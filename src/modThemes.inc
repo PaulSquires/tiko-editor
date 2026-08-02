@@ -11,6 +11,11 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
+' The resolved theme as ONE structure -- theme.editor.keyword1.forecolor and friends. Loaded
+' first because the generated key table below names its members.
+#include once "modThemeTypes.bi"
+
+
 type THEME_TYPE
     keyValue as DWSTRING
     keyData as DWSTRING
@@ -46,6 +51,15 @@ type THEME_TYPE
     ' explicit command rather than something an edit does by accident.
     foreMacro as DWSTRING
     backMacro as DWSTRING
+    ' Did this channel come from the ROLE layer rather than from the file?
+    '
+    ' Without this the writer cannot tell "the author wrote this colour" from "we filled it
+    ' in from role.accent", because role resolution sets hasFore/hasBack exactly as a parse
+    ' does. It would then emit every role-derived value as a literal, and the first save of a
+    ' roles-only theme would flatten the whole palette into 140 hard-coded lines -- the same
+    ' failure the %MACRO round-trip exists to prevent, one layer up.
+    foreFromRole as boolean
+    backFromRole as boolean
 end type
 
 
@@ -107,195 +121,45 @@ end enum
 ''  never loads at all, including at startup, so a missing entry fails loudly on first run
 ''  instead of silently refusing to update during a live edit.
 ''
-''  ghGeneral.description / .version are the two exceptions -- they carry DWSTRING payloads
-''  rather than colours and are filled by hand in Theme_FillGlobals.
+''  theme.general.description / .version are the two exceptions -- they carry DWSTRING payloads
+''  rather than colours; the key table carries them through its ofsText channel.
 ''
-type THEMEBIND_TYPE
-    keyValue      as zstring * 40
-    pFore         as COLORREF ptr    ' 0 when the key has no such channel
-    pBack         as COLORREF ptr
-    pBold         as boolean ptr
-    pItalic       as boolean ptr
-    pUnder        as boolean ptr
-    pForeAlpha    as long ptr        ' 0 unless alpha has somewhere real to land
-    pBackAlpha    as long ptr
-    nSubsys       as ulong
-    bAlphaCapable as boolean         ' can alpha on this key actually reach a pixel?
-end type
-dim shared gThemeBind(any) as THEMEBIND_TYPE
+' THEMEBIND_TYPE and gThemeBind are GONE. The hand-written bind table's only job was
+' filling the ten gh* globals; with every read site migrated to the theme root, the
+' generated key table (modThemeKeys.bi) is the single answer to what is in a theme.
 
-type GENERAL_HANDLES_TYPE
-    description as DWSTRING
-    version as DWSTRING
-    iconfail as COLORREF
-    iconsuccess as COLORREF
-    ' The debugger's "this value changed on the last step" colour. Its own key rather than a
-    ' reuse of iconsuccess: that one is 0,128,0 in both shipped themes, which is a signal
-    ' colour for a status glyph and too dark to read as small text on the Output background.
-    ' This wants to catch the eye without shouting -- it appears on several rows at once
-    ' while stepping a loop.
-    debugchanged as COLORREF
-end type
-dim shared ghGeneral as GENERAL_HANDLES_TYPE
+' ghGeneral is GONE. Its five fields moved to where their KEYS always said they belonged,
+' which the single struct made obvious and the old flat one hid:
+'     description  -> theme.general.description
+'     version      -> theme.general.version
+'     iconfail     -> theme.compile.iconfail
+'     iconsuccess  -> theme.compile.iconsuccess
+'     debugchanged -> theme.output.valuechanged
+'
+' That last one is the debugger's "this value changed on the last step" colour. It has its
+' own key rather than reusing iconsuccess: that one is 0,128,0 in both shipped themes, a
+' signal colour for a status glyph and too dark to read as small text on the Output
+' background. It wants to catch the eye without shouting -- it appears on several rows at
+' once while stepping a loop.
 
-type MAIN_HANDLES_TYPE
-    BackColor as COLORREF
-end type
-dim shared ghMain as MAIN_HANDLES_TYPE
+' ghMain is GONE -- migrated to theme.main.panel. Deleting the group is what turns fbc into
+' the checklist: a read site left behind becomes "error 41: Variable not declared" rather
+' than quietly carrying on against a struct nothing fills any more.
 
-type EDITOR_HANDLES_TYPE
-    ForeColorCaret as COLORREF
-    BackColorCurrentLine as COLORREF
-    ForeColorText as COLORREF
-    BackColorText as COLORREF
-    TextBold as boolean
-    TextItalic as boolean
-    TextUnderline as boolean
-    ForeColorNumbers as COLORREF
-    BackColorNumbers as COLORREF
-    NumbersBold as boolean
-    NumbersItalic as boolean
-    NumbersUnderLine as boolean
-    ForeColorComments as COLORREF
-    BackColorComments as COLORREF
-    CommentsBold as boolean
-    CommentsItalic as boolean
-    CommentsUnderline as boolean
-    ForeColorKeyword as COLORREF
-    BackColorKeyword as COLORREF
-    KeywordBold as boolean
-    KeywordItalic as boolean
-    KeywordUnderline as boolean
-    ForeColorKeyword2 as COLORREF
-    BackColorKeyword2 as COLORREF
-    KeywordBold2 as boolean
-    KeywordItalic2 as boolean
-    KeywordUnderline2 as boolean
-    ForeColorKeyword3 as COLORREF
-    BackColorKeyword3 as COLORREF
-    KeywordBold3 as boolean
-    KeywordItalic3 as boolean
-    KeywordUnderline3 as boolean
-    ForeColorFoldmargin as COLORREF
-    ForeColorFoldsymbol as COLORREF
-    BackColorFoldsymbol as COLORREF
-    ForeColorLinenumbers as COLORREF
-    BackColorLinenumbers as COLORREF
-    LinenumbersBold as boolean
-    LinenumbersItalic as boolean
-    LinenumbersUnderline as boolean
-    ForeColorOperators as COLORREF
-    BackColorOperators as COLORREF
-    OperatorsBold as boolean
-    OperatorsItalic as boolean
-    OperatorsUnderline as boolean
-    ForeColorIndentguides as COLORREF
-    BackColorIndentguides as COLORREF
-    ForeColorPreprocessor as COLORREF
-    BackColorPreprocessor as COLORREF
-    PreprocessorBold as boolean
-    PreprocessorItalic as boolean
-    PreprocessorUnderline as boolean
-    ForeColorSelection as COLORREF
-    BackColorSelection as COLORREF
-    ' -1 means "the theme did not ask for an alpha", and every consumer then keeps doing
-    ' exactly what it does today -- Scintilla's own default for the selection, and the
-    ' hardcoded 80/90 for the two occurrence indicators. That sentinel is what lets alpha
-    ' land in Phase 1 without changing a single pixel until a theme opts in.
-    AlphaSelection as long = -1
-    ForeColorStrings as COLORREF
-    BackColorStrings as COLORREF
-    StringsBold as boolean
-    StringsItalic as boolean
-    StringsUnderline as boolean
-    ForeColorBracegood as COLORREF
-    ForeColorBracebad as COLORREF
-    ForeColorOccurrence as COLORREF
-    AlphaOccurrence as long = -1     ' see AlphaSelection
-    BackColorScrollBar as COLORREF
-    ForeColorScrollBar as COLORREF
-    Divider as COLORREF
-    ForeColorBookmark as COLORREF
-    BackColorBookmark as COLORREF
-    ForeColorBreakpoint as COLORREF
-    BackColorBreakpoint as COLORREF
-    ForeColorDebugLine as COLORREF
-    BackColorDebugLine as COLORREF
-end type
-dim shared ghEditor as EDITOR_HANDLES_TYPE
+' ghEditor is GONE -- migrated to theme.editor.*, the last of the ten.
 
-type PANEL_HANDLES_TYPE
-    BackColorScrollBar as COLORREF
-    ForeColorScrollBar as COLORREF
-    BackColor as COLORREF
-    ForeColor as COLORREF
-    BackColorHot as COLORREF
-    ForeColorHot as COLORREF
-    BackColorButton as COLORREF
-    ForeColorButton as COLORREF
-    BackColorButtonHot as COLORREF
-    ForeColorButtonHot as COLORREF
-    BackColorFilenameIcon as COLORREF
-    ForeColorFilenameIcon as COLORREF
-    BackColorFunctionIcon as COLORREF
-    ForeColorFunctionIcon as COLORREF
-    BackColorTypeIcon as COLORREF
-    ForeColorTypeIcon as COLORREF
-    ForeColorTextSearch as COLORREF
-    ForeColorTextSearchHot as COLORREF
-end type
-dim shared ghPanel as PANEL_HANDLES_TYPE
+' ghPanel is GONE -- migrated to theme.panel.*
 
-type MENUBAR_HANDLES_TYPE
-    BackColor as COLORREF
-    BackColorHot as COLORREF
-    ForeColor as COLORREF
-    ForeColorHot as COLORREF
-end type
-dim shared ghMenuBar as MENUBAR_HANDLES_TYPE
+' ghMenuBar is GONE -- migrated to theme.menubar.text.* / .texthot.*
+' ghPopup is GONE -- migrated to theme.topmenu.*. Note the namespace: these keys have
+' always fed the POPUP menus rather than the horizontal bar, which the flat gh* naming
+' actively disguised (ghPopup fed by topmenu.*, ghMenuBar by menubar.*).
 
-type POPUPMENU_HANDLES_TYPE
-    PanelColor as COLORREF
-    BackColor as COLORREF
-    BackColorHot as COLORREF
-    BackColorDisabled as COLORREF
-    ForeColor as COLORREF
-    ForeColorHot as COLORREF
-    ForeColorDisabled as COLORREF
-end type
-dim shared ghPopup as POPUPMENU_HANDLES_TYPE
+' ghTopTabs is GONE -- migrated to theme.toptabs.*
 
-type TOPTABS_HANDLES_TYPE
-    BackColor as COLORREF
-    BackColorHot as COLORREF
-    ForeColor as COLORREF
-    ForeColorHot as COLORREF
-    Divider as COLORREF
-    CloseBackColorHot as COLORREF
-    IconSelectedBackColor as COLORREF
-end type
-dim shared ghTopTabs as TOPTABS_HANDLES_TYPE
+' ghStatusBar is GONE -- migrated to theme.statusbar.text.* / .texthot.*
 
-type STATUSBAR_HANDLES_TYPE
-    BackColor as COLORREF
-    BackColorHot as COLORREF
-    ForeColor as COLORREF
-    ForeColorHot as COLORREF
-end type
-dim shared ghStatusBar as STATUSBAR_HANDLES_TYPE
-
-type OUTPUT_HANDLES_TYPE
-    BackColor as COLORREF
-    BackColorHot as COLORREF
-    ForeColor as COLORREF
-    ForeColorHot as COLORREF
-    Divider as COLORREF
-    CloseBackColorHot as COLORREF
-    BackColorScrollBar as COLORREF
-    ForeColorScrollBar as COLORREF
-    ScrollBarDivider as COLORREF
-end type
-dim shared ghOutput as OUTPUT_HANDLES_TYPE
+' ghOutput is GONE -- migrated to theme.output.*
 
 ' Chrome that is not the editor but has always been dressed FROM the editor keys, because
 ' there was nowhere else to put it: the app-wide hairline, the fill/text of every PsTextBox,
@@ -306,18 +170,8 @@ dim shared ghOutput as OUTPUT_HANDLES_TYPE
 ' NOTHING READS THESE YET. Theme_ResolveFallbacks fills them from the editor.* values when a
 ' theme does not define them, so every existing theme keeps working byte-for-byte; repointing
 ' the ~20 consumers is a separate, reviewable patch and deliberately not part of this one.
-type UI_HANDLES_TYPE
-    Divider as COLORREF
-    ForeColorField as COLORREF
-    BackColorField as COLORREF
-    ForeColorScrollBar as COLORREF
-    BackColorScrollBar as COLORREF
-    ' The theme's ACCENT -- the one colour that means "this is on / selected / active".
-    ' Every control that needs it was reaching into some unrelated group for it (the toggle
-    ' used a panel button grey, which is why an ON switch read as dimmer than an OFF one).
-    AccentColor as COLORREF
-end type
-dim shared ghUI as UI_HANDLES_TYPE
+' ghUI is GONE -- migrated to theme.ui.*. Its four field/scrollbar members finally have
+' consumers: see the chrome cleanup in Phase 4.
 
 
 ''
@@ -411,7 +265,99 @@ dim shared as THEMEFALLBACK_TYPE gThemeFallback(0 to 5) = { _
 ''  edit -- an explicitly-supplied value is never overwritten, which is exactly what the
 ''  has* presence flags are for (a value of 0,0,0 is legitimate black, not "absent").
 ''
+''
+''  THE ROLE PALETTE: NAME, ENUM AND BUILT-IN DEFAULT
+''
+''  Filled at RUNTIME, never as a static initialiser. CLAUDE.md records gas64 silently
+''  corrupting static wstring array initialisers, and a table of role names is exactly the
+''  shape that bug takes.
+''
+''  The defaults are the dark palette, chosen so a theme file that defines NOTHING still
+''  renders a coherent editor rather than a black rectangle. That is what makes a roles-only
+''  theme legal, and it is also what finally removes the app's dependency on
+''  default_dark.theme existing on disk.
+''
+type THEMEROLEDEF_TYPE
+    name    as zstring * 32      ' the on-disk key, e.g. "role.background"
+    nRole   as long
+    clrDflt as COLORREF
+end type
+dim shared gThemeRoleDef(any) as THEMEROLEDEF_TYPE
+
+private sub ThemeRole_Add( byval k as zstring ptr, byval r as long, byval c as COLORREF )
+    dim as long n = ubound(gThemeRoleDef) + 1
+    redim preserve gThemeRoleDef(n) as THEMEROLEDEF_TYPE
+    gThemeRoleDef(n).name    = *k
+    gThemeRoleDef(n).nRole   = r
+    gThemeRoleDef(n).clrDflt = c
+end sub
+
+sub Theme_BuildRoleTable()
+
+    static as boolean bBuilt
+    if bBuilt then exit sub
+    bBuilt = true
+    erase gThemeRoleDef
+
+    '                name                      role                     default (r,g,b)
+    ThemeRole_Add( "role.background",       THROLE_BACKGROUND,       BGR( 40, 44, 52) )
+    ThemeRole_Add( "role.backgroundalt",    THROLE_BACKGROUNDALT,    BGR( 33, 37, 43) )
+    ThemeRole_Add( "role.backgroundraised", THROLE_BACKGROUNDRAISED, BGR( 33, 37, 43) )
+    ThemeRole_Add( "role.foreground",       THROLE_FOREGROUND,       BGR(215,218,224) )
+    ThemeRole_Add( "role.foregrounddim",    THROLE_FOREGROUNDDIM,    BGR(157,165,180) )
+    ThemeRole_Add( "role.border",           THROLE_BORDER,           BGR( 62, 68, 81) )
+    ThemeRole_Add( "role.accent",           THROLE_ACCENT,           BGR( 49, 73,123) )
+    ThemeRole_Add( "role.accentfore",       THROLE_ACCENTFORE,       BGR( 97,175,239) )
+    ThemeRole_Add( "role.hot",              THROLE_HOT,              BGR( 62, 68, 81) )
+    ThemeRole_Add( "role.selection",        THROLE_SELECTION,        BGR( 62, 68, 81) )
+    ThemeRole_Add( "role.error",            THROLE_ERROR,            BGR(224,108,117) )
+    ThemeRole_Add( "role.warning",          THROLE_WARNING,          BGR(229,192,123) )
+    ThemeRole_Add( "role.success",          THROLE_SUCCESS,          BGR(152,195,121) )
+    ThemeRole_Add( "role.keyword",          THROLE_KEYWORD,          BGR(198,120,221) )
+    ThemeRole_Add( "role.apikeyword",       THROLE_APIKEYWORD,       BGR( 86,182,194) )
+    ThemeRole_Add( "role.userkeyword",      THROLE_USERKEYWORD,      BGR(229,192,123) )
+    ThemeRole_Add( "role.comment",          THROLE_COMMENT,          BGR( 92, 99,112) )
+    ThemeRole_Add( "role.string",           THROLE_STRING,           BGR(152,195,121) )
+    ThemeRole_Add( "role.number",           THROLE_NUMBER,           BGR(209,154,102) )
+    ThemeRole_Add( "role.operator",         THROLE_OPERATOR,         BGR(171,178,191) )
+    ThemeRole_Add( "role.preprocessor",     THROLE_PREPROCESSOR,     BGR(198,120,221) )
+
+end sub
+
+
+''
+''  RESOLVE THE PALETTE
+''
+''  A role named in the file wins; otherwise the built-in default. Writes straight into the
+''  root's role array, which is what every widget fallback below then reads.
+''
+sub Theme_ResolveRoles()
+
+    Theme_BuildRoleTable()
+
+    for i as long = lbound(gThemeRoleDef) to ubound(gThemeRoleDef)
+        dim as long r = gThemeRoleDef(i).nRole
+        dim as long n = Theme_FindEntry( gThemeRoleDef(i).name )
+        ' A role carries ONE colour and the file states it as a foreground.
+        if (n >= 0) andalso gTheme(n).hasFore then
+            theme.role.clr(r) = gTheme(n).foreground
+        else
+            theme.role.clr(r) = gThemeRoleDef(i).clrDflt
+        end if
+    next
+
+end sub
+
+
+' Theme_ResolveKeyRoles is defined further down, after the key table it walks.
+declare sub Theme_ResolveKeyRoles()
+
+
+
 sub Theme_ResolveFallbacks()
+
+    ' The palette first: everything below can inherit from it.
+    Theme_ResolveRoles()
 
     for i as long = lbound(gThemeFallback) to ubound(gThemeFallback)
 
@@ -439,6 +385,9 @@ sub Theme_ResolveFallbacks()
         end if
 
     next
+
+    ' ...and finally the general net: anything still absent takes its declared role.
+    Theme_ResolveKeyRoles()
 
 end sub
 
@@ -586,6 +535,27 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
 
         gTheme(nFound).keyValue = keyValue
         gTheme(nFound).keyData = keyData
+
+        ' role.* IS A COLOUR DESPITE HAVING ONLY TWO SEGMENTS.
+        '
+        ' A role carries exactly one colour, so "role.accent: 49,73,123" is the natural
+        ' syntax and the third segment would be noise on every line of a palette. But the
+        ' two-segment path below is the TEXT path -- it is what general.description takes --
+        ' so without this arm a role parses perfectly happily, stores its digits as a string,
+        ' sets no colour, and silently falls through to the built-in default. That is exactly
+        ' what happened: a full palette was added to both shipped themes and changed nothing
+        ' at all, with a clean build and 636 assertions passing.
+        if (numKeys = 2) andalso (keys(1) = "role") then
+            gTheme(nFound).foreground = clr
+            gTheme(nFound).hasFore    = true
+            if bHasAlpha then
+                gTheme(nFound).foregroundAlpha = cubyte(nAlpha)
+                gTheme(nFound).hasForeAlpha    = true
+            end if
+            gTheme(nFound).foreMacro = wszMacroUsed
+            continue do
+        end if
+
         select case keys(3)
             case "foreground"
                 gTheme(nFound).foreground = clr
@@ -639,7 +609,7 @@ private function Theme_SubsysForNamespace( byval k as string ) as ulong
         ' frmAutoComplete derives its row colours from the editor styles (keyword2, keyword3,
         ' numbers, comments, selection, currentline), so the whole namespace feeds it.
         case "editor"    : return THSUB_SCINTILLA or THSUB_EDITORCHROME or THSUB_AUTOCOMPLETE
-        ' ghPanel dresses the Options dialog and the symbol search popup as well as the panels.
+        ' the panel namespace dresses the Options dialog and the symbol search popup as well as the panels.
         case "panel"     : return THSUB_PANEL or THSUB_OPTIONSDLG or THSUB_SEARCHSYMBOL
         case "toptabs"   : return THSUB_TOPTABS
         case "menubar"   : return THSUB_MENUBAR
@@ -660,187 +630,504 @@ end function
 ''
 ''  ADD ONE BIND ROW
 ''
-private sub ThemeBind_Add( _
-        byval k as zstring ptr, _
-        byval pF as COLORREF ptr = 0, _
-        byval pB as COLORREF ptr = 0, _
-        byval pBo as boolean ptr = 0, _
-        byval pIt as boolean ptr = 0, _
-        byval pUn as boolean ptr = 0, _
-        byval nSub as ulong = 0, _
-        byval pFA as long ptr = 0, _
-        byval pBA as long ptr = 0 )
-
-    dim as long n = ubound(gThemeBind) + 1
-    redim preserve gThemeBind(n) as THEMEBIND_TYPE
-
-    gThemeBind(n).keyValue   = *k
-    gThemeBind(n).pFore      = pF
-    gThemeBind(n).pBack      = pB
-    gThemeBind(n).pBold      = pBo
-    gThemeBind(n).pItalic    = pIt
-    gThemeBind(n).pUnder     = pUn
-    gThemeBind(n).pForeAlpha = pFA
-    gThemeBind(n).pBackAlpha = pBA
-
-    ' Zero means "derive from the namespace".
-    if nSub = 0 then nSub = Theme_SubsysForNamespace( *k )
-    gThemeBind(n).nSubsys = nSub
-
-    ' Alpha is claimed only where a consumer exists TODAY. Scintilla styles and GDI text are
-    ' opaque by construction, and PsBufferPaint's SetXxxColorA overloads are called by no
-    ' control yet -- so an alpha slider on any other key would move a number that reaches no
-    ' pixel. Having an alpha destination IS the definition of being alpha-capable.
-    dim as boolean bHasFA = (pFA <> 0)
-    dim as boolean bHasBA = (pBA <> 0)
-    gThemeBind(n).bAlphaCapable = (bHasFA orelse bHasBA)
-
-end sub
+' ThemeBind_Add and Theme_BuildBindTable are GONE -- see Theme_BuildKeyTable below,
+' which generates the same information from modThemeKeys.bi and cannot drift from it.
 
 
 ''
-''  BUILD THE KEY -> DESTINATION TABLE
+''  ============================ THE GENERATED KEY TABLE ============================
 ''
-''  Transcribed from the hand-written copy block this replaced. A key with no row here never
-''  loads at all, which is deliberate: the failure is visible on the first run rather than
-''  only during a live edit.
+''  The replacement for Theme_BuildBindTable above, generated from modThemeKeys.bi rather
+''  than hand-written. Both exist at once for now: the hand-written table still fills the
+''  legacy gh* globals, this one fills the new "theme" root, and the self-test asserts the
+''  two agree key for key. Once the 1,266 read sites have moved, the hand-written table and
+''  the gh* globals go and this is all that is left.
 ''
-''  Deliberately ABSENT, and asserted absent by the self-test's dead-key list: panel.panel,
-''  menubar.panel, toptabs.panel, statusbar.panel, output.panel and editor.window. All six
-''  are present in the shipped theme files and all six had no destination in the original
-''  code either -- four were looked up into a pointer that the next line overwrote before
-''  reading, one was commented out, and editor.window was never referenced at all.
+''  OFFSETS, NOT POINTERS, and that is the whole reason for a second table rather than an
+''  extra column on the first. A pointer can only ever address the ONE live instance; an
+''  offset addresses whichever THEMEROOT_TYPE it is handed, so the identical code fills the
+''  live theme, the Cancel snapshot, the Reset baseline and the built-in defaults.
 ''
-private sub Theme_BuildBindTable()
+''  SENTINEL IS -1, NEVER 0. Offset 0 is a real member (general.description). The legacy
+''  table's null-pointer-means-absent test does not survive the translation.
+''
+type THEMEKEY_TYPE
+    keyValue     as zstring * 40
+    ofsText      as long          ' a DWSTRING payload rather than a colour
+    ofsFore      as long
+    ofsBack      as long
+    ofsBold      as long
+    ofsItalic    as long
+    ofsUnder     as long
+    ofsForeAlpha as long
+    ofsBackAlpha as long
+    ' The role each channel falls back to when the file does not name this key.
+    nRoleFore    as long
+    nRoleBack    as long
+    nCat         as long          ' the theme editor's group header
+    nSubsys      as ulong
+    ' Can an alpha on this key actually reach a pixel? Having an alpha destination IS the
+    ' definition, so it is derived rather than declared -- the colour picker asks this to
+    ' decide whether to offer an alpha slider at all.
+    bAlphaCapable as boolean
+end type
+dim shared gThemeKeys(any) as THEMEKEY_TYPE
+
+
+''
+''  BUILD IT
+''
+''  modThemeKeys.bi is included WITHOUT "once" -- see the warning in its header. It is
+''  expanded again elsewhere under different row-macro bodies, and a "once" at any single
+''  site breaks every later expansion silently, with a clean build and no warning.
+''
+private sub Theme_BuildKeyTable()
 
     static as boolean bBuilt
     if bBuilt then exit sub
     bBuilt = true
 
-    erase gThemeBind
+    erase gThemeKeys
 
-    ' ---- general / compile / main ----------------------------------------------------
-    ThemeBind_Add( "compile.iconsuccess", @ghGeneral.iconsuccess )
-    ThemeBind_Add( "compile.iconfail",    @ghGeneral.iconfail )
-    ThemeBind_Add( "output.valuechanged",  @ghGeneral.debugchanged )
-    ThemeBind_Add( "main.panel",          0, @ghMain.BackColor )
+    ' Every row runs this first: grow the array and fill the fields common to all shapes,
+    ' defaulting every channel to "absent". Each row macro then claims only its own channels.
+    #macro THKEY_BEGIN( k, cat, sub_, rF, rB )
+        scope
+            dim as long n = ubound(gThemeKeys) + 1
+            redim preserve gThemeKeys(n) as THEMEKEY_TYPE
+            with gThemeKeys(n)
+                .keyValue     = k
+                .ofsText      = -1
+                .ofsFore      = -1
+                .ofsBack      = -1
+                .ofsBold      = -1
+                .ofsItalic    = -1
+                .ofsUnder     = -1
+                .ofsForeAlpha = -1
+                .ofsBackAlpha = -1
+                .nRoleFore    = rF
+                .nRoleBack    = rB
+                .nCat         = cat
+                ' Zero means "derive from the namespace", exactly as the legacy table does.
+                '
+                ' The parentheses around sub_ are LOAD-BEARING. A macro argument is pasted in
+                ' as raw tokens, and the two multi-subsystem keys pass an expression:
+                '   THSUB_SCINTILLA or THSUB_EDITORCHROME or THSUB_AUTOCOMPLETE or THSUB_OPTIONSDLG
+                ' In FreeBASIC "=" binds TIGHTER than "or", so an unparenthesised sub_ = 0
+                ' parses as "A or B or C or (D = 0)" -- a mask silently missing three of its
+                ' four bits, which means a live edit of editor.text would repaint Scintilla
+                ' and nothing else. Caught by assertion 22c, not by the compiler.
+                .nSubsys      = iif( (sub_) = 0, Theme_SubsysForNamespace( k ), (sub_) )
+    #endmacro
 
-    ' ---- editor: syntax styles (fore + back + bold/italic/underline) ------------------
-    ' editor.text also dresses the autocomplete popup, the Options textboxes and the help
-    ' Options textboxes, so it reaches beyond Scintilla. It no longer reaches the help
-    ' window: that is a WebView2 pane and the site brings its own CSS.
-    ThemeBind_Add( "editor.text", @ghEditor.ForeColorText, @ghEditor.BackColorText, _
-                   @ghEditor.TextBold, @ghEditor.TextItalic, @ghEditor.TextUnderline, _
-                   THSUB_SCINTILLA or THSUB_EDITORCHROME or THSUB_AUTOCOMPLETE or _
-                   THSUB_OPTIONSDLG )
-    ThemeBind_Add( "editor.comments", @ghEditor.ForeColorComments, @ghEditor.BackColorComments, _
-                   @ghEditor.CommentsBold, @ghEditor.CommentsItalic, @ghEditor.CommentsUnderline )
-    ThemeBind_Add( "editor.keyword", @ghEditor.ForeColorKeyword, @ghEditor.BackColorKeyword, _
-                   @ghEditor.KeywordBold, @ghEditor.KeywordItalic, @ghEditor.KeywordUnderline )
-    ThemeBind_Add( "editor.keyword2", @ghEditor.ForeColorKeyword2, @ghEditor.BackColorKeyword2, _
-                   @ghEditor.KeywordBold2, @ghEditor.KeywordItalic2, @ghEditor.KeywordUnderline2 )
-    ThemeBind_Add( "editor.keyword3", @ghEditor.ForeColorKeyword3, @ghEditor.BackColorKeyword3, _
-                   @ghEditor.KeywordBold3, @ghEditor.KeywordItalic3, @ghEditor.KeywordUnderline3 )
-    ThemeBind_Add( "editor.numbers", @ghEditor.ForeColorNumbers, @ghEditor.BackColorNumbers, _
-                   @ghEditor.NumbersBold, @ghEditor.NumbersItalic, @ghEditor.NumbersUnderLine )
-    ThemeBind_Add( "editor.operators", @ghEditor.ForeColorOperators, @ghEditor.BackColorOperators, _
-                   @ghEditor.OperatorsBold, @ghEditor.OperatorsItalic, @ghEditor.OperatorsUnderline )
-    ThemeBind_Add( "editor.preprocessor", @ghEditor.ForeColorPreprocessor, @ghEditor.BackColorPreprocessor, _
-                   @ghEditor.PreprocessorBold, @ghEditor.PreprocessorItalic, @ghEditor.PreprocessorUnderline )
-    ThemeBind_Add( "editor.strings", @ghEditor.ForeColorStrings, @ghEditor.BackColorStrings, _
-                   @ghEditor.StringsBold, @ghEditor.StringsItalic, @ghEditor.StringsUnderline )
-    ThemeBind_Add( "editor.linenumbers", @ghEditor.ForeColorLinenumbers, @ghEditor.BackColorLinenumbers, _
-                   @ghEditor.LinenumbersBold, @ghEditor.LinenumbersItalic, @ghEditor.LinenumbersUnderline )
+    #macro THKEY_END()
+                .bAlphaCapable = ((.ofsForeAlpha >= 0) orelse (.ofsBackAlpha >= 0))
+            end with
+        end scope
+    #endmacro
 
-    ' ---- editor: surface, margins, markers --------------------------------------------
-    ThemeBind_Add( "editor.caret",        @ghEditor.ForeColorCaret )
-    ThemeBind_Add( "editor.currentline",  0, @ghEditor.BackColorCurrentLine )
-    ThemeBind_Add( "editor.foldmargin",   @ghEditor.ForeColorFoldmargin )
-    ThemeBind_Add( "editor.foldsymbol",   @ghEditor.ForeColorFoldsymbol, @ghEditor.BackColorFoldsymbol )
-    ThemeBind_Add( "editor.indentguides", @ghEditor.ForeColorIndentguides, @ghEditor.BackColorIndentguides )
-    ThemeBind_Add( "editor.bracegood",    @ghEditor.ForeColorBracegood )
-    ThemeBind_Add( "editor.bracebad",     @ghEditor.ForeColorBracebad )
-    ThemeBind_Add( "editor.bookmark",     @ghEditor.ForeColorBookmark, @ghEditor.BackColorBookmark )
-    ThemeBind_Add( "editor.breakpoint",   @ghEditor.ForeColorBreakpoint, @ghEditor.BackColorBreakpoint )
-    ThemeBind_Add( "editor.debugline",    @ghEditor.ForeColorDebugLine, @ghEditor.BackColorDebugLine )
+    #macro THTEXTKEY( k, path, cat, sub_, rF, rB )
+        THKEY_BEGIN( k, cat, sub_, rF, rB )
+            .ofsText = offsetof( THEMEROOT_TYPE, path )
+        THKEY_END()
+    #endmacro
 
-    ' The two alpha-bearing keys. SCI_SETSELALPHA takes the selection's background alpha and
-    ' SCI_INDICSETALPHA the occurrence indicator's -- the only two places in the editor where
-    ' an alpha reaches a pixel at all.
-    ThemeBind_Add( "editor.selection", @ghEditor.ForeColorSelection, @ghEditor.BackColorSelection, _
-                   0, 0, 0, 0, 0, @ghEditor.AlphaSelection )
-    ThemeBind_Add( "editor.occurrence", @ghEditor.ForeColorOccurrence, 0, _
-                   0, 0, 0, 0, @ghEditor.AlphaOccurrence )
+    #macro THSTYLEKEY( k, path, cat, sub_, rF, rB )
+        THKEY_BEGIN( k, cat, sub_, rF, rB )
+            .ofsFore   = offsetof( THEMEROOT_TYPE, path.forecolor )
+            .ofsBack   = offsetof( THEMEROOT_TYPE, path.backcolor )
+            .ofsBold   = offsetof( THEMEROOT_TYPE, path.bold )
+            .ofsItalic = offsetof( THEMEROOT_TYPE, path.italic )
+            .ofsUnder  = offsetof( THEMEROOT_TYPE, path.underline )
+        THKEY_END()
+    #endmacro
 
-    ' editor.scrollbar dresses the Options scroll panels and the autocomplete list too.
-    ThemeBind_Add( "editor.scrollbar", @ghEditor.ForeColorScrollBar, @ghEditor.BackColorScrollBar, _
-                   0, 0, 0, _
-                   THSUB_SCINTILLA or THSUB_EDITORCHROME or THSUB_AUTOCOMPLETE or THSUB_OPTIONSDLG )
+    #macro THPAIRKEY( k, path, cat, sub_, rF, rB )
+        THKEY_BEGIN( k, cat, sub_, rF, rB )
+            .ofsFore = offsetof( THEMEROOT_TYPE, path.forecolor )
+            .ofsBack = offsetof( THEMEROOT_TYPE, path.backcolor )
+        THKEY_END()
+    #endmacro
 
-    ' editor.divider is THE app-wide hairline: menu separators, tab-bar border, every Ps*
-    ' control border built by OptionsTheme_Fill*, message-box frames, the autocomplete frame.
-    ' Read in 20 files, so it feeds everything.
-    ThemeBind_Add( "editor.divider", @ghEditor.Divider, 0, 0, 0, 0, THSUB_ALL )
+    #macro THPAIRAKEY( k, path, apath, cat, sub_, rF, rB )
+        THKEY_BEGIN( k, cat, sub_, rF, rB )
+            .ofsFore      = offsetof( THEMEROOT_TYPE, path.forecolor )
+            .ofsBack      = offsetof( THEMEROOT_TYPE, path.backcolor )
+            .ofsBackAlpha = offsetof( THEMEROOT_TYPE, apath )
+        THKEY_END()
+    #endmacro
 
-    ' ---- ui: chrome split out of the editor namespace ----------------------------------
-    ' Filled by Theme_ResolveFallbacks when a theme does not define them. All three are
-    ' app-wide, hence THSUB_ALL.
-    ThemeBind_Add( "ui.divider",   @ghUI.Divider,            0,                  0, 0, 0, THSUB_ALL )
-    ThemeBind_Add( "ui.field",     @ghUI.ForeColorField,     @ghUI.BackColorField,     0, 0, 0, THSUB_ALL )
-    ThemeBind_Add( "ui.scrollbar", @ghUI.ForeColorScrollBar, @ghUI.BackColorScrollBar, 0, 0, 0, THSUB_ALL )
-    ThemeBind_Add( "ui.accent",    0, @ghUI.AccentColor, 0, 0, 0, THSUB_ALL )
+    #macro THFOREKEY( k, path, cat, sub_, rF, rB )
+        THKEY_BEGIN( k, cat, sub_, rF, rB )
+            .ofsFore = offsetof( THEMEROOT_TYPE, path )
+        THKEY_END()
+    #endmacro
 
-    ' ---- panel ------------------------------------------------------------------------
-    ThemeBind_Add( "panel.text",           @ghPanel.ForeColor, @ghPanel.BackColor )
-    ThemeBind_Add( "panel.texthot",        @ghPanel.ForeColorHot, @ghPanel.BackColorHot )
-    ThemeBind_Add( "panel.scrollbar",      @ghPanel.ForeColorScrollBar, @ghPanel.BackColorScrollBar )
-    ThemeBind_Add( "panel.button",         @ghPanel.ForeColorButton, @ghPanel.BackColorButton )
-    ThemeBind_Add( "panel.buttonhot",      @ghPanel.ForeColorButtonHot, @ghPanel.BackColorButtonHot )
-    ThemeBind_Add( "panel.filenameicon",   @ghPanel.ForeColorFilenameIcon, @ghPanel.BackColorFilenameIcon )
-    ThemeBind_Add( "panel.functionicon",   @ghPanel.ForeColorFunctionIcon, @ghPanel.BackColorFunctionIcon )
-    ThemeBind_Add( "panel.typeicon",       @ghPanel.ForeColorTypeIcon, @ghPanel.BackColorTypeIcon )
-    ThemeBind_Add( "panel.textsearch",     @ghPanel.ForeColorTextSearch )
-    ThemeBind_Add( "panel.textsearchhot",  @ghPanel.ForeColorTextSearchHot )
+    #macro THFOREAKEY( k, path, apath, cat, sub_, rF, rB )
+        THKEY_BEGIN( k, cat, sub_, rF, rB )
+            .ofsFore      = offsetof( THEMEROOT_TYPE, path )
+            .ofsForeAlpha = offsetof( THEMEROOT_TYPE, apath )
+        THKEY_END()
+    #endmacro
 
-    ' ---- topmenu (feeds ghPopup, not ghMenuBar) ----------------------------------------
-    ThemeBind_Add( "topmenu.panel",        0, @ghPopup.PanelColor )
-    ThemeBind_Add( "topmenu.text",         @ghPopup.ForeColor, @ghPopup.BackColor )
-    ThemeBind_Add( "topmenu.texthot",      @ghPopup.ForeColorHot, @ghPopup.BackColorHot )
-    ThemeBind_Add( "topmenu.textdisabled", @ghPopup.ForeColorDisabled, @ghPopup.BackColorDisabled )
+    #macro THBACKKEY( k, path, cat, sub_, rF, rB )
+        THKEY_BEGIN( k, cat, sub_, rF, rB )
+            .ofsBack = offsetof( THEMEROOT_TYPE, path )
+        THKEY_END()
+    #endmacro
 
-    ' ---- menubar -----------------------------------------------------------------------
-    ThemeBind_Add( "menubar.text",         @ghMenuBar.ForeColor, @ghMenuBar.BackColor )
-    ThemeBind_Add( "menubar.texthot",      @ghMenuBar.ForeColorHot, @ghMenuBar.BackColorHot )
+    #include "modThemeKeys.bi"
 
-    ' ---- toptabs -----------------------------------------------------------------------
-    ThemeBind_Add( "toptabs.text",         @ghTopTabs.ForeColor, @ghTopTabs.BackColor )
-    ThemeBind_Add( "toptabs.texthot",      @ghTopTabs.ForeColorHot, @ghTopTabs.BackColorHot )
-    ThemeBind_Add( "toptabs.divider",      @ghTopTabs.Divider )
-    ThemeBind_Add( "toptabs.closehot",     0, @ghTopTabs.CloseBackColorHot )
-    ThemeBind_Add( "toptabs.iconselected", 0, @ghTopTabs.IconSelectedBackColor )
-
-    ' ---- statusbar ---------------------------------------------------------------------
-    ThemeBind_Add( "statusbar.text",       @ghStatusBar.ForeColor, @ghStatusBar.BackColor )
-    ThemeBind_Add( "statusbar.texthot",    @ghStatusBar.ForeColorHot, @ghStatusBar.BackColorHot )
-
-    ' ---- output ------------------------------------------------------------------------
-    ThemeBind_Add( "output.text",             @ghOutput.ForeColor, @ghOutput.BackColor )
-    ThemeBind_Add( "output.texthot",          @ghOutput.ForeColorHot, @ghOutput.BackColorHot )
-    ThemeBind_Add( "output.divider",          @ghOutput.Divider )
-    ThemeBind_Add( "output.closehot",         0, @ghOutput.CloseBackColorHot )
-    ThemeBind_Add( "output.scrollbar",        @ghOutput.ForeColorScrollBar, @ghOutput.BackColorScrollBar )
-    ThemeBind_Add( "output.scrollbardivider", @ghOutput.ScrollBarDivider )
+    #undef THTEXTKEY
+    #undef THSTYLEKEY
+    #undef THPAIRKEY
+    #undef THPAIRAKEY
+    #undef THFOREKEY
+    #undef THFOREAKEY
+    #undef THBACKKEY
+    #undef THKEY_BEGIN
+    #undef THKEY_END
 
 end sub
+
+
+''
+''  WRITE ONE CHANNEL THROUGH AN OFFSET
+''
+''  A negative offset means the key has no such channel and the write is skipped -- the
+''  translation of the legacy table's null-pointer test.
+''
+private sub ThemeRoot_PokeColor( byval pRoot as THEMEROOT_TYPE ptr, byval ofs as long, _
+                                 byval v as COLORREF )
+    if ofs < 0 then exit sub
+    *cast( COLORREF ptr, cast( any ptr, pRoot ) + ofs ) = v
+end sub
+
+private sub ThemeRoot_PokeBool( byval pRoot as THEMEROOT_TYPE ptr, byval ofs as long, _
+                                byval v as boolean )
+    if ofs < 0 then exit sub
+    *cast( boolean ptr, cast( any ptr, pRoot ) + ofs ) = v
+end sub
+
+private sub ThemeRoot_PokeLong( byval pRoot as THEMEROOT_TYPE ptr, byval ofs as long, _
+                                byval v as long )
+    if ofs < 0 then exit sub
+    *cast( long ptr, cast( any ptr, pRoot ) + ofs ) = v
+end sub
+
+' byval, and never "byref as const" -- AfxNova's DWSTRING copy constructor is not
+' const-correct and a const reference that is then copied corrupts the heap. See Learnings.md.
+private sub ThemeRoot_PokeText( byval pRoot as THEMEROOT_TYPE ptr, byval ofs as long, _
+                                byval v as DWSTRING )
+    if ofs < 0 then exit sub
+    *cast( DWSTRING ptr, cast( any ptr, pRoot ) + ofs ) = v
+end sub
+
+
+''
+''  THE ROLE PALETTE, AS THE THEME EDITOR SEES IT
+''
+''  Index-addressed so a list control can walk it without knowing the enum.
+''
+function Theme_RoleCount() as long
+    Theme_BuildRoleTable()
+    return ubound(gThemeRoleDef) - lbound(gThemeRoleDef) + 1
+end function
+
+function Theme_RoleName( byval idx as long ) as DWSTRING
+    Theme_BuildRoleTable()
+    if (idx < lbound(gThemeRoleDef)) orelse (idx > ubound(gThemeRoleDef)) then return ""
+    return gThemeRoleDef(idx).name
+end function
+
+function Theme_RoleColor( byval idx as long ) as COLORREF
+    Theme_BuildRoleTable()
+    if (idx < lbound(gThemeRoleDef)) orelse (idx > ubound(gThemeRoleDef)) then return 0
+    return theme.role.clr( gThemeRoleDef(idx).nRole )
+end function
+
+' Is this role NAMED IN THE FILE, or is it coming from the built-in default? The editor marks
+' the difference so a user can see which of the twenty-one this theme actually chose.
+function Theme_RoleIsExplicit( byval idx as long ) as boolean
+    Theme_BuildRoleTable()
+    if (idx < lbound(gThemeRoleDef)) orelse (idx > ubound(gThemeRoleDef)) then return false
+    dim as long n = Theme_FindEntry( gThemeRoleDef(idx).name )
+    if n < 0 then return false
+    return gTheme(n).hasFore
+end function
+
+
+''
+''  RE-RESOLVE EVERY KEY THAT INHERITS FROM A ROLE
+''
+''  MUST BE CALLED AFTER EDITING A ROLE, and this is the whole reason it exists: role
+''  resolution only fills a channel whose has* flag is FALSE, so once a key has taken its
+''  role's colour it is indistinguishable from an authored one and a later change to that
+''  role would reach nothing at all. The edit would appear to do nothing, silently, which is
+''  the exact shape of bug this branch has hit repeatedly.
+''
+''  So the role-derived values are UN-RESOLVED first -- and only those, which is what the
+''  foreFromRole/backFromRole provenance is for. An authored colour is never disturbed.
+''
+sub Theme_ReapplyRoles()
+
+    for i as long = lbound(gTheme) to ubound(gTheme)
+        if gTheme(i).foreFromRole then
+            gTheme(i).hasFore      = false
+            gTheme(i).foreFromRole = false
+        end if
+        if gTheme(i).backFromRole then
+            gTheme(i).hasBack      = false
+            gTheme(i).backFromRole = false
+        end if
+    next
+
+    Theme_ResolveRoles()
+    Theme_ResolveKeyRoles()
+
+end sub
+
+
+''
+''  SET ONE ROLE AND RE-RESOLVE. Returns the subsystems to repaint -- always everything,
+''  because a role feeds keys across every namespace by design.
+''
+function Theme_SetRole( byval idx as long, byval clr as COLORREF ) as ulong
+
+    Theme_BuildRoleTable()
+    if (idx < lbound(gThemeRoleDef)) orelse (idx > ubound(gThemeRoleDef)) then return THSUB_NONE
+
+    dim as long n = Theme_EnsureEntry( gThemeRoleDef(idx).name )
+    gTheme(n).foreground   = clr
+    gTheme(n).hasFore      = true
+    gTheme(n).foreFromRole = false      ' a role is authored, never inherited from itself
+
+    Theme_ReapplyRoles()
+    return THSUB_ALL
+
+end function
+
+
+''
+''  READ ONE CHANNEL BACK THROUGH AN OFFSET
+''
+''  Public because the self-test's whole job in this phase is to compare what the generated
+''  offsets address against what the hand-written pointer table addresses. There is no other
+''  way to reach a member the caller knows only by offset.
+''
+function ThemeRoot_PeekColor( byval pRoot as THEMEROOT_TYPE ptr, byval ofs as long ) as COLORREF
+    if pRoot = 0 orelse ofs < 0 then return 0
+    return *cast( COLORREF ptr, cast( any ptr, pRoot ) + ofs )
+end function
+
+function ThemeRoot_PeekBool( byval pRoot as THEMEROOT_TYPE ptr, byval ofs as long ) as boolean
+    if pRoot = 0 orelse ofs < 0 then return false
+    return *cast( boolean ptr, cast( any ptr, pRoot ) + ofs )
+end function
+
+function ThemeRoot_PeekLong( byval pRoot as THEMEROOT_TYPE ptr, byval ofs as long ) as long
+    if pRoot = 0 orelse ofs < 0 then return 0
+    return *cast( long ptr, cast( any ptr, pRoot ) + ofs )
+end function
+
+function ThemeRoot_PeekText( byval pRoot as THEMEROOT_TYPE ptr, byval ofs as long ) as DWSTRING
+    if pRoot = 0 orelse ofs < 0 then return ""
+    return *cast( DWSTRING ptr, cast( any ptr, pRoot ) + ofs )
+end function
+
+
+''
+''  FIND A KEY'S ROW IN THE GENERATED TABLE, or -1.
+''
+function Theme_KeyIndex( byval lookupKey as string ) as long
+    Theme_BuildKeyTable()
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+        if gThemeKeys(i).keyValue = lookupKey then return i
+    next
+    return -1
+end function
+
+
+''
+''  HOW MANY ROWS DID THE TABLE ACTUALLY GENERATE?
+''
+''  Exists so the self-test can catch the "#include once" trap, which is otherwise completely
+''  silent: the build stays clean and the table simply comes out empty.
+''
+function Theme_KeyCount() as long
+    Theme_BuildKeyTable()
+    return ubound(gThemeKeys) - lbound(gThemeKeys) + 1
+end function
+
+
+''
+''  POUR THE PARSED THEME INTO A ROOT STRUCTURE
+''
+''  Takes the destination rather than assuming the live one, which is the point of holding
+''  offsets: the same call fills the snapshot, the baseline or the defaults.
+''
+sub Theme_FillRoot( byval pRoot as THEMEROOT_TYPE ptr )
+
+    if pRoot = 0 then exit sub
+    Theme_BuildKeyTable()
+
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+        dim as THEMEKEY_TYPE ptr pk = @gThemeKeys(i)
+        dim as THEME_TYPE ptr pTheme = getThemePtr( pk->keyValue )
+
+        ThemeRoot_PokeText ( pRoot, pk->ofsText,   pTheme->keyData )
+        ThemeRoot_PokeColor( pRoot, pk->ofsFore,   pTheme->foreground )
+        ThemeRoot_PokeColor( pRoot, pk->ofsBack,   pTheme->background )
+        ThemeRoot_PokeBool ( pRoot, pk->ofsBold,   (pTheme->bold <> 0) )
+        ThemeRoot_PokeBool ( pRoot, pk->ofsItalic, (pTheme->italic <> 0) )
+        ThemeRoot_PokeBool ( pRoot, pk->ofsUnder,  (pTheme->underline <> 0) )
+
+        ' Alpha only lands when the theme actually asked for one. Without the has* test a
+        ' plain "r,g,b" would drive the destination to the 255 default and silently take
+        ' over from whatever constant the consumer uses today. Same rule as Theme_FillGlobals.
+        if pk->ofsForeAlpha >= 0 then
+            ThemeRoot_PokeLong( pRoot, pk->ofsForeAlpha, _
+                iif( pTheme->hasForeAlpha, clng(pTheme->foregroundAlpha), -1 ) )
+        end if
+        if pk->ofsBackAlpha >= 0 then
+            ThemeRoot_PokeLong( pRoot, pk->ofsBackAlpha, _
+                iif( pTheme->hasBackAlpha, clng(pTheme->backgroundAlpha), -1 ) )
+        end if
+    next
+
+end sub
+
+
+''
+''  MATERIALISE ANY KEY THE THEME DID NOT SUPPLY, FROM ITS ROLE
+''
+''  Runs after the legacy ui.* table below and fills only what is STILL absent, so the order
+''  is explicit-value -> ui.* inheritance -> role -> built-in default. That is a defined
+''  precedence rather than a race: each step writes only where has* is false.
+''
+''  Keeping the ui.* table underneath the roles rather than deleting it is deliberate and is
+''  a departure from the original plan. The shipped themes define no ui.* keys, so ui.divider
+''  and ui.accent are materialised today by inheritance from editor.divider and
+''  toptabs.iconselected. Replacing that with role.border / role.accent would change both --
+''  33 consumers between them -- and this step is supposed to move no pixels at all.
+''
+sub Theme_ResolveKeyRoles()
+
+    Theme_BuildKeyTable()
+
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+
+        ' Text payloads have no colour to inherit.
+        if gThemeKeys(i).ofsText >= 0 then continue for
+
+        dim as long rF = gThemeKeys(i).nRoleFore
+        dim as long rB = gThemeKeys(i).nRoleBack
+        dim as boolean bNoRoles = ((rF = THROLE_NONE) andalso (rB = THROLE_NONE))
+        if bNoRoles then continue for
+
+        dim as long n = Theme_EnsureEntry( gThemeKeys(i).keyValue )
+
+        ' Only a channel the key actually HAS may be filled -- otherwise a role would
+        ' invent a background for a hairline and the writer would start emitting it.
+        dim as boolean bWantF = (rF <> THROLE_NONE)
+        dim as boolean bHasF   = (gThemeKeys(i).ofsFore >= 0)
+        dim as boolean bFreeF  = (gTheme(n).hasFore = false)
+        if bWantF andalso bHasF andalso bFreeF then
+            gTheme(n).foreground   = theme.role.clr(rF)
+            gTheme(n).hasFore      = true
+            gTheme(n).foreFromRole = true
+        end if
+        dim as boolean bWantB = (rB <> THROLE_NONE)
+        dim as boolean bHasB   = (gThemeKeys(i).ofsBack >= 0)
+        dim as boolean bFreeB  = (gTheme(n).hasBack = false)
+        if bWantB andalso bHasB andalso bFreeB then
+            gTheme(n).background   = theme.role.clr(rB)
+            gTheme(n).hasBack      = true
+            gTheme(n).backFromRole = true
+        end if
+
+    next
+
+end sub
+
+
+''
+''  HAND A CHANNEL BACK TO ITS ROLE                        (the other half of "override")
+''
+''  Without this a palette can only DECAY: every edit detaches a key permanently, so a theme
+''  drifts one key at a time into literals and the palette stops reaching anything. CLAUDE.md
+''  states that outright as the reason PsColorPicker's Assign button mattered -- and this is
+''  the same capability, moved out of the picker (which only knows about colours) and onto the
+''  page (which knows about roles).
+''
+''  Clears the channel and lets the resolver refill it, so the key ends up holding its role's
+''  current colour AND marked as inherited -- which is what makes it follow later palette
+''  edits and stops the writer emitting it.
+''
+function Theme_InheritChannel( byval lookupKey as string, byval nChannel as long ) as ulong
+
+    dim as long n = Theme_FindEntry( lookupKey )
+    if n < 0 then return THSUB_NONE
+
+    dim as long k = Theme_KeyIndex( lookupKey )
+    if k < 0 then return THSUB_NONE
+
+    ' A channel with no declared role has nothing to inherit FROM; refusing is better than
+    ' clearing it and leaving the key black.
+    if nChannel = THEMECH_FORE then
+        if gThemeKeys(k).nRoleFore = THROLE_NONE then return THSUB_NONE
+        gTheme(n).hasFore      = false
+        gTheme(n).foreFromRole = false
+        gTheme(n).foreMacro    = ""
+    else
+        if gThemeKeys(k).nRoleBack = THROLE_NONE then return THSUB_NONE
+        gTheme(n).hasBack      = false
+        gTheme(n).backFromRole = false
+        gTheme(n).backMacro    = ""
+    end if
+
+    Theme_ResolveKeyRoles()
+    ' Read the mask straight off the row rather than calling Theme_SubsystemsForKey, which is
+    ' defined further down this file -- fbc is single-pass and k is already the row index.
+    return gThemeKeys(k).nSubsys
+
+end function
+
+
+''
+''  IS THIS CHANNEL CURRENTLY OVERRIDDEN, i.e. would "inherit" change anything?
+''
+''  The UI asks this to enable its control. Two conditions, and both matter: the key must HAVE
+''  a role to go back to, and it must not already be following it.
+''
+function Theme_ChannelIsOverridden( byval lookupKey as string, byval nChannel as long ) as boolean
+
+    dim as long n = Theme_FindEntry( lookupKey )
+    if n < 0 then return false
+    dim as long k = Theme_KeyIndex( lookupKey )
+    if k < 0 then return false
+
+    if nChannel = THEMECH_FORE then
+        if gThemeKeys(k).nRoleFore = THROLE_NONE then return false
+        if gThemeKeys(k).ofsFore < 0 then return false
+        return (gTheme(n).foreFromRole = false)
+    end if
+
+    if gThemeKeys(k).nRoleBack = THROLE_NONE then return false
+    if gThemeKeys(k).ofsBack < 0 then return false
+    return (gTheme(n).backFromRole = false)
+
+end function
+
 
 
 ''
 ''  WHICH SUBSYSTEMS DOES THIS KEY FEED?
 ''
 function Theme_SubsystemsForKey( byval lookupKey as string ) as ulong
-    Theme_BuildBindTable()
-    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
-        if gThemeBind(i).keyValue = lookupKey then return gThemeBind(i).nSubsys
+    Theme_BuildKeyTable()
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+        if gThemeKeys(i).keyValue = lookupKey then return gThemeKeys(i).nSubsys
     next
     return THSUB_NONE
 end function
@@ -853,9 +1140,9 @@ end function
 ''  for every Scintilla style and every GDI-drawn caption, which are opaque by construction.
 ''
 function Theme_IsAlphaCapable( byval lookupKey as string ) as boolean
-    Theme_BuildBindTable()
-    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
-        if gThemeBind(i).keyValue = lookupKey then return gThemeBind(i).bAlphaCapable
+    Theme_BuildKeyTable()
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+        if gThemeKeys(i).keyValue = lookupKey then return gThemeKeys(i).bAlphaCapable
     next
     return false
 end function
@@ -884,7 +1171,8 @@ function Theme_SetColor( byval lookupKey as string, _
             ' DETACH. This key stops referring to the macro; the macro itself and every
             ' other key using it are untouched. Re-attaching is a separate explicit action,
             ' never a side effect of picking a colour.
-            gTheme(n).foreMacro = ""
+            gTheme(n).foreMacro    = ""
+        gTheme(n).foreFromRole = false
             if nAlpha >= 0 then
                 gTheme(n).foregroundAlpha = cubyte(iif(nAlpha > 255, 255, nAlpha))
                 gTheme(n).hasForeAlpha = true
@@ -892,7 +1180,8 @@ function Theme_SetColor( byval lookupKey as string, _
         case THEMECH_BACK
             gTheme(n).background = clr
             gTheme(n).hasBack = true
-            gTheme(n).backMacro = ""                ' detach -- see THEMECH_FORE above
+            gTheme(n).backMacro    = ""
+        gTheme(n).backFromRole = false                ' detach -- see THEMECH_FORE above
             if nAlpha >= 0 then
                 gTheme(n).backgroundAlpha = cubyte(iif(nAlpha > 255, 255, nAlpha))
                 gTheme(n).hasBackAlpha = true
@@ -1123,14 +1412,21 @@ function Theme_ResetChannel( byval lookupKey as string, byval nChannel as long )
 
     for i as long = lbound(gThemeBaseEntries) to ubound(gThemeBaseEntries)
         if gThemeBaseEntries(i).keyValue <> lookupKey then continue for
+        ' THE PROVENANCE FLAG IS PART OF THE BASELINE. Restoring the colour alone left a key
+        ' that had been INHERITED, then edited, then reset sitting at the right colour but
+        ' marked authored -- so the writer would start emitting it as a literal and it would
+        ' stop following its role. Reset means "as the file had it", and the file had it
+        ' inherited.
         if nChannel = THEMECH_FORE then
             gTheme(n).foreground      = gThemeBaseEntries(i).foreground
             gTheme(n).foregroundAlpha = gThemeBaseEntries(i).foregroundAlpha
             gTheme(n).hasForeAlpha    = gThemeBaseEntries(i).hasForeAlpha
+            gTheme(n).foreFromRole    = gThemeBaseEntries(i).foreFromRole
         else
             gTheme(n).background      = gThemeBaseEntries(i).background
             gTheme(n).backgroundAlpha = gThemeBaseEntries(i).backgroundAlpha
             gTheme(n).hasBackAlpha    = gThemeBaseEntries(i).hasBackAlpha
+            gTheme(n).backFromRole    = gThemeBaseEntries(i).backFromRole
         end if
         return Theme_SubsystemsForKey( lookupKey )
     next
@@ -1149,50 +1445,13 @@ end function
 ''
 sub Theme_FillGlobals()
 
-    Theme_BuildBindTable()
-
-    dim as THEME_TYPE ptr pTheme
-
-    ' The two DWSTRING payloads have no home in the bind table, which holds COLORREF
-    ' pointers. They are the only hand-written rows left.
-    pTheme = getThemePtr("general.description")
-    ghGeneral.description = pTheme->keyData
-    pTheme = getThemePtr("general.version")
-    ghGeneral.version = pTheme->keyData
-
-    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
-        dim as THEMEBIND_TYPE ptr pBind = @gThemeBind(i)
-        pTheme = getThemePtr( pBind->keyValue )
-
-        if pBind->pFore   <> 0 then *pBind->pFore   = pTheme->foreground
-        if pBind->pBack   <> 0 then *pBind->pBack   = pTheme->background
-        if pBind->pBold   <> 0 then *pBind->pBold   = (pTheme->bold <> 0)
-        if pBind->pItalic <> 0 then *pBind->pItalic = (pTheme->italic <> 0)
-        if pBind->pUnder  <> 0 then *pBind->pUnder  = (pTheme->underline <> 0)
-
-        ' Alpha only lands when the theme actually asked for one. Without the has* test a
-        ' plain "r,g,b" would drive the destination to the 255 default and silently take
-        ' over from whatever constant the consumer uses today.
-        if pBind->pForeAlpha <> 0 then
-            if pTheme->hasForeAlpha then
-                *pBind->pForeAlpha = clng(pTheme->foregroundAlpha)
-            else
-                *pBind->pForeAlpha = -1
-            end if
-        end if
-        if pBind->pBackAlpha <> 0 then
-            if pTheme->hasBackAlpha then
-                *pBind->pBackAlpha = clng(pTheme->backgroundAlpha)
-            else
-                *pBind->pBackAlpha = -1
-            end if
-        end if
-    next
-
-
-
-        
-    
+    ' A thin wrapper over Theme_FillRoot now. The name is kept because three call sites use
+    ' it and it still says what it does: make the parsed theme visible to the app.
+    '
+    ' What it used to do -- walk the hand-written bind table writing ten gh* globals, plus
+    ' hand-copy the two DWSTRING payloads the table could not hold -- is all gone. The key
+    ' table carries the payloads through its ofsText channel and Theme_FillRoot does the rest.
+    Theme_FillRoot( @theme )
 
 end sub
 
@@ -1373,7 +1632,10 @@ end function
 private function Theme_ChannelText( byval wszMacro as DWSTRING, _
                                     byval clr as COLORREF, _
                                     byval nAlpha as long ) as DWSTRING
-    if (len(wszMacro) > 0) andalso (nAlpha < 0) then return wszMacro
+    ' wszMacro is ignored. It used to be returned as "%NAME" so an attached key round
+    ' tripped; with %MACRO retired there is nothing to round trip back into, and every
+    ' channel is written as a literal. The parameter is kept so the call sites -- which
+    ' still carry the parsed macro name -- do not all have to change in the same commit.
     return Theme_FormatColor( clr, nAlpha )
 end function
 
@@ -1418,7 +1680,7 @@ end function
 function Theme_WriteFile( byval wszFullPath as DWSTRING, _
                           byval wszDescription as DWSTRING ) as boolean
 
-    Theme_BuildBindTable()
+    Theme_BuildKeyTable()
 
     dim as long f = freefile
     if open( wszFullPath for output as #f ) <> 0 then return true
@@ -1433,18 +1695,44 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
     print #f, sLine
     print #f, ""
 
-    ' The palette. Written back verbatim, in declaration order, and BEFORE any key that
-    ' refers to it -- the parser resolves macros in one forward pass, so a definition that
-    ' appeared after its use would silently read as black.
-    if ubound(gThemeMacros) >= lbound(gThemeMacros) then
-        sLine = "# Named colors. Edit one of these to move every key that refers to it."
-        print #f, sLine
-        for i as long = lbound(gThemeMacros) to ubound(gThemeMacros)
-            sLine = gThemeMacros(i).name & ": " & gThemeMacros(i).value
+    ' THE ROLE PALETTE, and it MUST be written or the theme loses it.
+    '
+    ' The writer walks the KEY table, and roles are not in it -- so without this block a save
+    ' emitted no role.* lines at all. For a theme whose keys are all explicit that is
+    ' invisible (default_dark forked and rendered identically); for a ROLES-ONLY theme it is
+    ' catastrophic, because every key is fromRole and therefore skipped below, so the saved
+    ' file would come back very nearly empty. Found by forking a theme and reading what came
+    ' out, not by any assertion -- assertion 23b checked that a roles-only save stayed SHORT
+    ' and was perfectly happy with short-because-empty.
+    '
+    ' Only EXPLICIT roles are written. One left at its built-in default is not part of this
+    ' theme's palette and writing it would freeze today's default into the file forever.
+    scope
+        dim as long nWritten
+        for i as long = 0 to Theme_RoleCount() - 1
+            if Theme_RoleIsExplicit(i) = false then continue for
+            if nWritten = 0 then
+                sLine = "# The palette. Every key that does not name a colour of its own"
+                print #f, sLine
+                sLine = "# inherits from one of these."
+                print #f, sLine
+            end if
+            sLine = Theme_RoleName(i) & ": " & Theme_FormatColor( Theme_RoleColor(i), -1 )
             print #f, sLine
+            nWritten += 1
         next
-        print #f, ""
-    end if
+        if nWritten > 0 then print #f, ""
+    end scope
+
+    ' NO %MACRO BLOCK. The writer used to echo the palette back here so a hand-authored
+    ' theme kept its named colours; the ROLE layer replaced that job outright and does it
+    ' better, because a macro was pure text substitution carrying no meaning -- nothing
+    ' could inherit from one, so every key still had to appear in every file. A role says
+    ' WHICH colour this is, and every key falls back to one automatically.
+    '
+    ' The parser still ACCEPTS %MACRO, so an existing hand-authored theme keeps loading and
+    ' the first save through this function migrates it to literals. That is deliberate: a
+    ' one-way migration costs a branch in the parser and breaks nobody's file.
 
     sLine = "general.description: " & Theme_SanitizeText( wszDescription )
     print #f, sLine
@@ -1475,18 +1763,32 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
 
     dim as string sLastNamespace
 
-    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
+    ' Driven by the GENERATED KEY TABLE, not the bind table.
+    '
+    ' This was the bind table until the migration emptied it, and the consequence was data
+    ' loss rather than a cosmetic gap: the writer emits exactly the keys it is asked to walk,
+    ' so every namespace whose bind rows had gone silently stopped being written to the file
+    ' at all. Saving a theme would have dropped panel.*, output.*, toptabs.* and the rest --
+    ' with a clean build and a working editor. Caught by the write/read round-trip assertion.
+    Theme_BuildKeyTable()
 
-        dim as string sKey = gThemeBind(i).keyValue
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+
+        dim as string sKey = gThemeKeys(i).keyValue
         dim as long n = Theme_FindEntry( sKey )
         if n < 0 then continue for
+        ' general.* carries its payload in keyData and is emitted by hand above.
+        if gThemeKeys(i).ofsText >= 0 then continue for
 
         ' Blank line between namespaces, purely so the file stays readable by hand.
         dim as string sNamespace = AfxStrParse( sKey, 1, "." )
         if (len(sLastNamespace) > 0) andalso (sNamespace <> sLastNamespace) then print #f, ""
         sLastNamespace = sNamespace
 
-        if (gThemeBind(i).pFore <> 0) andalso gTheme(n).hasFore then
+        dim as boolean bWriteF = (gThemeKeys(i).ofsFore >= 0)
+        bWriteF = (bWriteF andalso gTheme(n).hasFore)
+        bWriteF = (bWriteF andalso (gTheme(n).foreFromRole = false))
+        if bWriteF then
             dim as long nA = -1
             if gTheme(n).hasForeAlpha then nA = clng(gTheme(n).foregroundAlpha)
             sLine = sKey & ".foreground: " & _
@@ -1494,7 +1796,10 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
             print #f, sLine
         end if
 
-        if (gThemeBind(i).pBack <> 0) andalso gTheme(n).hasBack then
+        dim as boolean bWriteB = (gThemeKeys(i).ofsBack >= 0)
+        bWriteB = (bWriteB andalso gTheme(n).hasBack)
+        bWriteB = (bWriteB andalso (gTheme(n).backFromRole = false))
+        if bWriteB then
             dim as long nA = -1
             if gTheme(n).hasBackAlpha then nA = clng(gTheme(n).backgroundAlpha)
             sLine = sKey & ".background: " & _
@@ -1504,7 +1809,7 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
 
         ' Flags are written for every key that HAS them bound, present or not, so a syntax
         ' style always shows its full triplet rather than a partial one.
-        if gThemeBind(i).pBold <> 0 then
+        if gThemeKeys(i).ofsBold >= 0 then
             sLine = sKey & ".bold: "      & iif( gTheme(n).bold      <> 0, "true", "false" )
             print #f, sLine
             sLine = sKey & ".italic: "    & iif( gTheme(n).italic    <> 0, "true", "false" )
@@ -1554,151 +1859,162 @@ sub Theme_DumpGlobals( byval wszOutPath as DWSTRING )
         print #f, sLine
     #endmacro
 
-    DUMPTXT( "general.description",        ghGeneral.description )
-    DUMPTXT( "general.version",            ghGeneral.version )
-    DUMPCLR( "general.iconfail",           ghGeneral.iconfail )
-    DUMPCLR( "general.iconsuccess",        ghGeneral.iconsuccess )
+    DUMPTXT( "general.description",        theme.general.description )
+    DUMPTXT( "general.version",            theme.general.version )
+    DUMPCLR( "general.iconfail",           theme.compile.iconfail )
+    DUMPCLR( "general.iconsuccess",        theme.compile.iconsuccess )
 
-    DUMPCLR( "main.BackColor",             ghMain.BackColor )
+    DUMPCLR( "main.panel",                 theme.main.panel )
 
-    DUMPCLR( "editor.ForeColorCaret",         ghEditor.ForeColorCaret )
-    DUMPCLR( "editor.BackColorCurrentLine",   ghEditor.BackColorCurrentLine )
-    DUMPCLR( "editor.ForeColorText",          ghEditor.ForeColorText )
-    DUMPCLR( "editor.BackColorText",          ghEditor.BackColorText )
-    DUMPFLG( "editor.TextBold",               ghEditor.TextBold )
-    DUMPFLG( "editor.TextItalic",             ghEditor.TextItalic )
-    DUMPFLG( "editor.TextUnderline",          ghEditor.TextUnderline )
-    DUMPCLR( "editor.ForeColorNumbers",       ghEditor.ForeColorNumbers )
-    DUMPCLR( "editor.BackColorNumbers",       ghEditor.BackColorNumbers )
-    DUMPFLG( "editor.NumbersBold",            ghEditor.NumbersBold )
-    DUMPFLG( "editor.NumbersItalic",          ghEditor.NumbersItalic )
-    DUMPFLG( "editor.NumbersUnderLine",       ghEditor.NumbersUnderLine )
-    DUMPCLR( "editor.ForeColorComments",      ghEditor.ForeColorComments )
-    DUMPCLR( "editor.BackColorComments",      ghEditor.BackColorComments )
-    DUMPFLG( "editor.CommentsBold",           ghEditor.CommentsBold )
-    DUMPFLG( "editor.CommentsItalic",         ghEditor.CommentsItalic )
-    DUMPFLG( "editor.CommentsUnderline",      ghEditor.CommentsUnderline )
-    DUMPCLR( "editor.ForeColorKeyword",       ghEditor.ForeColorKeyword )
-    DUMPCLR( "editor.BackColorKeyword",       ghEditor.BackColorKeyword )
-    DUMPFLG( "editor.KeywordBold",            ghEditor.KeywordBold )
-    DUMPFLG( "editor.KeywordItalic",          ghEditor.KeywordItalic )
-    DUMPFLG( "editor.KeywordUnderline",       ghEditor.KeywordUnderline )
-    DUMPCLR( "editor.ForeColorKeyword2",      ghEditor.ForeColorKeyword2 )
-    DUMPCLR( "editor.BackColorKeyword2",      ghEditor.BackColorKeyword2 )
-    DUMPFLG( "editor.KeywordBold2",           ghEditor.KeywordBold2 )
-    DUMPFLG( "editor.KeywordItalic2",         ghEditor.KeywordItalic2 )
-    DUMPFLG( "editor.KeywordUnderline2",      ghEditor.KeywordUnderline2 )
-    DUMPCLR( "editor.ForeColorKeyword3",      ghEditor.ForeColorKeyword3 )
-    DUMPCLR( "editor.BackColorKeyword3",      ghEditor.BackColorKeyword3 )
-    DUMPFLG( "editor.KeywordBold3",           ghEditor.KeywordBold3 )
-    DUMPFLG( "editor.KeywordItalic3",         ghEditor.KeywordItalic3 )
-    DUMPFLG( "editor.KeywordUnderline3",      ghEditor.KeywordUnderline3 )
-    DUMPCLR( "editor.ForeColorFoldmargin",    ghEditor.ForeColorFoldmargin )
-    DUMPCLR( "editor.ForeColorFoldsymbol",    ghEditor.ForeColorFoldsymbol )
-    DUMPCLR( "editor.BackColorFoldsymbol",    ghEditor.BackColorFoldsymbol )
-    DUMPCLR( "editor.ForeColorLinenumbers",   ghEditor.ForeColorLinenumbers )
-    DUMPCLR( "editor.BackColorLinenumbers",   ghEditor.BackColorLinenumbers )
-    DUMPFLG( "editor.LinenumbersBold",        ghEditor.LinenumbersBold )
-    DUMPFLG( "editor.LinenumbersItalic",      ghEditor.LinenumbersItalic )
-    DUMPFLG( "editor.LinenumbersUnderline",   ghEditor.LinenumbersUnderline )
-    DUMPCLR( "editor.ForeColorOperators",     ghEditor.ForeColorOperators )
-    DUMPCLR( "editor.BackColorOperators",     ghEditor.BackColorOperators )
-    DUMPFLG( "editor.OperatorsBold",          ghEditor.OperatorsBold )
-    DUMPFLG( "editor.OperatorsItalic",        ghEditor.OperatorsItalic )
-    DUMPFLG( "editor.OperatorsUnderline",     ghEditor.OperatorsUnderline )
-    DUMPCLR( "editor.ForeColorIndentguides",  ghEditor.ForeColorIndentguides )
-    DUMPCLR( "editor.BackColorIndentguides",  ghEditor.BackColorIndentguides )
-    DUMPCLR( "editor.ForeColorPreprocessor",  ghEditor.ForeColorPreprocessor )
-    DUMPCLR( "editor.BackColorPreprocessor",  ghEditor.BackColorPreprocessor )
-    DUMPFLG( "editor.PreprocessorBold",       ghEditor.PreprocessorBold )
-    DUMPFLG( "editor.PreprocessorItalic",     ghEditor.PreprocessorItalic )
-    DUMPFLG( "editor.PreprocessorUnderline",  ghEditor.PreprocessorUnderline )
-    DUMPCLR( "editor.ForeColorSelection",     ghEditor.ForeColorSelection )
-    DUMPCLR( "editor.BackColorSelection",     ghEditor.BackColorSelection )
-    DUMPCLR( "editor.ForeColorStrings",       ghEditor.ForeColorStrings )
-    DUMPCLR( "editor.BackColorStrings",       ghEditor.BackColorStrings )
-    DUMPFLG( "editor.StringsBold",            ghEditor.StringsBold )
-    DUMPFLG( "editor.StringsItalic",          ghEditor.StringsItalic )
-    DUMPFLG( "editor.StringsUnderline",       ghEditor.StringsUnderline )
-    DUMPCLR( "editor.ForeColorBracegood",     ghEditor.ForeColorBracegood )
-    DUMPCLR( "editor.ForeColorBracebad",      ghEditor.ForeColorBracebad )
-    DUMPCLR( "editor.ForeColorOccurrence",    ghEditor.ForeColorOccurrence )
-    DUMPCLR( "editor.BackColorScrollBar",     ghEditor.BackColorScrollBar )
-    DUMPCLR( "editor.ForeColorScrollBar",     ghEditor.ForeColorScrollBar )
-    DUMPCLR( "editor.Divider",                ghEditor.Divider )
-    DUMPCLR( "editor.ForeColorBookmark",      ghEditor.ForeColorBookmark )
-    DUMPCLR( "editor.BackColorBookmark",      ghEditor.BackColorBookmark )
-    DUMPCLR( "editor.ForeColorBreakpoint",    ghEditor.ForeColorBreakpoint )
-    DUMPCLR( "editor.BackColorBreakpoint",    ghEditor.BackColorBreakpoint )
-    DUMPCLR( "editor.ForeColorDebugLine",     ghEditor.ForeColorDebugLine )
-    DUMPCLR( "editor.BackColorDebugLine",     ghEditor.BackColorDebugLine )
+    DUMPCLR( "editor.ForeColorCaret",         theme.editor.caret )
+    DUMPCLR( "editor.BackColorCurrentLine",   theme.editor.currentline )
+    DUMPCLR( "editor.ForeColorText",          theme.editor.text.forecolor )
+    DUMPCLR( "editor.BackColorText",          theme.editor.text.backcolor )
+    DUMPFLG( "editor.TextBold",               theme.editor.text.bold )
+    DUMPFLG( "editor.TextItalic",             theme.editor.text.italic )
+    DUMPFLG( "editor.TextUnderline",          theme.editor.text.underline )
+    DUMPCLR( "editor.ForeColorNumbers",       theme.editor.numbers.forecolor )
+    DUMPCLR( "editor.BackColorNumbers",       theme.editor.numbers.backcolor )
+    DUMPFLG( "editor.NumbersBold",            theme.editor.numbers.bold )
+    DUMPFLG( "editor.NumbersItalic",          theme.editor.numbers.italic )
+    DUMPFLG( "editor.NumbersUnderLine",       theme.editor.numbers.underline )
+    DUMPCLR( "editor.ForeColorComments",      theme.editor.comments.forecolor )
+    DUMPCLR( "editor.BackColorComments",      theme.editor.comments.backcolor )
+    DUMPFLG( "editor.CommentsBold",           theme.editor.comments.bold )
+    DUMPFLG( "editor.CommentsItalic",         theme.editor.comments.italic )
+    DUMPFLG( "editor.CommentsUnderline",      theme.editor.comments.underline )
+    DUMPCLR( "editor.ForeColorKeyword",       theme.editor.keyword1.forecolor )
+    DUMPCLR( "editor.BackColorKeyword",       theme.editor.keyword1.backcolor )
+    DUMPFLG( "editor.KeywordBold",            theme.editor.keyword1.bold )
+    DUMPFLG( "editor.KeywordItalic",          theme.editor.keyword1.italic )
+    DUMPFLG( "editor.KeywordUnderline",       theme.editor.keyword1.underline )
+    DUMPCLR( "editor.ForeColorKeyword2",      theme.editor.keyword2.forecolor )
+    DUMPCLR( "editor.BackColorKeyword2",      theme.editor.keyword2.backcolor )
+    DUMPFLG( "editor.KeywordBold2",           theme.editor.keyword2.bold )
+    DUMPFLG( "editor.KeywordItalic2",         theme.editor.keyword2.italic )
+    DUMPFLG( "editor.KeywordUnderline2",      theme.editor.keyword2.underline )
+    DUMPCLR( "editor.ForeColorKeyword3",      theme.editor.keyword3.forecolor )
+    DUMPCLR( "editor.BackColorKeyword3",      theme.editor.keyword3.backcolor )
+    DUMPFLG( "editor.KeywordBold3",           theme.editor.keyword3.bold )
+    DUMPFLG( "editor.KeywordItalic3",         theme.editor.keyword3.italic )
+    DUMPFLG( "editor.KeywordUnderline3",      theme.editor.keyword3.underline )
+    DUMPCLR( "editor.ForeColorFoldmargin",    theme.editor.foldmargin )
+    DUMPCLR( "editor.ForeColorFoldsymbol",    theme.editor.foldsymbol.forecolor )
+    DUMPCLR( "editor.BackColorFoldsymbol",    theme.editor.foldsymbol.backcolor )
+    DUMPCLR( "editor.ForeColorLinenumbers",   theme.editor.linenumbers.forecolor )
+    DUMPCLR( "editor.BackColorLinenumbers",   theme.editor.linenumbers.backcolor )
+    DUMPFLG( "editor.LinenumbersBold",        theme.editor.linenumbers.bold )
+    DUMPFLG( "editor.LinenumbersItalic",      theme.editor.linenumbers.italic )
+    DUMPFLG( "editor.LinenumbersUnderline",   theme.editor.linenumbers.underline )
+    DUMPCLR( "editor.ForeColorOperators",     theme.editor.operators.forecolor )
+    DUMPCLR( "editor.BackColorOperators",     theme.editor.operators.backcolor )
+    DUMPFLG( "editor.OperatorsBold",          theme.editor.operators.bold )
+    DUMPFLG( "editor.OperatorsItalic",        theme.editor.operators.italic )
+    DUMPFLG( "editor.OperatorsUnderline",     theme.editor.operators.underline )
+    DUMPCLR( "editor.ForeColorIndentguides",  theme.editor.indentguides.forecolor )
+    DUMPCLR( "editor.BackColorIndentguides",  theme.editor.indentguides.backcolor )
+    DUMPCLR( "editor.ForeColorPreprocessor",  theme.editor.preprocessor.forecolor )
+    DUMPCLR( "editor.BackColorPreprocessor",  theme.editor.preprocessor.backcolor )
+    DUMPFLG( "editor.PreprocessorBold",       theme.editor.preprocessor.bold )
+    DUMPFLG( "editor.PreprocessorItalic",     theme.editor.preprocessor.italic )
+    DUMPFLG( "editor.PreprocessorUnderline",  theme.editor.preprocessor.underline )
+    DUMPCLR( "editor.ForeColorSelection",     theme.editor.selection.forecolor )
+    DUMPCLR( "editor.BackColorSelection",     theme.editor.selection.backcolor )
+    DUMPCLR( "editor.ForeColorStrings",       theme.editor.strings.forecolor )
+    DUMPCLR( "editor.BackColorStrings",       theme.editor.strings.backcolor )
+    DUMPFLG( "editor.StringsBold",            theme.editor.strings.bold )
+    DUMPFLG( "editor.StringsItalic",          theme.editor.strings.italic )
+    DUMPFLG( "editor.StringsUnderline",       theme.editor.strings.underline )
+    DUMPCLR( "editor.ForeColorBracegood",     theme.editor.bracegood )
+    DUMPCLR( "editor.ForeColorBracebad",      theme.editor.bracebad )
+    DUMPCLR( "editor.ForeColorOccurrence",    theme.editor.occurrence )
+    DUMPCLR( "editor.BackColorScrollBar",     theme.editor.scrollbar.backcolor )
+    DUMPCLR( "editor.ForeColorScrollBar",     theme.editor.scrollbar.forecolor )
+    DUMPCLR( "editor.Divider",                theme.editor.divider )
+    DUMPCLR( "editor.edge",                   theme.editor.edge )
+    DUMPCLR( "editor.whitespace.fore",        theme.editor.whitespace.forecolor )
+    DUMPCLR( "editor.whitespace.back",        theme.editor.whitespace.backcolor )
+    DUMPCLR( "editor.additionalselection",    theme.editor.additionalselection )
+    DUMPCLR( "editor.additionalcaret",        theme.editor.additionalcaret )
 
-    DUMPCLR( "panel.BackColorScrollBar",      ghPanel.BackColorScrollBar )
-    DUMPCLR( "panel.ForeColorScrollBar",      ghPanel.ForeColorScrollBar )
-    DUMPCLR( "panel.BackColor",               ghPanel.BackColor )
-    DUMPCLR( "panel.ForeColor",               ghPanel.ForeColor )
-    DUMPCLR( "panel.BackColorHot",            ghPanel.BackColorHot )
-    DUMPCLR( "panel.ForeColorHot",            ghPanel.ForeColorHot )
-    DUMPCLR( "panel.BackColorButton",         ghPanel.BackColorButton )
-    DUMPCLR( "panel.ForeColorButton",         ghPanel.ForeColorButton )
-    DUMPCLR( "panel.BackColorButtonHot",      ghPanel.BackColorButtonHot )
-    DUMPCLR( "panel.ForeColorButtonHot",      ghPanel.ForeColorButtonHot )
-    DUMPCLR( "panel.BackColorFilenameIcon",   ghPanel.BackColorFilenameIcon )
-    DUMPCLR( "panel.ForeColorFilenameIcon",   ghPanel.ForeColorFilenameIcon )
-    DUMPCLR( "panel.BackColorFunctionIcon",   ghPanel.BackColorFunctionIcon )
-    DUMPCLR( "panel.ForeColorFunctionIcon",   ghPanel.ForeColorFunctionIcon )
-    DUMPCLR( "panel.BackColorTypeIcon",       ghPanel.BackColorTypeIcon )
-    DUMPCLR( "panel.ForeColorTypeIcon",       ghPanel.ForeColorTypeIcon )
-    DUMPCLR( "panel.ForeColorTextSearch",     ghPanel.ForeColorTextSearch )
-    DUMPCLR( "panel.ForeColorTextSearchHot",  ghPanel.ForeColorTextSearchHot )
+    DUMPCLR( "tooltip.text.fore",             theme.tooltip.text.forecolor )
+    DUMPCLR( "tooltip.text.back",             theme.tooltip.text.backcolor )
+    DUMPCLR( "tooltip.border",                theme.tooltip.border )
+    DUMPCLR( "tooltip.title",                 theme.tooltip.title )
+    DUMPCLR( "tooltip.glyph",                 theme.tooltip.glyph )
+    DUMPCLR( "editor.ForeColorBookmark",      theme.editor.bookmark.forecolor )
+    DUMPCLR( "editor.BackColorBookmark",      theme.editor.bookmark.backcolor )
+    DUMPCLR( "editor.ForeColorBreakpoint",    theme.editor.breakpoint.forecolor )
+    DUMPCLR( "editor.BackColorBreakpoint",    theme.editor.breakpoint.backcolor )
+    DUMPCLR( "editor.ForeColorDebugLine",     theme.editor.debugline.forecolor )
+    DUMPCLR( "editor.BackColorDebugLine",     theme.editor.debugline.backcolor )
 
-    DUMPCLR( "menubar.BackColor",             ghMenuBar.BackColor )
-    DUMPCLR( "menubar.BackColorHot",          ghMenuBar.BackColorHot )
-    DUMPCLR( "menubar.ForeColor",             ghMenuBar.ForeColor )
-    DUMPCLR( "menubar.ForeColorHot",          ghMenuBar.ForeColorHot )
+    DUMPCLR( "panel.BackColorScrollBar",      theme.panel.scrollbar.backcolor )
+    DUMPCLR( "panel.ForeColorScrollBar",      theme.panel.scrollbar.forecolor )
+    DUMPCLR( "panel.BackColor",               theme.panel.text.backcolor )
+    DUMPCLR( "panel.ForeColor",               theme.panel.text.forecolor )
+    DUMPCLR( "panel.BackColorHot",            theme.panel.texthot.backcolor )
+    DUMPCLR( "panel.ForeColorHot",            theme.panel.texthot.forecolor )
+    DUMPCLR( "panel.BackColorButton",         theme.panel.button.backcolor )
+    DUMPCLR( "panel.ForeColorButton",         theme.panel.button.forecolor )
+    DUMPCLR( "panel.BackColorButtonHot",      theme.panel.buttonhot.backcolor )
+    DUMPCLR( "panel.ForeColorButtonHot",      theme.panel.buttonhot.forecolor )
+    DUMPCLR( "panel.BackColorFilenameIcon",   theme.panel.filenameicon.backcolor )
+    DUMPCLR( "panel.ForeColorFilenameIcon",   theme.panel.filenameicon.forecolor )
+    DUMPCLR( "panel.BackColorFunctionIcon",   theme.panel.functionicon.backcolor )
+    DUMPCLR( "panel.ForeColorFunctionIcon",   theme.panel.functionicon.forecolor )
+    DUMPCLR( "panel.BackColorTypeIcon",       theme.panel.typeicon.backcolor )
+    DUMPCLR( "panel.ForeColorTypeIcon",       theme.panel.typeicon.forecolor )
+    DUMPCLR( "panel.ForeColorTextSearch",     theme.panel.textsearch )
+    DUMPCLR( "panel.ForeColorTextSearchHot",  theme.panel.textsearchhot )
 
-    DUMPCLR( "popup.PanelColor",              ghPopup.PanelColor )
-    DUMPCLR( "popup.BackColor",               ghPopup.BackColor )
-    DUMPCLR( "popup.BackColorHot",            ghPopup.BackColorHot )
-    DUMPCLR( "popup.BackColorDisabled",       ghPopup.BackColorDisabled )
-    DUMPCLR( "popup.ForeColor",               ghPopup.ForeColor )
-    DUMPCLR( "popup.ForeColorHot",            ghPopup.ForeColorHot )
-    DUMPCLR( "popup.ForeColorDisabled",       ghPopup.ForeColorDisabled )
+    DUMPCLR( "menubar.BackColor",             theme.menubar.text.backcolor )
+    DUMPCLR( "menubar.BackColorHot",          theme.menubar.texthot.backcolor )
+    DUMPCLR( "menubar.ForeColor",             theme.menubar.text.forecolor )
+    DUMPCLR( "menubar.ForeColorHot",          theme.menubar.texthot.forecolor )
 
-    DUMPCLR( "toptabs.BackColor",             ghTopTabs.BackColor )
-    DUMPCLR( "toptabs.BackColorHot",          ghTopTabs.BackColorHot )
-    DUMPCLR( "toptabs.ForeColor",             ghTopTabs.ForeColor )
-    DUMPCLR( "toptabs.ForeColorHot",          ghTopTabs.ForeColorHot )
-    DUMPCLR( "toptabs.Divider",               ghTopTabs.Divider )
-    DUMPCLR( "toptabs.CloseBackColorHot",     ghTopTabs.CloseBackColorHot )
-    DUMPCLR( "toptabs.IconSelectedBackColor", ghTopTabs.IconSelectedBackColor )
+    DUMPCLR( "popup.PanelColor",              theme.topmenu.panel )
+    DUMPCLR( "popup.BackColor",               theme.topmenu.text.backcolor )
+    DUMPCLR( "popup.BackColorHot",            theme.topmenu.texthot.backcolor )
+    DUMPCLR( "popup.BackColorDisabled",       theme.topmenu.textdisabled.backcolor )
+    DUMPCLR( "popup.ForeColor",               theme.topmenu.text.forecolor )
+    DUMPCLR( "popup.ForeColorHot",            theme.topmenu.texthot.forecolor )
+    DUMPCLR( "popup.ForeColorDisabled",       theme.topmenu.textdisabled.forecolor )
 
-    DUMPCLR( "statusbar.BackColor",           ghStatusBar.BackColor )
-    DUMPCLR( "statusbar.BackColorHot",        ghStatusBar.BackColorHot )
-    DUMPCLR( "statusbar.ForeColor",           ghStatusBar.ForeColor )
-    DUMPCLR( "statusbar.ForeColorHot",        ghStatusBar.ForeColorHot )
+    DUMPCLR( "toptabs.BackColor",             theme.toptabs.text.backcolor )
+    DUMPCLR( "toptabs.BackColorHot",          theme.toptabs.texthot.backcolor )
+    DUMPCLR( "toptabs.ForeColor",             theme.toptabs.text.forecolor )
+    DUMPCLR( "toptabs.ForeColorHot",          theme.toptabs.texthot.forecolor )
+    DUMPCLR( "toptabs.Divider",               theme.toptabs.divider )
+    DUMPCLR( "toptabs.CloseBackColorHot",     theme.toptabs.closehot )
+    DUMPCLR( "toptabs.IconSelectedBackColor", theme.toptabs.iconselected )
 
-    DUMPCLR( "output.BackColor",              ghOutput.BackColor )
-    DUMPCLR( "output.BackColorHot",           ghOutput.BackColorHot )
-    DUMPCLR( "output.ForeColor",              ghOutput.ForeColor )
-    DUMPCLR( "output.ForeColorHot",           ghOutput.ForeColorHot )
-    DUMPCLR( "output.Divider",                ghOutput.Divider )
-    DUMPCLR( "output.CloseBackColorHot",      ghOutput.CloseBackColorHot )
-    DUMPCLR( "output.BackColorScrollBar",     ghOutput.BackColorScrollBar )
-    DUMPCLR( "output.ForeColorScrollBar",     ghOutput.ForeColorScrollBar )
-    DUMPCLR( "output.ScrollBarDivider",       ghOutput.ScrollBarDivider )
+    DUMPCLR( "statusbar.BackColor",           theme.statusbar.text.backcolor )
+    DUMPCLR( "statusbar.BackColorHot",        theme.statusbar.texthot.backcolor )
+    DUMPCLR( "statusbar.ForeColor",           theme.statusbar.text.forecolor )
+    DUMPCLR( "statusbar.ForeColorHot",        theme.statusbar.texthot.forecolor )
 
-    DUMPCLR( "ui.Divider",                    ghUI.Divider )
-    DUMPCLR( "ui.ForeColorField",             ghUI.ForeColorField )
-    DUMPCLR( "ui.BackColorField",             ghUI.BackColorField )
-    DUMPCLR( "ui.ForeColorScrollBar",         ghUI.ForeColorScrollBar )
-    DUMPCLR( "ui.BackColorScrollBar",         ghUI.BackColorScrollBar )
-    DUMPCLR( "ui.AccentColor",                ghUI.AccentColor )
+    DUMPCLR( "output.BackColor",              theme.output.text.backcolor )
+    DUMPCLR( "output.BackColorHot",           theme.output.texthot.backcolor )
+    DUMPCLR( "output.ForeColor",              theme.output.text.forecolor )
+    DUMPCLR( "output.ForeColorHot",           theme.output.texthot.forecolor )
+    DUMPCLR( "output.Divider",                theme.output.divider )
+    DUMPCLR( "output.CloseBackColorHot",      theme.output.closehot )
+    DUMPCLR( "output.BackColorScrollBar",     theme.output.scrollbar.backcolor )
+    DUMPCLR( "output.ForeColorScrollBar",     theme.output.scrollbar.forecolor )
+    DUMPCLR( "output.ScrollBarDivider",       theme.output.scrollbardivider )
+
+    DUMPCLR( "ui.Divider",                    theme.ui.divider )
+    DUMPCLR( "ui.ForeColorField",             theme.ui.field.forecolor )
+    DUMPCLR( "ui.BackColorField",             theme.ui.field.backcolor )
+    DUMPCLR( "ui.ForeColorScrollBar",         theme.ui.scrollbar.forecolor )
+    DUMPCLR( "ui.BackColorScrollBar",         theme.ui.scrollbar.backcolor )
+    DUMPCLR( "ui.AccentColor",                theme.ui.accent )
 
     ' The two alpha sentinels. -1 means the theme asked for no alpha and the consumer keeps
     ' whatever constant it uses today.
-    DUMPFLG( "editor.AlphaSelection_isSet",   (ghEditor.AlphaSelection >= 0) )
-    DUMPFLG( "editor.AlphaOccurrence_isSet",  (ghEditor.AlphaOccurrence >= 0) )
+    DUMPFLG( "editor.AlphaSelection_isSet",   (theme.editor.selectionalpha >= 0) )
+    DUMPFLG( "editor.AlphaOccurrence_isSet",  (theme.editor.occurrencealpha >= 0) )
 
     ' Anything the parser accepted but could not act on.
     for i as long = lbound(gThemeParseWarnings) to ubound(gThemeParseWarnings)

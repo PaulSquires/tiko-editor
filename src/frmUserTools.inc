@@ -311,7 +311,7 @@ end function
 ' A name in settings.ini that KeyBindings_PickListKeyToValue does not resolve produces no
 ' ACCEL entry at all, so the shortcut saves, reloads and shows in the Tools menu perfectly
 ' and never once works. There is no build warning and no visible symptom -- which is the
-' whole reason the list paints it in ghGeneral.iconfail.
+' whole reason the list paints it in theme.compile.iconfail.
 '
 ' THIS DIALOG CANNOT CREATE ONE. Both routes into a key (the capture field and the picker) go
 ' through gKeyNames, and KeyBindings_RunSelfTest already asserts every name in that vocabulary
@@ -419,8 +419,8 @@ end function
 private sub frmUserTools_ListPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
 
-    dim as COLORREF backclr = iif( p->isSelected, ghPanel.BackColorHot, ghPanel.BackColor )
-    dim as COLORREF foreclr = iif( p->isSelected, ghPanel.ForeColorHot, ghPanel.ForeColor )
+    dim as COLORREF backclr = iif( p->isSelected, theme.panel.texthot.backcolor, theme.panel.text.backcolor )
+    dim as COLORREF foreclr = iif( p->isSelected, theme.panel.texthot.forecolor, theme.panel.text.forecolor )
 
     p->b->SetBackColor( backclr )
     p->b->PaintRect( @p->rc )
@@ -450,13 +450,13 @@ private sub frmUserTools_ListPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
                 ' rendering fault, and dim it so it does not read as the tool's actual name.
                 if len(wszCell) = 0 then
                     wszCell = L(353,"(untitled)")
-                    if p->isSelected = false then clr = ghPopup.ForeColorDisabled
+                    if p->isSelected = false then clr = theme.topmenu.textdisabled.forecolor
                 end if
 
             case 1
                 ' The shortcut. Marked when it cannot fire; state readable as colour, and the
                 ' detail pane spells it out in words for a reader who cannot see the colour.
-                if bBadKey then clr = ghGeneral.iconfail
+                if bBadKey then clr = theme.compile.iconfail
         end select
 
         p->b->SetForeColor( clr )
@@ -472,22 +472,22 @@ end sub
 private sub frmUserTools_ListPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
     if p = 0 then exit sub
 
-    dim as COLORREF backclr = ghPanel.BackColor
-    if p->isHot orelse p->isResizeHot then backclr = ghPanel.BackColorHot
+    dim as COLORREF backclr = theme.panel.text.backcolor
+    if p->isHot orelse p->isResizeHot then backclr = theme.panel.texthot.backcolor
 
     p->b->SetBackColor( backclr )
     p->b->PaintRect( @p->rc )
 
     dim as RECT rcText = p->rc
     rcText.left += AfxScaleX(6)
-    p->b->SetForeColor( ghPanel.ForeColorHot )
+    p->b->SetForeColor( theme.panel.texthot.forecolor )
     p->b->SetFont( ghFont(GUIFONT_11) )
     p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_END_ELLIPSIS )
 
     ' Hairline on the trailing edge so columns read as separated.
     dim as RECT rcDiv = p->rc
     rcDiv.left = rcDiv.right - AfxScaleX(1)
-    p->b->SetBackColor( ghEditor.Divider )
+    p->b->SetBackColor( theme.ui.divider )
     p->b->PaintRect( @rcDiv )
 end sub
 
@@ -892,7 +892,7 @@ private function frmUserTools_OnPaint( byval hwnd as HWND ) as LRESULT
     dim buffer as PsBufferPaint
     buffer.BeginDoubleBuffer( hwnd, hdc, rc )
 
-    buffer.SetBackColor( ghPanel.BackColor )
+    buffer.SetBackColor( theme.panel.text.backcolor )
     buffer.PaintRect( @rc )
 
     dim as long mx      = AfxScaleX(FRMUSERTOOLS_MARGIN)
@@ -917,7 +917,7 @@ private function frmUserTools_OnPaint( byval hwnd as HWND ) as LRESULT
         rcT.right  = xRight
         rcT.top    = titleH
         rcT.bottom = rc.bottom - AfxScaleY(FRMUSERTOOLS_FOOTER_H)
-        buffer.SetForeColor( ghPanel.ForeColor )
+        buffer.SetForeColor( theme.panel.text.forecolor )
         buffer.SetFont( ghFont(GUIFONT_11) )
         buffer.PaintText( L(361,"Select a tool, or press Add to create one."), @rcT, _
                           DT_CENTER or DT_VCENTER or DT_SINGLELINE )
@@ -930,7 +930,7 @@ private function frmUserTools_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as long y = titleH + AfxScaleY(12)
 
     buffer.SetFont( ghFont(GUIFONT_11) )
-    buffer.SetForeColor( ghPanel.ForeColor )
+    buffer.SetForeColor( theme.panel.text.forecolor )
 
     #macro ROWLABEL( _text_ )
         rcT.left = detailX : rcT.right = fieldX - AfxScaleX(FRMUSERTOOLS_GAP)
@@ -961,16 +961,16 @@ private function frmUserTools_OnPaint( byval hwnd as HWND ) as LRESULT
     buffer.PaintText( L(349,"Shortcut"), @rcT, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
 
     dim as DWSTRING wszShortcut = frmUserTools_ShortcutText( gUTCurrent )
-    dim as COLORREF clrShortcut = ghEditor.ForeColorText
+    dim as COLORREF clrShortcut = theme.ui.field.forecolor
     if len(wszShortcut) = 0 then
         wszShortcut = L(354,"(none)")
-        clrShortcut = ghPopup.ForeColorDisabled
+        clrShortcut = theme.topmenu.textdisabled.forecolor
     elseif frmUserTools_ShortcutIsDead( gUTCurrent ) then
         ' Said in WORDS as well as in colour. The list marks the cell red; a reader who cannot
         ' see that gets nothing from it, and "this saves and never fires" is not something to
         ' encode in a hue alone.
         wszShortcut = wszShortcut & "   " & L(356,"This shortcut cannot fire -- reassign it.")
-        clrShortcut = ghGeneral.iconfail
+        clrShortcut = theme.compile.iconfail
     else
         ' ...and the same for a shortcut that is real but already spoken for. The assign dialog
         ' will not let one be created, so this only ever shows for a binding that pre-dates the
@@ -978,13 +978,13 @@ private function frmUserTools_OnPaint( byval hwnd as HWND ) as LRESULT
         dim as DWSTRING wszOwner = frmUserTools_ShortcutClash( gUTCurrent )
         if len(wszOwner) then
             wszShortcut = wszShortcut & "   " & wszOwner
-            clrShortcut = ghGeneral.iconfail
+            clrShortcut = theme.compile.iconfail
         end if
     end if
     rcT.left = fieldX : rcT.right = xRight - AfxScaleX(FRMUSERTOOLS_ASSIGN_W) - AfxScaleX(FRMUSERTOOLS_GAP)
     buffer.SetForeColor( clrShortcut )
     buffer.PaintText( wszShortcut, @rcT, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
-    buffer.SetForeColor( ghPanel.ForeColor )
+    buffer.SetForeColor( theme.panel.text.forecolor )
     y += rowH
 
     ROWLABEL( L(359,"Action") )
@@ -996,9 +996,9 @@ private function frmUserTools_OnPaint( byval hwnd as HWND ) as LRESULT
     rcDiv.right  = xRight
     rcDiv.top    = y
     rcDiv.bottom = y + AfxScaleY(1)
-    buffer.SetBackColor( ghEditor.Divider )
+    buffer.SetBackColor( theme.ui.divider )
     buffer.PaintRect( @rcDiv )
-    buffer.SetBackColor( ghPanel.BackColor )
+    buffer.SetBackColor( theme.panel.text.backcolor )
     y += AfxScaleY(FRMUSERTOOLS_GAP) + AfxScaleY(2)
 
     ' ---- the four option rows ---------------------------------------------------------
@@ -1141,9 +1141,9 @@ end sub
 ' ========================================================================================
 private sub frmUserTools_ApplyTheme( byval hwnd as HWND )
 
-    PsListTree_SetBackColor( HWND_FRMUSERTOOLS_LIST, ghPanel.BackColor )
-    PsListTree_SetScrollBarColors( HWND_FRMUSERTOOLS_LIST, ghPanel.BackColorScrollBar, _
-                                   ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+    PsListTree_SetBackColor( HWND_FRMUSERTOOLS_LIST, theme.panel.text.backcolor )
+    PsListTree_SetScrollBarColors( HWND_FRMUSERTOOLS_LIST, theme.panel.scrollbar.backcolor, _
+                                   theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
     OptionsTheme_ApplyListBorder( HWND_FRMUSERTOOLS_LIST )
 
     OptionsTheme_ApplyTextBox( ghUTName )
@@ -1758,11 +1758,7 @@ function frmUserTools_Show( byval hWndParent as HWND ) as LRESULT
     PsTooltip_SetFonts( ghUTParamsTip, ghFont(GUIFONT_11), ghFont(GUIFONTBOLD_11), ghFont(SYMBOLFONT_10) )
     scope
         dim as PSTOOLTIP_COLORS tipc
-        tipc.BackColor   = ghPopup.BackColor
-        tipc.BorderColor = ghEditor.Divider
-        tipc.ForeColor   = ghPopup.ForeColor
-        tipc.TitleColor  = ghPanel.ForeColorHot
-        tipc.GlyphColor  = ghUI.AccentColor
+        Theme_FillTooltipColors( tipc )
         PsTooltip_SetColors( ghUTParamsTip, @tipc )
     end scope
 

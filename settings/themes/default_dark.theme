@@ -3,105 +3,128 @@ general.version: 1.0.0
 
 # all colors are specified using RGB syntax (red,green,blue)
 
-# simple macros that can be used instead of literal values
-%GRAY: 157,165,180
-%LIGHT_GRAY: 204,204,204
-%LIGHT_BLACK: 40,44,52
-%EVENING_BLACK: 33,37,43
-%LIGHT_WHITE: 215,218,224
-%WHITE: 255,255,255
+
+# ---------------------------------------------------------------------------------------
+# THE ROLE PALETTE
+#
+# Every widget key falls back to one of these when this file does not name it, so a key
+# added to tiko later is themed here for free instead of arriving as a built-in default
+# from some other palette. Values below are this theme's own colours, not new ones.
+#
+# Resolution order:  the key itself  ->  its role  ->  tiko's built-in default
+# ---------------------------------------------------------------------------------------
+role.background: 40,44,52
+role.backgroundalt: 33,37,43
+role.backgroundraised: 53,59,69
+role.foreground: 204,204,204
+role.foregrounddim: 157,165,180
+role.border: 64,67,73
+role.accent: 49,73,123
+# The accent as readable INK (glyphs, ticks, focus rings) rather than as a fill.
+role.accentfore: 148,202,240
+role.hot: 44,49,58
+role.selection: 38,79,120
+role.error: 255,0,0
+role.warning: 240,178,102
+role.success: 0,128,0
+role.keyword: 148,202,240
+role.apikeyword: 187,111,78
+role.userkeyword: 179,48,142
+role.comment: 95,125,49
+role.string: 195,137,80
+role.number: 198,107,60
+role.operator: 204,204,204
+role.preprocessor: 165,134,181
 
 compile.iconsuccess.foreground: 0,128,0    # green
 compile.iconfail.foreground: 255,0,0       # red
 output.valuechanged.foreground: 240,178,102  # soft orange - a debugger value that changed on the last step
 
-main.panel.background: %LIGHT_BLACK
+main.panel.background: 40,44,52
 
-editor.window.background: %LIGHT_BLACK
-editor.caret.foreground: %LIGHT_GRAY
+editor.caret.foreground: 204,204,204
 editor.currentline.background: 44,49,60
-editor.text.foreground: %LIGHT_GRAY
-editor.text.background: %LIGHT_BLACK
+editor.text.foreground: 204,204,204
+editor.text.background: 40,44,52
 editor.text.bold: false
 editor.text.italic: false
 editor.text.underline: false
 editor.numbers.foreground: 198,107,60          # orange
-editor.numbers.background: %LIGHT_BLACK
+editor.numbers.background: 40,44,52
 editor.numbers.bold: false
 editor.numbers.italic: false
 editor.numbers.underline: false
 editor.comments.foreground: 095,125,049        # moss green
-editor.comments.background: %LIGHT_BLACK
+editor.comments.background: 40,44,52
 editor.comments.bold: false
 editor.comments.italic: false
 editor.comments.underline: false
 editor.keyword.foreground: 148,202,240         # FreeBasic (powder blue)
-editor.keyword.background: %LIGHT_BLACK
+editor.keyword.background: 40,44,52
 editor.keyword.bold: false
 editor.keyword.italic: false
 editor.keyword.underline: false
 editor.keyword2.foreground: 187,111,78         # Windows Api (dark orange)
-editor.keyword2.background: %LIGHT_BLACK
+editor.keyword2.background: 40,44,52
 editor.keyword2.bold: false
 editor.keyword2.italic: false
 editor.keyword2.underline: false
 editor.keyword3.foreground: 179,48,142         # Extra Keywords (pink)
-editor.keyword3.background: %LIGHT_BLACK
+editor.keyword3.background: 40,44,52
 editor.keyword3.bold: false
 editor.keyword3.italic: false
 editor.keyword3.underline: false
-editor.foldmargin.foreground: %LIGHT_BLACK
+editor.foldmargin.foreground: 40,44,52
 editor.foldsymbol.foreground: 99,109,131
-editor.foldsymbol.background: %LIGHT_BLACK
+editor.foldsymbol.background: 40,44,52
 editor.linenumbers.foreground: 99,109,131
-editor.linenumbers.background: %LIGHT_BLACK
+editor.linenumbers.background: 40,44,52
 editor.linenumbers.bold: false
 editor.linenumbers.italic: false
 editor.linenumbers.underline: false
-editor.operators.foreground: %LIGHT_GRAY
-editor.operators.background: %LIGHT_BLACK
+editor.operators.foreground: 204,204,204
+editor.operators.background: 40,44,52
 editor.operators.bold: false
 editor.operators.italic: false
 editor.operators.underline: false
-editor.indentguides.foreground: %LIGHT_BLACK
-editor.indentguides.background: %LIGHT_GRAY
+editor.indentguides.foreground: 40,44,52
+editor.indentguides.background: 204,204,204
 editor.preprocessor.foreground: 165,134,181    # light purple
-editor.preprocessor.background: %LIGHT_BLACK
+editor.preprocessor.background: 40,44,52
 editor.preprocessor.bold: false
 editor.preprocessor.italic: false
 editor.preprocessor.underline: false
-editor.selection.foreground: %LIGHT_GRAY
+editor.selection.foreground: 204,204,204
 editor.selection.background: 038,079,120       # light blue
 editor.strings.foreground: 195,137,080         # orange brown
-editor.strings.background: %LIGHT_BLACK
+editor.strings.background: 40,44,52
 editor.strings.bold: false
 editor.strings.italic: false
 editor.strings.underline: false
 editor.bracegood.foreground: 255,255,000       # yellow
-#editor.bracegood.foreground: %LIGHT_GRAY
+#editor.bracegood.foreground: 204,204,204
 editor.bracebad.foreground: 196,000,000        # red
 editor.occurrence.foreground: 53,70,107
 editor.scrollbar.foreground: 75,83,97
-editor.scrollbar.background: %LIGHT_BLACK
+editor.scrollbar.background: 40,44,52
 editor.divider.foreground: 64,67,73
-editor.bookmark.foreground: %WHITE             
-editor.bookmark.background: %WHITE             
+editor.bookmark.foreground: 255,255,255
+editor.bookmark.background: 255,255,255
 editor.breakpoint.foreground: 196,68,80        # crimson
 editor.breakpoint.background: 196,68,80        # crimson
 editor.debugline.foreground: 151,217,247       # yellow
 editor.debugline.background: 151,217,247       # yellow
 
 # panel holds Explorer, FunctionList, Bookmarks
-panel.panel.background: %EVENING_BLACK
-panel.text.foreground: %LIGHT_WHITE
-panel.text.background: %EVENING_BLACK
-panel.texthot.foreground: %LIGHT_GRAY
+panel.text.foreground: 215,218,224
+panel.text.background: 33,37,43
+panel.texthot.foreground: 204,204,204
 panel.texthot.background: 44,49,58
 panel.scrollbar.foreground: 53,59,69
-panel.scrollbar.background: %EVENING_BLACK
-panel.button.foreground: %LIGHT_WHITE
-panel.button.background: %LIGHT_BLACK
-panel.buttonhot.foreground: %LIGHT_WHITE
+panel.scrollbar.background: 33,37,43
+panel.button.foreground: 215,218,224
+panel.button.background: 40,44,52
+panel.buttonhot.foreground: 215,218,224
 panel.buttonhot.background: 53,59,69
 panel.filenameicon.foreground: 84,171,178     
 panel.filenameicon.background: 51,63,69
@@ -110,45 +133,40 @@ panel.functionicon.background: 65,54,61
 panel.typeicon.foreground: 162,139,196     
 panel.typeicon.background: 62,60,71
 panel.textsearch.foreground: 199,203,207
-panel.textsearchhot.foreground: %LIGHT_WHITE   # highlighted individual letters in fuzzy text match
+panel.textsearchhot.foreground: 215,218,224    # highlighted individual letters in fuzzy text match
 
-toptabs.panel.background: %EVENING_BLACK
 toptabs.text.foreground: 124,127,133
-toptabs.text.background: %EVENING_BLACK
-toptabs.texthot.foreground: %LIGHT_WHITE
-toptabs.texthot.background: %LIGHT_BLACK
+toptabs.text.background: 33,37,43
+toptabs.texthot.foreground: 215,218,224
+toptabs.texthot.background: 40,44,52
 toptabs.divider.foreground: 24,26,31
 toptabs.closehot.background: 64,67,73
 toptabs.iconselected.background: 49,73,123      # blue
 
-menubar.panel.background: %EVENING_BLACK
-menubar.text.foreground: %GRAY
-menubar.text.background: %EVENING_BLACK
-menubar.texthot.foreground: %GRAY
+menubar.text.foreground: 157,165,180
+menubar.text.background: 33,37,43
+menubar.texthot.foreground: 157,165,180
 menubar.texthot.background: 56,59,65
 
 topmenu.panel.background: 53,59,69
-topmenu.text.foreground: %WHITE
+topmenu.text.foreground: 255,255,255
 topmenu.text.background: 53,59,69
-topmenu.texthot.foreground: %WHITE
+topmenu.texthot.foreground: 255,255,255
 topmenu.texthot.background: 44,49,58
-topmenu.textdisabled.foreground: %GRAY
+topmenu.textdisabled.foreground: 157,165,180
 topmenu.textdisabled.background: 53,59,69
 
-statusbar.panel.background: %EVENING_BLACK
-statusbar.text.foreground: %GRAY
-statusbar.text.background: %EVENING_BLACK
-statusbar.texthot.foreground: %GRAY
+statusbar.text.foreground: 157,165,180
+statusbar.text.background: 33,37,43
+statusbar.texthot.foreground: 157,165,180
 statusbar.texthot.background: 44,49,58
 
-output.panel.background: %LIGHT_BLACK
 output.text.foreground: 124,127,133
-output.text.background: %LIGHT_BLACK
-output.texthot.foreground: %LIGHT_WHITE
-output.texthot.background: %LIGHT_BLACK
+output.text.background: 40,44,52
+output.texthot.foreground: 215,218,224
+output.texthot.background: 40,44,52
 output.divider.foreground: 124,127,133
 output.closehot.background: 56,59,65
 output.scrollbar.foreground: 75,83,97
-output.scrollbar.background: %LIGHT_BLACK
+output.scrollbar.background: 40,44,52
 output.scrollbardivider.foreground: 64,67,73
-

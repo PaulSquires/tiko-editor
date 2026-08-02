@@ -86,8 +86,8 @@ sub frmOutput_LVPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
     if pWindow = 0 then exit sub
 
-    p->b->SetForeColor( ghOutput.ForeColorHot )
-    p->b->SetBackColor( ghOutput.BackColor )
+    p->b->SetForeColor( theme.output.texthot.forecolor )
+    p->b->SetBackColor( theme.output.text.backcolor )
     p->b->PaintRect( @p->rc )
 
     dim as RECT rcText = p->rc
@@ -98,7 +98,7 @@ sub frmOutput_LVPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
     ' A one-pixel divider on the trailing edge, so columns read as separated.
     dim as RECT rcDiv = p->rc
     rcDiv.left = rcDiv.right - AfxScaleX(1)
-    p->b->SetBackColor( ghOutput.ScrollBarDivider )
+    p->b->SetBackColor( theme.output.scrollbardivider )
     p->b->PaintRect( @rcDiv )
 end sub
 
@@ -151,9 +151,9 @@ function frmOutput_CreateListView( byval CtrlID as long ) as HWND
     end if
 
     PsListTree_SetFont( hCtl, ghFont(GUIFONT_9) )
-    PsListTree_SetBackColor( hCtl, ghOutput.BackColor )
-    PsListTree_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _
-                                 ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
+    PsListTree_SetBackColor( hCtl, theme.output.text.backcolor )
+    PsListTree_SetScrollBarColors( hCtl, theme.output.scrollbar.backcolor, _
+                                 theme.output.scrollbar.forecolor, theme.output.scrollbar.forecolor )
 
     return hCtl
 end function
@@ -455,12 +455,12 @@ end sub
 ' colors live, so a theme switch only needs a repaint.
 sub frmOutput_VScrollPaint( byval p as PSVSCROLLBAR_PAINTINFO ptr )
     dim as PsBufferPaint ptr b = p->b
-    b->SetBackColor( ghOutput.BackColorScrollBar )
+    b->SetBackColor( theme.output.scrollbar.backcolor )
     b->PaintClientRect()
     if IsRectEmpty( @p->rcThumb ) = 0 then
-        b->SetPenColor( ghOutput.ScrollBarDivider )
+        b->SetPenColor( theme.output.scrollbardivider )
         b->PaintLine( 1, p->rcClient.left, p->rcClient.top, p->rcClient.left, p->rcClient.bottom )
-        b->SetBackColor( ghOutput.ForeColorScrollBar )
+        b->SetBackColor( theme.output.scrollbar.forecolor )
         b->PaintRect( @p->rcThumb )
     end if
 end sub
@@ -511,7 +511,7 @@ end Function
 sub frmOutput_SplitterPaint( byval p as PSSPLITTER_PAINTINFO ptr )
     dim as PsBufferPaint ptr b = p->b
 
-    b->SetBackColor( ghOutput.BackColor )
+    b->SetBackColor( theme.output.text.backcolor )
     b->PaintClientRect()
 
     dim as RECT rc = p->rcClient
@@ -521,7 +521,7 @@ sub frmOutput_SplitterPaint( byval p as PSSPLITTER_PAINTINFO ptr )
 
     ' Constant color -- deliberately no isHot/isDragging highlight. The cursor change
     ' from the control is the only hover feedback this bar gets.
-    b->SetBackColor( ghOutput.Divider )
+    b->SetBackColor( theme.output.divider )
     b->PaintRect( @rc )
 end sub
 
@@ -762,8 +762,8 @@ dim shared as HBRUSH ghOutputPanelBrush = 0
 sub frmOutput_SelectBarPaint( byval p as PSSELECTBAR_PAINTINFO ptr )
     dim as boolean isHotTab = p->isSelected orelse p->isHot orelse p->isPressed
 
-    p->b->SetForeColor( iif( isHotTab, ghOutput.ForeColorHot, ghOutput.ForeColor ) )
-    p->b->SetBackColor( iif( isHotTab, ghOutput.BackColorHot, ghOutput.BackColor ) )
+    p->b->SetForeColor( iif( isHotTab, theme.output.texthot.forecolor, theme.output.text.forecolor ) )
+    p->b->SetBackColor( iif( isHotTab, theme.output.texthot.backcolor, theme.output.text.backcolor ) )
     p->b->PaintRect( @p->rc )
 
     p->b->SetFont( ghFont(GUIFONT_9) )
@@ -772,7 +772,7 @@ sub frmOutput_SelectBarPaint( byval p as PSSELECTBAR_PAINTINFO ptr )
     ' The indicator under the current tab. rcIndicator already spans exactly the caption
     ' text and sits the configured gap below it -- no arithmetic needed here.
     if p->isSelected then
-        p->b->SetBackColor( ghOutput.ForeColorHot )
+        p->b->SetBackColor( theme.output.texthot.forecolor )
         p->b->PaintRect( @p->rcIndicator )
     end if
 end sub
@@ -843,12 +843,12 @@ end function
 ' fills only on hover, then the glyph.
 ' ----------------------------------------------------------------------------------------
 sub frmOutput_ClosePaint( byval p as PSICONPANEL_PAINTINFO ptr )
-    p->b->SetBackColor( ghOutput.BackColor )
+    p->b->SetBackColor( theme.output.text.backcolor )
     p->b->PaintRect( @p->rc )
 
-    p->b->SetForeColor( ghOutput.ForeColorHot )
+    p->b->SetForeColor( theme.output.texthot.forecolor )
     p->b->SetBackColor( iif( p->isHot orelse p->isPressed, _
-                             ghOutput.CloseBackColorHot, ghOutput.BackColor ) )
+                             theme.output.closehot, theme.output.text.backcolor ) )
     p->b->PaintRoundRect( @p->rcIcon )
 
     p->b->SetFont( ghFont(SYMBOLFONT_10) )
@@ -954,7 +954,7 @@ function frmOutput_WndProc( _
     case WM_PAINT            
         dim as PsBufferPaint b
         b.BeginDoubleBuffer(hwnd)
-        b.SetBackColor( ghOutput.BackColorHot )
+        b.SetBackColor( theme.output.texthot.backcolor )
         b.PaintClientRect()
         b.EndDoubleBuffer()
         return 0
@@ -978,7 +978,7 @@ function frmOutput_SetControlColors() as long
     dim pPanel as CWindow ptr = AfxCWindowPtr( HWND_FRMOUTPUT )
     if pPanel then
         dim as HBRUSH hOld = ghOutputPanelBrush
-        ghOutputPanelBrush = CreateSolidBrush( ghOutput.BackColorHot )
+        ghOutputPanelBrush = CreateSolidBrush( theme.output.texthot.backcolor )
         pPanel->Brush = ghOutputPanelBrush
         ' Freed only AFTER the class has stopped pointing at it.
         if hOld then DeleteObject( hOld )
@@ -987,14 +987,14 @@ function frmOutput_SetControlColors() as long
 
     dim as HWND hCtl
     hCtl = GetDlgItem( HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE )
-    PsTextBox_SetForeColor( hCtl, ghOutput.ForeColorHot )
-    PsTextBox_SetBackColor( hCtl, ghOutput.BackColor )
-    PsTextBox_SetOuterBackColor( hCtl, ghOutput.BackColor )
+    PsTextBox_SetForeColor( hCtl, theme.output.texthot.forecolor )
+    PsTextBox_SetBackColor( hCtl, theme.output.text.backcolor )
+    PsTextBox_SetOuterBackColor( hCtl, theme.output.text.backcolor )
 
     hCtl = GetDlgItem( HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES )
-    PsTextBox_SetForeColor( hCtl, ghOutput.ForeColorHot )
-    PsTextBox_SetBackColor( hCtl, ghOutput.BackColor )
-    PsTextBox_SetOuterBackColor( hCtl, ghOutput.BackColor )
+    PsTextBox_SetForeColor( hCtl, theme.output.texthot.forecolor )
+    PsTextBox_SetBackColor( hCtl, theme.output.text.backcolor )
+    PsTextBox_SetOuterBackColor( hCtl, theme.output.text.backcolor )
 
     ' The scrollbar's paint callback reads the ghOutput colors live -- a repaint is all
     ' a theme switch needs.
@@ -1007,9 +1007,9 @@ function frmOutput_SetControlColors() as long
             case 0 : hCtl = HWND_FRMOUTPUT_LVRESULTS
             case 1 : hCtl = HWND_FRMOUTPUT_LVTODO
         end select
-        PsListTree_SetBackColor( hCtl, ghOutput.BackColor )
-        PsListTree_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _
-                                     ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
+        PsListTree_SetBackColor( hCtl, theme.output.text.backcolor )
+        PsListTree_SetScrollBarColors( hCtl, theme.output.scrollbar.backcolor, _
+                                     theme.output.scrollbar.forecolor, theme.output.scrollbar.forecolor )
         AfxRedrawWindow( hCtl )
     next
 
@@ -1056,7 +1056,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
     ' reached. Undocking flashed white because of this and the frame's own brush together;
     ' the panel is the one covering the whole client, so it is the one that showed.
     ' The class is per-instance, so this affects nothing else. Freed in WM_NCDESTROY.
-    ghOutputPanelBrush = CreateSolidBrush( ghOutput.BackColorHot )
+    ghOutputPanelBrush = CreateSolidBrush( theme.output.texthot.backcolor )
     pWindow->Brush = ghOutputPanelBrush
 
     ' NOTE: gConfig.ShowOutputPanelHeight is deliberately NOT scaled here. It stays in
@@ -1080,7 +1080,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         
         dim as PSSELECTBAR_COLORS SelectBarColors 
         PsSelectBar_GetColors( HWND_FRMOUTPUT_SELECTBAR, @SelectBarColors )
-        SelectBarColors.BackColor = ghOutput.BackColorHot 
+        SelectBarColors.BackColor = theme.output.texthot.backcolor 
         PsSelectBar_SetColors( HWND_FRMOUTPUT_SELECTBAR, @SelectBarColors )
 
         ' Panels are added ONCE. The third argument is the panel's host ID -- an
@@ -1120,7 +1120,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
 
         dim as PSICONPANEL_COLORS UndockColors
         PsIconPanel_GetColors( HWND_FRMOUTPUT_UNDOCK, @UndockColors )
-        UndockColors.BackColor = ghOutput.BackColorHot
+        UndockColors.BackColor = theme.output.texthot.backcolor
         PsIconPanel_SetColors( HWND_FRMOUTPUT_UNDOCK, @UndockColors )
 
     HWND_FRMOUTPUT_CLOSE = PsIconPanel_Create( HWND_FRMOUTPUT, IDC_FRMOUTPUT_BTNCLOSE )
@@ -1136,7 +1136,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
 
         dim as PSICONPANEL_COLORS IconPanelColors 
         PsIconPanel_GetColors( HWND_FRMOUTPUT_CLOSE, @IconPanelColors )
-        IconPanelColors.BackColor = ghOutput.BackColorHot 
+        IconPanelColors.BackColor = theme.output.texthot.backcolor 
         PsIconPanel_SetColors( HWND_FRMOUTPUT_CLOSE, @IconPanelColors )
 
     ' Compiler Log File: multiline read-only PsTextBox (borderless; the 20px indent the

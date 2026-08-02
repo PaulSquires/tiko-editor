@@ -121,10 +121,10 @@ end sub
 private sub frmOptionsKeywords_ThemeText( byval hTb as HWND )
     if hTb = 0 then exit sub
     PsTextBox_SetFont( hTb, ghFont(INFOFONT_11) )      ' Consolas 11 (fixed pitch)
-    PsTextBox_SetForeColor( hTb, ghEditor.ForeColorText )
-    PsTextBox_SetBackColor( hTb, ghEditor.BackColorText )
-    PsTextBox_SetBorderColor( hTb, ghEditor.Divider )
-    PsTextBox_SetFocusBorderColor( hTb, ghPanel.ForeColorHot )
+    PsTextBox_SetForeColor( hTb, theme.ui.field.forecolor )
+    PsTextBox_SetBackColor( hTb, theme.ui.field.backcolor )
+    PsTextBox_SetBorderColor( hTb, theme.ui.divider )
+    PsTextBox_SetFocusBorderColor( hTb, theme.panel.texthot.forecolor )
     ThemeTextBoxContextMenu( hTb )
 end sub
 
@@ -168,8 +168,8 @@ sub frmOptionsKeywords_ApplyTheme()
         frmOptionsKeywords_ThemeText( ghKwText(i) )
     next
     if ghKwScroll then
-        PsVScrollBar_SetColors( ghKwScroll, ghPanel.BackColorScrollBar, _
-                               ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+        PsVScrollBar_SetColors( ghKwScroll, theme.panel.scrollbar.backcolor, _
+                               theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
     end if
 end sub
 

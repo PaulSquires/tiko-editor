@@ -49,11 +49,11 @@ sub frmPanelMenu_PaintCallback( byval p as PSICONPANEL_PAINTINFO ptr )
     ' State priority for the icon background/foreground: hot > normal
     dim as COLORREF backclr, foreclr
     if p->isHot then
-        backclr = ghPanel.BackColorHot
-        foreclr = ghPanel.ForeColorHot
+        backclr = theme.panel.texthot.backcolor
+        foreclr = theme.panel.texthot.forecolor
     else
-        backclr = ghPanel.BackColor
-        foreclr = ghPanel.ForeColor
+        backclr = theme.panel.text.backcolor
+        foreclr = theme.panel.text.forecolor
     end if
     p->b->SetColors(foreclr, backclr)
 
@@ -83,7 +83,7 @@ sub frmPanelMenu_PaintCallback( byval p as PSICONPANEL_PAINTINFO ptr )
         rc.left += pWindow->ScaleX(2)
         rc.right -= pWindow->ScaleX(2)
         rc.bottom -= pWindow->ScaleX(5)
-        p->b->SetPenColor( ghOutput.ForeColor )
+        p->b->SetPenColor( theme.output.text.forecolor )
         p->b->PaintLine( 1, rc.left, rc.bottom, rc.right, rc.bottom )
     end if
 
@@ -150,14 +150,14 @@ end function
 ' ========================================================================================
 sub frmPanelMenu_ApplyTheme()
     dim as PSICONPANEL_COLORS colors
-    colors.BackColor         = ghPanel.BackColor
-    colors.ForeColor         = ghPanel.ForeColor
-    colors.BackColorHot      = ghPanel.BackColorHot
-    colors.ForeColorHot      = ghPanel.ForeColorHot
-    colors.BackColorSelect   = ghPanel.BackColorHot
-    colors.ForeColorSelect   = ghPanel.ForeColorHot
-    colors.ForeColorDisabled = ghPanel.ForeColor
-    colors.SeparatorColor    = ghPanel.ForeColor
+    colors.BackColor         = theme.panel.text.backcolor
+    colors.ForeColor         = theme.panel.text.forecolor
+    colors.BackColorHot      = theme.panel.texthot.backcolor
+    colors.ForeColorHot      = theme.panel.texthot.forecolor
+    colors.BackColorSelect   = theme.panel.texthot.backcolor
+    colors.ForeColorSelect   = theme.panel.texthot.forecolor
+    colors.ForeColorDisabled = theme.panel.text.forecolor
+    colors.SeparatorColor    = theme.panel.text.forecolor
 
     if IsWindow(HWND_FRMPANEL_MENU) then _
         PsIconPanel_SetColors( HWND_FRMPANEL_MENU, @colors )

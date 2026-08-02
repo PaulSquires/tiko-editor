@@ -203,15 +203,15 @@ private sub frmOptions_NavPaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
 
     dim as COLORREF backclr, foreclr
     if p->isSelected then
-        backclr = ghPanel.BackColorHot
-        foreclr = ghPanel.ForeColorHot
+        backclr = theme.panel.texthot.backcolor
+        foreclr = theme.panel.texthot.forecolor
     elseif p->isHot then
-        backclr = ghPanel.BackColorHot
-        foreclr = ghPanel.ForeColorHot
+        backclr = theme.panel.texthot.backcolor
+        foreclr = theme.panel.texthot.forecolor
     else
         ' Idle rows read in the nav panel's own shade -- the separator between nav and page now.
-        backclr = ghTopTabs.BackColorHot
-        foreclr = ghPanel.ForeColor
+        backclr = theme.toptabs.texthot.backcolor
+        foreclr = theme.panel.text.forecolor
     end if
 
     p->b->SetForeColor( foreclr )
@@ -300,7 +300,7 @@ private function frmOptions_PageWndProc( _
         GetClientRect( hwnd, @p.rcClient )
         p.nPos         = 0
 
-        b.SetBackColor( ghPanel.BackColor )
+        b.SetBackColor( theme.panel.text.backcolor )
         b.PaintRect( @p.rcClient )
 
         if OptionsRows_HasPage( gOptCurrentPage ) then
@@ -316,9 +316,9 @@ private function frmOptions_PageWndProc( _
         ' Without this a plain EDIT or STATIC on a page comes up system-white on a dark panel.
         ' The brush is cached and rebuilt by frmOptions_ApplyTheme, because returning a brush
         ' created here would leak one per repaint.
-        SetBkColor( cast(HDC, wParam), ghPanel.BackColor )
-        SetTextColor( cast(HDC, wParam), ghPanel.ForeColor )
-        if ghOptPageBrush = 0 then ghOptPageBrush = CreateSolidBrush( ghPanel.BackColor )
+        SetBkColor( cast(HDC, wParam), theme.panel.text.backcolor )
+        SetTextColor( cast(HDC, wParam), theme.panel.text.forecolor )
+        if ghOptPageBrush = 0 then ghOptPageBrush = CreateSolidBrush( theme.panel.text.backcolor )
         return cast( LRESULT, ghOptPageBrush )
 
     case WM_COMMAND, WM_NOTIFY, WM_HSCROLL, WM_VSCROLL
@@ -536,7 +536,7 @@ private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     dim buffer as PsBufferPaint
     buffer.BeginDoubleBuffer( hwnd, hdc, rc )
 
-    buffer.SetBackColor( ghPanel.BackColor )
+    buffer.SetBackColor( theme.panel.text.backcolor )
     buffer.PaintRect( @rc )
 
     dim as long navW    = AfxScaleX(FRMOPTIONS_NAV_W)
@@ -552,7 +552,7 @@ private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     rcNavPanel.top    = 0
     rcNavPanel.right  = navW
     rcNavPanel.bottom = rc.bottom
-    buffer.SetBackColor( ghTopTabs.BackColorHot )
+    buffer.SetBackColor( theme.toptabs.texthot.backcolor )
     buffer.PaintRect( @rcNavPanel )
 
     ' Page title band.
@@ -561,7 +561,7 @@ private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     rcTitle.top    = 0
     rcTitle.right  = rc.right - AfxScaleX(OPTROW_PADRIGHT)
     rcTitle.bottom = titleH
-    buffer.SetForeColor( ghPanel.ForeColorHot )
+    buffer.SetForeColor( theme.panel.texthot.forecolor )
     ' Pinned bold match for the 11pt base font (see modOptionsRows.bi); does not follow the
     ' TIKO_OPTIONS_FONT override.
     buffer.SetFont( ghFont(GUIFONTBOLD_11) )
@@ -584,7 +584,7 @@ private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     rcFrame.right  = navW - mxG
     rcFrame.bottom = searchYG + searchHG
 
-    buffer.SetBackColor( ghEditor.BackColorText )
+    buffer.SetBackColor( theme.ui.field.backcolor )
     buffer.PaintRoundRect( @rcFrame, curveG )
 
     dim as RECT rcGlyph
@@ -592,16 +592,16 @@ private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     rcGlyph.top    = searchYG
     rcGlyph.right  = mxG + AfxScaleX(FRMOPTIONS_SEARCH_GLYPHW)
     rcGlyph.bottom = searchYG + searchHG
-    buffer.SetForeColor( ghPanel.ForeColor )
-    buffer.SetBackColor( ghEditor.BackColorText )
+    buffer.SetForeColor( theme.panel.text.forecolor )
+    buffer.SetBackColor( theme.ui.field.backcolor )
     buffer.SetFont( ghFont(SYMBOLFONT_10) )
     buffer.PaintText( wchr(&hE721), @rcGlyph, DT_CENTER or DT_VCENTER or DT_SINGLELINE )
 
-    buffer.SetPenColor( ghEditor.Divider )
+    buffer.SetPenColor( theme.ui.divider )
     buffer.PaintRoundOutline( @rcFrame, curveG, 1 )
 
     ' There is NO vertical rule between the nav list and the page any more -- the nav panel's
-    ' own distinct background (ghTopTabs.BackColorHot) separates the two columns instead.
+    ' own distinct background (theme.toptabs.texthot.backcolor) separates the two columns instead.
     ' There is also deliberately NO rule above the footer buttons and none between settings rows.
 
     ' No rule under the page title -- the dialog has no divider lines at all now; the nav
@@ -1017,25 +1017,25 @@ private sub frmOptions_ApplyTheme( byval hwnd as HWND )
 
     ' The nav panel reads in its own distinct shade -- this is what separates it from the page
     ' now that the vertical divider is gone.
-    PsListTree_SetBackColor( HWND_FRMOPTIONS_NAV, ghTopTabs.BackColorHot )
-    PsListTree_SetScrollBarColors( HWND_FRMOPTIONS_NAV, ghPanel.BackColorScrollBar, _
-                                 ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+    PsListTree_SetBackColor( HWND_FRMOPTIONS_NAV, theme.toptabs.texthot.backcolor )
+    PsListTree_SetScrollBarColors( HWND_FRMOPTIONS_NAV, theme.panel.scrollbar.backcolor, _
+                                 theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
 
     if HWND_FRMOPTIONS_SEARCH then
         ' A field-coloured box: editor background, dimmed cue, divider border, accent on focus.
         ' Its background matches the frame the dialog fills behind it, so the two read as one
         ' surface. The frame (fill + border) is drawn in frmOptions_OnPaint.
-        PsTextBox_SetBackColor( HWND_FRMOPTIONS_SEARCH, ghEditor.BackColorText )
-        PsTextBox_SetOuterBackColor( HWND_FRMOPTIONS_SEARCH, ghEditor.BackColorText )
-        PsTextBox_SetForeColor( HWND_FRMOPTIONS_SEARCH, ghEditor.ForeColorText )
-        PsTextBox_SetCueBannerColor( HWND_FRMOPTIONS_SEARCH, ghPanel.ForeColor )
+        PsTextBox_SetBackColor( HWND_FRMOPTIONS_SEARCH, theme.ui.field.backcolor )
+        PsTextBox_SetOuterBackColor( HWND_FRMOPTIONS_SEARCH, theme.ui.field.backcolor )
+        PsTextBox_SetForeColor( HWND_FRMOPTIONS_SEARCH, theme.ui.field.forecolor )
+        PsTextBox_SetCueBannerColor( HWND_FRMOPTIONS_SEARCH, theme.panel.text.forecolor )
     end if
 
         ' The plain container's WM_CTLCOLOR brush is derived from the back colour, so it is rebuilt
     ' here rather than at first use -- otherwise a theme change would keep handing out a brush of
     ' the PREVIOUS background for the rest of the session.
     if ghOptPageBrush then DeleteObject( ghOptPageBrush )
-    ghOptPageBrush = CreateSolidBrush( ghPanel.BackColor )
+    ghOptPageBrush = CreateSolidBrush( theme.panel.text.backcolor )
     if HWND_FRMOPTIONS_PAGE then AfxRedrawWindow( HWND_FRMOPTIONS_PAGE )
 
     dim as PSBUTTON_COLORS bc

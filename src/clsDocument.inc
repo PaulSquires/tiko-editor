@@ -602,7 +602,7 @@ function clsDocument.SetMarkerHighlight() as long
             function = SciMsg( pSci, SCI_MARKERADD, i, MARKER_OCCURRENCES)    ' add defined marker #10 to each line
         next
         ' set backcolor of marker MARKER_OCCURRENCES
-        dim as COLORREF clr = ghEditor.BackColorSelection
+        dim as COLORREF clr = theme.editor.selection.backcolor
         SciMsg( pSci, SCI_MARKERSETBACK, MARKER_OCCURRENCES, clr) 
     end if
 end function
@@ -1483,11 +1483,11 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
         SciMsg( pSciView, SCI_SETEXTRADESCENT, nFontExtraSpace, 0 )
         SciMsg( pSciView, SCI_STYLESETCHARACTERSET, STYLE_DEFAULT, GetFontCharSetID(gConfig.EditorFontCharset) )
 
-        SciMsg( pSciView, SCI_STYLESETFORE, STYLE_DEFAULT, ghEditor.ForeColorText)
-        SciMsg( pSciView, SCI_STYLESETBACK, STYLE_DEFAULT, ghEditor.BackColorText)
-        SciMsg( pSciView, SCI_STYLESETBOLD, STYLE_DEFAULT, ghEditor.TextBold )
-        SciMsg( pSciView, SCI_STYLESETITALIC, STYLE_DEFAULT, ghEditor.TextItalic )
-        SciMsg( pSciView, SCI_STYLESETUNDERLINE, STYLE_DEFAULT, ghEditor.TextUnderline )
+        SciMsg( pSciView, SCI_STYLESETFORE, STYLE_DEFAULT, theme.editor.text.forecolor)
+        SciMsg( pSciView, SCI_STYLESETBACK, STYLE_DEFAULT, theme.editor.text.backcolor)
+        SciMsg( pSciView, SCI_STYLESETBOLD, STYLE_DEFAULT, theme.editor.text.bold )
+        SciMsg( pSciView, SCI_STYLESETITALIC, STYLE_DEFAULT, theme.editor.text.italic )
+        SciMsg( pSciView, SCI_STYLESETUNDERLINE, STYLE_DEFAULT, theme.editor.text.underline )
         SciMsg( pSciView, SCI_STYLECLEARALL, 0, 0 )  ' Copies global style to all others
             
         ' Set the style for the AutoComplete popup list
@@ -1497,13 +1497,13 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
 
         ' define bookmark marker (white circle)
         SciMsg( pSciView, SCI_MARKERDEFINE, MARKER_BOOKMARK, SC_MARK_VERTICALBOOKMARK )
-        SciMsg( pSciView, SCI_MARKERSETFORE, MARKER_BOOKMARK, ghEditor.ForeColorBookmark)
-        SciMsg( pSciView, SCI_MARKERSETBACK, MARKER_BOOKMARK, ghEditor.BackColorBookmark )
+        SciMsg( pSciView, SCI_MARKERSETFORE, MARKER_BOOKMARK, theme.editor.bookmark.forecolor)
+        SciMsg( pSciView, SCI_MARKERSETBACK, MARKER_BOOKMARK, theme.editor.bookmark.backcolor )
         
         ' define breakpoint marker (red circle)
         SciMsg( pSciView, SCI_MARKERDEFINE, MARKER_BREAKPOINT, SC_MARK_CIRCLE )
-        SciMsg( pSciView, SCI_MARKERSETFORE, MARKER_BREAKPOINT, ghEditor.ForeColorBreakpoint )
-        SciMsg( pSciView, SCI_MARKERSETBACK, MARKER_BREAKPOINT, ghEditor.BackColorBreakpoint )
+        SciMsg( pSciView, SCI_MARKERSETFORE, MARKER_BREAKPOINT, theme.editor.breakpoint.forecolor )
+        SciMsg( pSciView, SCI_MARKERSETBACK, MARKER_BREAKPOINT, theme.editor.breakpoint.backcolor )
 
         ' Arm the mouse dwell notification. Without a time set Scintilla's default is
         ' SC_TIME_FOREVER, SCN_DWELLSTART never arrives, and the debugger's hover datatips
@@ -1517,18 +1517,18 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
 
         ' define debugger cuurent line marker (yellow arrow)
         SciMsg( pSciView, SCI_MARKERDEFINE, MARKER_DEBUGGER_CURLINE, SC_MARK_SHORTARROW )
-        SciMsg( pSciView, SCI_MARKERSETFORE, MARKER_DEBUGGER_CURLINE, ghEditor.ForeColorDebugLine )
-        SciMsg( pSciView, SCI_MARKERSETBACK, MARKER_DEBUGGER_CURLINE, ghEditor.BackColorDebugLine )
+        SciMsg( pSciView, SCI_MARKERSETFORE, MARKER_DEBUGGER_CURLINE, theme.editor.debugline.forecolor )
+        SciMsg( pSciView, SCI_MARKERSETBACK, MARKER_DEBUGGER_CURLINE, theme.editor.debugline.backcolor )
         ''
         ''  MARGIN 0: Line Numbering (defaults to width 0)
         nPixels = SciMsg( pSciView, SCI_TEXTWIDTH, 0, cast(LPARAM, @"_99999"))
         SciMsg( pSciView, SCI_SETMARGINTYPEN, 0, SC_MARGIN_NUMBER )
-        SciMsg( pSciView, SCI_STYLESETFORE, STYLE_LINENUMBER, ghEditor.ForeColorLinenumbers )
-        SciMsg( pSciView, SCI_STYLESETBACK, STYLE_LINENUMBER, ghEditor.BackColorLinenumbers )
+        SciMsg( pSciView, SCI_STYLESETFORE, STYLE_LINENUMBER, theme.editor.linenumbers.forecolor )
+        SciMsg( pSciView, SCI_STYLESETBACK, STYLE_LINENUMBER, theme.editor.linenumbers.backcolor )
         SciMsg( pSciView, SCI_SETMARGINWIDTHN, 0, iif(gConfig.LineNumbering, nPixels, 0) )
-        SciMsg( pSciView, SCI_STYLESETBOLD, STYLE_LINENUMBER, ghEditor.LineNumbersBold )
-        SciMsg( pSciView, SCI_STYLESETITALIC, STYLE_LINENUMBER, ghEditor.LineNumbersItalic )
-        SciMsg( pSciView, SCI_STYLESETUNDERLINE, STYLE_LINENUMBER, ghEditor.LineNumbersUnderline )
+        SciMsg( pSciView, SCI_STYLESETBOLD, STYLE_LINENUMBER, theme.editor.linenumbers.bold )
+        SciMsg( pSciView, SCI_STYLESETITALIC, STYLE_LINENUMBER, theme.editor.linenumbers.italic )
+        SciMsg( pSciView, SCI_STYLESETUNDERLINE, STYLE_LINENUMBER, theme.editor.linenumbers.underline )
     
         ''
         ''  MARGIN 1: Non-Folding symbols (defaults to width 16) (Bookmark symbol, etc) (will be same color as line numbering)
@@ -1540,8 +1540,8 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
         ''  MARGIN 2: Folding symbols (defaults to width 0)
         SciMsg( pSciView, SCI_SETMARGINTYPEN, 2, SC_MARGIN_SYMBOL )
         SciMsg( pSciView, SCI_SETMARGINMASKN, 2, SC_MASK_FOLDERS )
-        SciMsg( pSciView, SCI_SETFOLDMARGINCOLOUR, Ctrue, ghEditor.ForeColorFoldmargin )
-        SciMsg( pSciView, SCI_SETFOLDMARGINHICOLOUR, Ctrue, ghEditor.ForeColorFoldmargin )
+        SciMsg( pSciView, SCI_SETFOLDMARGINCOLOUR, Ctrue, theme.editor.foldmargin )
+        SciMsg( pSciView, SCI_SETFOLDMARGINHICOLOUR, Ctrue, theme.editor.foldmargin )
         SciMsg( pSciView, SCI_SETMARGINSENSITIVEN, 2, 1 )
         SciMsg( pSciView, SCI_SETMARGINWIDTHN, 2, iif(gConfig.FoldMargin, 16 * rxRatio, 0) )
 
@@ -1584,27 +1584,27 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
         else
             SciMsg( pSciView, SCI_SETINDENTATIONGUIDES, false, 0)
         end if
-        SciMsg( pSciView, SCI_STYLESETFORE, STYLE_INDENTGUIDE, ghEditor.ForeColorIndentguides )
-        SciMsg( pSciView, SCI_STYLESETBACK, STYLE_INDENTGUIDE, ghEditor.BackColorIndentguides )
+        SciMsg( pSciView, SCI_STYLESETFORE, STYLE_INDENTGUIDE, theme.editor.indentguides.forecolor )
+        SciMsg( pSciView, SCI_STYLESETBACK, STYLE_INDENTGUIDE, theme.editor.indentguides.backcolor )
         
         ''
         ''  CARET
-        SciMsg( pSciView, SCI_SETCARETFORE, ghEditor.ForeColorCaret, 0 )
+        SciMsg( pSciView, SCI_SETCARETFORE, theme.editor.caret, 0 )
         SciMsg( pSciView, SCI_SETCARETWIDTH, 3, 0 )   '(1,2,3  Default is 1)
 
         ''
         ''  SHOW CARET LINE
         if gConfig.HighlightCurrentLine then
             SciMsg( pSciView, SCI_SETCARETLINEVISIBLE, Ctrue, 0 )
-            SciMsg( pSciView, SCI_SETCARETLINEBACK, ghEditor.BackColorCurrentline, 0 )
+            SciMsg( pSciView, SCI_SETCARETLINEBACK, theme.editor.currentline, 0 )
         else
             SciMsg( pSciView, SCI_SETCARETLINEVISIBLE, false, 0 )
         end if
         
         ''
         ''  SELECTION COLORS
-        SciMsg( pSciView, SCI_SETSELFORE, Ctrue, ghEditor.ForeColorSelection )
-        SciMsg( pSciView, SCI_SETSELBACK, Ctrue, ghEditor.BackColorSelection )
+        SciMsg( pSciView, SCI_SETSELFORE, Ctrue, theme.editor.selection.forecolor )
+        SciMsg( pSciView, SCI_SETSELBACK, Ctrue, theme.editor.selection.backcolor )
     
         ''
         ''  MULTIPLE SELECTIONS
@@ -1635,6 +1635,16 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
         '' RIGHT EDGE COLUMN
         SciMsg( pSciView, SCI_SETEDGEMODE, iif(gConfig.RightEdge, EDGE_LINE, EDGE_NONE), 0 )
         SciMsg( pSciView, SCI_SETEDGECOLUMN, val(gConfig.RightEdgePosition), 0 )
+        ' SCI_SETEDGECOLOUR was never sent anywhere, so the right-margin guide drew in
+        ' Scintilla's built-in #C0C0C0 in every theme -- a light grey line down a dark
+        ' editor. It has a key now.
+        SciMsg( pSciView, SCI_SETEDGECOLOUR, theme.editor.edge, 0 )
+        ' Likewise visible whitespace and the multi-cursor selections/carets: all four of
+        ' these messages were absent, so they used Scintilla's defaults regardless of theme.
+        SciMsg( pSciView, SCI_SETWHITESPACEFORE, 1, theme.editor.whitespace.forecolor )
+        SciMsg( pSciView, SCI_SETWHITESPACEBACK, 1, theme.editor.whitespace.backcolor )
+        SciMsg( pSciView, SCI_SETADDITIONALSELBACK, theme.editor.additionalselection, 0 )
+        SciMsg( pSciView, SCI_SETADDITIONALCARETFORE, theme.editor.additionalcaret, 0 )
 
         ''
         ''  OTHER
@@ -1681,84 +1691,84 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
 
             if gConfig.SyntaxHighlighting then
             ' Set the Default text colors
-            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_DEFAULT, ghEditor.ForeColorText)
-            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_DEFAULT, ghEditor.BackColorText)
-            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_DEFAULT, ghEditor.TextBold )
-            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_DEFAULT, ghEditor.TextItalic )
-            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_DEFAULT, ghEditor.TextUnderline )
+            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_DEFAULT, theme.editor.text.forecolor)
+            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_DEFAULT, theme.editor.text.backcolor)
+            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_DEFAULT, theme.editor.text.bold )
+            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_DEFAULT, theme.editor.text.italic )
+            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_DEFAULT, theme.editor.text.underline )
 
             ' Set the Multiline Comments style
-            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_MULTILINECOMMENT, ghEditor.ForeColorComments )
-            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_MULTILINECOMMENT, ghEditor.BackColorComments )
-            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_MULTILINECOMMENT, ghEditor.CommentsBold )
-            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_MULTILINECOMMENT, ghEditor.CommentsItalic )
-            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_MULTILINECOMMENT, ghEditor.CommentsUnderline )
+            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_MULTILINECOMMENT, theme.editor.comments.forecolor )
+            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_MULTILINECOMMENT, theme.editor.comments.backcolor )
+            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_MULTILINECOMMENT, theme.editor.comments.bold )
+            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_MULTILINECOMMENT, theme.editor.comments.italic )
+            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_MULTILINECOMMENT, theme.editor.comments.underline )
 
             ' Set the Comments style
-            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_COMMENT, ghEditor.ForeColorComments )
-            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_COMMENT, ghEditor.BackColorComments )
-            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_COMMENT, ghEditor.CommentsBold )
-            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_COMMENT, ghEditor.CommentsItalic )
-            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_COMMENT, ghEditor.CommentsUnderline )
+            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_COMMENT, theme.editor.comments.forecolor )
+            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_COMMENT, theme.editor.comments.backcolor )
+            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_COMMENT, theme.editor.comments.bold )
+            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_COMMENT, theme.editor.comments.italic )
+            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_COMMENT, theme.editor.comments.underline )
 
             ' Set the Keywords style (FreeBasic)
-            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_KEYWORD, ghEditor.ForeColorKeyword )
-            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_KEYWORD, ghEditor.BackColorKeyword )
+            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_KEYWORD, theme.editor.keyword1.forecolor )
+            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_KEYWORD, theme.editor.keyword1.backcolor )
             SciMsg( pSciView, SCI_STYLESETCASE, SCE_B_KEYWORD, nFontcase )
-            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_KEYWORD, ghEditor.KeywordBold )
-            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_KEYWORD, ghEditor.KeywordItalic )
-            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_KEYWORD, ghEditor.KeywordUnderline )
+            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_KEYWORD, theme.editor.keyword1.bold )
+            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_KEYWORD, theme.editor.keyword1.italic )
+            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_KEYWORD, theme.editor.keyword1.underline )
 
             ' Set the Keywords style (Windows Api)
-            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_KEYWORD2, ghEditor.ForeColorKeyword2 )
-            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_KEYWORD2, ghEditor.BackColorKeyword2 )
+            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_KEYWORD2, theme.editor.keyword2.forecolor )
+            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_KEYWORD2, theme.editor.keyword2.backcolor )
             SciMsg( pSciView, SCI_STYLESETCASE, SCE_B_KEYWORD2, nFontcase )
-            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_KEYWORD2, ghEditor.KeywordBold2 )
-            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_KEYWORD2, ghEditor.KeywordItalic2 )
-            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_KEYWORD2, ghEditor.KeywordUnderline2 )
+            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_KEYWORD2, theme.editor.keyword2.bold )
+            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_KEYWORD2, theme.editor.keyword2.italic )
+            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_KEYWORD2, theme.editor.keyword2.underline )
 
             ' Set the Keywords style (Extra Keywords)
-            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_KEYWORD3, ghEditor.ForeColorKeyword3 )
-            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_KEYWORD3, ghEditor.BackColorKeyword3 )
+            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_KEYWORD3, theme.editor.keyword3.forecolor )
+            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_KEYWORD3, theme.editor.keyword3.backcolor )
             SciMsg( pSciView, SCI_STYLESETCASE, SCE_B_KEYWORD3, nFontcase )
-            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_KEYWORD3, ghEditor.KeywordBold3 )
-            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_KEYWORD3, ghEditor.KeywordItalic3 )
-            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_KEYWORD3, ghEditor.KeywordUnderline3 )
+            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_KEYWORD3, theme.editor.keyword3.bold )
+            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_KEYWORD3, theme.editor.keyword3.italic )
+            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_KEYWORD3, theme.editor.keyword3.underline )
 
             ' Set the Numbers style
-            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_NUMBER, ghEditor.ForeColorNumbers )
-            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_NUMBER, ghEditor.BackColorNumbers )
-            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_NUMBER, ghEditor.NumbersBold )
-            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_NUMBER, ghEditor.NumbersItalic)
-            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_NUMBER, ghEditor.NumbersUnderline)
+            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_NUMBER, theme.editor.numbers.forecolor )
+            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_NUMBER, theme.editor.numbers.backcolor )
+            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_NUMBER, theme.editor.numbers.bold )
+            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_NUMBER, theme.editor.numbers.italic)
+            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_NUMBER, theme.editor.numbers.underline)
 
             ' Set the Operators style
-            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_OPERATOR, ghEditor.ForeColorOperators )
-            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_OPERATOR, ghEditor.BackColorOperators )
-            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_OPERATOR, ghEditor.OperatorsBold)
-            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_OPERATOR, ghEditor.OperatorsItalic)
-            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_OPERATOR, ghEditor.OperatorsUnderline)
+            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_OPERATOR, theme.editor.operators.forecolor )
+            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_OPERATOR, theme.editor.operators.backcolor )
+            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_OPERATOR, theme.editor.operators.bold)
+            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_OPERATOR, theme.editor.operators.italic)
+            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_OPERATOR, theme.editor.operators.underline)
 
 '            ' Set the "date" style. We use this for @()[]{} brace characters
-'            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_DATE, ghEditor.ForeColorBraceGood)
-'            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_DATE, ghEditor.BackColorText)
-'            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_DATE, ghEditor.TextBold )
-'            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_DATE, ghEditor.TextItalic )
-'            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_DATE, ghEditor.TextUnderline )
+'            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_DATE, theme.editor.bracegood)
+'            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_DATE, theme.editor.text.backcolor)
+'            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_DATE, theme.editor.text.bold )
+'            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_DATE, theme.editor.text.italic )
+'            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_DATE, theme.editor.text.underline )
 
             ' Set the Preprocessor style
-            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_PREPROCESSOR, ghEditor.ForeColorPreprocessor )
-            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_PREPROCESSOR, ghEditor.BackColorPreprocessor )
-            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_PREPROCESSOR, ghEditor.PreprocessorBold)
-            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_PREPROCESSOR, ghEditor.PreprocessorItalic)
-            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_PREPROCESSOR, ghEditor.PreprocessorUnderline)
+            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_PREPROCESSOR, theme.editor.preprocessor.forecolor )
+            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_PREPROCESSOR, theme.editor.preprocessor.backcolor )
+            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_PREPROCESSOR, theme.editor.preprocessor.bold)
+            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_PREPROCESSOR, theme.editor.preprocessor.italic)
+            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_PREPROCESSOR, theme.editor.preprocessor.underline)
 
             ' Set the strings style
-            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_STRING, ghEditor.ForeColorStrings )
-            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_STRING, ghEditor.BackColorStrings )
-            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_STRING, ghEditor.StringsBold)
-            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_STRING, ghEditor.StringsItalic)
-            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_STRING, ghEditor.StringsUnderline)
+            SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_STRING, theme.editor.strings.forecolor )
+            SciMsg( pSciView, SCI_STYLESETBACK, SCE_B_STRING, theme.editor.strings.backcolor )
+            SciMsg( pSciView, SCI_STYLESETBOLD, SCE_B_STRING, theme.editor.strings.bold)
+            SciMsg( pSciView, SCI_STYLESETITALIC, SCE_B_STRING, theme.editor.strings.italic)
+            SciMsg( pSciView, SCI_STYLESETUNDERLINE, SCE_B_STRING, theme.editor.strings.underline)
 
             end if
         end if
@@ -1783,8 +1793,8 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
             SciMsg( pSciView, SCI_SETFOLDFLAGS, 16, 0 )
 
             ' Colors for folders closed and folders opened
-            dim as COLORREF clrFore = ghEditor.ForeColorFoldsymbol
-            dim as COLORREF clrBack = ghEditor.BackColorFoldsymbol
+            dim as COLORREF clrFore = theme.editor.foldsymbol.forecolor
+            dim as COLORREF clrBack = theme.editor.foldsymbol.backcolor
 
             SciMsg( pSciView, SCI_MARKERSETFORE, SC_MARKNUM_FOLDER, clrBack)
             SciMsg( pSciView, SCI_MARKERSETBACK, SC_MARKNUM_FOLDER, clrFore)

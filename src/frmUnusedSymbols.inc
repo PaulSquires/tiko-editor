@@ -194,9 +194,9 @@ end sub
 private sub frmUnusedSymbols_PaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
     if p = 0 then exit sub
 
-    dim as COLORREF backclr = ghOutput.BackColor
-    if p->isHot orelse p->isResizeHot then backclr = ghOutput.ForeColorScrollBar
-    p->b->SetForeColor( ghOutput.ForeColorHot )
+    dim as COLORREF backclr = theme.output.text.backcolor
+    if p->isHot orelse p->isResizeHot then backclr = theme.output.scrollbar.forecolor
+    p->b->SetForeColor( theme.output.texthot.forecolor )
     p->b->SetBackColor( backclr )
     p->b->PaintRect( @p->rc )
 
@@ -222,7 +222,7 @@ private sub frmUnusedSymbols_PaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO pt
     ' one-pixel trailing divider, matching the shared painter
     dim as RECT rcDiv = p->rc
     rcDiv.left = rcDiv.right - AfxScaleX(1)
-    p->b->SetBackColor( ghOutput.ScrollBarDivider )
+    p->b->SetBackColor( theme.output.scrollbardivider )
     p->b->PaintRect( @rcDiv )
 end sub
 
@@ -260,9 +260,9 @@ sub frmUnusedSymbols_ApplyTheme()
 
     dim as HWND hLV = HWND_FRMUNUSED_LIST
     if IsWindow(hLV) then
-        PsListTree_SetBackColor( hLV, ghOutput.BackColor )
-        PsListTree_SetScrollBarColors( hLV, ghOutput.BackColorScrollBar, _
-                                       ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
+        PsListTree_SetBackColor( hLV, theme.output.text.backcolor )
+        PsListTree_SetScrollBarColors( hLV, theme.output.scrollbar.backcolor, _
+                                       theme.output.scrollbar.forecolor, theme.output.scrollbar.forecolor )
     end if
 
     AfxRedrawWindow( HWND_FRMUNUSED )
@@ -314,7 +314,7 @@ private sub frmUnusedSymbols_OnPaint( byval hwnd as HWND )
 
     dim as PsBufferPaint b
     b.BeginDoubleBuffer( hwnd )
-    b.SetBackColor( ghPanel.BackColor )
+    b.SetBackColor( theme.panel.text.backcolor )
     b.PaintRect( @rc )
     b.SetFont( ghFont(GUIFONT_9) )
 
@@ -331,7 +331,7 @@ private sub frmUnusedSymbols_OnPaint( byval hwnd as HWND )
     rcT.left += nPad
     rcT.right -= nPad
     rcT.bottom = rcT.top + pWindow->ScaleY(22)
-    b.SetForeColor( ghPanel.ForeColor )
+    b.SetForeColor( theme.panel.text.forecolor )
     b.PaintText( L(583, "Scanned:") & " " & gUnusedScannedText, @rcT, DT_LEFT )
 
     if len(gUnusedDirtyText) > 0 then
@@ -340,10 +340,10 @@ private sub frmUnusedSymbols_OnPaint( byval hwnd as HWND )
         rcW.right -= nPad
         rcW.top = rcT.bottom
         ' the one line here that must not be missed
-        b.SetForeColor( ghGeneral.iconfail )
+        b.SetForeColor( theme.compile.iconfail )
         b.PaintText( L(584, "Unsaved changes (line numbers may be stale):") & " " & gUnusedDirtyText, _
                      @rcW, DT_LEFT )
-        b.SetForeColor( ghPanel.ForeColor )
+        b.SetForeColor( theme.panel.text.forecolor )
     end if
 
     ' (the kind filters are PsCheckBoxes and paint their own captions)
@@ -498,6 +498,47 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
         PsCheckBox_SetGlyphFont( h, ghFont(SYMBOLFONT_10) )
         PsCheckBox_SetChecked( h, (gConfig.UnusedKindMask and (1 shl (id - IDC_FRMUNUSED_TOGGLEFIRST))) <> 0 )
         PsCheckBox_SetCheckChangedCallback( h, @frmUnusedSymbols_ToggleChanged )
+
+        ' THESE WERE NEVER THEMED. Every other setter above was called and this one was
+        ' not, so the five filters rendered in PsCheckBox's library defaults -- a fixed
+        ' dark palette matching nothing in this window. tiko has no other PsCheckBox host,
+        ' which is why nothing else had to notice.
+        '
+        ' THE PANEL PALETTE, because that is what frmUnusedSymbols_OnPaint fills its own
+        ' client rect with. Getting this wrong is VISIBLE rather than subtle: a checkbox
+        ' whose BackColor differs from the surface behind it paints its whole control rect
+        ' in that colour, so the five filters read as five raised tiles on the pane instead
+        ' of as text on it. The library default and the Output palette are both wrong here
+        ' for the same reason -- neither is what this window paints.
+        scope
+            dim as PSCHECKBOX_COLORS cc
+            cc.BackColor               = theme.panel.text.backcolor
+            cc.BackColorHot            = theme.panel.text.backcolor
+            cc.BackColorPressed        = theme.panel.text.backcolor
+            cc.BackColorDisabled       = theme.panel.text.backcolor
+            cc.ForeColor               = theme.panel.text.forecolor
+            cc.ForeColorHot            = theme.panel.texthot.forecolor
+            cc.ForeColorPressed        = theme.panel.texthot.forecolor
+            cc.ForeColorDisabled       = theme.role.clr(THROLE_FOREGROUNDDIM)
+            ' The box is ONE COMPOSITE GLYPH -- outline and tick are a single piece of ink
+            ' in a single colour -- so unchecked wants a muted outline and checked wants
+            ' the accent. There is no fill/tick split to reach for.
+            cc.BoxColor                = theme.role.clr(THROLE_FOREGROUNDDIM)
+            cc.BoxColorHot             = theme.panel.texthot.forecolor
+            cc.BoxColorPressed         = theme.panel.texthot.forecolor
+            cc.BoxColorDisabled        = theme.role.clr(THROLE_FOREGROUNDDIM)
+            ' ACCENTFORE, not ui.accent. The box glyph is INK, and ui.accent resolves to
+            ' toptabs.iconselected -- a colour picked to sit behind an icon, which reads
+            ' too dark as a stroke on this background. That is the rule CLAUDE.md states
+            ' (the accent is a fill, never a foreground) and this is what breaking it
+            ' looks like.
+            cc.BoxColorChecked         = theme.role.clr(THROLE_ACCENTFORE)
+            cc.BoxColorCheckedHot      = theme.role.clr(THROLE_ACCENTFORE)
+            cc.BoxColorCheckedPressed  = theme.role.clr(THROLE_ACCENTFORE)
+            cc.BoxColorCheckedDisabled = theme.role.clr(THROLE_FOREGROUNDDIM)
+            cc.FocusRingColor          = theme.role.clr(THROLE_ACCENTFORE)
+            PsCheckBox_SetColors( h, @cc )
+        end scope
     next
 
     ' --- list ---

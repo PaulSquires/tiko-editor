@@ -55,9 +55,19 @@
 ' in the Options nav strip; they are tabs on a PsSelectBar now, so they are numbered from zero
 ' and are local to this dialog. Nothing outside this file should name them.
 #Define THEMEPAGE_NONE       -1
-#Define THEMEPAGE_SYNTAX      0
-#Define THEMEPAGE_INTERFACE   1
-#Define THEMEPAGE_COUNT       2
+' THE PAGE ID IS THE SELECT-BAR PANEL INDEX. They must be equal, and the order of these
+' defines must match the order of the PsSelectBar_AddPanel calls in frmThemes_Build.
+'
+' That is not a style preference. frmThemes_BarSelChange receives the panel INDEX from the
+' control and passes it straight to frmThemes_SelectPage as a page ID, and
+' PsSelectBar_SetCurSel takes an INDEX too -- so the dialog conflates the two throughout and
+' only ever worked because they happened to match. Appending THEMEPAGE_PALETTE = 2 while
+' showing it FIRST broke that silently: the bar highlighted Interface (index 2) while the
+' list filled with roles. The invariant is asserted rather than remembered.
+#Define THEMEPAGE_PALETTE     0
+#Define THEMEPAGE_SYNTAX      1
+#Define THEMEPAGE_INTERFACE   2
+#Define THEMEPAGE_COUNT       3
 
 ' Shell metrics, UNSCALED -- run through AfxScaleX/AfxScaleY at use. FIXED SIZE, like
 ' frmOptions: the colour page's three columns have to fit one known width, and a resizable
@@ -117,30 +127,24 @@
 #Define IDC_FRMTHEMES_CMDRESETB   9508
 #Define IDC_FRMTHEMES_PICKER      9509
 #Define IDC_FRMTHEMES_PICKER2     9510   ' the selection-only picker inside the colour popup
+' Two R/G/B rows, one per CHANNEL. The page used to carry one row that edited whichever
+' channel was "active" -- state signalled only by the default border on the Foreground
+' button -- so a key could offer two colours to pick and one to type. Two rows delete the
+' mode rather than labelling it.
 #Define IDC_FRMTHEMES_TXTR        9511
 #Define IDC_FRMTHEMES_TXTG        9512
 #Define IDC_FRMTHEMES_TXTB        9513
+' "Use the palette colour" -- hands a channel back to its role. The other half of override:
+' without it every edit detaches a key permanently and the palette decays one key at a time.
+#Define IDC_FRMTHEMES_CMDINHF     9517
+#Define IDC_FRMTHEMES_CMDINHB     9518
+#Define IDC_FRMTHEMES_TXTR2       9514
+#Define IDC_FRMTHEMES_TXTG2       9515
+#Define IDC_FRMTHEMES_TXTB2       9516
 
-' Group-header categories for the key list. Stable ids, deliberately NOT localized strings --
-' grouping is structure, and must not change meaning with the UI language. THEMECAT_OTHER is
-' the unclassified bucket the self-test asserts stays empty.
-enum
-    THEMECAT_OTHER = 0
-    THEMECAT_MAIN
-    THEMECAT_PANEL
-    THEMECAT_TOPTABS
-    THEMECAT_MENUBAR
-    THEMECAT_POPUP
-    THEMECAT_STATUSBAR
-    THEMECAT_OUTPUT
-    THEMECAT_COMPILE
-    THEMECAT_SHARED
-    THEMECAT_SYNTAX
-    THEMECAT_CURSOR
-    THEMECAT_MARGINS
-    THEMECAT_MARKERS
-    THEMECAT_EDCHROME
-end enum
+' The THEMECAT_* group-header ids have MOVED to modThemeTypes.bi. They are engine vocabulary
+' now: the key table carries each key's category, so the ids have to exist long before this
+' dialog is loaded. Nothing else about them changed.
 
 dim shared HWND_FRMTHEMES       as HWND
 dim shared HWND_FRMTHEMES_PAGE  as HWND

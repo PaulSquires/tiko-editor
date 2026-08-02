@@ -442,7 +442,7 @@ private function frmKeyboardEdit_CaptureProc( _
             dim buffer as PsBufferPaint
             buffer.BeginDoubleBuffer( hwnd, hdc, rc )
 
-            buffer.SetBackColor( ghEditor.BackColorText )
+            buffer.SetBackColor( theme.ui.field.backcolor )
             buffer.PaintRect( @rc )
 
             ' The frame. PaintRoundOutline STROKES; a fill-then-stroke primitive here would
@@ -451,26 +451,26 @@ private function frmKeyboardEdit_CaptureProc( _
             ' Three states, and the refusal flash outranks focus: for its 200ms the frame is
             ' carrying news, and the focus it would otherwise report has not changed anyway.
             dim as long curve = AfxScaleY(6)
-            dim as COLORREF penclr = ghEditor.Divider
+            dim as COLORREF penclr = theme.ui.divider
             dim as long     penw   = 1
             if gEditFlashOn then
-                penclr = ghGeneral.iconfail : penw = 2
+                penclr = theme.compile.iconfail : penw = 2
             elseif gEditCaptureFocus then
-                penclr = ghUI.AccentColor   : penw = 2
+                penclr = theme.ui.accent   : penw = 2
             end if
             buffer.SetPenColor( penclr )
             buffer.PaintRoundOutline( @rc, curve, penw )
 
             dim as DWSTRING wszShow = gEditKeys
-            dim as COLORREF clr = ghEditor.ForeColorText
+            dim as COLORREF clr = theme.ui.field.forecolor
             dim as boolean bWaiting = (len(wszShow) = 0)
             if bWaiting then
                 wszShow = L(343,"Press the new shortcut")
-                clr = ghPanel.ForeColor
+                clr = theme.panel.text.forecolor
             end if
 
             buffer.SetForeColor( clr )
-            buffer.SetBackColor( ghEditor.BackColorText )
+            buffer.SetBackColor( theme.ui.field.backcolor )
             buffer.SetFont( ghFont(GUIFONTBOLD_11) )
 
             if bWaiting = false then
@@ -501,9 +501,9 @@ private function frmKeyboardEdit_CaptureProc( _
                     rcCaret.right  = rcCaret.left + caretW
                     rcCaret.top    = (rc.bottom - barH) \ 2
                     rcCaret.bottom = rcCaret.top + barH
-                    buffer.SetBackColor( ghUI.AccentColor )
+                    buffer.SetBackColor( theme.ui.accent )
                     buffer.PaintRect( @rcCaret )
-                    buffer.SetBackColor( ghEditor.BackColorText )
+                    buffer.SetBackColor( theme.ui.field.backcolor )
                 end if
             end if
 
@@ -545,11 +545,11 @@ end function
 private sub frmKeyboardEdit_KeyListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
     dim as boolean bActive = (p->isSelected orelse p->isHot)
-    p->b->SetBackColor( iif( bActive, ghPanel.BackColorHot, ghEditor.BackColorText ) )
+    p->b->SetBackColor( iif( bActive, theme.panel.texthot.backcolor, theme.ui.field.backcolor ) )
     p->b->PaintRect( @p->rc )
     dim as RECT rcText = p->rc
     rcText.left += AfxScaleX(8)
-    p->b->SetForeColor( iif( bActive, ghPanel.ForeColorHot, ghEditor.ForeColorText ) )
+    p->b->SetForeColor( iif( bActive, theme.panel.texthot.forecolor, theme.ui.field.forecolor ) )
     p->b->SetFont( ghFont(GUIFONT_11) )
     p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_END_ELLIPSIS )
 end sub
@@ -595,7 +595,7 @@ private function frmKeyboardEdit_OnPaint( byval hwnd as HWND ) as LRESULT
     dim buffer as PsBufferPaint
     buffer.BeginDoubleBuffer( hwnd, hdc, rc )
 
-    buffer.SetBackColor( ghPanel.BackColor )
+    buffer.SetBackColor( theme.panel.text.backcolor )
     buffer.PaintRect( @rc )
 
     dim as long mx = AfxScaleX(FRMKBEDIT_MARGIN)
@@ -607,14 +607,14 @@ private function frmKeyboardEdit_OnPaint( byval hwnd as HWND ) as LRESULT
 
     ' Description, bold.
     rcT.top = y : rcT.bottom = y + rowH
-    buffer.SetForeColor( ghPanel.ForeColorHot )
+    buffer.SetForeColor( theme.panel.texthot.forecolor )
     buffer.SetFont( ghFont(GUIFONTBOLD_11) )
     buffer.PaintText( gKeysEdit.wszDescription, @rcT, DT_LEFT or DT_END_ELLIPSIS )
     y += rowH
 
     ' Category, dim.
     rcT.top = y : rcT.bottom = y + rowH
-    buffer.SetForeColor( ghPanel.ForeColor )
+    buffer.SetForeColor( theme.panel.text.forecolor )
     buffer.SetFont( ghFont(GUIFONT_11) )
     buffer.PaintText( gKeysEdit.wszCategory, @rcT, DT_LEFT or DT_END_ELLIPSIS )
     y += rowH + AfxScaleY(10)
@@ -627,7 +627,7 @@ private function frmKeyboardEdit_OnPaint( byval hwnd as HWND ) as LRESULT
     if len(wszDef) = 0 then wszDef = L(348,"(no default)")
     rcT.top = y : rcT.bottom = y + rowH
     rcT.right = rc.right - mx - AfxScaleX(210)
-    buffer.SetForeColor( ghPanel.ForeColor )
+    buffer.SetForeColor( theme.panel.text.forecolor )
     buffer.SetFont( ghFont(GUIFONT_11) )
     buffer.PaintText( L(337,"Default Keys") & ": " & wszDef, @rcT, DT_LEFT or DT_END_ELLIPSIS )
 
@@ -652,7 +652,7 @@ private function frmKeyboardEdit_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as long togW = AfxScaleX(46)
     dim as long capW = AfxScaleX(42)
     dim as long x    = mx
-    buffer.SetForeColor( ghPanel.ForeColor )
+    buffer.SetForeColor( theme.panel.text.forecolor )
     buffer.SetFont( ghFont(GUIFONT_11) )
 
     #macro TOGCAPTION( _text_ )
@@ -681,7 +681,7 @@ private function frmKeyboardEdit_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as DWSTRING wszMsg = gEditWhy
     if len(wszMsg) = 0 then wszMsg = frmKeyboard_CheckForKeyConflict( gEditKeys, gEditIndex )
     if len(wszMsg) then
-        buffer.SetForeColor( ghGeneral.iconfail )
+        buffer.SetForeColor( theme.compile.iconfail )
         buffer.SetFont( ghFont(GUIFONT_11) )
         buffer.PaintText( wszMsg, @rcT, DT_LEFT or DT_END_ELLIPSIS )
     end if
@@ -762,55 +762,55 @@ private sub frmKeyboardEdit_ApplyTheme( byval hwnd as HWND )
     ' Same recipes as the Options dialog's OptionsTheme_Fill* helpers, spelled out because
     ' those live in modOptionsRows.inc, which the unity build includes after this file.
     dim as PSTOGGLE_COLORS tc
-    tc.BackColor                   = ghPanel.BackColor
-    tc.FocusRingColor              = ghPanel.ForeColorHot
-    tc.TrackColorOn                = ghUI.AccentColor
-    tc.TrackColorOnHot             = ghUI.AccentColor
-    tc.TrackColorOnDisabled        = ghPanel.BackColorButton
+    tc.BackColor                   = theme.panel.text.backcolor
+    tc.FocusRingColor              = theme.panel.texthot.forecolor
+    tc.TrackColorOn                = theme.ui.accent
+    tc.TrackColorOnHot             = theme.ui.accent
+    tc.TrackColorOnDisabled        = theme.panel.button.backcolor
     tc.TrackBorderColorOn          = tc.TrackColorOn
     tc.TrackBorderColorOnHot       = tc.TrackColorOnHot
     tc.TrackBorderColorOnDisabled  = tc.TrackColorOnDisabled
-    tc.KnobColorOn                 = ghPanel.ForeColor
-    tc.KnobColorOnHot              = ghPanel.ForeColorHot
-    tc.KnobColorOnDisabled         = ghPanel.ForeColorScrollBar
-    tc.TrackColorOff               = ghPanel.BackColor
-    tc.TrackColorOffHot            = ghPanel.BackColorHot
-    tc.TrackColorOffDisabled       = ghPanel.BackColor
-    tc.TrackBorderColorOff         = ghEditor.Divider
-    tc.TrackBorderColorOffHot      = ghPanel.ForeColorHot
-    tc.TrackBorderColorOffDisabled = ghEditor.Divider
-    tc.KnobColorOff                = ghPanel.ForeColorScrollBar
-    tc.KnobColorOffHot             = ghPanel.ForeColor
-    tc.KnobColorOffDisabled        = ghEditor.Divider
+    tc.KnobColorOn                 = theme.panel.text.forecolor
+    tc.KnobColorOnHot              = theme.panel.texthot.forecolor
+    tc.KnobColorOnDisabled         = theme.panel.scrollbar.forecolor
+    tc.TrackColorOff               = theme.panel.text.backcolor
+    tc.TrackColorOffHot            = theme.panel.texthot.backcolor
+    tc.TrackColorOffDisabled       = theme.panel.text.backcolor
+    tc.TrackBorderColorOff         = theme.ui.divider
+    tc.TrackBorderColorOffHot      = theme.panel.texthot.forecolor
+    tc.TrackBorderColorOffDisabled = theme.ui.divider
+    tc.KnobColorOff                = theme.panel.scrollbar.forecolor
+    tc.KnobColorOffHot             = theme.panel.text.forecolor
+    tc.KnobColorOffDisabled        = theme.ui.divider
 
     PsToggle_SetColors( ghEditTogCtrl,    @tc )
     PsToggle_SetColors( ghEditTogAlt,     @tc )
     PsToggle_SetColors( ghEditTogShift,   @tc )
     PsToggle_SetColors( ghEditTogDisable, @tc )
 
-    PsListTree_SetBackColor( ghEditKeyList, ghEditor.BackColorText )
-    PsListTree_SetScrollBarColors( ghEditKeyList, ghPanel.BackColorScrollBar, _
-                                   ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
-    PsListTree_SetBorderColor( ghEditKeyList, ghEditor.Divider )
+    PsListTree_SetBackColor( ghEditKeyList, theme.ui.field.backcolor )
+    PsListTree_SetScrollBarColors( ghEditKeyList, theme.panel.scrollbar.backcolor, _
+                                   theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
+    PsListTree_SetBorderColor( ghEditKeyList, theme.ui.divider )
     PsListTree_SetBorderWidth( ghEditKeyList, 1 )
 
     dim as PSBUTTON_COLORS bc
-    bc.BackColor           = ghPanel.BackColorButton
-    bc.ForeColor           = ghPanel.ForeColorButton
-    bc.BorderColor         = ghEditor.Divider
-    bc.IconColor           = ghPanel.ForeColorButton
-    bc.BackColorHot        = ghPanel.BackColorButtonHot
-    bc.ForeColorHot        = ghPanel.ForeColorButtonHot
-    bc.BorderColorHot      = ghPanel.BackColorButtonHot
-    bc.IconColorHot        = ghPanel.ForeColorButtonHot
-    bc.BackColorPressed    = ghPanel.BackColorButtonHot
-    bc.ForeColorPressed    = ghPanel.ForeColorButtonHot
-    bc.BorderColorPressed  = ghPanel.BackColorButtonHot
-    bc.IconColorPressed    = ghPanel.ForeColorButtonHot
-    bc.BackColorDisabled   = ghPanel.BackColor
-    bc.ForeColorDisabled   = ghEditor.Divider
-    bc.BorderColorDisabled = ghEditor.Divider
-    bc.IconColorDisabled   = ghEditor.Divider
+    bc.BackColor           = theme.panel.button.backcolor
+    bc.ForeColor           = theme.panel.button.forecolor
+    bc.BorderColor         = theme.ui.divider
+    bc.IconColor           = theme.panel.button.forecolor
+    bc.BackColorHot        = theme.panel.buttonhot.backcolor
+    bc.ForeColorHot        = theme.panel.buttonhot.forecolor
+    bc.BorderColorHot      = theme.panel.buttonhot.backcolor
+    bc.IconColorHot        = theme.panel.buttonhot.forecolor
+    bc.BackColorPressed    = theme.panel.buttonhot.backcolor
+    bc.ForeColorPressed    = theme.panel.buttonhot.forecolor
+    bc.BorderColorPressed  = theme.panel.buttonhot.backcolor
+    bc.IconColorPressed    = theme.panel.buttonhot.forecolor
+    bc.BackColorDisabled   = theme.panel.text.backcolor
+    bc.ForeColorDisabled   = theme.ui.divider
+    bc.BorderColorDisabled = theme.ui.divider
+    bc.IconColorDisabled   = theme.ui.divider
     PsButton_SetColors( ghEditReset, @bc )
     PsButton_SetColors( ghEditOK, @bc )
     PsButton_SetColors( ghEditCancel, @bc )

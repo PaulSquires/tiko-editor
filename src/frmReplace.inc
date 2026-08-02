@@ -76,17 +76,17 @@ end function
 private sub frmReplace_IconPaint( byval p as PSICONPANEL_PAINTINFO ptr )
     ' Fill the whole cell first: p->rc carries the item's padding, and anything left
     ' unpainted shows the panel background through.
-    p->b->SetBackColor( ghTopTabs.BackColorHot )
+    p->b->SetBackColor( theme.toptabs.texthot.backcolor )
     p->b->PaintRect( @p->rc )
 
     dim as long id = PsIconPanel_GetItemID( p->hIconPanel, p->itemID )
     if (id = REPLACETIP_PRESERVE) andalso (gFind.nPreserve <> 0) then
-        p->b->SetBackColor( ghTopTabs.IconSelectedBackColor )
+        p->b->SetBackColor( theme.toptabs.iconselected )
     else
         p->b->SetBackColor( iif( p->isHot orelse p->isPressed, _
-                                 ghTopTabs.BackColor, ghTopTabs.BackColorHot ) )
+                                 theme.toptabs.text.backcolor, theme.toptabs.texthot.backcolor ) )
     end if
-    p->b->SetForeColor( ghTopTabs.ForeColorHot )
+    p->b->SetForeColor( theme.toptabs.texthot.forecolor )
     p->b->SetFont( PsIconPanel_GetFont( p->hIconPanel ) )
     p->b->PaintIconButton( p->wszGlyph, @p->rc )
 end sub
@@ -324,20 +324,20 @@ function frmReplace_WndProc( _
         b.BeginDoubleBuffer(hwnd)
 
         ' Set the default colors
-        b.SetForeColor( ghTopTabs.ForeColorHot )
-        b.SetBackColor( ghTopTabs.BackColorHot )
+        b.SetForeColor( theme.toptabs.texthot.forecolor )
+        b.SetBackColor( theme.toptabs.texthot.backcolor )
 
         ' Clear the entire back client area
         b.PaintClientRect()
 
         ' Paint the bottom line that separates from the code editing window.
-        b.SetPenColor( ghEditor.Divider )
+        b.SetPenColor( theme.editor.divider )
         b.PaintLine( 1, b.rcClient.left, b.rcClient.bottom, b.rcClient.right, b.rcClient.bottom )
 
         ' Draw the Replace controls. The strip's field color is BackColorHot, so
         ' a hovered (unselected) button inverts to the tab area's normal BackColor.
-        b.SetColors( ghTopTabs.ForeColorHot, ghTopTabs.BackColorHot )
-        b.SetPenColor( ghEditor.Divider )
+        b.SetColors( theme.toptabs.texthot.forecolor, theme.toptabs.texthot.backcolor )
+        b.SetPenColor( theme.editor.divider )
 
         b.PaintRoundBorderRect( @gTTabCtl.rcReplaceTextRect )
 
@@ -377,11 +377,11 @@ function frmReplace_Show( byval hwndParent as HWND ) as LRESULT
     ' regular Edit controls can not easily have their text vertically centered).
     dim as HWND hCtlReplace = PsTextBox_Create( HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE )
     PsTextBox_SetFont( hCtlReplace, ghFont(INFOFONT_11) )
-    PsTextBox_SetForeColor( hCtlReplace, ghTopTabs.ForeColorHot )
-    PsTextBox_SetBackColor( hCtlReplace, ghTopTabs.BackColorHot )
+    PsTextBox_SetForeColor( hCtlReplace, theme.toptabs.texthot.forecolor )
+    PsTextBox_SetBackColor( hCtlReplace, theme.toptabs.texthot.backcolor )
     PsTextBox_SetBorderWidth( hCtlReplace, 0 )                    ' flat, as before
     PsTextBox_SetCueBannerText( hCtlReplace, L(139,"Replace") & "..." )
-    PsTextBox_SetCueBannerColor( hCtlReplace, ghTopTabs.ForeColor )
+    PsTextBox_SetCueBannerColor( hCtlReplace, theme.toptabs.text.forecolor )
     PsTextBox_SetFocusCallback( hCtlReplace, @frmReplace_TextBoxFocus )
     PsTextBox_SetText( hCtlReplace, gFind.txtReplace )            ' carried-over replace term
     ThemeTextBoxContextMenu( hCtlReplace )

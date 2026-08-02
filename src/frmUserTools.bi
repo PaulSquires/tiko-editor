@@ -133,7 +133,7 @@ declare function frmUserTools_ShortcutText( byval idx as long ) as DWSTRING
 
 ' TRUE when this tool carries a key that CANNOT FIRE -- a name in settings.ini that
 ' KeyBindings_PickListKeyToValue does not resolve. Such a shortcut saves, reloads and shows
-' in the Tools menu perfectly and never once works; the list paints it in ghGeneral.iconfail
+' in the Tools menu perfectly and never once works; the list paints it in theme.compile.iconfail
 ' so it is visible rather than merely broken.
 declare function frmUserTools_ShortcutIsDead( byval idx as long ) as boolean
 

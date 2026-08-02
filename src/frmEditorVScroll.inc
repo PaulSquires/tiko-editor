@@ -64,16 +64,16 @@ end sub
 ' ========================================================================================
 ' Custom paint keeping the old editor scrollbar visuals: flat track, an always-drawn
 ' divider line at the left edge, flat thumb with no hover brightening. Reads the
-' ghEditor theme colors live, so a theme switch only needs a repaint.
+' theme.editor colors live, so a theme switch only needs a repaint.
 ' ========================================================================================
 sub frmEditorVScroll_PaintCallback( byval p as PSVSCROLLBAR_PAINTINFO ptr )
     dim as PsBufferPaint ptr b = p->b
-    b->SetBackColor( ghEditor.BackColorScrollBar )
+    b->SetBackColor( theme.editor.scrollbar.backcolor )
     b->PaintClientRect()
-    b->SetPenColor( ghEditor.Divider )
+    b->SetPenColor( theme.editor.divider )
     b->PaintLine( 1, p->rcClient.left, p->rcClient.top, p->rcClient.left, p->rcClient.bottom )
     if IsRectEmpty( @p->rcThumb ) = 0 then
-        b->SetBackColor( ghEditor.ForeColorScrollBar )
+        b->SetBackColor( theme.editor.scrollbar.forecolor )
         b->PaintRect( @p->rcThumb )
     end if
 end sub

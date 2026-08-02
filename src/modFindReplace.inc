@@ -385,7 +385,7 @@ function FindReplace_HighlightSearches() as long
     SciExec( hEdit, SCI_SETADDITIONALCARETSVISIBLE, false, 0) 
     SciExec( hEdit, SCI_INDICSETSTYLE, 8, INDIC_STRAIGHTBOX)
     SciExec( hEdit, SCI_SETINDICATORCURRENT, 8, 0)
-    SciExec( hEdit, SCI_INDICSETFORE, 8, ghEditor.ForeColorOccurrence ) 
+    SciExec( hEdit, SCI_INDICSETFORE, 8, theme.editor.occurrence ) 
     SciExec( hEdit, SCI_INDICSETALPHA, 8, 90 )   
     
     dim txtFind as string = gFind.txtFind

@@ -106,7 +106,7 @@ end function
 private sub frmTopTabsInfo_IconPaint( byval p as PSICONPANEL_PAINTINFO ptr )
     ' Fill the whole cell first: p->rc carries the item's padding and the control has
     ' background-filled it, so anything left unpainted shows the panel through.
-    p->b->SetBackColor( ghTopTabs.BackColorHot )
+    p->b->SetBackColor( theme.toptabs.texthot.backcolor )
     p->b->PaintRect( @p->rc )
 
     ' With no tabs open the bar draws nothing but its field -- the same guard the rest of
@@ -118,9 +118,9 @@ private sub frmTopTabsInfo_IconPaint( byval p as PSICONPANEL_PAINTINFO ptr )
     if len(wszGlyph) = 0 then exit sub
 
     p->b->SetFont( ghFont( iif( p->itemID = TTITIP_FIND, SYMBOLFONT_10, GUIFONT_10 ) ) )
-    p->b->SetForeColor( ghTopTabs.ForeColorHot )
+    p->b->SetForeColor( theme.toptabs.texthot.forecolor )
     p->b->SetBackColor( iif( p->isHot orelse p->isPressed, _
-                             ghTopTabs.BackColor, ghTopTabs.BackColorHot ) )
+                             theme.toptabs.text.backcolor, theme.toptabs.texthot.backcolor ) )
     p->b->PaintIconButton( wszGlyph, @p->rc )
 end sub
 
@@ -316,13 +316,13 @@ function frmTopTabsInfo_WndProc( _
         b.BeginDoubleBuffer(hwnd)
 
         ' Set the default colors
-        b.SetColors( ghTopTabs.ForeColorHot, ghTopTabs.BackColorHot )
+        b.SetColors( theme.toptabs.texthot.forecolor, theme.toptabs.texthot.backcolor )
 
         ' Clear the entire back client area
         b.PaintClientRect()
 
         ' Only paint bottom line if Find is not active.
-        b.SetPenColor( ghEditor.Divider )
+        b.SetPenColor( theme.editor.divider )
         if gFind.bShowFindPanel = false then
             b.PaintLine( 1, b.rcClient.left, b.rcClient.bottom, b.rcClient.right, b.rcClient.bottom )
         end if
@@ -348,7 +348,7 @@ function frmTopTabsInfo_WndProc( _
             end if
             ' The strip's field color is BackColorHot, so a hovered button
             ' inverts to the tab area's normal BackColor.
-            b.SetColors( ghTopTabs.ForeColorHot, ghTopTabs.BackColorHot )
+            b.SetColors( theme.toptabs.texthot.forecolor, theme.toptabs.texthot.backcolor )
             b.SetFont( ghFont(INFOFONT_11) )
             b.PaintText( wszFilename, @gTTabCtl.rcDiskFilename, DT_LEFT )
 
@@ -365,7 +365,7 @@ function frmTopTabsInfo_WndProc( _
             ' Keep this in step with the font PositionWindows measures the pill's width in.
             b.SetFont( ghFont(GUIFONT_11) )
             b.SetBackColor( iif( isMouseOverRECT(hwnd, gTTabCtl.rcFileTypeButton), _
-                                 ghTopTabs.BackColor, ghTopTabs.BackColorHot ) )
+                                 theme.toptabs.text.backcolor, theme.toptabs.texthot.backcolor ) )
             b.PaintRoundRect( @gTTabCtl.rcFileTypeButton )
             b.PaintText( gTTabCtl.wszFileType, @gTTabCtl.rcFileTypeButton, DT_CENTER )
         end if

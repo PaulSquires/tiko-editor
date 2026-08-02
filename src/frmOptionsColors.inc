@@ -200,10 +200,10 @@ private sub frmOptionsColors_FontPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
     dim as COLORREF backclr, foreclr
     if p->isSelected orelse p->isHot then
-        backclr = ghPanel.BackColorHot : foreclr = ghPanel.ForeColorHot
+        backclr = theme.panel.texthot.backcolor : foreclr = theme.panel.texthot.forecolor
     else
         ' Idle rows match the nav panel's lighter shade (see frmOptions nav list).
-        backclr = ghTopTabs.BackColorHot : foreclr = ghPanel.ForeColor
+        backclr = theme.toptabs.texthot.backcolor : foreclr = theme.panel.text.forecolor
     end if
     p->b->SetBackColor( backclr )
     p->b->SetForeColor( foreclr )
@@ -370,10 +370,10 @@ end sub
 sub frmOptionsColors_ApplyTheme()
     if gColorBuilt = false then exit sub
 
-    PsListTree_SetBackColor( ghColorFonts, ghTopTabs.BackColorHot )
+    PsListTree_SetBackColor( ghColorFonts, theme.toptabs.texthot.backcolor )
     OptionsTheme_ApplyListBorder( ghColorFonts )
-    PsListTree_SetScrollBarColors( ghColorFonts, ghPanel.BackColorScrollBar, _
-                                   ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+    PsListTree_SetScrollBarColors( ghColorFonts, theme.panel.scrollbar.backcolor, _
+                                   theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
 
     dim as PSCOMBOBOX_COLORS cc
     dim as PSPOPUPMENU_COLORS pc
@@ -510,8 +510,8 @@ sub frmOptionsColors_Paint( byval p as SCP_PAINTINFO ptr )
     if p = 0 then exit sub
     if gColorBuilt = false then exit sub
     p->b->SetFont( OptionsFont_Base() )
-    p->b->SetBackColor( ghPanel.BackColor )
-    p->b->SetForeColor( ghPanel.ForeColor )
+    p->b->SetBackColor( theme.panel.text.backcolor )
+    p->b->SetForeColor( theme.panel.text.forecolor )
     for i as long = lbound(gColorLabels) to ubound(gColorLabels)
         dim as RECT rc = gColorLabels(i).rc
         p->b->PaintText( gColorLabels(i).caption, @rc, DT_LEFT or DT_END_ELLIPSIS )

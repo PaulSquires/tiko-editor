@@ -133,15 +133,15 @@ end sub
 
 ' ========================================================================================
 ' Custom paint keeping the old editor scrollbar visuals: flat track, flat thumb, no
-' hover brightening. Reads the ghEditor theme colors live, so a theme switch only
+' hover brightening. Reads the theme.editor colors live, so a theme switch only
 ' needs a repaint.
 ' ========================================================================================
 sub frmEditorHScroll_PaintCallback( byval p as PSHSCROLLBAR_PAINTINFO ptr )
     dim as PsBufferPaint ptr b = p->b
-    b->SetBackColor( ghEditor.BackColorScrollBar )
+    b->SetBackColor( theme.editor.scrollbar.backcolor )
     b->PaintClientRect()
     if IsRectEmpty( @p->rcThumb ) = 0 then
-        b->SetBackColor( ghEditor.ForeColorScrollBar )
+        b->SetBackColor( theme.editor.scrollbar.forecolor )
         b->PaintRect( @p->rcThumb )
     end if
 end sub

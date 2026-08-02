@@ -388,7 +388,7 @@ function frmMain_HighlightWord( _
 
     '// Update indicator appearance
     SciMsg( pSci, SCI_INDICSETSTYLE, NUM, INDIC_STRAIGHTBOX )
-    SciMsg( pSci, SCI_INDICSETFORE, NUM, ghEditor.ForeColorOccurrence ) 
+    SciMsg( pSci, SCI_INDICSETFORE, NUM, theme.editor.occurrence ) 
     SciMsg( pSci, SCI_INDICSETALPHA, NUM, 80 )   
 
     '// Search the document
@@ -448,7 +448,7 @@ sub frmMain_SplitterPaint( byval p as PSSPLITTER_PAINTINFO ptr )
     dim as PsBufferPaint ptr b = p->b
 
     ' The sliver either side of the band is the form's own background.
-    b->SetBackColor( ghMain.BackColor )
+    b->SetBackColor( theme.main.panel )
     b->PaintClientRect()
 
     dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
@@ -466,7 +466,7 @@ sub frmMain_SplitterPaint( byval p as PSSPLITTER_PAINTINFO ptr )
         rc.top += nInset : rc.bottom -= nInset
     end if
 
-    b->SetBackColor( ghEditor.Divider )
+    b->SetBackColor( theme.editor.divider )
     b->PaintRect( @rc )
 end sub
 
@@ -541,7 +541,7 @@ function frmMain_OnPaint( byval hwnd as HWND ) as LRESULT
 
     b.BeginDoubleBuffer(hwnd)
 
-    b.SetBackColor( ghMain.BackColor )
+    b.SetBackColor( theme.main.panel )
 
     b.PaintClientRect()
 
@@ -555,7 +555,7 @@ function frmMain_OnPaint( byval hwnd as HWND ) as LRESULT
         MapWindowPoints( HWND_DESKTOP, HWND_FRMMAIN, cast(POINT ptr, @rcMenu), 2 )
         rcMenu.left = rcMenu.right
         rcMenu.right = b.rcClient.right
-        b.SetBackColor( ghTopTabs.BackColor )
+        b.SetBackColor( theme.toptabs.text.backcolor )
         b.PaintRect( @rcMenu )
 
         ' Continue frmTopTabsMenu's own bottom rule across this strip -- but only over the
@@ -570,7 +570,7 @@ function frmMain_OnPaint( byval hwnd as HWND ) as LRESULT
         dim as RECT rcRule = rcMenu
         rcRule.top    = rcMenu.bottom - (nPenW \ 2)
         rcRule.bottom = rcMenu.bottom
-        b.SetBackColor( ghEditor.Divider )
+        b.SetBackColor( theme.editor.divider )
         b.PaintRect( @rcRule )
     end if
     
@@ -1804,6 +1804,11 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Rendering-backend geometry self-test. Runs here because it needs a CWindow-backed
     ' HWND (PaintLine asks it for the DPI scale) but nothing else -- no theme, no config.
     if environ("PSBUFFERPAINT_SELFTEST") = "1" then PsBufferPaint_RunSelfTest( HWND_FRMMAIN )
+    ' The colour picker's own suite. tiko vendored the control for a long time without ever
+    ' calling this -- the file was included and the assertions never ran. Wired up with the
+    ' sync to canonical, which is exactly when a regression net over it starts earning its
+    ' keep: it is 195 assertions tiko was already carrying the code for.
+    if environ("PSCOLORPICKER_SELFTEST") = "1" then PsColorPicker_RunSelfTest( HWND_FRMMAIN )
 
     ' Build the keyboard accelerators
     frmKeyboard_BuildAcceleratorTable()

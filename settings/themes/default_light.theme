@@ -3,78 +3,102 @@ general.version: 1.0.0
 
 # all colors are specified using RGB syntax (red,green,blue)
 
-# simple macros that can be used instead of literal values
-%BLACK: 0,0,0
-%GRAY: 157,165,180
-%LIGHT_GRAY: 204,204,204
-%LIGHT_BLACK: 40,44,52
-%EVENING_BLACK: 33,37,43
-%LIGHT_WHITE: 215,218,224
-%WHITE: 255,255,255
+
+# ---------------------------------------------------------------------------------------
+# THE ROLE PALETTE
+#
+# Every widget key falls back to one of these when this file does not name it, so a key
+# added to tiko later is themed here for free instead of arriving as a built-in default
+# from some other palette -- which for a LIGHT theme would mean inheriting tiko's dark
+# defaults. Values below are this theme's own colours, not new ones.
+#
+# Resolution order:  the key itself  ->  its role  ->  tiko's built-in default
+# ---------------------------------------------------------------------------------------
+role.background: 255,255,255
+role.backgroundalt: 243,243,243
+role.backgroundraised: 255,255,255
+role.foreground: 97,97,97
+role.foregrounddim: 157,165,180
+role.border: 221,221,221
+role.accent: 204,233,252
+# The accent as readable INK (glyphs, ticks, focus rings) rather than as a fill.
+role.accentfore: 0,102,184
+role.hot: 229,229,229
+role.selection: 173,214,255
+role.error: 196,0,0
+role.warning: 198,106,12
+role.success: 0,128,0
+role.keyword: 0,0,255
+role.apikeyword: 187,111,78
+role.userkeyword: 179,48,142
+role.comment: 0,128,0
+role.string: 163,21,21
+role.number: 198,107,60
+role.operator: 196,0,0
+role.preprocessor: 165,134,181
 
 compile.iconsuccess.foreground: 138,209,138  # green
 compile.iconfail.foreground: 255,0,0         # red
 output.valuechanged.foreground: 198,106,012  # soft orange - a debugger value that changed on the last step
 
-main.panel.background: %WHITE
+main.panel.background: 255,255,255
 
-editor.window.background: %WHITE
-editor.caret.foreground: %BLACK
+editor.caret.foreground: 0,0,0
 editor.currentline.background: 255,255,0    # yellow
-editor.text.foreground: %BLACK
-editor.text.background: %WHITE
+editor.text.foreground: 0,0,0
+editor.text.background: 255,255,255
 editor.text.bold: false
 editor.text.italic: false
 editor.text.underline: false
-editor.numbers.foreground: %BLACK
-editor.numbers.background: %WHITE
+editor.numbers.foreground: 0,0,0
+editor.numbers.background: 255,255,255
 editor.numbers.bold: false
 editor.numbers.italic: false
 editor.numbers.underline: false
 editor.comments.foreground: 0,128,0        # green
-editor.comments.background: %WHITE
+editor.comments.background: 255,255,255
 editor.comments.bold: false
 editor.comments.italic: false
 editor.comments.underline: false
 editor.keyword.foreground: 0,0,255          # blue
-editor.keyword.background: %WHITE
+editor.keyword.background: 255,255,255
 editor.keyword.bold: false
 editor.keyword.italic: false
 editor.keyword.underline: false
 editor.keyword2.foreground: 187,111,78      # Windows Api (dark orange)
-editor.keyword2.background: %WHITE
+editor.keyword2.background: 255,255,255
 editor.keyword2.bold: false
 editor.keyword2.italic: false
 editor.keyword2.underline: false
 editor.keyword3.foreground: 179,48,142         # Extra Keywords (pink)
-editor.keyword3.background: %WHITE
+editor.keyword3.background: 255,255,255
 editor.keyword3.bold: false
 editor.keyword3.italic: false
 editor.keyword3.underline: false
-editor.foldmargin.foreground: %WHITE
-editor.foldsymbol.foreground: %GRAY
-editor.foldsymbol.background: %WHITE
-editor.linenumbers.foreground: %GRAY
-editor.linenumbers.background: %WHITE
+editor.foldmargin.foreground: 255,255,255
+editor.foldsymbol.foreground: 157,165,180
+editor.foldsymbol.background: 255,255,255
+editor.linenumbers.foreground: 157,165,180
+editor.linenumbers.background: 255,255,255
 editor.linenumbers.bold: false
 editor.linenumbers.italic: false
 editor.linenumbers.underline: false
 editor.operators.foreground: 196,0,0            # red
-editor.operators.background: %WHITE
+editor.operators.background: 255,255,255
 editor.operators.bold: false
 editor.operators.italic: false
 editor.operators.underline: false
-editor.indentguides.foreground: %WHITE
-editor.indentguides.background: %BLACK
+editor.indentguides.foreground: 255,255,255
+editor.indentguides.background: 0,0,0
 editor.preprocessor.foreground: 165,134,181    # light purple
-editor.preprocessor.background: %WHITE
+editor.preprocessor.background: 255,255,255
 editor.preprocessor.bold: false
 editor.preprocessor.italic: false
 editor.preprocessor.underline: false
-editor.selection.foreground: %WHITE
+editor.selection.foreground: 255,255,255
 editor.selection.background: 173,214,255       # light blue
 editor.strings.foreground: 173,0,173           # Purple (little darker than Magenta)
-editor.strings.background: %WHITE
+editor.strings.background: 255,255,255
 editor.strings.bold: false
 editor.strings.italic: false
 editor.strings.underline: false
@@ -82,17 +106,16 @@ editor.bracegood.foreground: 000,128,000       # green
 editor.bracebad.foreground: 196,000,000        # red
 editor.occurrence.foreground: 148,202,240      # powder blue
 editor.scrollbar.foreground: 221,221,221
-editor.scrollbar.background: %WHITE
+editor.scrollbar.background: 255,255,255
 editor.divider.foreground: 221,221,221
-editor.bookmark.foreground: %BLACK             
-editor.bookmark.background: %WHITE             
+editor.bookmark.foreground: 0,0,0
+editor.bookmark.background: 255,255,255
 editor.breakpoint.foreground: 196,68,80        # crimson
 editor.breakpoint.background: 196,68,80        # crimson
 editor.debugline.foreground: 0,0,250           # blue
 editor.debugline.background: 0,0,250           # blue
 
 # panel holds Explorer, FunctionList, Bookmarks
-panel.panel.background: 243,243,243
 panel.text.foreground: 97,97,97
 panel.text.background: 243,243,243
 panel.texthot.foreground: 97,97,97
@@ -102,7 +125,7 @@ panel.scrollbar.background: 243,243,243
 panel.button.foreground: 97,97,97
 panel.button.background: 236,236,236
 panel.buttonhot.foreground: 97,97,97
-panel.buttonhot.background: %WHITE
+panel.buttonhot.background: 255,255,255
 panel.filenameicon.foreground: 84,171,178     
 panel.filenameicon.background: 232,238,237
 panel.functionicon.foreground: 236,91,89     
@@ -110,45 +133,41 @@ panel.functionicon.background: 240,224,223
 panel.typeicon.foreground: 162,139,196     
 panel.typeicon.background: 237,233,236
 panel.textsearch.foreground: 97,97,97
-panel.textsearchhot.foreground: %LIGHT_BLACK    # highlighted individual letters in fuzzy text match
+panel.textsearchhot.foreground: 40,44,52    # highlighted individual letters in fuzzy text match
 
-toptabs.panel.background: 236,236,236
 toptabs.text.foreground: 106,106,106
 toptabs.text.background: 236,236,236
 toptabs.texthot.foreground: 51,51,51
-toptabs.texthot.background: %WHITE
+toptabs.texthot.background: 255,255,255
 toptabs.divider.foreground: 243,243,243
 toptabs.closehot.background: 221,221,221
 toptabs.iconselected.background: 204,233,252    # blue
 
-menubar.panel.background: 221,221,221
 menubar.text.foreground: 51,51,51
 menubar.text.background: 221,221,221
 menubar.texthot.foreground: 51,51,51
 menubar.texthot.background: 198,198,198
 
-topmenu.panel.background: %WHITE
+topmenu.panel.background: 255,255,255
 topmenu.text.foreground: 97,97,97
-topmenu.text.background: %WHITE
-topmenu.texthot.foreground: %WHITE
+topmenu.text.background: 255,255,255
+topmenu.texthot.foreground: 255,255,255
 topmenu.texthot.background: 0,96,192
 topmenu.textdisabled.foreground: 192,192,192
-topmenu.textdisabled.background: %WHITE
+topmenu.textdisabled.background: 255,255,255
 
-statusbar.panel.background: 0,122,204
-statusbar.text.foreground: %WHITE
+statusbar.text.foreground: 255,255,255
 statusbar.text.background: 0,122,204
-statusbar.texthot.foreground: %WHITE
+statusbar.texthot.foreground: 255,255,255
 statusbar.texthot.background: 31,138,210
 
-output.panel.background: %WHITE
 output.text.foreground: 106,106,106
-output.text.background: %WHITE
+output.text.background: 255,255,255
 output.texthot.foreground: 51,51,51
-output.texthot.background: %WHITE
+output.texthot.background: 255,255,255
 output.divider.foreground: 124,127,133
 output.closehot.background: 225,225,225
 output.scrollbar.foreground: 221,221,221
-output.scrollbar.background: %WHITE
+output.scrollbar.background: 255,255,255
 output.scrollbardivider.foreground: 221,221,221
 

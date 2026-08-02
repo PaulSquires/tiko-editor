@@ -212,6 +212,10 @@ dim shared gTTabCtl as clsTopTabCtl
 ' User Tools dialog's Parameters field, which needs a WRAPPED, multi-line tip -- something the
 ' comctl32 path only reaches by hand-sending TTM_SETMAXTIPWIDTH.
 #include once "PsTooltip.inc"
+' The two tooltip colour recipes, shared by all four tip owners. Here rather than in
+' modThemeApply.inc because PSTOOLTIP_COLORS is PsTooltip's and every caller precedes
+' the apply layer.
+#include once "modThemeTips.inc"
 ' The code tip window. Immediately after PsTooltip.inc because it is a PsTooltip driven
 ' entirely by hand, and before frmAutoComplete.inc, which calls Codetip_Show on commit.
 #include once "modCodetipTip.inc"

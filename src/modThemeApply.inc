@@ -158,9 +158,9 @@ end sub
 ''
 private sub Theme_PushPanelList( byval hList as HWND )
     if IsWindow(hList) = 0 then exit sub
-    PsListTree_SetBackColor( hList, ghPanel.BackColor )
-    PsListTree_SetScrollBarColors( hList, ghPanel.BackColorScrollBar, _
-                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+    PsListTree_SetBackColor( hList, theme.panel.text.backcolor )
+    PsListTree_SetScrollBarColors( hList, theme.panel.scrollbar.backcolor, _
+                                  theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
 end sub
 
 
@@ -169,9 +169,9 @@ end sub
 ''
 private sub Theme_PushOutputList( byval hList as HWND )
     if IsWindow(hList) = 0 then exit sub
-    PsListTree_SetBackColor( hList, ghOutput.BackColor )
-    PsListTree_SetScrollBarColors( hList, ghOutput.BackColorScrollBar, _
-                                  ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
+    PsListTree_SetBackColor( hList, theme.output.text.backcolor )
+    PsListTree_SetScrollBarColors( hList, theme.output.scrollbar.backcolor, _
+                                  theme.output.scrollbar.forecolor, theme.output.scrollbar.forecolor )
 end sub
 
 
@@ -184,9 +184,9 @@ end sub
 ''
 private sub Theme_PushTopTabsTextBox( byval hTextBox as HWND )
     if IsWindow(hTextBox) = 0 then exit sub
-    PsTextBox_SetForeColor( hTextBox, ghTopTabs.ForeColorHot )
-    PsTextBox_SetBackColor( hTextBox, ghTopTabs.BackColorHot )
-    PsTextBox_SetCueBannerColor( hTextBox, ghTopTabs.ForeColor )
+    PsTextBox_SetForeColor( hTextBox, theme.toptabs.texthot.forecolor )
+    PsTextBox_SetBackColor( hTextBox, theme.toptabs.texthot.backcolor )
+    PsTextBox_SetCueBannerColor( hTextBox, theme.toptabs.text.forecolor )
 end sub
 
 
@@ -216,13 +216,13 @@ private sub Theme_PushStripIcons( byval hPanel as HWND )
     PsIconPanel_GetColors( hPanel, @c )
     ' The strip's field colour, not the tab area's -- a hovered button inverts TO BackColor,
     ' so idle is the hot one. Same inversion the bar has always drawn.
-    c.BackColor         = ghTopTabs.BackColorHot
-    c.ForeColor         = ghTopTabs.ForeColorHot
-    c.BackColorHot      = ghTopTabs.BackColor
-    c.ForeColorHot      = ghTopTabs.ForeColorHot
-    c.BackColorSelect   = ghTopTabs.BackColor
-    c.ForeColorSelect   = ghTopTabs.ForeColorHot
-    c.SeparatorColor    = ghEditor.Divider
+    c.BackColor         = theme.toptabs.texthot.backcolor
+    c.ForeColor         = theme.toptabs.texthot.forecolor
+    c.BackColorHot      = theme.toptabs.text.backcolor
+    c.ForeColorHot      = theme.toptabs.texthot.forecolor
+    c.BackColorSelect   = theme.toptabs.text.backcolor
+    c.ForeColorSelect   = theme.toptabs.texthot.forecolor
+    c.SeparatorColor    = theme.editor.divider
     PsIconPanel_SetColors( hPanel, @c )
 end sub
 
@@ -247,13 +247,8 @@ end sub
 ' (frmFind, frmPanel, ...) and a control's PsTipHost-owned tip cannot come to disagree.
 ' PRIVATE, and it has to be: modThemeApply.bi is included at tiko.bas:86, well before
 ' PsTooltip.bi at 148, so a declaration naming PSTOOLTIP_COLORS cannot live in the header.
-private sub Theme_FillTooltipColors( byref tipc as PSTOOLTIP_COLORS )
-    tipc.BackColor   = ghPopup.BackColor
-    tipc.BorderColor = ghEditor.Divider
-    tipc.ForeColor   = ghPopup.ForeColor
-    tipc.TitleColor  = ghPanel.ForeColorHot
-    tipc.GlyphColor  = ghUI.AccentColor
-end sub
+' Theme_FillTooltipColors lives in modThemeTips.inc now, beside its code-tip sibling
+' and ahead of the four tip owners that could not see it from here.
 
 
 ' Theme ONE tip -- the door the hand-built tips (frmFind, frmPanel, frmReplace, frmDebug,
@@ -415,16 +410,16 @@ sub Theme_ApplySubsystems( byval nMask as ulong )
 
     if (nMask and THSUB_STATUSBAR) <> 0 then
         if IsWindow(HWND_FRMMAIN_STATUSBAR) then _
-            PsStatusBar_SetBackColor( HWND_FRMMAIN_STATUSBAR, ghStatusBar.BackColor )
+            PsStatusBar_SetBackColor( HWND_FRMMAIN_STATUSBAR, theme.statusbar.text.backcolor )
     end if
 
     if (nMask and THSUB_TOPTABS) <> 0 then
         if IsWindow(HWND_FRMMAIN_TOPTABS) then
-            PsTabBar_SetBackColor( HWND_FRMMAIN_TOPTABS, ghTopTabs.BackColor )
-            PsTabBar_SetBorderColor( HWND_FRMMAIN_TOPTABS, ghEditor.Divider )
+            PsTabBar_SetBackColor( HWND_FRMMAIN_TOPTABS, theme.toptabs.text.backcolor )
+            PsTabBar_SetBorderColor( HWND_FRMMAIN_TOPTABS, theme.editor.divider )
         end if
         if IsWindow(HWND_FRMMAIN_TOPTABSMENU) then _
-            PsStatusBar_SetBackColor( HWND_FRMMAIN_TOPTABSMENU, ghTopTabs.BackColor )
+            PsStatusBar_SetBackColor( HWND_FRMMAIN_TOPTABSMENU, theme.toptabs.text.backcolor )
         Theme_ApplyTopTabsIcons()
         Theme_ApplyFindIcons()
         Theme_ApplyReplaceIcons()
@@ -601,35 +596,47 @@ sub Theme_RunSelfTest()
 
     ? "--- TIKO_THEME_SELFTEST ---"
 
-    Theme_BuildBindTable()
+    Theme_BuildKeyTable()
 
-    ' -- 1. Every bind row resolves to a real key, and to the channels it claims. ---------
-    '    Catches a typo'd bind key or a key missing from a shipped theme. Would have caught
-    '    the original panel.panel, whose lookup was overwritten before it was ever read.
-    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
-        dim as string sKey = gThemeBind(i).keyValue
+    ' Groups 1-3 READ THE GENERATED KEY TABLE, not the hand-written bind table, and that
+    ' changed when the first gh* group was migrated. These three assert properties of THE
+    ' THEME -- every key resolves, every key repaints something, every subsystem has a
+    ' feeder. The bind table is no longer the theme: it is a bridge that shrinks by one
+    ' group per commit until Phase 3 deletes it. Left pointed at it, group 3 would have gone
+    ' red the moment main.panel migrated, because "main" is the only namespace feeding
+    ' THSUB_FRAME -- an assertion failing to report that the app got WORSE, when nothing had.
+    Theme_BuildKeyTable()
+
+    ' -- 1. Every key resolves to a real entry, and to the channels it claims. ------------
+    '    Catches a typo'd key or a key missing from a shipped theme. Would have caught the
+    '    original panel.panel, whose lookup was overwritten before it was ever read.
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+        dim as string sKey = gThemeKeys(i).keyValue
         dim as long n = Theme_FindEntry( sKey )
-        THASSERT( n >= 0, "bind key not present in theme: " & sKey )
+        THASSERT( n >= 0, "key not present in theme: " & sKey )
         if n < 0 then continue for
-        if gThemeBind(i).pFore <> 0 then
+        if gThemeKeys(i).ofsFore >= 0 then
             THASSERT( gTheme(n).hasFore, "bound foreground missing: " & sKey )
         end if
-        if gThemeBind(i).pBack <> 0 then
+        if gThemeKeys(i).ofsBack >= 0 then
             THASSERT( gTheme(n).hasBack, "bound background missing: " & sKey )
         end if
     next
 
-    ' -- 2. No bind row has an empty subsystem mask. -------------------------------------
+    ' -- 2. No colour key has an empty subsystem mask. -----------------------------------
     '    This IS the "change it and nothing updates" failure mode, in its only testable form.
-    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
-        THASSERT( gThemeBind(i).nSubsys <> THSUB_NONE, _
-                  "zero subsystem mask: " & gThemeBind(i).keyValue )
+    '    general.* is exempt and always was: description and version are text, repaint
+    '    nothing, and carry THSUB_NONE deliberately.
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+        if left( gThemeKeys(i).keyValue, 8 ) = "general." then continue for
+        THASSERT( gThemeKeys(i).nSubsys <> THSUB_NONE, _
+                  "zero subsystem mask: " & gThemeKeys(i).keyValue )
     next
 
     ' -- 3. Every subsystem bit is fed by at least one key. ------------------------------
     dim as ulong nCovered
-    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
-        nCovered or= gThemeBind(i).nSubsys
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+        nCovered or= gThemeKeys(i).nSubsys
     next
     THASSERT( nCovered = THSUB_ALL, "subsystem coverage &h" & hex(nCovered) & " <> THSUB_ALL" )
 
@@ -720,25 +727,39 @@ sub Theme_RunSelfTest()
         kill( wszTmp )
     end if
 
-    ' -- 11. The two colour pages PARTITION the bind table. ------------------------------
+    ' -- 11. The two colour pages PARTITION the COLOUR keys. -----------------------------
     '    Every colour key on exactly one page, nothing listed twice, nothing orphaned. The
     '    pages are generated from this same predicate, so a key added to the engine cannot
     '    quietly fail to appear in the UI.
-    dim as long nSyntax, nInterface, nNeither
-    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
-        select case frmThemes_PageForKey( gThemeBind(i).keyValue )
+    '
+    '    This walked the bind table until the migration emptied it, and its premise went with
+    '    it: "general.* have no bind row, so nothing lands in neither" was true of that table
+    '    and is false of the key table, which carries the two text payloads like any other
+    '    key. Rather than exempt them by count, the check is now STRONGER -- a key is allowed
+    '    off both pages only if it is a text key, which is asserted rather than assumed.
+    dim as long nSyntax, nInterface, nNeither, nNeitherText
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+        select case frmThemes_PageForKey( gThemeKeys(i).keyValue )
             case THEMEPAGE_SYNTAX:    nSyntax += 1
             case THEMEPAGE_INTERFACE: nInterface += 1
-            case else:              nNeither += 1
+            case else
+                nNeither += 1
+                ' ofsText >= 0 IS the definition of a text payload rather than a colour.
+                if gThemeKeys(i).ofsText >= 0 then
+                    nNeitherText += 1
+                else
+                    THASSERT( false, "a COLOUR key belongs to no page: " & gThemeKeys(i).keyValue )
+                end if
         end select
     next
-    THASSERT( nSyntax + nInterface + nNeither = (ubound(gThemeBind) - lbound(gThemeBind) + 1), _
+    THASSERT( nSyntax + nInterface + nNeither = (ubound(gThemeKeys) - lbound(gThemeKeys) + 1), _
               "page partition lost a key" )
     THASSERT( nSyntax > 0, "syntax page is empty" )
     THASSERT( nInterface > 0, "interface page is empty" )
-    '    general.description / general.version have no bind row at all, so nothing should land
-    '    in "neither" -- if it does, a colour key is invisible in both pages.
-    THASSERT( nNeither = 0, "a bound colour key belongs to no page" )
+    '    ...and conversely, every text key IS off both pages. Without this the arm above
+    '    would be satisfied by a theme with no text keys at all.
+    THASSERT( nNeither = nNeitherText, "a colour key escaped both pages" )
+    THASSERT( nNeitherText = 2, "expected exactly 2 text keys off-page, got " & nNeitherText )
     THASSERT( frmThemes_PageForKey( "editor.keyword" ) = THEMEPAGE_SYNTAX, "editor.* -> syntax" )
     THASSERT( frmThemes_PageForKey( "panel.text" ) = THEMEPAGE_INTERFACE, "panel.* -> interface" )
     THASSERT( frmThemes_PageForKey( "ui.divider" ) = THEMEPAGE_INTERFACE, "ui.* -> interface" )
@@ -800,10 +821,10 @@ sub Theme_RunSelfTest()
     '    Compares category IDS, never their localized titles -- two categories that happen to
     '    translate alike are still two categories, and a missing string id would make every
     '    title compare equal (which is exactly how this went wrong the first time).
-    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
-        if frmThemes_PageForKey( gThemeBind(i).keyValue ) = OPTPAGE_NONE then continue for
-        THASSERT( frmThemes_CategoryIdForKey( gThemeBind(i).keyValue ) <> THEMECAT_OTHER, _
-                  "key has no category: " & gThemeBind(i).keyValue )
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+        if frmThemes_PageForKey( gThemeKeys(i).keyValue ) = OPTPAGE_NONE then continue for
+        THASSERT( frmThemes_CategoryIdForKey( gThemeKeys(i).keyValue ) <> THEMECAT_OTHER, _
+                  "key has no category: " & gThemeKeys(i).keyValue )
     next
 
     ' -- 16. Reset puts a channel back, and reports honestly whether it needs to. ---------
@@ -842,12 +863,24 @@ sub Theme_RunSelfTest()
         THASSERT( bHasText, "localized string " & str(nId) & " is missing from english.lang" )
     next
 
-    ' -- 18. An ON toggle must read BRIGHTER than an OFF one. ----------------------------
+    ' -- 18. The two toggle states must be TELLABLE APART. -------------------------------
     '    The failure this guards against is not a wrong value -- it is a control that shows
-    '    the right value in a way people read backwards. tiko's toggle put a page-dark knob
-    '    on a near-page-grey track for ON, and a bright knob on ON's darker sibling for OFF,
-    '    so the OFF state was the visually louder one and a setting got read as its opposite.
-    '    Compared by LUMINANCE rather than by naming a colour, so a light theme passes too.
+    '    the right value in a way people cannot read at a glance.
+    '
+    '    THIS MEASURED DIRECTION AND NOW MEASURES DISTANCE, and the reason is that the old
+    '    form was dark-theme-only. It required ON to out-luminate OFF, which is true of a
+    '    dark theme (accent track brighter than the page) and FALSE of a light one, where
+    '    the accent is a tint darker than the page and ON is legitimately the darker state.
+    '    Running the suite under default_light for the first time reported exactly that:
+    '    "an OFF switch reads BRIGHTER than an ON one (on=226 off=243)" -- a correct control
+    '    failing an assumption baked into the assertion.
+    '
+    '    ELEMENT-WISE, which is the other half of the fix. The old form reduced each state to
+    '    max(track, knob) and compared those, which throws away the distinction that actually
+    '    carries the state on a light theme: there ON is a pale track with a DARK knob and
+    '    OFF is a near-white track with a light knob. Those are obvious side by side and
+    '    indistinguishable under max(). Comparing track-to-track and knob-to-knob, and
+    '    accepting either, is what makes the assertion true of both theme families.
     scope
         dim as PSTOGGLE_COLORS tc
         OptionsTheme_FillToggle( @tc )
@@ -856,84 +889,722 @@ sub Theme_RunSelfTest()
             (( 299 * ((c) and &hFF) + 587 * (((c) shr 8) and &hFF) + 114 * (((c) shr 16) and &hFF) ) \ 1000)
         #endmacro
 
-        ' Compare the BRIGHTEST element of each state, track or knob. Comparing tracks alone
-        ' is what this assertion did first, and it PASSED against the very colours that were
-        ' being misread -- the track was never the loud part, the knob was. An assertion that
-        ' cannot fail on the reported bug is not an assertion.
         dim as long lumOnTrack  = LUMA( tc.TrackColorOn )
         dim as long lumOnKnob   = LUMA( tc.KnobColorOn )
         dim as long lumOffTrack = LUMA( tc.TrackColorOff )
         dim as long lumOffKnob  = LUMA( tc.KnobColorOff )
 
-        dim as long lumOn  = iif( lumOnTrack  > lumOnKnob,  lumOnTrack,  lumOnKnob )
-        dim as long lumOff = iif( lumOffTrack > lumOffKnob, lumOffTrack, lumOffKnob )
+        dim as long dTrack = abs( lumOnTrack - lumOffTrack )
+        dim as long dKnob  = abs( lumOnKnob  - lumOffKnob )
+        dim as long dBest  = iif( dTrack > dKnob, dTrack, dKnob )
 
-        THASSERT( lumOn > lumOff, _
-                  "an OFF switch reads BRIGHTER than an ON one (on=" & str(lumOn) & _
-                  " off=" & str(lumOff) & ") -- the control inverts at a glance" )
-        THASSERT( tc.TrackColorOn = ghUI.AccentColor, _
+        ' 40 of 255. Measured, not picked: it clears both shipped themes with room and
+        ' still fails the original reported bug, where the two states differed by single
+        ' digits on every element.
+        const TOGGLE_MIN_DELTA = 40
+        THASSERT( dBest >= TOGGLE_MIN_DELTA, _
+                  "the two toggle states are not tellable apart (track delta=" & str(dTrack) & _
+                  ", knob delta=" & str(dKnob) & ", need " & str(TOGGLE_MIN_DELTA) & _
+                  ") -- ON and OFF read the same at a glance" )
+        THASSERT( tc.TrackColorOn = theme.ui.accent, _
                   "the ON track is not the theme accent" )
     end scope
 
     ' -- 19. The accent key exists and actually carries a colour. -------------------------
     THASSERT( Theme_FindEntry( "ui.accent" ) >= 0, "ui.accent was not materialised by the fallback" )
-    THASSERT( ghUI.AccentColor <> ghPanel.BackColor, "the accent is the same as the page background" )
+    THASSERT( theme.ui.accent <> theme.panel.text.backcolor, "the accent is the same as the page background" )
 
-    ' -- 20. %MACRO survives a write/read round trip. ------------------------------------
-    '    The writer used to expand every macro to literal r,g,b, so the first save of a
-    '    hand-authored theme silently flattened its palette. The shipped themes define six,
-    '    which is what makes this testable against real data rather than a fixture.
-    THASSERT( ubound(gThemeMacros) >= lbound(gThemeMacros), _
-              "the shipped theme defines macros but none were retained" )
+    ' -- 20/21. RETIRED WITH THE FEATURE. -----------------------------------------------
+    '    These asserted that a %MACRO survived a write/read round trip, and that editing one
+    '    key detached only that key from its macro. Both were real and both earned their
+    '    keep -- the writer used to flatten every macro into literals on the first save.
+    '
+    '    %MACRO is gone now. The ROLE layer replaced it and is strictly better at the job:
+    '    a macro was pure text substitution with no meaning, so nothing could inherit from
+    '    it and a new key still had to be written out in every file, while a role carries
+    '    WHICH colour this is and every key falls back to one automatically. The shipped
+    '    themes are macro-free and the twelve new ones never used them.
+    '
+    '    The PARSER still accepts %MACRO so an existing hand-authored theme keeps loading;
+    '    the writer no longer emits it, so the first save migrates such a file to literals.
+    '    That compatibility path is asserted in group 20b below rather than left to trust.
 
+    ' -- 20b. AN OLD MACRO-BEARING THEME STILL LOADS. ------------------------------------
     scope
-        dim as long nMacrosBefore = ubound(gThemeMacros) - lbound(gThemeMacros) + 1
-        dim as long nk = Theme_FindEntry( "editor.text" )
-        dim as DWSTRING wszMacroBefore
-        if nk >= 0 then wszMacroBefore = gTheme(nk).backMacro
+        dim as string sTmp = *AfxGetExePathName() & "_theme_macrocompat.tmp"
+        dim as long f = freefile
+        if open( sTmp for output encoding "utf-8" as #f ) = 0 then
+            print #f, "general.description: legacy macros"
+            print #f, "%OLDBLUE: 10,20,30"
+            print #f, "editor.keyword.foreground: %OLDBLUE"
+            close #f
 
-        dim as DWSTRING wszTmp3 = AfxGetExePathName & "_theme_selftest3.tmp"
-        Theme_Snapshot()
-        if Theme_WriteFile( wszTmp3, "Macro Probe" ) = false then
-            if Theme_ParseFile( wszTmp3 ) = false then
-                THASSERT( (ubound(gThemeMacros) - lbound(gThemeMacros) + 1) = nMacrosBefore, _
-                          "macro count changed across a write/read round trip" )
-                dim as long nk2 = Theme_FindEntry( "editor.text" )
-                THASSERT( (nk2 >= 0) andalso (gTheme(nk2).backMacro = wszMacroBefore), _
-                          "editor.text lost its macro binding across a round trip" )
-            else
-                THASSERT( false, "could not re-parse the macro probe" )
-            end if
-        else
-            THASSERT( false, "could not write the macro probe" )
-        end if
-        Theme_Restore()
-        Theme_DiscardSnapshot()
-        kill( wszTmp3 )
-    end scope
-
-    ' -- 21. Editing a key DETACHES only that key. ---------------------------------------
-    '    The decided rule: no action at a distance. Editing one key that shares a macro with
-    '    six others must not move the other six, and must not alter the macro itself.
-    scope
-        dim as long na = Theme_FindEntry( "editor.text" )
-        dim as long nb2 = Theme_FindEntry( "editor.comments" )
-        if (na >= 0) andalso (nb2 >= 0) then
             Theme_Snapshot()
-            dim as DWSTRING wszOtherMacro = gTheme(nb2).backMacro
-            dim as long nMacros = ubound(gThemeMacros) - lbound(gThemeMacros) + 1
-
-            Theme_SetColor( "editor.text", THEMECH_BACK, BGR(3, 3, 3) )
-
-            THASSERT( len(gTheme(na).backMacro) = 0, _
-                      "the edited key is still attached to its macro" )
-            THASSERT( gTheme(nb2).backMacro = wszOtherMacro, _
-                      "editing one key detached a DIFFERENT key from its macro" )
-            THASSERT( (ubound(gThemeMacros) - lbound(gThemeMacros) + 1) = nMacros, _
-                      "editing a key changed the macro table" )
+            erase gTheme
+            Theme_ParseFile( sTmp )
+            dim as long n = Theme_FindEntry( "editor.keyword" )
+            THASSERT( n >= 0, "a macro-bearing theme did not load" )
+            if n >= 0 then
+                THASSERT( gTheme(n).foreground = BGR(10,20,30), _
+                          "the macro did not expand on load" )
+            end if
+            THASSERT( ubound(gThemeParseWarnings) < lbound(gThemeParseWarnings), _
+                      "a macro-bearing theme produced parse warnings" )
             Theme_Restore()
             Theme_DiscardSnapshot()
+            Theme_ResolveFallbacks()
+            Theme_FillGlobals()
+            kill( sTmp )
         end if
+    end scope
+
+    ' -- 22. THE GENERATED KEY TABLE AGREES WITH THE HAND-WRITTEN BIND TABLE. -------------
+    '    The whole of Phase 1's claim, in its only testable form. The new "theme" root is
+    '    filled from generated offsets; the gh* globals are filled from hand-written
+    '    pointers; every read site in the app still reads gh*. So the root is only correct
+    '    if it holds, key for key and channel for channel, exactly what the legacy table
+    '    put in the globals.
+    '
+    '    These assertions are DELETED in Phase 3, when the gh* side they compare against
+    '    stops existing. That is the stated reason, not a quiet drop.
+    scope
+        ' 22a. The table generated any rows at all.
+        '      This is the "#include once" trap's only symptom: it is otherwise completely
+        '      silent -- clean build, no warning, and an empty table means every colour in
+        '      the app reads as black the moment the gh* globals are retired.
+        dim as long nKeys = Theme_KeyCount()
+        THASSERT( nKeys > 0, "the generated key table is EMPTY (#include once on modThemeKeys.bi?)" )
+
+        ' 22b. The key table holds the COMPLETE key set -- 61 colour keys plus the two
+        '      DWSTRING payloads the legacy bind table could not carry.
+        '
+        '      A CONSTANT, deliberately, and not "nBind + 2": the bind table shrinks by one
+        '      group per migration commit while this number must not move at all. Written as
+        '      a tripwire -- adding a key in Phase 4 is supposed to fail here until the
+        '      number is updated on purpose.
+        const THEME_TOTAL_KEYS = 71
+        THASSERT( nKeys = THEME_TOTAL_KEYS, _
+                  "key table has " & nKeys & " rows, expected " & THEME_TOTAL_KEYS )
+        THASSERT( Theme_KeyIndex( "general.description" ) >= 0, _
+                  "general.description is not in the key table" )
+        THASSERT( Theme_KeyIndex( "general.version" ) >= 0, _
+                  "general.version is not in the key table" )
+
+        ' 22c. RETIRED. It compared every channel of every bind row against the member the
+        '      generated offset addressed -- which was the whole of Phase 1's claim, and is
+        '      now unassertable because the legacy side no longer exists. The bind table, the
+        '      ten gh* globals and ThemeBind_Add are all deleted.
+        '
+        '      Deleted rather than left to pass: with an empty bind table the loop compared
+        '      NOTHING and reported success for it, which is the exact failure mode the rest
+        '      of this suite exists to catch.
+        '
+        '      What still covers the same ground: group 1 (every key resolves to a real entry
+        '      and to the channels it claims), 22e (no two keys share a member), and the fact
+        '      that every consumer in the app now reads the root directly, so a wrong offset
+        '      is a wrong colour on screen rather than a silent disagreement between two
+        '      tables.
+
+        ' 22d. The two DWSTRING payloads reached the root -- the rows the legacy bind table
+        '      could not hold at all, and which used to be hand-copied in Theme_FillGlobals.
+        '
+        '      Compared against the PARSED ENTRY, not against ghGeneral. That struct is gone,
+        '      and the mechanical rename rewrote BOTH sides of the old comparison into
+        '      "theme.general.description = theme.general.description" -- a tautology that
+        '      would have passed forever, in a group whose entire job is catching exactly
+        '      this. A rename can silently convert an assertion into one that cannot fail.
+        scope
+            dim as long nd = Theme_FindEntry( "general.description" )
+            dim as long nv = Theme_FindEntry( "general.version" )
+            THASSERT( nd >= 0, "general.description is not in the parsed theme" )
+            THASSERT( nv >= 0, "general.version is not in the parsed theme" )
+            if nd >= 0 then
+                THASSERT( theme.general.description = gTheme(nd).keyData, _
+                          "general.description did not reach the root" )
+                ' Non-empty too: getThemePtr answers with a shared empty dummy on a miss, so
+                ' "" = "" would satisfy the line above while nothing had actually loaded.
+                THASSERT( len( theme.general.description ) > 0, _
+                          "general.description reached the root EMPTY" )
+            end if
+            if nv >= 0 then
+                THASSERT( theme.general.version = gTheme(nv).keyData, _
+                          "general.version did not reach the root" )
+            end if
+        end scope
+
+        ' 22e. Every offset is inside the struct, and no two rows claim the SAME offset on
+        '      the same channel -- which is what a duplicated member path in the table would
+        '      look like, and it would silently make one key overwrite another.
+        for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+            THASSERT( gThemeKeys(i).ofsFore < sizeof(THEMEROOT_TYPE), _
+                      "foreground offset outside the struct: " & gThemeKeys(i).keyValue )
+            THASSERT( gThemeKeys(i).ofsBack < sizeof(THEMEROOT_TYPE), _
+                      "background offset outside the struct: " & gThemeKeys(i).keyValue )
+            for j as long = i + 1 to ubound(gThemeKeys)
+                if (gThemeKeys(i).ofsFore >= 0) andalso _
+                   (gThemeKeys(i).ofsFore = gThemeKeys(j).ofsFore) then
+                    THASSERT( false, "two keys share one foreground member: " & _
+                              gThemeKeys(i).keyValue & " and " & gThemeKeys(j).keyValue )
+                end if
+                if (gThemeKeys(i).ofsBack >= 0) andalso _
+                   (gThemeKeys(i).ofsBack = gThemeKeys(j).ofsBack) then
+                    THASSERT( false, "two keys share one background member: " & _
+                              gThemeKeys(i).keyValue & " and " & gThemeKeys(j).keyValue )
+                end if
+            next
+        next
+
+        ' 22f. Every key carries a real category. The theme editor derives its group headers
+        '      from the table now, so an unclassified key would silently land in "Other".
+        for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+            if left( gThemeKeys(i).keyValue, 8 ) = "general." then continue for
+            THASSERT( gThemeKeys(i).nCat <> THEMECAT_OTHER, _
+                      "key has no category: " & gThemeKeys(i).keyValue )
+        next
+
+        ' 22g. Filling a SECOND root gives the same answer -- which is the property that
+        '      makes offsets worth having over pointers, since the snapshot, the baseline
+        '      and the defaults are all just another destination.
+        scope
+            dim as THEMEROOT_TYPE other
+            Theme_FillRoot( @other )
+            THASSERT( other.editor.keyword1.forecolor = theme.editor.keyword1.forecolor, _
+                      "filling a second root gave a different colour" )
+            THASSERT( other.general.description = theme.general.description, _
+                      "filling a second root gave a different description" )
+            ' And a whole-struct assignment deep-copies it, including the DWSTRINGs.
+            dim as THEMEROOT_TYPE copy
+            copy = other
+            other.general.description = "mutated"
+            THASSERT( copy.general.description = theme.general.description, _
+                      "assignment did not deep-copy the description" )
+        end scope
+    end scope
+
+    ' -- 22h. A role.* LINE IN THE FILE IS PARSED AS A COLOUR. ---------------------------
+    '    role.accent has only TWO dot segments, and two-segment keys are the TEXT path --
+    '    it is the path general.description takes. So a role parsed perfectly happily,
+    '    stored its digits as a string, set no colour, and silently fell through to the
+    '    built-in default. A full 20-line palette was added to both shipped themes and
+    '    changed absolutely nothing, with a clean build and every assertion green.
+    '
+    '    Asserted on the PARSE, not on the resolved value: a resolved role equal to its
+    '    built-in default is legitimate, so comparing those cannot tell the two apart.
+    scope
+        dim as long n = Theme_FindEntry( "role.background" )
+        THASSERT( n >= 0, "role.background is not in the parsed theme" )
+        if n >= 0 then
+            THASSERT( gTheme(n).hasFore, _
+                      "role.background parsed as TEXT, not as a colour -- the palette is inert" )
+            THASSERT( theme.role.clr(THROLE_BACKGROUND) = gTheme(n).foreground, _
+                      "the resolved palette does not match the file" )
+        end if
+    end scope
+
+    ' -- 22i. THE STROKE ACCENT OUT-CONTRASTS THE FILL ACCENT. ---------------------------
+    '    role.accent is a FILL -- it resolves to toptabs.iconselected, a colour chosen to
+    '    sit BEHIND an icon: dark navy in default_dark, a pale tint in default_light. Used
+    '    as ink it is too dark to read on one theme and invisible on the other. That is the
+    '    rule CLAUDE.md states, and it was broken once already (the Unused Symbols check
+    '    glyph, reported as "a little too dark" on sight).
+    '
+    '    So role.accentfore exists, and the property that makes it worth having is that it
+    '    reads against the page. Asserted as CONTRAST rather than raw brightness: on a light
+    '    theme the readable accent is DARKER than the fill, so "brighter" would be exactly
+    '    backwards and would pass on dark while failing on light.
+    scope
+        #macro LUMA( c )
+            ( (  30 * clng( (c) and &hFF ) _
+               + 59 * clng( ((c) shr 8) and &hFF ) _
+               + 11 * clng( ((c) shr 16) and &hFF ) ) \ 100 )
+        #endmacro
+        dim as long lumBg   = LUMA( theme.role.clr(THROLE_BACKGROUND) )
+        dim as long lumFill = LUMA( theme.role.clr(THROLE_ACCENT) )
+        dim as long lumInk  = LUMA( theme.role.clr(THROLE_ACCENTFORE) )
+        dim as long conFill = abs( lumFill - lumBg )
+        dim as long conInk  = abs( lumInk  - lumBg )
+        THASSERT( conInk > conFill, _
+                  "role.accentfore reads no better than the fill accent (ink=" & conInk & _
+                  " fill=" & conFill & ") -- it is ink, it has to be legible" )
+        ' And it is genuinely a separate colour, not the fill copied into a second key.
+        THASSERT( theme.role.clr(THROLE_ACCENTFORE) <> theme.role.clr(THROLE_ACCENT), _
+                  "role.accentfore is the same colour as role.accent" )
+        #undef LUMA
+    end scope
+
+    ' -- 22m. THE ROLE ACCESSORS ARE CORRECT AT EVERY INDEX. -----------------------------
+    '    Theme_RoleColor(i) is what the Palette page paints in a row and mirrors into the
+    '    R/G/B fields, so an off-by-one or a wrong lookup there is a page that shows one
+    '    colour and edits another. Checked across the WHOLE table, not at index 0: the bug
+    '    this guards against showed the right thing for some rows and 0,0,0 for others.
+    '
+    '    Also asserts the two index spaces are distinct sizes, which is the mistake itself --
+    '    the page briefly fed a ROLE index to gThemeKeys() and read a different key entirely.
+    scope
+        dim as long nBad
+        for i as long = 0 to Theme_RoleCount() - 1
+            if Theme_RoleColor(i) <> theme.role.clr( gThemeRoleDef(i).nRole ) then nBad += 1
+            if len( Theme_RoleName(i) ) = 0 then nBad += 1
+        next
+        THASSERT( nBad = 0, "role accessors disagree with the palette at " & nBad & " index(es)" )
+        THASSERT( Theme_RoleCount() = THROLE_COUNT - 1, _
+                  "the role table does not cover the enum (" & Theme_RoleCount() & _
+                  " rows for " & (THROLE_COUNT - 1) & " roles)" )
+        THASSERT( Theme_RoleCount() <> Theme_KeyCount(), _
+                  "role and key index spaces are the same size -- a mix-up would not show" )
+    end scope
+
+    ' -- 22l. PAGE ID == SELECT-BAR PANEL INDEX. -----------------------------------------
+    '    frmThemes_BarSelChange receives the panel INDEX from PsSelectBar and hands it to
+    '    frmThemes_SelectPage as a page ID; PsSelectBar_SetCurSel takes an index too. So the
+    '    dialog uses the two interchangeably and only ever worked because they matched.
+    '
+    '    Adding the Palette tab as id 2 while showing it FIRST broke that silently: the bar
+    '    highlighted Interface (index 2) while the list filled with roles, so the tab and its
+    '    contents disagreed and nothing failed. Reported by the author, invisible to every
+    '    assertion here at the time.
+    '
+    '    The ids are the panel order now, and this says so. It cannot see the bar -- that
+    '    only exists while the dialog is open -- but it pins the half a reorder would move.
+    THASSERT( THEMEPAGE_PALETTE = 0, "THEMEPAGE_PALETTE is not the first panel" )
+    THASSERT( THEMEPAGE_SYNTAX = 1, "THEMEPAGE_SYNTAX is not the second panel" )
+    THASSERT( THEMEPAGE_INTERFACE = 2, "THEMEPAGE_INTERFACE is not the third panel" )
+    THASSERT( THEMEPAGE_COUNT = 3, "THEMEPAGE_COUNT does not match the panel count" )
+
+    ' -- 22k. THE PALETTE PAGE'S OWN STRINGS RESOLVE, AND TO THE RIGHT THING. ------------
+    '    L(id, "default") DISCARDS the default -- an id with no entry renders EMPTY, and an
+    '    id belonging to something else renders THAT. Both were live here: 327 and 328 were
+    '    the first free-looking pair and are in fact the encoding-warning messages, so the
+    '    Palette tab would have been captioned "This document contains characters...".
+    '
+    '    Checked by VALUE, not by len() > 0. A wrong-but-present id passes a non-empty test
+    '    perfectly, which is exactly how the bug would have shipped.
+    THASSERT( len( LL(671) ) > 0, "671 (Palette) is empty in this language file" )
+    THASSERT( len( LL(672) ) > 0, "672 (default) is empty in this language file" )
+    THASSERT( instr( LL(671), "document" ) = 0, _
+              "671 is not the Palette caption -- it reads: " & LL(671) )
+    THASSERT( instr( LL(672), "ANSI" ) = 0, _
+              "672 is not the default marker -- it reads: " & LL(672) )
+    THASSERT( len( LL(673) ) > 0, "673 (Choose Color) is empty in this language file" )
+    THASSERT( len( LL(674) ) > 0, "674 (Use palette color) is empty in this language file" )
+
+    ' -- 22n. A KEY CAN BE HANDED BACK TO ITS ROLE. --------------------------------------
+    '    The half of the palette that was missing. Every edit DETACHES a key, so without a
+    '    way back a theme decays into literals one key at a time and the palette stops
+    '    reaching anything -- which is exactly what CLAUDE.md says the picker's old Assign
+    '    button was for. Reported by the author as "no way to assign a palette colour".
+    '
+    '    Round trip: inherited -> overridden -> inherited, checking the FLAG each time, not
+    '    just the colour. A key overridden with its role's own value would look identical by
+    '    colour while being written to the file as a literal and no longer following the role.
+    scope
+        Theme_Snapshot()
+
+        ' editor.edge, NOT a syntax key: the shipped themes name every syntax colour
+        ' explicitly, so editor.keyword2 is authored and was never inheriting. editor.edge is
+        ' one of the keys added with the role layer and appears in no theme file, so it is
+        ' inheriting in every shipped theme -- which is what this needs to start from.
+        dim as long n = Theme_FindEntry( "editor.edge" )
+        if n >= 0 then
+            THASSERT( gTheme(n).foreFromRole, "editor.edge is not inheriting to begin with" )
+
+            ' Override it with the role's OWN colour -- the case a colour comparison cannot see.
+            dim as COLORREF clrRole = theme.role.clr(THROLE_BORDER)
+            Theme_SetColor( "editor.edge", THEMECH_FORE, clrRole )
+            dim as long n2 = Theme_FindEntry( "editor.edge" )
+            THASSERT( gTheme(n2).foreFromRole = false, "an edit did not detach the key" )
+            THASSERT( Theme_ChannelIsOverridden( "editor.edge", THEMECH_FORE ), _
+                      "an overridden channel does not report itself overridden" )
+
+            ' ...and back.
+            dim as ulong nMask = Theme_InheritChannel( "editor.edge", THEMECH_FORE )
+            THASSERT( nMask <> THSUB_NONE, "inherit returned no subsystems to repaint" )
+            dim as long n3 = Theme_FindEntry( "editor.edge" )
+            THASSERT( gTheme(n3).foreFromRole, "the key did not go back to inheriting" )
+            THASSERT( gTheme(n3).foreground = theme.role.clr(THROLE_BORDER), _
+                      "the key did not take the role's colour" )
+            THASSERT( Theme_ChannelIsOverridden( "editor.edge", THEMECH_FORE ) = false, _
+                      "an inherited channel still reports itself overridden" )
+
+            ' A channel with NO role has nothing to go back to and must be refused rather
+            ' than cleared -- clearing would leave the key black.
+            THASSERT( Theme_InheritChannel( "general.description", THEMECH_FORE ) = THSUB_NONE, _
+                      "inherit accepted a key with no role" )
+        end if
+
+        Theme_Restore()
+        Theme_DiscardSnapshot()
+        Theme_ResolveFallbacks()
+        Theme_FillGlobals()
+    end scope
+
+    ' -- 22j. EDITING A ROLE MOVES THE KEYS THAT INHERIT IT. -----------------------------
+    '    The palette page's entire promise, and a silent no-op without Theme_ReapplyRoles:
+    '    role resolution only fills a channel whose has* flag is FALSE, so once a key has
+    '    taken its role's colour it looks exactly like an authored one and a later change to
+    '    that role reaches nothing. The page would appear to work and change nothing.
+    '
+    '    Also asserts the other half -- that an AUTHORED colour is NOT dragged along. The
+    '    provenance flags exist to tell those two apart and this is what checks they do.
+    scope
+        Theme_Snapshot()
+
+        ' editor.keyword2 inherits role.apikeyword in every shipped theme; editor.keyword is
+        ' authored in the two defaults, so pin it explicitly to be independent of the file.
+        Theme_SetColor( "editor.keyword", THEMECH_FORE, BGR(7,7,7) )
+
+        dim as long nInherit = Theme_FindEntry( "editor.keyword2" )
+        dim as long nAuthored = Theme_FindEntry( "editor.keyword" )
+        if (nInherit >= 0) andalso (nAuthored >= 0) then
+            dim as boolean bWasInherited = gTheme(nInherit).foreFromRole
+
+            ' find role.apikeyword by name rather than by index
+            dim as long idxRole = -1
+            for i as long = 0 to Theme_RoleCount() - 1
+                if Theme_RoleName(i) = "role.apikeyword" then idxRole = i : exit for
+            next
+            THASSERT( idxRole >= 0, "role.apikeyword is not in the role table" )
+
+            if (idxRole >= 0) andalso bWasInherited then
+                Theme_SetRole( idxRole, BGR(3,5,7) )
+                dim as long n2 = Theme_FindEntry( "editor.keyword2" )
+                THASSERT( n2 >= 0, "editor.keyword2 vanished when its role was edited" )
+                if n2 >= 0 then
+                    THASSERT( gTheme(n2).foreground = BGR(3,5,7), _
+                              "editing a role did not move the key that inherits it" )
+                end if
+                dim as long n3 = Theme_FindEntry( "editor.keyword" )
+                if n3 >= 0 then
+                    THASSERT( gTheme(n3).foreground = BGR(7,7,7), _
+                              "editing a role overwrote an AUTHORED colour" )
+                end if
+                THASSERT( theme.role.clr(THROLE_APIKEYWORD) = BGR(3,5,7), _
+                          "the palette did not take the new value" )
+            end if
+        end if
+
+        Theme_Restore()
+        Theme_DiscardSnapshot()
+        Theme_ResolveFallbacks()
+        Theme_FillGlobals()
+    end scope
+
+    ' -- 23. A THEME THAT DEFINES NOTHING IS STILL COMPLETE. -----------------------------
+    '    This is the role layer's entire promise, in its only testable form: every colour
+    '    key resolves, from the built-in defaults alone, with no file involved. It is what
+    '    makes a roles-only theme legal and what removes the app's dependence on
+    '    default_dark.theme existing on disk.
+    '
+    '    Destructive, so it runs inside a snapshot/restore pair and LAST -- everything above
+    '    reads the real loaded theme.
+    scope
+        Theme_Snapshot()
+
+        erase gTheme                        ' the emptiest possible theme
+        Theme_ResolveFallbacks()            ' roles -> ui.* table -> key roles
+
+        dim as long nMissing, nFilled
+        dim as string sFirstMissing
+        for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+            if gThemeKeys(i).ofsText >= 0 then continue for      ' text payloads, not colours
+            dim as long n = Theme_FindEntry( gThemeKeys(i).keyValue )
+            dim as boolean bWantF = (gThemeKeys(i).ofsFore >= 0)
+            dim as boolean bWantB = (gThemeKeys(i).ofsBack >= 0)
+            dim as boolean bGotF  = false
+            dim as boolean bGotB  = false
+            if n >= 0 then
+                bGotF = gTheme(n).hasFore
+                bGotB = gTheme(n).hasBack
+            end if
+            if (bWantF andalso (bGotF = false)) orelse (bWantB andalso (bGotB = false)) then
+                nMissing += 1
+                if len(sFirstMissing) = 0 then sFirstMissing = gThemeKeys(i).keyValue
+            else
+                nFilled += 1
+            end if
+        next
+        THASSERT( nMissing = 0, _
+                  "an empty theme left " & nMissing & " key(s) unresolved, first: " & sFirstMissing )
+        THASSERT( nFilled > 50, "only " & nFilled & " keys resolved from defaults" )
+
+        ' The palette itself came from the built-in defaults, not from zero. A role resolving
+        ' to black would satisfy the completeness count above while rendering nothing.
+        THASSERT( theme.role.clr(THROLE_BACKGROUND) <> 0, "role.background defaulted to black" )
+        THASSERT( theme.role.clr(THROLE_FOREGROUND) <> theme.role.clr(THROLE_BACKGROUND), _
+                  "foreground and background defaulted to the same colour" )
+        THASSERT( theme.role.clr(THROLE_KEYWORD) <> theme.role.clr(THROLE_COMMENT), _
+                  "keyword and comment defaulted to the same colour" )
+
+        ' A role NAMED IN THE FILE must beat the built-in default -- the other half of the
+        ' rule, and the half a defaults-only test cannot see.
+        scope
+            dim as long n = Theme_EnsureEntry( "role.accent" )
+            gTheme(n).foreground = BGR( 1, 2, 3 )
+            gTheme(n).hasFore    = true
+            Theme_ResolveRoles()
+            THASSERT( theme.role.clr(THROLE_ACCENT) = BGR(1,2,3), _
+                      "a role named in the file did not beat the built-in default" )
+        end scope
+
+        ' 23b. A ROLES-ONLY THEME SURVIVES A SAVE. This is what the foreFromRole /
+        '      backFromRole provenance flags buy, and it is the same failure the %MACRO
+        '      round trip exists to prevent, one layer up: role resolution sets hasFore
+        '      exactly as a parse does, so without provenance the writer cannot tell an
+        '      authored colour from an inherited one and would flatten the whole palette
+        '      into hard-coded literals on the first save.
+        scope
+            dim as string sTmp = *AfxGetExePathName() & "_theme_roletest.tmp"
+
+            ' A theme with ONE authored key and everything else inherited.
+            erase gTheme
+            dim as long na = Theme_EnsureEntry( "editor.keyword" )
+            gTheme(na).foreground = BGR( 9, 9, 9 )
+            gTheme(na).hasFore    = true
+            ' One authored ROLE too, so the round trip has a palette to lose.
+            dim as long nr = Theme_EnsureEntry( "role.accent" )
+            gTheme(nr).foreground = BGR( 4, 4, 4 )
+            gTheme(nr).hasFore    = true
+            Theme_ResolveFallbacks()
+
+            THASSERT( Theme_WriteFile( sTmp, "roles only" ) = false, "roles-only write failed" )
+
+            dim as long nLines
+            dim as long f = freefile
+            if open( sTmp for input encoding "utf-8" as #f ) = 0 then
+                dim as string sLineIn
+                while eof(f) = 0
+                    line input #f, sLineIn
+                    dim as boolean bReal = (len(trim(sLineIn)) > 0)
+                    bReal = (bReal andalso (left(trim(sLineIn),1) <> "#"))
+                    if bReal then nLines += 1
+                wend
+                close #f
+            end if
+
+            ' The authored key comes back...
+            erase gTheme
+            Theme_ParseFile( sTmp )
+            dim as long nb = Theme_FindEntry( "editor.keyword" )
+            THASSERT( nb >= 0, "the authored key did not survive the save" )
+            if nb >= 0 then
+                THASSERT( gTheme(nb).foreground = BGR(9,9,9), "the authored colour changed" )
+            end if
+            ' ...and the inherited ones did NOT get baked into the file. Without provenance
+            ' this file carries a line for every colour key.
+            THASSERT( nLines < 40, _
+                      "a roles-only save emitted " & nLines & " lines -- the palette was flattened" )
+
+            ' AND THE PALETTE ITSELF SURVIVED. This assertion was previously the line count
+            ' alone, and it was happy with short-because-EMPTY: the writer emitted no role.*
+            ' block at all, so a roles-only theme saved as a handful of lines and lost every
+            ' colour it had. Found by forking a theme and reading the file, not by this test.
+            ' A count is not a round trip.
+            dim as long nRoles
+            for i as long = 0 to Theme_RoleCount() - 1
+                if Theme_RoleIsExplicit(i) then nRoles += 1
+            next
+            THASSERT( nRoles > 0, "the role palette did not survive the save" )
+            THASSERT( theme.role.clr(THROLE_ACCENT) = BGR(4,4,4), _
+                      "an authored role came back with a different colour" )
+            kill( sTmp )
+        end scope
+
+        Theme_Restore()
+        Theme_DiscardSnapshot()
+        Theme_ResolveFallbacks()
+        Theme_FillGlobals()
+    end scope
+
+    ' -- 24. EVERY SHIPPED THEME IS LEGIBLE. ---------------------------------------------
+    '    Twelve themes were about to be authored by someone who cannot see them. This is
+    '    what makes that responsible: it loads every .theme file on disk and puts each one
+    '    through the same battery, so "the comment colour vanished into the page" fails a
+    '    build instead of waiting to be noticed.
+    '
+    '    It asserts LEGIBILITY, not taste. Whether a palette is pleasant is the author's
+    '    call and no assertion's business; whether its text can be read on its own
+    '    background is arithmetic.
+    '
+    '    Destructive -- it parses other files over the live theme -- so it runs last, inside
+    '    its own snapshot, and puts the real theme back afterwards.
+    scope
+        #macro LUM( c )
+            (( 299 * ((c) and &hFF) + 587 * (((c) shr 8) and &hFF) + 114 * (((c) shr 16) and &hFF) ) \ 1000)
+        #endmacro
+
+        Theme_Snapshot()
+
+        dim as DWSTRING wszFolder = frmThemes_ThemesFolder()
+        dim as WIN32_FIND_DATAW WFD
+        dim as HANDLE hSearch = FindFirstFile( wszFolder & "*.theme", @WFD )
+        dim as long nThemes
+
+        if hSearch <> INVALID_HANDLE_VALUE then
+            do
+                dim as DWSTRING wszName = WFD.cFileName
+                if (wszName <> ".") andalso (wszName <> "..") then
+                    nThemes += 1
+                    dim as string sT = " [" & wszName & "]"
+
+                    erase gTheme
+                    dim as boolean bErr = Theme_ParseFile( wszFolder & wszName )
+                    THASSERT( bErr = false, "theme failed to parse" & sT )
+                    THASSERT( ubound(gThemeParseWarnings) < lbound(gThemeParseWarnings), _
+                              "theme produced parse warnings" & sT )
+                    Theme_ResolveFallbacks()
+                    Theme_FillRoot( @theme )
+
+                    ' Every colour key resolved -- the roles-only promise, per theme.
+                    dim as long nUnres
+                    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+                        if gThemeKeys(i).ofsText >= 0 then continue for
+                        dim as long n = Theme_FindEntry( gThemeKeys(i).keyValue )
+                        dim as boolean bF = (gThemeKeys(i).ofsFore >= 0)
+                        dim as boolean bB = (gThemeKeys(i).ofsBack >= 0)
+                        dim as boolean bOkF = true
+                        dim as boolean bOkB = true
+                        if n < 0 then
+                            bOkF = (bF = false) : bOkB = (bB = false)
+                        else
+                            if bF then bOkF = gTheme(n).hasFore
+                            if bB then bOkB = gTheme(n).hasBack
+                        end if
+                        if (bOkF = false) orelse (bOkB = false) then nUnres += 1
+                    next
+                    THASSERT( nUnres = 0, "unresolved colour keys: " & nUnres & sT )
+
+                    THASSERT( len(theme.general.description) > 0, "no description" & sT )
+
+                    ' CODE MUST BE READABLE ON ITS OWN PAGE. The single most important
+                    ' number in a theme, and the one a blind author gets wrong.
+                    dim as long lumBg = LUM( theme.editor.text.backcolor )
+                    dim as long dText = abs( LUM( theme.editor.text.forecolor ) - lumBg )
+                    THASSERT( dText >= 90, "body text contrast is only " & dText & sT )
+
+                    ' NO TOKEN CLASS DISAPPEARS INTO THE PAGE. A comment or a string the
+                    ' same luminance as the background is invisible, and it is exactly the
+                    ' mistake a hand-ported palette makes on one class out of eight.
+                    #macro TOKCHK( style, nm )
+                        scope
+                            dim as long d = abs( LUM( theme.editor.style.forecolor ) - lumBg )
+                            THASSERT( d >= 25, nm & " is invisible on the page (" & d & ")" & sT )
+                        end scope
+                    #endmacro
+                    TOKCHK( keyword1,     "keyword" )
+                    TOKCHK( keyword2,     "api keyword" )
+                    TOKCHK( keyword3,     "user keyword" )
+                    TOKCHK( comments,     "comment" )
+                    TOKCHK( strings,      "string" )
+                    TOKCHK( numbers,      "number" )
+                    TOKCHK( operators,    "operator" )
+                    TOKCHK( preprocessor, "preprocessor" )
+                    #undef TOKCHK
+
+                    ' A HOVERED ROW MUST LOOK HOVERED. role.hot fills the row under the
+                    ' cursor and role.backgroundalt fills the ones that are not; if they
+                    ' are the same colour the panels, menus, tabs and status bar all lose
+                    ' their hover feedback at once, silently, in that theme only.
+                    '
+                    ' Both sepia themes shipped exactly that: Solarized names one colour
+                    ' (base02 / base2) for both jobs and I took it for both roles. Caught by
+                    ' a human hovering a row, which is precisely the kind of defect this
+                    ' battery exists to find first -- and it did not, because every earlier
+                    ' check compares INK against a background and this one compares two
+                    ' backgrounds against each other.
+                    '
+                    ' Floor of 5, calibrated against the shipped themes rather than chosen:
+                    ' the tightest legitimate one is studio_dark at 7, which is VS Code's
+                    ' own list-hover step (#2A2D2E on #252526). This catches invisible, not
+                    ' merely subtle.
+                    scope
+                        dim as long dHot = abs( LUM( theme.role.clr(THROLE_HOT) ) - _
+                                                LUM( theme.role.clr(THROLE_BACKGROUNDALT) ) )
+                        THASSERT( dHot >= 5, _
+                                  "row hover is invisible -- role.hot is " & dHot & _
+                                  " from role.backgroundalt" & sT )
+                    end scope
+
+                    ' A POPUP MUST BE DISTINGUISHABLE FROM THE PAGE -- BY FILL *OR* BY
+                    ' BORDER. Menus, dropdowns and tooltips have to read as floating over
+                    ' the window rather than as holes in it.
+                    '
+                    ' The first version of this check required a different FILL, and it was
+                    ' wrong in the same way assertion 18 was: it encoded a dark-theme
+                    ' assumption. It failed studio_light, contrast_light AND default_light
+                    ' -- the last of which predates all of this work. A white popup on a
+                    ' white page is not a defect, it is what VS Code Light+ ships; the
+                    ' separation is carried by the border and the drop shadow. So the
+                    ' requirement is that SOMETHING separates them, not that the fill does.
+                    scope
+                        dim as long lumRz  = LUM( theme.role.clr(THROLE_BACKGROUNDRAISED) )
+                        dim as long dFill  = abs( lumRz - LUM( theme.role.clr(THROLE_BACKGROUND) ) )
+                        dim as long dEdge  = abs( lumRz - LUM( theme.role.clr(THROLE_BORDER) ) )
+                        dim as long dBest  = iif( dFill > dEdge, dFill, dEdge )
+                        THASSERT( dBest >= 5, _
+                                  "popups are indistinguishable from the page (fill " & dFill & _
+                                  ", border " & dEdge & ")" & sT )
+                    end scope
+
+                    ' THE EDITOR/PANEL BOUNDARY MUST BE READABLE. Either the divider shows
+                    ' against a surface, or the two surfaces differ from each other enough
+                    ' that the boundary reads as a tonal step with no line needed.
+                    '
+                    ' Also softened from a first version that demanded the border be visible
+                    ' against BOTH surfaces. That failed both sepia themes, where Solarized
+                    ' uses base02 for the panel and for subtle rules alike -- the line
+                    ' vanishes into the panel, but the panel and the editor are themselves
+                    ' 10 apart, so the edge is perfectly legible. Requiring the line
+                    ' specifically was requiring one implementation of an outcome.
+                    scope
+                        dim as long lumBd = LUM( theme.role.clr(THROLE_BORDER) )
+                        dim as long lumBg = LUM( theme.role.clr(THROLE_BACKGROUND) )
+                        dim as long lumAl = LUM( theme.role.clr(THROLE_BACKGROUNDALT) )
+                        dim as long d1 = abs( lumBd - lumBg )
+                        dim as long d2 = abs( lumBd - lumAl )
+                        dim as long d3 = abs( lumBg - lumAl )
+                        dim as long dMax = d1
+                        if d2 > dMax then dMax = d2
+                        if d3 > dMax then dMax = d3
+                        THASSERT( dMax >= 5, _
+                                  "the editor/panel boundary is invisible (border-vs-bg " & d1 & _
+                                  ", border-vs-alt " & d2 & ", bg-vs-alt " & d3 & ")" & sT )
+                    end scope
+
+                    ' Selected text stays readable against its own highlight.
+                    dim as long dSel = abs( LUM( theme.editor.selection.forecolor ) - _
+                                            LUM( theme.editor.selection.backcolor ) )
+                    THASSERT( dSel >= 40, "selected text contrast is only " & dSel & sT )
+
+                    ' The stroke accent is legible (22i, per theme).
+                    dim as long lumPg = LUM( theme.role.clr(THROLE_BACKGROUND) )
+                    THASSERT( abs( LUM(theme.role.clr(THROLE_ACCENTFORE)) - lumPg ) > _
+                              abs( LUM(theme.role.clr(THROLE_ACCENT)) - lumPg ), _
+                              "role.accentfore reads no better than role.accent" & sT )
+
+                    ' And the toggle states are tellable apart under THIS palette.
+                    scope
+                        dim as PSTOGGLE_COLORS tc
+                        OptionsTheme_FillToggle( @tc )
+                        dim as long dTr = abs( LUM(tc.TrackColorOn) - LUM(tc.TrackColorOff) )
+                        dim as long dKn = abs( LUM(tc.KnobColorOn)  - LUM(tc.KnobColorOff) )
+                        THASSERT( iif(dTr > dKn, dTr, dKn) >= 40, _
+                                  "toggle states not tellable apart (track " & dTr & _
+                                  ", knob " & dKn & ")" & sT )
+                    end scope
+                end if
+            loop while FindNextFile( hSearch, @WFD )
+            FindClose( hSearch )
+        end if
+
+        THASSERT( nThemes >= 2, "found only " & nThemes & " theme files" )
+        sLine = "    (battery ran over " & nThemes & " theme files)"
+        ? sLine
+
+        Theme_Restore()
+        Theme_DiscardSnapshot()
+        Theme_ResolveFallbacks()
+        Theme_FillGlobals()
+        #undef LUM
     end scope
 
     sLine = "--- theme self-test: " & str(nPass) & " passed, " & str(nFail) & " failed ---"

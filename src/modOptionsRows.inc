@@ -431,19 +431,19 @@ end sub
 sub OptionsTheme_FillToggle( byval tc as PSTOGGLE_COLORS ptr )
     if tc = 0 then exit sub
     ' The pill's own background must match the page it sits on, or its corners show a halo.
-    tc->BackColor                   = ghPanel.BackColor
-    tc->FocusRingColor              = ghPanel.ForeColorHot
+    tc->BackColor                   = theme.panel.text.backcolor
+    tc->FocusRingColor              = theme.panel.texthot.forecolor
     ' ON: filled with the theme ACCENT, borderless (border = fill).
     '
-    ' This used to be ghPanel.BackColorButtonHot -- a grey barely distinct from the page. The
+    ' This used to be theme.panel.buttonhot.backcolor -- a grey barely distinct from the page. The
     ' knob mapping below (page-dark when ON, bright when OFF) is Windows 11's, and it works
     ' there only because an ON track is unmistakably accent-coloured. With a grey track the
     ' one strong signal left was the knob, so an OFF switch read as BRIGHTER than an ON one
     ' and the whole control inverted at a glance. Reported 2026-07-25 after it caused a
     ' settings value to be misread as its opposite.
-    tc->TrackColorOn                = ghUI.AccentColor
-    tc->TrackColorOnHot             = ghUI.AccentColor
-    tc->TrackColorOnDisabled        = ghPanel.BackColorButton
+    tc->TrackColorOn                = theme.ui.accent
+    tc->TrackColorOnHot             = theme.ui.accent
+    tc->TrackColorOnDisabled        = theme.panel.button.backcolor
     tc->TrackBorderColorOn          = tc->TrackColorOn
     tc->TrackBorderColorOnHot       = tc->TrackColorOnHot
     tc->TrackBorderColorOnDisabled  = tc->TrackColorOnDisabled
@@ -453,50 +453,50 @@ sub OptionsTheme_FillToggle( byval tc as PSTOGGLE_COLORS ptr )
     ' 217. Keeping Windows' mapping left OFF the loudest thing on the row no matter what the
     ' track did. iOS/Material's accent-track-plus-white-knob is unambiguous at any accent
     ' brightness, so the family follows that instead.
-    tc->KnobColorOn                 = ghPanel.ForeColor
-    tc->KnobColorOnHot              = ghPanel.ForeColorHot
-    tc->KnobColorOnDisabled         = ghPanel.ForeColorScrollBar
+    tc->KnobColorOn                 = theme.panel.text.forecolor
+    tc->KnobColorOnHot              = theme.panel.texthot.forecolor
+    tc->KnobColorOnDisabled         = theme.panel.scrollbar.forecolor
     ' OFF: outlined, the track barely distinct from the page.
-    tc->TrackColorOff               = ghPanel.BackColor
-    tc->TrackColorOffHot            = ghPanel.BackColorHot
-    tc->TrackColorOffDisabled       = ghPanel.BackColor
-    tc->TrackBorderColorOff         = ghEditor.Divider
-    tc->TrackBorderColorOffHot      = ghPanel.ForeColorHot
-    tc->TrackBorderColorOffDisabled = ghEditor.Divider
-    ' ...and a SUBDUED knob when OFF. This was ghPanel.ForeColor -- the brightest colour on
+    tc->TrackColorOff               = theme.panel.text.backcolor
+    tc->TrackColorOffHot            = theme.panel.texthot.backcolor
+    tc->TrackColorOffDisabled       = theme.panel.text.backcolor
+    tc->TrackBorderColorOff         = theme.ui.divider
+    tc->TrackBorderColorOffHot      = theme.panel.texthot.forecolor
+    tc->TrackBorderColorOffDisabled = theme.ui.divider
+    ' ...and a SUBDUED knob when OFF. This was theme.panel.text.forecolor -- the brightest colour on
     ' the page -- which is what made an OFF switch shout louder than an ON one.
-    tc->KnobColorOff                = ghPanel.ForeColorScrollBar
-    tc->KnobColorOffHot             = ghPanel.ForeColor
-    tc->KnobColorOffDisabled        = ghEditor.Divider
+    tc->KnobColorOff                = theme.panel.scrollbar.forecolor
+    tc->KnobColorOffHot             = theme.panel.text.forecolor
+    tc->KnobColorOffDisabled        = theme.ui.divider
 end sub
 
 sub OptionsTheme_FillButton( byval bc as PSBUTTON_COLORS ptr )
     if bc = 0 then exit sub
-    bc->BackColor           = ghPanel.BackColorButton
-    bc->ForeColor           = ghPanel.ForeColorButton
-    bc->BorderColor         = ghEditor.Divider
-    bc->IconColor           = ghPanel.ForeColorButton
-    bc->BackColorHot        = ghPanel.BackColorButtonHot
-    bc->ForeColorHot        = ghPanel.ForeColorButtonHot
-    bc->BorderColorHot      = ghPanel.BackColorButtonHot
-    bc->IconColorHot        = ghPanel.ForeColorButtonHot
-    bc->BackColorPressed    = ghPanel.BackColorButtonHot
-    bc->ForeColorPressed    = ghPanel.ForeColorButtonHot
-    bc->BorderColorPressed  = ghPanel.BackColorButtonHot
-    bc->IconColorPressed    = ghPanel.ForeColorButtonHot
-    bc->BackColorDisabled   = ghPanel.BackColor
-    bc->ForeColorDisabled   = ghEditor.Divider
-    bc->BorderColorDisabled = ghEditor.Divider
-    bc->IconColorDisabled   = ghEditor.Divider
+    bc->BackColor           = theme.panel.button.backcolor
+    bc->ForeColor           = theme.panel.button.forecolor
+    bc->BorderColor         = theme.ui.divider
+    bc->IconColor           = theme.panel.button.forecolor
+    bc->BackColorHot        = theme.panel.buttonhot.backcolor
+    bc->ForeColorHot        = theme.panel.buttonhot.forecolor
+    bc->BorderColorHot      = theme.panel.buttonhot.backcolor
+    bc->IconColorHot        = theme.panel.buttonhot.forecolor
+    bc->BackColorPressed    = theme.panel.buttonhot.backcolor
+    bc->ForeColorPressed    = theme.panel.buttonhot.forecolor
+    bc->BorderColorPressed  = theme.panel.buttonhot.backcolor
+    bc->IconColorPressed    = theme.panel.buttonhot.forecolor
+    bc->BackColorDisabled   = theme.panel.text.backcolor
+    bc->ForeColorDisabled   = theme.ui.divider
+    bc->BorderColorDisabled = theme.ui.divider
+    bc->IconColorDisabled   = theme.ui.divider
 end sub
 
 sub OptionsTheme_ApplyTextBox( byval hTextBox as HWND )
     if hTextBox = 0 then exit sub
     PsTextBox_SetFont( hTextBox, OptionsFont_Base() )
-    PsTextBox_SetForeColor( hTextBox, ghEditor.ForeColorText )
-    PsTextBox_SetBackColor( hTextBox, ghEditor.BackColorText )
-    PsTextBox_SetBorderColor( hTextBox, ghEditor.Divider )
-    PsTextBox_SetFocusBorderColor( hTextBox, ghPanel.ForeColorHot )
+    PsTextBox_SetForeColor( hTextBox, theme.ui.field.forecolor )
+    PsTextBox_SetBackColor( hTextBox, theme.ui.field.backcolor )
+    PsTextBox_SetBorderColor( hTextBox, theme.ui.divider )
+    PsTextBox_SetFocusBorderColor( hTextBox, theme.panel.texthot.forecolor )
     ' The control's own Cut/Copy/Paste popup follows tiko's theme through the same registry
     ' the topmenu dropdowns use.
     ThemeTextBoxContextMenu( hTextBox )
@@ -508,61 +508,61 @@ end sub
 ' caret, and a list has no caret to signal.
 sub OptionsTheme_ApplyListBorder( byval hList as HWND )
     if hList = 0 then exit sub
-    PsListTree_SetBorderColor( hList, ghEditor.Divider )
+    PsListTree_SetBorderColor( hList, theme.ui.divider )
     PsListTree_SetBorderWidth( hList, 1 )
 end sub
 
 sub OptionsTheme_FillNumeric( byval nc as PSNUMERICUPDOWN_COLORS ptr )
     if nc = 0 then exit sub
-    nc->BackColor               = ghPanel.BackColor
-    nc->BorderColor             = ghEditor.Divider
-    nc->FocusBorderColor        = ghPanel.ForeColorHot
-    nc->BorderColorDisabled     = ghEditor.Divider
-    nc->DividerColor            = ghEditor.Divider
-    nc->DividerColorDisabled    = ghEditor.Divider
-    nc->ValueBackColor          = ghEditor.BackColorText
-    nc->ValueForeColor          = ghEditor.ForeColorText
-    nc->ValueBackColorDisabled  = ghPanel.BackColor
-    nc->ValueForeColorDisabled  = ghEditor.Divider
-    nc->ButtonBackColor         = ghPanel.BackColorButton
-    nc->ButtonBackColorHot      = ghPanel.BackColorButtonHot
-    nc->ButtonBackColorPressed  = ghPanel.BackColorButtonHot
-    nc->ButtonBackColorDisabled = ghPanel.BackColor
-    nc->GlyphColor              = ghPanel.ForeColorButton
-    nc->GlyphColorHot           = ghPanel.ForeColorButtonHot
-    nc->GlyphColorPressed       = ghPanel.ForeColorButtonHot
-    nc->GlyphColorDisabled      = ghEditor.Divider
+    nc->BackColor               = theme.panel.text.backcolor
+    nc->BorderColor             = theme.ui.divider
+    nc->FocusBorderColor        = theme.panel.texthot.forecolor
+    nc->BorderColorDisabled     = theme.ui.divider
+    nc->DividerColor            = theme.ui.divider
+    nc->DividerColorDisabled    = theme.ui.divider
+    nc->ValueBackColor          = theme.ui.field.backcolor
+    nc->ValueForeColor          = theme.ui.field.forecolor
+    nc->ValueBackColorDisabled  = theme.panel.text.backcolor
+    nc->ValueForeColorDisabled  = theme.ui.divider
+    nc->ButtonBackColor         = theme.panel.button.backcolor
+    nc->ButtonBackColorHot      = theme.panel.buttonhot.backcolor
+    nc->ButtonBackColorPressed  = theme.panel.buttonhot.backcolor
+    nc->ButtonBackColorDisabled = theme.panel.text.backcolor
+    nc->GlyphColor              = theme.panel.button.forecolor
+    nc->GlyphColorHot           = theme.panel.buttonhot.forecolor
+    nc->GlyphColorPressed       = theme.panel.buttonhot.forecolor
+    nc->GlyphColorDisabled      = theme.ui.divider
 end sub
 
 sub OptionsTheme_FillCombo( byval cc as PSCOMBOBOX_COLORS ptr, byval pc as PSPOPUPMENU_COLORS ptr )
     if cc <> 0 then
-        cc->BackColor            = ghPanel.BackColorButton
-        cc->ForeColor            = ghPanel.ForeColorButton
-        cc->BorderColor          = ghEditor.Divider
-        cc->ChevronColor         = ghPanel.ForeColorButton
-        cc->BackColorHot         = ghPanel.BackColorButtonHot
-        cc->ForeColorHot         = ghPanel.ForeColorButtonHot
-        cc->BorderColorHot       = ghPanel.BackColorButtonHot
-        cc->ChevronColorHot      = ghPanel.ForeColorButtonHot
-        cc->BackColorOpen        = ghPanel.BackColorButtonHot
-        cc->ForeColorOpen        = ghPanel.ForeColorButtonHot
-        cc->BorderColorOpen      = ghPanel.BackColorButtonHot
-        cc->ChevronColorOpen     = ghPanel.ForeColorButtonHot
-        cc->BackColorDisabled    = ghPanel.BackColor
-        cc->ForeColorDisabled    = ghEditor.Divider
-        cc->BorderColorDisabled  = ghEditor.Divider
-        cc->ChevronColorDisabled = ghEditor.Divider
-        cc->ForeColorPlaceholder = ghEditor.Divider
-        cc->FocusRingColor       = ghPanel.ForeColorHot
+        cc->BackColor            = theme.panel.button.backcolor
+        cc->ForeColor            = theme.panel.button.forecolor
+        cc->BorderColor          = theme.ui.divider
+        cc->ChevronColor         = theme.panel.button.forecolor
+        cc->BackColorHot         = theme.panel.buttonhot.backcolor
+        cc->ForeColorHot         = theme.panel.buttonhot.forecolor
+        cc->BorderColorHot       = theme.panel.buttonhot.backcolor
+        cc->ChevronColorHot      = theme.panel.buttonhot.forecolor
+        cc->BackColorOpen        = theme.panel.buttonhot.backcolor
+        cc->ForeColorOpen        = theme.panel.buttonhot.forecolor
+        cc->BorderColorOpen      = theme.panel.buttonhot.backcolor
+        cc->ChevronColorOpen     = theme.panel.buttonhot.forecolor
+        cc->BackColorDisabled    = theme.panel.text.backcolor
+        cc->ForeColorDisabled    = theme.ui.divider
+        cc->BorderColorDisabled  = theme.ui.divider
+        cc->ChevronColorDisabled = theme.ui.divider
+        cc->ForeColorPlaceholder = theme.ui.divider
+        cc->FocusRingColor       = theme.panel.texthot.forecolor
     end if
     if pc <> 0 then
-        pc->BackColor         = ghPopup.BackColor
-        pc->ForeColor         = ghPopup.ForeColor
-        pc->BackColorHot      = ghPopup.BackColorHot
-        pc->ForeColorHot      = ghPopup.ForeColorHot
-        pc->ForeColorDisabled = ghPopup.ForeColorDisabled
-        pc->BorderColor       = ghPopup.PanelColor
-        pc->SeparatorColor    = ghEditor.Divider
+        pc->BackColor         = theme.topmenu.text.backcolor
+        pc->ForeColor         = theme.topmenu.text.forecolor
+        pc->BackColorHot      = theme.topmenu.texthot.backcolor
+        pc->ForeColorHot      = theme.topmenu.texthot.forecolor
+        pc->ForeColorDisabled = theme.topmenu.textdisabled.forecolor
+        pc->BorderColor       = theme.topmenu.panel
+        pc->SeparatorColor    = theme.ui.divider
     end if
 end sub
 
@@ -767,14 +767,14 @@ sub OptionsRows_PaintPage( byval nPage as long, byval p as SCP_PAINTINFO ptr )
     if p = 0 then exit sub
 
     p->b->SetFont( OptionsFont_Base() )
-    p->b->SetBackColor( ghPanel.BackColor )
+    p->b->SetBackColor( theme.panel.text.backcolor )
 
     for i as long = lbound(gOptRows) to ubound(gOptRows)
         if gOptRows(i).nPage <> nPage then continue for
         if gOptRows(i).hCtrl = 0 then continue for
 
         dim as boolean bEnabled = OptionsRows_IsRowEnabled(i)
-        p->b->SetForeColor( iif( bEnabled, ghPanel.ForeColor, ghEditor.Divider ) )
+        p->b->SetForeColor( iif( bEnabled, theme.panel.text.forecolor, theme.ui.divider ) )
 
         dim as DWSTRING wszCaption = LL(gOptRows(i).nLabelID)
         dim as RECT rcText = gOptRows(i).rcLabel

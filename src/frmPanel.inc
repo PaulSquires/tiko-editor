@@ -197,7 +197,7 @@ function frmPanel_OnPaint( byval hwnd as HWND ) as LRESULT
     b.BeginDoubleBuffer(hwnd)
 
     ' Set default fore and back colors
-    b.SetColors( ghPanel.ForeColor, ghPanel.BackColor )
+    b.SetColors( theme.panel.text.forecolor, theme.panel.text.backcolor )
 
     ' Clear the entire back client area
     b.PaintClientRect()
@@ -209,9 +209,9 @@ function frmPanel_OnPaint( byval hwnd as HWND ) as LRESULT
     ' Draw the "..." menu item (hot when the mouse is over it)
     b.SetFont( ghFont(SYMBOLFONT_10) )
     if isMouseOverRECT( hwnd, gPanel.rcActionMenu ) then
-        b.SetColors( ghPanel.ForeColorHot, ghPanel.BackColorHot )
+        b.SetColors( theme.panel.texthot.forecolor, theme.panel.texthot.backcolor )
     else
-        b.SetColors( ghPanel.ForeColor, ghPanel.BackColor )
+        b.SetColors( theme.panel.text.forecolor, theme.panel.text.backcolor )
     end if
     b.PaintRoundRect( @gPanel.rcActionMenu )
     b.PaintText( wszIconMoreActions, @gPanel.rcActionMenu, DT_CENTER )
@@ -242,7 +242,7 @@ end function
 sub frmPanel_SplitterPaint( byval p as PSSPLITTER_PAINTINFO ptr )
     dim as PsBufferPaint ptr b = p->b
 
-    b->SetBackColor( ghPanel.BackColor )
+    b->SetBackColor( theme.panel.text.backcolor )
     b->PaintClientRect()
 
     dim as RECT rc = p->rcClient
@@ -252,7 +252,7 @@ sub frmPanel_SplitterPaint( byval p as PSSPLITTER_PAINTINFO ptr )
 
     ' Constant color -- deliberately no isHot/isDragging highlight. The cursor change
     ' from the control is the only hover feedback this bar gets.
-    b->SetBackColor( ghEditor.Divider )
+    b->SetBackColor( theme.editor.divider )
     b->PaintRect( @rc )
 end sub
 

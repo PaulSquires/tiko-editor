@@ -1,0 +1,35 @@
+general.description: Slate Light
+general.version: 1.0.0
+general.appearance: light
+
+# Slate Light -- palette after One Light by Atom / GitHub (MIT)
+# Re-implemented for tiko from published colour values; no files from the
+# original project are included or derived.
+#
+# A ROLES-ONLY THEME. Every widget key inherits from the palette below, so a
+# key added to tiko later is themed here for free instead of coming up in
+# some other palette's colours. To depart from the palette, name the key
+# itself -- an explicit value always beats its role.
+
+role.background: 250,250,250
+role.backgroundalt: 240,240,240
+role.backgroundraised: 255,255,255
+role.foreground: 56,58,66
+role.foregrounddim: 140,141,148
+role.border: 225,225,226
+role.accent: 220,224,232
+role.accentfore: 64,120,242
+role.hot: 232,232,234
+role.selection: 208,216,229
+role.error: 228,86,73
+role.warning: 152,104,1
+role.success: 80,161,79
+role.keyword: 166,38,164
+role.apikeyword: 1,132,188
+role.userkeyword: 152,104,1
+role.comment: 140,141,148
+role.string: 80,161,79
+role.number: 152,104,1
+role.operator: 56,58,66
+role.preprocessor: 166,38,164
+

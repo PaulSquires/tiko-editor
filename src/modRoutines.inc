@@ -90,7 +90,7 @@ end function
 '   - That code computed foreclr as iif(IsHot, ForeColorHot, ForeColorHot) -- a degenerate
 '     ternary, so the non-hot ForeColor was never actually used and every row drew in
 '     ForeColorHot. Reproduced here deliberately, to keep the migration visually identical;
-'     switch the else branch to ghOutput.ForeColor if the original intent is wanted.
+'     switch the else branch to theme.output.text.forecolor if the original intent is wanted.
 '   - Column 2 (the filename) gets DT_PATH_ELLIPSIS, as before.
 ' ========================================================================================
 sub ListBox_LVPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
@@ -100,8 +100,8 @@ sub ListBox_LVPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
     ' The old control highlighted the SELECTED row only; PsListTree tracks hover separately,
     ' so honor both.
     dim as boolean bHot = (p->isSelected orelse p->isHot)
-    dim as COLORREF backclr = iif( bHot, ghOutput.ForeColorScrollBar, ghOutput.BackColor )
-    p->b->SetForeColor( ghOutput.ForeColorHot )
+    dim as COLORREF backclr = iif( bHot, theme.output.scrollbar.forecolor, theme.output.text.backcolor )
+    p->b->SetForeColor( theme.output.texthot.forecolor )
     p->b->SetBackColor( backclr )
     p->b->PaintRect( @p->rc )
 
@@ -130,9 +130,9 @@ sub ListBox_LVPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
     if pWindow = 0 then exit sub
 
-    dim as COLORREF backclr = ghOutput.BackColor
-    if p->isHot orelse p->isResizeHot then backclr = ghOutput.ForeColorScrollBar
-    p->b->SetForeColor( ghOutput.ForeColorHot )
+    dim as COLORREF backclr = theme.output.text.backcolor
+    if p->isHot orelse p->isResizeHot then backclr = theme.output.scrollbar.forecolor
+    p->b->SetForeColor( theme.output.texthot.forecolor )
     p->b->SetBackColor( backclr )
     p->b->PaintRect( @p->rc )
 
@@ -144,7 +144,7 @@ sub ListBox_LVPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
     ' A one-pixel divider on the trailing edge, so columns read as separated.
     dim as RECT rcDiv = p->rc
     rcDiv.left = rcDiv.right - AfxScaleX(1)
-    p->b->SetBackColor( ghOutput.ScrollBarDivider )
+    p->b->SetBackColor( theme.output.scrollbardivider )
     p->b->PaintRect( @rcDiv )
 end sub
 

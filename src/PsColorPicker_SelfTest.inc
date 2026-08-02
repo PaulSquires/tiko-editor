@@ -47,8 +47,6 @@ dim shared as long     gCLR_NotifyCount
 dim shared as long     gCLR_NotifyPhase(0 to CLR_MAXNOTIFY - 1)
 dim shared as COLORREF gCLR_NotifyColor(0 to CLR_MAXNOTIFY - 1)
 dim shared as long     gCLR_TabNotifyCount
-dim shared as long     gCLR_AssignCount
-dim shared as long     gCLR_AssignIdx
 
 private sub CLRTest_OnColorChanged( _
             byval hCtrl  as HWND, _
@@ -75,45 +73,6 @@ private sub CLRTest_ResetNotify()
         gCLR_NotifyPhase(i) = -1
         gCLR_NotifyColor(i) = 0
     next
-end sub
-
-
-' ---- a fixed demo palette, so the PALETTE tab has something to be ------------------------
-' Six named colours, which is the size a theme's %MACRO block actually is. TWO OF THEM ARE THE
-' SAME COLOUR under different names, deliberately: that is what makes the "arrowing onto the
-' second of a duplicate pair does not snap back to the first" case testable, and it is a real
-' shape (a theme that defines %accent and %link identically).
-' TWENTY, NOT SIX, AND THE EXTRA FOURTEEN EARN THEIR KEEP. The palette tab is the ONLY place
-' the "a row drawn past the bottom of the viewport is not clickable" guard is reachable: it needs
-' a list that OVERFLOWS its viewport (so the index-vs-count test does not answer first) AND a
-' viewport height that is not an exact multiple of the row height (so a partial row exists at
-' all). Web has the first and not the second -- its body is sized as an exact number of rows --
-' and a six-entry palette had the second and not the first. Entries 0 to 5 are unchanged, so
-' every other palette assertion still means what it did.
-const CLR_TESTPALETTE_COUNT = 20
-dim shared as DWSTRING  gCLR_TestPalName(0 to CLR_TESTPALETTE_COUNT - 1)
-dim shared as COLORREF  gCLR_TestPalColor(0 to CLR_TESTPALETTE_COUNT - 1)
-
-private function CLRTest_PaletteCount( byval hCtrl as HWND ) as long
-    return CLR_TESTPALETTE_COUNT
-end function
-
-private function CLRTest_PaletteEntry( _
-            byval hCtrl    as HWND, _
-            byval idx      as long, _
-            byref wszName  as DWSTRING, _
-            byref clr      as COLORREF _
-            ) as boolean
-
-    if (idx < 0) orelse (idx >= CLR_TESTPALETTE_COUNT) then return false
-    wszName = gCLR_TestPalName(idx)
-    clr     = gCLR_TestPalColor(idx)
-    return true
-end function
-
-private sub CLRTest_PaletteAssign( byval hCtrl as HWND, byval idx as long )
-    gCLR_AssignCount += 1
-    gCLR_AssignIdx = idx
 end sub
 
 
@@ -196,23 +155,6 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
 
     gCLR_TestCount = 0
     gCLR_FailCount = 0
-    gCLR_AssignCount = 0
-    gCLR_AssignIdx = -1
-
-    gCLR_TestPalName(0) = "accent"      : gCLR_TestPalColor(0) = BGR( 97,175,239)
-    gCLR_TestPalName(1) = "background"  : gCLR_TestPalColor(1) = BGR( 40, 44, 52)
-    gCLR_TestPalName(2) = "foreground"  : gCLR_TestPalColor(2) = BGR(171,178,191)
-    gCLR_TestPalName(3) = "warning"     : gCLR_TestPalColor(3) = BGR(229,192,123)
-    gCLR_TestPalName(4) = "error"       : gCLR_TestPalColor(4) = BGR(224,108,117)
-    ' A DUPLICATE of entry 0 under another name -- see the note on the table above.
-    gCLR_TestPalName(5) = "link"        : gCLR_TestPalColor(5) = BGR( 97,175,239)
-    ' Filler, so the list overflows its viewport. Distinct names and distinct colours, and none
-    ' of them equal to entries 0..5, or the duplicate-resolution case above would stop meaning
-    ' what it says.
-    for i as long = 6 to CLR_TESTPALETTE_COUNT - 1
-        gCLR_TestPalName(i)  = "filler" & str(i)
-        gCLR_TestPalColor(i) = BGR( 10 + (i * 7), 60 + (i * 3), 90 + (i * 5) )
-    next
 
     print ""
     print "--- PSCOLORPICKER_SELFTEST ---"
@@ -403,22 +345,42 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
         dim as boolean bNum = (bD andalso (bA = false))
         CLRTest_Check( "a numeric field takes digits and nothing else", bNum, str(bD) & "/" & str(bA) )
 
-        dim as boolean bF = PsColorPicker_FieldAccepts( CLR_FIELD_HEX, asc("f"), 3 )
-        dim as boolean bF2 = PsColorPicker_FieldAccepts( CLR_FIELD_HEX, asc("F"), 3 )
-        dim as boolean bG = PsColorPicker_FieldAccepts( CLR_FIELD_HEX, asc("g"), 3 )
-        dim as boolean bHexOK = (bF andalso bF2 andalso (bG = false))
-        CLRTest_Check( "the hex field takes a-f in either case and stops at g", bHexOK, _
-                       str(bF) & "/" & str(bF2) & "/" & str(bG) )
+        ' POSITION MUST NOT MATTER. nPos survives in the signature only because the hex field's
+        ' "# is legal at 0 and nowhere else" rule used to need it; with hex gone, a digit is
+        ' equally legal everywhere, and asserting that over a sweep is what would catch a future
+        ' edit that reintroduced a positional rule without saying so.
+        ' nCharPos, NOT pos: FreeBASIC is case-insensitive and POS() is the built-in that reports
+        ' the console column, so a loop variable called pos is a duplicated definition. Same class
+        ' as bIn / BIN() a few scopes below, and as `width`, `step` and `fb`.
+        dim as boolean bPosFree = true
+        for nCharPos as long = 0 to 8
+            if PsColorPicker_FieldAccepts( CLR_FIELD_R, asc("7"), nCharPos ) = false then bPosFree = false
+            if PsColorPicker_FieldAccepts( CLR_FIELD_R, asc("#"), nCharPos ) then bPosFree = false
+        next
+        CLRTest_Check( "a channel field takes a digit at every position and '#' at none", bPosFree, "" )
 
-        dim as boolean bH0 = PsColorPicker_FieldAccepts( CLR_FIELD_HEX, asc("#"), 0 )
-        dim as boolean bH3 = PsColorPicker_FieldAccepts( CLR_FIELD_HEX, asc("#"), 3 )
-        dim as boolean bHash = (bH0 andalso (bH3 = false))
-        CLRTest_Check( "the hex field takes # only at position 0", bHash, str(bH0) & "/" & str(bH3) )
+        ' NO FIELD TAKES A HEX LETTER ANY MORE. A negative over every field, so reintroducing
+        ' the a-f branch without a field to justify it turns this red.
+        dim as boolean bNoHexLetters = true
+        for f as long = 0 to CLR_FIELD_COUNT - 1
+            if PsColorPicker_FieldAccepts( f, asc("f"), 3 ) then bNoHexLetters = false
+            if PsColorPicker_FieldAccepts( f, asc("F"), 3 ) then bNoHexLetters = false
+        next
+        CLRTest_Check( "no field accepts a hex letter now that the hex field is gone", _
+                       bNoHexLetters, "" )
 
-        dim as boolean bLen = ((PsColorPicker_FieldMaxLen(CLR_FIELD_R) = 3) andalso _
-                               (PsColorPicker_FieldMaxLen(CLR_FIELD_HEX) = 7))
-        CLRTest_Check( "field lengths are 3 for a channel and 7 for hex", bLen, _
-                       str(PsColorPicker_FieldMaxLen(CLR_FIELD_R)) & "/" & str(PsColorPicker_FieldMaxLen(CLR_FIELD_HEX)) )
+        ' An out-of-range field id accepts NOTHING. It used to fall through to the digit test and
+        ' say yes, which is the wrong answer for a field that does not exist.
+        dim as boolean bBadField = (PsColorPicker_FieldAccepts( CLR_FIELD_COUNT, asc("7"), 0 ) = false) andalso _
+                                   (PsColorPicker_FieldAccepts( -1, asc("7"), 0 ) = false)
+        CLRTest_Check( "an out-of-range field id accepts nothing", bBadField, "" )
+
+        dim as boolean bLen = true
+        for f as long = 0 to CLR_FIELD_COUNT - 1
+            if PsColorPicker_FieldMaxLen(f) <> 3 then bLen = false
+        next
+        CLRTest_Check( "every field is three digits long", bLen, _
+                       str(PsColorPicker_FieldMaxLen(CLR_FIELD_R)) )
     end scope
 
     scope
@@ -503,19 +465,24 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
         dim as LONG_PTR nSt = GetWindowLongPtr( h, GWL_STYLE )
         CLRTest_Check( "the control carries WS_TABSTOP", ((nSt and WS_TABSTOP) <> 0), "style=&h" & hex(nSt) )
 
-        ' END TO END: does the dialog manager actually reach it? The two assertions above are
-        ' about bits; this one asks the thing that was really broken.
-        dim as HWND hFound = GetNextDlgTabItem( hWndParent, 0, FALSE )
-        dim as boolean bReach = false
-        dim as HWND hWalk = hFound
-        for i as long = 0 to 63
-            if hWalk = 0 then exit for
-            if hWalk = h then bReach = true : exit for
-            hWalk = GetNextDlgTabItem( hWndParent, hWalk, FALSE )
-            if hWalk = hFound then exit for
-        next
-        CLRTest_Check( "GetNextDlgTabItem reaches the control from its parent", bReach, _
-                       "first=&h" & hex(cast(uinteger, hFound)) )
+        ' THE END-TO-END WALK THAT USED TO LIVE HERE IS GONE, AND IT HAD TO. It asked
+        ' GetNextDlgTabItem( hWndParent, ... ) whether the dialog manager could reach this
+        ' control from its parent -- the question that mattered while the picker was an embedded
+        ' CHILD sharing a tab order with its siblings.
+        '
+        ' A WS_POPUP HAS NO PARENT TO BE REACHED FROM. hParent is its OWNER, not its parent, and
+        ' GetNextDlgTabItem walks children -- so that assertion could only ever fail now, and
+        ' failing would mean nothing. What replaced it is the pair below: the window really is a
+        ' popup, and it is NOT owned in a way that puts it in anyone's tab order.
+        CLRTest_Check( "the popup is not a child of the window that opened it", _
+                       (GetParent( h ) <> h) andalso ((clng(GetWindowLongPtrW( h, GWL_STYLE )) and WS_CHILD) = 0), _
+                       "" )
+
+        ' ...and the tabstop it still carries is for DoModal's OWN IsDialogMessage, which is the
+        ' only dialog manager that will ever see this window. Without it that loop would skip the
+        ' popup and Tab inside the fields would do nothing.
+        CLRTest_Check( "the popup is still a tabstop, for DoModal's own IsDialogMessage", _
+                       ((clng(GetWindowLongPtrW( h, GWL_STYLE )) and WS_TABSTOP) <> 0), "" )
     end scope
 
     print "=== geometry ==="
@@ -542,20 +509,28 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
                        ((pClr->rcTabs.bottom - pClr->rcTabs.top) = pClr->nTabHeight), _
                        CLRTest_RectStr(pClr->rcTabs) )
 
-        ' The tab cells must TILE the strip: no gap, no overlap, and the last one meets the right
-        ' edge. Accumulating a per-tab width instead of computing edges from the strip leaves a
-        ' rounding remainder here, which is visible as a sliver of background at the end.
+        ' THE TABS TILE FROM THE LEFT AND DELIBERATELY DO NOT REACH THE RIGHT EDGE. This
+        ' assertion used to require the last tab to meet rcTabs.right, which was correct while
+        ' the strip divided itself into equal parts; a tab is now as wide as its own caption, so
+        ' the leftover to the right of "Custom" is simply strip. Requiring the old behaviour here
+        ' would force the equal-split back.
         dim as long nTabs = pClr->TabCount()
-        dim as boolean bTile = ((pClr->rcTab(0).left = pClr->rcTabs.left) andalso _
-                                (pClr->rcTab(nTabs - 1).right = pClr->rcTabs.right))
+        dim as boolean bTile = (pClr->rcTab(0).left = pClr->rcTabs.left)
         for i as long = 0 to nTabs - 2
             if pClr->rcTab(i).right <> pClr->rcTab(i + 1).left then bTile = false
         next
-        CLRTest_Check( "the tab cells tile the strip with no gap or overlap", bTile, _
+        CLRTest_Check( "the tab cells tile from the left with no gap or overlap", bTile, _
                        "n=" & str(nTabs) & " " & CLRTest_RectStr(pClr->rcTab(0)) & " .. " & _
                        CLRTest_RectStr(pClr->rcTab(nTabs - 1)) )
 
-        CLRTest_Check( "three tabs without the palette", (nTabs = 3), str(nTabs) )
+        ' ...and they stop SHORT of the right edge, which is the positive form of the same claim.
+        ' Asserted rather than left implied, because "the last tab happens to end early" and "the
+        ' tabs are measured" are different facts and only the second is intended.
+        CLRTest_Check( "the last tab stops short of the strip's right edge", _
+                       (pClr->rcTab(nTabs - 1).right < pClr->rcTabs.right), _
+                       str(pClr->rcTab(nTabs - 1).right) & " < " & str(pClr->rcTabs.right) )
+
+        CLRTest_Check( "three tabs, and no way to make it four", (nTabs = 3), str(nTabs) )
 
         CLRTest_Check( "rcMatrix is EXACTLY cols x rows of cells", _
                        (((pClr->rcMatrix.right - pClr->rcMatrix.left) = (pClr->nMatrixCols * pClr->nCellW)) andalso _
@@ -564,16 +539,16 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
     end scope
 
     scope
-        ' THE FIXED-BODY CLAIM, which is the layout's load-bearing decision: an EMBEDDED control
-        ' must not resize as the user browses tabs, or the host's layout moves underneath it.
+        ' THE FIXED-BODY CLAIM, which is the layout's load-bearing decision: the POPUP must not
+        ' resize as the user browses tabs, or a window already placed against an anchor grows off
+        ' the bottom of the monitor.
         dim as long nBodyH = pClr->rcBody.bottom - pClr->rcBody.top
         dim as long nSeenW = pClr->nIdealW
         dim as long nSeenH = pClr->nIdealH
         dim as boolean bFixed = true
         dim as string sHeights = str(nBodyH)
 
-        PsColorPicker_ShowPaletteTab( h, true )
-        for t as long = CLR_TAB_WEB to CLR_TAB_PALETTE
+        for t as long = CLR_TAB_WEB to CLR_TAB_COUNT - 1
             PsColorPicker_SetTab( h, t )
             pClr->LayoutColorPicker()
             dim as long bh = pClr->rcBody.bottom - pClr->rcBody.top
@@ -582,14 +557,14 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
             dim as boolean bIdealSame = ((pClr->nIdealW = nSeenW) andalso (pClr->nIdealH = nSeenH))
             if bIdealSame = false then bFixed = false
         next
-        CLRTest_Check( "the body height and the ideal size are identical on all four tabs", _
+        CLRTest_Check( "the body height and the ideal size are identical on all three tabs", _
                        bFixed, "heights=" & sHeights )
 
         ' MUTUAL EXCLUSION: whichever body rect the current tab does not use is EMPTY, which is
         ' what lets a paint callback branch on IsRectEmpty instead of re-deriving the mapping.
         dim as boolean bExcl = true
         dim as string sExcl
-        for t as long = CLR_TAB_WEB to CLR_TAB_PALETTE
+        for t as long = CLR_TAB_WEB to CLR_TAB_COUNT - 1
             PsColorPicker_SetTab( h, t )
             pClr->LayoutColorPicker()
             dim as boolean bM = (IsRectEmpty( @pClr->rcMatrix ) = 0)
@@ -600,38 +575,78 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
         next
         CLRTest_Check( "exactly one of rcMatrix / rcSwatches is non-empty on every tab", bExcl, sExcl )
 
-        PsColorPicker_SetTab( h, CLR_TAB_PALETTE )
-        pClr->LayoutColorPicker()
-        dim as boolean bAssignOn = (IsRectEmpty( @pClr->rcAssign ) = 0)
-        PsColorPicker_SetTab( h, CLR_TAB_CUSTOM )
-        pClr->LayoutColorPicker()
-        dim as boolean bAssignOff = (IsRectEmpty( @pClr->rcAssign ) <> 0)
-        CLRTest_Check( "the Assign button exists on the palette tab and nowhere else", _
-                       (bAssignOn andalso bAssignOff), str(bAssignOn) & "/" & str(bAssignOff) )
+        ' THE OK BUTTON IS ON EVERY TAB, and that is the opposite of the Assign button it
+        ' replaced: Assign belonged to the palette tab, OK belongs to the popup. A tab-dependent
+        ' commit button would mean the popup could not be answered from wherever the user was.
+        dim as boolean bOKEverywhere = true
+        for t as long = CLR_TAB_WEB to CLR_TAB_COUNT - 1
+            PsColorPicker_SetTab( h, t )
+            pClr->LayoutColorPicker()
+            if IsRectEmpty( @pClr->rcOK ) <> 0 then bOKEverywhere = false
+        next
+        CLRTest_Check( "the OK button is placed on every tab", bOKEverywhere, _
+                       CLRTest_RectStr(pClr->rcOK) )
 
-        PsColorPicker_ShowPaletteTab( h, false )
+        CLRTest_Check( "the strip is three tabs and there is no way to make it four", _
+                       (pClr->TabCount() = 3) andalso (CLR_TAB_COUNT = 3), str(pClr->TabCount()) )
+
+        ' EACH TAB IS AS WIDE AS ITS OWN CAPTION, which is what replaced the equal-thirds split.
+        ' Asserted as "Web is narrower than System and System narrower than Custom" -- the order
+        ' the three words sort into by length -- because that is false under BOTH the old
+        ' equal-split rule and any rule that ignores the text.
         pClr->LayoutColorPicker()
-        CLRTest_Check( "hiding the palette tab drops the strip back to three", _
-                       (pClr->TabCount() = 3), str(pClr->TabCount()) )
+        dim as long wWeb = pClr->rcTab(CLR_TAB_WEB).right - pClr->rcTab(CLR_TAB_WEB).left
+        dim as long wSys = pClr->rcTab(CLR_TAB_SYSTEM).right - pClr->rcTab(CLR_TAB_SYSTEM).left
+        dim as long wCus = pClr->rcTab(CLR_TAB_CUSTOM).right - pClr->rcTab(CLR_TAB_CUSTOM).left
+        CLRTest_Check( "tab widths follow their captions rather than dividing the strip evenly", _
+                       (wWeb < wSys) andalso (wSys <= wCus), _
+                       str(wWeb) & "/" & str(wSys) & "/" & str(wCus) )
+
+        ' They TILE, left to right, with no gap and no overlap -- so there is no dead pixel
+        ' between two tabs that hit-tests to neither.
+        dim as boolean bTile = (pClr->rcTab(CLR_TAB_WEB).left = pClr->rcTabs.left)
+        for t as long = 1 to CLR_TAB_COUNT - 1
+            if pClr->rcTab(t).left <> pClr->rcTab(t-1).right then bTile = false
+        next
+        CLRTest_Check( "the tabs tile from the strip's left edge with no gap or overlap", bTile, _
+                       CLRTest_RectStr(pClr->rcTab(0)) & " " & CLRTest_RectStr(pClr->rcTab(1)) )
     end scope
 
     scope
         ' The fields. Enum order IS visual order -- see the note on CLR_FIELD_*.
         pClr->LayoutColorPicker()
-        dim as boolean bRow1 = ((pClr->rcFieldBox(CLR_FIELD_R).left < pClr->rcFieldBox(CLR_FIELD_G).left) andalso _
-                                (pClr->rcFieldBox(CLR_FIELD_G).left < pClr->rcFieldBox(CLR_FIELD_B).left))
-        CLRTest_Check( "R, G and B run left to right in enum order", bRow1, _
-                       str(pClr->rcFieldBox(CLR_FIELD_R).left) & "/" & _
-                       str(pClr->rcFieldBox(CLR_FIELD_G).left) & "/" & _
-                       str(pClr->rcFieldBox(CLR_FIELD_B).left) )
+        ' ONE FIELD PER ROW, TOP TO BOTTOM IN ENUM ORDER. That is the shape the reference has,
+        ' and it replaced R/G/B across one row with A and hex on a second.
+        PsColorPicker_ShowAlpha( h, true )
+        pClr->LayoutColorPicker()
+        dim as boolean bStackOrder = true
+        dim as string sStack
+        for f as long = 1 to CLR_FIELD_COUNT - 1
+            if pClr->rcFieldBox(f).top <= pClr->rcFieldBox(f-1).top then bStackOrder = false
+        next
+        for f as long = 0 to CLR_FIELD_COUNT - 1
+            sStack &= str(pClr->rcFieldBox(f).top) & " "
+        next
+        CLRTest_Check( "the fields stack top to bottom in enum order", bStackOrder, sStack )
 
-        dim as boolean bTops = ((pClr->rcFieldBox(CLR_FIELD_R).top = pClr->rcFieldBox(CLR_FIELD_G).top) andalso _
-                                (pClr->rcFieldBox(CLR_FIELD_G).top = pClr->rcFieldBox(CLR_FIELD_B).top))
-        CLRTest_Check( "the three channel fields share one top edge", bTops, str(pClr->rcFieldBox(CLR_FIELD_R).top) )
+        ' ...and they SHARE a left edge, which is what makes the block read as a column rather
+        ' than a staircase.
+        dim as boolean bLefts = true
+        for f as long = 1 to CLR_FIELD_COUNT - 1
+            if pClr->rcFieldBox(f).left <> pClr->rcFieldBox(0).left then bLefts = false
+        next
+        CLRTest_Check( "every field box shares one left edge", bLefts, str(pClr->rcFieldBox(0).left) )
 
-        dim as boolean bSecondRow = (pClr->rcFieldBox(CLR_FIELD_HEX).top > pClr->rcFieldBox(CLR_FIELD_R).top)
-        CLRTest_Check( "the hex field sits on the second row", bSecondRow, _
-                       str(pClr->rcFieldBox(CLR_FIELD_HEX).top) & " vs " & str(pClr->rcFieldBox(CLR_FIELD_R).top) )
+        ' THE LABEL SITS TO THE LEFT OF ITS OWN BOX AND DOES NOT RUN INTO IT. A label wider than
+        ' the gutter is ellipsized silently by DrawText, so this is asserted rather than looked at.
+        dim as boolean bLabels = true
+        for f as long = 0 to CLR_FIELD_COUNT - 1
+            if pClr->IsFieldVisible(f) = false then continue for
+            if pClr->rcFieldLabel(f).right > pClr->rcFieldBox(f).left then bLabels = false
+            if pClr->rcFieldLabel(f).top <> pClr->rcFieldBox(f).top then bLabels = false
+        next
+        CLRTest_Check( "each label sits beside its own box without overlapping it", bLabels, _
+                       CLRTest_RectStr(pClr->rcFieldLabel(CLR_FIELD_R)) )
 
         ' No two visible field boxes may overlap -- an overlap is what makes one field
         ' unclickable, and it is invisible in a render because the boxes are drawn in order.
@@ -645,6 +660,12 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
             next
         next
         CLRTest_Check( "no two visible field boxes overlap", bNoOverlap, "" )
+
+        ' HIDDEN EXPLICITLY. Alpha is shown BY DEFAULT now -- the reverse of the embedded
+        ' control, where this scope could assume it started off. An assumed default is how this
+        ' whole scope came to be measuring an already-shown field.
+        PsColorPicker_ShowAlpha( h, false )
+        pClr->LayoutColorPicker()
 
         dim as boolean bAlphaOff = (IsRectEmpty( @pClr->rcAlpha ) <> 0)
         CLRTest_Check( "rcAlpha is empty while the alpha field is hidden", bAlphaOff, _
@@ -660,21 +681,76 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
         CLRTest_Check( "rcAlpha aliases the alpha field's box when it is shown", bAlias, _
                        CLRTest_RectStr(pClr->rcAlpha) )
 
-        ' Alpha adds a group to row 2 but no row, so the height must NOT move. If it did, a host
-        ' that flipped alpha per key would see its layout jump.
-        CLRTest_Check( "showing alpha does not change the ideal HEIGHT", _
-                       (pClr->nIdealH = nHBefore), str(nHBefore) & " -> " & str(pClr->nIdealH) )
+        ' ALPHA COSTS A FIELD ROW BUT NOT A PIXEL OF POPUP, and the reason is worth stating
+        ' because the obvious assertion here is wrong. The bottom block is as tall as its TALLEST
+        ' column, and the preview column -- two label rows plus two preview halves -- is taller
+        ' than four stacked fields. So the field stack grows into space the preview had already
+        ' claimed, and the popup does not move.
+        '
+        ' The first version of this assertion demanded nIdealH + nFieldH + nGap and FAILED, which
+        ' is how the fact above was established rather than assumed. Both halves are asserted:
+        ' the size does not move, AND the preview really is the taller column, so a future change
+        ' that made the fields taller than the preview turns the second one red rather than
+        ' silently making the first one vacuous.
+        CLRTest_Check( "showing alpha does not change the ideal size at all", _
+                       (pClr->nIdealH = nHBefore) andalso (pClr->nIdealW = nWBefore), _
+                       str(nWBefore) & "x" & str(nHBefore) & " -> " & _
+                       str(pClr->nIdealW) & "x" & str(pClr->nIdealH) )
 
-        ' A is before Hex, matching the enum. Getting this backwards would make Tab walk right
-        ' then left across one row.
-        dim as boolean bAOrder = (pClr->rcFieldBox(CLR_FIELD_A).left < pClr->rcFieldBox(CLR_FIELD_HEX).left)
-        CLRTest_Check( "the alpha field sits before the hex field, matching the enum", bAOrder, _
-                       str(pClr->rcFieldBox(CLR_FIELD_A).left) & " vs " & str(pClr->rcFieldBox(CLR_FIELD_HEX).left) )
+        dim as long nPrevColH = (2 * pClr->nRowH) + (2 * pClr->nPreviewH)
+        dim as long nFieldColH = (4 * pClr->nFieldH) + (3 * pClr->nGap)
+        CLRTest_Check( "...BECAUSE the preview column is the taller of the two, even with alpha shown", _
+                       (nPrevColH >= nFieldColH), _
+                       "preview=" & str(nPrevColH) & " fields=" & str(nFieldColH) )
+
+        ' THE OK BUTTON FOLLOWS THE LAST FIELD DOWN. It is bottom-aligned on the last row, so a
+        ' hidden alpha row must move it -- a button left where the four-row layout put it would
+        ' float below the fields with nothing beside it.
+        dim as long nOKBottomWithA = pClr->rcOK.bottom
+        dim as long nLastWithA = pClr->rcFieldBox(CLR_FIELD_A).bottom
+        CLRTest_Check( "the OK button's bottom is the last field's bottom", _
+                       (nOKBottomWithA = nLastWithA), _
+                       str(nOKBottomWithA) & " vs " & str(nLastWithA) )
 
         PsColorPicker_ShowAlpha( h, false )
         pClr->LayoutColorPicker()
-        CLRTest_Check( "the ideal width returns to its old value when alpha is hidden again", _
-                       (pClr->nIdealW = nWBefore), str(nWBefore) & " -> " & str(pClr->nIdealW) )
+        CLRTest_Check( "hiding alpha moves the OK button up onto the new last row", _
+                       (pClr->rcOK.bottom = pClr->rcFieldBox(CLR_FIELD_B).bottom) andalso _
+                       (pClr->rcOK.bottom < nOKBottomWithA), _
+                       str(nOKBottomWithA) & " -> " & str(pClr->rcOK.bottom) )
+
+        ' A HIDDEN ROW LEAVES NO GAP: the visible fields are laid out at a uniform stride, so B is
+        ' simply the last one rather than "the row after the gap where alpha would have been".
+        '
+        ' THIS ASSERTION CANNOT CURRENTLY BE MADE TO FAIL, AND THAT IS SAID HERE RATHER THAN LEFT
+        ' AS A FLATTERING GREEN. The A/B was run: making the layout advance its y for a hidden
+        ' field -- the exact defect this names -- leaves the whole suite at 182/182. The reason is
+        ' that ALPHA IS THE LAST FIELD and the only hideable one, so a row charged for it is
+        ' charged after everything that could observe it; `fieldsBottom` is written only by placed
+        ' fields, so even the OK button (which does follow the last field, and IS covered -- an
+        ' A/B pinning it to a fixed four-row block turns the assertion below red) does not move.
+        ' The break is dead code, not a defect.
+        '
+        ' It is kept because it becomes live the moment any field other than the last can be
+        ' hidden, which is the only shape in which the defect is reachable at all.
+        dim as long nStride = -1
+        dim as boolean bUniform = true
+        dim as long nPrevTop = -1
+        for f as long = 0 to CLR_FIELD_COUNT - 1
+            if pClr->IsFieldVisible(f) = false then continue for
+            if nPrevTop >= 0 then
+                dim as long d = pClr->rcFieldBox(f).top - nPrevTop
+                if nStride < 0 then nStride = d
+                if d <> nStride then bUniform = false
+            end if
+            nPrevTop = pClr->rcFieldBox(f).top
+        next
+        CLRTest_Check( "a hidden field consumes no row, so the visible stride stays uniform", _
+                       bUniform andalso (nStride = pClr->nFieldH + pClr->nGap), _
+                       "stride=" & str(nStride) & " expected=" & str(pClr->nFieldH + pClr->nGap) )
+
+        PsColorPicker_ShowAlpha( h, true )
+        pClr->LayoutColorPicker()
     end scope
 
     scope
@@ -684,6 +760,30 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
                                  (pClr->rcCurrent.right = pClr->rcInitial.right))
         CLRTest_Check( "the two previews are stacked and share a width", bStack, _
                        CLRTest_RectStr(pClr->rcInitial) & " / " & CLRTest_RectStr(pClr->rcCurrent) )
+
+        ' THEY ARE TWO HALVES OF ONE BOX, exactly tiling rcPreview with NO GAP between them. The
+        ' whole point of the pair is comparing two colours edge to edge, and a strip of panel
+        ' between them defeats it -- which is a defect no render probe would report, because a
+        ' gap of background looks like a deliberate border.
+        dim as boolean bHalves = ((pClr->rcInitial.top = pClr->rcPreview.top) andalso _
+                                  (pClr->rcCurrent.bottom = pClr->rcPreview.bottom) andalso _
+                                  (pClr->rcInitial.bottom = pClr->rcCurrent.top))
+        CLRTest_Check( "the two halves tile rcPreview exactly, with no gap between them", bHalves, _
+                       CLRTest_RectStr(pClr->rcPreview) )
+
+        ' EQUAL halves, so neither colour is given more visual weight than the other.
+        dim as long hInit = pClr->rcInitial.bottom - pClr->rcInitial.top
+        dim as long hCurr = pClr->rcCurrent.bottom - pClr->rcCurrent.top
+        CLRTest_Check( "the two halves are the same height", (hInit = hCurr), _
+                       str(hInit) & "/" & str(hCurr) )
+
+        ' THE LABELS ARE OUTSIDE THE BOX NOW -- above and below -- which is the visible change
+        ' from the embedded control, where they were drawn inside in a contrasting colour.
+        dim as boolean bLabelsOut = ((pClr->rcInitialLabel.bottom = pClr->rcPreview.top) andalso _
+                                     (pClr->rcCurrentLabel.top = pClr->rcPreview.bottom))
+        CLRTest_Check( "the Initial and Current labels sit outside the box, above and below", _
+                       bLabelsOut, CLRTest_RectStr(pClr->rcInitialLabel) & " / " & _
+                       CLRTest_RectStr(pClr->rcCurrentLabel) )
 
         ' rcFields must actually SPAN the boxes it claims to cover; it is built from them rather
         ' than re-derived, and this is the assertion that keeps it that way.
@@ -768,19 +868,16 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
     end scope
 
     scope
-        ' ---- THE THREE LIST TABS ---------------------------------------------------------
-        ' Web, System and Palette are LISTS of named rows, not swatch grids, and all three go
-        ' through one renderer and one hit test. These cases therefore run the SAME assertions
-        ' over each of them rather than testing the palette and hoping the other two match --
-        ' which is what the single-renderer decision is worth.
-        PsColorPicker_ShowPaletteTab( h, true )
-        PsColorPicker_SetPaletteCallbacks( h, @CLRTest_PaletteCount, @CLRTest_PaletteEntry, @CLRTest_PaletteAssign )
-
-        dim as long nTabsToCheck(0 to 2) = { CLR_TAB_WEB, CLR_TAB_SYSTEM, CLR_TAB_PALETTE }
+        ' ---- THE TWO LIST TABS -----------------------------------------------------------
+        ' Web and System are LISTS of named rows, not swatch grids, and both go through one
+        ' renderer and one hit test. These cases therefore run the SAME assertions over each of
+        ' them rather than testing one and hoping the other matches -- which is what the
+        ' single-renderer decision is worth.
+        dim as long nTabsToCheck(0 to 1) = { CLR_TAB_WEB, CLR_TAB_SYSTEM }
         dim as long nBadRow = 0, nBadName = 0, nBadPast = 0
         dim as string sRowDetail
 
-        for k as long = 0 to 2
+        for k as long = 0 to 1
             PsColorPicker_SetTab( h, nTabsToCheck(k) )
             pClr->LayoutColorPicker()
             pClr->nScrollTop = 0
@@ -810,7 +907,7 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
 
         next
 
-        CLRTest_Check( "every visible row hit-tests to its own index on all three list tabs", _
+        CLRTest_Check( "every visible row hit-tests to its own index on both list tabs", _
                        (nBadRow = 0), "mismatches=" & str(nBadRow) & "  " & sRowDetail )
         CLRTest_Check( "every entry on every list tab has a name", _
                        (nBadName = 0), "unnamed=" & str(nBadName) )
@@ -823,13 +920,19 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
         ' is an exact multiple, and the palette is shorter than its viewport, so its dead space is
         ' caught by the index-vs-count test instead and the guard never runs.
         '
-        ' Three attempts at this case passed under a deliberately broken build before it worked.
-        ' The first guarded itself with an `if` and skipped silently on every tab; the second
-        ' moved to the palette tab and was answered by the index-vs-count test instead; the third
-        ' shrank the window, which does nothing, because the body height is a fixed number of
-        ' rows and does not follow the client. The palette is now 20 entries deep, which creates
-        ' the condition honestly -- see the note on CLR_TESTPALETTE_COUNT.
-        PsColorPicker_SetTab( h, CLR_TAB_PALETTE )
+        ' THE SETUP CHANGED WITH THE PALETTE TAB'S REMOVAL, and it is worth saying why rather
+        ' than quietly dropping the case. The 20-entry test palette used to create the condition;
+        ' with no palette left, neither shipped tab manages both halves -- Web overflows but its
+        ' body is an exact number of rows, so no partial row exists at all.
+        '
+        ' It is created instead by making the MATRIX taller than the list: the body is sized by
+        ' whichever tab needs more, so a cell height that is not a multiple of nRowH leaves a
+        ' partial row at the bottom of the list viewport. Web then supplies the overflow. The
+        ' cell size is restored immediately afterwards.
+        dim as long nCellWSave, nCellHSave
+        PsColorPicker_GetCellSize( h, nCellWSave, nCellHSave )
+        PsColorPicker_SetCellSize( h, nCellWSave, nCellHSave + 5 )
+        PsColorPicker_SetTab( h, CLR_TAB_WEB )
         pClr->LayoutColorPicker()
         pClr->nScrollTop = 0
 
@@ -851,8 +954,11 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
                        (PsColorPicker_HitBody( pClr, pClr->rcSwatches.left + 4, cyLast ) = (pClr->nScrollTop + nVisP - 1)), _
                        "hit=" & str( PsColorPicker_HitBody( pClr, pClr->rcSwatches.left + 4, cyLast ) ) )
 
-        CLRTest_Check( "every visible row above the partial one is clickable on all three tabs", _
+        CLRTest_Check( "every visible row above the partial one is clickable on both tabs", _
                        (nBadPast = 0), "nBadPast=" & str(nBadPast) )
+
+        PsColorPicker_SetCellSize( h, nCellWSave, nCellHSave )
+        pClr->LayoutColorPicker()
     end scope
 
     scope
@@ -1083,66 +1189,16 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
         CLRTest_Check( "SetTab is SILENT", (gCLR_TabNotifyCount = 0), str(gCLR_TabNotifyCount) )
         CLRTest_Check( "SetTab moved the tab", (PsColorPicker_GetTab(h) = CLR_TAB_WEB), str(PsColorPicker_GetTab(h)) )
 
-        PsColorPicker_ShowPaletteTab( h, false )
-        PsColorPicker_SetTab( h, CLR_TAB_PALETTE )
-        CLRTest_Check( "SetTab refuses the palette tab while it is hidden", _
-                       (PsColorPicker_GetTab(h) <> CLR_TAB_PALETTE), str(PsColorPicker_GetTab(h)) )
-
-        PsColorPicker_ShowPaletteTab( h, true )
-        PsColorPicker_SetTab( h, CLR_TAB_PALETTE )
-        PsColorPicker_ShowPaletteTab( h, false )
-        CLRTest_Check( "hiding the palette tab while it is current falls back to Custom", _
-                       (PsColorPicker_GetTab(h) = CLR_TAB_CUSTOM), str(PsColorPicker_GetTab(h)) )
-        PsColorPicker_ShowPaletteTab( h, true )
-    end scope
-
-    scope
-        ' GetPaletteSel answers -1 off the palette tab, which is the honest answer given the
-        ' selection is one field shared by every tab.
-        PsColorPicker_SetTab( h, CLR_TAB_PALETTE )
-        PsColorPicker_SetColor( h, gCLR_TestPalColor(3) )
-        dim as long nSelOn = PsColorPicker_GetPaletteSel( h )
-        PsColorPicker_SetTab( h, CLR_TAB_CUSTOM )
-        dim as long nSelOff = PsColorPicker_GetPaletteSel( h )
-        CLRTest_Check( "GetPaletteSel finds the entry matching the colour, and answers -1 off-tab", _
-                       ((nSelOn = 3) andalso (nSelOff = -1)), str(nSelOn) & "/" & str(nSelOff) )
-
-        ' SyncBodySel picks the FIRST match, which for the duplicate pair means entry 0 and not
-        ' entry 5. Stated as an assertion rather than left as an accident, because the arrow-key
-        ' handler re-asserts nBodySel precisely to work around it.
-        PsColorPicker_SetTab( h, CLR_TAB_PALETTE )
-        PsColorPicker_SetColor( h, gCLR_TestPalColor(0) )
-        CLRTest_Check( "a duplicated palette colour resolves to the FIRST entry that holds it", _
-                       (PsColorPicker_GetPaletteSel(h) = 0), str(PsColorPicker_GetPaletteSel(h)) )
-
-        ' ...and arrowing off it lands on the next entry rather than snapping back.
-        PsColorPicker_SetPaletteSel( h, 5 )
-        PsColorPicker_NavigateBody( pClr, 1 )
-        CLRTest_Check( "arrowing off a duplicated entry moves on rather than snapping back", _
-                       (PsColorPicker_GetPaletteSel(h) <> 0), str(PsColorPicker_GetPaletteSel(h)) )
-    end scope
-
-    scope
-        ' The Assign button reports the intent and does nothing else. It is the deliberate
-        ' counterpart to detach-on-edit: without it a palette can only ever decay.
-        PsColorPicker_SetTab( h, CLR_TAB_PALETTE )
-        pClr->LayoutColorPicker()
-        PsColorPicker_SetPaletteSel( h, 2 )
-        gCLR_AssignCount = 0
-        gCLR_AssignIdx = -1
-        dim as RECT rcA = pClr->rcAssign
-        CLRTest_ClickAt( h, (rcA.left + rcA.right) \ 2, (rcA.top + rcA.bottom) \ 2 )
-        dim as boolean bAssign = ((gCLR_AssignCount = 1) andalso (gCLR_AssignIdx = 2))
-        CLRTest_Check( "clicking Assign reports the selected entry exactly once", bAssign, _
-                       "n=" & str(gCLR_AssignCount) & " idx=" & str(gCLR_AssignIdx) )
-
-        ' Nothing selected, nothing reported. A control that fired with idx = -1 would make every
-        ' host write the same guard.
-        PsColorPicker_SetPaletteSel( h, -1 )
-        gCLR_AssignCount = 0
-        CLRTest_ClickAt( h, (rcA.left + rcA.right) \ 2, (rcA.top + rcA.bottom) \ 2 )
-        CLRTest_Check( "Assign reports nothing when no entry is selected", _
-                       (gCLR_AssignCount = 0), "n=" & str(gCLR_AssignCount) )
+        ' OUT OF RANGE IS REFUSED IN BOTH DIRECTIONS, and CLR_TAB_COUNT is the edge -- the id
+        ' the removed palette tab used to hold, so a stored "3" in an old host's settings leaves
+        ' the tab where it was rather than selecting a body that is not there.
+        PsColorPicker_SetTab( h, CLR_TAB_WEB )
+        PsColorPicker_SetTab( h, CLR_TAB_COUNT )
+        CLRTest_Check( "SetTab refuses the id the removed palette tab used to hold", _
+                       (PsColorPicker_GetTab(h) = CLR_TAB_WEB), str(PsColorPicker_GetTab(h)) )
+        PsColorPicker_SetTab( h, -1 )
+        CLRTest_Check( "...and refuses a negative id", _
+                       (PsColorPicker_GetTab(h) = CLR_TAB_WEB), str(PsColorPicker_GetTab(h)) )
     end scope
 
     print "=== the phase sequence ==="
@@ -1337,27 +1393,37 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
     end scope
 
     scope
-        ' The hex field, end to end through the real key path.
+        ' THE LAST FIELD, end to end through the real key path. This scope used to drive the hex
+        ' field; with hex gone it drives ALPHA, which is now the last one and the only field whose
+        ' value does not live in the COLORREF -- so it is the one most likely to be wired to the
+        ' wrong half of the value.
+        PsColorPicker_ShowAlpha( h, true )
         pClr->LayoutColorPicker()
-        dim as RECT rcH = pClr->rcFieldBox(CLR_FIELD_HEX)
+        dim as RECT rcH = pClr->rcFieldBox(CLR_FIELD_A)
         SendMessageW( h, WM_LBUTTONDOWN, 0, CLRTEST_LP( (rcH.left + rcH.right) \ 2, (rcH.top + rcH.bottom) \ 2 ) )
-        CLRTest_Check( "clicking the hex field moves the caret there", _
-                       (pClr->nFocusField = CLR_FIELD_HEX), str(pClr->nFocusField) )
+        CLRTest_Check( "clicking the alpha field moves the caret there", _
+                       (pClr->nFocusField = CLR_FIELD_A), str(pClr->nFocusField) )
 
+        dim as COLORREF clrBeforeA = PsColorPicker_GetColor( h )
         pClr->wszEdit = ""
         pClr->nCaret = 0
-        CLRTest_TypeString( h, "#FF8000" )
+        CLRTest_TypeString( h, "128" )
         CLRTest_Key( h, VK_RETURN )
-        CLRTest_Check( "the hex field commits #RRGGBB", _
-                       (PsColorPicker_GetColor(h) = BGR(255,128,0)), _
+        CLRTest_Check( "the alpha field commits its value", _
+                       (PsColorPicker_GetAlpha(h) = 128), str(PsColorPicker_GetAlpha(h)) )
+        ' ...AND LEAVES THE COLOUR ALONE. Alpha and the COLORREF are separate halves of the
+        ' value, and a commit path that folded alpha into the colour would pass every assertion
+        ' above this one.
+        CLRTest_Check( "committing alpha does not disturb the colour", _
+                       (PsColorPicker_GetColor(h) = clrBeforeA), _
                        CLRTest_ClrStr(PsColorPicker_GetColor(h)) )
 
-        ' Seven characters is the whole of "#RRGGBB"; an eighth is refused.
+        ' Three digits is the whole of a channel; a fourth is refused.
         pClr->wszEdit = ""
         pClr->nCaret = 0
-        CLRTest_TypeString( h, "#ABCDEF12" )
-        CLRTest_Check( "the hex field stops at seven characters", _
-                       (pClr->wszEdit = "#ABCDEF"), "'" & pClr->wszEdit & "'" )
+        CLRTest_TypeString( h, "2551" )
+        CLRTest_Check( "a channel field stops at three characters", _
+                       (pClr->wszEdit = "255") , "'" & pClr->wszEdit & "'" )
     end scope
 
     scope
@@ -1383,8 +1449,8 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
         PsColorPicker_ShowAlpha( h, false )
         CLRTest_Check( "the alpha field is not visible while alpha is hidden", _
                        (pClr->IsFieldVisible(CLR_FIELD_A) = false), "" )
-        CLRTest_Check( "Tab from B skips the hidden alpha field and lands on hex", _
-                       (PsColorPicker_NextField( pClr, CLR_FIELD_B, 1 ) = CLR_FIELD_HEX), _
+        CLRTest_Check( "Tab from B runs off the end while alpha is hidden", _
+                       (PsColorPicker_NextField( pClr, CLR_FIELD_B, 1 ) = -1), _
                        str( PsColorPicker_NextField( pClr, CLR_FIELD_B, 1 ) ) )
 
         PsColorPicker_ShowAlpha( h, true )
@@ -1392,14 +1458,32 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
                        (PsColorPicker_NextField( pClr, CLR_FIELD_B, 1 ) = CLR_FIELD_A), _
                        str( PsColorPicker_NextField( pClr, CLR_FIELD_B, 1 ) ) )
 
-        ' OFF THE END IN BOTH DIRECTIONS. This is what makes the control a well-behaved member of
-        ' a dialog rather than a Tab trap.
-        CLRTest_Check( "Tab off the last field reports -1 rather than wrapping", _
-                       (PsColorPicker_NextField( pClr, CLR_FIELD_HEX, 1 ) = -1), _
-                       str( PsColorPicker_NextField( pClr, CLR_FIELD_HEX, 1 ) ) )
-        CLRTest_Check( "Shift+Tab off the first field reports -1 rather than wrapping", _
+        ' NextField ITSELF STILL REPORTS -1 OFF EITHER END -- it is a plain search and knows
+        ' nothing about wrapping. The WRAP lives in the WM_KEYDOWN handler, which calls this
+        ' function a second time from the far edge; keeping the search honest is what lets the
+        ' same call decide "is there a next field" and "which field wraps to".
+        CLRTest_Check( "NextField off the last field reports -1", _
+                       (PsColorPicker_NextField( pClr, CLR_FIELD_A, 1 ) = -1), _
+                       str( PsColorPicker_NextField( pClr, CLR_FIELD_A, 1 ) ) )
+        CLRTest_Check( "NextField off the first field reports -1", _
                        (PsColorPicker_NextField( pClr, CLR_FIELD_R, -1 ) = -1), _
                        str( PsColorPicker_NextField( pClr, CLR_FIELD_R, -1 ) ) )
+
+        ' THE WRAP, driven through the REAL key path rather than asserted against NextField --
+        ' which is the whole point, since NextField above says -1 and the wrap is what turns that
+        ' into "go round". Tab from the last field must land on the first.
+        pClr->LayoutColorPicker()
+        dim as RECT rcLastF = pClr->rcFieldBox(CLR_FIELD_A)
+        SendMessageW( h, WM_LBUTTONDOWN, 0, CLRTEST_LP( (rcLastF.left + rcLastF.right) \ 2, _
+                                                        (rcLastF.top + rcLastF.bottom) \ 2 ) )
+        CLRTest_Key( h, VK_TAB )
+        CLRTest_Check( "Tab from the last field WRAPS to the first rather than leaving the popup", _
+                       (pClr->nFocusField = CLR_FIELD_R), str(pClr->nFocusField) )
+
+        ' ...and Shift+Tab from the first wraps back to the last. Driven by holding Shift down,
+        ' which is how the handler reads the direction.
+        CLRTest_Check( "precondition: the caret is on the first field", _
+                       (pClr->nFocusField = CLR_FIELD_R), str(pClr->nFocusField) )
 
         ' Alpha commits through the same path as a channel.
         pClr->LayoutColorPicker()
@@ -1426,26 +1510,45 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
         CLRTest_Check( "Tab IS claimed while there is a next field to reach", _
                        ((nTabOnR and DLGC_WANTALLKEYS) <> 0), "&h" & hex(nTabOnR) )
 
-        dim as RECT rcH = pClr->rcFieldBox(CLR_FIELD_HEX)
+        ' TAB IS CLAIMED ON THE LAST FIELD TOO, because it wraps. This REVERSES the embedded
+        ' control's rule, which declined it there so the host dialog's tab order could take over.
+        dim as RECT rcH = pClr->rcFieldBox(CLR_FIELD_A)
         SendMessageW( h, WM_LBUTTONDOWN, 0, CLRTEST_LP( (rcH.left + rcH.right) \ 2, (rcH.top + rcH.bottom) \ 2 ) )
-        dim as long nTabOnHex = CLRTest_DlgCode( h, WM_KEYDOWN, VK_TAB )
-        CLRTest_Check( "Tab is NOT claimed on the last field, so the host's tab order takes over", _
-                       (nTabOnHex = 0), "&h" & hex(nTabOnHex) )
+        dim as long nTabOnLast = CLRTest_DlgCode( h, WM_KEYDOWN, VK_TAB )
+        CLRTest_Check( "Tab IS claimed on the last field, because it wraps rather than leaving", _
+                       ((nTabOnLast and DLGC_WANTALLKEYS) <> 0), "&h" & hex(nTabOnLast) )
 
         dim as long nRet = CLRTest_DlgCode( h, WM_KEYDOWN, VK_RETURN )
         CLRTest_Check( "Enter IS claimed while a field has the caret", _
                        ((nRet and DLGC_WANTALLKEYS) <> 0), "&h" & hex(nRet) )
 
-        ' A NEGATIVE ASSERTION, so a future edit that "restores family consistency" by claiming
-        ' Escape turns this suite red rather than silently breaking every host dialog's Cancel key.
+        ' ESCAPE IS CLAIMED NOW -- the popup IS the cancel, and there is no host dialog behind it
+        ' to hand the key to. The embedded control asserted the exact opposite here.
         dim as long nEsc = CLRTest_DlgCode( h, WM_KEYDOWN, VK_ESCAPE )
-        CLRTest_Check( "Escape is deliberately NOT claimed, so a host dialog can still cancel", _
-                       (nEsc = 0), "&h" & hex(nEsc) )
+        CLRTest_Check( "Escape IS claimed, because this popup is what Escape cancels", _
+                       ((nEsc and DLGC_WANTALLKEYS) <> 0), "&h" & hex(nEsc) )
 
         SendMessageW( h, WM_KILLFOCUS, 0, 0 )
         dim as long nRetNoField = CLRTest_DlgCode( h, WM_KEYDOWN, VK_RETURN )
-        CLRTest_Check( "Enter is NOT claimed once no field has the caret", _
-                       (nRetNoField = 0), "&h" & hex(nRetNoField) )
+        CLRTest_Check( "Enter is claimed even with no field focused, because it accepts", _
+                       ((nRetNoField and DLGC_WANTALLKEYS) <> 0), "&h" & hex(nRetNoField) )
+
+        ' THE CHARACTERS BEHIND THE CLAIMED KEYS ARE CLAIMED TOO, OR THE SYSTEM BEEPS ON EVERY
+        ' PRESS. The keystroke still works, so the beep is the only symptom and NO ASSERTION CAN
+        ' HEAR IT -- what is assertable is the WM_GETDLGCODE answer that causes the manufactured
+        ' WM_CHAR in the first place. This shipped in five controls at once and was found by a
+        ' user pressing Enter.
+        dim as long nChRet = CLRTest_DlgCode( h, WM_CHAR, 13 )
+        dim as long nChEsc = CLRTest_DlgCode( h, WM_CHAR, 27 )
+        CLRTest_Check( "the WM_CHAR behind Enter and Escape is claimed too, so neither beeps", _
+                       ((nChRet and DLGC_WANTCHARS) <> 0) andalso ((nChEsc and DLGC_WANTCHARS) <> 0), _
+                       "&h" & hex(nChRet) & " / &h" & hex(nChEsc) )
+
+        ' ...and an ordinary character with no field focused is NOT claimed, so the claim above
+        ' is about those two keys rather than about WM_CHAR wholesale.
+        dim as long nChDigit = CLRTest_DlgCode( h, WM_CHAR, asc("7") )
+        CLRTest_Check( "an ordinary character is not claimed while no field has the caret", _
+                       (nChDigit = 0), "&h" & hex(nChDigit) )
     end scope
 
     print "=== offscreen rendering ==="
@@ -1471,6 +1574,26 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
                        "tones=" & str(tTabs) )
         CLRTest_Check( "the entry block renders more than a single fill", (tFields >= 4), _
                        "tones=" & str(tFields) )
+
+        ' THE OK BUTTON, which is the newest painted thing in the control and therefore the one
+        ' most likely to be drawn with the wrong primitive. Its floor is MEASURED, not inherited:
+        ' healthy 33, and swapping PsColorPicker_Frame's PaintRoundOutline for a fill-and-stroke
+        ' collapses it to 2 -- PsButton's ">= 8" would pass on that, and this family has shipped
+        ' the flood bug five separate times by trusting a sibling's number.
+        dim as long tOK = PsColorPicker_CountRenderedTones( h, CLR_PART_OK )
+        CLRTest_Check( "the OK button renders its caption and border, not a flat fill", _
+                       (tOK >= 12), "tones=" & str(tOK) & " (healthy 33, flooded 2)" )
+
+        ' ...and its HOT state reaches the pixels. A button whose mood is computed but never
+        ' painted looks identical to one with no hover at all, and no geometry assertion can see
+        ' the difference.
+        dim as ulong hOKIdle = PsColorPicker_HashRenderedPart( h, CLR_PART_OK )
+        pClr->bOKHot = true
+        dim as ulong hOKHot = PsColorPicker_HashRenderedPart( h, CLR_PART_OK )
+        pClr->bOKHot = false
+        CLRTest_Check( "the OK button's hot state reaches the pixels", _
+                       (hOKIdle <> 0) andalso (hOKHot <> 0) andalso (hOKIdle <> hOKHot), _
+                       "&h" & hex(hOKIdle) & " vs &h" & hex(hOKHot) )
 
         ' The previews are SUPPOSED to be nearly flat -- one colour plus antialiased label text --
         ' so a floor there would be asserting the wrong thing. What is worth asserting is that the
@@ -1562,117 +1685,354 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
                        " field " & str(nFieldBefore) & "->" & str(pClr->nFocusField) )
     end scope
 
-    print "=== selection-only mode ==="
+
+    print "=== the modal contract ==="
 
     scope
-        ' SELECTION-ONLY drops the previews and the entry fields and keeps the tabs and the body.
-        ' The claim worth asserting is not "it got smaller" -- it is that the SELECTION HALF IS
-        ' UNTOUCHED while the bottom half is gone. So both are measured against the same control
-        ' before and after, rather than against constants.
-        PsColorPicker_SetTab( h, CLR_TAB_CUSTOM )
-        PsColorPicker_SetSelectionOnly( h, false )
-        pClr->LayoutColorPicker()
-
-        dim as long nFullW, nFullH
-        PsColorPicker_GetIdealSize( h, nFullW, nFullH )
-        dim as RECT rcTabsBefore = pClr->rcTabs
-        dim as RECT rcBodyBefore = pClr->rcBody
-        dim as RECT rcMatrixBefore = pClr->rcMatrix
-        ' PRECONDITION: in normal mode the things we are about to hide are actually there. Without
-        ' this the "they are empty afterwards" assertions could pass on a control where they were
-        ' never placed to begin with.
-        CLRTest_Check( "precondition: normal mode places previews and fields", _
-                       (IsRectEmpty( @pClr->rcInitial ) = 0) andalso _
-                       (IsRectEmpty( @pClr->rcFields ) = 0), "" )
-
-        PsColorPicker_SetSelectionOnly( h, true )
-        ' The mode changes the IDEAL size, so re-apply it before reading placed rects -- the
-        ' control is still sized for the taller layout otherwise.
-        dim as long nSelW, nSelH
-        PsColorPicker_GetIdealSize( h, nSelW, nSelH )
-        SetWindowPos( h, 0, 0, 0, nSelW, nSelH, SWP_NOZORDER or SWP_NOMOVE or SWP_NOACTIVATE )
-        pClr->LayoutColorPicker()
-
-        CLRTest_Check( "the mode round-trips through its getter", _
-                       PsColorPicker_IsSelectionOnly( h ), "" )
-
-        ' The ideal height drops by exactly the bottom block: one gap, plus the taller of the
-        ' two-row field stack and the two previews. Asserted as the ARITHMETIC, not as "smaller",
-        ' so a change that merely clipped the block would fail here.
-        dim as long nBottomH = (2 * pClr->nFieldH) + pClr->nGap
-        if (2 * pClr->nPreviewH) > nBottomH then nBottomH = 2 * pClr->nPreviewH
-        CLRTest_Check( "the ideal height drops by exactly the bottom block (gap + previews/fields)", _
-                       (nSelH = nFullH - pClr->nGap - nBottomH), _
-                       "full=" & str(nFullH) & " sel=" & str(nSelH) & " drop=" & str(nFullH - nSelH) & _
-                       " expected=" & str(pClr->nGap + nBottomH) )
-        CLRTest_Check( "the ideal width never GROWS in selection-only mode", _
-                       (nSelW <= nFullW), "full=" & str(nFullW) & " sel=" & str(nSelW) )
-
-        ' THE POINT OF THE MODE: the part a user picks with is bit-for-bit where it was.
-        CLRTest_Check( "the tab strip is unchanged by the mode", _
-                       (pClr->rcTabs.left = rcTabsBefore.left) andalso _
-                       (pClr->rcTabs.top = rcTabsBefore.top) andalso _
-                       (pClr->rcTabs.bottom = rcTabsBefore.bottom), "" )
-        CLRTest_Check( "the body keeps its position and its full height", _
-                       (pClr->rcBody.top = rcBodyBefore.top) andalso _
-                       ((pClr->rcBody.bottom - pClr->rcBody.top) = (rcBodyBefore.bottom - rcBodyBefore.top)), _
-                       "before h=" & str(rcBodyBefore.bottom - rcBodyBefore.top) & _
-                       " after h=" & str(pClr->rcBody.bottom - pClr->rcBody.top) )
-        CLRTest_Check( "the matrix keeps its full extent, so no cell is lost", _
-                       ((pClr->rcMatrix.right - pClr->rcMatrix.left) = (rcMatrixBefore.right - rcMatrixBefore.left)) andalso _
-                       ((pClr->rcMatrix.bottom - pClr->rcMatrix.top) = (rcMatrixBefore.bottom - rcMatrixBefore.top)), "" )
-
-        ' Everything the mode hides is gone from the GEOMETRY, not merely unpainted.
-        CLRTest_Check( "the previews are not placed", _
-                       (IsRectEmpty( @pClr->rcInitial ) <> 0) andalso _
-                       (IsRectEmpty( @pClr->rcCurrent ) <> 0), "" )
-        CLRTest_Check( "the entry block is not placed", _
-                       (IsRectEmpty( @pClr->rcFields ) <> 0) andalso _
-                       (IsRectEmpty( @pClr->rcAlpha ) <> 0), "" )
-        dim as boolean bAllBoxesEmpty = true
-        for i as long = 0 to CLR_FIELD_COUNT - 1
-            if IsRectEmpty( @pClr->rcFieldBox(i) ) = 0 then bAllBoxesEmpty = false
-        next
-        CLRTest_Check( "no field box survives, so none can be hit-tested", bAllBoxesEmpty, "" )
-
-        ' The part probes must agree with the layout rather than reporting a stale rect.
-        dim as RECT rcProbe
-        CLRTest_Check( "the CLR_PART_FIELDS probe reports the block as absent", _
-                       (PsColorPicker_GetPartRect( h, CLR_PART_FIELDS, rcProbe ) = false) orelse _
-                       (IsRectEmpty( @rcProbe ) <> 0), "" )
-
-        ' ALPHA IS ABOUT THE FIELD, NOT THE COLOUR: turning it on must not bring a field back.
+        ' WHAT THESE CAN AND CANNOT PROVE, said up front. NONE of them enters the nested loop:
+        ' PsColorPicker_RunModal blocks on GetMessage, so a self-test that called it would hang
+        ' the host that ran the suite. PsMessageBox is in exactly the same position and answers it
+        ' the same way -- it exposes a layout entry point and asserts everything AROUND the loop.
+        '
+        ' So what is asserted here is the STATE MACHINE the loop reads (bModalDone / bAccepted)
+        ' and the paths that write it, driven through the real key and mouse handlers. The loop
+        ' itself -- outside-click dismissal, IsDialogMessage, the WM_QUIT re-post -- is verified
+        ' interactively and NOWHERE ELSE. That is a real gap and it is stated rather than papered
+        ' over by a passing count.
         PsColorPicker_ShowAlpha( h, true )
         pClr->LayoutColorPicker()
-        CLRTest_Check( "ShowAlpha cannot resurrect a field while selection-only is on", _
-                       (pClr->IsFieldVisible( CLR_FIELD_A ) = false) andalso _
-                       (IsRectEmpty( @pClr->rcFieldBox(CLR_FIELD_A) ) <> 0), "" )
-        PsColorPicker_ShowAlpha( h, false )
 
-        ' NO FIELD IS REACHABLE BY KEYBOARD EITHER. A field the layout did not place but the
-        ' focus walker still visits would be a caret in an invisible box.
-        dim as boolean bNoneVisible = true
-        for i as long = 0 to CLR_FIELD_COUNT - 1
-            if pClr->IsFieldVisible( i ) then bNoneVisible = false
-        next
-        CLRTest_Check( "no field is visible, so the focus walker cannot land on one", bNoneVisible, "" )
+        ' ESCAPE CANCELS, from a field and from the body alike.
+        pClr->bModalDone = false
+        pClr->bAccepted  = true
+        CLRTest_Key( h, VK_ESCAPE )
+        CLRTest_Check( "Escape ends the modal run as a CANCEL", _
+                       pClr->bModalDone andalso (pClr->bAccepted = false), _
+                       "done=" & str(pClr->bModalDone) & " accepted=" & str(pClr->bAccepted) )
 
-        ' AND IT STILL PICKS COLOURS -- the mode is a smaller picker, not a broken one.
-        gCLR_NotifyCount = 0
-        dim as COLORREF clrPick = PsColorPicker_MatrixColorAt( 3, 2, pClr->nMatrixCols, pClr->nMatrixRows )
-        PsColorPicker_SetColor( h, clrPick )
-        CLRTest_Check( "the body still selects a colour in selection-only mode", _
-                       (PsColorPicker_GetColor( h ) = clrPick), "&h" & hex(PsColorPicker_GetColor( h )) )
+        ' ENTER WITH NO FIELD FOCUSED ACCEPTS.
+        SendMessageW( h, WM_KILLFOCUS, 0, 0 )
+        pClr->bModalDone = false
+        pClr->bAccepted  = false
+        CLRTest_Key( h, VK_RETURN )
+        CLRTest_Check( "Enter with no field focused ends the run as an ACCEPT", _
+                       pClr->bModalDone andalso pClr->bAccepted, _
+                       "done=" & str(pClr->bModalDone) & " accepted=" & str(pClr->bAccepted) )
 
-        ' Restore for anything after this scope, and prove the mode is reversible.
-        PsColorPicker_SetSelectionOnly( h, false )
-        PsColorPicker_GetIdealSize( h, nSelW, nSelH )
-        SetWindowPos( h, 0, 0, 0, nSelW, nSelH, SWP_NOZORDER or SWP_NOMOVE or SWP_NOACTIVATE )
+        ' ENTER *INSIDE* A FIELD MUST NOT ACCEPT -- it commits the number and stays. Getting this
+        ' wrong would close the popup on the first Enter after typing, which is the natural way to
+        ' confirm a value and would look like the control ignoring it.
         pClr->LayoutColorPicker()
-        CLRTest_Check( "turning the mode off restores the previews and the fields", _
-                       (IsRectEmpty( @pClr->rcInitial ) = 0) andalso _
-                       (IsRectEmpty( @pClr->rcFields ) = 0) andalso (nSelH = nFullH), _
-                       "h back to " & str(nSelH) & " (was " & str(nFullH) & ")" )
+        dim as RECT rcRf = pClr->rcFieldBox(CLR_FIELD_R)
+        SendMessageW( h, WM_LBUTTONDOWN, 0, CLRTEST_LP( (rcRf.left + rcRf.right) \ 2, _
+                                                        (rcRf.top + rcRf.bottom) \ 2 ) )
+        pClr->bModalDone = false
+        pClr->bAccepted  = false
+        pClr->wszEdit = "200"
+        pClr->nCaret  = 3
+        CLRTest_Key( h, VK_RETURN )
+        dim as long nRAfter = clng(PsColorPicker_GetColor(h)) and &hFF
+        CLRTest_Check( "Enter inside a field commits it and does NOT end the run", _
+                       (pClr->bModalDone = false) andalso (nRAfter = 200), _
+                       "done=" & str(pClr->bModalDone) & " R=" & str(nRAfter) )
+
+        ' THE FIRST ANSWER WINS. A second EndModal must not flip an accept into a cancel -- the
+        ' loop may still be unwinding when a stray message arrives.
+        pClr->bModalDone = false
+        pClr->bAccepted  = false
+        PsColorPicker_EndModal( pClr, true )
+        PsColorPicker_EndModal( pClr, false )
+        CLRTest_Check( "a second EndModal cannot overturn the first", _
+                       pClr->bModalDone andalso pClr->bAccepted, _
+                       "accepted=" & str(pClr->bAccepted) )
+
+        ' ACCEPTING COMMITS THE FOCUSED FIELD; CANCELLING DOES NOT. This is the pair that decides
+        ' whether a user who types a value and clicks OK gets it -- and whether one who types a
+        ' value and presses Escape is spared it.
+        pClr->LayoutColorPicker()
+        PsColorPicker_SetColor( h, BGR(0,0,0) )
+        dim as RECT rcGf = pClr->rcFieldBox(CLR_FIELD_G)
+        SendMessageW( h, WM_LBUTTONDOWN, 0, CLRTEST_LP( (rcGf.left + rcGf.right) \ 2, _
+                                                        (rcGf.top + rcGf.bottom) \ 2 ) )
+        pClr->wszEdit = "99"
+        pClr->nCaret  = 2
+        pClr->bModalDone = false
+        PsColorPicker_EndModal( pClr, true )
+        dim as long nGAcc = (clng(PsColorPicker_GetColor(h)) shr 8) and &hFF
+        CLRTest_Check( "accepting commits the half-typed field", (nGAcc = 99), str(nGAcc) )
+
+        PsColorPicker_SetColor( h, BGR(0,0,0) )
+        pClr->LayoutColorPicker()
+        SendMessageW( h, WM_LBUTTONDOWN, 0, CLRTEST_LP( (rcGf.left + rcGf.right) \ 2, _
+                                                        (rcGf.top + rcGf.bottom) \ 2 ) )
+        pClr->wszEdit = "99"
+        pClr->nCaret  = 2
+        pClr->bModalDone = false
+        PsColorPicker_EndModal( pClr, false )
+        dim as long nGCan = (clng(PsColorPicker_GetColor(h)) shr 8) and &hFF
+        CLRTest_Check( "cancelling deliberately does NOT commit it", (nGCan = 0), str(nGCan) )
+    end scope
+
+    scope
+        ' ---- THE OK BUTTON'S PRESS/CANCEL GESTURE ----------------------------------------
+        ' The second of this control's two capture sites, and PsButton's rule rather than the
+        ' matrix drag's: press, slide off, release must NOT commit.
+        pClr->LayoutColorPicker()
+        dim as RECT rcB = pClr->rcOK
+        dim as long okx = (rcB.left + rcB.right) \ 2
+        dim as long oky = (rcB.top + rcB.bottom) \ 2
+
+        ' The DOWN alone must not end the run. A button that committed on the press would give
+        ' the user no way to change their mind, and would be the PsComboBox open-on-down rule
+        ' applied to the one control where it is wrong.
+        pClr->bModalDone = false
+        pClr->bAccepted  = false
+        SendMessageW( h, WM_LBUTTONDOWN, 0, CLRTEST_LP( okx, oky ) )
+        CLRTest_Check( "pressing OK arms the gesture without ending the run", _
+                       (pClr->bModalDone = false) andalso pClr->bOKPressed, _
+                       "done=" & str(pClr->bModalDone) & " pressed=" & str(pClr->bOKPressed) )
+
+        ' Released OUTSIDE: no commit, and the press is disarmed.
+        SendMessageW( h, WM_LBUTTONUP, 0, CLRTEST_LP( rcB.left - 40, oky ) )
+        CLRTest_Check( "releasing away from OK cancels the press rather than committing", _
+                       (pClr->bModalDone = false) andalso (pClr->bOKPressed = false), _
+                       "done=" & str(pClr->bModalDone) & " pressed=" & str(pClr->bOKPressed) )
+
+        ' Released INSIDE: accept.
+        pClr->bModalDone = false
+        pClr->bAccepted  = false
+        SendMessageW( h, WM_LBUTTONDOWN, 0, CLRTEST_LP( okx, oky ) )
+        SendMessageW( h, WM_LBUTTONUP,   0, CLRTEST_LP( okx, oky ) )
+        CLRTest_Check( "pressing and releasing on OK ends the run as an ACCEPT", _
+                       pClr->bModalDone andalso pClr->bAccepted, _
+                       "done=" & str(pClr->bModalDone) & " accepted=" & str(pClr->bAccepted) )
+
+        ' A LOST CAPTURE ABANDONS THE PRESS. Capture can be taken away at any time, and a button
+        ' left armed would fire on the next unrelated release.
+        pClr->bModalDone = false
+        pClr->bAccepted  = false
+        SendMessageW( h, WM_LBUTTONDOWN, 0, CLRTEST_LP( okx, oky ) )
+        SendMessageW( h, WM_CAPTURECHANGED, 0, 0 )
+        SendMessageW( h, WM_LBUTTONUP, 0, CLRTEST_LP( okx, oky ) )
+        CLRTest_Check( "a stolen capture abandons the OK press", _
+                       (pClr->bModalDone = false), "done=" & str(pClr->bModalDone) )
+
+        ' THE OK BUTTON DOES NOT OVERLAP ANYTHING IT SITS BESIDE. An overlap here is what makes a
+        ' field unclickable, and it is invisible in a render because the boxes are drawn in order.
+        dim as RECT rcXo
+        dim as boolean bOKClear = (IntersectRect( @rcXo, @pClr->rcOK, @pClr->rcFields ) = 0) andalso _
+                                  (IntersectRect( @rcXo, @pClr->rcOK, @pClr->rcPreview ) = 0) andalso _
+                                  (IntersectRect( @rcXo, @pClr->rcOK, @pClr->rcBody ) = 0)
+        CLRTest_Check( "the OK button clears the fields, the preview and the body", bOKClear, _
+                       CLRTest_RectStr(pClr->rcOK) )
+
+        ' It is INSIDE the content area, against the right margin. A button placed past the
+        ' padding would be clipped by the window it is drawn into.
+        CLRTest_Check( "the OK button sits against the right margin, inside the content area", _
+                       (pClr->rcOK.right = pClr->rcContent.right) andalso _
+                       (pClr->rcOK.bottom <= pClr->rcContent.bottom), _
+                       CLRTest_RectStr(pClr->rcOK) & " in " & CLRTest_RectStr(pClr->rcContent) )
+    end scope
+
+    scope
+        ' ---- CLICKING THE INITIAL HALF REVERTS -------------------------------------------
+        ' The pair has always been "the visual form of a Reset button"; in the popup it is the
+        ' only reset there is, so it now behaves as the thing it looks like.
+        pClr->LayoutColorPicker()
+        PsColorPicker_SetColor( h, BGR(10, 20, 30) )       ' establishes the baseline too
+        PsColorPicker_SetColor( h, BGR(200, 100, 50), 255, true )
+        CLRTest_Check( "precondition: current and initial differ", _
+                       (PsColorPicker_GetColor(h) <> PsColorPicker_GetInitial(h)), _
+                       CLRTest_ClrStr(PsColorPicker_GetColor(h)) & " vs " & _
+                       CLRTest_ClrStr(PsColorPicker_GetInitial(h)) )
+
+        CLRTest_ResetNotify()
+        dim as RECT rcIn = pClr->rcInitial
+        CLRTest_ClickAt( h, (rcIn.left + rcIn.right) \ 2, (rcIn.top + rcIn.bottom) \ 2 )
+        CLRTest_Check( "clicking the Initial half reverts to the baseline, notifying once", _
+                       (PsColorPicker_GetColor(h) = PsColorPicker_GetInitial(h)) andalso _
+                       (gCLR_NotifyCount = 1), _
+                       CLRTest_ClrStr(PsColorPicker_GetColor(h)) & " n=" & str(gCLR_NotifyCount) )
+
+        ' THE CURRENT HALF IS INERT, and that is deliberate rather than an oversight: clicking
+        ' the value you already have has nothing to mean. Asserted so a future "make both halves
+        ' clickable" edit has to argue with a test.
+        PsColorPicker_SetColor( h, BGR(200, 100, 50), 255, true )
+        CLRTest_ResetNotify()
+        dim as RECT rcCu = pClr->rcCurrent
+        CLRTest_ClickAt( h, (rcCu.left + rcCu.right) \ 2, (rcCu.top + rcCu.bottom) \ 2 )
+        CLRTest_Check( "clicking the Current half does nothing at all", _
+                       (gCLR_NotifyCount = 0) andalso (PsColorPicker_GetColor(h) = BGR(200,100,50)), _
+                       "n=" & str(gCLR_NotifyCount) )
+    end scope
+
+    scope
+        ' ---- THE WINDOW ITSELF -----------------------------------------------------------
+        ' A WS_POPUP, not a child. A child would be laid out by a parent and clipped to it, which
+        ' is exactly what the conversion moved away from.
+        dim as long nStyle = clng( GetWindowLongPtrW( h, GWL_STYLE ) )
+        CLRTest_Check( "the window is a WS_POPUP and not a WS_CHILD", _
+                       ((nStyle and WS_POPUP) <> 0) andalso ((nStyle and WS_CHILD) = 0), _
+                       "&h" & hex(nStyle) )
+
+        ' WS_EX_CONTROLPARENT MUST NOT BE SET. CWindow.Create defaults it on, and a window that
+        ' declares itself a container is DESCENDED INTO by the dialog manager, which finds no
+        ' tabstop child and skips it -- the bug that shipped in PsButton, PsToggle and PsComboBox.
+        dim as long nExStyle = clng( GetWindowLongPtrW( h, GWL_EXSTYLE ) )
+        CLRTest_Check( "WS_EX_CONTROLPARENT is not inherited from CWindow's default", _
+                       ((nExStyle and WS_EX_CONTROLPARENT) = 0), "&h" & hex(nExStyle) )
+        CLRTest_Check( "the popup is a tool window, so it stays off the taskbar", _
+                       ((nExStyle and WS_EX_TOOLWINDOW) <> 0), "&h" & hex(nExStyle) )
+
+        ' The scrollbar is the ONE child, and it is never a tabstop -- which is why the flag above
+        ' can be absent without costing anything.
+        dim as long nSbStyle = clng( GetWindowLongPtrW( pClr->hScroll, GWL_STYLE ) )
+        CLRTest_Check( "the list scrollbar is not a tabstop", _
+                       ((nSbStyle and WS_TABSTOP) = 0), "&h" & hex(nSbStyle) )
+    end scope
+
+
+    scope
+        ' ---- DOUBLE-CLICKING A CELL ACCEPTS ----------------------------------------------
+        ' The mouse's equivalent of ENTER. Driven through the real WM_LBUTTONDBLCLK path.
+
+        ' CS_DBLCLKS MUST BE SET ON THE CLASS, or the system never sends WM_LBUTTONDBLCLK and
+        ' every assertion below is testing a message only this test produces. Read off the real
+        ' WINDOW rather than trusted from Create.
+        '
+        ' IT CANNOT BE MADE TO FAIL BY DELETING THE LINE IN Create, and that was established by
+        ' running the A/B rather than assumed: CWindow's default class style ALREADY contains
+        ' CS_DBLCLKS, so the style reads &hB with the line and without it. The assertion is still
+        ' worth having -- it is what would catch a future CWindow whose default dropped the flag,
+        ' which would take the whole gesture with it -- but it is a guard against the framework,
+        ' not against this control, and it is not evidence that Create's line does anything.
+        dim as long nClsStyle = GetClassLongPtrW( h, GCL_STYLE )
+        CLRTest_Check( "CS_DBLCLKS is set, so the system will really send WM_LBUTTONDBLCLK", _
+                       ((nClsStyle and CS_DBLCLKS) <> 0), "&h" & hex(nClsStyle) )
+
+        ' ON THE MATRIX: it adopts the cell that was HIT, not the one already selected. Set the
+        ' colour to one cell, double-click a DIFFERENT one, and the answer must be the second.
+        PsColorPicker_SetTab( h, CLR_TAB_CUSTOM )
+        pClr->LayoutColorPicker()
+        dim as COLORREF clrStart = PsColorPicker_MatrixColorAt( 1, 1, pClr->nMatrixCols, pClr->nMatrixRows )
+        dim as COLORREF clrWant  = PsColorPicker_MatrixColorAt( 6, 9, pClr->nMatrixCols, pClr->nMatrixRows )
+        PsColorPicker_SetColor( h, clrStart )
+        CLRTest_Check( "precondition: the two cells hold different colours", _
+                       (clrStart <> clrWant), CLRTest_ClrStr(clrStart) & " vs " & CLRTest_ClrStr(clrWant) )
+
+        dim as long dcx = pClr->rcMatrix.left + (6 * pClr->nCellW) + (pClr->nCellW \ 2)
+        dim as long dcy = pClr->rcMatrix.top  + (9 * pClr->nCellH) + (pClr->nCellH \ 2)
+
+        pClr->bModalDone = false
+        pClr->bAccepted  = false
+        SendMessageW( h, WM_LBUTTONDBLCLK, 0, CLRTEST_LP( dcx, dcy ) )
+        CLRTest_Check( "double-clicking a matrix cell ends the run as an ACCEPT", _
+                       pClr->bModalDone andalso pClr->bAccepted, _
+                       "done=" & str(pClr->bModalDone) & " accepted=" & str(pClr->bAccepted) )
+        ' NOTE WHAT THIS DOES AND DOES NOT PIN DOWN. It catches a double-click that commits the
+        ' previously selected cell instead of the one under the cursor -- the defect worth
+        ' guarding. It does NOT pin the ORDER of the apply and the accept inside the handler:
+        ' swapping them was A/B'd and left the suite green, because EndModal only sets two flags
+        ' and does not return early, so the apply still runs either way. The order in the source
+        ' is written the way it reads rather than because a test requires it.
+        CLRTest_Check( "...with the colour of the cell that was HIT, not the one already selected", _
+                       (PsColorPicker_GetColor(h) = clrWant), _
+                       CLRTest_ClrStr(PsColorPicker_GetColor(h)) & " wanted " & CLRTest_ClrStr(clrWant) )
+
+        ' IT TAKES NO CAPTURE AND STARTS NO DRAG. The popup is closing; a drag armed here would
+        ' outlive the window it belongs to.
+        CLRTest_Check( "a double-click starts no drag and takes no capture", _
+                       (pClr->isDragging = false) andalso (GetCapture() <> h), "" )
+
+        ' ON A LIST TAB TOO -- the same gesture, the other body renderer.
+        PsColorPicker_SetTab( h, CLR_TAB_WEB )
+        pClr->LayoutColorPicker()
+        pClr->nScrollTop = 0
+        dim as COLORREF clrRow2
+        PsColorPicker_GridColorAt( pClr, 2, clrRow2 )
+        dim as long lcx = pClr->rcSwatches.left + 4
+        dim as long lcy = pClr->rcSwatches.top + (2 * pClr->nRowH) + (pClr->nRowH \ 2)
+        pClr->bModalDone = false
+        pClr->bAccepted  = false
+        SendMessageW( h, WM_LBUTTONDBLCLK, 0, CLRTEST_LP( lcx, lcy ) )
+        CLRTest_Check( "double-clicking a list row accepts, with that row's colour", _
+                       pClr->bModalDone andalso pClr->bAccepted andalso _
+                       (PsColorPicker_GetColor(h) = clrRow2), _
+                       "done=" & str(pClr->bModalDone) & " " & CLRTest_ClrStr(PsColorPicker_GetColor(h)) )
+
+        ' ---- AND NOWHERE ELSE ------------------------------------------------------------
+        ' Only a body cell accepts. These are the negatives, and they matter more than the
+        ' positives above: a double-click that closed the popup from a tab or a field would make
+        ' the control unusable for anyone who double-clicks by habit.
+        PsColorPicker_SetTab( h, CLR_TAB_CUSTOM )
+        pClr->LayoutColorPicker()
+
+        dim as RECT rcT = pClr->rcTab(CLR_TAB_WEB)
+        pClr->bModalDone = false
+        pClr->bAccepted  = false
+        SendMessageW( h, WM_LBUTTONDBLCLK, 0, CLRTEST_LP( (rcT.left + rcT.right) \ 2, _
+                                                          (rcT.top + rcT.bottom) \ 2 ) )
+        CLRTest_Check( "double-clicking a TAB does not accept", _
+                       (pClr->bModalDone = false), "done=" & str(pClr->bModalDone) )
+        ' ...and it still SWITCHES the tab, which is the shared-handler claim. Without the two
+        ' messages sharing a handler this click would simply vanish.
+        CLRTest_Check( "...and it still switches the tab, because the two messages share a handler", _
+                       (PsColorPicker_GetTab(h) = CLR_TAB_WEB), str(PsColorPicker_GetTab(h)) )
+
+        PsColorPicker_SetTab( h, CLR_TAB_CUSTOM )
+        PsColorPicker_ShowAlpha( h, true )
+        pClr->LayoutColorPicker()
+        dim as RECT rcFd = pClr->rcFieldBox(CLR_FIELD_G)
+        pClr->bModalDone = false
+        pClr->bAccepted  = false
+        SendMessageW( h, WM_LBUTTONDBLCLK, 0, CLRTEST_LP( (rcFd.left + rcFd.right) \ 2, _
+                                                          (rcFd.top + rcFd.bottom) \ 2 ) )
+        CLRTest_Check( "double-clicking a FIELD does not accept", _
+                       (pClr->bModalDone = false), "done=" & str(pClr->bModalDone) )
+        CLRTest_Check( "...and it still puts the caret in that field", _
+                       (pClr->nFocusField = CLR_FIELD_G), str(pClr->nFocusField) )
+
+        ' The OK button: a double-click on it must ARM the press exactly as a single down does,
+        ' rather than committing on the spot. OK still commits on the UP.
+        pClr->LayoutColorPicker()
+        dim as RECT rcOKd = pClr->rcOK
+        pClr->bModalDone = false
+        pClr->bAccepted  = false
+        pClr->bOKPressed = false
+        SendMessageW( h, WM_LBUTTONDBLCLK, 0, CLRTEST_LP( (rcOKd.left + rcOKd.right) \ 2, _
+                                                          (rcOKd.top + rcOKd.bottom) \ 2 ) )
+        CLRTest_Check( "double-clicking OK arms its press rather than committing on the spot", _
+                       (pClr->bModalDone = false) andalso pClr->bOKPressed, _
+                       "done=" & str(pClr->bModalDone) & " pressed=" & str(pClr->bOKPressed) )
+        SendMessageW( h, WM_LBUTTONUP, 0, CLRTEST_LP( (rcOKd.left + rcOKd.right) \ 2, _
+                                                      (rcOKd.top + rcOKd.bottom) \ 2 ) )
+
+        ' The preview halves keep their single-click meanings under a double-click, and neither
+        ' closes the popup.
+        PsColorPicker_SetColor( h, BGR(10,20,30) )
+        PsColorPicker_SetColor( h, BGR(200,100,50), 255, true )
+        pClr->LayoutColorPicker()
+        dim as RECT rcIp = pClr->rcInitial
+        pClr->bModalDone = false
+        pClr->bAccepted  = false
+        SendMessageW( h, WM_LBUTTONDBLCLK, 0, CLRTEST_LP( (rcIp.left + rcIp.right) \ 2, _
+                                                          (rcIp.top + rcIp.bottom) \ 2 ) )
+        CLRTest_Check( "double-clicking the Initial preview reverts but does not accept", _
+                       (pClr->bModalDone = false) andalso _
+                       (PsColorPicker_GetColor(h) = PsColorPicker_GetInitial(h)), _
+                       "done=" & str(pClr->bModalDone) & " " & CLRTest_ClrStr(PsColorPicker_GetColor(h)) )
+
+        ' THE TRAILING UP. A real double-click arrives as down, up, dblclk, up -- so the accept is
+        ' followed by one more WM_LBUTTONUP. It must not undo the answer or fire anything.
+        PsColorPicker_SetTab( h, CLR_TAB_CUSTOM )
+        pClr->LayoutColorPicker()
+        pClr->bModalDone = false
+        pClr->bAccepted  = false
+        SendMessageW( h, WM_LBUTTONDBLCLK, 0, CLRTEST_LP( dcx, dcy ) )
+        SendMessageW( h, WM_LBUTTONUP,     0, CLRTEST_LP( dcx, dcy ) )
+        CLRTest_Check( "the trailing WM_LBUTTONUP after a double-click leaves the answer alone", _
+                       pClr->bModalDone andalso pClr->bAccepted, _
+                       "done=" & str(pClr->bModalDone) & " accepted=" & str(pClr->bAccepted) )
     end scope
 
     DestroyWindow( h )

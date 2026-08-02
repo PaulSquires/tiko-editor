@@ -32,7 +32,7 @@
 ' The return is IDOK (OK button, or Enter) or IDCANCEL (Cancel, Escape, the close X, Alt+F4).
 '
 ' It is reusable WITHIN tiko: it still draws through the shared Options theme builders
-' (OptionsTheme_ApplyTextBox / OptionsTheme_FillButton / OptionsFont_Base) and ghPanel, so it
+' (OptionsTheme_ApplyTextBox / OptionsTheme_FillButton / OptionsFont_Base) and theme.panel.*, so it
 ' follows the active theme with no per-caller wiring. It is NOT cross-project standalone --
 ' those dependencies are tiko's -- and decoupling them was not the ask.
 '

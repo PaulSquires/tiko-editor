@@ -124,7 +124,7 @@ sub frmFind_ApplyErrorState( byval bForce as boolean = false )
     if (bErr = gFindTextIsError) andalso (bForce = false) then exit sub
     gFindTextIsError = bErr
 
-    PsTextBox_SetForeColor( hCtl, iif( bErr, ghGeneral.iconfail, ghTopTabs.ForeColorHot ) )
+    PsTextBox_SetForeColor( hCtl, iif( bErr, theme.compile.iconfail, theme.toptabs.texthot.forecolor ) )
     AfxRedrawWindow( hCtl )
 end sub
 
@@ -157,26 +157,26 @@ end function
 private sub frmFind_IconPaint( byval p as PSICONPANEL_PAINTINFO ptr )
     ' Fill the whole cell first: p->rc carries the item's padding, and anything left
     ' unpainted shows the panel background through.
-    p->b->SetBackColor( ghTopTabs.BackColorHot )
+    p->b->SetBackColor( theme.toptabs.texthot.backcolor )
     p->b->PaintRect( @p->rc )
 
     if p->itemKind = IP_KIND_SEPARATOR then
         dim pWindow as CWindow ptr = AfxCWindowPtr( p->hIconPanel )
         dim as long nInset = iif( pWindow, pWindow->ScaleY(4), 4 )
         dim as long x = (p->rc.left + p->rc.right) \ 2
-        p->b->SetPenColor( ghEditor.Divider )
+        p->b->SetPenColor( theme.editor.divider )
         p->b->PaintLine( 1, x, p->rc.top + nInset, x, p->rc.bottom - nInset )
         exit sub
     end if
 
     dim as long id = PsIconPanel_GetItemID( p->hIconPanel, p->itemID )
     if frmFind_IsLatched( id ) then
-        p->b->SetBackColor( ghTopTabs.IconSelectedBackColor )
+        p->b->SetBackColor( theme.toptabs.iconselected )
     else
         p->b->SetBackColor( iif( p->isHot orelse p->isPressed, _
-                                 ghTopTabs.BackColor, ghTopTabs.BackColorHot ) )
+                                 theme.toptabs.text.backcolor, theme.toptabs.texthot.backcolor ) )
     end if
-    p->b->SetForeColor( ghTopTabs.ForeColorHot )
+    p->b->SetForeColor( theme.toptabs.texthot.forecolor )
     p->b->SetFont( PsIconPanel_GetFont( p->hIconPanel ) )
     p->b->PaintIconButton( p->wszGlyph, @p->rc )
 end sub
@@ -542,19 +542,19 @@ function frmFind_WndProc( _
 
         ' Set the default colors. The strip's field color is BackColorHot, so a
         ' hovered (unselected) button inverts to the tab area's normal BackColor.
-        b.SetColors( ghTopTabs.ForeColorHot, ghTopTabs.BackColorHot )
+        b.SetColors( theme.toptabs.texthot.forecolor, theme.toptabs.texthot.backcolor )
 
         ' Clear the entire back client area
         b.PaintClientRect()
 
         ' Only paint the bottom line if Replace is not active.
-        b.SetPenColor( ghEditor.Divider )
+        b.SetPenColor( theme.editor.divider )
         if gFind.bShowReplacePanel = false then
             b.PaintLine( 1, b.rcClient.left, b.rcClient.bottom, b.rcClient.right, b.rcClient.bottom )
         end if
 
         ' Draw the Find controls.
-        b.SetPenColor( ghEditor.Divider )
+        b.SetPenColor( theme.editor.divider )
 
         b.PaintRoundBorderRect( @gTTabCtl.rcFindTextRect )
 
@@ -562,7 +562,7 @@ function frmFind_WndProc( _
         ' client areas (frmFind_IconPaint). All that is left to this window is the frame
         ' around the find field and the results count beside the chevrons.
         b.SetFont( ghFont(GUIFONT_9) )
-        b.SetBackColor( ghTopTabs.BackColorHot )
+        b.SetBackColor( theme.toptabs.texthot.backcolor )
         b.PaintText( gFind.wszResults, @gFind.rcResults, DT_LEFT )
 
         b.EndDoubleBuffer()
@@ -597,11 +597,11 @@ function frmFind_Show( byval hwndParent as HWND ) as LRESULT
     ' regular Edit controls can not easily have their text vertically centered).
     dim as HWND hCtlFind = PsTextBox_Create( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND )
     PsTextBox_SetFont( hCtlFind, ghFont(INFOFONT_11) )
-    PsTextBox_SetForeColor( hCtlFind, ghTopTabs.ForeColorHot )
-    PsTextBox_SetBackColor( hCtlFind, ghTopTabs.BackColorHot )
+    PsTextBox_SetForeColor( hCtlFind, theme.toptabs.texthot.forecolor )
+    PsTextBox_SetBackColor( hCtlFind, theme.toptabs.texthot.backcolor )
     PsTextBox_SetBorderWidth( hCtlFind, 0 )                       ' flat, as before
     PsTextBox_SetCueBannerText( hCtlFind, L(135,"Find") & "..." )
-    PsTextBox_SetCueBannerColor( hCtlFind, ghTopTabs.ForeColor )
+    PsTextBox_SetCueBannerColor( hCtlFind, theme.toptabs.text.forecolor )
     PsTextBox_SetChangeCallback( hCtlFind, @frmFind_TextBoxChange )
     PsTextBox_SetFocusCallback( hCtlFind, @frmFind_TextBoxFocus )
     ThemeTextBoxContextMenu( hCtlFind )

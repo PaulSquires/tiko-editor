@@ -38,15 +38,15 @@ sub frmTopTabsMenu_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
 
     ' State priority for the row background/foreground: selected > hot > normal
     dim as COLORREF backclr, foreclr
-    foreclr = ghTopTabs.ForeColorHot
-    backclr = ghTopTabs.BackColor
-    if p->isHot then backclr = ghTopTabs.BackColorHot
+    foreclr = theme.toptabs.texthot.forecolor
+    backclr = theme.toptabs.text.backcolor
+    if p->isHot then backclr = theme.toptabs.texthot.backcolor
     p->b->SetColors(foreclr, backclr)
 
     ' If this is the Spring panel then we don't want any highlighting because it is
     ' just a placeholder that forces the icons right justified.
     if PsStatusBar_GetItemData(p->hStatusBar, p->itemID) = 0 then
-        p->b->SetColors(ghPanel.BackColor, ghPanel.BackColor)
+        p->b->SetColors(theme.panel.text.backcolor, theme.panel.text.backcolor)
     end if
 
     ' Don't paint the background because we will reduce the size of the drawing
@@ -67,7 +67,7 @@ sub frmTopTabsMenu_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
 
     ' Paint a full line under the control so that continues the line
     ' of the TopTabs control.
-    p->b->SetPenColor( ghEditor.Divider )
+    p->b->SetPenColor( theme.editor.divider )
     p->b->PaintLine( 2, p->b->rcClient.left, p->b->rcClient.bottom, p->b->rcClient.right, p->b->rcClient.bottom )
 
 end sub
@@ -145,7 +145,7 @@ function frmTopTabsMenu_Show( byval hwndParent as HWND ) as LRESULT
     PsStatusBar_SetMessageCallback( hCtrl, @frmTopTabsMenu_MessageCallback )
     PsStatusBar_SetTooltipCallback( hCtrl, @frmTopTabsMenu_TooltipCallback )
     PsStatusBar_SetTooltipMode( hCtrl, PSTIP_MODE_PS )
-    PsStatusBar_SetBackColor( hCtrl, ghTopTabs.BackColor )
+    PsStatusBar_SetBackColor( hCtrl, theme.toptabs.text.backcolor )
     PsStatusBar_SetPadding( hCtrl, 7 )
     PsStatusBar_SetFont( hCtrl, ghFont(SYMBOLFONT_10) )
 

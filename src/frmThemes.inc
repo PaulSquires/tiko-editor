@@ -112,7 +112,7 @@ end function
 
 
 ' Blend c1 toward c2 by weight pct (weight of c1, 0..100). Used to dim the header's secondary
-' text a notch below ghPanel.ForeColor without inventing a new theme key.
+' text a notch below theme.panel.text.forecolor without inventing a new theme key.
 private function frmThemes_Blend( byval c1 as COLORREF, byval c2 as COLORREF, byval pct as long ) as COLORREF
     dim as long r = (GetRValue(c1) * pct + GetRValue(c2) * (100 - pct)) \ 100
     dim as long g = (GetGValue(c1) * pct + GetGValue(c2) * (100 - pct)) \ 100
@@ -279,11 +279,11 @@ private sub frmThemes_ThemeListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     ' as noise. (isHot is deliberately ignored.)
     dim as COLORREF backclr, foreclr
     if p->isSelected then
-        backclr = ghPanel.BackColorHot
-        foreclr = ghPanel.ForeColorHot
+        backclr = theme.panel.texthot.backcolor
+        foreclr = theme.panel.texthot.forecolor
     else
-        backclr = ghPanel.BackColor
-        foreclr = ghPanel.ForeColor
+        backclr = theme.panel.text.backcolor
+        foreclr = theme.panel.text.forecolor
     end if
     p->b->SetBackColor( backclr )
     p->b->SetForeColor( foreclr )
@@ -310,12 +310,12 @@ end sub
 
 private sub frmThemes_HeaderPaint( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
     if p = 0 then exit sub
-    ' A DISTINCT DARK header band: darker than the list rows (which paint ghPanel.BackColor), with
-    ' the lighter ghPanel.ForeColor text on top so the column titles read clearly.
-    dim as COLORREF backclr = frmThemes_Blend( ghPanel.BackColor, RGB(0,0,0), 72 )
-    if p->isHot orelse p->isResizeHot then backclr = ghPanel.BackColor
+    ' A DISTINCT DARK header band: darker than the list rows (which paint theme.panel.text.backcolor), with
+    ' the lighter theme.panel.text.forecolor text on top so the column titles read clearly.
+    dim as COLORREF backclr = frmThemes_Blend( theme.panel.text.backcolor, RGB(0,0,0), 72 )
+    if p->isHot orelse p->isResizeHot then backclr = theme.panel.text.backcolor
     p->b->SetBackColor( backclr )
-    p->b->SetForeColor( ghPanel.ForeColor )
+    p->b->SetForeColor( theme.panel.text.forecolor )
     p->b->PaintRect( @p->rc )
     p->b->SetFont( OptionsFont_Base() )
     dim as RECT rcText = p->rc
@@ -324,7 +324,7 @@ private sub frmThemes_HeaderPaint( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
 
     dim as RECT rcDiv = p->rc
     rcDiv.left = rcDiv.right - AfxScaleX(1)
-    p->b->SetBackColor( ghEditor.Divider )
+    p->b->SetBackColor( theme.ui.divider )
     p->b->PaintRect( @rcDiv )
 end sub
 
@@ -382,7 +382,7 @@ private function frmThemes_PageWndProc( _
         GetClientRect( hwnd, @p.rcClient )
         p.nPos         = 0
 
-        b.SetBackColor( ghPanel.BackColor )
+        b.SetBackColor( theme.panel.text.backcolor )
         b.PaintRect( @p.rcClient )
         if gThemesCurPage <> THEMEPAGE_NONE then frmThemes_Paint( gThemesCurPage, @p )
 
@@ -390,9 +390,9 @@ private function frmThemes_PageWndProc( _
         return 0
 
     case WM_CTLCOLORSTATIC, WM_CTLCOLORBTN, WM_CTLCOLOREDIT, WM_CTLCOLORLISTBOX
-        SetBkColor( cast(HDC, wParam), ghPanel.BackColor )
-        SetTextColor( cast(HDC, wParam), ghPanel.ForeColor )
-        if ghThemesPageBrush = 0 then ghThemesPageBrush = CreateSolidBrush( ghPanel.BackColor )
+        SetBkColor( cast(HDC, wParam), theme.panel.text.backcolor )
+        SetTextColor( cast(HDC, wParam), theme.panel.text.forecolor )
+        if ghThemesPageBrush = 0 then ghThemesPageBrush = CreateSolidBrush( theme.panel.text.backcolor )
         return cast( LRESULT, ghThemesPageBrush )
 
     case WM_COMMAND, WM_NOTIFY, WM_HSCROLL, WM_VSCROLL
@@ -525,7 +525,7 @@ private sub frmThemes_PositionWindows( byval hwnd as HWND )
     dim as long listLeftX = AfxScaleX(OPTROW_PADLEFT)
 
     dim as HDC hdcM = GetDC( hwnd )
-    dim as long descW = frmThemes_TextW( hdcM, ghFont(GUIFONT_11), ghGeneral.description )
+    dim as long descW = frmThemes_TextW( hdcM, ghFont(GUIFONT_11), theme.general.description )
     ReleaseDC( hwnd, hdcM )
     dim as long editW = AfxScaleX(28)
     dim as long editH = AfxScaleY(26)
@@ -563,11 +563,7 @@ end sub
 private sub frmThemes_ThemeDescTip()
     if ghThemesDescTip = 0 then exit sub
     dim as PSTOOLTIP_COLORS tipc
-    tipc.BackColor   = ghPopup.BackColor
-    tipc.BorderColor = ghEditor.Divider
-    tipc.ForeColor   = ghPopup.ForeColor
-    tipc.TitleColor  = ghPanel.ForeColorHot
-    tipc.GlyphColor  = ghUI.AccentColor
+    Theme_FillTooltipColors( tipc )
     PsTooltip_SetColors( ghThemesDescTip, @tipc )
 end sub
 
@@ -579,22 +575,22 @@ private sub frmThemes_ApplyShellTheme()
     if HWND_FRMTHEMES then Theme_ApplyDarkCaption( HWND_FRMTHEMES )
 
     if ghThemesPageBrush then DeleteObject( ghThemesPageBrush )
-    ghThemesPageBrush = CreateSolidBrush( ghPanel.BackColor )
+    ghThemesPageBrush = CreateSolidBrush( theme.panel.text.backcolor )
 
     if ghThemesList then
-        PsListTree_SetBackColor( ghThemesList, ghPanel.BackColor )
+        PsListTree_SetBackColor( ghThemesList, theme.panel.text.backcolor )
         PsListTree_SetFont( ghThemesList, OptionsFont_Base() )
     end if
 
     if ghThemesBar then
         dim as PSSELECTBAR_COLORS sc
-        sc.BackColor        = ghPanel.BackColor
-        sc.BackColorHot     = ghPanel.BackColor
-        sc.BackColorSelect  = ghPanel.BackColor
-        sc.ForeColor        = ghPanel.ForeColor
-        sc.ForeColorHot     = ghPanel.ForeColorHot
-        sc.ForeColorSelect  = ghPanel.ForeColorHot
-        sc.IndicatorColor   = ghUI.AccentColor
+        sc.BackColor        = theme.panel.text.backcolor
+        sc.BackColorHot     = theme.panel.text.backcolor
+        sc.BackColorSelect  = theme.panel.text.backcolor
+        sc.ForeColor        = theme.panel.text.forecolor
+        sc.ForeColorHot     = theme.panel.texthot.forecolor
+        sc.ForeColorSelect  = theme.panel.texthot.forecolor
+        sc.IndicatorColor   = theme.ui.accent
         PsSelectBar_SetColors( ghThemesBar, @sc )
         PsSelectBar_SetFont( ghThemesBar, OptionsFont_Base() )
         PsSelectBar_Refresh( ghThemesBar )
@@ -612,6 +608,13 @@ private sub frmThemes_ApplyShellTheme()
             PsButton_Refresh( hButtons(i) )
         end if
     next
+    ' Back draws its chevron from the GLYPH font, which is a separate paint-time input the
+    ' loop above does not touch -- SetFont sets the caption font only.
+    if ghThemesBack then
+        PsButton_SetGlyphFont( ghThemesBack, ghFont(SYMBOLFONT_10) )
+        PsButton_Refresh( ghThemesBack )
+    end if
+
     ' The edit-description button paints its pencil GLYPH as a centred caption, so it wants the
     ' symbol font rather than the base UI font the loop just gave it.
     if ghThemesDescEdit then
@@ -638,15 +641,15 @@ private sub frmThemes_EditClick( byval hButton as HWND, byval id as long )
     gThemesWorkFile = gThemeFilenames(sel)
 
     ' Sync the description for the header display (Theme_PreviewFile does not refresh
-    ' ghGeneral.description), and start a clean editing session.
-    ghGeneral.description = GetThemeDescription( frmThemes_ThemesFolder() & gThemesWorkFile )
+    ' theme.general.description), and start a clean editing session.
+    theme.general.description = GetThemeDescription( frmThemes_ThemesFolder() & gThemesWorkFile )
     frmThemes_ClearEdited()
     gThemesDescEdited = false
 
     gThemesShowEdit = true
     if gThemesCurPage = THEMEPAGE_NONE then
-        PsSelectBar_SetCurSel( ghThemesBar, THEMEPAGE_SYNTAX )
-        frmThemes_SelectPage( THEMEPAGE_SYNTAX )
+        PsSelectBar_SetCurSel( ghThemesBar, THEMEPAGE_PALETTE )
+        frmThemes_SelectPage( THEMEPAGE_PALETTE )
     end if
     frmThemes_ApplyTheme()          ' refresh the page's swatches/picker for the previewed theme
 
@@ -696,7 +699,7 @@ private sub frmThemes_CloneClick( byval hButton as HWND, byval id as long )
     ' the copied colours), overwrite the description, and write it back.
     dim as DWSTRING wszDesc = GetThemeDescription( wszDest ) & " " & L(396,"(cloned)")
     Theme_PreviewFile( wszClone )
-    ghGeneral.description = wszDesc
+    theme.general.description = wszDesc
     Theme_WriteFile( wszDest, wszDesc )
 
     frmThemes_RefreshThemeList()
@@ -792,7 +795,7 @@ end sub
 ' Revert: reload the theme from disk, discarding every edit since the last save.
 private sub frmThemes_RevertClick( byval hButton as HWND, byval id as long )
     Theme_PreviewFile( gThemesWorkFile )
-    ghGeneral.description = GetThemeDescription( frmThemes_ThemesFolder() & gThemesWorkFile )
+    theme.general.description = GetThemeDescription( frmThemes_ThemesFolder() & gThemesWorkFile )
     Theme_ApplyAll()
     frmThemes_ClearEdited()
     gThemesDescEdited = false
@@ -807,9 +810,9 @@ end sub
 ' Edit-description icon: pop up frmInputBox to change the theme's description text. A committed
 ' change marks the theme dirty (and forks a built-in at save time).
 private sub frmThemes_DescEditClick( byval hButton as HWND, byval id as long )
-    dim as DWSTRING wszDesc = ghGeneral.description
+    dim as DWSTRING wszDesc = theme.general.description
     if frmInputBox_Show( HWND_FRMTHEMES, L(329,"Themes"), L(387,"Description"), wszDesc ) = IDOK then
-        ghGeneral.description = wszDesc
+        theme.general.description = wszDesc
         gThemesDescEdited = true
         frmThemes_MarkEdited()
         frmThemes_PositionWindows( HWND_FRMTHEMES )   ' re-place the icon after the new text
@@ -868,7 +871,7 @@ function frmThemes_WndProc( _
         b.BeginDoubleBuffer( hwnd )
         dim as RECT rc
         GetClientRect( hwnd, @rc )
-        b.SetBackColor( ghPanel.BackColor )
+        b.SetBackColor( theme.panel.text.backcolor )
         b.PaintRect( @rc )
 
         ' SELECT view header band: a bold "Themes" on the first line, and the active theme named
@@ -888,7 +891,7 @@ function frmThemes_WndProc( _
             dim as DWSTRING s1 = L(329,"Themes")
             dim as RECT r1 : SetRect( @r1, hx, yTop, rc.right - mx, yTop + lineH )
             b.SetFont( hHead )
-            b.SetForeColor( ghPanel.ForeColorHot )
+            b.SetForeColor( theme.panel.texthot.forecolor )
             b.PaintText( s1, @r1, DT_LEFT )
 
             ' Line 2, directly under it: the current active theme.
@@ -896,7 +899,7 @@ function frmThemes_WndProc( _
                                  GetThemeDescription( frmThemes_ThemesFolder() & gConfig.ThemeShortFilename )
             dim as RECT r2 : SetRect( @r2, hx, yTop + lineH, rc.right - mx, yTop + lineH + AfxScaleY(22) )
             b.SetFont( ghFont(GUIFONT_11) )
-            b.SetForeColor( ghPanel.ForeColor )
+            b.SetForeColor( theme.panel.text.forecolor )
             b.PaintText( s2, @r2, DT_LEFT or DT_END_ELLIPSIS )
         else
             ' EDIT view header, left-aligned to the element list below it: bold "Edit theme",
@@ -910,20 +913,20 @@ function frmThemes_WndProc( _
             dim as DWSTRING sT = L(391,"Edit theme")
             dim as RECT rT : SetRect( @rT, listLeftX, AfxScaleY(8), rRight, AfxScaleY(34) )
             b.SetFont( hHead )
-            b.SetForeColor( ghPanel.ForeColorHot )
+            b.SetForeColor( theme.panel.texthot.forecolor )
             b.PaintText( sT, @rT, DT_LEFT )
 
             dim as RECT rD : SetRect( @rD, listLeftX, AfxScaleY(40), rRight, AfxScaleY(62) )
             b.SetFont( ghFont(GUIFONT_11) )
-            b.SetForeColor( ghPanel.ForeColor )
-            b.PaintText( ghGeneral.description, @rD, DT_LEFT or DT_END_ELLIPSIS )
+            b.SetForeColor( theme.panel.text.forecolor )
+            b.PaintText( theme.general.description, @rD, DT_LEFT or DT_END_ELLIPSIS )
         end if
 
         ' The rule above the footer, so the buttons read as a band.
         dim as RECT rcDiv
         SetRect( @rcDiv, 0, rc.bottom - AfxScaleY(FRMTHEMES_FOOTER_H), _
                  rc.right, rc.bottom - AfxScaleY(FRMTHEMES_FOOTER_H) + AfxScaleY(1) )
-        b.SetBackColor( ghEditor.Divider )
+        b.SetBackColor( theme.ui.divider )
         b.PaintRect( @rcDiv )
 
         ' Unsaved-changes indicator, footer left, EDIT view only.
@@ -932,7 +935,7 @@ function frmThemes_WndProc( _
             SetRect( @rDirty, AfxScaleX(FRMTHEMES_MARGIN), rc.bottom - AfxScaleY(FRMTHEMES_FOOTER_H), _
                      rc.right \ 2, rc.bottom )
             b.SetFont( ghFont(GUIFONT_10) )
-            b.SetForeColor( ghUI.AccentColor )
+            b.SetForeColor( theme.ui.accent )
             b.PaintText( L(395,"Unsaved changes"), @rDirty, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
         end if
 
@@ -1035,7 +1038,7 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
     ' Rows 50% taller than the control's 22-unit default (UNSCALED -- the control scales it).
     PsListTree_SetRowHeight( ghThemesList, 33 )
     PsListTree_SetBorderWidth( ghThemesList, 1 )
-    PsListTree_SetBorderColor( ghThemesList, ghEditor.Divider )
+    PsListTree_SetBorderColor( ghThemesList, theme.ui.divider )
 
     ghThemesEdit = PsButton_Create( HWND_FRMTHEMES, IDC_FRMTHEMES_CMDEDIT )
     PsButton_SetText( ghThemesEdit, L(14,"Edit") )
@@ -1060,8 +1063,25 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
 
     ' ---- EDIT-view children -------------------------------------------------------------
     ghThemesBar = PsSelectBar_Create( HWND_FRMTHEMES, IDC_FRMTHEMES_SELECTBAR )
-    PsSelectBar_AddPanel( ghThemesBar, L(306,"Syntax Colors"), THEMEPAGE_SYNTAX )
-    PsSelectBar_AddPanel( ghThemesBar, L(307,"Interface Colors"), THEMEPAGE_INTERFACE )
+    ' PALETTE FIRST: editing the twenty-one roles is how a theme is actually retuned, and
+    ' the two key lists behind it are for departing from that palette one key at a time.
+    '
+    ' ADD ORDER IS PAGE-ID ORDER. AddPanel returns the model index and the dialog uses the
+    ' index and the page id interchangeably -- see the note on THEMEPAGE_* in frmThemes.bi.
+    ' The assertion below is what stops a future reorder from breaking that silently.
+    scope
+        dim as long i0 = PsSelectBar_AddPanel( ghThemesBar, L(671,"Palette"), THEMEPAGE_PALETTE )
+        dim as long i1 = PsSelectBar_AddPanel( ghThemesBar, L(306,"Syntax Colors"), THEMEPAGE_SYNTAX )
+        dim as long i2 = PsSelectBar_AddPanel( ghThemesBar, L(307,"Interface Colors"), THEMEPAGE_INTERFACE )
+        if (i0 <> THEMEPAGE_PALETTE) orelse (i1 <> THEMEPAGE_SYNTAX) orelse _
+           (i2 <> THEMEPAGE_INTERFACE) then
+            ' Loud, and at the only moment it can be caught: the panel index and the page id
+            ' have diverged, so the highlighted tab and the visible list are about to disagree.
+            dim as string sMsg = "frmThemes: select-bar index/page-id mismatch (" & _
+                                 i0 & "," & i1 & "," & i2 & ")"
+            ? sMsg
+        end if
+    end scope
     ' Zero the FIRST tab's left padding so its text starts at the bar's left edge (aligned with
     ' the Back button); -1 keeps its right padding at the bar default.
     PsSelectBar_SetPanelPadding( ghThemesBar, 0, 0, -1 )
@@ -1076,9 +1096,20 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
     end scope
 
     ghThemesBack = PsButton_Create( HWND_FRMTHEMES, IDC_FRMTHEMES_CMDGOBACK )
-    ' A left chevron (U+2039) before the caption -- built with wchr so the source file's
-    ' encoding cannot mangle it.
-    PsButton_SetText( ghThemesBack, wchr(&h2039) & "  " & L(334,"Back") )
+    ' A REAL CHEVRON GLYPH IN THE ICON FONT, not a character in the caption.
+    '
+    ' This was U+2039 concatenated onto the caption text, which drew it in the UI font -- and
+    ' U+2039 is a single guillemet, a PUNCTUATION mark sized like a quote, so the chevron came
+    ' out visibly smaller than the word beside it. Segoe Fluent's E76B is the actual
+    ' ChevronLeft and is drawn from the separate glyph font at icon size.
+    '
+    ' SetGlyphLeft rather than the MAKECHEVRON idiom used for the reorder buttons elsewhere:
+    ' that one puts the glyph in the CAPTION and hands the whole button the symbol font, which
+    ' is the documented workaround for a glyph-ONLY button (PsButton pins its icon cells to the
+    ' padding, so a lone icon cannot be centred). This button has a caption, which is exactly
+    ' the case the pinned cell is for.
+    PsButton_SetText( ghThemesBack, L(334,"Back") )
+    PsButton_SetGlyphLeft( ghThemesBack, !"\uE76B" )
     PsButton_SetClickCallback( ghThemesBack, @frmThemes_GoBackClick )
 
     ' Edit-description icon (a pencil glyph); opens frmInputBox to change the description text.
@@ -1132,7 +1163,9 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
 
         ' The colour popup's dismissal (Escape / outside-click). Ahead of the dialog's own
         ' Escape so that, while the popup is open, Escape closes it rather than backing out.
-        if frmThemes_ColorPopupFilterMessage( @uMsg ) then continue while
+        ' No PsColorPicker filter here, and there must never be one: DoModal runs its own
+        ' nested loop and owns IsDialogMessage, Escape and the outside-click test for as long
+        ' as the picker is up. That is the property the control was designed around.
 
         if (uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_ESCAPE) then
             ' In the editor, Escape backs out to the picker; in the picker it closes.

@@ -628,7 +628,7 @@ end function
 ' The builds list: Description | (uncaptioned) Default marker
 '
 ' NO WARNING COLOURING. An earlier version painted a clashing or unresolvable shortcut cell
-' in ghGeneral.iconfail. There is now nothing to warn about: a shortcut that cannot fire is
+' in theme.compile.iconfail. There is now nothing to warn about: a shortcut that cannot fire is
 ' UNASSIGNED when the staging copy is seeded (see frmBuildConfig_SanitizeWork), and the assign
 ' dialog refuses to create a new one -- so a clash cannot survive long enough to be reported.
 ' ========================================================================================
@@ -637,16 +637,16 @@ private sub frmBuildConfig_ListPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
     dim as boolean bActive = (p->isSelected orelse p->isHot)
 
-    p->b->SetBackColor( iif( bActive, ghPanel.BackColorHot, ghPanel.BackColor ) )
+    p->b->SetBackColor( iif( bActive, theme.panel.texthot.backcolor, theme.panel.text.backcolor ) )
     p->b->PaintRect( @p->rc )
     p->b->SetFont( ghFont(GUIFONT_11) )
 
     for i as integer = 0 to p->columnCount - 1
         dim as RECT rcText = p->cells[i].rc
         rcText.left += AfxScaleX(6)
-        dim as COLORREF clr = iif( bActive, ghPanel.ForeColorHot, ghPanel.ForeColor )
+        dim as COLORREF clr = iif( bActive, theme.panel.texthot.forecolor, theme.panel.text.forecolor )
         ' The default marker is subdued: it is a state, not a heading.
-        if (i = 1) andalso (bActive = false) then clr = ghPopup.ForeColorDisabled
+        if (i = 1) andalso (bActive = false) then clr = theme.topmenu.textdisabled.forecolor
         p->b->SetForeColor( clr )
         p->b->PaintText( p->cells[i].wszText, @rcText, _
                          DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
@@ -658,18 +658,18 @@ end sub
 private sub frmBuildConfig_ListPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
     if p = 0 then exit sub
 
-    p->b->SetBackColor( iif( p->isHot orelse p->isResizeHot, ghPanel.BackColorHot, ghPanel.BackColor ) )
+    p->b->SetBackColor( iif( p->isHot orelse p->isResizeHot, theme.panel.texthot.backcolor, theme.panel.text.backcolor ) )
     p->b->PaintRect( @p->rc )
 
     dim as RECT rcText = p->rc
     rcText.left += AfxScaleX(6)
     p->b->SetFont( ghFont(GUIFONT_11) )
-    p->b->SetForeColor( ghPopup.ForeColorDisabled )
+    p->b->SetForeColor( theme.topmenu.textdisabled.forecolor )
     p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
 
     dim as RECT rcEdge = p->rc
     rcEdge.left = rcEdge.right - AfxScaleX(1)
-    p->b->SetBackColor( ghEditor.Divider )
+    p->b->SetBackColor( theme.ui.divider )
     p->b->PaintRect( @rcEdge )
 end sub
 
@@ -705,7 +705,7 @@ private sub frmBuildConfig_SwitchPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
     if (idx < lbound(gBuildOptions)) orelse (idx > ubound(gBuildOptions)) then exit sub
 
     dim as boolean bActive = (p->isSelected orelse p->isHot)
-    p->b->SetBackColor( iif( bActive, ghPanel.BackColorHot, ghPanel.BackColor ) )
+    p->b->SetBackColor( iif( bActive, theme.panel.texthot.backcolor, theme.panel.text.backcolor ) )
     p->b->PaintRect( @p->rc )
 
     ' The group rule. Not drawn above the very first row -- there is nothing above it to
@@ -714,9 +714,9 @@ private sub frmBuildConfig_SwitchPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
         if gBuildOptions(idx).groupid <> gBuildOptions(idx - 1).groupid then
             dim as RECT rcRule = p->rc
             rcRule.bottom = rcRule.top + AfxScaleY(1)
-            p->b->SetBackColor( ghEditor.Divider )
+            p->b->SetBackColor( theme.ui.divider )
             p->b->PaintRect( @rcRule )
-            p->b->SetBackColor( iif( bActive, ghPanel.BackColorHot, ghPanel.BackColor ) )
+            p->b->SetBackColor( iif( bActive, theme.panel.texthot.backcolor, theme.panel.text.backcolor ) )
         end if
     end if
 
@@ -726,14 +726,14 @@ private sub frmBuildConfig_SwitchPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
     dim as RECT rcGlyph = p->rc
     rcGlyph.right = rcGlyph.left + AfxScaleX(FRMBUILDCONFIG_SWGLYPH_W)
     p->b->SetFont( ghFont(SYMBOLFONT_10) )
-    p->b->SetForeColor( iif( bChecked, ghPanel.ForeColorHot, ghPopup.ForeColorDisabled ) )
+    p->b->SetForeColor( iif( bChecked, theme.panel.texthot.forecolor, theme.topmenu.textdisabled.forecolor ) )
     p->b->PaintText( iif( bChecked, wszIconCheckBoxMarked, wszIconCheckBoxEmpty ), @rcGlyph, _
                      DT_CENTER or DT_VCENTER or DT_SINGLELINE )
 
     dim as RECT rcText = p->rc
     rcText.left = rcGlyph.right + AfxScaleX(4)
     p->b->SetFont( ghFont(GUIFONT_11) )
-    p->b->SetForeColor( iif( bActive, ghPanel.ForeColorHot, ghPanel.ForeColor ) )
+    p->b->SetForeColor( iif( bActive, theme.panel.texthot.forecolor, theme.panel.text.forecolor ) )
     p->b->PaintText( gBuildOptions(idx).wszText, @rcText, _
                      DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
 
@@ -1132,7 +1132,7 @@ private function frmBuildConfig_OnPaint( byval hwnd as HWND ) as LRESULT
     dim buffer as PsBufferPaint
     buffer.BeginDoubleBuffer( hwnd, hdc, rc )
 
-    buffer.SetBackColor( ghPanel.BackColor )
+    buffer.SetBackColor( theme.panel.text.backcolor )
     buffer.PaintRect( @rc )
 
     dim as long mx      = AfxScaleX(FRMBUILDCONFIG_MARGIN)
@@ -1152,7 +1152,7 @@ private function frmBuildConfig_OnPaint( byval hwnd as HWND ) as LRESULT
         rcT.right  = xRight
         rcT.top    = titleH
         rcT.bottom = rc.bottom - AfxScaleY(FRMBUILDCONFIG_FOOTER_H)
-        buffer.SetForeColor( ghPanel.ForeColor )
+        buffer.SetForeColor( theme.panel.text.forecolor )
         buffer.SetFont( ghFont(GUIFONT_11) )
         buffer.PaintText( L(400,"Select a build configuration, or press Add to create one."), _
                           @rcT, DT_CENTER or DT_VCENTER or DT_SINGLELINE )
@@ -1164,7 +1164,7 @@ private function frmBuildConfig_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as long y = titleH + AfxScaleY(FRMBUILDCONFIG_SELECTBAR_H) + AfxScaleY(12)
 
     buffer.SetFont( ghFont(GUIFONT_11) )
-    buffer.SetForeColor( ghPanel.ForeColor )
+    buffer.SetForeColor( theme.panel.text.forecolor )
 
     if gBCPage = IDP_FRMBUILDCONFIG_GENERAL then
 
@@ -1198,7 +1198,7 @@ private function frmBuildConfig_OnPaint( byval hwnd as HWND ) as LRESULT
         ' Its rect is computed in PositionWindows and stored, because the mouse handlers
         ' hit-test it -- there is no child window here to do that for us.
         dim as RECT rcLbl = gBCPreviewLabelRect
-        buffer.SetForeColor( ghPanel.ForeColor )
+        buffer.SetForeColor( theme.panel.text.forecolor )
         buffer.PaintText( L(367,"Compiler switches"), @rcLbl, _
                           DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
 
@@ -1206,9 +1206,9 @@ private function frmBuildConfig_OnPaint( byval hwnd as HWND ) as LRESULT
         ' colour from SetForeColor; PaintRoundBorderRect would fill the interior back over --
         ' the mistake this family has made four separate times.
         dim as RECT rcPrev = gBCPreviewRect
-        buffer.SetBackColor( iif( gBCPreviewHot, ghPanel.BackColorHot, ghEditor.BackColorText ) )
+        buffer.SetBackColor( iif( gBCPreviewHot, theme.panel.texthot.backcolor, theme.ui.field.backcolor ) )
         buffer.PaintRoundRect( @rcPrev, AfxScaleY(6) )
-        buffer.SetForeColor( ghEditor.Divider )
+        buffer.SetForeColor( theme.ui.divider )
         buffer.PaintRoundOutline( @rcPrev, AfxScaleY(6), 1 )
 
         dim as RECT rcTxt = rcPrev
@@ -1224,11 +1224,11 @@ private function frmBuildConfig_OnPaint( byval hwnd as HWND ) as LRESULT
         dim as DWSTRING wszOpts = gBuildsWork(gBCCurrent).wszOptions
         if len(trim(wszOpts)) = 0 then
             buffer.SetFont( ghFont(GUIFONT_11) )
-            buffer.SetForeColor( ghPopup.ForeColorDisabled )
+            buffer.SetForeColor( theme.topmenu.textdisabled.forecolor )
             buffer.PaintText( L(354,"(none)"), @rcTxt, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
         else
             buffer.SetFont( ghBCFontFixed )
-            buffer.SetForeColor( ghEditor.ForeColorText )
+            buffer.SetForeColor( theme.ui.field.forecolor )
             buffer.PaintTextEx( wszOpts, @rcTxt, DT_LEFT or DT_TOP or DT_WORDBREAK or DT_END_ELLIPSIS )
         end if
 
@@ -1392,9 +1392,9 @@ end sub
 private sub frmBuildConfig_ApplyTheme( byval hwnd as HWND )
 
     #macro DRESSLIST( _h_ )
-        PsListTree_SetBackColor( _h_, ghPanel.BackColor )
-        PsListTree_SetScrollBarColors( _h_, ghPanel.BackColorScrollBar, _
-                                       ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+        PsListTree_SetBackColor( _h_, theme.panel.text.backcolor )
+        PsListTree_SetScrollBarColors( _h_, theme.panel.scrollbar.backcolor, _
+                                       theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
         OptionsTheme_ApplyListBorder( _h_ )
     #endmacro
 
@@ -1421,13 +1421,13 @@ private sub frmBuildConfig_ApplyTheme( byval hwnd as HWND )
 
     dim as PSSELECTBAR_COLORS sc
     PsSelectBar_GetColors( ghBCSelectBar, @sc )
-    sc.BackColor        = ghPanel.BackColor
-    sc.BackColorHot     = ghPanel.BackColor
-    sc.BackColorSelect  = ghPanel.BackColor
-    sc.ForeColor        = ghPopup.ForeColorDisabled
-    sc.ForeColorHot     = ghPanel.ForeColor
-    sc.ForeColorSelect  = ghPanel.ForeColorHot
-    sc.IndicatorColor   = ghPanel.ForeColorHot
+    sc.BackColor        = theme.panel.text.backcolor
+    sc.BackColorHot     = theme.panel.text.backcolor
+    sc.BackColorSelect  = theme.panel.text.backcolor
+    sc.ForeColor        = theme.topmenu.textdisabled.forecolor
+    sc.ForeColorHot     = theme.panel.text.forecolor
+    sc.ForeColorSelect  = theme.panel.texthot.forecolor
+    sc.IndicatorColor   = theme.panel.texthot.forecolor
     PsSelectBar_SetColors( ghBCSelectBar, @sc )
 
     dim as PSBUTTON_COLORS bc

@@ -1284,7 +1284,7 @@ end sub
 private sub frmDebug_SplitterPaint( byval p as PSSPLITTER_PAINTINFO ptr )
     if p = 0 then exit sub
 
-    p->b->SetBackColor( ghOutput.BackColorHot )
+    p->b->SetBackColor( theme.output.texthot.backcolor )
     p->b->PaintRect( @p->rcClient )
 
     dim as boolean bLive = (p->isHot orelse p->isDragging)
@@ -1301,7 +1301,7 @@ private sub frmDebug_SplitterPaint( byval p as PSSPLITTER_PAINTINFO ptr )
         dim as long mid_ = rc.left + ((rc.right - rc.left) - nThick) \ 2
         rc.left = mid_ : rc.right = mid_ + nThick
     end if
-    p->b->SetBackColor( iif( bLive, ghOutput.ForeColorScrollBar, ghOutput.Divider ) )
+    p->b->SetBackColor( iif( bLive, theme.output.scrollbar.forecolor, theme.output.divider ) )
     p->b->PaintRect( @rc )
 end sub
 
@@ -1344,16 +1344,16 @@ private sub frmDebug_PaintVarRowFor( byval hLV as HWND, byval p as PSLISTTREE_PA
     ' A debugger pane is read while the mouse happens to be resting somewhere, and a row
     ' lighting up under the cursor competes with the one thing here that IS meant to catch
     ' the eye: a value that just changed.
-    dim as COLORREF backclr = iif( p->isSelected, ghOutput.ForeColorScrollBar, ghOutput.BackColor )
-    p->b->SetForeColor( ghOutput.ForeColorHot )
+    dim as COLORREF backclr = iif( p->isSelected, theme.output.scrollbar.forecolor, theme.output.text.backcolor )
+    p->b->SetForeColor( theme.output.texthot.forecolor )
     p->b->SetBackColor( backclr )
     p->b->PaintRect( @p->rc )
     p->b->SetFont( ghFont(GUIFONT_9) )
 
     ' A group row ("[100 .. 199]") is chrome, not data -- dimmed so the eye runs past it to
     ' the elements.
-    dim as COLORREF foreNormal = ghOutput.ForeColorHot
-    if p->isSelectable = false then foreNormal = ghOutput.ForeColor
+    dim as COLORREF foreNormal = theme.output.texthot.forecolor
+    if p->isSelectable = false then foreNormal = theme.output.text.forecolor
 
     ' There is no per-row delete affordance any more. An X drawn in the row could not be
     ' made to behave: PsListTree hit-tests rows and not cells, it re-resolves a tooltip only
@@ -1383,7 +1383,7 @@ private sub frmDebug_PaintVarRowFor( byval hLV as HWND, byval p as PSLISTTREE_PA
         dim as RECT rcText = p->cells[i].rc
         rcText.left += pWindow->ScaleX(4)
         dim as COLORREF clr = foreNormal
-        if bChanged andalso (i = 1) then clr = ghGeneral.debugchanged
+        if bChanged andalso (i = 1) then clr = theme.output.valuechanged
         p->b->SetForeColor( clr )
         p->b->PaintText( p->cells[i].wszText, @rcText, DT_LEFT or DT_END_ELLIPSIS )
     next
@@ -1395,8 +1395,8 @@ sub frmDebug_PaintStackRow( byval p as PSLISTTREE_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
     if pWindow = 0 then exit sub
 
-    dim as COLORREF backclr = iif( p->isSelected, ghOutput.ForeColorScrollBar, ghOutput.BackColor )
-    p->b->SetForeColor( ghOutput.ForeColorHot )
+    dim as COLORREF backclr = iif( p->isSelected, theme.output.scrollbar.forecolor, theme.output.text.backcolor )
+    p->b->SetForeColor( theme.output.texthot.forecolor )
     p->b->SetBackColor( backclr )
     p->b->PaintRect( @p->rc )
     p->b->SetFont( ghFont(GUIFONT_9) )
@@ -1442,8 +1442,8 @@ sub frmDebug_PaintVarHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
 
     ' isHot / isResizeHot deliberately unused -- the header does not light up under the
     ' cursor, for the same reason the rows do not.
-    p->b->SetForeColor( ghOutput.ForeColorHot )
-    p->b->SetBackColor( ghOutput.BackColor )
+    p->b->SetForeColor( theme.output.texthot.forecolor )
+    p->b->SetBackColor( theme.output.text.backcolor )
     p->b->PaintRect( @p->rc )
 
     dim as RECT rcText = p->rc
@@ -1473,15 +1473,15 @@ sub frmDebug_PaintVarHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
 
     dim as RECT rcDiv = p->rc
     rcDiv.left = rcDiv.right - AfxScaleX(1)
-    p->b->SetBackColor( ghOutput.ScrollBarDivider )
+    p->b->SetBackColor( theme.output.scrollbardivider )
     p->b->PaintRect( @rcDiv )
 end sub
 
 private sub frmDebug_PushListColors( byval hCtl as HWND )
     if IsWindow(hCtl) = 0 then exit sub
-    PsListTree_SetBackColor( hCtl, ghOutput.BackColor )
-    PsListTree_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _
-                                   ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
+    PsListTree_SetBackColor( hCtl, theme.output.text.backcolor )
+    PsListTree_SetScrollBarColors( hCtl, theme.output.scrollbar.backcolor, _
+                                   theme.output.scrollbar.forecolor, theme.output.scrollbar.forecolor )
     AfxRedrawWindow( hCtl )
 end sub
 
@@ -1492,13 +1492,13 @@ sub frmDebug_ApplyTheme()
         if IsWindow(gDbgBtn(id)) = 0 then continue for
         dim as PSBUTTON_COLORS bc
         PsButton_GetColors( gDbgBtn(id), @bc )
-        bc.BackColor        = ghOutput.BackColorHot
-        bc.BackColorHot     = ghOutput.ForeColorScrollBar
-        bc.BackColorPressed = ghOutput.ForeColorScrollBar
-        bc.ForeColor        = ghOutput.ForeColorHot
-        bc.ForeColorHot     = ghOutput.ForeColorHot
-        bc.BorderColor      = ghOutput.Divider
-        bc.BorderColorHot   = ghOutput.Divider
+        bc.BackColor        = theme.output.texthot.backcolor
+        bc.BackColorHot     = theme.output.scrollbar.forecolor
+        bc.BackColorPressed = theme.output.scrollbar.forecolor
+        bc.ForeColor        = theme.output.texthot.forecolor
+        bc.ForeColorHot     = theme.output.texthot.forecolor
+        bc.BorderColor      = theme.output.divider
+        bc.BorderColorHot   = theme.output.divider
         PsButton_SetColors( gDbgBtn(id), @bc )
     next
 
@@ -1507,13 +1507,13 @@ sub frmDebug_ApplyTheme()
         if IsWindow(h) then
             dim as PSBUTTON_COLORS ac
             PsButton_GetColors( h, @ac )
-            ac.BackColor        = ghOutput.BackColorHot
-            ac.BackColorHot     = ghOutput.ForeColorScrollBar
-            ac.BackColorPressed = ghOutput.ForeColorScrollBar
-            ac.ForeColor        = ghOutput.ForeColor
-            ac.ForeColorHot     = ghOutput.ForeColorHot
-            ac.BorderColor      = ghOutput.BackColorHot
-            ac.BorderColorHot   = ghOutput.Divider
+            ac.BackColor        = theme.output.texthot.backcolor
+            ac.BackColorHot     = theme.output.scrollbar.forecolor
+            ac.BackColorPressed = theme.output.scrollbar.forecolor
+            ac.ForeColor        = theme.output.text.forecolor
+            ac.ForeColorHot     = theme.output.texthot.forecolor
+            ac.BorderColor      = theme.output.texthot.backcolor
+            ac.BorderColorHot   = theme.output.divider
             PsButton_SetColors( h, @ac )
         end if
     #endmacro
@@ -1526,7 +1526,7 @@ sub frmDebug_ApplyTheme()
     frmDebug_PushListColors( HWND_FRMDEBUG_LVWATCH )
 
     #macro SPLITTHEME( h )
-        if IsWindow(h) then PsSplitter_SetColors( h, ghOutput.BackColorHot, ghOutput.Divider )
+        if IsWindow(h) then PsSplitter_SetColors( h, theme.output.texthot.backcolor, theme.output.divider )
     #endmacro
     SPLITTHEME( HWND_FRMDEBUG_SPLITMAIN )
     SPLITTHEME( HWND_FRMDEBUG_SPLITLEFT )
@@ -1779,11 +1779,7 @@ sub frmDebug_InitDataTip()
     ' The EDITOR palette, not the popup one -- this tip appears over source text and has to
     ' read as part of it. Same call the code tips make, for the same reason.
     dim as PSTOOLTIP_COLORS tipc
-    tipc.BackColor   = ghEditor.BackColorText
-    tipc.BorderColor = ghEditor.Divider
-    tipc.ForeColor   = ghEditor.ForeColorText
-    tipc.TitleColor  = ghEditor.ForeColorKeyword
-    tipc.GlyphColor  = ghEditor.ForeColorText
+    Theme_FillCodeTipColors( tipc )
     PsTooltip_SetColors( gDbgDataTip, @tipc )
 end sub
 
@@ -1949,8 +1945,8 @@ private function frmDebug_CreateListView( byval CtrlID as long ) as HWND
                 ' The editor is created lazily and owned by the control, so a host cannot
                 ' reach the PsTextBox to colour it -- without this it opens black-on-white
                 ' in the middle of a dark list.
-                PsListTree_SetEditColors( hCtl, ghOutput.BackColor, ghOutput.ForeColorHot, _
-                                          ghOutput.Divider, ghOutput.ForeColorScrollBar )
+                PsListTree_SetEditColors( hCtl, theme.output.text.backcolor, theme.output.texthot.forecolor, _
+                                          theme.output.divider, theme.output.scrollbar.forecolor )
                 PsListTree_SetEditTextInset( hCtl, pWindow->ScaleX(4) )
         end select
     end if
@@ -1964,9 +1960,9 @@ private function frmDebug_CreateListView( byval CtrlID as long ) as HWND
     ' that is invisible here: frmDebug_NoHeaderTooltip suppresses them outright.)
     PsListTree_SetTooltipMode( hCtl, PSTIP_MODE_PS )
     PsListTree_SetFont( hCtl, ghFont(GUIFONT_9) )
-    PsListTree_SetBackColor( hCtl, ghOutput.BackColor )
-    PsListTree_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _
-                                   ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
+    PsListTree_SetBackColor( hCtl, theme.output.text.backcolor )
+    PsListTree_SetScrollBarColors( hCtl, theme.output.scrollbar.backcolor, _
+                                   theme.output.scrollbar.forecolor, theme.output.scrollbar.forecolor )
     return hCtl
 end function
 
@@ -2015,7 +2011,7 @@ private function frmDebug_WndProc( byval hwnd as HWND, byval uMsg as UINT, _
             dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
             dim as PsBufferPaint b
             b.BeginDoubleBuffer(hwnd)
-            b.SetBackColor( ghOutput.BackColorHot )
+            b.SetBackColor( theme.output.texthot.backcolor )
             b.PaintClientRect()
 
             if pWindow then
@@ -2027,8 +2023,8 @@ private function frmDebug_WndProc( byval hwnd as HWND, byval uMsg as UINT, _
                 rcStatus.right  = rc.right - pWindow->ScaleX(12)
                 rcStatus.bottom = rcStatus.top + pWindow->ScaleY(FRMDEBUG_STATUSHEIGHT)
                 b.SetFont( ghFont(GUIFONT_9) )
-                b.SetForeColor( ghOutput.ForeColorHot )
-                b.SetBackColor( ghOutput.BackColorHot )
+                b.SetForeColor( theme.output.texthot.forecolor )
+                b.SetBackColor( theme.output.texthot.backcolor )
                 b.PaintText( gDbgStatusText, @rcStatus, DT_LEFT or DT_END_ELLIPSIS )
 
                 ' A hairline under the status line, separating chrome from content.
@@ -2037,7 +2033,7 @@ private function frmDebug_WndProc( byval hwnd as HWND, byval uMsg as UINT, _
                 rcLine.top    = rcStatus.bottom - 1
                 rcLine.right  = rc.right
                 rcLine.bottom = rcStatus.bottom
-                b.SetBackColor( ghOutput.Divider )
+                b.SetBackColor( theme.output.divider )
                 b.PaintRect( @rcLine )
 
                 ' --- the four pane captions ---
@@ -2060,11 +2056,11 @@ private function frmDebug_WndProc( byval hwnd as HWND, byval uMsg as UINT, _
                 #macro PAINTCAPTION( r, wszCap )
                     scope
                         dim as RECT rcCap = (r)
-                        b.SetBackColor( ghOutput.BackColorHot )
+                        b.SetBackColor( theme.output.texthot.backcolor )
                         b.PaintRect( @rcCap )
                         rcCap.left += pWindow->ScaleX(8)
                         b.SetFont( ghFont(GUIFONT_9) )
-                        b.SetForeColor( ghOutput.ForeColor )
+                        b.SetForeColor( theme.output.text.forecolor )
                         b.PaintText( wszCap, @rcCap, DT_LEFT or DT_END_ELLIPSIS )
                     end scope
                 #endmacro

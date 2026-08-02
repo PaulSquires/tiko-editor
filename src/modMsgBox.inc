@@ -43,7 +43,7 @@ end function
 ' four startup boxes can ever see this.
 ' ========================================================================================
 private function MsgBox_ThemeIsUsable() as boolean
-    if ghPanel.BackColor <> ghPanel.ForeColor then return true
+    if theme.panel.text.backcolor <> theme.panel.text.forecolor then return true
     return false
 end function
 
@@ -152,15 +152,15 @@ function TikoMsgBox( byval hParent      as HWND, _
     dim as PSBUTTON_COLORS bc
 
     if MsgBox_ThemeIsUsable() then
-        mc.BorderColor      = ghEditor.Divider
-        mc.CaptionBackColor = ghPanel.BackColor
-        mc.CaptionForeColor = ghPanel.ForeColorHot
-        mc.CloseBackColor   = ghPanel.BackColor
-        mc.CloseForeColor   = ghPanel.ForeColor
-        mc.BackColor        = ghPanel.BackColor
-        mc.ForeColor        = ghPanel.ForeColor
-        mc.FooterBackColor  = ghPanel.BackColor
-        mc.DividerColor     = ghEditor.Divider
+        mc.BorderColor      = theme.ui.divider
+        mc.CaptionBackColor = theme.panel.text.backcolor
+        mc.CaptionForeColor = theme.panel.texthot.forecolor
+        mc.CloseBackColor   = theme.panel.text.backcolor
+        mc.CloseForeColor   = theme.panel.text.forecolor
+        mc.BackColor        = theme.panel.text.backcolor
+        mc.ForeColor        = theme.panel.text.forecolor
+        mc.FooterBackColor  = theme.panel.text.backcolor
+        mc.DividerColor     = theme.ui.divider
         OptionsTheme_FillButton( @bc )
     else
         ' Startup, before any theme exists. GetSysColor rather than a hardcoded dark set, so

@@ -1,0 +1,35 @@
+general.description: Slate Dark
+general.version: 1.0.0
+general.appearance: dark
+
+# Slate Dark -- palette after One Dark by Atom / GitHub (MIT)
+# Re-implemented for tiko from published colour values; no files from the
+# original project are included or derived.
+#
+# A ROLES-ONLY THEME. Every widget key inherits from the palette below, so a
+# key added to tiko later is themed here for free instead of coming up in
+# some other palette's colours. To depart from the palette, name the key
+# itself -- an explicit value always beats its role.
+
+role.background: 40,44,52
+role.backgroundalt: 33,37,43
+role.backgroundraised: 33,37,43
+role.foreground: 171,178,191
+role.foregrounddim: 92,99,112
+role.border: 62,68,81
+role.accent: 62,68,81
+role.accentfore: 97,175,239
+role.hot: 47,52,63
+role.selection: 62,68,81
+role.error: 224,108,117
+role.warning: 229,192,123
+role.success: 152,195,121
+role.keyword: 198,120,221
+role.apikeyword: 86,182,194
+role.userkeyword: 229,192,123
+role.comment: 106,115,131
+role.string: 152,195,121
+role.number: 209,154,102
+role.operator: 86,182,194
+role.preprocessor: 198,120,221
+

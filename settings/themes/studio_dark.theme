@@ -1,0 +1,35 @@
+general.description: Studio Dark
+general.version: 1.0.0
+general.appearance: dark
+
+# Studio Dark -- palette after VS Code Dark+ by Microsoft (MIT)
+# Re-implemented for tiko from published colour values; no files from the
+# original project are included or derived.
+#
+# A ROLES-ONLY THEME. Every widget key inherits from the palette below, so a
+# key added to tiko later is themed here for free instead of coming up in
+# some other palette's colours. To depart from the palette, name the key
+# itself -- an explicit value always beats its role.
+
+role.background: 30,30,30
+role.backgroundalt: 37,37,38
+role.backgroundraised: 37,37,38
+role.foreground: 212,212,212
+role.foregrounddim: 133,133,133
+role.border: 62,62,66
+role.accent: 4,73,109
+role.accentfore: 0,122,204
+role.hot: 42,45,46
+role.selection: 38,79,120
+role.error: 244,71,71
+role.warning: 204,167,0
+role.success: 137,209,133
+role.keyword: 86,156,214
+role.apikeyword: 78,201,176
+role.userkeyword: 220,220,170
+role.comment: 106,153,85
+role.string: 206,145,120
+role.number: 181,206,168
+role.operator: 212,212,212
+role.preprocessor: 155,110,157
+
