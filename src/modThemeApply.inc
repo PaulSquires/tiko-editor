@@ -1363,6 +1363,52 @@ sub Theme_RunSelfTest()
                                   " from role.backgroundalt" & sT )
                     end scope
 
+                    ' A POPUP MUST BE DISTINGUISHABLE FROM THE PAGE -- BY FILL *OR* BY
+                    ' BORDER. Menus, dropdowns and tooltips have to read as floating over
+                    ' the window rather than as holes in it.
+                    '
+                    ' The first version of this check required a different FILL, and it was
+                    ' wrong in the same way assertion 18 was: it encoded a dark-theme
+                    ' assumption. It failed studio_light, contrast_light AND default_light
+                    ' -- the last of which predates all of this work. A white popup on a
+                    ' white page is not a defect, it is what VS Code Light+ ships; the
+                    ' separation is carried by the border and the drop shadow. So the
+                    ' requirement is that SOMETHING separates them, not that the fill does.
+                    scope
+                        dim as long lumRz  = LUM( theme.role.clr(THROLE_BACKGROUNDRAISED) )
+                        dim as long dFill  = abs( lumRz - LUM( theme.role.clr(THROLE_BACKGROUND) ) )
+                        dim as long dEdge  = abs( lumRz - LUM( theme.role.clr(THROLE_BORDER) ) )
+                        dim as long dBest  = iif( dFill > dEdge, dFill, dEdge )
+                        THASSERT( dBest >= 5, _
+                                  "popups are indistinguishable from the page (fill " & dFill & _
+                                  ", border " & dEdge & ")" & sT )
+                    end scope
+
+                    ' THE EDITOR/PANEL BOUNDARY MUST BE READABLE. Either the divider shows
+                    ' against a surface, or the two surfaces differ from each other enough
+                    ' that the boundary reads as a tonal step with no line needed.
+                    '
+                    ' Also softened from a first version that demanded the border be visible
+                    ' against BOTH surfaces. That failed both sepia themes, where Solarized
+                    ' uses base02 for the panel and for subtle rules alike -- the line
+                    ' vanishes into the panel, but the panel and the editor are themselves
+                    ' 10 apart, so the edge is perfectly legible. Requiring the line
+                    ' specifically was requiring one implementation of an outcome.
+                    scope
+                        dim as long lumBd = LUM( theme.role.clr(THROLE_BORDER) )
+                        dim as long lumBg = LUM( theme.role.clr(THROLE_BACKGROUND) )
+                        dim as long lumAl = LUM( theme.role.clr(THROLE_BACKGROUNDALT) )
+                        dim as long d1 = abs( lumBd - lumBg )
+                        dim as long d2 = abs( lumBd - lumAl )
+                        dim as long d3 = abs( lumBg - lumAl )
+                        dim as long dMax = d1
+                        if d2 > dMax then dMax = d2
+                        if d3 > dMax then dMax = d3
+                        THASSERT( dMax >= 5, _
+                                  "the editor/panel boundary is invisible (border-vs-bg " & d1 & _
+                                  ", border-vs-alt " & d2 & ", bg-vs-alt " & d3 & ")" & sT )
+                    end scope
+
                     ' Selected text stays readable against its own highlight.
                     dim as long dSel = abs( LUM( theme.editor.selection.forecolor ) - _
                                             LUM( theme.editor.selection.backcolor ) )
