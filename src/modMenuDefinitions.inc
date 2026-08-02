@@ -83,6 +83,12 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
             return wszText
         case IDM_USERTOOLSLIST: return L(11,"(Empty)")
         case IDM_SETTINGS: return L(228,"Settings")
+        case IDM_FORMATSUBMENU:   return L(633,"Format")
+        case IDM_FORMATDOCUMENT:  wszText = L(634,"Format Document")
+        case IDM_FORMATSELECTION: wszText = L(635,"Format Selection")
+        case IDM_FORMATALLDOCS:   wszText = L(636,"Format All Open Documents")
+        case IDM_FORMATPROJECT:   wszText = L(637,"Format Project") & "..."
+        case IDM_FORMATOPTIONS:   wszText = L(638,"Format Options") & "..."
         case IDM_OPTIONSDIALOG: wszText = L(61,"Options") & "..."
         case IDM_THEMES: wszText = L(329,"Themes") & "..."
         case IDM_BUILDCONFIG: wszText = L(219,"Build Configurations") & "..."
@@ -255,12 +261,12 @@ function buildTopMenuDefinitions() as long
     ' always reopens with no menu verb at all. The separator stays: it divides the
     ' file-level commands from the tools/settings block below.
     setTopMenuItem( IDC_MENUBAR_FILE, 0, 0, false, true )
-    setTopMenuItem( IDC_MENUBAR_FILE, IDM_USERTOOLS, IDM_USERTOOLSLIST, false, false )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_SETTINGS, IDM_OPTIONSDIALOG, false, false )
     setTopMenuItem( IDM_SETTINGS, IDM_OPTIONSDIALOG, 0, false, false )
     setTopMenuItem( IDM_SETTINGS, IDM_THEMES, 0, false, false )
     setTopMenuItem( IDM_SETTINGS, IDM_BUILDCONFIG, 0, false, false )
     setTopMenuItem( IDM_SETTINGS, IDM_KEYBOARDSHORTCUTS, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_FILE, IDM_USERTOOLS, IDM_USERTOOLSLIST, false, false )
     setTopMenuItem( IDC_MENUBAR_FILE, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_EXIT, 0, false, false )
     
@@ -281,7 +287,18 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_EDIT, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_EDIT, IDM_SELECTLINE, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_EDIT, IDM_SELECTALL, 0, false, false )
-    
+    setTopMenuItem( IDC_MENUBAR_EDIT, 0, 0, false, true )
+    ' Code formatter, as a submenu -- four commands is enough to be worth grouping, and it
+    ' keeps the Edit menu from growing a fourth screenful.
+    setTopMenuItem( IDC_MENUBAR_EDIT, IDM_FORMATSUBMENU, IDM_FORMATDOCUMENT, false, false )
+    setTopMenuItem( IDM_FORMATSUBMENU, IDM_FORMATDOCUMENT, 0, false, false )
+    setTopMenuItem( IDM_FORMATSUBMENU, IDM_FORMATSELECTION, 0, false, false )
+    setTopMenuItem( IDM_FORMATSUBMENU, 0, 0, false, true )
+    setTopMenuItem( IDM_FORMATSUBMENU, IDM_FORMATALLDOCS, 0, false, false )
+    setTopMenuItem( IDM_FORMATSUBMENU, IDM_FORMATPROJECT, 0, false, false )
+    setTopMenuItem( IDM_FORMATSUBMENU, 0, 0, false, true )
+    setTopMenuItem( IDM_FORMATSUBMENU, IDM_FORMATOPTIONS, 0, false, false )
+
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_SEARCHSYMBOL, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_SEARCH, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_FIND, 0, false, false )

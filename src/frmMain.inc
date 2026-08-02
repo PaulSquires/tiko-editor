@@ -1750,6 +1750,27 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Unused Symbols: the model only (comparator + filter). Pure, so it needs no scan and
     ' no window -- which is also everything it cannot reach; see the suite's header.
     UnusedSymbols_RunSelfTest()
+    ' Env-gated (TIKO_FORMAT_SELFTEST=1). The formatter ENGINE, which is pure text in / text
+    ' out, so it runs happily here with no document open. That purity is also the whole of
+    ' what it cannot reach: stub the Format Document command to a no-op and every assertion
+    ' in it still passes. See the suite's own header.
+    Format_RunSelfTest()
+    ' The bridge half: the localized ids, which the pure engine suite cannot see at all.
+    Format_RunApplySelfTest()
+    ' The dialog's headless half: its localized ids and the rule table's invariants. The
+    ' layout half needs real windows and runs from frmFormatOptions_Show.
+    frmFormatOptions_RunSelfTest( false )
+    ' Two unattended hooks, both env-gated and both existing because this dialog is
+    ' otherwise reachable only by a human picking File > Settings > Format Options.
+    '
+    ' AUTOOPEN opens it here so the LAYOUT half -- which measures real windows at the real
+    ' DPI -- can run at all. AUTOEXIT then quits, and that one is not a convenience: tiko is
+    ' a console-subsystem exe whose output is BLOCK-BUFFERED when redirected, so a run that
+    ' is killed rather than exited loses every line the suites printed, including their own
+    ' pass/fail report. (frmAbout's TIKO_ABOUT_AUTOCLOSE exists for exactly this.)
+    if environ("TIKO_FORMATOPTIONS_AUTOOPEN") = "1" then
+        frmFormatOptions_Show( HWND_FRMMAIN )
+    end if
     ' Set the small and large icon for the main window (must be set after main window is created)
     pWindow->BigIcon   = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 32, 32, LR_SHARED)
     pWindow->SmallIcon = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 16, 16, LR_SHARED)
@@ -1896,6 +1917,11 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' rest of that function does.
     if gConfig.OutputFloating then frmOutputFloat_Undock()
     frmOutputFloat_RunSelfTest()
+    ' LAST, after every other suite, so an unattended run reports all of them. tiko is a
+    ' console-subsystem exe whose output is BLOCK-BUFFERED when redirected, so a run that is
+    ' killed rather than exited loses every line printed above -- including the pass/fail
+    ' reports that ARE the result. (frmAbout's TIKO_ABOUT_AUTOCLOSE exists for this too.)
+    if environ("TIKO_FORMAT_AUTOEXIT") = "1" then end 0
     frmEditorHScroll_Show( HWND_FRMMAIN )
     frmEditorVScroll_Show( HWND_FRMMAIN )
 

@@ -561,8 +561,17 @@ function Scintilla_OnNotify( _
                         if SciExec( hEdit, SCI_GETEOLMODE, 0, 0 ) <> SC_EOL_LF then exit function
                     end if
                     pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
+                    ' FORMAT ON ENTER, ahead of AttemptAutoInsert and deliberately not
+                    ' merged into it. It reformats only the line the caret just LEFT;
+                    ' AttemptAutoInsert then does its existing job on the NEW line -- the
+                    ' indent plus the matching End If / Next -- entirely unchanged. The
+                    ' order matters: auto-insert reads the previous line's leading
+                    ' whitespace to compute the new line's indent, so it must see the
+                    ' formatted version or the two disagree by one level.
+                    ' Returns immediately unless gConfig.Format.FormatOnEnter is set.
+                    Format_OnEnterPressed( pDoc )
                     AttemptAutoInsert()
-                    
+
                 case chr(32)  ' Space key pressed (Insert AutoComplete constructs if applicable)
                     pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
                     if ShowAutocompleteList() then exit function

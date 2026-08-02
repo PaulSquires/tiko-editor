@@ -133,7 +133,8 @@ function frmMain_OnCommand( _
             IDM_KEYBOARDSHORTCUTS, IDM_USERTOOLSDIALOG, IDM_OPTIONSDIALOG, IDM_BUILDCONFIG, _
             IDM_FIND, IDM_FINDINPROJECT, IDM_SEARCHSYMBOL, _
             IDM_PROJECTOPEN, IDM_PROJECTSAVEAS, _
-            IDM_PROJECTOPTIONS, IDM_COMMANDLINE, IDM_DEBUG_STARTDEBUGGING, IDM_ABOUT
+            IDM_PROJECTOPTIONS, IDM_COMMANDLINE, IDM_DEBUG_STARTDEBUGGING, IDM_ABOUT, _
+            IDM_FORMATOPTIONS, IDM_FORMATPROJECT, IDM_FORMATALLDOCS
             killAllPopupMenus()
     end select
     
@@ -229,6 +230,7 @@ function frmMain_OnCommand( _
         case IDM_KEYBOARDSHORTCUTS:  frmKeyboard_Show( hwnd )
         case IDM_USERTOOLSDIALOG:    frmUserTools_Show( hwnd ) 
         case IDM_OPTIONSDIALOG:      frmOptions_Show( hwnd )
+        case IDM_FORMATOPTIONS:      frmFormatOptions_Show( hwnd )
         case IDM_BUILDCONFIG:        frmBuildConfig_Show( hwnd ) 
         case IDM_MRUCLEAR:           ClearMRUlist( id )
 
@@ -270,6 +272,12 @@ function frmMain_OnCommand( _
             IDM_SELECTLINE,     IDM_REDO,           IDM_UNDO, _
             WM_UNDO
             OnCommand_EditCommon( id, pDoc )
+
+        ''  CODE FORMATTER
+        case IDM_FORMATDOCUMENT:     OnCommand_FormatDocument()
+        case IDM_FORMATSELECTION:    OnCommand_FormatSelection()
+        case IDM_FORMATALLDOCS:      OnCommand_FormatAllOpenDocuments()
+        case IDM_FORMATPROJECT:      OnCommand_FormatProject()
 
 
         ''  SEARCH MENU  

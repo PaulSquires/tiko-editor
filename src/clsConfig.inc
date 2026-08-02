@@ -292,6 +292,24 @@ function clsConfig.SaveConfigFile() as long
     pStream.WriteLine "UnicodeEncoding="       & this.UnicodeEncoding
     pStream.WriteLine "NewFileEncoding="       & this.NewFileEncoding
     pStream.WriteLine "KeywordCase="           & this.KeywordCase
+    ' The code formatter's rule set. Every field is `as long` for the reason the AskExit
+    ' note above gives -- these are written verbatim, and a real boolean would emit
+    ' "true"/"false" where the reader expects 0/1.
+    pStream.WriteLine "FmtReindent="           & this.Format.Reindent
+    pStream.WriteLine "FmtIndentCase="         & this.Format.IndentCase
+    pStream.WriteLine "FmtContinuationIndent=" & this.Format.ContinuationIndent
+    pStream.WriteLine "FmtCaseKeywords="       & this.Format.CaseKeywords
+    pStream.WriteLine "FmtCaseDirectives="     & this.Format.CaseDirectives
+    pStream.WriteLine "FmtCaseTypes="          & this.Format.CaseTypes
+    pStream.WriteLine "FmtSpaceOperators="     & this.Format.SpaceAroundOperators
+    pStream.WriteLine "FmtSpaceAfterComma="    & this.Format.SpaceAfterComma
+    pStream.WriteLine "FmtParenSpacing="       & this.Format.ParenSpacing
+    pStream.WriteLine "FmtSpacesBeforeComment=" & this.Format.SpacesBeforeComment
+    pStream.WriteLine "FmtTrimTrailing="       & this.Format.TrimTrailing
+    pStream.WriteLine "FmtMaxBlankLines="      & this.Format.MaxBlankLines
+    pStream.WriteLine "FmtBlankLinesAroundProc=" & this.Format.BlankLinesAroundProc
+    pStream.WriteLine "FmtFormatOnEnter="      & this.Format.FormatOnEnter
+    pStream.WriteLine "FmtFormatOnPaste="      & this.Format.FormatOnPaste
     pStream.WriteLine "LocalizationFile="      & this.LocalizationFile
     pStream.WriteLine "TabSize="               & this.TabSize
     pStream.WriteLine "PositionMiddle="        & this.PositionMiddle
@@ -738,6 +756,24 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
             case "Theme":                    this.ThemeShortFilename    = wData
             case "ExplorerPositionRight":    this.ExplorerPositionRight = nData
             case "KeywordCase":              this.KeywordCase           = nData
+            ' The code formatter's rule set. A key missing from an older settings.ini
+            ' simply leaves the compiled-in default from FORMAT_RULES in place, which is
+            ' why every one of these defaults to a conservative value.
+            case "FmtReindent":              this.Format.Reindent             = nData
+            case "FmtIndentCase":            this.Format.IndentCase           = nData
+            case "FmtContinuationIndent":    this.Format.ContinuationIndent   = nData
+            case "FmtCaseKeywords":          this.Format.CaseKeywords         = nData
+            case "FmtCaseDirectives":        this.Format.CaseDirectives       = nData
+            case "FmtCaseTypes":             this.Format.CaseTypes            = nData
+            case "FmtSpaceOperators":        this.Format.SpaceAroundOperators = nData
+            case "FmtSpaceAfterComma":       this.Format.SpaceAfterComma      = nData
+            case "FmtParenSpacing":          this.Format.ParenSpacing         = nData
+            case "FmtSpacesBeforeComment":   this.Format.SpacesBeforeComment  = nData
+            case "FmtTrimTrailing":          this.Format.TrimTrailing         = nData
+            case "FmtMaxBlankLines":         this.Format.MaxBlankLines        = nData
+            case "FmtBlankLinesAroundProc":  this.Format.BlankLinesAroundProc = nData
+            case "FmtFormatOnEnter":         this.Format.FormatOnEnter        = nData
+            case "FmtFormatOnPaste":         this.Format.FormatOnPaste        = nData
             case "FBWINCompiler32":          this.FBWINCompiler32       = ProcessFromCurdriveApp(wData)
             case "FBWINCompiler64":          this.FBWINCompiler64       = ProcessFromCurdriveApp(wData)
             case "CompilerBuild":            this.CompilerBuild         = wData

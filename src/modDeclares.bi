@@ -73,6 +73,15 @@ enum
     IDM_LINEENDINGS, IDM_EOLTOCRLF, IDM_EOLTOLF
     IDM_SELECTLINE, IDM_TABSTOSPACES
     IDM_SPACES, IDM_SELECTALL
+    ' CODE FORMATTER. Appended at the END of the Edit block rather than slotted in beside
+    ' the other transforms: these ids are persisted in keybindings.ini, so inserting one in
+    ' the middle renumbers every id after it and silently reassigns the user's shortcuts.
+    IDM_FORMATSUBMENU
+    IDM_FORMATDOCUMENT, IDM_FORMATSELECTION, IDM_FORMATALLDOCS, IDM_FORMATPROJECT
+    ' The Format Options dialog. It lives on File > Settings beside IDM_OPTIONSDIALOG, but
+    ' its id is declared HERE for the same persisted-id reason as above -- appending is
+    ' safe, inserting it next to IDM_OPTIONSDIALOG would shift every id after that one.
+    IDM_FORMATOPTIONS
     IDM_EDIT_END
     
     '' SEARCH

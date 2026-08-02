@@ -81,8 +81,27 @@ function OnCommand_EditPaste( _
              PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)), _
              PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE))
             SendMessage( GetFocus, WM_PASTE, 0, 0 )
-        case else     
+        case else
+            ' FORMAT ON PASTE. The length and caret position are sampled BEFORE the paste so
+            ' the inserted range can be identified afterwards -- Scintilla reports no such
+            ' range itself. The paste and the format are bracketed as ONE undo action, so
+            ' Ctrl+Z removes the pasted text rather than leaving it behind reformatted.
+            ' All of this collapses to two cheap SciExec calls when the option is off.
+            dim as long bFmtPaste = false
+            dim as long nPasteLenBefore = 0, nPastePosBefore = 0
+            if (gConfig.Format.FormatOnPaste <> 0) andalso (GetFocus() = hEdit) then
+                bFmtPaste = true
+                nPasteLenBefore = SciExec( hEdit, SCI_GETLENGTH, 0, 0 )
+                nPastePosBefore = SciExec( hEdit, SCI_GETSELECTIONSTART, 0, 0 )
+                SciExec( hEdit, SCI_BEGINUNDOACTION, 0, 0 )
+            end if
+
             SciExec( GetFocus(), Iif(GetFocus()=hEdit, SCI_PASTE, WM_PASTE), 0, 0)
+
+            if bFmtPaste then
+                Format_OnPaste( pDoc, nPastePosBefore, nPasteLenBefore )
+                SciExec( hEdit, SCI_ENDUNDOACTION, 0, 0 )
+            end if
             ' Codetip may be active when pasting after a ".' or ">" so test to update code complete list.
             if gConfig.CodeTips then ShowAutocompleteList()
             frmMain_PositionWindows()    ' ensure custom scrollbars display

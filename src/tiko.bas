@@ -79,8 +79,18 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 ' DestroyScintillaWindows, well ahead of the modFindProject.inc that implements it. This
 ' header names clsDocument ptr and SCNOTIFICATION but no Ps* type.
 #include once "modFindProject.bi"
+' Formatter Scintilla-bridge declarations. Named clsDocument ptr, no Ps* type. Up here
+' because frmMainOnNotify/frmMainEdit/frmMainOnCommand all call into it well before the
+' implementation can be compiled -- that needs PsMessageBox and lands near the end.
+#include once "modFormatApply.bi"
+#include once "frmFormatOptions.bi"
 #include once "PsBufferPaint.bi"
 #include once "clsTopTabCtl.bi"
+' Ahead of clsConfig.bi because clsConfig embeds a FORMAT_RULES. Declarations only, and it
+' names no Ps* type, no clsDocument and nothing from Scintilla -- the formatter engine is
+' pure text in, text out, which is what lets the Options preview, the self-test and the
+' offline Format Project path all drive the exact same code the editor does.
+#include once "modFormat.bi"
 #include once "clsConfig.bi"
 #include once "modProjectFolders.bi"
 #include once "clsApp.bi"
@@ -126,6 +136,10 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "clsConfig.inc"
 #include once "PsBufferPaint.inc"
 #include once "modRoutines.inc"
+' The formatter engine. After clsConfig.inc (it reads gConfig's keyword list to build its
+' casing vocabulary) and after modRoutines.inc for AfxGetExePathName. It deliberately calls
+' NOTHING else in tiko -- no document, no window, no Scintilla.
+#include once "modFormat.inc"
 ' After modRoutines.inc: NavHistory_Goto drives OpenSelectedDocument.
 #include once "modNavHistory.inc"
 #include once "clsDocument.inc"
@@ -258,6 +272,9 @@ dim shared gTTabCtl as clsTopTabCtl
 ' through frmBuildConfig.bi, which clsConfig.inc pulls in independently far earlier, so
 ' every caller still resolves -- FreeBASIC needs only the DECLARATION in scope.
 #include once "frmBuildConfig.inc"
+' Format Options. HERE, after modOptionsRows.inc, because it dresses its controls through
+' the shared OptionsTheme_Fill* helpers -- the only thing it borrows from that module.
+#include once "frmFormatOptions.inc"
 #include once "modMsgPump.inc"
 #include once "frmMainFile.inc"
 #include once "frmMainEdit.inc"
@@ -283,6 +300,9 @@ dim shared gTTabCtl as clsTopTabCtl
 ' Needs PsMessageBox and OptionsTheme_FillButton (modOptionsRows.inc), so it cannot go any
 ' earlier than this.
 #include once "modMsgBox.inc"
+' Formatter Scintilla bridge. HERE, at the end, because its command handlers call
+' TikoMsgBox (modMsgBox.inc, immediately above) which needs PsMessageBox.
+#include once "modFormatApply.inc"
 #include once "frmMain.inc"
 
 

@@ -166,6 +166,16 @@ type clsConfig
         FontExtraSpace            as DWSTRING = "2"
         ThemeShortFilename        as DWSTRING = "default_dark.theme"
         KeywordCase               as long = 3  ' "Original Case"
+        ' The CODE FORMATTER's rule set (modFormat.bi). Deliberately a nested struct rather
+        ' than 16 loose fields: the Format Options dialog stages a whole copy of it for
+        ' Cancel, and one assignment is both cheaper and impossible to get half-right.
+        '
+        ' NOTE this is entirely SEPARATE from KeywordCase above, which is display-only --
+        ' it maps to SCI_STYLESETCASE and changes how keywords are RENDERED without
+        ' touching a byte of the buffer. Format.CaseKeywords rewrites the file. Two
+        ' settings that can legitimately disagree, and merging them would mean a display
+        ' preference silently deciding what gets written to disk.
+        Format                    as FORMAT_RULES
         StartupLeft               as long = 0
         StartupTop                as long = 0
         StartupRight              as long = 0

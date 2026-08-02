@@ -157,6 +157,12 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
     frmKeyBoard_AddKeyBinding( "Edit", IDM_TOMIXEDCASE, "IDM_TOMIXEDCASE", "Change selection to mixedcase", "Ctrl+Alt+X" )
     frmKeyBoard_AddKeyBinding( "Edit", IDM_NEWLINEBELOWCURRENT, "IDM_NEWLINEBELOWCURRENT", "Insert new line below current line", "Ctrl+Enter" )
     frmKeyBoard_AddKeyBinding( "Edit", IDM_SETFOCUSEDITOR, "IDM_SETFOCUSEDITOR", "Set keyboard focus to the editing window", "Ctrl+Tilde" ) ' VK_OEM_3
+    ' Code formatter. Shift+Alt+F is VS Code's Format Document and the closest thing to a
+    ' cross-editor convention; the other three ship unbound rather than inventing one.
+    frmKeyBoard_AddKeyBinding( "Edit", IDM_FORMATDOCUMENT, "IDM_FORMATDOCUMENT", "Format document", "Shift+Alt+F" )
+    frmKeyBoard_AddKeyBinding( "Edit", IDM_FORMATSELECTION, "IDM_FORMATSELECTION", "Format selection", "" )
+    frmKeyBoard_AddKeyBinding( "Edit", IDM_FORMATALLDOCS, "IDM_FORMATALLDOCS", "Format all open documents", "" )
+    frmKeyBoard_AddKeyBinding( "Edit", IDM_FORMATPROJECT, "IDM_FORMATPROJECT", "Format project", "" )
 
     '' SEARCH MENU
     frmKeyBoard_AddKeyBinding( "Search", IDM_SEARCHSYMBOL, "IDM_SEARCHSYMBOL", "Search Symbol", "Ctrl+P" )
