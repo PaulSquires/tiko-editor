@@ -1339,6 +1339,30 @@ sub Theme_RunSelfTest()
                     TOKCHK( preprocessor, "preprocessor" )
                     #undef TOKCHK
 
+                    ' A HOVERED ROW MUST LOOK HOVERED. role.hot fills the row under the
+                    ' cursor and role.backgroundalt fills the ones that are not; if they
+                    ' are the same colour the panels, menus, tabs and status bar all lose
+                    ' their hover feedback at once, silently, in that theme only.
+                    '
+                    ' Both sepia themes shipped exactly that: Solarized names one colour
+                    ' (base02 / base2) for both jobs and I took it for both roles. Caught by
+                    ' a human hovering a row, which is precisely the kind of defect this
+                    ' battery exists to find first -- and it did not, because every earlier
+                    ' check compares INK against a background and this one compares two
+                    ' backgrounds against each other.
+                    '
+                    ' Floor of 5, calibrated against the shipped themes rather than chosen:
+                    ' the tightest legitimate one is studio_dark at 7, which is VS Code's
+                    ' own list-hover step (#2A2D2E on #252526). This catches invisible, not
+                    ' merely subtle.
+                    scope
+                        dim as long dHot = abs( LUM( theme.role.clr(THROLE_HOT) ) - _
+                                                LUM( theme.role.clr(THROLE_BACKGROUNDALT) ) )
+                        THASSERT( dHot >= 5, _
+                                  "row hover is invisible -- role.hot is " & dHot & _
+                                  " from role.backgroundalt" & sT )
+                    end scope
+
                     ' Selected text stays readable against its own highlight.
                     dim as long dSel = abs( LUM( theme.editor.selection.forecolor ) - _
                                             LUM( theme.editor.selection.backcolor ) )

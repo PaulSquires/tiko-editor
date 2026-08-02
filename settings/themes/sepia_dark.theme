@@ -19,7 +19,7 @@ role.foregrounddim: 88,110,117
 role.border: 7,54,66
 role.accent: 88,110,117
 role.accentfore: 38,139,210
-role.hot: 7,54,66
+role.hot: 19,71,86
 role.selection: 7,54,66
 role.error: 220,50,47
 role.warning: 181,137,0
