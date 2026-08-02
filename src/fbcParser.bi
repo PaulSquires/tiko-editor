@@ -156,6 +156,7 @@ const FBCP_OK        = 0
 const FBCP_E_BADARGS = -1               '' NULL file/result ptr
 const FBCP_E_VERSION = -2               '' options.version <> FBCP_VERSION
 const FBCP_E_BUSY    = -3               '' a scan is already running
+const FBCP_E_UNAUTHORIZED = -4          '' the host process is not tiko.exe; the DLL refuses to scan
 
 ''
 '' fbcparser_scan: parse wszFile (and everything it #includes) and return the

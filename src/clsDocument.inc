@@ -1165,11 +1165,19 @@ function clsDocument.ToggleBreakPoint( byval nLine as long ) as long
         dim as wstring * 520 wszFile = this.DiskFilename
         dim as long si = debugparser_source_index( @wszFile )
         if si >= 0 then
-            if bit(fMark, MARKER_BREAKPOINT) then
-                debugparser_remove_breakpoint( si, nLine + 1 )
-            else
-                dim as long lnExec = debugparser_next_executable_line( si, nLine + 1 )
-                if lnExec > 0 then debugparser_add_breakpoint( si, lnExec )
+            ' BOTH ARMS SNAP THROUGH next_executable_line, and they have to. The engine
+            ' stores a breakpoint at the line that actually generated code, so the MARKER
+            ' (on the line the user clicked) and the engine's line differ whenever the
+            ' clicked line has none -- a blank line or a comment above a statement. Removing
+            ' with the raw clicked line then looks up a breakpoint that was never stored,
+            ' the engine answers DBGP_ERR_NOTFOUND, and F9 silently fails to clear it.
+            dim as long lnExec = debugparser_next_executable_line( si, nLine + 1 )
+            if lnExec > 0 then
+                if bit(fMark, MARKER_BREAKPOINT) then
+                    debugparser_remove_breakpoint( si, lnExec )
+                else
+                    debugparser_add_breakpoint( si, lnExec )
+                end if
             end if
         end if
     end if
