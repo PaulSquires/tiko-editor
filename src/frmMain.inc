@@ -448,7 +448,7 @@ sub frmMain_SplitterPaint( byval p as PSSPLITTER_PAINTINFO ptr )
     dim as PsBufferPaint ptr b = p->b
 
     ' The sliver either side of the band is the form's own background.
-    b->SetBackColor( ghMain.BackColor )
+    b->SetBackColor( theme.main.panel )
     b->PaintClientRect()
 
     dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
@@ -541,7 +541,7 @@ function frmMain_OnPaint( byval hwnd as HWND ) as LRESULT
 
     b.BeginDoubleBuffer(hwnd)
 
-    b.SetBackColor( ghMain.BackColor )
+    b.SetBackColor( theme.main.panel )
 
     b.PaintClientRect()
 

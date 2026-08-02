@@ -603,33 +603,45 @@ sub Theme_RunSelfTest()
 
     Theme_BuildBindTable()
 
-    ' -- 1. Every bind row resolves to a real key, and to the channels it claims. ---------
-    '    Catches a typo'd bind key or a key missing from a shipped theme. Would have caught
-    '    the original panel.panel, whose lookup was overwritten before it was ever read.
-    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
-        dim as string sKey = gThemeBind(i).keyValue
+    ' Groups 1-3 READ THE GENERATED KEY TABLE, not the hand-written bind table, and that
+    ' changed when the first gh* group was migrated. These three assert properties of THE
+    ' THEME -- every key resolves, every key repaints something, every subsystem has a
+    ' feeder. The bind table is no longer the theme: it is a bridge that shrinks by one
+    ' group per commit until Phase 3 deletes it. Left pointed at it, group 3 would have gone
+    ' red the moment main.panel migrated, because "main" is the only namespace feeding
+    ' THSUB_FRAME -- an assertion failing to report that the app got WORSE, when nothing had.
+    Theme_BuildKeyTable()
+
+    ' -- 1. Every key resolves to a real entry, and to the channels it claims. ------------
+    '    Catches a typo'd key or a key missing from a shipped theme. Would have caught the
+    '    original panel.panel, whose lookup was overwritten before it was ever read.
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+        dim as string sKey = gThemeKeys(i).keyValue
         dim as long n = Theme_FindEntry( sKey )
-        THASSERT( n >= 0, "bind key not present in theme: " & sKey )
+        THASSERT( n >= 0, "key not present in theme: " & sKey )
         if n < 0 then continue for
-        if gThemeBind(i).pFore <> 0 then
+        if gThemeKeys(i).ofsFore >= 0 then
             THASSERT( gTheme(n).hasFore, "bound foreground missing: " & sKey )
         end if
-        if gThemeBind(i).pBack <> 0 then
+        if gThemeKeys(i).ofsBack >= 0 then
             THASSERT( gTheme(n).hasBack, "bound background missing: " & sKey )
         end if
     next
 
-    ' -- 2. No bind row has an empty subsystem mask. -------------------------------------
+    ' -- 2. No colour key has an empty subsystem mask. -----------------------------------
     '    This IS the "change it and nothing updates" failure mode, in its only testable form.
-    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
-        THASSERT( gThemeBind(i).nSubsys <> THSUB_NONE, _
-                  "zero subsystem mask: " & gThemeBind(i).keyValue )
+    '    general.* is exempt and always was: description and version are text, repaint
+    '    nothing, and carry THSUB_NONE deliberately.
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+        if left( gThemeKeys(i).keyValue, 8 ) = "general." then continue for
+        THASSERT( gThemeKeys(i).nSubsys <> THSUB_NONE, _
+                  "zero subsystem mask: " & gThemeKeys(i).keyValue )
     next
 
     ' -- 3. Every subsystem bit is fed by at least one key. ------------------------------
     dim as ulong nCovered
-    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
-        nCovered or= gThemeBind(i).nSubsys
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+        nCovered or= gThemeKeys(i).nSubsys
     next
     THASSERT( nCovered = THSUB_ALL, "subsystem coverage &h" & hex(nCovered) & " <> THSUB_ALL" )
 
@@ -953,12 +965,16 @@ sub Theme_RunSelfTest()
         dim as long nKeys = Theme_KeyCount()
         THASSERT( nKeys > 0, "the generated key table is EMPTY (#include once on modThemeKeys.bi?)" )
 
-        ' 22b. It covers every bind row, plus exactly the two DWSTRING payload keys the
-        '      legacy table could not carry.
-        dim as long nBind = ubound(gThemeBind) - lbound(gThemeBind) + 1
-        THASSERT( nKeys = nBind + 2, _
-                  "key table has " & nKeys & " rows, expected " & (nBind + 2) & _
-                  " (= " & nBind & " bind rows + general.description + general.version)" )
+        ' 22b. The key table holds the COMPLETE key set -- 61 colour keys plus the two
+        '      DWSTRING payloads the legacy bind table could not carry.
+        '
+        '      A CONSTANT, deliberately, and not "nBind + 2": the bind table shrinks by one
+        '      group per migration commit while this number must not move at all. Written as
+        '      a tripwire -- adding a key in Phase 4 is supposed to fail here until the
+        '      number is updated on purpose.
+        const THEME_TOTAL_KEYS = 63
+        THASSERT( nKeys = THEME_TOTAL_KEYS, _
+                  "key table has " & nKeys & " rows, expected " & THEME_TOTAL_KEYS )
         THASSERT( Theme_KeyIndex( "general.description" ) >= 0, _
                   "general.description is not in the key table" )
         THASSERT( Theme_KeyIndex( "general.version" ) >= 0, _

@@ -143,10 +143,9 @@ type GENERAL_HANDLES_TYPE
 end type
 dim shared ghGeneral as GENERAL_HANDLES_TYPE
 
-type MAIN_HANDLES_TYPE
-    BackColor as COLORREF
-end type
-dim shared ghMain as MAIN_HANDLES_TYPE
+' ghMain is GONE -- migrated to theme.main.panel. Deleting the group is what turns fbc into
+' the checklist: a read site left behind becomes "error 41: Variable not declared" rather
+' than quietly carrying on against a struct nothing fills any more.
 
 type EDITOR_HANDLES_TYPE
     ForeColorCaret as COLORREF
@@ -728,7 +727,8 @@ private sub Theme_BuildBindTable()
     ThemeBind_Add( "compile.iconsuccess", @ghGeneral.iconsuccess )
     ThemeBind_Add( "compile.iconfail",    @ghGeneral.iconfail )
     ThemeBind_Add( "output.valuechanged",  @ghGeneral.debugchanged )
-    ThemeBind_Add( "main.panel",          0, @ghMain.BackColor )
+    ' main.panel has no row here any more: its consumers read theme.main.panel, which the
+    ' generated key table fills. The bind table is a shrinking bridge from here on.
 
     ' ---- editor: syntax styles (fore + back + bold/italic/underline) ------------------
     ' editor.text also dresses the autocomplete popup, the Options textboxes and the help
@@ -1841,7 +1841,7 @@ sub Theme_DumpGlobals( byval wszOutPath as DWSTRING )
     DUMPCLR( "general.iconfail",           ghGeneral.iconfail )
     DUMPCLR( "general.iconsuccess",        ghGeneral.iconsuccess )
 
-    DUMPCLR( "main.BackColor",             ghMain.BackColor )
+    DUMPCLR( "main.panel",                 theme.main.panel )
 
     DUMPCLR( "editor.ForeColorCaret",         ghEditor.ForeColorCaret )
     DUMPCLR( "editor.BackColorCurrentLine",   ghEditor.BackColorCurrentLine )
