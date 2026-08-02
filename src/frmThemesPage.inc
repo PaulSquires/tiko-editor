@@ -392,7 +392,7 @@ private sub frmThemes_SyncEditControls()
             PsButton_SetDefault( ghThemeFore, true )
             PsButton_Refresh( ghThemeFore )
         end if
-        AfxRedrawWindow( ghThemeKeys )
+        PsListTree_Refresh( ghThemeKeys )
         if HWND_FRMTHEMES_PAGE then AfxRedrawWindow( HWND_FRMTHEMES_PAGE )
         exit sub
     end if
@@ -531,7 +531,14 @@ private sub frmThemes_SyncEditControls()
 
     ' Swatches live in the list rows AND beside the Fore/Back buttons (painted on the page), so a
     ' selection change has to repaint both.
-    AfxRedrawWindow( ghThemeKeys )
+    '
+    ' PsListTree_Refresh, NOT AfxRedrawWindow. The control is a CONTAINER over a child surface
+    ' and the rows are painted onto that surface, so invalidating the container never reaches
+    ' them -- the documented trap in CLAUDE.md, and all four call sites here had it. It showed
+    ' up on "use palette color", because that is the action where a row VISIBLY changes (the
+    ' grey role name appears); the others mostly changed a swatch the page redraw also owned.
+    ' Refresh also preserves the scroll position, which a plain invalidate would not.
+    PsListTree_Refresh( ghThemeKeys )
     if HWND_FRMTHEMES_PAGE then AfxRedrawWindow( HWND_FRMTHEMES_PAGE )
 
 end sub
@@ -1095,7 +1102,7 @@ private sub frmThemes_RGBChanged( byval hTextBox as HWND )
         Theme_RequestApply( nMaskR )
         ' The row swatch and any "default" marker just moved -- but NOT the fields, which the
         ' user is typing into.
-        AfxRedrawWindow( ghThemeKeys )
+        PsListTree_Refresh( ghThemeKeys )
         if HWND_FRMTHEMES_PAGE then AfxRedrawWindow( HWND_FRMTHEMES_PAGE )
         exit sub
     end if
@@ -1127,7 +1134,7 @@ private sub frmThemes_RGBChanged( byval hTextBox as HWND )
 
     ' Keep the hidden colour model (the popup's seed) and the row swatches in step -- NOT the fields.
     if ghThemePicker then PsColorPicker_SetColor( ghThemePicker, clr, 255, true )
-    AfxRedrawWindow( ghThemeKeys )
+    PsListTree_Refresh( ghThemeKeys )
     if HWND_FRMTHEMES_PAGE then AfxRedrawWindow( HWND_FRMTHEMES_PAGE )
 end sub
 
