@@ -111,6 +111,10 @@ dim shared SciMsg as Scintilla_DirectFunction
 #Define SCI_OPTIONAL_START                              3000
 #Define SCI_LEXER_START                                 4000
 #define SCI_SETILEXER                                   4033
+' Whitespace-separated canonical keyword spellings for SC_CASE_PROPER. Matching is
+' case-insensitive and only the rendered case changes, so document positions and the
+' bytes on disk are untouched. Local addition to Scintilla, not upstream.
+#define SCI_SETCASEKEYWORDS                             4040
 #Define SCI_ADDTEXT                                     2001
 #Define SCI_ADDSTYLEDTEXT                               2002
 #Define SCI_INSERTTEXT                                  2003
@@ -277,6 +281,10 @@ dim shared SciMsg as Scintilla_DirectFunction
 #Define SC_CASE_UPPER                                   1
 #Define SC_CASE_LOWER                                   2
 #Define SC_CASE_CAMEL                                   3
+' Renders a keyword using the canonical spelling supplied by SCI_SETCASEKEYWORDS
+' ("MessageBox", not SC_CASE_CAMEL's "Messagebox"). A word absent from that list
+' falls back to SC_CASE_CAMEL. Local addition to Scintilla, not upstream.
+#Define SC_CASE_PROPER                                  4
 #Define SCI_STYLEGETFORE                                2481
 #Define SCI_STYLEGETBACK                                2482
 #Define SCI_STYLEGETBOLD                                2483

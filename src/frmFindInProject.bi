@@ -111,6 +111,9 @@ declare sub      frmFindInProject_ApplyTheme()
 ' command, so the caller's single-document path is skipped. This is the ONE interception
 ' point: Enter in the find box already funnels to IDM_FINDNEXT.
 declare function frmFindInProject_BarAction( byval id as long ) as boolean
+' The document Ctrl+S saves while this tab is up: the focused excerpt's, or the one that
+' last held the caret. See the function header -- it is NOT the same test as ActiveEdit.
+declare function frmFindInProject_SaveTarget( byref pDocOut as clsDocument ptr ) as boolean
 ' (frmFindInProject_RestoreFocus is declared in frmTopTabs.bi -- clsTopTabCtl.inc calls it
 '  and is compiled long before this file.)
 ' There is deliberately NO frmFindInProject_Close. Closing this tab goes through the ordinary
@@ -127,3 +130,8 @@ declare function frmFindInProject_BarAction( byval id as long ) as boolean
 declare sub      frmFindInProject_RunSelfTest()
 ' Env-gated: TIKO_FINDPROJ_REPRO=1. Drives the reported no-hits-then-corrected-phrase crash.
 declare sub      frmFindInProject_RunRepro()
+
+' Env-gated harness: TIKO_FINDPROJ_REPLACETEST=1. Drives Replace / Replace All, the Match
+' Case and Whole Word toggles, and Ctrl+S against a TEMPORARY FILE OF ITS OWN, so the
+' expected counts are known constants rather than whatever happens to be open.
+declare sub      frmFindInProject_RunReplaceTest()

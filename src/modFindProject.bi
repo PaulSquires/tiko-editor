@@ -155,6 +155,11 @@ dim shared gFipUnbindDoc as FIP_UnbindDocSub
 ' watcher drives with no user action at all).
 declare sub      FindProject_OnDocumentClosing( byval pDocGone as clsDocument ptr )
 
+' A result file has just been written to disk: re-take its line snapshots, so the dirty
+' stripe means "changed since the last save" rather than "changed since the search ran".
+' Called from clsDocument.SaveFile, the one place every save route converges on.
+declare sub      FindProject_OnDocumentSaved( byval pDocSaved as clsDocument ptr )
+
 
 ' Run a search over every document. Returns the number of matches found.
 declare function FindProject_Search( byval wszPhrase as DWSTRING, _

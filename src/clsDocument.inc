@@ -459,9 +459,15 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
     this.IsNewFlag = false
     
     ' Set the current state of the document to unmodified
-    this.UserModified = false   
+    this.UserModified = false
     SciMsg( pSci, SCI_SETSAVEPOINT, 0, 0)
-    
+
+    ' Re-baseline any Find in Project results on this file, so their dirty stripes clear.
+    ' HERE rather than in OnCommand_FileSave: this is the single point every save route
+    ' converges on -- Save, Save As, Save All, the close prompt, and FindProject's own
+    ' SaveAllDirty, which never goes through the command handler at all.
+    FindProject_OnDocumentSaved( @this )
+
     function = false
 end function
 
@@ -1446,7 +1452,13 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
     select case gConfig.KeywordCase
         case 0:  nFontcase = SC_CASE_LOWER
         case 1:  nFontcase = SC_CASE_UPPER
-        case 2:  nFontcase = SC_CASE_CAMEL
+        ' "Proper Case" is the keyword's canonical spelling, taken from the keyword
+        ' files via SCI_SETCASEKEYWORDS below. SC_CASE_CAMEL would only capitalize the
+        ' first letter, giving "Messagebox" and "Byval". The combo index is unchanged,
+        ' so an existing settings.ini keeps meaning what it meant -- only the label and
+        ' the rendering improved. NOT related to ChangeSelectionCase's "mixed case",
+        ' which rewrites the buffer.
+        case 2:  nFontcase = SC_CASE_PROPER
         case 3:  nFontcase = SC_CASE_MIXED    ' original case
     end select
 
@@ -1654,7 +1666,19 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
             if len(gConfig.ExtraKeywords) then
                 SciMsg( pSciView, SCI_SETKEYWORDS, 2, cast(LPARAM, strptr(gConfig.ExtraKeywords)) )
             end if
-            
+
+            ' Canonical spellings for SC_CASE_PROPER ("Proper Case" in Options).
+            ' The SAME text the lexer gets: the keyword files carry proper casing and
+            ' the lexer lower-cases both the token and its word list before matching,
+            ' so one set of files serves highlighting and rendering alike. A keyword
+            ' whose file spelling is still lower case simply falls back to camel case.
+            ' Sent unconditionally so that clearing the option, or emptying a keyword
+            ' file, actually removes the old spellings rather than leaving them behind.
+            dim as string strCaseKeywords = _
+                gConfig.FBKeywords & " " & gConfig.WinApiKeywords & " " & gConfig.ExtraKeywords
+            SciMsg( pSciView, SCI_SETCASEKEYWORDS, 0, cast(LPARAM, strptr(strCaseKeywords)) )
+
+
             if gConfig.SyntaxHighlighting then
             ' Set the Default text colors
             SciMsg( pSciView, SCI_STYLESETFORE, SCE_B_DEFAULT, ghEditor.ForeColorText)
@@ -1830,9 +1854,9 @@ function clsDocument.ApplyProperties() as long
     select case gConfig.KeywordCase
         case 0:  nFontcase = SC_CASE_LOWER
         case 1:  nFontcase = SC_CASE_UPPER
-        case 2:  nFontcase = SC_CASE_CAMEL   
+        case 2:  nFontcase = SC_CASE_PROPER
         case 3:  nFontcase = SC_CASE_MIXED    ' original case
-    end select            
+    end select
     
     
     ' Must apply all settings/styles to each Scintilla split window to ensure that

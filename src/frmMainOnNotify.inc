@@ -561,8 +561,17 @@ function Scintilla_OnNotify( _
                         if SciExec( hEdit, SCI_GETEOLMODE, 0, 0 ) <> SC_EOL_LF then exit function
                     end if
                     pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
+                    ' FORMAT ON ENTER, ahead of AttemptAutoInsert and deliberately not
+                    ' merged into it. It reformats only the line the caret just LEFT;
+                    ' AttemptAutoInsert then does its existing job on the NEW line -- the
+                    ' indent plus the matching End If / Next -- entirely unchanged. The
+                    ' order matters: auto-insert reads the previous line's leading
+                    ' whitespace to compute the new line's indent, so it must see the
+                    ' formatted version or the two disagree by one level.
+                    ' Returns immediately unless gConfig.Format.FormatOnEnter is set.
+                    Format_OnEnterPressed( pDoc )
                     AttemptAutoInsert()
-                    
+
                 case chr(32)  ' Space key pressed (Insert AutoComplete constructs if applicable)
                     pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
                     if ShowAutocompleteList() then exit function
@@ -613,9 +622,30 @@ function frmMain_OnNotify( _
         dim as SCNOTIFICATION ptr pNotify = cast( SCNOTIFICATION ptr, pNMHDR )
         dim as clsDocument ptr pDocMod = gApp.GetDocumentPtrByWindow( pNMHDR->hwndFrom )
         if pDocMod then
-            FindProject_OnDocumentModified( pDocMod, pNotify->modificationType, _
-                                            pNotify->position, pNotify->length, _
-                                            pNotify->linesAdded )
+            if environ("TIKO_FINDPROJ_TRACE") = "1" then
+                dim as string sT = "SCNMOD: from=" & hex(cast(integer, pNMHDR->hwndFrom)) & _
+                    " w0=" & hex(cast(integer, pDocMod->hWindow(0))) & _
+                    " w1=" & hex(cast(integer, pDocMod->hWindow(1))) & _
+                    " type=" & hex(pNotify->modificationType) & _
+                    " pos=" & str(pNotify->position) & " len=" & str(pNotify->length)
+                print sT
+            end if
+            ' ONE VIEW ONLY, AND THIS IS NOT AN OPTIMISATION -- IT IS THE CORRECTNESS FIX.
+            '
+            ' Every document owns TWO Scintilla windows sharing ONE Scintilla document
+            ' (clsDocument.CreateScintillaWindows always creates the split view, visible or
+            ' not), both children of frmMain and both carrying SC_MOD_INSERTTEXT /
+            ' SC_MOD_DELETETEXT in their event mask. So a single edit arrives here TWICE,
+            ' identical in type, position and length -- and remapping applies it twice, which
+            ' drags every later offset in the file out of place and kills matches that the
+            ' edit never touched. Measured: one Replace in the Find in Project tab killed TWO
+            ' matches, and the failure is silent -- the buffer is edited correctly, only the
+            ' model is wrong, so it shows up as results quietly going missing.
+            if pNMHDR->hwndFrom = pDocMod->hWindow(0) then
+                FindProject_OnDocumentModified( pDocMod, pNotify->modificationType, _
+                                                pNotify->position, pNotify->length, _
+                                                pNotify->linesAdded )
+            end if
         end if
     end if
 

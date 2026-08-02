@@ -140,9 +140,27 @@ function frmMain_EditTopMenuStates() as long
     if SendMessage( hEdit, SCI_CANUNDO, 0, 0) then EnableTopMenuItem( IDM_UNDO, true )
     if SendMessage( hEdit, SCI_CANREDO, 0, 0) then EnableTopMenuItem( IDM_REDO, true )
     if SendMessage( hEdit, SCI_CANPASTE, 0, 0) then EnableTopMenuItem( IDM_PASTE, true )
-    for idMenu as long = IDM_DELETELINE to IDM_selectALL
+    for idMenu as long = IDM_DELETELINE to IDM_SELECTALL
         EnableTopMenuItem( idMenu, true )
     next 
+    
+    EnableTopMenuItem( IDM_FORMATOPTIONS, true )
+
+    ' The code formatter. Enabled explicitly rather than by widening the loop above: these
+    ' ids are APPENDED after IDM_SELECTALL (they had to be, since keybindings.ini persists
+    ' them and inserting one mid-enum silently reassigns every shortcut after it), so the
+    ' IDM_DELETELINE..IDM_SELECTALL range does not reach them.
+    '
+    ' Gated on the document being formattable, which is what greys the whole submenu out on
+    ' a .rc file or a read-only view -- the commands would refuse anyway, and a menu item
+    ' that does nothing when clicked reads as a bug.
+    if Format_IsFormattableDocument( pDoc ) then
+        EnableTopMenuItem( IDM_FORMATSUBMENU, true )
+        EnableTopMenuItem( IDM_FORMATDOCUMENT, true )
+        EnableTopMenuItem( IDM_FORMATSELECTION, true )
+        EnableTopMenuItem( IDM_FORMATALLDOCS, true )
+        EnableTopMenuItem( IDM_FORMATPROJECT, true )
+    end if
 
     function = 0
 end function
@@ -324,20 +342,7 @@ function frmMain_DebugTopMenuStates() as long
     EnableTopMenuItem( IDM_DEBUG_TOGGLEBREAKPOINT, fEnabled )
     EnableTopMenuItem( IDM_DEBUG_DELETEALLBREAKPOINTS, fEnabled )
 
-'    dim pDoc as clsDocument ptr 
-'    if gApp.IsProjectActive then
-'        pDoc = gApp.GetMainDocumentPtr()
-'    else
-'        pDoc = gApp.GetMainDocumentPtr()
-'        if pDoc = null then
-'            pDoc = gTTabCtl.GetActiveDocumentPtr()
-'        end if    
-'    end if
-'    ' Enable the "Unused Symbols Report" menu item only if a valid pDoc
-'    if (pDoc <> null) then
-        EnableTopMenuItem( IDM_DEBUG_UNUSEDSYMBOLS, true )
-'    end if
-
+    EnableTopMenuItem( IDM_DEBUG_UNUSEDSYMBOLS, true )
 
     function = 0
 end function
