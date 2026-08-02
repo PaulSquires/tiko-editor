@@ -552,7 +552,7 @@ private sub frmAbout_ApplyTheme( byval hwnd as HWND )
     sc.ForeColorHot      = ghPanel.ForeColorHot
     sc.BackColorSelect   = ghPanel.BackColor
     sc.ForeColorSelect   = ghEditor.ForeColorText
-    sc.ForeColorDisabled = ghPopup.ForeColorDisabled
+    sc.ForeColorDisabled = theme.topmenu.textdisabled.forecolor
     sc.IndicatorColor    = ghUI.AccentColor
     PsSelectBar_SetColors( HWND_FRMABOUT_TABS, @sc )
 

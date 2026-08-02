@@ -250,24 +250,10 @@ type PANEL_HANDLES_TYPE
 end type
 dim shared ghPanel as PANEL_HANDLES_TYPE
 
-type MENUBAR_HANDLES_TYPE
-    BackColor as COLORREF
-    BackColorHot as COLORREF
-    ForeColor as COLORREF
-    ForeColorHot as COLORREF
-end type
-dim shared ghMenuBar as MENUBAR_HANDLES_TYPE
-
-type POPUPMENU_HANDLES_TYPE
-    PanelColor as COLORREF
-    BackColor as COLORREF
-    BackColorHot as COLORREF
-    BackColorDisabled as COLORREF
-    ForeColor as COLORREF
-    ForeColorHot as COLORREF
-    ForeColorDisabled as COLORREF
-end type
-dim shared ghPopup as POPUPMENU_HANDLES_TYPE
+' ghMenuBar is GONE -- migrated to theme.menubar.text.* / .texthot.*
+' ghPopup is GONE -- migrated to theme.topmenu.*. Note the namespace: these keys have
+' always fed the POPUP menus rather than the horizontal bar, which the flat gh* naming
+' actively disguised (ghPopup fed by topmenu.*, ghMenuBar by menubar.*).
 
 type TOPTABS_HANDLES_TYPE
     BackColor as COLORREF
@@ -280,13 +266,7 @@ type TOPTABS_HANDLES_TYPE
 end type
 dim shared ghTopTabs as TOPTABS_HANDLES_TYPE
 
-type STATUSBAR_HANDLES_TYPE
-    BackColor as COLORREF
-    BackColorHot as COLORREF
-    ForeColor as COLORREF
-    ForeColorHot as COLORREF
-end type
-dim shared ghStatusBar as STATUSBAR_HANDLES_TYPE
+' ghStatusBar is GONE -- migrated to theme.statusbar.text.* / .texthot.*
 
 type OUTPUT_HANDLES_TYPE
     BackColor as COLORREF
@@ -807,14 +787,8 @@ private sub Theme_BuildBindTable()
     ThemeBind_Add( "panel.textsearchhot",  @ghPanel.ForeColorTextSearchHot )
 
     ' ---- topmenu (feeds ghPopup, not ghMenuBar) ----------------------------------------
-    ThemeBind_Add( "topmenu.panel",        0, @ghPopup.PanelColor )
-    ThemeBind_Add( "topmenu.text",         @ghPopup.ForeColor, @ghPopup.BackColor )
-    ThemeBind_Add( "topmenu.texthot",      @ghPopup.ForeColorHot, @ghPopup.BackColorHot )
-    ThemeBind_Add( "topmenu.textdisabled", @ghPopup.ForeColorDisabled, @ghPopup.BackColorDisabled )
 
     ' ---- menubar -----------------------------------------------------------------------
-    ThemeBind_Add( "menubar.text",         @ghMenuBar.ForeColor, @ghMenuBar.BackColor )
-    ThemeBind_Add( "menubar.texthot",      @ghMenuBar.ForeColorHot, @ghMenuBar.BackColorHot )
 
     ' ---- toptabs -----------------------------------------------------------------------
     ThemeBind_Add( "toptabs.text",         @ghTopTabs.ForeColor, @ghTopTabs.BackColor )
@@ -824,8 +798,6 @@ private sub Theme_BuildBindTable()
     ThemeBind_Add( "toptabs.iconselected", 0, @ghTopTabs.IconSelectedBackColor )
 
     ' ---- statusbar ---------------------------------------------------------------------
-    ThemeBind_Add( "statusbar.text",       @ghStatusBar.ForeColor, @ghStatusBar.BackColor )
-    ThemeBind_Add( "statusbar.texthot",    @ghStatusBar.ForeColorHot, @ghStatusBar.BackColorHot )
 
     ' ---- output ------------------------------------------------------------------------
     ThemeBind_Add( "output.text",             @ghOutput.ForeColor, @ghOutput.BackColor )
@@ -1930,18 +1902,18 @@ sub Theme_DumpGlobals( byval wszOutPath as DWSTRING )
     DUMPCLR( "panel.ForeColorTextSearch",     ghPanel.ForeColorTextSearch )
     DUMPCLR( "panel.ForeColorTextSearchHot",  ghPanel.ForeColorTextSearchHot )
 
-    DUMPCLR( "menubar.BackColor",             ghMenuBar.BackColor )
-    DUMPCLR( "menubar.BackColorHot",          ghMenuBar.BackColorHot )
-    DUMPCLR( "menubar.ForeColor",             ghMenuBar.ForeColor )
-    DUMPCLR( "menubar.ForeColorHot",          ghMenuBar.ForeColorHot )
+    DUMPCLR( "menubar.BackColor",             theme.menubar.text.backcolor )
+    DUMPCLR( "menubar.BackColorHot",          theme.menubar.texthot.backcolor )
+    DUMPCLR( "menubar.ForeColor",             theme.menubar.text.forecolor )
+    DUMPCLR( "menubar.ForeColorHot",          theme.menubar.texthot.forecolor )
 
-    DUMPCLR( "popup.PanelColor",              ghPopup.PanelColor )
-    DUMPCLR( "popup.BackColor",               ghPopup.BackColor )
-    DUMPCLR( "popup.BackColorHot",            ghPopup.BackColorHot )
-    DUMPCLR( "popup.BackColorDisabled",       ghPopup.BackColorDisabled )
-    DUMPCLR( "popup.ForeColor",               ghPopup.ForeColor )
-    DUMPCLR( "popup.ForeColorHot",            ghPopup.ForeColorHot )
-    DUMPCLR( "popup.ForeColorDisabled",       ghPopup.ForeColorDisabled )
+    DUMPCLR( "popup.PanelColor",              theme.topmenu.panel )
+    DUMPCLR( "popup.BackColor",               theme.topmenu.text.backcolor )
+    DUMPCLR( "popup.BackColorHot",            theme.topmenu.texthot.backcolor )
+    DUMPCLR( "popup.BackColorDisabled",       theme.topmenu.textdisabled.backcolor )
+    DUMPCLR( "popup.ForeColor",               theme.topmenu.text.forecolor )
+    DUMPCLR( "popup.ForeColorHot",            theme.topmenu.texthot.forecolor )
+    DUMPCLR( "popup.ForeColorDisabled",       theme.topmenu.textdisabled.forecolor )
 
     DUMPCLR( "toptabs.BackColor",             ghTopTabs.BackColor )
     DUMPCLR( "toptabs.BackColorHot",          ghTopTabs.BackColorHot )
@@ -1951,10 +1923,10 @@ sub Theme_DumpGlobals( byval wszOutPath as DWSTRING )
     DUMPCLR( "toptabs.CloseBackColorHot",     ghTopTabs.CloseBackColorHot )
     DUMPCLR( "toptabs.IconSelectedBackColor", ghTopTabs.IconSelectedBackColor )
 
-    DUMPCLR( "statusbar.BackColor",           ghStatusBar.BackColor )
-    DUMPCLR( "statusbar.BackColorHot",        ghStatusBar.BackColorHot )
-    DUMPCLR( "statusbar.ForeColor",           ghStatusBar.ForeColor )
-    DUMPCLR( "statusbar.ForeColorHot",        ghStatusBar.ForeColorHot )
+    DUMPCLR( "statusbar.BackColor",           theme.statusbar.text.backcolor )
+    DUMPCLR( "statusbar.BackColorHot",        theme.statusbar.texthot.backcolor )
+    DUMPCLR( "statusbar.ForeColor",           theme.statusbar.text.forecolor )
+    DUMPCLR( "statusbar.ForeColorHot",        theme.statusbar.texthot.forecolor )
 
     DUMPCLR( "output.BackColor",              ghOutput.BackColor )
     DUMPCLR( "output.BackColorHot",           ghOutput.BackColorHot )

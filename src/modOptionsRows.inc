@@ -556,12 +556,12 @@ sub OptionsTheme_FillCombo( byval cc as PSCOMBOBOX_COLORS ptr, byval pc as PSPOP
         cc->FocusRingColor       = ghPanel.ForeColorHot
     end if
     if pc <> 0 then
-        pc->BackColor         = ghPopup.BackColor
-        pc->ForeColor         = ghPopup.ForeColor
-        pc->BackColorHot      = ghPopup.BackColorHot
-        pc->ForeColorHot      = ghPopup.ForeColorHot
-        pc->ForeColorDisabled = ghPopup.ForeColorDisabled
-        pc->BorderColor       = ghPopup.PanelColor
+        pc->BackColor         = theme.topmenu.text.backcolor
+        pc->ForeColor         = theme.topmenu.text.forecolor
+        pc->BackColorHot      = theme.topmenu.texthot.backcolor
+        pc->ForeColorHot      = theme.topmenu.texthot.forecolor
+        pc->ForeColorDisabled = theme.topmenu.textdisabled.forecolor
+        pc->BorderColor       = theme.topmenu.panel
         pc->SeparatorColor    = ghEditor.Divider
     end if
 end sub

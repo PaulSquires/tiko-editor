@@ -248,9 +248,9 @@ end sub
 ' PRIVATE, and it has to be: modThemeApply.bi is included at tiko.bas:86, well before
 ' PsTooltip.bi at 148, so a declaration naming PSTOOLTIP_COLORS cannot live in the header.
 private sub Theme_FillTooltipColors( byref tipc as PSTOOLTIP_COLORS )
-    tipc.BackColor   = ghPopup.BackColor
+    tipc.BackColor   = theme.topmenu.text.backcolor
     tipc.BorderColor = ghEditor.Divider
-    tipc.ForeColor   = ghPopup.ForeColor
+    tipc.ForeColor   = theme.topmenu.text.forecolor
     tipc.TitleColor  = ghPanel.ForeColorHot
     tipc.GlyphColor  = ghUI.AccentColor
 end sub
@@ -415,7 +415,7 @@ sub Theme_ApplySubsystems( byval nMask as ulong )
 
     if (nMask and THSUB_STATUSBAR) <> 0 then
         if IsWindow(HWND_FRMMAIN_STATUSBAR) then _
-            PsStatusBar_SetBackColor( HWND_FRMMAIN_STATUSBAR, ghStatusBar.BackColor )
+            PsStatusBar_SetBackColor( HWND_FRMMAIN_STATUSBAR, theme.statusbar.text.backcolor )
     end if
 
     if (nMask and THSUB_TOPTABS) <> 0 then

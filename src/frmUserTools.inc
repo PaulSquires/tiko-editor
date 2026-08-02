@@ -450,7 +450,7 @@ private sub frmUserTools_ListPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
                 ' rendering fault, and dim it so it does not read as the tool's actual name.
                 if len(wszCell) = 0 then
                     wszCell = L(353,"(untitled)")
-                    if p->isSelected = false then clr = ghPopup.ForeColorDisabled
+                    if p->isSelected = false then clr = theme.topmenu.textdisabled.forecolor
                 end if
 
             case 1
@@ -964,7 +964,7 @@ private function frmUserTools_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as COLORREF clrShortcut = ghEditor.ForeColorText
     if len(wszShortcut) = 0 then
         wszShortcut = L(354,"(none)")
-        clrShortcut = ghPopup.ForeColorDisabled
+        clrShortcut = theme.topmenu.textdisabled.forecolor
     elseif frmUserTools_ShortcutIsDead( gUTCurrent ) then
         ' Said in WORDS as well as in colour. The list marks the cell red; a reader who cannot
         ' see that gets nothing from it, and "this saves and never fires" is not something to
@@ -1758,9 +1758,9 @@ function frmUserTools_Show( byval hWndParent as HWND ) as LRESULT
     PsTooltip_SetFonts( ghUTParamsTip, ghFont(GUIFONT_11), ghFont(GUIFONTBOLD_11), ghFont(SYMBOLFONT_10) )
     scope
         dim as PSTOOLTIP_COLORS tipc
-        tipc.BackColor   = ghPopup.BackColor
+        tipc.BackColor   = theme.topmenu.text.backcolor
         tipc.BorderColor = ghEditor.Divider
-        tipc.ForeColor   = ghPopup.ForeColor
+        tipc.ForeColor   = theme.topmenu.text.forecolor
         tipc.TitleColor  = ghPanel.ForeColorHot
         tipc.GlyphColor  = ghUI.AccentColor
         PsTooltip_SetColors( ghUTParamsTip, @tipc )

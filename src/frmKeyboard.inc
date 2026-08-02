@@ -381,7 +381,7 @@ private sub frmKeyboard_ListPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
                 ' goes dim -- state readable both as text and as weight, so it survives a
                 ' greyscale screenshot and a colour-blind reader alike.
                 wszCell = frmKeyboard_DefaultKeysDisplay( idx )
-                if gKeysWork(idx).bDefaultDisabled then clr = ghPopup.ForeColorDisabled
+                if gKeysWork(idx).bDefaultDisabled then clr = theme.topmenu.textdisabled.forecolor
                 ' A row whose clash comes from its DEFAULT has no user cell to mark, so the
                 ' marker goes here instead. Checked before the disabled dimming above would
                 ' otherwise win, because a disabled default cannot conflict with anything.

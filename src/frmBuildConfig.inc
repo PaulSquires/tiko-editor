@@ -646,7 +646,7 @@ private sub frmBuildConfig_ListPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
         rcText.left += AfxScaleX(6)
         dim as COLORREF clr = iif( bActive, ghPanel.ForeColorHot, ghPanel.ForeColor )
         ' The default marker is subdued: it is a state, not a heading.
-        if (i = 1) andalso (bActive = false) then clr = ghPopup.ForeColorDisabled
+        if (i = 1) andalso (bActive = false) then clr = theme.topmenu.textdisabled.forecolor
         p->b->SetForeColor( clr )
         p->b->PaintText( p->cells[i].wszText, @rcText, _
                          DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
@@ -664,7 +664,7 @@ private sub frmBuildConfig_ListPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO 
     dim as RECT rcText = p->rc
     rcText.left += AfxScaleX(6)
     p->b->SetFont( ghFont(GUIFONT_11) )
-    p->b->SetForeColor( ghPopup.ForeColorDisabled )
+    p->b->SetForeColor( theme.topmenu.textdisabled.forecolor )
     p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
 
     dim as RECT rcEdge = p->rc
@@ -726,7 +726,7 @@ private sub frmBuildConfig_SwitchPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
     dim as RECT rcGlyph = p->rc
     rcGlyph.right = rcGlyph.left + AfxScaleX(FRMBUILDCONFIG_SWGLYPH_W)
     p->b->SetFont( ghFont(SYMBOLFONT_10) )
-    p->b->SetForeColor( iif( bChecked, ghPanel.ForeColorHot, ghPopup.ForeColorDisabled ) )
+    p->b->SetForeColor( iif( bChecked, ghPanel.ForeColorHot, theme.topmenu.textdisabled.forecolor ) )
     p->b->PaintText( iif( bChecked, wszIconCheckBoxMarked, wszIconCheckBoxEmpty ), @rcGlyph, _
                      DT_CENTER or DT_VCENTER or DT_SINGLELINE )
 
@@ -1224,7 +1224,7 @@ private function frmBuildConfig_OnPaint( byval hwnd as HWND ) as LRESULT
         dim as DWSTRING wszOpts = gBuildsWork(gBCCurrent).wszOptions
         if len(trim(wszOpts)) = 0 then
             buffer.SetFont( ghFont(GUIFONT_11) )
-            buffer.SetForeColor( ghPopup.ForeColorDisabled )
+            buffer.SetForeColor( theme.topmenu.textdisabled.forecolor )
             buffer.PaintText( L(354,"(none)"), @rcTxt, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
         else
             buffer.SetFont( ghBCFontFixed )
@@ -1424,7 +1424,7 @@ private sub frmBuildConfig_ApplyTheme( byval hwnd as HWND )
     sc.BackColor        = ghPanel.BackColor
     sc.BackColorHot     = ghPanel.BackColor
     sc.BackColorSelect  = ghPanel.BackColor
-    sc.ForeColor        = ghPopup.ForeColorDisabled
+    sc.ForeColor        = theme.topmenu.textdisabled.forecolor
     sc.ForeColorHot     = ghPanel.ForeColor
     sc.ForeColorSelect  = ghPanel.ForeColorHot
     sc.IndicatorColor   = ghPanel.ForeColorHot

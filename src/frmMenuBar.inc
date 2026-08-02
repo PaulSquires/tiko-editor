@@ -97,12 +97,12 @@ end sub
 ' ========================================================================================
 private sub frmMenuBar_ApplyPopupTheme( byval hPopup as HWND, byval bForceCompact as boolean = false )
     dim c as PSPOPUPMENU_COLORS
-    c.BackColor         = ghPopup.BackColor
-    c.ForeColor         = ghPopup.ForeColor
-    c.BackColorHot      = ghPopup.BackColorHot
-    c.ForeColorHot      = ghPopup.ForeColorHot
-    c.ForeColorDisabled = ghPopup.ForeColorDisabled
-    c.BorderColor       = ghPopup.PanelColor
+    c.BackColor         = theme.topmenu.text.backcolor
+    c.ForeColor         = theme.topmenu.text.forecolor
+    c.BackColorHot      = theme.topmenu.texthot.backcolor
+    c.ForeColorHot      = theme.topmenu.texthot.forecolor
+    c.ForeColorDisabled = theme.topmenu.textdisabled.forecolor
+    c.BorderColor       = theme.topmenu.panel
     ' Separators use the editor's divider color, not the muted text color the control
     ' drew them in before it grew this field -- it is the same rule tiko draws between
     ' every other pane, so menus now match the splitters and the panel dividers.
@@ -176,10 +176,10 @@ end function
 sub frmMenuBar_SyncTheme()
     if HWND_FRMMAIN_MENUBAR = 0 then exit sub
     dim c as PSMENUBAR_COLORS
-    c.BackColor    = ghMenuBar.BackColor
-    c.ForeColor    = ghMenuBar.ForeColor
-    c.BackColorHot = ghMenuBar.BackColorHot
-    c.ForeColorHot = ghMenuBar.ForeColorHot
+    c.BackColor    = theme.menubar.text.backcolor
+    c.ForeColor    = theme.menubar.text.forecolor
+    c.BackColorHot = theme.menubar.texthot.backcolor
+    c.ForeColorHot = theme.menubar.texthot.forecolor
     PsMenuBar_SetColors( HWND_FRMMAIN_MENUBAR, @c )
     PsMenuBar_SetFont( HWND_FRMMAIN_MENUBAR, ghFont(GUIFONT_10) )
     for i as long = 0 to gMenuPopupCount - 1
@@ -379,9 +379,9 @@ function frmMenuBarUpdate_WndProc( _
             GetClientRect( hwnd, @rc )
             dim as boolean isHot = isMouseOverWindow( hwnd )
             if isHot then
-                b.SetColors( ghMenuBar.ForeColorHot, ghMenuBar.BackColorHot )
+                b.SetColors( theme.menubar.texthot.forecolor, theme.menubar.texthot.backcolor )
             else
-                b.SetColors( ghMenuBar.ForeColor, ghMenuBar.BackColor )
+                b.SetColors( theme.menubar.text.forecolor, theme.menubar.text.backcolor )
             end if
             b.PaintClientRect()
             b.SetFont( ghFont(GUIFONT_10) )

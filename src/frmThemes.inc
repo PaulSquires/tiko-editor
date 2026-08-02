@@ -563,9 +563,9 @@ end sub
 private sub frmThemes_ThemeDescTip()
     if ghThemesDescTip = 0 then exit sub
     dim as PSTOOLTIP_COLORS tipc
-    tipc.BackColor   = ghPopup.BackColor
+    tipc.BackColor   = theme.topmenu.text.backcolor
     tipc.BorderColor = ghEditor.Divider
-    tipc.ForeColor   = ghPopup.ForeColor
+    tipc.ForeColor   = theme.topmenu.text.forecolor
     tipc.TitleColor  = ghPanel.ForeColorHot
     tipc.GlyphColor  = ghUI.AccentColor
     PsTooltip_SetColors( ghThemesDescTip, @tipc )

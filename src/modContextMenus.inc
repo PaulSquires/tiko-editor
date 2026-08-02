@@ -32,7 +32,7 @@
 '
 ' COLORS
 '   All of them go through frmMenuBar_CreatePopup, so they are enrolled in
-'   gMenuPopupList and pick up ghPopup.* colors and the GUI/symbol fonts from
+'   gMenuPopupList and pick up theme.topmenu.* colors and the GUI/symbol fonts from
 '   frmMenuBar_ApplyPopupTheme -- identical to the topmenu dropdowns, and re-pushed
 '   automatically by frmMenuBar_SyncTheme on a theme change.
 '

@@ -22,14 +22,14 @@ sub frmStatusBar_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
     ' Panel state: hot > normal. (No selected state -- a statusbar has no selection.)
     ' The Ln/Col also has no selection
     ' Set default fore and back colors
-    dim as COLORREF backclr = ghStatusBar.BackColor
-    dim as COLORREF foreclr = ghStatusBar.ForeColor
+    dim as COLORREF backclr = theme.statusbar.text.backcolor
+    dim as COLORREF foreclr = theme.statusbar.text.forecolor
     
     if (p->itemID <> COMPILE_STATUS_PANEL) andalso _
          (p->itemID <> GOTO_PANEL) then
         if (p->isHot = true) then
-            backclr = ghStatusBar.BackColorHot
-            foreclr = ghStatusBar.ForeColorHot
+            backclr = theme.statusbar.texthot.backcolor
+            foreclr = theme.statusbar.texthot.forecolor
         end if    
     end if
     p->b->SetForeColor( foreclr )
@@ -58,11 +58,11 @@ sub frmStatusBar_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
             ' Calculate where the spinner or good/fail compile will display to the 
             ' left of the panel text.
             if p->wszCaption = "" then gApp.hIconPanel = 0
-            dim as COLORREF clr = ghStatusBar.BackColor
+            dim as COLORREF clr = theme.statusbar.text.backcolor
             if gApp.hIconPanel = ghIconGood then clr = theme.compile.iconsuccess
             if gApp.hIconPanel = ghIconBad then clr = theme.compile.iconfail
             p->b->SetForeColor( clr )
-            p->b->SetBackColor( ghStatusBar.BackColor )
+            p->b->SetBackColor( theme.statusbar.text.backcolor )
 
             dim as long txtWidth = getTextWidth( HWND_FRMMAIN_STATUSBAR, p->wszCaption, GUIFONT_9 ) 
             dim as RECT rcIcon = p->rc
@@ -73,9 +73,9 @@ sub frmStatusBar_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
             
             ' If a Spinner is active then that will take precedence over the good/bad compile icon.
             if (gApp.bShowSpinner = true) then
-                p->b->SetForeColor( ghStatusBar.ForeColor )
+                p->b->SetForeColor( theme.statusbar.text.forecolor )
                 wszText = spinner(gApp.SpinnerCurrentFrame)
-                p->b->SetBackColor( ghStatusBar.BackColor )
+                p->b->SetBackColor( theme.statusbar.text.backcolor )
                 ' Position the spinner a bit better
                 rcIcon.top -= AfxScaleY(4)
                 rcIcon.left -= AfxScaleY(2)
@@ -153,7 +153,7 @@ function frmStatusBar_Show( byval hwndParent as HWND ) as LRESULT
     PsStatusBar_SetMessageCallback( hCtrl, @frmStatusBar_MessageCallback )
     PsStatusBar_SetTooltipCallback( hCtrl, @frmStatusBar_TooltipCallback )
     PsStatusBar_SetTooltipMode( hCtrl, PSTIP_MODE_PS )
-    PsStatusBar_SetBackColor( hCtrl, ghStatusBar.BackColor )
+    PsStatusBar_SetBackColor( hCtrl, theme.statusbar.text.backcolor )
     PsStatusBar_SetFont( hCtrl, ghFont(GUIFONT_9) )
 
     ' The Ln/Col readout is INERT -- itemData 0 means "no command", which the message
