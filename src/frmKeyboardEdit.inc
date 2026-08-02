@@ -454,7 +454,7 @@ private function frmKeyboardEdit_CaptureProc( _
             dim as COLORREF penclr = ghEditor.Divider
             dim as long     penw   = 1
             if gEditFlashOn then
-                penclr = ghGeneral.iconfail : penw = 2
+                penclr = theme.compile.iconfail : penw = 2
             elseif gEditCaptureFocus then
                 penclr = ghUI.AccentColor   : penw = 2
             end if
@@ -681,7 +681,7 @@ private function frmKeyboardEdit_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as DWSTRING wszMsg = gEditWhy
     if len(wszMsg) = 0 then wszMsg = frmKeyboard_CheckForKeyConflict( gEditKeys, gEditIndex )
     if len(wszMsg) then
-        buffer.SetForeColor( ghGeneral.iconfail )
+        buffer.SetForeColor( theme.compile.iconfail )
         buffer.SetFont( ghFont(GUIFONT_11) )
         buffer.PaintText( wszMsg, @rcT, DT_LEFT or DT_END_ELLIPSIS )
     end if

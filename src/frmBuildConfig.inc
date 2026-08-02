@@ -628,7 +628,7 @@ end function
 ' The builds list: Description | (uncaptioned) Default marker
 '
 ' NO WARNING COLOURING. An earlier version painted a clashing or unresolvable shortcut cell
-' in ghGeneral.iconfail. There is now nothing to warn about: a shortcut that cannot fire is
+' in theme.compile.iconfail. There is now nothing to warn about: a shortcut that cannot fire is
 ' UNASSIGNED when the staging copy is seeded (see frmBuildConfig_SanitizeWork), and the assign
 ' dialog refuses to create a new one -- so a clash cannot survive long enough to be reported.
 ' ========================================================================================

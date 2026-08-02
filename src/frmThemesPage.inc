@@ -457,7 +457,7 @@ private function frmThemes_EnsureForked() as boolean
                                 TMB_ICON_QUESTION, TMB_OKCANCEL ) <> IDOK then return false
 
     dim as DWSTRING wszPath = AfxGetExePathName & "settings\themes\" & wszFork
-    dim as DWSTRING wszDesc = ghGeneral.description & " (custom)"
+    dim as DWSTRING wszDesc = theme.general.description & " (custom)"
 
     if Theme_WriteFile( wszPath, wszDesc ) then
         frmThemes_ThemedMsgBox( L(299, "The new theme file could not be written."), _
@@ -469,7 +469,7 @@ private function frmThemes_EnsureForked() as boolean
     ' it) and the staging copy (so OK persists it to gConfig).
     gThemeCurrentShortFilename = wszFork
     gThemesWorkFile = wszFork
-    ghGeneral.description = wszDesc
+    theme.general.description = wszDesc
 
     ' The Themes and Fonts page has a stale folder listing now.
     frmThemes_RefreshThemeList()
@@ -496,14 +496,14 @@ end sub
 ' otherwise a fork of an untouched built-in keeps the distinguishing suffix. Returns TRUE on
 ' success; clears the dirty flag and refreshes the shell's theme list.
 function frmThemes_SaveThemeFile() as boolean
-    dim as DWSTRING wszUserDesc = ghGeneral.description
+    dim as DWSTRING wszUserDesc = theme.general.description
     dim as boolean  bUserDesc   = gThemesDescEdited
 
     if frmThemes_EnsureForked() = false then return false   ' declined the fork -> do not save
-    if bUserDesc then ghGeneral.description = wszUserDesc
+    if bUserDesc then theme.general.description = wszUserDesc
 
     dim as DWSTRING wszPath = AfxGetExePathName & "settings\themes\" & gThemesWorkFile
-    if Theme_WriteFile( wszPath, ghGeneral.description ) then
+    if Theme_WriteFile( wszPath, theme.general.description ) then
         frmThemes_ThemedMsgBox( L(299,"The new theme file could not be written."), _
                                 L(329,"Themes"), TMB_ICON_ERROR, TMB_OK )
         return false

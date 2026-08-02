@@ -112,7 +112,7 @@ end enum
 ''  never loads at all, including at startup, so a missing entry fails loudly on first run
 ''  instead of silently refusing to update during a live edit.
 ''
-''  ghGeneral.description / .version are the two exceptions -- they carry DWSTRING payloads
+''  theme.general.description / .version are the two exceptions -- they carry DWSTRING payloads
 ''  rather than colours and are filled by hand in Theme_FillGlobals.
 ''
 type THEMEBIND_TYPE
@@ -129,19 +129,19 @@ type THEMEBIND_TYPE
 end type
 dim shared gThemeBind(any) as THEMEBIND_TYPE
 
-type GENERAL_HANDLES_TYPE
-    description as DWSTRING
-    version as DWSTRING
-    iconfail as COLORREF
-    iconsuccess as COLORREF
-    ' The debugger's "this value changed on the last step" colour. Its own key rather than a
-    ' reuse of iconsuccess: that one is 0,128,0 in both shipped themes, which is a signal
-    ' colour for a status glyph and too dark to read as small text on the Output background.
-    ' This wants to catch the eye without shouting -- it appears on several rows at once
-    ' while stepping a loop.
-    debugchanged as COLORREF
-end type
-dim shared ghGeneral as GENERAL_HANDLES_TYPE
+' ghGeneral is GONE. Its five fields moved to where their KEYS always said they belonged,
+' which the single struct made obvious and the old flat one hid:
+'     description  -> theme.general.description
+'     version      -> theme.general.version
+'     iconfail     -> theme.compile.iconfail
+'     iconsuccess  -> theme.compile.iconsuccess
+'     debugchanged -> theme.output.valuechanged
+'
+' That last one is the debugger's "this value changed on the last step" colour. It has its
+' own key rather than reusing iconsuccess: that one is 0,128,0 in both shipped themes, a
+' signal colour for a status glyph and too dark to read as small text on the Output
+' background. It wants to catch the eye without shouting -- it appears on several rows at
+' once while stepping a loop.
 
 ' ghMain is GONE -- migrated to theme.main.panel. Deleting the group is what turns fbc into
 ' the checklist: a read site left behind becomes "error 41: Variable not declared" rather
@@ -724,9 +724,8 @@ private sub Theme_BuildBindTable()
     erase gThemeBind
 
     ' ---- general / compile / main ----------------------------------------------------
-    ThemeBind_Add( "compile.iconsuccess", @ghGeneral.iconsuccess )
-    ThemeBind_Add( "compile.iconfail",    @ghGeneral.iconfail )
-    ThemeBind_Add( "output.valuechanged",  @ghGeneral.debugchanged )
+    ' compile.iconsuccess / compile.iconfail / output.valuechanged have no rows here any
+    ' more: their consumers read theme.compile.* and theme.output.valuechanged.
     ' main.panel has no row here any more: its consumers read theme.main.panel, which the
     ' generated key table fills. The bind table is a shrinking bridge from here on.
 
@@ -1435,12 +1434,9 @@ sub Theme_FillGlobals()
 
     dim as THEME_TYPE ptr pTheme
 
-    ' The two DWSTRING payloads have no home in the bind table, which holds COLORREF
-    ' pointers. They are the only hand-written rows left.
-    pTheme = getThemePtr("general.description")
-    ghGeneral.description = pTheme->keyData
-    pTheme = getThemePtr("general.version")
-    ghGeneral.version = pTheme->keyData
+    ' The two hand-written DWSTRING rows are GONE. The bind table could not hold them
+    ' because it addresses COLORREF pointers; the generated key table has an ofsText channel
+    ' and carries them like any other key, so Theme_FillRoot above has already done this.
 
     for i as long = lbound(gThemeBind) to ubound(gThemeBind)
         dim as THEMEBIND_TYPE ptr pBind = @gThemeBind(i)
@@ -1836,10 +1832,10 @@ sub Theme_DumpGlobals( byval wszOutPath as DWSTRING )
         print #f, sLine
     #endmacro
 
-    DUMPTXT( "general.description",        ghGeneral.description )
-    DUMPTXT( "general.version",            ghGeneral.version )
-    DUMPCLR( "general.iconfail",           ghGeneral.iconfail )
-    DUMPCLR( "general.iconsuccess",        ghGeneral.iconsuccess )
+    DUMPTXT( "general.description",        theme.general.description )
+    DUMPTXT( "general.version",            theme.general.version )
+    DUMPCLR( "general.iconfail",           theme.compile.iconfail )
+    DUMPCLR( "general.iconsuccess",        theme.compile.iconsuccess )
 
     DUMPCLR( "main.panel",                 theme.main.panel )
 

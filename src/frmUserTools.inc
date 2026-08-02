@@ -311,7 +311,7 @@ end function
 ' A name in settings.ini that KeyBindings_PickListKeyToValue does not resolve produces no
 ' ACCEL entry at all, so the shortcut saves, reloads and shows in the Tools menu perfectly
 ' and never once works. There is no build warning and no visible symptom -- which is the
-' whole reason the list paints it in ghGeneral.iconfail.
+' whole reason the list paints it in theme.compile.iconfail.
 '
 ' THIS DIALOG CANNOT CREATE ONE. Both routes into a key (the capture field and the picker) go
 ' through gKeyNames, and KeyBindings_RunSelfTest already asserts every name in that vocabulary
@@ -456,7 +456,7 @@ private sub frmUserTools_ListPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
             case 1
                 ' The shortcut. Marked when it cannot fire; state readable as colour, and the
                 ' detail pane spells it out in words for a reader who cannot see the colour.
-                if bBadKey then clr = ghGeneral.iconfail
+                if bBadKey then clr = theme.compile.iconfail
         end select
 
         p->b->SetForeColor( clr )
@@ -970,7 +970,7 @@ private function frmUserTools_OnPaint( byval hwnd as HWND ) as LRESULT
         ' see that gets nothing from it, and "this saves and never fires" is not something to
         ' encode in a hue alone.
         wszShortcut = wszShortcut & "   " & L(356,"This shortcut cannot fire -- reassign it.")
-        clrShortcut = ghGeneral.iconfail
+        clrShortcut = theme.compile.iconfail
     else
         ' ...and the same for a shortcut that is real but already spoken for. The assign dialog
         ' will not let one be created, so this only ever shows for a binding that pre-dates the
@@ -978,7 +978,7 @@ private function frmUserTools_OnPaint( byval hwnd as HWND ) as LRESULT
         dim as DWSTRING wszOwner = frmUserTools_ShortcutClash( gUTCurrent )
         if len(wszOwner) then
             wszShortcut = wszShortcut & "   " & wszOwner
-            clrShortcut = ghGeneral.iconfail
+            clrShortcut = theme.compile.iconfail
         end if
     end if
     rcT.left = fieldX : rcT.right = xRight - AfxScaleX(FRMUSERTOOLS_ASSIGN_W) - AfxScaleX(FRMUSERTOOLS_GAP)

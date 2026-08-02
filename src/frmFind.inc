@@ -124,7 +124,7 @@ sub frmFind_ApplyErrorState( byval bForce as boolean = false )
     if (bErr = gFindTextIsError) andalso (bForce = false) then exit sub
     gFindTextIsError = bErr
 
-    PsTextBox_SetForeColor( hCtl, iif( bErr, ghGeneral.iconfail, ghTopTabs.ForeColorHot ) )
+    PsTextBox_SetForeColor( hCtl, iif( bErr, theme.compile.iconfail, ghTopTabs.ForeColorHot ) )
     AfxRedrawWindow( hCtl )
 end sub
 

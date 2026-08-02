@@ -525,7 +525,7 @@ private sub frmThemes_PositionWindows( byval hwnd as HWND )
     dim as long listLeftX = AfxScaleX(OPTROW_PADLEFT)
 
     dim as HDC hdcM = GetDC( hwnd )
-    dim as long descW = frmThemes_TextW( hdcM, ghFont(GUIFONT_11), ghGeneral.description )
+    dim as long descW = frmThemes_TextW( hdcM, ghFont(GUIFONT_11), theme.general.description )
     ReleaseDC( hwnd, hdcM )
     dim as long editW = AfxScaleX(28)
     dim as long editH = AfxScaleY(26)
@@ -638,8 +638,8 @@ private sub frmThemes_EditClick( byval hButton as HWND, byval id as long )
     gThemesWorkFile = gThemeFilenames(sel)
 
     ' Sync the description for the header display (Theme_PreviewFile does not refresh
-    ' ghGeneral.description), and start a clean editing session.
-    ghGeneral.description = GetThemeDescription( frmThemes_ThemesFolder() & gThemesWorkFile )
+    ' theme.general.description), and start a clean editing session.
+    theme.general.description = GetThemeDescription( frmThemes_ThemesFolder() & gThemesWorkFile )
     frmThemes_ClearEdited()
     gThemesDescEdited = false
 
@@ -696,7 +696,7 @@ private sub frmThemes_CloneClick( byval hButton as HWND, byval id as long )
     ' the copied colours), overwrite the description, and write it back.
     dim as DWSTRING wszDesc = GetThemeDescription( wszDest ) & " " & L(396,"(cloned)")
     Theme_PreviewFile( wszClone )
-    ghGeneral.description = wszDesc
+    theme.general.description = wszDesc
     Theme_WriteFile( wszDest, wszDesc )
 
     frmThemes_RefreshThemeList()
@@ -792,7 +792,7 @@ end sub
 ' Revert: reload the theme from disk, discarding every edit since the last save.
 private sub frmThemes_RevertClick( byval hButton as HWND, byval id as long )
     Theme_PreviewFile( gThemesWorkFile )
-    ghGeneral.description = GetThemeDescription( frmThemes_ThemesFolder() & gThemesWorkFile )
+    theme.general.description = GetThemeDescription( frmThemes_ThemesFolder() & gThemesWorkFile )
     Theme_ApplyAll()
     frmThemes_ClearEdited()
     gThemesDescEdited = false
@@ -807,9 +807,9 @@ end sub
 ' Edit-description icon: pop up frmInputBox to change the theme's description text. A committed
 ' change marks the theme dirty (and forks a built-in at save time).
 private sub frmThemes_DescEditClick( byval hButton as HWND, byval id as long )
-    dim as DWSTRING wszDesc = ghGeneral.description
+    dim as DWSTRING wszDesc = theme.general.description
     if frmInputBox_Show( HWND_FRMTHEMES, L(329,"Themes"), L(387,"Description"), wszDesc ) = IDOK then
-        ghGeneral.description = wszDesc
+        theme.general.description = wszDesc
         gThemesDescEdited = true
         frmThemes_MarkEdited()
         frmThemes_PositionWindows( HWND_FRMTHEMES )   ' re-place the icon after the new text
@@ -916,7 +916,7 @@ function frmThemes_WndProc( _
             dim as RECT rD : SetRect( @rD, listLeftX, AfxScaleY(40), rRight, AfxScaleY(62) )
             b.SetFont( ghFont(GUIFONT_11) )
             b.SetForeColor( ghPanel.ForeColor )
-            b.PaintText( ghGeneral.description, @rD, DT_LEFT or DT_END_ELLIPSIS )
+            b.PaintText( theme.general.description, @rD, DT_LEFT or DT_END_ELLIPSIS )
         end if
 
         ' The rule above the footer, so the buttons read as a band.

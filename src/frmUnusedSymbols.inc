@@ -340,7 +340,7 @@ private sub frmUnusedSymbols_OnPaint( byval hwnd as HWND )
         rcW.right -= nPad
         rcW.top = rcT.bottom
         ' the one line here that must not be missed
-        b.SetForeColor( ghGeneral.iconfail )
+        b.SetForeColor( theme.compile.iconfail )
         b.PaintText( L(584, "Unsaved changes (line numbers may be stale):") & " " & gUnusedDirtyText, _
                      @rcW, DT_LEFT )
         b.SetForeColor( ghPanel.ForeColor )

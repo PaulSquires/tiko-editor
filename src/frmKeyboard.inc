@@ -385,11 +385,11 @@ private sub frmKeyboard_ListPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
                 ' A row whose clash comes from its DEFAULT has no user cell to mark, so the
                 ' marker goes here instead. Checked before the disabled dimming above would
                 ' otherwise win, because a disabled default cannot conflict with anything.
-                if bConflict andalso (bHasUserKeys = false) then clr = ghGeneral.iconfail
+                if bConflict andalso (bHasUserKeys = false) then clr = theme.compile.iconfail
 
             case 3
                 ' User Keys. A conflict is marked on the cell the user actually edits.
-                if bConflict andalso bHasUserKeys then clr = ghGeneral.iconfail
+                if bConflict andalso bHasUserKeys then clr = theme.compile.iconfail
         end select
 
         p->b->SetForeColor( clr )

@@ -59,8 +59,8 @@ sub frmStatusBar_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
             ' left of the panel text.
             if p->wszCaption = "" then gApp.hIconPanel = 0
             dim as COLORREF clr = ghStatusBar.BackColor
-            if gApp.hIconPanel = ghIconGood then clr = ghGeneral.iconsuccess
-            if gApp.hIconPanel = ghIconBad then clr = ghGeneral.iconfail
+            if gApp.hIconPanel = ghIconGood then clr = theme.compile.iconsuccess
+            if gApp.hIconPanel = ghIconBad then clr = theme.compile.iconfail
             p->b->SetForeColor( clr )
             p->b->SetBackColor( ghStatusBar.BackColor )
 

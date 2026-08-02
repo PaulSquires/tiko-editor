@@ -1025,12 +1025,32 @@ sub Theme_RunSelfTest()
             THASSERT( pK->nSubsys = pB->nSubsys, "subsystem mask differs: " & sKey )
         next
 
-        ' 22d. The two DWSTRING payloads reached the root -- the rows the legacy table could
-        '      not hold at all, and which were hand-copied in Theme_FillGlobals.
-        THASSERT( theme.general.description = ghGeneral.description, _
-                  "general.description did not reach the root" )
-        THASSERT( theme.general.version = ghGeneral.version, _
-                  "general.version did not reach the root" )
+        ' 22d. The two DWSTRING payloads reached the root -- the rows the legacy bind table
+        '      could not hold at all, and which used to be hand-copied in Theme_FillGlobals.
+        '
+        '      Compared against the PARSED ENTRY, not against ghGeneral. That struct is gone,
+        '      and the mechanical rename rewrote BOTH sides of the old comparison into
+        '      "theme.general.description = theme.general.description" -- a tautology that
+        '      would have passed forever, in a group whose entire job is catching exactly
+        '      this. A rename can silently convert an assertion into one that cannot fail.
+        scope
+            dim as long nd = Theme_FindEntry( "general.description" )
+            dim as long nv = Theme_FindEntry( "general.version" )
+            THASSERT( nd >= 0, "general.description is not in the parsed theme" )
+            THASSERT( nv >= 0, "general.version is not in the parsed theme" )
+            if nd >= 0 then
+                THASSERT( theme.general.description = gTheme(nd).keyData, _
+                          "general.description did not reach the root" )
+                ' Non-empty too: getThemePtr answers with a shared empty dummy on a miss, so
+                ' "" = "" would satisfy the line above while nothing had actually loaded.
+                THASSERT( len( theme.general.description ) > 0, _
+                          "general.description reached the root EMPTY" )
+            end if
+            if nv >= 0 then
+                THASSERT( theme.general.version = gTheme(nv).keyData, _
+                          "general.version did not reach the root" )
+            end if
+        end scope
 
         ' 22e. Every offset is inside the struct, and no two rows claim the SAME offset on
         '      the same channel -- which is what a duplicated member path in the table would

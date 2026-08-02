@@ -1383,7 +1383,7 @@ private sub frmDebug_PaintVarRowFor( byval hLV as HWND, byval p as PSLISTTREE_PA
         dim as RECT rcText = p->cells[i].rc
         rcText.left += pWindow->ScaleX(4)
         dim as COLORREF clr = foreNormal
-        if bChanged andalso (i = 1) then clr = ghGeneral.debugchanged
+        if bChanged andalso (i = 1) then clr = theme.output.valuechanged
         p->b->SetForeColor( clr )
         p->b->PaintText( p->cells[i].wszText, @rcText, DT_LEFT or DT_END_ELLIPSIS )
     next
