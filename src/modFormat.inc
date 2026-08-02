@@ -91,11 +91,16 @@ end type
 ' than the whole 6KB list. Built lazily from gConfig on first use and thrown away by
 ' FMT_InvalidateVocabulary when the user edits a keyword page.
 '
-' NOTE the lists are ALL LOWERCASE and must stay that way. tiko's Lexilla lexer lowercases
-' each source word before lookup (LexTiko.cxx, sc.GetCurrentLowered) and WordList::InList
-' then compares bytes exactly, so a mixed-case entry would never match and that keyword
-' would silently lose its syntax highlighting. Proper-case spellings therefore cannot live
-' in these lists; they come from the separate casing table below.
+' The lists are LOWERCASED HERE, for matching, but they arrive carrying CANONICAL CASING
+' (ByVal, ScreenRes, MessageBox) and that is deliberate -- FMT_BuildProperTable reads the
+' same text to answer FMTCASE_PROPER.
+'
+' This was the other way round until tiko's Lexilla was changed: WordList::Set now
+' lower-cases the word LIST as well as the token (WordList.cxx), where it used to compare
+' bytes exactly against a token that had already been lowered -- so a mixed-case entry
+' matched nothing and silently killed that keyword's highlighting. One set of files now
+' serves highlighting, SC_CASE_PROPER rendering and this formatter alike, which is what
+' stops the editor and the formatter disagreeing about how a keyword is spelled.
 ' ----------------------------------------------------------------------------------------
 dim shared gFmtVocabReady   as long = false
 dim shared gFmtKeywordBuk(0 to 26) as string
@@ -186,13 +191,7 @@ end sub
 
 
 ' ========================================================================================
-' Load the proper-case spelling table (settings\format\fb_keyword_case.txt).
-'
-' The table exists because the lexer's keyword lists cannot carry casing (see the note
-' above): they can tell us "screenres is a keyword" but not whether the documented
-' spelling is ScreenRes, Screenres or SCREENRES. Format is one "word=Spelling" pair per
-' whitespace-delimited token; anything not listed falls back to Capitalized, which is the
-' right answer for the large majority of single-word keywords.
+' Build the lowercase -> canonical-spelling map used by FMTCASE_PROPER.
 ' ========================================================================================
 private sub FMT_BuildProperTable()
     if gFmtProperReady then exit sub
@@ -201,55 +200,55 @@ private sub FMT_BuildProperTable()
         gFmtProperBuk(i) = " "
     next
 
-    ' Raw FreeBASIC file I/O rather than modRoutines' GetFileToString, which takes a
-    ' clsDocument ptr -- this engine must stay free of every editor type so the self-test
-    ' and the offline Format Project path can call it with no document in existence.
-    dim as string sData = ""
-    dim as string sFile = AfxGetExePathName() & "settings\format\fb_keyword_case.txt"
-    dim as long hFile = freefile()
-    if open( sFile for binary access read as #hFile ) = 0 then
-        dim as longint nSize = lof(hFile)
-        if (nSize > 0) andalso (nSize < 1048576) then
-            sData = string( cast(long, nSize), 0 )
-            get #hFile, , sData
-        end if
-        close #hFile
-    end if
+    ' CANONICAL SPELLINGS COME STRAIGHT FROM THE KEYWORD FILES, which carry them.
+    '
+    ' This used to read a separate settingsormatb_keyword_case.txt, because the keyword
+    ' lists were all lower case and the lexer compared bytes exactly -- a mixed-case entry
+    ' would never match and would silently kill that keyword's highlighting. That is no
+    ' longer true: WordList::Set now lower-cases the LIST as well as the token, so one set
+    ' of files serves highlighting, SC_CASE_PROPER rendering and this formatter alike.
+    '
+    ' Reading the same text clsDocument hands to SCI_SETCASEKEYWORDS is what keeps the
+    ' formatter from disagreeing with the editor about how a keyword is spelled -- a
+    ' second table would drift the first time somebody edited a Keywords page.
+    ' A keyword whose file spelling is still lower case falls back to Capitalized, exactly
+    ' as the renderer falls back to camel case.
+    dim as string sData = gConfig.FBKeywords & " " & _
+                          gConfig.WinApiKeywords & " " & _
+                          gConfig.ExtraKeywords
 
-    if len(sData) > 0 then
-        dim as long nStart = 1
-        dim as long nLen = len(sData)
+    dim as long nStart = 1
+    dim as long nLen = len(sData)
+    while nStart <= nLen
         while nStart <= nLen
-            ' Split on any whitespace.
-            while nStart <= nLen
-                dim as long ch = asc(mid(sData, nStart, 1))
-                if (ch <> 32) andalso (ch <> 9) andalso (ch <> 13) andalso (ch <> 10) then exit while
-                nStart += 1
-            wend
-            if nStart > nLen then exit while
-            dim as long nEnd = nStart
-            while nEnd <= nLen
-                dim as long ch = asc(mid(sData, nEnd, 1))
-                if (ch = 32) orelse (ch = 9) orelse (ch = 13) orelse (ch = 10) then exit while
-                nEnd += 1
-            wend
-            dim as string sPair = mid(sData, nStart, nEnd - nStart)
-            nStart = nEnd + 1
-            ' A leading ' marks a comment line in the table; skip to end of line.
-            if left(sPair, 1) = "'" then
-                while (nStart <= nLen) andalso (asc(mid(sData, nStart, 1)) <> 10)
-                    nStart += 1
-                wend
-                continue while
-            end if
-            dim as long nEq = instr(sPair, "=")
-            if nEq > 1 then
-                dim as string sKey = lcase(left(sPair, nEq - 1))
-                dim as long b = FMT_Bucket(sKey)
-                gFmtProperBuk(b) &= sKey & "=" & mid(sPair, nEq + 1) & " "
-            end if
+            dim as long ch = asc(mid(sData, nStart, 1))
+            if (ch <> 32) andalso (ch <> 9) andalso (ch <> 13) andalso (ch <> 10) then exit while
+            nStart += 1
         wend
-    end if
+        if nStart > nLen then exit while
+
+        dim as long nEnd = nStart
+        while nEnd <= nLen
+            dim as long ch = asc(mid(sData, nEnd, 1))
+            if (ch = 32) orelse (ch = 9) orelse (ch = 13) orelse (ch = 10) then exit while
+            nEnd += 1
+        wend
+
+        dim as string sWord = mid(sData, nStart, nEnd - nStart)
+        nStart = nEnd + 1
+
+        ' Only words that actually CARRY casing earn an entry. A list that is still all
+        ' lower case adds nothing here and leaves every word on the Capitalized fallback,
+        ' which is the same answer for less memory.
+        if (len(sWord) > 0) andalso (sWord <> lcase(sWord)) then
+            dim as string sKey = lcase(sWord)
+            dim as long b = FMT_Bucket(sKey)
+            ' First spelling wins, so FBKeywords beats a later WinApi/Extra duplicate.
+            if instr( gFmtProperBuk(b), " " & sKey & "=" ) = 0 then
+                gFmtProperBuk(b) &= sKey & "=" & sWord & " "
+            end if
+        end if
+    wend
 
     gFmtProperReady = true
 end sub
@@ -1691,6 +1690,20 @@ function Format_RunSelfTest() as long
 
         ' Types are a SEPARATE vocabulary -- styling them differently from control-flow
         ' keywords is the whole point of the four-way split.
+        ' PROPER CASE reads its spellings from the keyword files themselves, which carry
+        ' canonical casing (ByVal, ScreenRes, MessageBox). Asserted against a REAL word
+        ' rather than a synthetic one, because the whole claim is that the formatter and
+        ' the editor agree about how a keyword is spelled -- and the editor's source is
+        ' this same list.
+        r.CaseKeywords = FMTCASE_PROPER
+        r.CaseTypes = FMTCASE_LEAVE
+        CHECK( instr( Format_Text( "dim byval x" & NL, r, bCh ), "ByVal" ) > 0, _
+               "Proper Case uses the keyword file's canonical spelling" )
+        ' And the fallback: a word the list holds only in lower case is Capitalized, not
+        ' left alone -- a file with two casing conventions in it is worse than either.
+        CHECK( instr( Format_Text( "IF x THEN" & NL, r, bCh ), "If" ) > 0, _
+               "Proper Case falls back to Capitalized" )
+
         r.CaseKeywords = FMTCASE_LOWER
         r.CaseTypes = FMTCASE_UPPER
         dim as string sMixed = Format_Text( sFrom, r, bCh )
