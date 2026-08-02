@@ -587,6 +587,195 @@ end function
 
 
 ' ========================================================================================
+' May a file with this extension live under this root group?
+'
+' THIS IS NOT Workspace_DeriveFileType, and the difference is the point. That function says
+' what a newly-opened file DEFAULTS to -- .inc defaults to Normal, and everything unknown
+' defaults to Normal. This says what is LEGAL, and the two deliberately disagree: an .inc is
+' perfectly legitimate as a Module, it simply is not what a fresh one becomes.
+'
+' Main and Resource are single-file groups (clsApp demotes any previous holder), which is
+' enforced by the drop validator rather than here -- this answers only about the extension.
+'
+' Pure, so the whole (extension x group) matrix is assertable with no window.
+' ========================================================================================
+function frmExplorer_ExtAllowedInCat( byval wszExt as DWSTRING, byval catIndex as long ) as boolean
+    dim as DWSTRING wszUp = ucase( trim(wszExt) )
+    select case catIndex
+        case CATINDEX_MAIN:     return (wszUp = ".BAS")
+        case CATINDEX_RESOURCE: return (wszUp = ".RC")
+        case CATINDEX_HEADER:   return (wszUp = ".BI") orelse (wszUp = ".H")
+        case CATINDEX_MODULE:   return (wszUp = ".BAS") orelse (wszUp = ".INC")
+        case CATINDEX_NORMAL:   return true
+        case else:              return false
+    end select
+end function
+
+
+' ========================================================================================
+' frmExplorer_CanDropCallback -- validate a drag, and perform it.
+'
+' IT ALWAYS RETURNS FALSE, which tells the control to leave its own model alone. That is
+' deliberate, not a refusal: PsListTree.MoveRows is a pure permutation and DOES NOT REWRITE
+' .level (PsListTree.bi), so the control cannot express a reparent at all -- a file dropped
+' into a folder would land next to it at the wrong depth. The host model is authoritative
+' and the tree is rebuilt from it, so letting the control permute first would only produce a
+' shape that is immediately discarded.
+'
+' The rebuild is POSTED rather than done here. We are inside the control's WM_LBUTTONUP,
+' between CommitDrop and CancelDrag; mutating the model is only data, but clearing and
+' refilling the rows underneath the code that is still tearing down the drag is not worth
+' the risk when a posted message costs nothing.
+'
+' The DESTINATION is resolved from targetRow alone, which is more forgiving than requiring a
+' precise hit on a group row: dropping onto a FILE means "into whatever folder that file is
+' in", which is what a user aiming at a list of files expects.
+' ========================================================================================
+function frmExplorer_CanDropCallback( byval p as PSLISTTREE_DROPINFO ptr ) as boolean
+    if p = 0 then return false
+    dim as HWND hCtl = HWND_FRMEXPLORER
+
+    ' --- where is this going? --------------------------------------------------------------
+    dim as long catDest = -1
+    dim as DWSTRING wszDest
+    select case frmExplorer_KindFromRow( hCtl, p->targetRow )
+        case EXPKIND_ROOT, EXPKIND_FOLDER
+            wszDest = frmExplorer_FolderPathFromRow( hCtl, p->targetRow, catDest )
+        case EXPKIND_FILE
+            ' Into the dropped-on file's own container.
+            dim as clsDocument ptr pT = frmExplorer_DocFromRow( hCtl, p->targetRow )
+            if pT = 0 then return false
+            catDest = frmExplorer_CatIndexForDoc( pT )
+            wszDest = pT->docData.wszFolder
+        case else
+            return false        ' the promotion row, or past the last row
+    end select
+    if catDest < 0 then return false
+
+    ' --- snapshot the sources BEFORE anything moves -----------------------------------------
+    ' Row indices stop meaning anything the moment the model changes, so every decision below
+    ' is taken against pointers and paths captured here.
+    redim srcDocs(any) as clsDocument ptr
+    redim srcFolderPaths(any) as DWSTRING
+    redim srcFolderCats(any) as long
+    for i as long = 0 to p->srcCount - 1
+        dim as long row = p->srcRows[i]
+        select case frmExplorer_KindFromRow( hCtl, row )
+            case EXPKIND_FILE
+                dim as clsDocument ptr pD = frmExplorer_DocFromRow( hCtl, row )
+                if pD then
+                    dim as long ub = ubound(srcDocs) + 1
+                    redim preserve srcDocs(ub)
+                    srcDocs(ub) = pD
+                end if
+            case EXPKIND_FOLDER
+                dim as long catSrc
+                dim as DWSTRING wszSrc = frmExplorer_FolderPathFromRow( hCtl, row, catSrc )
+                if len(wszSrc) then
+                    dim as long ub = ubound(srcFolderPaths) + 1
+                    redim preserve srcFolderPaths(ub)
+                    redim preserve srcFolderCats(ub)
+                    srcFolderPaths(ub) = wszSrc
+                    srcFolderCats(ub)  = catSrc
+                end if
+        end select
+    next
+    dim as long nDocs = ubound(srcDocs) + 1
+    dim as long nFolders = ubound(srcFolderPaths) + 1
+    if (nDocs = 0) andalso (nFolders = 0) then return false
+
+    ' --- validate EVERYTHING before moving anything -----------------------------------------
+    ' A refused drop must change nothing at all, so nothing is applied until the whole drag
+    ' is known to be legal. A partial move is the failure mode worth ruling out by
+    ' construction: it is silent, and it splits a selection the user thought was one thing.
+    if nFolders > 0 then
+        ' A folder cannot enter a group that holds no folders, and every file in its whole
+        ' subtree must be legal at the destination -- the "refuse the whole move" rule.
+        if ProjectFolders_CatAllowsFolders( catDest ) = false then return false
+        for i as long = 0 to nFolders - 1
+            if srcFolderCats(i) = catDest then
+                if ucase(srcFolderPaths(i)) = ucase(wszDest) then return false
+                if ProjectFolders_IsDescendantOf( wszDest, srcFolderPaths(i) ) then return false
+            end if
+            dim pScan as clsDocument ptr = gApp.pDocList
+            do until pScan = 0
+                if frmExplorer_CatIndexForDoc( pScan ) = srcFolderCats(i) then
+                    dim as DWSTRING wszF = pScan->docData.wszFolder
+                    dim as boolean bInside = false
+                    if ucase(wszF) = ucase(srcFolderPaths(i)) then bInside = true
+                    if ProjectFolders_IsDescendantOf( wszF, srcFolderPaths(i) ) then bInside = true
+                    if bInside then
+                        if frmExplorer_ExtAllowedInCat( AfxStrPathName("EXTN", pScan->DiskFilename), catDest ) = false then
+                            return false
+                        end if
+                    end if
+                end if
+                pScan = pScan->pDocNext
+            loop
+        next
+    end if
+
+    for i as long = 0 to nDocs - 1
+        if frmExplorer_ExtAllowedInCat( AfxStrPathName("EXTN", srcDocs(i)->DiskFilename), catDest ) = false then
+            return false
+        end if
+    next
+
+    ' Main and Resource hold exactly ONE file. Dropping a second is refused rather than
+    ' silently demoting a bystander: the incumbent IS demoted, but only when the drop names
+    ' a single replacement, which is the gesture the user can actually see the result of.
+    if (catDest = CATINDEX_MAIN) orelse (catDest = CATINDEX_RESOURCE) then
+        if nFolders > 0 then return false
+        if nDocs <> 1 then return false
+    end if
+
+    ' --- apply ------------------------------------------------------------------------------
+    ' Folders first. Their documents' TYPES are collected before the move, because afterwards
+    ' their folders name the destination and nothing identifies them as having come from the
+    ' source subtree.
+    for i as long = 0 to nFolders - 1
+        redim moved(any) as clsDocument ptr
+        if srcFolderCats(i) <> catDest then
+            dim pScan as clsDocument ptr = gApp.pDocList
+            do until pScan = 0
+                if frmExplorer_CatIndexForDoc( pScan ) = srcFolderCats(i) then
+                    dim as DWSTRING wszF = pScan->docData.wszFolder
+                    dim as boolean bInside = false
+                    if ucase(wszF) = ucase(srcFolderPaths(i)) then bInside = true
+                    if ProjectFolders_IsDescendantOf( wszF, srcFolderPaths(i) ) then bInside = true
+                    if bInside then
+                        dim as long ub = ubound(moved) + 1
+                        redim preserve moved(ub)
+                        moved(ub) = pScan
+                    end if
+                end if
+                pScan = pScan->pDocNext
+            loop
+        end if
+
+        if ProjectFolders_MoveFolder( srcFolderCats(i), srcFolderPaths(i), catDest, wszDest ) then
+            for j as long = lbound(moved) to ubound(moved)
+                if moved(j) then gApp.ProjectSetFileType( moved(j), gConfig.Cat(catDest).idFileType )
+            next
+        end if
+    next
+
+    ' Then the loose files. The TYPE change goes through gApp.ProjectSetFileType rather than
+    ' assigning the field, because that is what carries the Main/Resource demotion -- so a
+    ' drag inherits the context menu's rule instead of restating it.
+    for i as long = 0 to nDocs - 1
+        if frmExplorer_CatIndexForDoc( srcDocs(i) ) <> catDest then
+            gApp.ProjectSetFileType( srcDocs(i), gConfig.Cat(catDest).idFileType )
+        end if
+        srcDocs(i)->docData.wszFolder = wszDest
+    next
+
+    PostMessage( HWND_FRMMAIN, MSG_USER_LOAD_EXPLORERFILES, 0, 0 )
+    return false
+end function
+
+
+' ========================================================================================
 ' frmExplorer_BeginLabelEditCallback -- may this row's caption be edited?
 '
 ' Folders only. THE ROOT GROUPS MUST REFUSE: their captions come from gConfig.Cat(), are
@@ -878,6 +1067,13 @@ function frmExplorer_Show( byval hWndParent as HWND ) as LRESULT
     ' fixed glyph column is left to add.
     dim pWin as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
     if pWin then PsListTree_SetEditTextInset( hCtrl, pWin->ScaleX(EXPLORER_INDENT_UNITS) )
+
+    ' Drag and drop. The control does the gesture, the indicator and the multi-row source
+    ' set; the HOST does the move -- see frmExplorer_CanDropCallback for why it always
+    ' answers FALSE. No DragDropCallback is set: it only fires when the control moved rows
+    ' itself, which here it never does.
+    PsListTree_SetDragReorder( hCtrl, true )
+    PsListTree_SetCanDropCallback( hCtrl, @frmExplorer_CanDropCallback )
 
     PsListTree_EnableLabelEdit( hCtrl, true )
     PsListTree_SetBeginLabelEditCallback( hCtrl, @frmExplorer_BeginLabelEditCallback )

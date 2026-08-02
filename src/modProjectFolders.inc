@@ -359,3 +359,101 @@ function ProjectFolders_Rebase( byval catIndex as long, byval wszOldPath as DWST
 
     return true
 end function
+
+
+' ========================================================================================
+' Move a folder -- and everything beneath it -- to a new parent, possibly under a different
+' root group.
+'
+' Same-group moves are the ordinary drag; CROSS-GROUP moves are why this is not just
+' ProjectFolders_Rebase with a different argument. A folder's identity is (category, path),
+' so carrying it into another group has to rewrite the CATEGORY of the folder and of every
+' descendant as well as their paths -- and the documents inside them need their
+' ProjectFileType changed too, which is the CALLER's job because only it can route that
+' through gApp.ProjectSetFileType.
+'
+' The caller must therefore collect the affected documents BEFORE calling this: afterwards
+' their folders name the destination and there is no longer anything to identify them by.
+'
+' Refuses a move INTO ITS OWN SUBTREE, which would otherwise reparent a folder under a child
+' that is about to stop existing at that path -- the classic tree-move corruption.
+'
+' Paths can collide with something already at the destination, and they MERGE, exactly as a
+' dissolve does; the duplicate record is dropped and the documents in both already name the
+' same path by then.
+' ========================================================================================
+function ProjectFolders_MoveFolder( byval catFrom as long, byval wszPath as DWSTRING, _
+                                    byval catTo as long, byval wszNewParent as DWSTRING ) as boolean
+    wszPath      = ProjectFolders_Normalize( wszPath )
+    wszNewParent = ProjectFolders_Normalize( wszNewParent )
+
+    if len(wszPath) = 0 then return false
+    if ProjectFolders_CatAllowsFolders( catTo ) = false then return false
+    if ProjectFolders_Find( catFrom, wszPath ) < 0 then return false
+
+    ' Into itself or into its own descendant -- only meaningful within one group, since a
+    ' path under another category is a different folder however alike it reads.
+    if catFrom = catTo then
+        if ucase(wszNewParent) = ucase(wszPath) then return false
+        if ProjectFolders_IsDescendantOf( wszNewParent, wszPath ) then return false
+    end if
+
+    dim as DWSTRING wszNewPath = ProjectFolders_Combine( wszNewParent, ProjectFolders_LeafName( wszPath ) )
+
+    ' A same-group move that changes nothing is a no-op rather than a failure: dropping a
+    ' folder back where it already sits is a legitimate gesture with no effect.
+    if (catFrom = catTo) andalso (ucase(wszNewPath) = ucase(wszPath)) then return true
+
+    ' Documents first, while their folders still name the source paths.
+    dim pDoc as clsDocument ptr = gApp.pDocList
+    do until pDoc = 0
+        if pDoc->ProjectFiletype = gConfig.Cat(catFrom).idFileType then
+            if len(pDoc->docData.wszFolder) then
+                dim as DWSTRING wszWas = pDoc->docData.wszFolder
+                dim as boolean bInSubtree = false
+                if ucase(wszWas) = ucase(wszPath) then bInSubtree = true
+                if ProjectFolders_IsDescendantOf( wszWas, wszPath ) then bInSubtree = true
+                if bInSubtree then
+                    pDoc->docData.wszFolder = ProjectFolders_RebasePath( wszWas, wszPath, wszNewPath )
+                end if
+            end if
+        end if
+        pDoc = pDoc->pDocNext
+    loop
+
+    ' Then the folder records: path AND category, in place so the table keeps its insertion
+    ' order and an ancestor still precedes its descendants.
+    for i as long = lbound(gProjectFolders) to ubound(gProjectFolders)
+        if gProjectFolders(i).catIndex <> catFrom then continue for
+        dim as DWSTRING wszWas = gProjectFolders(i).wszPath
+        dim as boolean bMine = false
+        if ucase(wszWas) = ucase(wszPath) then bMine = true
+        if ProjectFolders_IsDescendantOf( wszWas, wszPath ) then bMine = true
+        if bMine = false then continue for
+        gProjectFolders(i).wszPath  = ProjectFolders_RebasePath( wszWas, wszPath, wszNewPath )
+        gProjectFolders(i).catIndex = catTo
+    next
+
+    ' Any ancestor the destination needs but does not have -- dropping into a group's top
+    ' level needs none, but a path can arrive ahead of its parent when groups differ.
+    if len(wszNewParent) then ProjectFolders_Add( catTo, wszNewParent )
+
+    ' Sweep duplicates created by a collision at the destination. Backwards, so removal's
+    ' compaction cannot skip an entry.
+    for i as long = ubound(gProjectFolders) to lbound(gProjectFolders) step -1
+        dim as boolean bDrop = false
+        if len(gProjectFolders(i).wszPath) = 0 then bDrop = true
+        if bDrop = false then
+            for j as long = lbound(gProjectFolders) to i - 1
+                if gProjectFolders(j).catIndex <> gProjectFolders(i).catIndex then continue for
+                if ucase(gProjectFolders(j).wszPath) = ucase(gProjectFolders(i).wszPath) then
+                    bDrop = true
+                    exit for
+                end if
+            next
+        end if
+        if bDrop then ProjectFolders_RemoveAt( i )
+    next
+
+    return true
+end function

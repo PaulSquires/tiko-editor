@@ -78,3 +78,6 @@ declare function ProjectFolders_RebasePath( byval wszPath as DWSTRING, byval wsz
 ' every descendant folder AND every affected document. See its definition.
 declare function ProjectFolders_Rebase( byval catIndex as long, byval wszOldPath as DWSTRING, _
                                         byval wszNewPath as DWSTRING ) as boolean
+' Move a folder and its whole subtree, possibly into another root group. See its definition.
+declare function ProjectFolders_MoveFolder( byval catFrom as long, byval wszPath as DWSTRING, _
+                                            byval catTo as long, byval wszNewParent as DWSTRING ) as boolean

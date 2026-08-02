@@ -87,6 +87,14 @@ declare sub frmExplorer_IconRects( byval hCtl as HWND, byval row as integer, byr
 declare sub frmExplorer_RenameFolder( byval hCtl as HWND, byval row as integer )
 declare sub ShowExplorerFolderContextMenu( byval hCtl as HWND, byval row as integer )
 declare function frmExplorer_FilterMessage( byval pMsg as MSG ptr ) as boolean
+' May a file with this extension live under this root group? Pure, so assertable.
+declare function frmExplorer_ExtAllowedInCat( byval wszExt as DWSTRING, byval catIndex as long ) as boolean
+
+' THIS FILE MAY NAME NO Ps* TYPE. clsConfig.inc includes it, and clsConfig.inc is processed
+' before PsListTree.bi has been seen -- so a declaration mentioning PSLISTTREE_DROPINFO here
+' fails with "Illegal specification" at a line that looks perfectly correct. That is why
+' frmExplorer_CanDropCallback is NOT declared here: it is defined in frmExplorer.inc ahead of
+' the only thing that references it, so it needs no prototype at all.
 declare function frmExplorer_IconHitTest( byval hCtl as HWND, byval row as integer, byval x as long ) as EXPLORER_ICONHIT
 declare function frmExplorer_FolderPathFromRow( byval hCtl as HWND, byval row as integer, byref catIndex as long ) as DWSTRING
 declare sub frmExplorer_TwistyRect( byval hCtl as HWND, byval row as integer, byref rcRow as RECT, byref rcOut as RECT )

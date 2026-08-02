@@ -507,6 +507,78 @@ sub frmExplorer_RunSelfTest()
             ProjectFolders_Count() = 1, "count=" & str(ProjectFolders_Count()) )
         Exp_Check( "the merged record is the surviving path", ProjectFolders_Exists( catTest, "dup" ) )
 
+        ' --- the drop legality matrix -------------------------------------------------------
+        ' Pure, so the whole (extension x group) table is assertable. Written out rather than
+        ' looped: a loop would be the same table a second time and would agree with a wrong
+        ' one just as happily.
+        Exp_Check( "Main takes a .bas", frmExplorer_ExtAllowedInCat(".bas", CATINDEX_MAIN) )
+        Exp_Check( "Main refuses a .bi", frmExplorer_ExtAllowedInCat(".bi", CATINDEX_MAIN) = false )
+        Exp_Check( "Main refuses a .rc", frmExplorer_ExtAllowedInCat(".rc", CATINDEX_MAIN) = false )
+        Exp_Check( "Resource takes a .rc", frmExplorer_ExtAllowedInCat(".rc", CATINDEX_RESOURCE) )
+        Exp_Check( "Resource refuses a .bas", frmExplorer_ExtAllowedInCat(".bas", CATINDEX_RESOURCE) = false )
+        Exp_Check( "Header takes a .bi", frmExplorer_ExtAllowedInCat(".bi", CATINDEX_HEADER) )
+        Exp_Check( "Header takes a .h", frmExplorer_ExtAllowedInCat(".h", CATINDEX_HEADER) )
+        Exp_Check( "Header refuses a .bas", frmExplorer_ExtAllowedInCat(".bas", CATINDEX_HEADER) = false )
+        Exp_Check( "Module takes a .bas", frmExplorer_ExtAllowedInCat(".bas", CATINDEX_MODULE) )
+        ' Legal by request, and the one place this predicate deliberately DISAGREES with
+        ' Workspace_DeriveFileType -- which defaults a fresh .inc to Normal. Default is not
+        ' legality, and conflating them is what would silently forbid this drop.
+        Exp_Check( "Module takes an .inc", frmExplorer_ExtAllowedInCat(".inc", CATINDEX_MODULE) )
+        Exp_Check( "Module refuses a .bi", frmExplorer_ExtAllowedInCat(".bi", CATINDEX_MODULE) = false )
+        Exp_Check( "Normal takes anything", _
+            frmExplorer_ExtAllowedInCat(".bas", CATINDEX_NORMAL) andalso _
+            frmExplorer_ExtAllowedInCat(".txt", CATINDEX_NORMAL) andalso _
+            frmExplorer_ExtAllowedInCat("", CATINDEX_NORMAL) )
+        Exp_Check( "the matrix is case-insensitive", _
+            frmExplorer_ExtAllowedInCat(".BAS", CATINDEX_MAIN) andalso _
+            frmExplorer_ExtAllowedInCat(".Bi", CATINDEX_HEADER) )
+        ' Where it MUST agree with Workspace_DeriveFileType: whatever a fresh file becomes has
+        ' to be somewhere it is allowed to be, or opening a file would put it in a group a
+        ' drag could never return it to.
+        Exp_Check( "a fresh file's default group always accepts it", _
+            frmExplorer_ExtAllowedInCat(".bi", CATINDEX_HEADER) andalso _
+            frmExplorer_ExtAllowedInCat(".rc", CATINDEX_RESOURCE) andalso _
+            frmExplorer_ExtAllowedInCat(".inc", CATINDEX_NORMAL) andalso _
+            frmExplorer_ExtAllowedInCat(".bas", CATINDEX_MAIN) )
+
+        ' --- moving a folder subtree ----------------------------------------------------------
+        ProjectFolders_Clear()
+        ProjectFolders_Add( CATINDEX_NORMAL, "src/net/http" )
+        ProjectFolders_Add( CATINDEX_NORMAL, "lib" )
+
+        ' Into its own descendant is the classic tree-move corruption: the new parent is about
+        ' to stop existing at that path.
+        Exp_Check( "a folder cannot move into its own descendant", _
+            ProjectFolders_MoveFolder( CATINDEX_NORMAL, "src", CATINDEX_NORMAL, "src/net" ) = false )
+        Exp_Check( "a folder cannot move into itself", _
+            ProjectFolders_MoveFolder( CATINDEX_NORMAL, "src", CATINDEX_NORMAL, "src" ) = false )
+        Exp_Check( "the refused moves changed nothing", _
+            ProjectFolders_Exists( CATINDEX_NORMAL, "src/net/http" ) )
+
+        Exp_Check( "a folder moves under a new parent", _
+            ProjectFolders_MoveFolder( CATINDEX_NORMAL, "src/net", CATINDEX_NORMAL, "lib" ) )
+        Exp_Check( "moving a folder carries its whole subtree", _
+            ProjectFolders_Exists( CATINDEX_NORMAL, "lib/net" ) andalso _
+            ProjectFolders_Exists( CATINDEX_NORMAL, "lib/net/http" ) andalso _
+            ( ProjectFolders_Exists( CATINDEX_NORMAL, "src/net" ) = false ), _
+            "count=" & str(ProjectFolders_Count()) )
+        Exp_Check( "moving a folder leaves its old parent standing", _
+            ProjectFolders_Exists( CATINDEX_NORMAL, "src" ) )
+
+        ' Across groups the CATEGORY has to move too, not just the path -- identity is
+        ' (category, path), so a subtree left holding the old category would vanish from the
+        ' destination and reappear under the source.
+        Exp_Check( "a folder moves to another group", _
+            ProjectFolders_MoveFolder( CATINDEX_NORMAL, "lib/net", CATINDEX_MODULE, "" ) )
+        Exp_Check( "a cross-group move carries the subtree's category", _
+            ProjectFolders_Exists( CATINDEX_MODULE, "net" ) andalso _
+            ProjectFolders_Exists( CATINDEX_MODULE, "net/http" ) andalso _
+            ( ProjectFolders_Exists( CATINDEX_NORMAL, "lib/net" ) = false ), _
+            "count=" & str(ProjectFolders_Count()) )
+        Exp_Check( "a folder cannot move into a group that takes none", _
+            ProjectFolders_MoveFolder( CATINDEX_MODULE, "net", CATINDEX_MAIN, "" ) = false )
+        ProjectFolders_Clear()
+
         ' --- the localized strings --------------------------------------------------------------
         ' Printed, not merely length-checked: LoadLocalizationFile fills a blank key with the
         ' English text, so len() > 0 passes under every language even when that language has

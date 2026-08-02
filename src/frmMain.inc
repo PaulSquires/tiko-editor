@@ -1483,6 +1483,14 @@ function frmMain_WndProc( _
         case WM_SETFOCUS
             frmMain_SetFocusToCurrentCodeWindow()
 
+        case MSG_USER_LOAD_EXPLORERFILES
+            ' Posted by the Explorer's drop handler. The move itself is applied inside the
+            ' control's CanDrop callback -- that is only data -- but the REBUILD is deferred
+            ' to here, because at that point we are inside the control's WM_LBUTTONUP between
+            ' CommitDrop and CancelDrag, and clearing the rows underneath the code still
+            ' tearing the drag down is not worth the risk when a posted message costs nothing.
+            LoadExplorerFiles()
+
         case MSG_USER_SETFOCUS
             ' Set focus to current Scintilla window and update the document
             ' display such as Line#, Col#, Filename, etc.
