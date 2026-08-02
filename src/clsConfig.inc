@@ -1,4 +1,4 @@
-'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
+﻿'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
 '    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
@@ -1041,6 +1041,7 @@ function clsConfig.ProjectSaveToFile() as boolean
             wszText = ProcessToCurdriveProject(wszText)
             pStream.WriteLine "File=" & wszText
             pStream.WriteLine "FileType=" & pDoc->ProjectFileType
+            pStream.WriteLine "FileFolder=" & pDoc->docData.wszFolder
             pStream.WriteLine "TabIndex=" & "-1"     ' use -1 rather than true
             pStream.WriteLine "Bookmarks=" & pDoc->docData.wszBookmarks
             pStream.WriteLine "BreakPoints=" & pDoc->docData.wszBreakPoints
@@ -1079,6 +1080,7 @@ function clsConfig.ProjectSaveToFile() as boolean
                 wszText = ProcessToCurdriveProject(wszText)
                 pStream.WriteLine "File=" & wszText
                 pStream.WriteLine "FileType=" & pDoc->ProjectFileType
+            pStream.WriteLine "FileFolder=" & pDoc->docData.wszFolder
                 pStream.WriteLine "TabIndex=" & "0"
                 pStream.WriteLine "Bookmarks=" & pDoc->docData.wszBookmarks
                 pStream.WriteLine "BreakPoints=" & pDoc->docData.wszBreakPoints
@@ -1096,6 +1098,22 @@ function clsConfig.ProjectSaveToFile() as boolean
         end if
         pDoc = pDoc->pDocnext
     loop
+
+    ' The user's subfolders, one record each.
+    '
+    ' Written INDEPENDENTLY of the files rather than being derived from their FileFolder
+    ' lines, because an EMPTY folder has no file to be derived from -- and creating a folder
+    ' before putting anything in it is the obvious order to work in. Without these records
+    ' such a folder would silently disappear on the next open.
+    '
+    ' A distinct key from the per-file "FileFolder": record assembly is driven by FileEnd,
+    ' so a bare "Folder=" line out here would be absorbed into whichever file record happened
+    ' to be pending. Emitted after the file block for readability only -- the reader is
+    ' order-independent.
+    for i = lbound(gProjectFolders) to ubound(gProjectFolders)
+        pStream.WriteLine "ProjectFolder=" & gProjectFolders(i).catIndex & _
+                          "|-|" & gProjectFolders(i).wszPath
+    next
 
     ' Notes belong to the workspace, so they are always written.
     dim wszNotes as DWSTRING = wstr("NOTES-START") + vbcrlf + _
@@ -1129,7 +1147,7 @@ end function
 function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
 
     dim pDoc as clsDocument ptr
-    dim as DWSTRING wst, wKey, wData, wszFilename
+    dim as DWSTRING wst, wKey, wData, wszFilename, wszFolder
 
     dim sBookmarks as string
     dim sBreakPoints as string
@@ -1155,6 +1173,11 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     gApp.ProjectFilename = wszFile
     gApp.ProjectName = AfxStrPathname( "NAMEX", gApp.ProjectFilename )
     gApp.ProjectNotes = ""
+
+    ' Folders belong to the workspace being opened, not to the one being left behind. Without
+    ' this the previous project's folders would survive into this one and be written back out
+    ' to its .tiko on the next save.
+    ProjectFolders_Clear()
 
     dim pStream as CTextStream  ' (utf16)
     if pStream.OpenUnicode(gApp.ProjectFilename) <> S_OK then return false
@@ -1206,6 +1229,16 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
             case "ActiveTab":           nActiveTab              = nData
             case "File":                wszFilename             = wData
             case "FileType":            wszFileType             = wData
+            case "FileFolder":          wszFolder               = wData
+
+            case "ProjectFolder":
+            ' <catIndex>|-|<path>. Add rather than append blindly: ProjectFolders_Add is
+            ' idempotent and creates missing ancestors, so a hand-edited file listing
+            ' "a/b" without "a" still loads as a well-formed tree instead of an orphan.
+            dim as long nSepPos = instr( wData, "|-|" )
+            if nSepPos > 0 then
+                ProjectFolders_Add( val( left(wData, nSepPos - 1) ), mid(wData, nSepPos + 3) )
+            end if
             case "Bookmarks":           sBookmarks              = str(wData)
             case "BreakPoints":         sBreakPoints            = str(wData)
             case "FoldPoints":          sFoldPoints             = str(wData)
@@ -1235,6 +1268,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
                     .bIsValidData    = true
                     .wszFilename     = wszFilename
                     .wszFileType     = wszFileType
+                    .wszFolder       = wszFolder
                     .bLoadInTab      = bLoadInTab
                     .wszBookmarks    = sBookmarks
                     .wszBreakPoints  = sBreakPoints
@@ -1255,6 +1289,12 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
                 sBookmarks  = "": sBreakPoints = "": sFoldPoints = ""
                 bLoadInTab    = false
             end if
+            ' Reset OUTSIDE the AfxFileExists guard, unlike the block above. That block sits
+            ' inside it, so a record naming a file that no longer exists leaves its state
+            ' standing and the NEXT record inherits it -- a pre-existing bug, left alone
+            ' here, but deliberately not joined: a missing file must not be able to hand its
+            ' folder to whatever record follows it.
+            wszFolder = ""
 
         end select
 

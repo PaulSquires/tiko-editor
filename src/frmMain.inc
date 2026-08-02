@@ -1483,6 +1483,14 @@ function frmMain_WndProc( _
         case WM_SETFOCUS
             frmMain_SetFocusToCurrentCodeWindow()
 
+        case MSG_USER_LOAD_EXPLORERFILES
+            ' Posted by the Explorer's drop handler. The move itself is applied inside the
+            ' control's CanDrop callback -- that is only data -- but the REBUILD is deferred
+            ' to here, because at that point we are inside the control's WM_LBUTTONUP between
+            ' CommitDrop and CancelDrag, and clearing the rows underneath the code still
+            ' tearing the drag down is not worth the risk when a posted message costs nothing.
+            LoadExplorerFiles()
+
         case MSG_USER_SETFOCUS
             ' Set focus to current Scintilla window and update the document
             ' display such as Line#, Col#, Filename, etc.
@@ -1520,6 +1528,10 @@ function frmMain_WndProc( _
             ' Same reasoning, and for the same reason it cannot live anywhere earlier:
             ' the workspace is not established until ProcessCommandLine returns.
             Workspace_RunSelfTest()
+
+            ' Same reasoning: it drives LoadExplorerFiles against the live workspace, so
+            ' the workspace has to exist first.
+            frmExplorer_RunSelfTest()
 
             ' TIKO_UNUSED_AUTOOPEN=1: the only way to reach the Unused Symbols layout
             ' self-test without a human driving the menu. HERE, not on scan completion:
@@ -2012,6 +2024,14 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         ' cancelled. Control-wide rather than window-wide -- one call covers every
         ' PsListTree in the application.
         if PsListTree_FilterMessage( @uMsg ) then continue do
+
+        ' F2 on its way to the Explorer's folder rename. F2 is a BOUND ACCELERATOR in tiko
+        ' -- IDM_BOOKMARKNEXT -- so TranslateAccelerator further down consumes it before the
+        ' control's own VK_F2 handler can run, and rename by keyboard silently did nothing.
+        ' This must therefore sit AHEAD of the accelerator chain. It claims the key only
+        ' while the focus is inside the Explorer and only on a folder row, so Goto Next
+        ' Bookmark keeps working everywhere else.
+        if frmExplorer_FilterMessage( @uMsg ) then continue do
 
         ' The code-completion popup. Unlike every filter above it, this one consumes ONLY
         ' the navigation and commit keys -- ordinary typing MUST reach Scintilla, which is

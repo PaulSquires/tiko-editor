@@ -1,4 +1,4 @@
-' ========================================================================================
+﻿' ========================================================================================
 ' tiko editor 
 ' Windows FreeBASIC Editor (Windows 64 bit)
 ' Paul Squires (2016-2026)
@@ -82,6 +82,7 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 #include once "PsBufferPaint.bi"
 #include once "clsTopTabCtl.bi"
 #include once "clsConfig.bi"
+#include once "modProjectFolders.bi"
 #include once "clsApp.bi"
 #include once "clsSymbolDb.bi"
 #include once "clsScanMgr.bi"
@@ -121,6 +122,7 @@ dim shared gTTabCtl as clsTopTabCtl
 ' own startup path, both of which are ahead of PsMessageBox.inc. This header names no Ps* type;
 ' the implementation is included at the end beside modFileWatch.inc.
 #include once "modMsgBox.bi"
+#include once "modProjectFolders.inc"
 #include once "clsConfig.inc"
 #include once "PsBufferPaint.inc"
 #include once "modRoutines.inc"
@@ -212,7 +214,8 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "frmEditorVScroll.inc" 
 #include once "frmPanel.inc" 
 #include once "frmPanelMenu.inc" 
-#include once "frmExplorer.inc" 
+#include once "frmExplorer.inc"
+#include once "modExplorerSelfTest.inc" 
 #include once "frmBookmarks.inc" 
 #include once "frmFunctions.inc"
 #include once "frmAutoComplete.inc"

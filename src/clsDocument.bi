@@ -65,6 +65,11 @@ type PROJECT_FILELOAD_DATA
     bLoadInTab      as boolean
     wszFilename     as DWSTRING        ' full path and filename
     wszFiletype     as DWSTRING        ' pDoc->ProjectFileType
+    wszFolder       as DWSTRING        ' user subfolder within the file's root group, or ""
+                                       ' for the group's own top level. Virtual -- see
+                                       ' modProjectFolders.bi. Persisted state like the
+                                       ' bookmarks below, which is why it lives here rather
+                                       ' than beside ProjectFileType.
     wszBookmarks    as DWSTRING        ' pDoc->GetBookmarks()
     wszBreakPoints  as DWSTRING        ' pDoc->GetBreakPoints()
     wszFoldPoints   as DWSTRING        ' pDoc->GetFoldPoints()

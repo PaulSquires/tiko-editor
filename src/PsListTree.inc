@@ -3388,6 +3388,17 @@ function PsListTreeSurface_WndProc ( _
                     PsTipHost_SetToolIndex( @pList->tip, idx )
                 end if
             end if
+            ' PSLISTTREE_MESSAGEINFO.idx is documented as "the MODEL row index under the
+            ' mouse (-1 if none)", and every other mouse message sets it -- but this one did
+            ' not. The struct is initialised with .idx = -1, so a host handling WM_MOUSEMOVE
+            ' was told "no row" for the entire surface, on every move, however plainly the
+            ' cursor was over one. Nothing faults: -1 is the documented no-row answer, so the
+            ' handler reads it as a legitimate miss and simply never does anything.
+            ' Found from tiko's Explorer, whose per-row action icons resolved their hover
+            ' zone against row -1 on every move and so never showed a tooltip.
+            if pList then
+                if idx >= 0 then m.idx = pList->VisibleToModel( idx ) else m.idx = -1
+            end if
             if pList andalso pList->MessageCallback then
                 if pList->MessageCallback( @m ) then return 0
             end if

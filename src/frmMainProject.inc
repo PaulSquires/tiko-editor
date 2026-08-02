@@ -181,36 +181,83 @@ sub Workspace_RunSelfTest()
     ' failed to MATCH a Cat() row rather than being FILETYPE_UNDEFINED.
     dim as long nHeaders = ( ubound(gConfig.Cat) - CATINDEX_MAIN ) + 1
     dim as long nPromote = iif( gApp.IsProjectNamed(), 0, 1 )
+    ' User subfolders each take a row too. Every folder in the table is displayed --
+    ' ProjectFolders_Add refuses a category that takes none -- so the count needs no filter.
+    ' This term is not optional: without it the assertion passes only on a workspace that has
+    ' no folders, which is every workspace until the first one is created and none after.
+    dim as long nFolders = ProjectFolders_Count()
     dim as long nRows = PsListTree_GetCount( HWND_FRMEXPLORER )
-    Workspace_Check( "the Explorer lists every document under a header", _
-        nRows = nHeaders + nDocs + nPromote, _
-        "rows=" & str(nRows) & " expected=" & str(nHeaders + nDocs + nPromote) & _
-        " (" & str(nHeaders) & " headers + " & str(nDocs) & " docs + " & _
-        str(nPromote) & " promote)" )
+    Workspace_Check( "the Explorer lists every document and folder under a group", _
+        nRows = nHeaders + nDocs + nPromote + nFolders, _
+        "rows=" & str(nRows) & " expected=" & str(nHeaders + nDocs + nPromote + nFolders) & _
+        " (" & str(nHeaders) & " groups + " & str(nDocs) & " docs + " & _
+        str(nPromote) & " promote + " & str(nFolders) & " folders)" )
 
     ' The promotion row exists exactly when the workspace is untitled, and it is pinned at
     ' index 0. Both halves matter: offering it on a named project would be nonsense, and a
     ' row that is present but buried below the headers is not the affordance it claims to
-    ' be. Checked by ITEMDATA, not by caption -- the caption is localized.
+    ' be. Checked by ROW KIND, not by caption -- the caption is localized.
     dim as boolean bPromoteAtTop = false
     if PsListTree_GetCount( HWND_FRMEXPLORER ) > 0 then
-        bPromoteAtTop = ( PsListTree_GetItemData( HWND_FRMEXPLORER, 0 ) = EXPLORER_PROMOTE_ROW )
+        bPromoteAtTop = ( frmExplorer_KindFromRow( HWND_FRMEXPLORER, 0 ) = EXPKIND_PROMOTE )
     end if
     ' EVERY Explorer row resolves to a real document or to nothing. This is the invariant
-    ' that a hand-written guard at each call site could not deliver: the promotion row's
-    ' sentinel is a NON-NULL value that is not a valid pointer, so a reader that casts and
-    ' then tests "if pDoc then" passes the test and dereferences address 1. That shipped --
-    ' three readers were guarded and the tooltip callback was missed, giving a GPF on hover.
+    ' that a hand-written guard at each call site could not deliver: a row's itemData means
+    ' whatever its kind says it means, so a reader that casts it to a pointer without
+    ' consulting the kind is reading one type as another. Under the previous scheme -- a bare
+    ' sentinel value living in itemData -- that dereferenced address 1: three readers were
+    ' guarded by hand and the tooltip callback was missed, giving a GPF on hover.
     ' Asserted over all rows rather than over the row that happens to be special today.
     dim as long nBadRow = -1
     for i as long = 0 to PsListTree_GetCount( HWND_FRMEXPLORER ) - 1
-        if PsListTree_IsHeader( HWND_FRMEXPLORER, i ) then continue for
+        ' Deliberately NOT skipping group rows first. Excluding them by IsHeader before
+        ' asking would leave DocFromRow's whole job -- refusing to resolve a non-file row --
+        ' untested in a named workspace, where every non-file row IS a group row. Offering
+        ' it every row is what makes this assertion sensitive to the kind mechanism.
         dim as clsDocument ptr pRowDoc = frmExplorer_DocFromRow( HWND_FRMEXPLORER, i )
         if pRowDoc = 0 then continue for
         if gApp.IsValidDocumentPointer( pRowDoc ) = false then nBadRow = i: exit for
     next
     Workspace_Check( "every Explorer row resolves to a live document or to nothing", _
         nBadRow = -1, iif( nBadRow = -1, "all rows clean", "row " & str(nBadRow) ) )
+
+    ' --- the Explorer is a TREE, not a flat list ------------------------------------------
+    ' The row COUNT cannot see this. Group rows became plain tree parents and files became
+    ' their children; get the parenting wrong -- AddString instead of AddNode, say, which
+    ' derives its level from the preceding row and would leave every file at level 0 -- and
+    ' the count is unchanged, every row still resolves, and nothing above goes red. What
+    ' would break is collapsing a group, which is not reachable from a headless suite.
+    ' The loop deliberately runs to completion and only REMEMBERS the first offending row,
+    ' rather than exiting on it. Bailing early would leave nRoots short and fail the
+    ' unrelated category assertion below as collateral -- measured: the A/B that reverts the
+    ' file insert to AddString reported 2 failures that way, only one of them a finding.
+    dim as long nBadTree = -1
+    dim as long nRoots = 0
+    for i as long = 0 to PsListTree_GetCount( HWND_FRMEXPLORER ) - 1
+        dim as boolean bBad = false
+        select case frmExplorer_KindFromRow( HWND_FRMEXPLORER, i )
+            case EXPKIND_ROOT
+                nRoots += 1
+                ' A group sits at the top level, and must not be selectable: WM_LBUTTONDOWN
+                ' computes canDrag from bSelectable, so a selectable group row would be
+                ' draggable once drag-reorder is on.
+                if PsListTree_GetLevel( HWND_FRMEXPLORER, i ) <> 0 then bBad = true
+                if PsListTree_GetRowSelectable( HWND_FRMEXPLORER, i ) then bBad = true
+            case EXPKIND_FILE
+                ' A file is a child OF A GROUP -- both halves checked, since a file at
+                ' level 1 under the wrong kind of parent would still read as depth-correct.
+                if PsListTree_GetLevel( HWND_FRMEXPLORER, i ) <> 1 then bBad = true
+                dim as long nParent = PsListTree_GetParent( HWND_FRMEXPLORER, i )
+                if frmExplorer_KindFromRow( HWND_FRMEXPLORER, nParent ) <> EXPKIND_ROOT then
+                    bBad = true
+                end if
+        end select
+        if bBad andalso (nBadTree = -1) then nBadTree = i
+    next
+    Workspace_Check( "every Explorer file is a child of a group row", _
+        nBadTree = -1, iif( nBadTree = -1, "tree well-formed", "row " & str(nBadTree) ) )
+    Workspace_Check( "the Explorer shows one row per category", _
+        nRoots = nHeaders, "roots=" & str(nRoots) & " categories=" & str(nHeaders) )
 
     Workspace_Check( "the promotion row is present iff the workspace is untitled", _
         bPromoteAtTop = ( gApp.IsProjectNamed() = false ), _
@@ -336,7 +383,7 @@ sub Workspace_RunSelfTest()
             Workspace_Check( "promotion retires the untitled workspace file", _
                 AfxFileExists( gConfig.UntitledProjectFilename ) = 0 )
             Workspace_Check( "promotion removes the Explorer's promote row", _
-                PsListTree_GetItemData( HWND_FRMEXPLORER, 0 ) <> EXPLORER_PROMOTE_ROW )
+                frmExplorer_KindFromRow( HWND_FRMEXPLORER, 0 ) <> EXPKIND_PROMOTE )
 
             AfxDeleteFile( wszScratch )
         end if
