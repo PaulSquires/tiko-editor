@@ -1471,7 +1471,10 @@ end function
 private function Theme_ChannelText( byval wszMacro as DWSTRING, _
                                     byval clr as COLORREF, _
                                     byval nAlpha as long ) as DWSTRING
-    if (len(wszMacro) > 0) andalso (nAlpha < 0) then return wszMacro
+    ' wszMacro is ignored. It used to be returned as "%NAME" so an attached key round
+    ' tripped; with %MACRO retired there is nothing to round trip back into, and every
+    ' channel is written as a literal. The parameter is kept so the call sites -- which
+    ' still carry the parsed macro name -- do not all have to change in the same commit.
     return Theme_FormatColor( clr, nAlpha )
 end function
 
@@ -1531,18 +1534,15 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
     print #f, sLine
     print #f, ""
 
-    ' The palette. Written back verbatim, in declaration order, and BEFORE any key that
-    ' refers to it -- the parser resolves macros in one forward pass, so a definition that
-    ' appeared after its use would silently read as black.
-    if ubound(gThemeMacros) >= lbound(gThemeMacros) then
-        sLine = "# Named colors. Edit one of these to move every key that refers to it."
-        print #f, sLine
-        for i as long = lbound(gThemeMacros) to ubound(gThemeMacros)
-            sLine = gThemeMacros(i).name & ": " & gThemeMacros(i).value
-            print #f, sLine
-        next
-        print #f, ""
-    end if
+    ' NO %MACRO BLOCK. The writer used to echo the palette back here so a hand-authored
+    ' theme kept its named colours; the ROLE layer replaced that job outright and does it
+    ' better, because a macro was pure text substitution carrying no meaning -- nothing
+    ' could inherit from one, so every key still had to appear in every file. A role says
+    ' WHICH colour this is, and every key falls back to one automatically.
+    '
+    ' The parser still ACCEPTS %MACRO, so an existing hand-authored theme keeps loading and
+    ' the first save through this function migrates it to literals. That is deliberate: a
+    ' one-way migration costs a branch in the parser and breaks nobody's file.
 
     sLine = "general.description: " & Theme_SanitizeText( wszDescription )
     print #f, sLine
