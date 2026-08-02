@@ -1770,6 +1770,11 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     Format_RunSelfTest()
     ' The bridge half: the localized ids, which the pure engine suite cannot see at all.
     Format_RunApplySelfTest()
+    ' Env-gated (TIKO_AUTOINSERT_SELFTEST=1). Auto-indent / block completion, driven over
+    ' line ARRAYS rather than a document, so it runs here with nothing open. That purity is
+    ' also everything it cannot reach -- stub AttemptAutoInsert to a bare "return 0" and it
+    ' stays green. See the suite's own header.
+    AutoInsert_RunSelfTest()
     ' The dialog's headless half: its localized ids and the rule table's invariants. The
     ' layout half needs real windows and runs from frmFormatOptions_Show.
     frmFormatOptions_RunSelfTest( false )

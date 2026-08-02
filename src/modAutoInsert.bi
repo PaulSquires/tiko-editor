@@ -34,4 +34,5 @@ enum
 end enum
 
 declare function AttemptAutoInsert() as long
+declare function AutoInsert_RunSelfTest() as long
 
