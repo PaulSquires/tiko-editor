@@ -203,7 +203,7 @@ private sub frmOptionsColors_FontPaint( byval p as PSLISTTREE_PAINTINFO ptr )
         backclr = ghPanel.BackColorHot : foreclr = ghPanel.ForeColorHot
     else
         ' Idle rows match the nav panel's lighter shade (see frmOptions nav list).
-        backclr = ghTopTabs.BackColorHot : foreclr = ghPanel.ForeColor
+        backclr = theme.toptabs.texthot.backcolor : foreclr = ghPanel.ForeColor
     end if
     p->b->SetBackColor( backclr )
     p->b->SetForeColor( foreclr )
@@ -370,7 +370,7 @@ end sub
 sub frmOptionsColors_ApplyTheme()
     if gColorBuilt = false then exit sub
 
-    PsListTree_SetBackColor( ghColorFonts, ghTopTabs.BackColorHot )
+    PsListTree_SetBackColor( ghColorFonts, theme.toptabs.texthot.backcolor )
     OptionsTheme_ApplyListBorder( ghColorFonts )
     PsListTree_SetScrollBarColors( ghColorFonts, ghPanel.BackColorScrollBar, _
                                    ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )

@@ -1762,7 +1762,7 @@ function frmUserTools_Show( byval hWndParent as HWND ) as LRESULT
         tipc.BorderColor = ghEditor.Divider
         tipc.ForeColor   = theme.topmenu.text.forecolor
         tipc.TitleColor  = ghPanel.ForeColorHot
-        tipc.GlyphColor  = ghUI.AccentColor
+        tipc.GlyphColor  = theme.ui.accent
         PsTooltip_SetColors( ghUTParamsTip, @tipc )
     end scope
 

@@ -194,9 +194,9 @@ end sub
 private sub frmUnusedSymbols_PaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
     if p = 0 then exit sub
 
-    dim as COLORREF backclr = ghOutput.BackColor
-    if p->isHot orelse p->isResizeHot then backclr = ghOutput.ForeColorScrollBar
-    p->b->SetForeColor( ghOutput.ForeColorHot )
+    dim as COLORREF backclr = theme.output.text.backcolor
+    if p->isHot orelse p->isResizeHot then backclr = theme.output.scrollbar.forecolor
+    p->b->SetForeColor( theme.output.texthot.forecolor )
     p->b->SetBackColor( backclr )
     p->b->PaintRect( @p->rc )
 
@@ -222,7 +222,7 @@ private sub frmUnusedSymbols_PaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO pt
     ' one-pixel trailing divider, matching the shared painter
     dim as RECT rcDiv = p->rc
     rcDiv.left = rcDiv.right - AfxScaleX(1)
-    p->b->SetBackColor( ghOutput.ScrollBarDivider )
+    p->b->SetBackColor( theme.output.scrollbardivider )
     p->b->PaintRect( @rcDiv )
 end sub
 
@@ -260,9 +260,9 @@ sub frmUnusedSymbols_ApplyTheme()
 
     dim as HWND hLV = HWND_FRMUNUSED_LIST
     if IsWindow(hLV) then
-        PsListTree_SetBackColor( hLV, ghOutput.BackColor )
-        PsListTree_SetScrollBarColors( hLV, ghOutput.BackColorScrollBar, _
-                                       ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
+        PsListTree_SetBackColor( hLV, theme.output.text.backcolor )
+        PsListTree_SetScrollBarColors( hLV, theme.output.scrollbar.backcolor, _
+                                       theme.output.scrollbar.forecolor, theme.output.scrollbar.forecolor )
     end if
 
     AfxRedrawWindow( HWND_FRMUNUSED )

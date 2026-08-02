@@ -165,7 +165,7 @@ private sub frmAbout_CreditsPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr
 
     dim as RECT rcDiv = p->rc
     rcDiv.left = rcDiv.right - AfxScaleX(1)
-    p->b->SetBackColor( ghUI.Divider )
+    p->b->SetBackColor( theme.ui.divider )
     p->b->PaintRect( @rcDiv )
 end sub
 
@@ -271,10 +271,10 @@ private sub frmAbout_PaintPill( _
     dim as long curve = rc->bottom - rc->top
 
     if bFilled then
-        pb->SetBackColor( ghUI.AccentColor )
+        pb->SetBackColor( theme.ui.accent )
         pb->PaintRoundRect( rc, curve )
     else
-        pb->SetPenColor( ghUI.Divider )
+        pb->SetPenColor( theme.ui.divider )
         pb->PaintRoundOutline( rc, curve, 1 )
     end if
 
@@ -294,7 +294,7 @@ private sub frmAbout_PaintHero( byval pb as PsBufferPaint ptr, byval rcHero as R
     ' keeps it a TINT of the page rather than a block of colour -- which is what makes it
     ' survive an accent that is nearly white (default_light) as well as one that is nearly
     ' black (default_dark).
-    pb->PaintGradientRect( rcHero, ghUI.AccentColor, ghPanel.BackColor, LinearGradientModeHorizontal )
+    pb->PaintGradientRect( rcHero, theme.ui.accent, ghPanel.BackColor, LinearGradientModeHorizontal )
 
     dim as long mx = AfxScaleX(FRMABOUT_MARGIN)
 
@@ -306,7 +306,7 @@ private sub frmAbout_PaintHero( byval pb as PsBufferPaint ptr, byval rcHero as R
     pb->PaintRoundRect( @rcPlate, AfxScaleX(FRMABOUT_PLATE_CURVE) )
     ' The ring is a DIVIDER, not the accent: an accent hairline is invisible against the pale
     ' accent of the light theme.
-    pb->SetPenColor( ghUI.Divider )
+    pb->SetPenColor( theme.ui.divider )
     pb->PaintRoundOutline( @rcPlate, AfxScaleX(FRMABOUT_PLATE_CURVE), 1 )
 
     ' The wordmark, centred on the PLATE rather than on an inset rect: DT_CENTER/DT_VCENTER
@@ -470,7 +470,7 @@ private function frmAbout_OnPaint( byval hwnd as HWND ) as LRESULT
     ' The footer hairline. A DIVIDER, for the same reason the plate's ring is one.
     dim as RECT rcDiv = rcFoot
     rcDiv.bottom = rcDiv.top + AfxScaleY(1)
-    buffer.SetBackColor( ghUI.Divider )
+    buffer.SetBackColor( theme.ui.divider )
     buffer.PaintRect( @rcDiv )
 
     buffer.EndDoubleBuffer()
@@ -553,23 +553,23 @@ private sub frmAbout_ApplyTheme( byval hwnd as HWND )
     sc.BackColorSelect   = ghPanel.BackColor
     sc.ForeColorSelect   = ghEditor.ForeColorText
     sc.ForeColorDisabled = theme.topmenu.textdisabled.forecolor
-    sc.IndicatorColor    = ghUI.AccentColor
+    sc.IndicatorColor    = theme.ui.accent
     PsSelectBar_SetColors( HWND_FRMABOUT_TABS, @sc )
 
     ' ---- the Credits list -------------------------------------------------------------
     PsListTree_SetBackColor( HWND_FRMABOUT_CREDITS, ghPanel.BackColor )
     PsListTree_SetScrollBarColors( HWND_FRMABOUT_CREDITS, ghPanel.BackColorScrollBar, _
                                    ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
-    PsListTree_SetBorderColor( HWND_FRMABOUT_CREDITS, ghUI.Divider )
+    PsListTree_SetBorderColor( HWND_FRMABOUT_CREDITS, theme.ui.divider )
 
     ' ---- the License field ------------------------------------------------------------
     PsTextBox_SetBackColor( HWND_FRMABOUT_LICENSE, ghEditor.BackColorText )
     PsTextBox_SetOuterBackColor( HWND_FRMABOUT_LICENSE, ghPanel.BackColor )
     PsTextBox_SetForeColor( HWND_FRMABOUT_LICENSE, ghEditor.ForeColorText )
-    PsTextBox_SetBorderColor( HWND_FRMABOUT_LICENSE, ghUI.Divider )
+    PsTextBox_SetBorderColor( HWND_FRMABOUT_LICENSE, theme.ui.divider )
     ' EQUAL to the plain border on purpose. A read-only field that brightens its frame when
     ' focused is advertising an edit that cannot happen.
-    PsTextBox_SetFocusBorderColor( HWND_FRMABOUT_LICENSE, ghUI.Divider )
+    PsTextBox_SetFocusBorderColor( HWND_FRMABOUT_LICENSE, theme.ui.divider )
 
     ' ---- the three buttons ------------------------------------------------------------
     ' Same recipe as frmKeyboard_ApplyTheme and OptionsTheme_FillButton, spelled out again
@@ -578,7 +578,7 @@ private sub frmAbout_ApplyTheme( byval hwnd as HWND )
     dim as PSBUTTON_COLORS bc
     bc.BackColor           = ghPanel.BackColorButton
     bc.ForeColor           = ghPanel.ForeColorButton
-    bc.BorderColor         = ghUI.Divider
+    bc.BorderColor         = theme.ui.divider
     bc.IconColor           = ghPanel.ForeColorButton
     bc.BackColorHot        = ghPanel.BackColorButtonHot
     bc.ForeColorHot        = ghPanel.ForeColorButtonHot
@@ -589,11 +589,11 @@ private sub frmAbout_ApplyTheme( byval hwnd as HWND )
     bc.BorderColorPressed  = ghPanel.BackColorButtonHot
     bc.IconColorPressed    = ghPanel.ForeColorButtonHot
     bc.BackColorDisabled   = ghPanel.BackColor
-    bc.ForeColorDisabled   = ghUI.Divider
-    bc.BorderColorDisabled = ghUI.Divider
+    bc.ForeColorDisabled   = theme.ui.divider
+    bc.BorderColorDisabled = theme.ui.divider
     ' The default button's accent border. PsButton applies this LAST and with no mood test, so
     ' it survives hover and press for free.
-    bc.DefaultBorderColor  = ghUI.AccentColor
+    bc.DefaultBorderColor  = theme.ui.accent
 
     dim as HWND hBtn(2) = { GetDlgItem(hwnd, IDC_FRMABOUT_CMDWEBSITE), _
                             GetDlgItem(hwnd, IDC_FRMABOUT_CMDGITHUB), _

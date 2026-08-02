@@ -30,17 +30,17 @@ sub frmTopTabs_PaintCallback( byval p as PSTABBAR_PAINTINFO ptr )
     ' fill so the eye can follow it while its neighbours change places around it.
     dim as COLORREF backclr, foreclr
     if p->isDragging then
-        backclr = ghTopTabs.BackColorHot
-        foreclr = ghTopTabs.ForeColorHot
+        backclr = theme.toptabs.texthot.backcolor
+        foreclr = theme.toptabs.texthot.forecolor
     elseif p->isSelected then
-        backclr = ghTopTabs.BackColorHot
-        foreclr = ghTopTabs.ForeColorHot
+        backclr = theme.toptabs.texthot.backcolor
+        foreclr = theme.toptabs.texthot.forecolor
     elseif p->isHot then
-        backclr = ghTopTabs.BackColor
-        foreclr = ghTopTabs.ForeColor
+        backclr = theme.toptabs.text.backcolor
+        foreclr = theme.toptabs.text.forecolor
     else
-        backclr = ghTopTabs.BackColor
-        foreclr = ghTopTabs.ForeColor
+        backclr = theme.toptabs.text.backcolor
+        foreclr = theme.toptabs.text.forecolor
     end if
     p->b->SetForeColor( foreclr )
     p->b->SetBackColor( backclr )
@@ -95,8 +95,8 @@ sub frmTopTabs_PaintCallback( byval p as PSTABBAR_PAINTINFO ptr )
     ' brightened while the cursor is over the X itself. This painting takes precedence
     ' over the file dirty circle, that is why we paint it last here.
     if p->isHotClose then 
-        p->b->SetForeColor( ghTopTabs.ForeColorHot )
-        p->b->SetBackColor( ghTopTabs.CloseBackColorHot )
+        p->b->SetForeColor( theme.toptabs.texthot.forecolor )
+        p->b->SetBackColor( theme.toptabs.closehot )
     end if    
     if p->isHot orelse p->isHotClose then
         p->b->SetFont( ghFont(SYMBOLFONT_9) )
@@ -214,7 +214,7 @@ function frmTopTabs_Show( byval hwndParent as HWND ) as LRESULT
     PsTabBar_SetCloseCallback( hCtrl, @frmTopTabs_CloseCallback )
     PsTabBar_SetReorderCallback( hCtrl, @frmTopTabs_ReorderCallback )
     PsTabBar_SetPadding( hCtrl, 0 )
-    PsTabBar_SetBackColor( hCtrl, ghTopTabs.BackColor )
+    PsTabBar_SetBackColor( hCtrl, theme.toptabs.text.backcolor )
     PsTabBar_SetFont( hCtrl, ghFont(GUIFONT_10) )
 
     ' The (bottom line + active tab border) is the CONTROL's one color.

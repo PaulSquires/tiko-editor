@@ -38,9 +38,9 @@ sub frmTopTabsMenu_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
 
     ' State priority for the row background/foreground: selected > hot > normal
     dim as COLORREF backclr, foreclr
-    foreclr = ghTopTabs.ForeColorHot
-    backclr = ghTopTabs.BackColor
-    if p->isHot then backclr = ghTopTabs.BackColorHot
+    foreclr = theme.toptabs.texthot.forecolor
+    backclr = theme.toptabs.text.backcolor
+    if p->isHot then backclr = theme.toptabs.texthot.backcolor
     p->b->SetColors(foreclr, backclr)
 
     ' If this is the Spring panel then we don't want any highlighting because it is
@@ -145,7 +145,7 @@ function frmTopTabsMenu_Show( byval hwndParent as HWND ) as LRESULT
     PsStatusBar_SetMessageCallback( hCtrl, @frmTopTabsMenu_MessageCallback )
     PsStatusBar_SetTooltipCallback( hCtrl, @frmTopTabsMenu_TooltipCallback )
     PsStatusBar_SetTooltipMode( hCtrl, PSTIP_MODE_PS )
-    PsStatusBar_SetBackColor( hCtrl, ghTopTabs.BackColor )
+    PsStatusBar_SetBackColor( hCtrl, theme.toptabs.text.backcolor )
     PsStatusBar_SetPadding( hCtrl, 7 )
     PsStatusBar_SetFont( hCtrl, ghFont(SYMBOLFONT_10) )
 

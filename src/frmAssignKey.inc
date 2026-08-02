@@ -511,7 +511,7 @@ private function frmAssignKey_CaptureProc( _
             if gTKFlashOn then
                 penclr = theme.compile.iconfail : penw = 2
             elseif gTKCaptureFocus then
-                penclr = ghUI.AccentColor   : penw = 2
+                penclr = theme.ui.accent   : penw = 2
             end if
             buffer.SetPenColor( penclr )
             buffer.PaintRoundOutline( @rc, curve, penw )
@@ -555,7 +555,7 @@ private function frmAssignKey_CaptureProc( _
                     rcCaret.right  = rcCaret.left + caretW
                     rcCaret.top    = (rc.bottom - barH) \ 2
                     rcCaret.bottom = rcCaret.top + barH
-                    buffer.SetBackColor( ghUI.AccentColor )
+                    buffer.SetBackColor( theme.ui.accent )
                     buffer.PaintRect( @rcCaret )
                     buffer.SetBackColor( ghEditor.BackColorText )
                 end if

@@ -83,7 +83,7 @@ sub frmPanelMenu_PaintCallback( byval p as PSICONPANEL_PAINTINFO ptr )
         rc.left += pWindow->ScaleX(2)
         rc.right -= pWindow->ScaleX(2)
         rc.bottom -= pWindow->ScaleX(5)
-        p->b->SetPenColor( ghOutput.ForeColor )
+        p->b->SetPenColor( theme.output.text.forecolor )
         p->b->PaintLine( 1, rc.left, rc.bottom, rc.right, rc.bottom )
     end if
 

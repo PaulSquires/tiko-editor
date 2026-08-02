@@ -555,7 +555,7 @@ function frmMain_OnPaint( byval hwnd as HWND ) as LRESULT
         MapWindowPoints( HWND_DESKTOP, HWND_FRMMAIN, cast(POINT ptr, @rcMenu), 2 )
         rcMenu.left = rcMenu.right
         rcMenu.right = b.rcClient.right
-        b.SetBackColor( ghTopTabs.BackColor )
+        b.SetBackColor( theme.toptabs.text.backcolor )
         b.PaintRect( @rcMenu )
 
         ' Continue frmTopTabsMenu's own bottom rule across this strip -- but only over the

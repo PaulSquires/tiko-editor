@@ -350,7 +350,7 @@ end sub
 ' ========================================================================================
 private sub frmFormatOptions_NavPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
-    dim as long clrBack = ghTopTabs.BackColorHot
+    dim as long clrBack = theme.toptabs.texthot.backcolor
     dim as long clrText = ghPanel.ForeColor
     if p->isSelected then
         clrBack = ghPanel.BackColor
@@ -557,12 +557,12 @@ private sub frmFormatOptions_OnPaint( byval hwnd as HWND )
     pb.PaintText( L(638,"Format Options"), @rcTitleText, DT_LEFT )
 
     dim as RECT rcRule = type( 0, nTitleH - AfxScaleY(1), rcClient.right, nTitleH )
-    pb.SetBackColor( ghUI.Divider )
+    pb.SetBackColor( theme.ui.divider )
     pb.PaintRect( @rcRule )
 
     ' -- footer hairline --------------------------------------------------------------------
     dim as RECT rcFootRule = type( 0, rcClient.bottom - nFootH, rcClient.right, rcClient.bottom - nFootH + AfxScaleY(1) )
-    pb.SetBackColor( ghUI.Divider )
+    pb.SetBackColor( theme.ui.divider )
     pb.PaintRect( @rcFootRule )
 
     ' -- rule labels for the visible page ---------------------------------------------------
@@ -602,7 +602,7 @@ private sub frmFormatOptions_ApplyTheme( byval hwnd as HWND )
     if hwnd = 0 then exit sub
 
     if HWND_FRMFORMATOPTIONS_NAV then
-        PsListTree_SetBackColor( HWND_FRMFORMATOPTIONS_NAV, ghTopTabs.BackColorHot )
+        PsListTree_SetBackColor( HWND_FRMFORMATOPTIONS_NAV, theme.toptabs.texthot.backcolor )
         PsListTree_SetScrollBarColors( HWND_FRMFORMATOPTIONS_NAV, ghPanel.BackColorScrollBar, _
                                        ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
     end if

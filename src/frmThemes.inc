@@ -567,7 +567,7 @@ private sub frmThemes_ThemeDescTip()
     tipc.BorderColor = ghEditor.Divider
     tipc.ForeColor   = theme.topmenu.text.forecolor
     tipc.TitleColor  = ghPanel.ForeColorHot
-    tipc.GlyphColor  = ghUI.AccentColor
+    tipc.GlyphColor  = theme.ui.accent
     PsTooltip_SetColors( ghThemesDescTip, @tipc )
 end sub
 
@@ -594,7 +594,7 @@ private sub frmThemes_ApplyShellTheme()
         sc.ForeColor        = ghPanel.ForeColor
         sc.ForeColorHot     = ghPanel.ForeColorHot
         sc.ForeColorSelect  = ghPanel.ForeColorHot
-        sc.IndicatorColor   = ghUI.AccentColor
+        sc.IndicatorColor   = theme.ui.accent
         PsSelectBar_SetColors( ghThemesBar, @sc )
         PsSelectBar_SetFont( ghThemesBar, OptionsFont_Base() )
         PsSelectBar_Refresh( ghThemesBar )
@@ -932,7 +932,7 @@ function frmThemes_WndProc( _
             SetRect( @rDirty, AfxScaleX(FRMTHEMES_MARGIN), rc.bottom - AfxScaleY(FRMTHEMES_FOOTER_H), _
                      rc.right \ 2, rc.bottom )
             b.SetFont( ghFont(GUIFONT_10) )
-            b.SetForeColor( ghUI.AccentColor )
+            b.SetForeColor( theme.ui.accent )
             b.PaintText( L(395,"Unsaved changes"), @rDirty, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
         end if
 

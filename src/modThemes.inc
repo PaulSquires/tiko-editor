@@ -255,31 +255,11 @@ dim shared ghPanel as PANEL_HANDLES_TYPE
 ' always fed the POPUP menus rather than the horizontal bar, which the flat gh* naming
 ' actively disguised (ghPopup fed by topmenu.*, ghMenuBar by menubar.*).
 
-type TOPTABS_HANDLES_TYPE
-    BackColor as COLORREF
-    BackColorHot as COLORREF
-    ForeColor as COLORREF
-    ForeColorHot as COLORREF
-    Divider as COLORREF
-    CloseBackColorHot as COLORREF
-    IconSelectedBackColor as COLORREF
-end type
-dim shared ghTopTabs as TOPTABS_HANDLES_TYPE
+' ghTopTabs is GONE -- migrated to theme.toptabs.*
 
 ' ghStatusBar is GONE -- migrated to theme.statusbar.text.* / .texthot.*
 
-type OUTPUT_HANDLES_TYPE
-    BackColor as COLORREF
-    BackColorHot as COLORREF
-    ForeColor as COLORREF
-    ForeColorHot as COLORREF
-    Divider as COLORREF
-    CloseBackColorHot as COLORREF
-    BackColorScrollBar as COLORREF
-    ForeColorScrollBar as COLORREF
-    ScrollBarDivider as COLORREF
-end type
-dim shared ghOutput as OUTPUT_HANDLES_TYPE
+' ghOutput is GONE -- migrated to theme.output.*
 
 ' Chrome that is not the editor but has always been dressed FROM the editor keys, because
 ' there was nowhere else to put it: the app-wide hairline, the fill/text of every PsTextBox,
@@ -290,18 +270,8 @@ dim shared ghOutput as OUTPUT_HANDLES_TYPE
 ' NOTHING READS THESE YET. Theme_ResolveFallbacks fills them from the editor.* values when a
 ' theme does not define them, so every existing theme keeps working byte-for-byte; repointing
 ' the ~20 consumers is a separate, reviewable patch and deliberately not part of this one.
-type UI_HANDLES_TYPE
-    Divider as COLORREF
-    ForeColorField as COLORREF
-    BackColorField as COLORREF
-    ForeColorScrollBar as COLORREF
-    BackColorScrollBar as COLORREF
-    ' The theme's ACCENT -- the one colour that means "this is on / selected / active".
-    ' Every control that needs it was reaching into some unrelated group for it (the toggle
-    ' used a panel button grey, which is why an ON switch read as dimmer than an OFF one).
-    AccentColor as COLORREF
-end type
-dim shared ghUI as UI_HANDLES_TYPE
+' ghUI is GONE -- migrated to theme.ui.*. Its four field/scrollbar members finally have
+' consumers: see the chrome cleanup in Phase 4.
 
 
 ''
@@ -769,10 +739,6 @@ private sub Theme_BuildBindTable()
     ' ---- ui: chrome split out of the editor namespace ----------------------------------
     ' Filled by Theme_ResolveFallbacks when a theme does not define them. All three are
     ' app-wide, hence THSUB_ALL.
-    ThemeBind_Add( "ui.divider",   @ghUI.Divider,            0,                  0, 0, 0, THSUB_ALL )
-    ThemeBind_Add( "ui.field",     @ghUI.ForeColorField,     @ghUI.BackColorField,     0, 0, 0, THSUB_ALL )
-    ThemeBind_Add( "ui.scrollbar", @ghUI.ForeColorScrollBar, @ghUI.BackColorScrollBar, 0, 0, 0, THSUB_ALL )
-    ThemeBind_Add( "ui.accent",    0, @ghUI.AccentColor, 0, 0, 0, THSUB_ALL )
 
     ' ---- panel ------------------------------------------------------------------------
     ThemeBind_Add( "panel.text",           @ghPanel.ForeColor, @ghPanel.BackColor )
@@ -791,21 +757,10 @@ private sub Theme_BuildBindTable()
     ' ---- menubar -----------------------------------------------------------------------
 
     ' ---- toptabs -----------------------------------------------------------------------
-    ThemeBind_Add( "toptabs.text",         @ghTopTabs.ForeColor, @ghTopTabs.BackColor )
-    ThemeBind_Add( "toptabs.texthot",      @ghTopTabs.ForeColorHot, @ghTopTabs.BackColorHot )
-    ThemeBind_Add( "toptabs.divider",      @ghTopTabs.Divider )
-    ThemeBind_Add( "toptabs.closehot",     0, @ghTopTabs.CloseBackColorHot )
-    ThemeBind_Add( "toptabs.iconselected", 0, @ghTopTabs.IconSelectedBackColor )
 
     ' ---- statusbar ---------------------------------------------------------------------
 
     ' ---- output ------------------------------------------------------------------------
-    ThemeBind_Add( "output.text",             @ghOutput.ForeColor, @ghOutput.BackColor )
-    ThemeBind_Add( "output.texthot",          @ghOutput.ForeColorHot, @ghOutput.BackColorHot )
-    ThemeBind_Add( "output.divider",          @ghOutput.Divider )
-    ThemeBind_Add( "output.closehot",         0, @ghOutput.CloseBackColorHot )
-    ThemeBind_Add( "output.scrollbar",        @ghOutput.ForeColorScrollBar, @ghOutput.BackColorScrollBar )
-    ThemeBind_Add( "output.scrollbardivider", @ghOutput.ScrollBarDivider )
 
 end sub
 
@@ -1915,35 +1870,35 @@ sub Theme_DumpGlobals( byval wszOutPath as DWSTRING )
     DUMPCLR( "popup.ForeColorHot",            theme.topmenu.texthot.forecolor )
     DUMPCLR( "popup.ForeColorDisabled",       theme.topmenu.textdisabled.forecolor )
 
-    DUMPCLR( "toptabs.BackColor",             ghTopTabs.BackColor )
-    DUMPCLR( "toptabs.BackColorHot",          ghTopTabs.BackColorHot )
-    DUMPCLR( "toptabs.ForeColor",             ghTopTabs.ForeColor )
-    DUMPCLR( "toptabs.ForeColorHot",          ghTopTabs.ForeColorHot )
-    DUMPCLR( "toptabs.Divider",               ghTopTabs.Divider )
-    DUMPCLR( "toptabs.CloseBackColorHot",     ghTopTabs.CloseBackColorHot )
-    DUMPCLR( "toptabs.IconSelectedBackColor", ghTopTabs.IconSelectedBackColor )
+    DUMPCLR( "toptabs.BackColor",             theme.toptabs.text.backcolor )
+    DUMPCLR( "toptabs.BackColorHot",          theme.toptabs.texthot.backcolor )
+    DUMPCLR( "toptabs.ForeColor",             theme.toptabs.text.forecolor )
+    DUMPCLR( "toptabs.ForeColorHot",          theme.toptabs.texthot.forecolor )
+    DUMPCLR( "toptabs.Divider",               theme.toptabs.divider )
+    DUMPCLR( "toptabs.CloseBackColorHot",     theme.toptabs.closehot )
+    DUMPCLR( "toptabs.IconSelectedBackColor", theme.toptabs.iconselected )
 
     DUMPCLR( "statusbar.BackColor",           theme.statusbar.text.backcolor )
     DUMPCLR( "statusbar.BackColorHot",        theme.statusbar.texthot.backcolor )
     DUMPCLR( "statusbar.ForeColor",           theme.statusbar.text.forecolor )
     DUMPCLR( "statusbar.ForeColorHot",        theme.statusbar.texthot.forecolor )
 
-    DUMPCLR( "output.BackColor",              ghOutput.BackColor )
-    DUMPCLR( "output.BackColorHot",           ghOutput.BackColorHot )
-    DUMPCLR( "output.ForeColor",              ghOutput.ForeColor )
-    DUMPCLR( "output.ForeColorHot",           ghOutput.ForeColorHot )
-    DUMPCLR( "output.Divider",                ghOutput.Divider )
-    DUMPCLR( "output.CloseBackColorHot",      ghOutput.CloseBackColorHot )
-    DUMPCLR( "output.BackColorScrollBar",     ghOutput.BackColorScrollBar )
-    DUMPCLR( "output.ForeColorScrollBar",     ghOutput.ForeColorScrollBar )
-    DUMPCLR( "output.ScrollBarDivider",       ghOutput.ScrollBarDivider )
+    DUMPCLR( "output.BackColor",              theme.output.text.backcolor )
+    DUMPCLR( "output.BackColorHot",           theme.output.texthot.backcolor )
+    DUMPCLR( "output.ForeColor",              theme.output.text.forecolor )
+    DUMPCLR( "output.ForeColorHot",           theme.output.texthot.forecolor )
+    DUMPCLR( "output.Divider",                theme.output.divider )
+    DUMPCLR( "output.CloseBackColorHot",      theme.output.closehot )
+    DUMPCLR( "output.BackColorScrollBar",     theme.output.scrollbar.backcolor )
+    DUMPCLR( "output.ForeColorScrollBar",     theme.output.scrollbar.forecolor )
+    DUMPCLR( "output.ScrollBarDivider",       theme.output.scrollbardivider )
 
-    DUMPCLR( "ui.Divider",                    ghUI.Divider )
-    DUMPCLR( "ui.ForeColorField",             ghUI.ForeColorField )
-    DUMPCLR( "ui.BackColorField",             ghUI.BackColorField )
-    DUMPCLR( "ui.ForeColorScrollBar",         ghUI.ForeColorScrollBar )
-    DUMPCLR( "ui.BackColorScrollBar",         ghUI.BackColorScrollBar )
-    DUMPCLR( "ui.AccentColor",                ghUI.AccentColor )
+    DUMPCLR( "ui.Divider",                    theme.ui.divider )
+    DUMPCLR( "ui.ForeColorField",             theme.ui.field.forecolor )
+    DUMPCLR( "ui.BackColorField",             theme.ui.field.backcolor )
+    DUMPCLR( "ui.ForeColorScrollBar",         theme.ui.scrollbar.forecolor )
+    DUMPCLR( "ui.BackColorScrollBar",         theme.ui.scrollbar.backcolor )
+    DUMPCLR( "ui.AccentColor",                theme.ui.accent )
 
     ' The two alpha sentinels. -1 means the theme asked for no alpha and the consumer keeps
     ' whatever constant it uses today.

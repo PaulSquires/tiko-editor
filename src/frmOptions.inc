@@ -210,7 +210,7 @@ private sub frmOptions_NavPaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
         foreclr = ghPanel.ForeColorHot
     else
         ' Idle rows read in the nav panel's own shade -- the separator between nav and page now.
-        backclr = ghTopTabs.BackColorHot
+        backclr = theme.toptabs.texthot.backcolor
         foreclr = ghPanel.ForeColor
     end if
 
@@ -552,7 +552,7 @@ private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     rcNavPanel.top    = 0
     rcNavPanel.right  = navW
     rcNavPanel.bottom = rc.bottom
-    buffer.SetBackColor( ghTopTabs.BackColorHot )
+    buffer.SetBackColor( theme.toptabs.texthot.backcolor )
     buffer.PaintRect( @rcNavPanel )
 
     ' Page title band.
@@ -601,7 +601,7 @@ private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     buffer.PaintRoundOutline( @rcFrame, curveG, 1 )
 
     ' There is NO vertical rule between the nav list and the page any more -- the nav panel's
-    ' own distinct background (ghTopTabs.BackColorHot) separates the two columns instead.
+    ' own distinct background (theme.toptabs.texthot.backcolor) separates the two columns instead.
     ' There is also deliberately NO rule above the footer buttons and none between settings rows.
 
     ' No rule under the page title -- the dialog has no divider lines at all now; the nav
@@ -1017,7 +1017,7 @@ private sub frmOptions_ApplyTheme( byval hwnd as HWND )
 
     ' The nav panel reads in its own distinct shade -- this is what separates it from the page
     ' now that the vertical divider is gone.
-    PsListTree_SetBackColor( HWND_FRMOPTIONS_NAV, ghTopTabs.BackColorHot )
+    PsListTree_SetBackColor( HWND_FRMOPTIONS_NAV, theme.toptabs.texthot.backcolor )
     PsListTree_SetScrollBarColors( HWND_FRMOPTIONS_NAV, ghPanel.BackColorScrollBar, _
                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
 

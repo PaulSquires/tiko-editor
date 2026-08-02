@@ -574,9 +574,9 @@ private sub frmThemes_FillPickerColors( byval pc as PSCOLORPICKER_COLORS ptr )
     pc->FieldBackColor      = ghEditor.BackColorText
     pc->FieldForeColor      = ghEditor.ForeColorText
     pc->FieldBorderColor    = ghEditor.Divider
-    pc->FieldBorderColorSel = ghUI.AccentColor
-    pc->SelRingColor        = ghUI.AccentColor
-    pc->FocusRingColor      = ghUI.AccentColor
+    pc->FieldBorderColorSel = theme.ui.accent
+    pc->SelRingColor        = theme.ui.accent
+    pc->FocusRingColor      = theme.ui.accent
     ' HotRingColor stays at its white default: it is drawn ON a swatch of an arbitrary colour.
 end sub
 
@@ -1084,14 +1084,14 @@ private sub frmThemes_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
         dim as RECT rcF = ( xFore, yMid, xFore + sw, yMid + sh )
         p->b->SetBackColor( gTheme(n).foreground )
         p->b->PaintRect( @rcF )
-        p->b->SetPenColor( ghUI.Divider )
+        p->b->SetPenColor( theme.ui.divider )
         p->b->PaintRoundOutline( @rcF, 0, 1 )
     end if
     if gThemeBind(nb).pBack <> 0 then
         dim as RECT rcB = ( xBack, yMid, xBack + sw, yMid + sh )
         p->b->SetBackColor( gTheme(n).background )
         p->b->PaintRect( @rcB )
-        p->b->SetPenColor( ghUI.Divider )
+        p->b->SetPenColor( theme.ui.divider )
         p->b->PaintRoundOutline( @rcB, 0, 1 )
     end if
 end sub

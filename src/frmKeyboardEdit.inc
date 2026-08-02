@@ -456,7 +456,7 @@ private function frmKeyboardEdit_CaptureProc( _
             if gEditFlashOn then
                 penclr = theme.compile.iconfail : penw = 2
             elseif gEditCaptureFocus then
-                penclr = ghUI.AccentColor   : penw = 2
+                penclr = theme.ui.accent   : penw = 2
             end if
             buffer.SetPenColor( penclr )
             buffer.PaintRoundOutline( @rc, curve, penw )
@@ -501,7 +501,7 @@ private function frmKeyboardEdit_CaptureProc( _
                     rcCaret.right  = rcCaret.left + caretW
                     rcCaret.top    = (rc.bottom - barH) \ 2
                     rcCaret.bottom = rcCaret.top + barH
-                    buffer.SetBackColor( ghUI.AccentColor )
+                    buffer.SetBackColor( theme.ui.accent )
                     buffer.PaintRect( @rcCaret )
                     buffer.SetBackColor( ghEditor.BackColorText )
                 end if
@@ -764,8 +764,8 @@ private sub frmKeyboardEdit_ApplyTheme( byval hwnd as HWND )
     dim as PSTOGGLE_COLORS tc
     tc.BackColor                   = ghPanel.BackColor
     tc.FocusRingColor              = ghPanel.ForeColorHot
-    tc.TrackColorOn                = ghUI.AccentColor
-    tc.TrackColorOnHot             = ghUI.AccentColor
+    tc.TrackColorOn                = theme.ui.accent
+    tc.TrackColorOnHot             = theme.ui.accent
     tc.TrackColorOnDisabled        = ghPanel.BackColorButton
     tc.TrackBorderColorOn          = tc.TrackColorOn
     tc.TrackBorderColorOnHot       = tc.TrackColorOnHot

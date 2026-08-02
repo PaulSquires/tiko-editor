@@ -441,8 +441,8 @@ sub OptionsTheme_FillToggle( byval tc as PSTOGGLE_COLORS ptr )
     ' one strong signal left was the knob, so an OFF switch read as BRIGHTER than an ON one
     ' and the whole control inverted at a glance. Reported 2026-07-25 after it caused a
     ' settings value to be misread as its opposite.
-    tc->TrackColorOn                = ghUI.AccentColor
-    tc->TrackColorOnHot             = ghUI.AccentColor
+    tc->TrackColorOn                = theme.ui.accent
+    tc->TrackColorOnHot             = theme.ui.accent
     tc->TrackColorOnDisabled        = ghPanel.BackColorButton
     tc->TrackBorderColorOn          = tc->TrackColorOn
     tc->TrackBorderColorOnHot       = tc->TrackColorOnHot

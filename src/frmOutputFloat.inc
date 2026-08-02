@@ -115,7 +115,7 @@ sub frmOutputFloat_SyncBrush()
     dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMOUTPUTFLOAT )
     if pWindow = 0 then exit sub
     dim as HBRUSH hOld = ghOutFloatBrush
-    ghOutFloatBrush = CreateSolidBrush( ghOutput.BackColorHot )
+    ghOutFloatBrush = CreateSolidBrush( theme.output.texthot.backcolor )
     pWindow->Brush = ghOutFloatBrush
     ' Freed only AFTER the class has stopped pointing at it.
     if hOld then DeleteObject( hOld )
@@ -162,7 +162,7 @@ private function frmOutputFloat_WndProc( byval hwnd   as HWND, _
             ' Only ever visible for the instant between a resize and the panel catching up.
             dim as PsBufferPaint b
             b.BeginDoubleBuffer(hwnd)
-            b.SetBackColor( ghOutput.BackColorHot )
+            b.SetBackColor( theme.output.texthot.backcolor )
             b.PaintClientRect()
             b.EndDoubleBuffer()
             return 0

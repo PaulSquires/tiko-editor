@@ -169,9 +169,9 @@ end sub
 ''
 private sub Theme_PushOutputList( byval hList as HWND )
     if IsWindow(hList) = 0 then exit sub
-    PsListTree_SetBackColor( hList, ghOutput.BackColor )
-    PsListTree_SetScrollBarColors( hList, ghOutput.BackColorScrollBar, _
-                                  ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
+    PsListTree_SetBackColor( hList, theme.output.text.backcolor )
+    PsListTree_SetScrollBarColors( hList, theme.output.scrollbar.backcolor, _
+                                  theme.output.scrollbar.forecolor, theme.output.scrollbar.forecolor )
 end sub
 
 
@@ -184,9 +184,9 @@ end sub
 ''
 private sub Theme_PushTopTabsTextBox( byval hTextBox as HWND )
     if IsWindow(hTextBox) = 0 then exit sub
-    PsTextBox_SetForeColor( hTextBox, ghTopTabs.ForeColorHot )
-    PsTextBox_SetBackColor( hTextBox, ghTopTabs.BackColorHot )
-    PsTextBox_SetCueBannerColor( hTextBox, ghTopTabs.ForeColor )
+    PsTextBox_SetForeColor( hTextBox, theme.toptabs.texthot.forecolor )
+    PsTextBox_SetBackColor( hTextBox, theme.toptabs.texthot.backcolor )
+    PsTextBox_SetCueBannerColor( hTextBox, theme.toptabs.text.forecolor )
 end sub
 
 
@@ -216,12 +216,12 @@ private sub Theme_PushStripIcons( byval hPanel as HWND )
     PsIconPanel_GetColors( hPanel, @c )
     ' The strip's field colour, not the tab area's -- a hovered button inverts TO BackColor,
     ' so idle is the hot one. Same inversion the bar has always drawn.
-    c.BackColor         = ghTopTabs.BackColorHot
-    c.ForeColor         = ghTopTabs.ForeColorHot
-    c.BackColorHot      = ghTopTabs.BackColor
-    c.ForeColorHot      = ghTopTabs.ForeColorHot
-    c.BackColorSelect   = ghTopTabs.BackColor
-    c.ForeColorSelect   = ghTopTabs.ForeColorHot
+    c.BackColor         = theme.toptabs.texthot.backcolor
+    c.ForeColor         = theme.toptabs.texthot.forecolor
+    c.BackColorHot      = theme.toptabs.text.backcolor
+    c.ForeColorHot      = theme.toptabs.texthot.forecolor
+    c.BackColorSelect   = theme.toptabs.text.backcolor
+    c.ForeColorSelect   = theme.toptabs.texthot.forecolor
     c.SeparatorColor    = ghEditor.Divider
     PsIconPanel_SetColors( hPanel, @c )
 end sub
@@ -252,7 +252,7 @@ private sub Theme_FillTooltipColors( byref tipc as PSTOOLTIP_COLORS )
     tipc.BorderColor = ghEditor.Divider
     tipc.ForeColor   = theme.topmenu.text.forecolor
     tipc.TitleColor  = ghPanel.ForeColorHot
-    tipc.GlyphColor  = ghUI.AccentColor
+    tipc.GlyphColor  = theme.ui.accent
 end sub
 
 
@@ -420,11 +420,11 @@ sub Theme_ApplySubsystems( byval nMask as ulong )
 
     if (nMask and THSUB_TOPTABS) <> 0 then
         if IsWindow(HWND_FRMMAIN_TOPTABS) then
-            PsTabBar_SetBackColor( HWND_FRMMAIN_TOPTABS, ghTopTabs.BackColor )
+            PsTabBar_SetBackColor( HWND_FRMMAIN_TOPTABS, theme.toptabs.text.backcolor )
             PsTabBar_SetBorderColor( HWND_FRMMAIN_TOPTABS, ghEditor.Divider )
         end if
         if IsWindow(HWND_FRMMAIN_TOPTABSMENU) then _
-            PsStatusBar_SetBackColor( HWND_FRMMAIN_TOPTABSMENU, ghTopTabs.BackColor )
+            PsStatusBar_SetBackColor( HWND_FRMMAIN_TOPTABSMENU, theme.toptabs.text.backcolor )
         Theme_ApplyTopTabsIcons()
         Theme_ApplyFindIcons()
         Theme_ApplyReplaceIcons()
@@ -883,13 +883,13 @@ sub Theme_RunSelfTest()
         THASSERT( lumOn > lumOff, _
                   "an OFF switch reads BRIGHTER than an ON one (on=" & str(lumOn) & _
                   " off=" & str(lumOff) & ") -- the control inverts at a glance" )
-        THASSERT( tc.TrackColorOn = ghUI.AccentColor, _
+        THASSERT( tc.TrackColorOn = theme.ui.accent, _
                   "the ON track is not the theme accent" )
     end scope
 
     ' -- 19. The accent key exists and actually carries a colour. -------------------------
     THASSERT( Theme_FindEntry( "ui.accent" ) >= 0, "ui.accent was not materialised by the fallback" )
-    THASSERT( ghUI.AccentColor <> ghPanel.BackColor, "the accent is the same as the page background" )
+    THASSERT( theme.ui.accent <> ghPanel.BackColor, "the accent is the same as the page background" )
 
     ' -- 20. %MACRO survives a write/read round trip. ------------------------------------
     '    The writer used to expand every macro to literal r,g,b, so the first save of a
