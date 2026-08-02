@@ -1804,6 +1804,11 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Rendering-backend geometry self-test. Runs here because it needs a CWindow-backed
     ' HWND (PaintLine asks it for the DPI scale) but nothing else -- no theme, no config.
     if environ("PSBUFFERPAINT_SELFTEST") = "1" then PsBufferPaint_RunSelfTest( HWND_FRMMAIN )
+    ' The colour picker's own suite. tiko vendored the control for a long time without ever
+    ' calling this -- the file was included and the assertions never ran. Wired up with the
+    ' sync to canonical, which is exactly when a regression net over it starts earning its
+    ' keep: it is 195 assertions tiko was already carrying the code for.
+    if environ("PSCOLORPICKER_SELFTEST") = "1" then PsColorPicker_RunSelfTest( HWND_FRMMAIN )
 
     ' Build the keyboard accelerators
     frmKeyboard_BuildAcceleratorTable()

@@ -166,6 +166,21 @@ function PsColorPicker_SystemColorName( byval idx as long ) as DWSTRING
 end function
 
 
+' The caption on tab idx. THE ONE DEFINITION -- the layout measures it to size the tab and the
+' painter draws it, and while the strip divided itself into equal thirds a literal in the painter
+' was harmless. It is not now: a second copy of the word would be a second, silently different
+' tab width.
+function PsColorPicker_TabName( byval idx as long ) as DWSTRING
+    dim as DWSTRING wszOut
+    select case idx
+    case CLR_TAB_WEB    : wszOut = "Web"
+    case CLR_TAB_SYSTEM : wszOut = "System"
+    case CLR_TAB_CUSTOM : wszOut = "Custom"
+    end select
+    return wszOut
+end function
+
+
 ' ========================================================================================
 ' Is (x,y) inside rc? Written out rather than calling PtInRect so it is a PURE function of four
 ' longs and can be asserted without a window -- and so the half-open convention (left/top
@@ -183,6 +198,10 @@ end function
 ' this control holds no handles to other controls, so the registry that made that one different
 ' would be machinery with nothing to protect against.
 ' ========================================================================================
+' END THE NESTED LOOP. Declared here because the WndProc calls it and it is defined with the
+' rest of the modal machinery, below.
+declare sub PsColorPicker_EndModal( byval pClr as PSCOLORPICKER ptr, byval bAccept as boolean )
+
 function GetColorPickerPointer( byval hColorPicker as HWND ) as PSCOLORPICKER ptr
     if hColorPicker = 0 then return 0
     dim as CWindow ptr pWindow = AfxCWindowPtr( hColorPicker )
@@ -223,11 +242,8 @@ end function
 ' ========================================================================================
 ' How many cells does the CURRENT tab's body hold?
 '
-' The palette's count is pulled from the host on every call rather than cached, which is the
-' contract stated on CLR_PaletteCountCallbackFunc: a palette that changes underneath must not
-' need an invalidation protocol. That does mean the callback is invoked several times per
-' repaint, so a host implementing it should make it cheap -- reading an array's ubound, not
-' re-parsing a file.
+' Every tab's count is now a fixed table or a product of two layout numbers -- there is no host
+' callback left to consult, since the palette tab went. So this is cheap and is called freely.
 ' ========================================================================================
 function PsColorPicker_GridCount( byval pClr as PSCOLORPICKER ptr ) as long
     if pClr = 0 then return 0
@@ -238,16 +254,12 @@ function PsColorPicker_GridCount( byval pClr as PSCOLORPICKER ptr ) as long
         return PsColorPicker_WebColorCount()
     case CLR_TAB_SYSTEM
         return PsColorPicker_SystemColorCount()
-    case CLR_TAB_PALETTE
-        if pClr->PaletteCountCallback = 0 then return 0
-        return pClr->PaletteCountCallback( pClr->hWin )
     end select
     return 0
 end function
 
 
-' The colour of body cell idx on the current tab. FALSE when idx is out of range, or when the
-' host's palette entry callback declines it -- a palette is allowed to have holes.
+' The colour of body cell idx on the current tab. FALSE when idx is out of range.
 private function PsColorPicker_GridColorAt( _
             byval pClr as PSCOLORPICKER ptr, _
             byval idx  as long, _
@@ -271,10 +283,6 @@ private function PsColorPicker_GridColorAt( _
     case CLR_TAB_SYSTEM
         clr = PsColorPicker_SystemColorAt( idx )
         return true
-    case CLR_TAB_PALETTE
-        if pClr->PaletteEntryCallback = 0 then return false
-        dim as DWSTRING wszName
-        return pClr->PaletteEntryCallback( pClr->hWin, idx, wszName, clr )
     end select
     return false
 end function
@@ -300,10 +308,6 @@ private function PsColorPicker_GridNameAt( _
     case CLR_TAB_SYSTEM
         wszName = PsColorPicker_SystemColorName( idx )
         return true
-    case CLR_TAB_PALETTE
-        if pClr->PaletteEntryCallback = 0 then return false
-        dim as COLORREF clr
-        return pClr->PaletteEntryCallback( pClr->hWin, idx, wszName, clr )
     end select
     return false
 end function
@@ -318,8 +322,7 @@ end function
 
 
 ' How many rows fit in the list viewport RIGHT NOW. Derived from the rect rather than from
-' nListRows, because the palette tab gives up part of its height to the Assign button and the
-' host may have sized the control shorter than ideal.
+' nListRows, because the host may have sized the popup shorter than ideal.
 private function PsColorPicker_VisibleRows( byval pClr as PSCOLORPICKER ptr ) as long
     if pClr = 0 then return 0
     if pClr->nRowH <= 0 then return 0
@@ -419,9 +422,9 @@ end sub
 ' there is that colour, and inventing a nearest match would be the control answering a question
 ' the user did not ask.
 '
-' The palette scan asks the host for every entry, so it is O(n) in the palette's size on every
-' colour change. Palettes here are the handful of named colours a theme defines; if that ever
-' stops being true this is the line to look at first.
+' The list scan is O(n) in the tab's entry count on every colour change -- 137 comparisons on
+' the Web tab. That is cheap enough to do unconditionally, which is what keeps the ring a pure
+' function of the value rather than something a caller has to remember to refresh.
 ' ========================================================================================
 sub PsColorPicker_SyncBodySel( byval pClr as PSCOLORPICKER ptr )
     if pClr = 0 then exit sub
@@ -488,7 +491,6 @@ private sub PsColorPicker_ApplyColor( _
         case CLR_FIELD_G : pClr->wszEdit = str( (clng(clr) shr 8) and &hFF )
         case CLR_FIELD_B : pClr->wszEdit = str( (clng(clr) shr 16) and &hFF )
         case CLR_FIELD_A : pClr->wszEdit = str( clng(nAlpha) )
-        case else        : pClr->wszEdit = PsColorPicker_FormatHex( clr )
         end select
         if pClr->nCaret > len( pClr->wszEdit ) then pClr->nCaret = len( pClr->wszEdit )
         ' The value moved underneath the caret, so what is in the field is a fresh seed again and
@@ -529,21 +531,23 @@ private function PsColorPicker_FieldText( _
     case CLR_FIELD_G : wszOut = str( (clng(pClr->clrCurrent) shr 8) and &hFF )
     case CLR_FIELD_B : wszOut = str( (clng(pClr->clrCurrent) shr 16) and &hFF )
     case CLR_FIELD_A : wszOut = str( clng(pClr->nAlphaCurrent) )
-    case CLR_FIELD_HEX : wszOut = PsColorPicker_FormatHex( pClr->clrCurrent )
     end select
     return wszOut
 end function
 
 
-private function PsColorPicker_FieldLabel( byval nField as long ) as DWSTRING
+' The label drawn beside a field. HOST-SETTABLE now, and stored per field rather than returned
+' from a select case: the labels went from single letters to whole words with the popup
+' conversion, and a word is a thing a host translates. Defaults are assigned at Create.
+private function PsColorPicker_FieldLabel( _
+            byval pClr   as PSCOLORPICKER ptr, _
+            byval nField as long _
+            ) as DWSTRING
+
     dim as DWSTRING wszOut
-    select case nField
-    case CLR_FIELD_R   : wszOut = "R"
-    case CLR_FIELD_G   : wszOut = "G"
-    case CLR_FIELD_B   : wszOut = "B"
-    case CLR_FIELD_A   : wszOut = "A"
-    case CLR_FIELD_HEX : wszOut = "#"
-    end select
+    if pClr = 0 then return wszOut
+    if (nField < 0) orelse (nField >= CLR_FIELD_COUNT) then return wszOut
+    wszOut = pClr->wszFieldLabel(nField)
     return wszOut
 end function
 
@@ -596,30 +600,22 @@ private sub PsColorPicker_CommitField( byval pClr as PSCOLORPICKER ptr )
     dim as ubyte    nANew  = pClr->nAlphaCurrent
     dim as boolean  bValid = false
 
-    if nField = CLR_FIELD_HEX then
-        dim as COLORREF c
-        if PsColorPicker_ParseHex( pClr->wszEdit, c ) then
-            clrNew = c
-            bValid = true
-        end if
-    else
-        dim as string s = trim( pClr->wszEdit )
-        if len( s ) > 0 then
-            dim as long v = clng( valint( s ) )
-            if v < 0 then v = 0
-            if v > 255 then v = 255
-            dim as long nR = clng(pClr->clrCurrent) and &hFF
-            dim as long nG = (clng(pClr->clrCurrent) shr 8) and &hFF
-            dim as long nB = (clng(pClr->clrCurrent) shr 16) and &hFF
-            select case nField
-            case CLR_FIELD_R : nR = v
-            case CLR_FIELD_G : nG = v
-            case CLR_FIELD_B : nB = v
-            case CLR_FIELD_A : nANew = cubyte(v)
-            end select
-            clrNew = BGR( nR, nG, nB )
-            bValid = true
-        end if
+    dim as string s = trim( pClr->wszEdit )
+    if len( s ) > 0 then
+        dim as long v = clng( valint( s ) )
+        if v < 0 then v = 0
+        if v > 255 then v = 255
+        dim as long nR = clng(pClr->clrCurrent) and &hFF
+        dim as long nG = (clng(pClr->clrCurrent) shr 8) and &hFF
+        dim as long nB = (clng(pClr->clrCurrent) shr 16) and &hFF
+        select case nField
+        case CLR_FIELD_R : nR = v
+        case CLR_FIELD_G : nG = v
+        case CLR_FIELD_B : nB = v
+        case CLR_FIELD_A : nANew = cubyte(v)
+        end select
+        clrNew = BGR( nR, nG, nB )
+        bValid = true
     end if
 
     ' Clear the caret BEFORE applying, so ApplyColor's re-seed of wszEdit does not run and leave
@@ -759,13 +755,7 @@ private sub PsColorPicker_RenderTabs( _
         b->SetBackColor( clrBack )
         b->PaintRect( @rc )
 
-        dim as DWSTRING wszCaption
-        select case i
-        case CLR_TAB_WEB     : wszCaption = "Web"
-        case CLR_TAB_SYSTEM  : wszCaption = "System"
-        case CLR_TAB_CUSTOM  : wszCaption = "Custom"
-        case CLR_TAB_PALETTE : wszCaption = "Palette"
-        end select
+        dim as DWSTRING wszCaption = PsColorPicker_TabName( i )
 
         b->SetColors( clrFore, clrBack )
         b->PaintText( wszCaption, @rc, DT_CENTER or DT_END_ELLIPSIS )
@@ -783,7 +773,7 @@ private sub PsColorPicker_RenderTabs( _
 end sub
 
 
-' Only the MATRIX renders through here now -- the Web, System and Palette tabs are lists and go
+' Only the MATRIX renders through here now -- the Web and System tabs are lists and go
 ' through PsColorPicker_RenderList. It does the same arithmetic PsColorPicker_CellFromPoint does,
 ' which is what stops the painter and the hit test disagreeing about where a cell is: a
 ' disagreement there produces "clicking one swatch rings its neighbour", which looks fine in a
@@ -836,12 +826,12 @@ end sub
 
 
 ' ========================================================================================
-' THE LIST.  Web, System and Palette all render through here: one row per entry, a swatch on the
+' THE LIST.  Web and System both render through here: one row per entry, a swatch on the
 ' left and the entry's NAME beside it, scrolled by whole rows.
 '
 ' ONE RENDERER FOR THREE TABS, and that is the point rather than an economy. They differ only in
 ' where the rows come from -- PsColorPicker_GridColorAt and _GridNameAt already answer that -- so
-' three renderers would be three chances for the Web tab to drift from the Palette tab in row
+' two renderers would be two chances for the Web tab to drift from the System tab in row
 ' height, swatch inset or highlight colour, and no assertion would notice, because each would be
 ' internally consistent.
 '
@@ -922,23 +912,6 @@ private sub PsColorPicker_RenderList( _
         end if
     next
 
-    ' The Assign button -- palette tab only. Reserved unconditionally by the layout, and drawn
-    ' looking disabled when there is nothing selected to assign rather than hidden, because a
-    ' button that appears and disappears as you click around the list reads as a glitch.
-    if IsRectEmpty( @pClr->rcAssign ) = 0 then
-        dim as boolean bArmed = (pClr->nBodySel >= 0)
-        dim as COLORREF clrBack = pClr->colors.FieldBackColor
-        if pClr->bHotAssign andalso bArmed then clrBack = pClr->colors.TabBackColorSel
-        dim as COLORREF clrFore = pClr->colors.ForeColor
-        if bArmed = false then clrFore = pClr->colors.TabForeColor
-
-        dim as RECT rcA = pClr->rcAssign
-        b->SetBackColor( clrBack )
-        b->PaintRect( @rcA )
-        PsColorPicker_Frame( b, rcA, pClr->colors.FieldBorderColor, pClr->nBorderThick, pClr->nCurvature )
-        b->SetColors( clrFore, clrBack )
-        b->PaintText( pClr->wszAssign, @rcA, DT_CENTER or DT_END_ELLIPSIS )
-    end if
 end sub
 
 
@@ -947,33 +920,65 @@ private sub PsColorPicker_RenderPreviews( _
             byval b    as PsBufferPaint ptr _
             )
 
-    ' Empty rect = selection-only mode, where there is no preview pair to draw. Gated on the
-    ' RECT rather than on the flag so the painter follows the layout by construction.
-    if IsRectEmpty( @pClr->rcInitial ) then exit sub
+    if IsRectEmpty( @pClr->rcPreview ) then exit sub
 
     dim as HFONT hFontUse = pClr->hTextFont
     if hFontUse = 0 then hFontUse = cast( HFONT, GetStockObject( DEFAULT_GUI_FONT ) )
     b->SetFont( hFontUse )
 
+    ' THE LABELS ARE OUTSIDE THE BOX NOW -- "Initial" above it, "Current" below -- which is what
+    ' the reference does and is the reason PsColorPicker_ContrastColor no longer appears here.
+    ' Drawing them inside was forced by the embedded panel's width; a popup has the two rows to
+    ' spare, and a label on the panel is legible against one known colour rather than against
+    ' whatever the user just picked.
+    b->SetColors( pClr->colors.ForeColor, pClr->colors.BackColor )
+    dim as RECT rcIL = pClr->rcInitialLabel
+    b->PaintText( pClr->wszInitialLabel, @rcIL, DT_CENTER or DT_END_ELLIPSIS )
+    dim as RECT rcCL = pClr->rcCurrentLabel
+    b->PaintText( pClr->wszCurrentLabel, @rcCL, DT_CENTER or DT_END_ELLIPSIS )
+
     dim as RECT rcI = pClr->rcInitial
     b->SetBackColor( pClr->clrInitial )
     b->PaintRect( @rcI )
-    ' The label goes INSIDE the box in whichever of black/white is legible on it -- there is no
-    ' room beside the previews, and two unlabelled rectangles do not tell you which is which.
-    b->SetColors( PsColorPicker_ContrastColor( pClr->clrInitial ), pClr->clrInitial )
-    b->PaintText( pClr->wszInitialLabel, @rcI, DT_CENTER or DT_END_ELLIPSIS )
 
     dim as RECT rcC = pClr->rcCurrent
     b->SetBackColor( pClr->clrCurrent )
     b->PaintRect( @rcC )
-    b->SetColors( PsColorPicker_ContrastColor( pClr->clrCurrent ), pClr->clrCurrent )
-    b->PaintText( pClr->wszCurrentLabel, @rcC, DT_CENTER or DT_END_ELLIPSIS )
 
-    ' ONE frame around the PAIR, not two around the boxes: they are two readings of one value and
-    ' a shared border is what says so.
-    dim as RECT rcBoth = pClr->rcInitial
-    rcBoth.bottom = pClr->rcCurrent.bottom
+    ' ONE frame around the PAIR, not two around the halves: they are two readings of one value
+    ' and a shared border with no rule between them is what says so.
+    dim as RECT rcBoth = pClr->rcPreview
     PsColorPicker_Frame( b, rcBoth, pClr->colors.BorderColor, pClr->nBorderThick, 0 )
+end sub
+
+
+' The OK button. Hand-drawn rather than a vendored PsButton -- see the .bi header. Mood order is
+' pressed > hot > idle, PsButton's precedence with its two disabled entries removed: OK is never
+' disabled, because every reachable state of this popup has a committable colour in it.
+private sub PsColorPicker_RenderOK( _
+            byval pClr as PSCOLORPICKER ptr, _
+            byval b    as PsBufferPaint ptr _
+            )
+
+    if IsRectEmpty( @pClr->rcOK ) then exit sub
+
+    dim as HFONT hFontUse = pClr->hTextFont
+    if hFontUse = 0 then hFontUse = cast( HFONT, GetStockObject( DEFAULT_GUI_FONT ) )
+    b->SetFont( hFontUse )
+
+    dim as COLORREF clrBack = pClr->colors.OKBackColor
+    if pClr->bOKPressed then
+        clrBack = pClr->colors.OKBackColorPressed
+    elseif pClr->bOKHot then
+        clrBack = pClr->colors.OKBackColorHot
+    end if
+
+    dim as RECT rcB = pClr->rcOK
+    b->SetBackColor( clrBack )
+    b->PaintRect( @rcB )
+    PsColorPicker_Frame( b, rcB, pClr->colors.OKBorderColor, pClr->nBorderThick, pClr->nCurvature )
+    b->SetColors( pClr->colors.OKForeColor, clrBack )
+    b->PaintText( pClr->wszOK, @rcB, DT_CENTER or DT_END_ELLIPSIS )
 end sub
 
 
@@ -993,7 +998,7 @@ private sub PsColorPicker_RenderFields( _
 
         dim as RECT rcLab = pClr->rcFieldLabel(i)
         b->SetColors( pClr->colors.ForeColor, pClr->colors.BackColor )
-        b->PaintText( PsColorPicker_FieldLabel( i ), @rcLab, DT_LEFT )
+        b->PaintText( PsColorPicker_FieldLabel( pClr, i ), @rcLab, DT_LEFT )
 
         b->SetBackColor( pClr->colors.FieldBackColor )
         b->PaintRect( @rcBox )
@@ -1048,6 +1053,7 @@ sub PsColorPicker_RenderDefault( _
 
     PsColorPicker_RenderPreviews( pClr, b )
     PsColorPicker_RenderFields( pClr, b )
+    PsColorPicker_RenderOK( pClr, b )
 
     ' THE CONTROL-LEVEL FOCUS RING, and only when no field has the caret. With a field focused
     ' its own accent border already says where the keyboard is going, and drawing both would make
@@ -1082,9 +1088,12 @@ private sub PsColorPicker_FillPaintInfo( _
     p->rcBody        = pClr->rcBody
     p->rcMatrix      = pClr->rcMatrix
     p->rcSwatches    = pClr->rcSwatches
-    p->rcAssign      = pClr->rcAssign
+    p->rcOK          = pClr->rcOK
+    p->rcPreview     = pClr->rcPreview
     p->rcInitial     = pClr->rcInitial
     p->rcCurrent     = pClr->rcCurrent
+    p->rcInitialLabel = pClr->rcInitialLabel
+    p->rcCurrentLabel = pClr->rcCurrentLabel
     p->rcFields      = pClr->rcFields
     p->rcAlpha       = pClr->rcAlpha
     p->clrCurrent    = pClr->clrCurrent
@@ -1095,6 +1104,8 @@ private sub PsColorPicker_FillPaintInfo( _
     p->isEnabled     = pClr->isEnabled
     p->isFocused     = pClr->isFocused
     p->isDragging    = pClr->isDragging
+    p->isOKHot       = pClr->bOKHot
+    p->isOKPressed   = pClr->bOKPressed
     p->nFocusField   = pClr->nFocusField
 end sub
 
@@ -1157,14 +1168,14 @@ private function PsColorPicker_HitField( byval pClr as PSCOLORPICKER ptr, byval 
 end function
 
 
-' The index of the body cell under the point, or -1. The three grid tabs go through
-' CellFromPoint; the palette is a list, so its "cell" is a row.
+' The index of the body cell under the point, or -1. The matrix goes through CellFromPoint; a
+' list's "cell" is a row.
 private function PsColorPicker_HitBody( byval pClr as PSCOLORPICKER ptr, byval x as long, byval y as long ) as long
     if pClr = 0 then return -1
     dim as long nCount = PsColorPicker_GridCount( pClr )
     if nCount <= 0 then return -1
 
-    ' ---- the three LIST tabs: a row lookup, offset by the scroll position -----------------
+    ' ---- the two LIST tabs: a row lookup, offset by the scroll position ------------------
     if PsColorPicker_IsListTab( pClr ) then
         if PsColorPicker_PtIn( pClr->rcSwatches, x, y ) = false then return -1
         if pClr->nRowH <= 0 then return -1
@@ -1232,12 +1243,12 @@ private sub PsColorPicker_ClearHot( byval pClr as PSCOLORPICKER ptr, byval hwnd 
     ' orelse chain trips fbc's warning 38, which is a real rule and not noise (C:\dev\Learnings.md).
     dim as boolean bHotAny = ((pClr->nHotTab >= 0) orelse (pClr->nHotSwatch >= 0) orelse _
                               (pClr->nHotField >= 0))
-    dim as boolean bAny = (bHotAny orelse pClr->bHotAssign)
+    dim as boolean bAny = (bHotAny orelse pClr->bOKHot)
     if bAny then
         pClr->nHotTab    = -1
         pClr->nHotSwatch = -1
         pClr->nHotField  = -1
-        pClr->bHotAssign = false
+        pClr->bOKHot     = false
         InvalidateRect( hwnd, NULL, FALSE )
     end if
 end sub
@@ -1296,15 +1307,38 @@ end function
 ' This control has NO CHILD WINDOWS -- that is the entire point of the design -- so there is
 ' nothing to subclass: every message is handled here.
 '
-' MOUSE CAPTURE IS TAKEN FOR ONE GESTURE, the matrix drag, and the family's test comes out
-' positive for it: dragging consumes the guaranteed WM_LBUTTONDOWN -> WM_LBUTTONUP pairing. The
-' full price is paid -- release on the up before any callback runs, WM_CAPTURECHANGED cancels,
-' WM_DESTROY releases, and the callback's result is ignored for the up-message. Tabs, swatches,
-' fields and the Assign button take none: they act on a single message and have no pairing to
-' protect.
+' MOUSE CAPTURE IS TAKEN FOR TWO GESTURES, and the family's test comes out positive for both:
+' the matrix drag and the OK button's press/cancel each consume the guaranteed WM_LBUTTONDOWN ->
+' WM_LBUTTONUP pairing. The full price is paid -- release on the up before any callback runs,
+' WM_CAPTURECHANGED cancels, WM_DESTROY releases, and the callback's result is ignored for the
+' up-message. Tabs, swatches, fields and the preview all take none: they act on a single message
+' and have no pairing to protect.
 '
-' CS_DBLCLKS IS DELIBERATELY *NOT* SET. A rapid second click on a swatch is a legitimate re-pick,
-' and on the matrix it would swallow the down that starts the second of two deliberate drags.
+' A DOUBLE-CLICK ON A BODY CELL ACCEPTS -- the mouse's equivalent of the ENTER key, which the
+' keyboard has had all along.
+'
+' THIS BLOCK USED TO CLAIM "CS_DBLCLKS IS DELIBERATELY *NOT* SET", AND THAT CLAIM WAS FALSE.
+' CWindow's default class style already contains CS_DBLCLKS and always did -- measured, the class
+' style reads &hB either way. So this window has been receiving WM_LBUTTONDBLCLK all along and
+' simply had no handler for it, which means every second click of a rapid pair fell through to
+' DefWindowProc and was SILENTLY DROPPED: on a tab, on a swatch, on a field, everywhere. The
+' comment described an intention that the code never implemented, and nothing failed to say so.
+'
+' Sharing the handler below is therefore a FIX as much as a feature. Two rules keep it safe:
+'
+'   - WM_LBUTTONDBLCLK SHARES the WM_LBUTTONDOWN handler, because with CS_DBLCLKS the dblclk
+'     SUBSTITUTES for the second rapid down rather than following it. That is what stops those
+'     clicks vanishing.
+'   - Only a BODY CELL accepts. A double-click on a tab, a field, the preview or the OK button
+'     cannot close the popup, and behaves exactly as the down it replaced.
+'
+' WHAT IT GENUINELY COSTS: on the matrix, a rapid second click can no longer START the second of
+' two deliberate drags -- it commits and closes instead. That is the real trade, and it is small
+' because commit-and-close is what a user rapid-clicking a colour almost always means.
+'
+' HOSTS SHOULD KNOW THE SEQUENCE IS down, up, dblclk, up -- a double-click delivers a TRAILING
+' WM_LBUTTONUP after the accept. It is harmless here (no capture is held and no drag is running
+' by then) but it does reach the message callback.
 ' ========================================================================================
 function PsColorPicker_WndProc( _
             byval hwnd   as HWND, _
@@ -1402,20 +1436,24 @@ function PsColorPicker_WndProc( _
         dim as long nTab    = PsColorPicker_HitTab( pClr, mx, my )
         dim as long nSwatch = PsColorPicker_HitBody( pClr, mx, my )
         dim as long nField  = PsColorPicker_HitField( pClr, mx, my )
-        dim as boolean bAssign = false
-        if IsRectEmpty( @pClr->rcAssign ) = 0 then
-            bAssign = PsColorPicker_PtIn( pClr->rcAssign, mx, my )
-        end if
+        dim as boolean bOverOK = PsColorPicker_PtIn( pClr->rcOK, mx, my )
 
         dim as boolean bChanged = ((nTab <> pClr->nHotTab) orelse (nSwatch <> pClr->nHotSwatch) orelse _
                                    (nField <> pClr->nHotField))
-        dim as boolean bAssignChanged = (bAssign <> pClr->bHotAssign)
-        if bChanged orelse bAssignChanged then
+        dim as boolean bOKChanged = (bOverOK <> pClr->bOKHot)
+        if bChanged orelse bOKChanged then
             pClr->nHotTab    = nTab
             pClr->nHotSwatch = nSwatch
             pClr->nHotField  = nField
-            pClr->bHotAssign = bAssign
+            pClr->bOKHot     = bOverOK
             InvalidateRect( hwnd, NULL, FALSE )
+        end if
+
+        ' THE PRESSED STATE FOLLOWS THE CURSOR WHILE THE BUTTON IS HELD, which is what makes
+        ' press-and-slide-off visible rather than merely correct. Only meaningful while OK holds
+        ' capture, so it is gated on bOKPressed already being armed by the DOWN.
+        if pClr->bOKPressed andalso (GetCapture() = hwnd) then
+            if bOverOK <> pClr->bOKHot then InvalidateRect( hwnd, NULL, FALSE )
         end if
 
         if PsColorPicker_CallMessage( pClr, hwnd, uMsg, wParam, lParam ) then return 0
@@ -1455,9 +1493,18 @@ function PsColorPicker_WndProc( _
             return TRUE
         end if
 
-    case WM_LBUTTONDOWN
+    case WM_LBUTTONDOWN, WM_LBUTTONDBLCLK
+        ' THE TWO SHARE A HANDLER, AND THAT IS REQUIRED RATHER THAN TIDY. With CS_DBLCLKS set,
+        ' the second click of a rapid pair arrives as WM_LBUTTONDBLCLK INSTEAD OF a second
+        ' WM_LBUTTONDOWN -- it substitutes for it, it does not follow it. A handler that answered
+        ' only WM_LBUTTONDOWN would therefore drop every second rapid click on a tab, a field or
+        ' the OK button.
+        '
+        ' The double-click's ONLY extra meaning is on a body cell, where it accepts; everywhere
+        ' else it behaves exactly as the down it replaced.
         if pClr = 0 then return 0
         if pClr->isEnabled = false then return 0
+        dim as boolean bDblClk = (uMsg = WM_LBUTTONDBLCLK)
 
         dim as long mx = cast( short, loword(lParam) )
         dim as long my = cast( short, hiword(lParam) )
@@ -1496,15 +1543,28 @@ function PsColorPicker_WndProc( _
             return 0
         end if
 
-        dim as boolean bAssignHit = false
-        if IsRectEmpty( @pClr->rcAssign ) = 0 then
-            bAssignHit = PsColorPicker_PtIn( pClr->rcAssign, mx, my )
+        ' THE OK BUTTON ARMS A PRESS/CANCEL GESTURE and therefore TAKES CAPTURE -- the second
+        ' of this control's two capture sites, and PsButton's rule rather than the matrix drag's:
+        ' pressing OK, sliding off and releasing must not commit. It does NOT commit here; the
+        ' UP does, and only if the cursor is still inside.
+        if PsColorPicker_PtIn( pClr->rcOK, mx, my ) then
+            SetCapture( hwnd )
+            pClr->bOKPressed = true
+            pClr->bOKHot     = true
+            InvalidateRect( hwnd, NULL, FALSE )
+            return 0
         end if
-        if bAssignHit then
-            ' Reported, never acted on: the control does not know what "assign" means to the
-            ' host, only that the user asked for it.
-            if (pClr->nBodySel >= 0) andalso (pClr->PaletteAssignCallback <> 0) then
-                pClr->PaletteAssignCallback( hwnd, pClr->nBodySel )
+
+        ' CLICKING THE INITIAL HALF OF THE PREVIEW REVERTS. The pair has always been described as
+        ' the visual form of a Reset button; with the popup there is nowhere else to put one, so
+        ' it now behaves as the thing it looks like. The Current half is deliberately inert --
+        ' clicking the value you already have has nothing to mean.
+        if PsColorPicker_PtIn( pClr->rcInitial, mx, my ) then
+            dim as boolean bMoved = ((pClr->clrInitial <> pClr->clrCurrent) orelse _
+                                     (pClr->nAlphaInitial <> pClr->nAlphaCurrent))
+            if bMoved then
+                PsColorPicker_ApplyColor( pClr, pClr->clrInitial, pClr->nAlphaInitial, _
+                                          true, CLR_PHASE_END )
             end if
             return 0
         end if
@@ -1513,6 +1573,20 @@ function PsColorPicker_WndProc( _
         if idx >= 0 then
             dim as COLORREF c
             if PsColorPicker_GridColorAt( pClr, idx, c ) then
+                ' DOUBLE-CLICKING A CELL IS THE MOUSE'S ENTER KEY: it adopts that cell's colour
+                ' and accepts, in that order. The order is the whole of it -- double-clicking a
+                ' cell that is not the selected one must commit the cell the user hit, not the
+                ' one that happened to be selected when they started.
+                '
+                ' It takes NO CAPTURE and starts no drag even on the matrix. There is nothing
+                ' left to drag: the popup is closing.
+                if bDblClk then
+                    PsColorPicker_ApplyColor( pClr, c, pClr->nAlphaCurrent, true, CLR_PHASE_END )
+                    pClr->nBodySel = idx
+                    PsColorPicker_EndModal( pClr, true )
+                    return 0
+                end if
+
                 if pClr->nTab = CLR_TAB_CUSTOM then
                     ' THE ONLY GESTURE THAT TAKES CAPTURE. BEGIN now; MOVEs while the button is
                     ' held; END on the release.
@@ -1538,14 +1612,29 @@ function PsColorPicker_WndProc( _
         ' capture SYNCHRONOUSLY, and our handler for it cancels the drag -- so reading isDragging
         ' after the release would always find FALSE and the END would never be sent.
         dim as boolean bWasDragging = pClr->isDragging
+        dim as boolean bWasOKPressed = pClr->bOKPressed
         if GetCapture() = hwnd then ReleaseCapture()
         pClr->CancelDrag()
+        pClr->bOKPressed = false
 
         ' The result is deliberately IGNORED here (see CLR_MessageCallbackFunc).
         PsColorPicker_CallMessage( pClr, hwnd, uMsg, wParam, lParam )
 
         if bWasDragging then
             PsColorPicker_Notify( pClr, CLR_PHASE_END )
+            InvalidateRect( hwnd, NULL, FALSE )
+        end if
+
+        ' OK COMMITS ONLY IF THE CURSOR IS STILL ON IT. Read from the CURRENT cursor position
+        ' rather than from bOKHot, because the hot flag is maintained by WM_MOUSEMOVE and a
+        ' release without an intervening move would leave it saying whatever the press said.
+        if bWasOKPressed then
+            dim as long ux = cast(short, loword(lParam))
+            dim as long uy = cast(short, hiword(lParam))
+            if PsColorPicker_PtIn( pClr->rcOK, ux, uy ) then
+                PsColorPicker_EndModal( pClr, true )
+                return 0
+            end if
             InvalidateRect( hwnd, NULL, FALSE )
         end if
         return 0
@@ -1560,6 +1649,10 @@ function PsColorPicker_WndProc( _
         ' should treat a stolen capture the same way they treat a Cancel.
         if pClr then
             pClr->CancelDrag()
+            ' AND THE OK BUTTON'S PRESS. Capture backs both gestures, so both have to be
+            ' abandoned here -- an OK left armed would commit on the next unrelated release,
+            ' closing the popup on a click the user aimed somewhere else entirely.
+            pClr->bOKPressed = false
             InvalidateRect( hwnd, NULL, FALSE )
             return 0
         end if
@@ -1608,32 +1701,36 @@ function PsColorPicker_WndProc( _
         ' about (lParam points at the MSG when it does). Claiming unconditionally would swallow
         ' Tab and break the navigation the tabstop opted into.
         '
-        ' TAB IS CLAIMED ONLY WHEN THERE IS A NEXT FIELD TO GO TO. That single condition is what
-        ' makes the picker a well-behaved member of a dialog: Tab walks R -> G -> B -> (A) ->
-        ' Hex and then LEAVES, because at Hex there is no next field and the key is not claimed.
+        ' TAB WRAPS rather than running off the end, and that REVERSES the embedded control's
+        ' rule. There it was load-bearing that Tab left the picker: it sat in a host dialog with
+        ' its own tab order, and a control that swallowed Tab forever would have been a trap.
+        ' This popup IS the whole interaction -- there is nothing behind it to tab to -- so
+        ' letting Tab escape would move focus to a window the user cannot see.
         '
-        ' ESCAPE IS DELIBERATELY NOT CLAIMED. An uncommitted edit is worth less than a working
-        ' Cancel key, and a host dialog that could not be dismissed because the caret happened to
-        ' be in a field would be the worse bug. Enter IS claimed, but only while a field has the
-        ' caret, so it commits the number rather than firing the default button out from under a
-        ' half-typed value.
+        ' ESCAPE IS NOW CLAIMED, WHICH ALSO REVERSES THAT RULE, and for the same reason. It used
+        ' to be left alone so a host dialog's Cancel kept working; here Escape IS the cancel, and
+        ' the popup is the only window that could act on it.
+        '
+        ' ENTER commits the field when one has the caret and otherwise accepts the popup, so it
+        ' is claimed unconditionally.
         if pClr = 0 then return 0
         if lParam = 0 then return 0
         dim as MSG ptr pMsg = cast( MSG ptr, lParam )
+        ' A CLAIMED KEY MUST HAVE ITS WM_CHAR CLAIMED TOO, OR THE SYSTEM BEEPS. Claiming a key
+        ' in WM_GETDLGCODE makes IsDialogMessage call TranslateMessage on it, which manufactures
+        ' a matching WM_CHAR; anything that reaches DefWindowProc unconsumed beeps. Enter and
+        ' Escape both produce one (13 and 27), so both are claimed here and swallowed in the
+        ' WM_CHAR arm below. The keystroke works either way -- the beep is the only symptom, and
+        ' no assertion can hear it (see Learnings.md in the workspace root).
         if pMsg->message = WM_CHAR then
             if pClr->nFocusField >= 0 then return DLGC_WANTCHARS or DLGC_WANTALLKEYS
+            dim as long chDlg = clng( pMsg->wParam )
+            if (chDlg = 13) orelse (chDlg = 27) then return DLGC_WANTCHARS or DLGC_WANTALLKEYS
             return 0
         end if
         if pMsg->message <> WM_KEYDOWN then return 0
         select case pMsg->wParam
-        case VK_TAB
-            if pClr->nFocusField < 0 then return 0
-            dim as long nDelta = 1
-            if (GetKeyState( VK_SHIFT ) and &h8000) <> 0 then nDelta = -1
-            if PsColorPicker_NextField( pClr, pClr->nFocusField, nDelta ) < 0 then return 0
-            return DLGC_WANTALLKEYS
-        case VK_RETURN
-            if pClr->nFocusField < 0 then return 0
+        case VK_TAB, VK_RETURN, VK_ESCAPE
             return DLGC_WANTALLKEYS
         case VK_LEFT, VK_RIGHT, VK_UP, VK_DOWN, VK_HOME, VK_END, VK_BACK, VK_DELETE
             return DLGC_WANTALLKEYS
@@ -1645,6 +1742,14 @@ function PsColorPicker_WndProc( _
         if pClr->isEnabled = false then return 0
         ' The host sees the key BEFORE it edits anything, so navigation can be vetoed.
         if PsColorPicker_CallMessage( pClr, hwnd, uMsg, wParam, lParam ) then return 0
+
+        ' ESCAPE CANCELS FROM ANYWHERE, including from inside a field -- and it deliberately does
+        ' NOT commit that field first. Escape means "forget this", and committing a half-typed
+        ' number on the way out of a cancel would be the opposite of what was asked.
+        if wParam = VK_ESCAPE then
+            PsColorPicker_EndModal( pClr, false )
+            return 0
+        end if
 
         ' ---- with the caret in a field: text editing ------------------------------------
         if pClr->nFocusField >= 0 then
@@ -1703,19 +1808,39 @@ function PsColorPicker_WndProc( _
                 dim as long nDelta = 1
                 if (GetKeyState( VK_SHIFT ) and &h8000) <> 0 then nDelta = -1
                 dim as long nNext = PsColorPicker_NextField( pClr, pClr->nFocusField, nDelta )
-                if nNext >= 0 then
-                    PsColorPicker_BeginEdit( pClr, nNext )
-                    return 0
+                if nNext < 0 then
+                    ' WRAP rather than leave -- see WM_GETDLGCODE. The wrap walks in from the far
+                    ' end with the SAME NextField search, so a hidden alpha row is skipped on the
+                    ' wrap exactly as it is in the middle of the walk.
+                    ' THE EDGE IS THE ONE *BEFORE* THE END WE ARE WALKING TOWARDS, because
+                    ' NextField steps FIRST and then tests. Walking forwards therefore starts at
+                    ' -1 so the first step lands on field 0; walking backwards starts at
+                    ' CLR_FIELD_COUNT so the first step lands on the last field. Getting these
+                    ' the wrong way round makes both wraps step straight out of range and return
+                    ' -1, which reads as "Tab does nothing" rather than as a crash.
+                    dim as long nEdge = CLR_FIELD_COUNT
+                    if nDelta > 0 then nEdge = -1
+                    nNext = PsColorPicker_NextField( pClr, nEdge, nDelta )
                 end if
-                ' Off the end: not consumed, so the dialog manager moves on. (We only get here
-                ' at all if something bypassed WM_GETDLGCODE, which already declines this case.)
-                exit select
+                if nNext >= 0 then PsColorPicker_BeginEdit( pClr, nNext )
+                return 0
             end select
             exit select
         end if
 
         ' ---- with no field focused: the arrows drive the body grid ----------------------
         select case wParam
+        case VK_RETURN
+            ' Enter outside a field accepts, which is what makes the popup answerable without
+            ' ever reaching for the mouse.
+            PsColorPicker_EndModal( pClr, true )
+            return 0
+        case VK_TAB
+            ' Tab from the body enters the first field, so the two halves of the popup are one
+            ' keyboard walk rather than two islands.
+            dim as long nFirst = PsColorPicker_NextField( pClr, -1, 1 )
+            if nFirst >= 0 then PsColorPicker_BeginEdit( pClr, nFirst )
+            return 0
         case VK_LEFT
             PsColorPicker_NavigateBody( pClr, -1 )
             return 0
@@ -1737,6 +1862,12 @@ function PsColorPicker_WndProc( _
     case WM_CHAR
         if pClr = 0 then exit select
         if pClr->isEnabled = false then return 0
+        ' SWALLOW THE CHARACTERS WE CLAIMED IN WM_GETDLGCODE. Enter and Escape are handled at
+        ' WM_KEYDOWN; their manufactured WM_CHAR has no work left to do and beeps if it reaches
+        ' DefWindowProc. Swallowed unconditionally rather than behind a flag armed in the keydown,
+        ' because neither key's meaning here depends on state the keydown changed.
+        dim as long chCtl = clng( wParam )
+        if (chCtl = 13) orelse (chCtl = 27) then return 0
         if pClr->nFocusField < 0 then exit select
         if PsColorPicker_CallMessage( pClr, hwnd, uMsg, wParam, lParam ) then return 0
 
@@ -1824,27 +1955,39 @@ function PsColorPicker_Create( byval hParent as HWND, byval id as long = 0 ) as 
 
     dim pWindow as CWindow ptr = New CWindow
 
-    ' WS_TABSTOP: this control takes focus, because its entry fields have to be typeable.
+    ' A WS_POPUP WITH NO CAPTION AND NO BORDER OF ITS OWN. hParent is passed as the OWNER, not
+    ' as a parent -- a WS_POPUP has no parent -- which is what keeps the popup above the window
+    ' that raised it and makes it go away if that window is destroyed. The frame the user sees is
+    ' painted by this control (PsColorPicker_RenderDefault's outer border), because a WS_BORDER
+    ' would be drawn by the system in a colour the theme does not choose.
+    '
+    ' WS_TABSTOP is retained, and it is NOT vestigial: DoModal's loop calls IsDialogMessage, and
+    ' the popup is the only window in that loop's reach, so the style is what makes it a
+    ' legitimate target rather than a window IsDialogMessage skips.
     '
     ' THE EXTENDED STYLE IS PASSED EXPLICITLY, AND IT MUST BE. CWindow.Create defaults its
     ' dwExStyle to WS_EX_CONTROLPARENT OR WS_EX_WINDOWEDGE, so a control that supplies only
     ' dwStyle silently declares itself a CONTAINER: the dialog manager descends into it hunting
-    ' for tabstops, finds no children, and SKIPS IT -- the control becomes unreachable by Tab.
-    ' That shipped in PsButton's first commit and was then found in PsToggle and PsComboBox too
-    ' (C:\dev\Learnings.md). It is ASSERTED in the self-test, not merely remembered.
+    ' for tabstops, finds no children, and SKIPS IT. That shipped in PsButton's first commit and
+    ' was then found in PsToggle and PsComboBox too. ASSERTED in the self-test, not remembered.
     '
-    ' This control is a LEAF despite looking like a panel: it has no child windows at all, which
-    ' is the whole design. The test is "does this window have children the dialog manager should
-    ' find?", and here the answer is no -- so 0 is right, and copying PsScrollPanel's
-    ' WS_EX_CONTROLPARENT (which is right for IT, because it really does host the host's
-    ' controls) would break Tab here.
+    ' WS_EX_TOOLWINDOW keeps the popup off the taskbar -- it is a transient answer to a question,
+    ' not a window a user alt-tabs to. WS_EX_WINDOWEDGE would draw a raised system edge over the
+    ' painted border, so it is deliberately absent along with WS_EX_CONTROLPARENT.
     dim as HWND hCtrl = _
             pWindow->Create( hParent, "", @PsColorPicker_WndProc, _
-            0, 0, 0, 0, WS_CHILD or WS_TABSTOP or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-            0 _
+            0, 0, 0, 0, WS_POPUP or WS_TABSTOP or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
+            WS_EX_TOOLWINDOW _
             )
 
-    ' NOTE: CS_DBLCLKS is deliberately NOT enabled here -- see the WndProc header.
+    ' CS_DBLCLKS, so a double-click on a body cell can accept the popup the way ENTER does.
+    '
+    ' THIS LINE IS DEFENSIVE, NOT LOAD-BEARING, and saying so is the point: CWindow's default
+    ' class style ALREADY contains CS_DBLCLKS. Measured -- the class style reads &hB
+    ' (CS_VREDRAW or CS_HREDRAW or CS_DBLCLKS) with this line and without it. It is kept so the
+    ' dependency is stated at the point that needs it rather than inherited silently, but do not
+    ' expect removing it to turn anything off.
+    pWindow->ClassStyle = pWindow->ClassStyle or CS_DBLCLKS
 
     dim as PSCOLORPICKER ptr pClr = new PSCOLORPICKER
     pClr->hWin            = hCtrl
@@ -1871,16 +2014,23 @@ function PsColorPicker_Create( byval hParent as HWND, byval id as long = 0 ) as 
     pClr->nPreviewH   = pWindow->ScaleY( PSCOLORPICKER_DEFAULT_PREVIEWH )
     pClr->nFieldW     = pWindow->ScaleX( PSCOLORPICKER_DEFAULT_FIELDW )
     pClr->nFieldH     = pWindow->ScaleY( PSCOLORPICKER_DEFAULT_FIELDH )
-    pClr->nHexW       = pWindow->ScaleX( PSCOLORPICKER_DEFAULT_HEXW )
+    pClr->nOKW        = pWindow->ScaleX( PSCOLORPICKER_DEFAULT_OKW )
+    pClr->nOKH        = pWindow->ScaleY( PSCOLORPICKER_DEFAULT_OKH )
+    pClr->nTabPad     = pWindow->ScaleX( PSCOLORPICKER_DEFAULT_TABPAD )
     pClr->nLabelW     = pWindow->ScaleX( PSCOLORPICKER_DEFAULT_LABELW )
     pClr->nRowH       = pWindow->ScaleY( PSCOLORPICKER_DEFAULT_ROWH )
     pClr->nCurvature  = pWindow->ScaleY( PSCOLORPICKER_DEFAULT_CURVATURE )
 
-    ' Defaults for the three host-supplied words. Assigned here rather than as TYPE field
-    ' defaults so there is exactly one place they live.
-    pClr->wszAssign       = "Assign"
+    ' Defaults for every host-supplied word. Assigned here rather than as TYPE field defaults so
+    ' there is exactly one place they live. The trailing colons are part of the DEFAULT, not
+    ' something the painter appends -- a host calling SetFieldText decides for itself.
+    pClr->wszOK           = "OK"
     pClr->wszInitialLabel = "Initial"
     pClr->wszCurrentLabel = "Current"
+    pClr->wszFieldLabel(CLR_FIELD_R) = "Red:"
+    pClr->wszFieldLabel(CLR_FIELD_G) = "Green:"
+    pClr->wszFieldLabel(CLR_FIELD_B) = "Blue:"
+    pClr->wszFieldLabel(CLR_FIELD_A) = "Alpha:"
 
     SetWindowLongPtr( hCtrl, GWLP_ID, id )
     pWindow->UserData(0) = cast(LONG_PTR, pClr)
@@ -1899,6 +2049,255 @@ function PsColorPicker_Create( byval hParent as HWND, byval id as long = 0 ) as 
 
 end function
 
+
+
+
+' ========================================================================================
+' THE MODAL RUN.
+'
+' DoModal creates, configures nothing, runs, destroys and reports. A host that needs to reach a
+' setter between the create and the run calls Create / PositionFor* / RunModal / DestroyWindow
+' itself -- the four things DoModal does, in the order it does them.
+'
+' WHY A NESTED LOOP AND NOT A DIALOG. There is no dialog template and no DialogBox call: this is
+' an ordinary window with an ordinary WndProc, and the loop below is what makes it modal.
+' PsMessageBox does the same thing for the same reason, and the two share the property that
+' matters -- because the loop owns IsDialogMessage, THE HOST'S PUMP HAS NOTHING TO DO and there
+' is no *_FilterMessage to forget.
+' ========================================================================================
+
+' Stop the loop. bAccept decides what DoModal returns AND whether the out-parameters are
+' written; nothing else in the control reads either flag.
+'
+' ACCEPTING COMMITS THE FOCUSED FIELD FIRST, so a user who types 128 and clicks OK gets 128
+' rather than whatever the value was before they typed. Cancelling deliberately does NOT --
+' see the Escape arm of WM_KEYDOWN.
+sub PsColorPicker_EndModal( byval pClr as PSCOLORPICKER ptr, byval bAccept as boolean )
+    if pClr = 0 then exit sub
+    if pClr->bModalDone then exit sub          ' first answer wins; a second is a no-op
+    if bAccept andalso (pClr->nFocusField >= 0) then PsColorPicker_CommitField( pClr )
+    pClr->bAccepted = bAccept
+    pClr->bModalDone = true
+    ' A message the loop is guaranteed to receive, so a loop parked in GetMessage wakes up and
+    ' notices the flag. Without it the popup would sit there answered but still on screen until
+    ' the user moved the mouse.
+    if pClr->hWin then PostMessageW( pClr->hWin, WM_NULL, 0, 0 )
+end sub
+
+
+' Clamp a proposed origin onto the work area of the monitor the popup is landing on. Shared by
+' both placement routines so "it never opens half off the screen" is one rule.
+private sub PsColorPicker_ClampToWork( _
+            byval hCtrl as HWND, _
+            byref x     as long, _
+            byref y     as long, _
+            byval cx    as long, _
+            byval cy    as long _
+            )
+
+    dim as RECT rcTarget
+    SetRect( @rcTarget, x, y, x + cx, y + cy )
+
+    dim as HMONITOR hMon = MonitorFromRect( @rcTarget, MONITOR_DEFAULTTONEAREST )
+    dim as MONITORINFO mi
+    mi.cbSize = sizeof(MONITORINFO)
+    if GetMonitorInfoW( hMon, @mi ) = 0 then exit sub
+
+    if (x + cx) > mi.rcWork.right then x = mi.rcWork.right - cx
+    if (y + cy) > mi.rcWork.bottom then y = mi.rcWork.bottom - cy
+    if x < mi.rcWork.left then x = mi.rcWork.left
+    if y < mi.rcWork.top then y = mi.rcWork.top
+end sub
+
+
+' Size the popup to its ideal size and return that size. Called by both placement routines,
+' because a placement that did not size first would be positioning a 0x0 window.
+private sub PsColorPicker_SizeToIdeal( _
+            byval hCtrl as HWND, _
+            byref cx    as long, _
+            byref cy    as long _
+            )
+
+    cx = 0 : cy = 0
+    PsColorPicker_GetIdealSize( hCtrl, cx, cy )
+    if cx <= 0 then cx = 1
+    if cy <= 0 then cy = 1
+    SetWindowPos( hCtrl, 0, 0, 0, cx, cy, SWP_NOMOVE or SWP_NOZORDER or SWP_NOACTIVATE )
+end sub
+
+
+' DROP THE POPUP UNDER rcAnchor -- screen coordinates, typically the field or button that opened
+' it -- and FLIP IT ABOVE when it will not fit below.
+'
+' THE FLIP IS NOT COSMETIC. Clamping the popup upward instead, which is what ClampToWork would do
+' on its own, leaves it covering its own anchor -- and then the opening click's RELEASE lands
+' inside the popup, on whatever row happens to be under the cursor. PsMenuBar_ShowForRect records
+' the same finding, reached the hard way when tall PsComboBox dropdowns became impossible to open.
+sub PsColorPicker_PositionForRect( byval hCtrl as HWND, byref rcAnchor as RECT )
+    dim as long cx, cy
+    PsColorPicker_SizeToIdeal( hCtrl, cx, cy )
+
+    dim as long x = rcAnchor.left
+    dim as long y = rcAnchor.bottom
+
+    dim as RECT rcBelow
+    SetRect( @rcBelow, x, y, x + cx, y + cy )
+    dim as HMONITOR hMon = MonitorFromRect( @rcBelow, MONITOR_DEFAULTTONEAREST )
+    dim as MONITORINFO mi
+    mi.cbSize = sizeof(MONITORINFO)
+    if GetMonitorInfoW( hMon, @mi ) then
+        ' Flip only if there is genuinely more room above. A popup taller than the whole work
+        ' area fits nowhere, and flipping it then would trade one clipped edge for another while
+        ' also covering the anchor -- so in that case it stays below and is clamped.
+        dim as long roomBelow = mi.rcWork.bottom - rcAnchor.bottom
+        dim as long roomAbove = rcAnchor.top - mi.rcWork.top
+        if (cy > roomBelow) andalso (roomAbove > roomBelow) then
+            y = rcAnchor.top - cy
+        end if
+    end if
+
+    PsColorPicker_ClampToWork( hCtrl, x, y, cx, cy )
+    SetWindowPos( hCtrl, HWND_TOP, x, y, 0, 0, SWP_NOSIZE or SWP_NOACTIVATE )
+end sub
+
+
+' Centre on hParent, or -- with no parent -- on the monitor holding the cursor, which is the
+' honest answer to "centre on nothing" and puts the popup where the user is looking.
+sub PsColorPicker_PositionCentered( byval hCtrl as HWND, byval hParent as HWND )
+    dim as long cx, cy
+    PsColorPicker_SizeToIdeal( hCtrl, cx, cy )
+
+    dim as RECT rcRef
+    if (hParent <> 0) andalso (IsWindow( hParent ) <> 0) then
+        GetWindowRect( hParent, @rcRef )
+    else
+        dim as POINT pt
+        GetCursorPos( @pt )
+        dim as HMONITOR hMon = MonitorFromPoint( pt, MONITOR_DEFAULTTONEAREST )
+        dim as MONITORINFO mi
+        mi.cbSize = sizeof(MONITORINFO)
+        if GetMonitorInfoW( hMon, @mi ) = 0 then exit sub
+        rcRef = mi.rcWork
+    end if
+
+    dim as long x = rcRef.left + (((rcRef.right - rcRef.left) - cx) \ 2)
+    dim as long y = rcRef.top + (((rcRef.bottom - rcRef.top) - cy) \ 2)
+
+    PsColorPicker_ClampToWork( hCtrl, x, y, cx, cy )
+    SetWindowPos( hCtrl, HWND_TOP, x, y, 0, 0, SWP_NOSIZE or SWP_NOACTIVATE )
+end sub
+
+
+' SHOW THE POPUP AND PUMP IT UNTIL IT IS ANSWERED. Returns TRUE if the user pressed OK.
+'
+' It does NOT destroy the window: a caller that used Create owns it. DoModal, which created it,
+' destroys it.
+function PsColorPicker_RunModal( byval hCtrl as HWND ) as boolean
+    dim as PSCOLORPICKER ptr pClr = GetColorPickerPointer( hCtrl )
+    if pClr = 0 then return false
+
+    pClr->bModalDone = false
+    pClr->bAccepted  = false
+
+    ShowWindow( hCtrl, SW_SHOW )
+    ' A WS_POPUP does not become active by being shown. Both calls are needed and neither is
+    ' redundant: SetActiveWindow makes it the active window of THIS thread, SetFocus is what
+    ' actually routes the keyboard here -- and without focus the caret never blinks and Escape
+    ' never arrives.
+    SetActiveWindow( hCtrl )
+    SetFocus( hCtrl )
+    UpdateWindow( hCtrl )
+
+    dim as MSG msg
+    do
+        if GetMessageW( @msg, NULL, 0, 0 ) = 0 then
+            ' WM_QUIT. It is not ours to swallow -- the application is shutting down -- so it
+            ' goes back on the queue for the host's own loop and this one gives up, reporting
+            ' the cancel that never explicitly happened.
+            PostQuitMessage( clng( msg.wParam ) )
+            pClr->bAccepted = false
+            exit do
+        end if
+
+        ' A BUTTON-DOWN ANYWHERE OUTSIDE CANCELS, which is the only way out of this popup other
+        ' than OK and Escape. Tested against the popup AND its descendants, because the list
+        ' scrollbar is a child window and a click on its thumb is emphatically not an outside
+        ' click. The message is SWALLOWED rather than dispatched: whatever the user clicked, they
+        ' were dismissing the popup, and letting the click also land on the window behind it
+        ' would act on a control the popup was covering.
+        select case msg.message
+        case WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_MBUTTONDOWN, _
+             WM_NCLBUTTONDOWN, WM_NCRBUTTONDOWN, WM_NCMBUTTONDOWN
+            dim as boolean bOurs = ((msg.hwnd = hCtrl) orelse (IsChild( hCtrl, msg.hwnd ) <> 0))
+            if bOurs = false then
+                PsColorPicker_EndModal( pClr, false )
+                exit do
+            end if
+        end select
+
+        if IsDialogMessage( hCtrl, @msg ) = 0 then
+            TranslateMessage( @msg )
+            DispatchMessageW( @msg )
+        end if
+
+        if pClr->bModalDone then exit do
+    loop
+
+    dim as boolean bResult = pClr->bAccepted
+    ShowWindow( hCtrl, SW_HIDE )
+    return bResult
+end function
+
+
+' The whole interaction in one call. See the .bi for the contract; the shape worth noting here is
+' that clr and nAlpha are read on the way IN as the starting value and written on the way OUT
+' only on OK, so a cancel genuinely leaves the host's variables alone.
+private function PsColorPicker_DoModalCore( _
+            byval hParent  as HWND, _
+            byval pAnchor  as RECT ptr, _
+            byref clr      as COLORREF, _
+            byref nAlpha   as ubyte _
+            ) as boolean
+
+    dim as HWND hCtrl = PsColorPicker_Create( hParent, 0 )
+    if hCtrl = 0 then return false
+
+    ' The colour goes in BEFORE the placement, because SetColor marks the layout dirty and the
+    ' placement is what asks for the ideal size.
+    PsColorPicker_SetColor( hCtrl, clr, nAlpha, false )
+
+    if pAnchor then
+        PsColorPicker_PositionForRect( hCtrl, *pAnchor )
+    else
+        PsColorPicker_PositionCentered( hCtrl, hParent )
+    end if
+
+    dim as boolean bOK = PsColorPicker_RunModal( hCtrl )
+    if bOK then
+        clr    = PsColorPicker_GetColor( hCtrl )
+        nAlpha = PsColorPicker_GetAlpha( hCtrl )
+    end if
+
+    DestroyWindow( hCtrl )
+    return bOK
+end function
+
+function PsColorPicker_DoModal( _
+            byval hParent as HWND, _
+            byref clr     as COLORREF, _
+            byref nAlpha  as ubyte _
+            ) as boolean
+    return PsColorPicker_DoModalCore( hParent, 0, clr, nAlpha )
+end function
+
+function PsColorPicker_DoModalForRect( _
+            byval hParent  as HWND, _
+            byref rcAnchor as RECT, _
+            byref clr      as COLORREF, _
+            byref nAlpha   as ubyte _
+            ) as boolean
+    return PsColorPicker_DoModalCore( hParent, @rcAnchor, clr, nAlpha )
+end function
 
 ' ========================================================================================
 ' Value.
@@ -1981,30 +2380,10 @@ function PsColorPicker_IsAlphaShown( byval hCtrl as HWND ) as boolean
 end function
 
 
-sub PsColorPicker_SetSelectionOnly( byval hCtrl as HWND, byval bSelectionOnly as boolean )
-    dim as PSCOLORPICKER ptr pClr = GetColorPickerPointer( hCtrl )
-    if pClr = 0 then exit sub
-    if pClr->bSelectionOnly = bSelectionOnly then exit sub
-    pClr->bSelectionOnly = bSelectionOnly
-    ' The caret cannot be left in a field that just disappeared -- ShowAlpha's rule, for the
-    ' same reason and with the same answer: commit rather than drop, because the user's typing
-    ' is still the most recent thing they said.
-    if bSelectionOnly andalso (pClr->nFocusField >= 0) then PsColorPicker_CommitField( pClr )
-    pClr->Refresh()
-end sub
-
-
-function PsColorPicker_IsSelectionOnly( byval hCtrl as HWND ) as boolean
-    dim as PSCOLORPICKER ptr pClr = GetColorPickerPointer( hCtrl )
-    if pClr = 0 then return false
-    return pClr->bSelectionOnly
-end function
-
 sub PsColorPicker_SetTab( byval hCtrl as HWND, byval nTab as long )
     dim as PSCOLORPICKER ptr pClr = GetColorPickerPointer( hCtrl )
     if pClr = 0 then exit sub
-    if (nTab < CLR_TAB_WEB) orelse (nTab > CLR_TAB_PALETTE) then exit sub
-    if (nTab = CLR_TAB_PALETTE) andalso (pClr->bShowPalette = false) then exit sub
+    if (nTab < CLR_TAB_WEB) orelse (nTab >= CLR_TAB_COUNT) then exit sub
     if pClr->nTab = nTab then exit sub
     pClr->nTab = nTab
     pClr->nScrollTop = 0
@@ -2019,44 +2398,6 @@ function PsColorPicker_GetTab( byval hCtrl as HWND ) as long
     if pClr = 0 then return CLR_TAB_CUSTOM
     return pClr->nTab
 end function
-
-sub PsColorPicker_ShowPaletteTab( byval hCtrl as HWND, byval bShow as boolean )
-    dim as PSCOLORPICKER ptr pClr = GetColorPickerPointer( hCtrl )
-    if pClr = 0 then exit sub
-    if pClr->bShowPalette = bShow then exit sub
-    pClr->bShowPalette = bShow
-    ' Hiding the tab that is CURRENT would otherwise leave the control rendering a body whose tab
-    ' is no longer on the strip -- visibly a bug, and one that only appears when a host turns the
-    ' palette off at runtime.
-    if (bShow = false) andalso (pClr->nTab = CLR_TAB_PALETTE) then
-        pClr->nTab = CLR_TAB_CUSTOM
-        pClr->nScrollTop = 0
-        pClr->bScrollToSel = true
-        PsColorPicker_SyncBodySel( pClr )
-    end if
-    pClr->Refresh()
-end sub
-
-function PsColorPicker_IsPaletteTabShown( byval hCtrl as HWND ) as boolean
-    dim as PSCOLORPICKER ptr pClr = GetColorPickerPointer( hCtrl )
-    if pClr = 0 then return false
-    return pClr->bShowPalette
-end function
-
-function PsColorPicker_GetPaletteSel( byval hCtrl as HWND ) as long
-    dim as PSCOLORPICKER ptr pClr = GetColorPickerPointer( hCtrl )
-    if pClr = 0 then return -1
-    if pClr->nTab <> CLR_TAB_PALETTE then return -1
-    return pClr->nBodySel
-end function
-
-sub PsColorPicker_SetPaletteSel( byval hCtrl as HWND, byval idx as long )
-    dim as PSCOLORPICKER ptr pClr = GetColorPickerPointer( hCtrl )
-    if pClr = 0 then exit sub
-    pClr->nBodySel = idx
-    if pClr->hWin then InvalidateRect( pClr->hWin, NULL, FALSE )
-end sub
-
 
 ' ========================================================================================
 ' Appearance.
@@ -2093,10 +2434,10 @@ end function
 ' byval, never "byref as const". A const-qualified DWSTRING reference that is then COPIED
 ' corrupts the process heap -- measured at 0xC0000374 in a 30-line program with no window
 ' (C:\dev\Learnings.md). Every DWSTRING parameter in this family is byval.
-sub PsColorPicker_SetAssignText( byval hCtrl as HWND, byval Text as DWSTRING )
+sub PsColorPicker_SetOKText( byval hCtrl as HWND, byval Text as DWSTRING )
     dim as PSCOLORPICKER ptr pClr = GetColorPickerPointer( hCtrl )
     if pClr = 0 then exit sub
-    pClr->wszAssign = Text
+    pClr->wszOK = Text
     if pClr->hWin then InvalidateRect( pClr->hWin, NULL, FALSE )
 end sub
 
@@ -2106,6 +2447,18 @@ sub PsColorPicker_SetPreviewText( byval hCtrl as HWND, byval TextInitial as DWST
     pClr->wszInitialLabel = TextInitial
     pClr->wszCurrentLabel = TextCurrent
     if pClr->hWin then InvalidateRect( pClr->hWin, NULL, FALSE )
+end sub
+
+' The label beside one field, in CLR_FIELD_* order. Refresh() rather than a plain invalidate,
+' because nLabelW does not follow the text -- a host that sets a longer word than the gutter
+' allows gets it ellipsized, and the re-layout is what lets a host that ALSO widened the gutter
+' see both changes take effect together.
+sub PsColorPicker_SetFieldText( byval hCtrl as HWND, byval nField as long, byval Text as DWSTRING )
+    dim as PSCOLORPICKER ptr pClr = GetColorPickerPointer( hCtrl )
+    if pClr = 0 then exit sub
+    if (nField < 0) orelse (nField >= CLR_FIELD_COUNT) then exit sub
+    pClr->wszFieldLabel(nField) = Text
+    pClr->Refresh()
 end sub
 
 sub PsColorPicker_Refresh( byval hCtrl as HWND )
@@ -2207,6 +2560,7 @@ private function PsColorPicker_PartRect( byval pClr as PSCOLORPICKER ptr, byval 
     case CLR_PART_CURRENT  : rc = pClr->rcCurrent
     case CLR_PART_FIELDS   : rc = pClr->rcFields
     case CLR_PART_ALPHA    : rc = pClr->rcAlpha
+    case CLR_PART_OK       : rc = pClr->rcOK
     end select
     return rc
 end function
@@ -2281,22 +2635,6 @@ end sub
 
 ' All three at once: a palette with a count but no entry reader, or entries with no count, is a
 ' half-wired host that would render as an empty tab and give no clue why.
-sub PsColorPicker_SetPaletteCallbacks( _
-            byval hCtrl     as HWND, _
-            byval fnCount   as CLR_PaletteCountCallbackFunc, _
-            byval fnEntry   as CLR_PaletteEntryCallbackFunc, _
-            byval subAssign as CLR_PaletteAssignCallbackSub _
-            )
-
-    dim as PSCOLORPICKER ptr pClr = GetColorPickerPointer( hCtrl )
-    if pClr = 0 then exit sub
-    pClr->PaletteCountCallback  = fnCount
-    pClr->PaletteEntryCallback  = fnEntry
-    pClr->PaletteAssignCallback = subAssign
-    PsColorPicker_SyncBodySel( pClr )
-    if pClr->hWin then InvalidateRect( pClr->hWin, NULL, FALSE )
-end sub
-
 sub PsColorPicker_SetMessageCallback( byval hCtrl as HWND, byval userfunc as CLR_MessageCallbackFunc )
     dim as PSCOLORPICKER ptr pClr = GetColorPickerPointer( hCtrl )
     if pClr = 0 then exit sub

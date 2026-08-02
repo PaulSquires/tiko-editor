@@ -392,9 +392,6 @@ private sub frmThemes_SyncEditControls()
         gThemePickerBind    = nb
         gThemePickerChannel = gThemeChannel
 
-        ' The palette tab appears only when this theme actually defines named colours. A tab that
-        ' is always there and usually empty teaches the user to ignore it.
-        PsColorPicker_ShowPaletteTab( ghThemePicker, (Theme_MacroCount() > 0) )
         EnableWindow( ghThemePicker, bCanEdit )
 
         ' Mirror the current colour into the R/G/B fields. SetText is silent, so no recursion.
@@ -524,25 +521,28 @@ end sub
 ' this popup is additive for now. It reads the CURRENT colour and tab from the embedded picker
 ' to seed itself. Phase C removes the embedded picker and adds the R/G/B/A fields.
 ' ========================================================================================
-dim shared ghThemeColorPopup  as HWND      ' the WS_POPUP window
-dim shared ghThemePopupPicker as HWND      ' the selection-only picker inside it
-dim shared gThemePopupOpener  as HWND      ' the button that opened it (reopen-guard target)
-dim shared gThemePopupGuard   as boolean   ' one-shot: swallow the reopen click on the opener
+' ========================================================================================
+'  THE COLOUR POPUP IS PsColorPicker's OWN NOW.
+'
+'  This was ~200 lines: a hand-rolled WS_POPUP with its own WndProc, a 1px frame painted by
+'  filling the client, monitor clamping, flip-above-if-it-will-not-fit, an Escape and
+'  outside-click pump filter, and a one-shot guard so the click that dismissed the popup did
+'  not immediately reopen it (PsComboBox's trap). Canonical PsColorPicker_DoModalForRect does
+'  every one of those things itself, so all of it is deleted -- along with the SECOND picker
+'  instance it needed and the hidden "colour model" picker that seeded it.
+'
+'  WHAT IS LOST, AND IT WAS PRICED IN: the live drag preview. The old popup reported every
+'  CLR_PHASE_MOVE and the theme repainted under the cursor; DoModal blocks and answers once,
+'  so the colour lands on OK. That is the trade the sync was accepted on.
+'
+'  THE FORK PROMPT MOVES WITH IT. It used to fire on CLR_PHASE_BEGIN -- deliberately, because
+'  asking per MOVE would stack a hundred message boxes during one drag and asking on END would
+'  let the user watch the app recolour before being told it could not be saved. With a modal
+'  picker there is no BEGIN to hook, so it asks BEFORE the picker opens, which is the same
+'  moment in the user's terms: the question is answered before anything changes.
+' ========================================================================================
 
-' Forward -- these are all defined LATER in this file, but the popup functions above them here
-' call them (FB is single-pass).
-declare sub      frmThemes_PickerChanged( byval hCtrl as HWND, byval clr as COLORREF, _
-                                          byval nAlpha as ubyte, byval nPhase as long )
-declare function frmThemes_PaletteCount( byval hCtrl as HWND ) as long
-declare function frmThemes_PaletteEntry( byval hCtrl as HWND, byval idx as long, _
-                                         byref wszName as DWSTRING, byref clr as COLORREF ) as boolean
-declare sub      frmThemes_PaletteAssign( byval hCtrl as HWND, byval idx as long )
-declare sub      frmThemes_CloseColorPopup()
-declare sub      frmThemes_OpenColorPopup( byval nChannel as long, byval hOpener as HWND )
-
-
-' Build a PSCOLORPICKER_COLORS from the current dialog theme. Shared by the embedded picker and
-' the popup picker so their chrome cannot drift.
+' Build a PSCOLORPICKER_COLORS from the current dialog theme.
 private sub frmThemes_FillPickerColors( byval pc as PSCOLORPICKER_COLORS ptr )
     if pc = 0 then exit sub
     pc->BackColor           = theme.panel.text.backcolor
@@ -562,170 +562,72 @@ private sub frmThemes_FillPickerColors( byval pc as PSCOLORPICKER_COLORS ptr )
 end sub
 
 
-' The popup picker's colour changed. Route through the SAME PickerChanged that the embedded
-' picker uses (fork, apply, sync -- one path), then close on the committing END.
-private sub frmThemes_PopupPickerChanged( byval hCtrl as HWND, byval clr as COLORREF, _
-                                          byval nAlpha as ubyte, byval nPhase as long )
-    frmThemes_PickerChanged( hCtrl, clr, nAlpha, nPhase )
-    if nPhase = CLR_PHASE_END then frmThemes_CloseColorPopup()
-end sub
+' Forward -- defined later in this file (FB is single-pass).
+declare sub frmThemes_ApplyPickedColor( byval nChannel as long, byval clr as COLORREF )
 
 
-private function frmThemes_ColorPopupWndProc( byval hwnd as HWND, byval uMsg as UINT, _
-                                              byval wParam as WPARAM, byval lParam as LPARAM ) as LRESULT
-    select case uMsg
-    case WM_MOUSEACTIVATE
-        ' Never take activation -- the dialog keeps focus, the family's popup contract.
-        return MA_NOACTIVATE
-    case WM_ERASEBKGND
-        return true
-    case WM_PAINT
-        ' The client is one pixel larger than the picker on every side; filling it in the divider
-        ' colour is what draws the 1px frame around the inset picker.
-        dim as PsBufferPaint b
-        b.BeginDoubleBuffer( hwnd )
-        dim as RECT rc : GetClientRect( hwnd, @rc )
-        b.SetBackColor( theme.ui.divider )
-        b.PaintRect( @rc )
-        b.EndDoubleBuffer()
-        return 0
-    case WM_NCDESTROY
-        dim as CWindow ptr pW = AfxCWindowPtr( hwnd )
-        if pW then delete(pW)
-        return 0
-    end select
-    function = DefWindowProc( hwnd, uMsg, wParam, lParam )
-end function
-
-
-private sub frmThemes_EnsureColorPopup()
-    if ghThemeColorPopup then exit sub
-
-    dim pW as CWindow ptr = new CWindow
-    pW->DPI = AfxCWindowOwnerPtr( HWND_FRMTHEMES )->DPI
-    ghThemeColorPopup = pW->Create( HWND_FRMTHEMES, "", @frmThemes_ColorPopupWndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_TOOLWINDOW or WS_EX_NOACTIVATE )
-    pW->ClassStyle = CS_DROPSHADOW
-
-    ghThemePopupPicker = PsColorPicker_Create( ghThemeColorPopup, IDC_FRMTHEMES_PICKER2 )
-    PsColorPicker_SetSelectionOnly( ghThemePopupPicker, true )
-    PsColorPicker_SetColorChangedCallback( ghThemePopupPicker, @frmThemes_PopupPickerChanged )
-    PsColorPicker_SetPaletteCallbacks( ghThemePopupPicker, @frmThemes_PaletteCount, _
-                                       @frmThemes_PaletteEntry, @frmThemes_PaletteAssign )
-    PsColorPicker_SetAssignText( ghThemePopupPicker, L(324, "Use named color") )
-
-    dim as PSCOLORPICKER_COLORS pc
-    frmThemes_FillPickerColors( @pc )
-    PsColorPicker_SetColors( ghThemePopupPicker, @pc )
-    PsColorPicker_SetFont( ghThemePopupPicker, OptionsFont_Base() )
-
-    ' PsColorPicker_Create does NOT set WS_VISIBLE (the embedded one is shown by ShowPage). Show
-    ' it once here; as a child it then follows the popup window's own show/hide.
-    ShowWindow( ghThemePopupPicker, SW_SHOW )
-end sub
-
-
-' Destroys the popup and its picker. Called from frmThemes_Reset (dialog close), because a
-' WS_POPUP is a top-level window and is NOT destroyed with the page.
-sub frmThemes_DestroyColorPopup()
-    if ghThemeColorPopup then DestroyWindow( ghThemeColorPopup )
-    ghThemeColorPopup  = 0
-    ghThemePopupPicker = 0
-    gThemePopupOpener  = 0
-    gThemePopupGuard   = false
-end sub
-
-
-sub frmThemes_CloseColorPopup()
-    if ghThemeColorPopup = 0 then exit sub
-    if IsWindowVisible( ghThemeColorPopup ) = 0 then exit sub
-    ShowWindow( ghThemeColorPopup, SW_HIDE )
-end sub
-
-
+' Ask for a colour for one channel of the selected key, anchored under hOpener.
 private sub frmThemes_OpenColorPopup( byval nChannel as long, byval hOpener as HWND )
-    frmThemes_EnsureColorPopup()
-    if ghThemePopupPicker = 0 then exit sub
 
-    ' Point the dialog at this channel. That seeds the embedded picker, which we then read to
-    ' seed the popup -- one source of "the current colour" rather than two.
+    dim as long nb = frmThemes_SelectedBind()
+    if nb < 0 then exit sub
+    if (nChannel = THEMECH_FORE) andalso (gThemeKeys(nb).ofsFore < 0) then exit sub
+    if (nChannel = THEMECH_BACK) andalso (gThemeKeys(nb).ofsBack < 0) then exit sub
+
+    ' BEFORE the picker opens -- see the note above. A declined fork means nothing is asked.
+    if frmThemes_EnsureForked() = false then exit sub
+
     frmThemes_SetChannel( nChannel )
 
-    dim as PSCOLORPICKER_COLORS pc
-    frmThemes_FillPickerColors( @pc )
-    PsColorPicker_SetColors( ghThemePopupPicker, @pc )
-    PsColorPicker_ShowPaletteTab( ghThemePopupPicker, (Theme_MacroCount() > 0) )
-    PsColorPicker_SetTab( ghThemePopupPicker, PsColorPicker_GetTab( ghThemePicker ) )
-    PsColorPicker_SetColor( ghThemePopupPicker, PsColorPicker_GetColor( ghThemePicker ), 255, false )
+    dim as long n = Theme_FindEntry( gThemeKeys(nb).keyValue )
+    if n < 0 then exit sub
+    dim as COLORREF clr = iif( nChannel = THEMECH_FORE, gTheme(n).foreground, gTheme(n).background )
+    dim as ubyte nAlpha = 255
 
-    ' Size the popup to the picker's ideal size plus a 1px frame on every side.
-    dim as long pw, ph
-    PsColorPicker_GetIdealSize( ghThemePopupPicker, pw, ph )
-    dim as long bd = 1
-    SetWindowPos( ghThemePopupPicker, 0, bd, bd, pw, ph, SWP_NOZORDER or SWP_NOACTIVATE )
-    dim as long popW = pw + (2 * bd)
-    dim as long popH = ph + (2 * bd)
-
-    ' Below the opener, clamped to the monitor work area; flipped above if it will not fit below.
-    dim as RECT rcBtn : GetWindowRect( hOpener, @rcBtn )
-    dim as long px = rcBtn.left
-    dim as long py = rcBtn.bottom + AfxScaleY(2)
-    dim as MONITORINFO mi : mi.cbSize = sizeof(MONITORINFO)
-    if GetMonitorInfo( MonitorFromWindow( HWND_FRMTHEMES, MONITOR_DEFAULTTONEAREST ), @mi ) then
-        if px + popW > mi.rcWork.right then px = mi.rcWork.right - popW
-        if px < mi.rcWork.left then px = mi.rcWork.left
-        if py + popH > mi.rcWork.bottom then py = rcBtn.top - popH - AfxScaleY(2)
-        if py < mi.rcWork.top then py = mi.rcWork.top
+    dim as RECT rcAnchor
+    if hOpener then
+        GetWindowRect( hOpener, @rcAnchor )
+    else
+        GetWindowRect( HWND_FRMTHEMES, @rcAnchor )
     end if
 
-    SetWindowPos( ghThemeColorPopup, HWND_TOP, px, py, popW, popH, SWP_NOACTIVATE )
-    ShowWindow( ghThemeColorPopup, SW_SHOWNOACTIVATE )
-    PsColorPicker_Refresh( ghThemePopupPicker )
-    gThemePopupOpener = hOpener
+    if PsColorPicker_DoModalForRect( HWND_FRMTHEMES, rcAnchor, clr, nAlpha ) then
+        frmThemes_ApplyPickedColor( nChannel, clr )
+    end if
+
 end sub
 
 
-' Escape and outside-click dismissal. Runs from frmThemes' pump, ahead of its own Escape
-' handling, so Escape closes the popup rather than backing out of the editor.
-function frmThemes_ColorPopupFilterMessage( byval pMsg as MSG ptr ) as boolean
-    if pMsg = 0 then return false
-    if ghThemeColorPopup = 0 then return false
-    if IsWindowVisible( ghThemeColorPopup ) = 0 then return false
+' Commit a colour the modal picker returned.
+'
+' The tail of what frmThemes_PickerChanged used to do on CLR_PHASE_END, minus the phase
+' machinery: with a modal picker there is one answer at one moment, so there is no BEGIN to
+' arm a fork latch on, no MOVE to preview, and no declined-gesture state to reset. The fork
+' question is already answered by the time this runs -- frmThemes_OpenColorPopup asks before
+' the picker opens.
+private sub frmThemes_ApplyPickedColor( byval nChannel as long, byval clr as COLORREF )
 
-    select case pMsg->message
-    case WM_KEYDOWN
-        if pMsg->wParam = VK_ESCAPE then
-            frmThemes_CloseColorPopup()
-            return true      ' consume, so the dialog does not ALSO act on Escape
-        end if
-    case WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_NCLBUTTONDOWN, WM_MBUTTONDOWN
-        dim as boolean bInPopup = (pMsg->hwnd = ghThemeColorPopup) orelse _
-                                  (IsChild( ghThemeColorPopup, pMsg->hwnd ) <> 0)
-        if bInPopup = false then
-            ' A click on the OPENER button -- or on the PAGE, where the clickable swatches are
-            ' painted -- would close-then-reopen (PsComboBox's trap); the guard lets that click's
-            ' handler swallow this one.
-            dim as boolean bOnOpener = (gThemePopupOpener <> 0) andalso _
-                ((pMsg->hwnd = gThemePopupOpener) orelse (IsChild( gThemePopupOpener, pMsg->hwnd ) <> 0))
-            dim as boolean bOnPage = (pMsg->hwnd = HWND_FRMTHEMES_PAGE)
-            frmThemes_CloseColorPopup()
-            if bOnOpener orelse bOnPage then gThemePopupGuard = true
-        end if
-        return false         ' let the click still reach whatever it landed on
-    end select
+    dim as long nb = frmThemes_SelectedBind()
+    if nb < 0 then exit sub
+    dim as string sKey = gThemeKeys(nb).keyValue
 
-    return false
-end function
+    ' Alpha rides ALONGSIDE the COLORREF, never folded into its high byte -- the house rule in
+    ' PsBufferPaint.bi, unsafe to break because GDI reads 0x01/0x02 there as palette-relative.
+    ' -1 is Theme_SetColor's "leave the alpha alone" sentinel; the picker's own alpha field is
+    ' hidden on this page, so alpha is owned by the PsNumericUpDown beside the swatches.
+    dim as ulong nMask = Theme_SetColor( sKey, nChannel, clr, -1 )
+    gThemeEdited = true
+
+    Theme_RequestApply( nMask )
+    frmThemes_SyncEditControls()
+
+end sub
 
 
 ' A click on the page (page client coords). If it hit a Foreground/Background colour swatch,
 ' open the popup for that channel -- anchored to the matching button so it lands in the same
 ' place a button click would. Returns TRUE if it was a swatch.
 function frmThemes_SwatchClick( byval x as long, byval y as long ) as boolean
-    dim as boolean bGuarded = gThemePopupGuard
-    gThemePopupGuard = false
-
     dim as long nb = frmThemes_SelectedBind()
     if nb < 0 then return false
 
@@ -739,20 +641,16 @@ function frmThemes_SwatchClick( byval x as long, byval y as long ) as boolean
     end if
     if nChan < 0 then return false
 
-    ' The popup was just closed by this same click (the pump filter ran first) -- don't reopen.
-    if bGuarded then return true
     frmThemes_OpenColorPopup( nChan, hAnchor )
     return true
 end function
 
 
 private sub frmThemes_ForeClick( byval hButton as HWND, byval id as long )
-    if gThemePopupGuard then gThemePopupGuard = false : exit sub   ' this click just closed the popup
     frmThemes_OpenColorPopup( THEMECH_FORE, hButton )
 end sub
 
 private sub frmThemes_BackClick( byval hButton as HWND, byval id as long )
-    if gThemePopupGuard then gThemePopupGuard = false : exit sub
     frmThemes_OpenColorPopup( THEMECH_BACK, hButton )
 end sub
 
@@ -1167,10 +1065,9 @@ sub frmThemes_Build( byval nPage as long, byval hPage as HWND )
     PsColorPicker_SetCellSize( ghThemePicker, AfxScaleX(16), AfxScaleY(22) )
 
     PsColorPicker_SetColorChangedCallback( ghThemePicker, @frmThemes_PickerChanged )
-    PsColorPicker_SetPaletteCallbacks( ghThemePicker, @frmThemes_PaletteCount, _
-                                       @frmThemes_PaletteEntry, @frmThemes_PaletteAssign )
-    ' Every word the user reads is supplied by the host: the control does no localization.
-    PsColorPicker_SetAssignText( ghThemePicker, L(324, "Use named color") )
+    ' No palette callbacks and no Assign button: canonical PsColorPicker has neither, and with
+    ' %MACRO retired there is no named-colour table left for them to talk to. A key's "named
+    ' colour" is its ROLE now, and a role is chosen on the page rather than inside the picker.
     PsColorPicker_SetPreviewText( ghThemePicker, L(325, "Initial"), L(326, "Current") )
 
     ' THE PICKER'S OWN ALPHA FIELD STAYS HIDDEN, deliberately, even on an alpha-capable key.
@@ -1259,11 +1156,9 @@ sub frmThemes_ApplyTheme()
     PsColorPicker_Refresh( ghThemePicker )
 
     ' Keep the popup picker's chrome in step with a live theme change too.
-    if ghThemePopupPicker then
-        PsColorPicker_SetColors( ghThemePopupPicker, @pc )
-        PsColorPicker_SetFont( ghThemePopupPicker, OptionsFont_Base() )
-        PsColorPicker_Refresh( ghThemePopupPicker )
-    end if
+    ' No live picker to re-push to: DoModalForRect builds one per invocation and takes its
+    ' colours from frmThemes_FillPickerColors at that moment, so a theme change is picked up
+    ' the next time it opens.
 
 end sub
 
@@ -1453,7 +1348,7 @@ end sub
 ' panel, so everything here is state that must not survive one visit to the next.
 ' ========================================================================================
 sub frmThemes_Reset()
-    frmThemes_DestroyColorPopup()   ' a WS_POPUP top-level; not destroyed with the page window
+    ' Nothing to destroy: the picker popup lives only for the duration of DoModalForRect.
     ghThemeKeys   = 0
     ghThemeFore   = 0
     ghThemeBack   = 0

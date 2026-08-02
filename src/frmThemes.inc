@@ -1128,7 +1128,9 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
 
         ' The colour popup's dismissal (Escape / outside-click). Ahead of the dialog's own
         ' Escape so that, while the popup is open, Escape closes it rather than backing out.
-        if frmThemes_ColorPopupFilterMessage( @uMsg ) then continue while
+        ' No PsColorPicker filter here, and there must never be one: DoModal runs its own
+        ' nested loop and owns IsDialogMessage, Escape and the outside-click test for as long
+        ' as the picker is up. That is the property the control was designed around.
 
         if (uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_ESCAPE) then
             ' In the editor, Escape backs out to the picker; in the picker it closes.
