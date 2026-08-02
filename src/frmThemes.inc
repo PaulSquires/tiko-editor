@@ -608,6 +608,13 @@ private sub frmThemes_ApplyShellTheme()
             PsButton_Refresh( hButtons(i) )
         end if
     next
+    ' Back draws its chevron from the GLYPH font, which is a separate paint-time input the
+    ' loop above does not touch -- SetFont sets the caption font only.
+    if ghThemesBack then
+        PsButton_SetGlyphFont( ghThemesBack, ghFont(SYMBOLFONT_10) )
+        PsButton_Refresh( ghThemesBack )
+    end if
+
     ' The edit-description button paints its pencil GLYPH as a centred caption, so it wants the
     ' symbol font rather than the base UI font the loop just gave it.
     if ghThemesDescEdit then
@@ -1089,9 +1096,20 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
     end scope
 
     ghThemesBack = PsButton_Create( HWND_FRMTHEMES, IDC_FRMTHEMES_CMDGOBACK )
-    ' A left chevron (U+2039) before the caption -- built with wchr so the source file's
-    ' encoding cannot mangle it.
-    PsButton_SetText( ghThemesBack, wchr(&h2039) & "  " & L(334,"Back") )
+    ' A REAL CHEVRON GLYPH IN THE ICON FONT, not a character in the caption.
+    '
+    ' This was U+2039 concatenated onto the caption text, which drew it in the UI font -- and
+    ' U+2039 is a single guillemet, a PUNCTUATION mark sized like a quote, so the chevron came
+    ' out visibly smaller than the word beside it. Segoe Fluent's E76B is the actual
+    ' ChevronLeft and is drawn from the separate glyph font at icon size.
+    '
+    ' SetGlyphLeft rather than the MAKECHEVRON idiom used for the reorder buttons elsewhere:
+    ' that one puts the glyph in the CAPTION and hands the whole button the symbol font, which
+    ' is the documented workaround for a glyph-ONLY button (PsButton pins its icon cells to the
+    ' padding, so a lone icon cannot be centred). This button has a caption, which is exactly
+    ' the case the pinned cell is for.
+    PsButton_SetText( ghThemesBack, L(334,"Back") )
+    PsButton_SetGlyphLeft( ghThemesBack, !"\uE76B" )
     PsButton_SetClickCallback( ghThemesBack, @frmThemes_GoBackClick )
 
     ' Edit-description icon (a pencil glyph); opens frmInputBox to change the description text.
