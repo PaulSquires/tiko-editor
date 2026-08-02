@@ -557,8 +557,21 @@ function frmMain_OnPaint( byval hwnd as HWND ) as LRESULT
         rcMenu.right = b.rcClient.right
         b.SetBackColor( ghTopTabs.BackColor )
         b.PaintRect( @rcMenu )
-        b.SetPenColor( ghEditor.Divider )
-        b.PaintLine( 2, rcMenu.left, rcMenu.bottom, rcMenu.right, rcMenu.bottom )
+
+        ' Continue frmTopTabsMenu's own bottom rule across this strip -- but only over the
+        ' rows that control actually SHOWS. It draws PaintLine(2) at its client bottom, and
+        ' PaintLine centres the pen (fills [y - penW\2, y - penW\2 + penW)), so the lower
+        ' half of that pen falls outside its client and is clipped away. Here there is no
+        ' clip, so the same call laid down one extra row hanging below the tab band -- a
+        ' visibly thicker rule in the strip past the icon panel. Painting the surviving
+        ' rows directly keeps the two halves the same thickness at every DPI.
+        dim as long nPenW = AfxScaleY(2)
+        if nPenW < 1 then nPenW = 1
+        dim as RECT rcRule = rcMenu
+        rcRule.top    = rcMenu.bottom - (nPenW \ 2)
+        rcRule.bottom = rcMenu.bottom
+        b.SetBackColor( ghEditor.Divider )
+        b.PaintRect( @rcRule )
     end if
     
     b.EndDoubleBuffer()

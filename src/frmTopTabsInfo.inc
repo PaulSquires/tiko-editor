@@ -201,7 +201,7 @@ function frmTopTabsInfo_PositionWindows() as LRESULT
     gTTabCtl.rcFileTypeButton = rc
     gTTabCtl.rcFileTypeButton.right = rc.right - pWindow->ScaleX(6)
     gTTabCtl.rcFileTypeButton.left = gTTabCtl.rcFileTypeButton.right - _
-            pWindow->ScaleX( getTextWidth(HWND_FRMMAIN_TOPTABSINFO, gTTabCtl.wszFileType, GUIFONT_9) + (nPadding * 2))
+            pWindow->ScaleX( getTextWidth(HWND_FRMMAIN_TOPTABSINFO, gTTabCtl.wszFileType, GUIFONT_11) + (nPadding * 2))
     gTTabCtl.rcFileTypeButton.left = gTTabCtl.rcFileTypeButton.left
     gTTabCtl.rcFileTypeButton.top += vmargin
     gTTabCtl.rcFileTypeButton.bottom = gTTabCtl.rcFileTypeButton.top + pWindow->ScaleY(TOPTABS_INFO_HEIGHT-1) - vmargin
@@ -354,6 +354,16 @@ function frmTopTabsInfo_WndProc( _
 
             ' The three icon buttons are the PsIconPanel's own client area and are painted
             ' by frmTopTabsInfo_IconPaint. Nothing here reaches them.
+            '
+            ' THE FONT MUST BE SET AGAIN HERE. Without it the pill inherited INFOFONT_11
+            ' (Consolas) from the filename above, while the icon buttons beside it draw in
+            ' GUIFONT_10 -- and DT_VCENTER centres each font's OWN line box, so two captions
+            ' in equal rects sit on different baselines. Measured (baseline = top +
+            ' (H - tmHeight)\2 + tmAscent): Consolas 11 and Segoe UI 10 agree at 96 dpi and
+            ' are 1px apart at 168, so the error only appears above 100% DPI -- which is why
+            ' nothing here can be checked by looking at it at 100%.
+            ' Keep this in step with the font PositionWindows measures the pill's width in.
+            b.SetFont( ghFont(GUIFONT_11) )
             b.SetBackColor( iif( isMouseOverRECT(hwnd, gTTabCtl.rcFileTypeButton), _
                                  ghTopTabs.BackColor, ghTopTabs.BackColorHot ) )
             b.PaintRoundRect( @gTTabCtl.rcFileTypeButton )
