@@ -1335,6 +1335,27 @@ sub frmThemes_Build( byval nPage as long, byval hPage as HWND )
     ghThemeB2 = PsTextBox_Create( hPage, IDC_FRMTHEMES_TXTB2 )
     PsTextBox_SetChangeCallback( ghThemeB2, @frmThemes_RGBChanged )
 
+    ' DRESS ALL SIX HERE, not only in ApplyTheme. Two reasons, and the second is a documented
+    ' trap rather than caution: ApplyTheme is not guaranteed to have run by the time the page
+    ' is first shown, so the new row came up in PsTextBox's own defaults -- white box, small
+    ' top-left text, no border colour -- next to three correctly dressed ones. And
+    ' PsTextBox_SetTextAlign MUST be set before the control has content: TM_PLAINTEXT refuses
+    ' EM_SETPARAFORMAT silently, so the setter can only apply it by emptying the buffer, and
+    ' on a box that already holds a value that discards the undo history (CLAUDE.md).
+    scope
+        dim hAll(0 to 5) as HWND = { ghThemeR, ghThemeG, ghThemeB, _
+                                     ghThemeR2, ghThemeG2, ghThemeB2 }
+        for i as long = 0 to 5
+            if hAll(i) = 0 then continue for
+            PsTextBox_SetTextAlign( hAll(i), TXT_ALIGN_CENTER )
+            PsTextBox_SetFont( hAll(i), OptionsFont_Base() )
+            PsTextBox_SetForeColor( hAll(i), theme.ui.field.forecolor )
+            PsTextBox_SetBackColor( hAll(i), theme.ui.field.backcolor )
+            PsTextBox_SetOuterBackColor( hAll(i), theme.panel.text.backcolor )
+            PsTextBox_SetBorderColor( hAll(i), theme.ui.divider )
+        next
+    end scope
+
     ' THE EMBEDDED PICKER. It adds NOTHING to frmOptions' message pump -- there is no
     ' PsColorPicker_FilterMessage, unlike the PsComboBox and PsTextBox calls already in there.
     ' That absence is the reason it is a panel rather than a dropdown.
@@ -1544,43 +1565,36 @@ function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPan
     dim as long xEdit = padLeft + listW + gapX
     dim as long yEdit = yTop
 
-    ' Foreground / Background, each with a Reset glyph button beside it. Clicking Fore/Back opens
-    ' the colour popup for that channel; the swatch of the current colour is drawn in Paint.
-    ' The colour swatch is the SAME HEIGHT as the buttons (it reads as part of the row).
+    ' EACH CHANNEL IS A BLOCK: its button + swatch + reset, with its own R/G/B row directly
+    ' underneath. Clicking Fore/Back opens the colour popup for that channel; the swatch of
+    ' the current colour is drawn in Paint.
+    '
+    ' The R/G/B rows sat together at the bottom under two caption lines saying "Foreground"
+    ' and "Background". That cost two text rows the buttons above already accounted for, and
+    ' overflowed the Syntax page by 67px at 175% -- caught by the height assertion added with
+    ' them, on its first run. Putting each row under the button that names it removes the
+    ' captions AND the ambiguity, which is what the captions were there for.
     dim as long resetW  = AfxScaleX(34)
     dim as long swatchW = AfxScaleX(THEME_SWATCHW)
     dim as long chanW   = editW - resetW - swatchW - (2 * AfxScaleX(6))
     dim as long swatchX = xEdit + chanW + AfxScaleX(6)
+
+    dim as long fldH  = ctlH
+    dim as long labW  = AfxScaleX(16)
+    dim as long cellW = (editW - (2 * AfxScaleX(10))) \ 3      ' three equal cells, two gaps
+    dim as long boxW  = cellW - labW
+    dim as long xc    = xEdit
+    dim rgbLabels(0 to 2) as string = { "R", "G", "B" }
+    dim rgbBoxes(0 to 2)  as HWND = { ghThemeR, ghThemeG, ghThemeB }
+    dim rgbBoxes2(0 to 2) as HWND = { ghThemeR2, ghThemeG2, ghThemeB2 }
+
+    ' ---- foreground block ----
     SetWindowPos( ghThemeFore, 0, xEdit, yEdit, chanW, ctlH, SWP_NOZORDER or SWP_NOACTIVATE )
     SetRect( @gThemeSwatchRc(0), swatchX, yEdit, swatchX + swatchW, yEdit + ctlH )
     SetWindowPos( ghThemeResetF, 0, xEdit + editW - resetW, yEdit, resetW, ctlH, _
                   SWP_NOZORDER or SWP_NOACTIVATE )
-    yEdit += ctlH + rowGap
-    SetWindowPos( ghThemeBack, 0, xEdit, yEdit, chanW, ctlH, SWP_NOZORDER or SWP_NOACTIVATE )
-    SetRect( @gThemeSwatchRc(1), swatchX, yEdit, swatchX + swatchW, yEdit + ctlH )
-    SetWindowPos( ghThemeResetB, 0, xEdit + editW - resetW, yEdit, resetW, ctlH, _
-                  SWP_NOZORDER or SWP_NOACTIVATE )
-    yEdit += ctlH + rowGap + rowGap
+    yEdit += ctlH + AfxScaleY(4)
 
-    ' R / G / B fields in one row, each a labelled box.
-    dim as long fldH  = ctlH
-    dim as long labW  = AfxScaleX(16)
-    dim as long cellW = (editW - (2 * AfxScaleX(10))) \ 3      ' three equal cells with two gaps
-    dim as long boxW  = cellW - labW
-    dim as long xc    = xEdit
-    dim rgbBoxes(0 to 2) as HWND = { ghThemeR, ghThemeG, ghThemeB }
-    ' TWO ROWS, ONE PER CHANNEL, each captioned with the channel it edits. One row that
-    ' followed an "active channel" meant a key could offer two colours to pick and one to
-    ' type, with the mode signalled only by the default border on a button. On the Palette
-    ' page a role has one colour, so the second row is hidden and the first is uncaptioned.
-    dim rgbLabels(0 to 2) as string = { "R", "G", "B" }
-    dim rgbBoxes2(0 to 2) as HWND = { ghThemeR2, ghThemeG2, ghThemeB2 }
-    dim as boolean bTwoRows = (gThemeCurPage <> THEMEPAGE_PALETTE)
-
-    if bTwoRows then
-        frmThemes_AddLabel( L(300, "Foreground"), xEdit, yEdit, xEdit + editW, yEdit + textH )
-        yEdit += textH + AfxScaleY(2)
-    end if
     xc = xEdit
     for i as long = 0 to 2
         frmThemes_AddLabel( rgbLabels(i), xc, yEdit + AfxScaleY(5), xc + labW, yEdit + fldH )
@@ -1589,9 +1603,14 @@ function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPan
     next
     yEdit += fldH + rowGap
 
-    if bTwoRows then
-        frmThemes_AddLabel( L(301, "Background"), xEdit, yEdit, xEdit + editW, yEdit + textH )
-        yEdit += textH + AfxScaleY(2)
+    ' ---- background block. A role has ONE colour, so the Palette page has no second one. ----
+    if gThemeCurPage <> THEMEPAGE_PALETTE then
+        SetWindowPos( ghThemeBack, 0, xEdit, yEdit, chanW, ctlH, SWP_NOZORDER or SWP_NOACTIVATE )
+        SetRect( @gThemeSwatchRc(1), swatchX, yEdit, swatchX + swatchW, yEdit + ctlH )
+        SetWindowPos( ghThemeResetB, 0, xEdit + editW - resetW, yEdit, resetW, ctlH, _
+                      SWP_NOZORDER or SWP_NOACTIVATE )
+        yEdit += ctlH + AfxScaleY(4)
+
         xc = xEdit
         for i as long = 0 to 2
             frmThemes_AddLabel( rgbLabels(i), xc, yEdit + AfxScaleY(5), xc + labW, yEdit + fldH )
@@ -1600,6 +1619,8 @@ function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPan
             xc += cellW + AfxScaleX(10)
         next
         yEdit += fldH + rowGap
+    else
+        SetRect( @gThemeSwatchRc(1), 0, 0, 0, 0 )
     end if
     yEdit += rowGap
 
