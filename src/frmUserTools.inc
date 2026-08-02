@@ -1758,11 +1758,7 @@ function frmUserTools_Show( byval hWndParent as HWND ) as LRESULT
     PsTooltip_SetFonts( ghUTParamsTip, ghFont(GUIFONT_11), ghFont(GUIFONTBOLD_11), ghFont(SYMBOLFONT_10) )
     scope
         dim as PSTOOLTIP_COLORS tipc
-        tipc.BackColor   = theme.topmenu.text.backcolor
-        tipc.BorderColor = theme.editor.divider
-        tipc.ForeColor   = theme.topmenu.text.forecolor
-        tipc.TitleColor  = theme.panel.texthot.forecolor
-        tipc.GlyphColor  = theme.ui.accent
+        Theme_FillTooltipColors( tipc )
         PsTooltip_SetColors( ghUTParamsTip, @tipc )
     end scope
 

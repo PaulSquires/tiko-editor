@@ -217,6 +217,30 @@ type THEME_EDITOR
     ' editor chrome
     scrollbar    as THPAIR
     divider      as COLORREF
+    ' The right-margin column guide. SCI_SETEDGECOLOUR was never sent anywhere, so this
+    ' drew in Scintilla's built-in #C0C0C0 in every theme, light or dark.
+    edge         as COLORREF
+    ' Visible whitespace dots. SCI_SETWHITESPACEFORE/BACK were never sent either.
+    whitespace   as THPAIR
+    ' Multi-cursor. SCI_SETADDITIONALSELBACK / SETADDITIONALCARETFORE were never sent, so
+    ' every selection after the first drew in Scintilla's defaults.
+    additionalselection as COLORREF
+    additionalcaret     as COLORREF
+end type
+
+
+' ---------------------------------------------------------------------------------------
+' tooltip -- hover tips, code tips and the debugger's data tips.
+'
+' These had no keys of their own: the five-line recipe was hand-copied into frmThemes,
+' frmUserTools, frmDebug and modCodetipTip, and the last two had already drifted apart on
+' the title colour. One home for it now.
+' ---------------------------------------------------------------------------------------
+type THEME_TOOLTIP
+    text   as THPAIR
+    border as COLORREF
+    title  as COLORREF
+    glyph  as COLORREF
 end type
 
 
@@ -346,6 +370,7 @@ type THEMEROOT_TYPE
     toptabs   as THEME_TOPTABS
     statusbar as THEME_STATUSBAR
     output    as THEME_OUTPUT
+    tooltip   as THEME_TOOLTIP
 end type
 
 dim shared theme as THEMEROOT_TYPE

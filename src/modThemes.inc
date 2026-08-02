@@ -51,6 +51,15 @@ type THEME_TYPE
     ' explicit command rather than something an edit does by accident.
     foreMacro as DWSTRING
     backMacro as DWSTRING
+    ' Did this channel come from the ROLE layer rather than from the file?
+    '
+    ' Without this the writer cannot tell "the author wrote this colour" from "we filled it
+    ' in from role.accent", because role resolution sets hasFore/hasBack exactly as a parse
+    ' does. It would then emit every role-derived value as a literal, and the first save of a
+    ' roles-only theme would flatten the whole palette into 140 hard-coded lines -- the same
+    ' failure the %MACRO round-trip exists to prevent, one layer up.
+    foreFromRole as boolean
+    backFromRole as boolean
 end type
 
 
@@ -525,6 +534,27 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
 
         gTheme(nFound).keyValue = keyValue
         gTheme(nFound).keyData = keyData
+
+        ' role.* IS A COLOUR DESPITE HAVING ONLY TWO SEGMENTS.
+        '
+        ' A role carries exactly one colour, so "role.accent: 49,73,123" is the natural
+        ' syntax and the third segment would be noise on every line of a palette. But the
+        ' two-segment path below is the TEXT path -- it is what general.description takes --
+        ' so without this arm a role parses perfectly happily, stores its digits as a string,
+        ' sets no colour, and silently falls through to the built-in default. That is exactly
+        ' what happened: a full palette was added to both shipped themes and changed nothing
+        ' at all, with a clean build and 636 assertions passing.
+        if (numKeys = 2) andalso (keys(1) = "role") then
+            gTheme(nFound).foreground = clr
+            gTheme(nFound).hasFore    = true
+            if bHasAlpha then
+                gTheme(nFound).foregroundAlpha = cubyte(nAlpha)
+                gTheme(nFound).hasForeAlpha    = true
+            end if
+            gTheme(nFound).foreMacro = wszMacroUsed
+            continue do
+        end if
+
         select case keys(3)
             case "foreground"
                 gTheme(nFound).foreground = clr
@@ -918,15 +948,17 @@ sub Theme_ResolveKeyRoles()
         dim as boolean bHasF   = (gThemeKeys(i).ofsFore >= 0)
         dim as boolean bFreeF  = (gTheme(n).hasFore = false)
         if bWantF andalso bHasF andalso bFreeF then
-            gTheme(n).foreground = theme.role.clr(rF)
-            gTheme(n).hasFore    = true
+            gTheme(n).foreground   = theme.role.clr(rF)
+            gTheme(n).hasFore      = true
+            gTheme(n).foreFromRole = true
         end if
         dim as boolean bWantB = (rB <> THROLE_NONE)
         dim as boolean bHasB   = (gThemeKeys(i).ofsBack >= 0)
         dim as boolean bFreeB  = (gTheme(n).hasBack = false)
         if bWantB andalso bHasB andalso bFreeB then
-            gTheme(n).background = theme.role.clr(rB)
-            gTheme(n).hasBack    = true
+            gTheme(n).background   = theme.role.clr(rB)
+            gTheme(n).hasBack      = true
+            gTheme(n).backFromRole = true
         end if
 
     next
@@ -984,7 +1016,8 @@ function Theme_SetColor( byval lookupKey as string, _
             ' DETACH. This key stops referring to the macro; the macro itself and every
             ' other key using it are untouched. Re-attaching is a separate explicit action,
             ' never a side effect of picking a colour.
-            gTheme(n).foreMacro = ""
+            gTheme(n).foreMacro    = ""
+        gTheme(n).foreFromRole = false
             if nAlpha >= 0 then
                 gTheme(n).foregroundAlpha = cubyte(iif(nAlpha > 255, 255, nAlpha))
                 gTheme(n).hasForeAlpha = true
@@ -992,7 +1025,8 @@ function Theme_SetColor( byval lookupKey as string, _
         case THEMECH_BACK
             gTheme(n).background = clr
             gTheme(n).hasBack = true
-            gTheme(n).backMacro = ""                ' detach -- see THEMECH_FORE above
+            gTheme(n).backMacro    = ""
+        gTheme(n).backFromRole = false                ' detach -- see THEMECH_FORE above
             if nAlpha >= 0 then
                 gTheme(n).backgroundAlpha = cubyte(iif(nAlpha > 255, 255, nAlpha))
                 gTheme(n).hasBackAlpha = true
@@ -1560,7 +1594,10 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
         if (len(sLastNamespace) > 0) andalso (sNamespace <> sLastNamespace) then print #f, ""
         sLastNamespace = sNamespace
 
-        if (gThemeKeys(i).ofsFore >= 0) andalso gTheme(n).hasFore then
+        dim as boolean bWriteF = (gThemeKeys(i).ofsFore >= 0)
+        bWriteF = (bWriteF andalso gTheme(n).hasFore)
+        bWriteF = (bWriteF andalso (gTheme(n).foreFromRole = false))
+        if bWriteF then
             dim as long nA = -1
             if gTheme(n).hasForeAlpha then nA = clng(gTheme(n).foregroundAlpha)
             sLine = sKey & ".foreground: " & _
@@ -1568,7 +1605,10 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
             print #f, sLine
         end if
 
-        if (gThemeKeys(i).ofsBack >= 0) andalso gTheme(n).hasBack then
+        dim as boolean bWriteB = (gThemeKeys(i).ofsBack >= 0)
+        bWriteB = (bWriteB andalso gTheme(n).hasBack)
+        bWriteB = (bWriteB andalso (gTheme(n).backFromRole = false))
+        if bWriteB then
             dim as long nA = -1
             if gTheme(n).hasBackAlpha then nA = clng(gTheme(n).backgroundAlpha)
             sLine = sKey & ".background: " & _
@@ -1700,6 +1740,17 @@ sub Theme_DumpGlobals( byval wszOutPath as DWSTRING )
     DUMPCLR( "editor.BackColorScrollBar",     theme.editor.scrollbar.backcolor )
     DUMPCLR( "editor.ForeColorScrollBar",     theme.editor.scrollbar.forecolor )
     DUMPCLR( "editor.Divider",                theme.editor.divider )
+    DUMPCLR( "editor.edge",                   theme.editor.edge )
+    DUMPCLR( "editor.whitespace.fore",        theme.editor.whitespace.forecolor )
+    DUMPCLR( "editor.whitespace.back",        theme.editor.whitespace.backcolor )
+    DUMPCLR( "editor.additionalselection",    theme.editor.additionalselection )
+    DUMPCLR( "editor.additionalcaret",        theme.editor.additionalcaret )
+
+    DUMPCLR( "tooltip.text.fore",             theme.tooltip.text.forecolor )
+    DUMPCLR( "tooltip.text.back",             theme.tooltip.text.backcolor )
+    DUMPCLR( "tooltip.border",                theme.tooltip.border )
+    DUMPCLR( "tooltip.title",                 theme.tooltip.title )
+    DUMPCLR( "tooltip.glyph",                 theme.tooltip.glyph )
     DUMPCLR( "editor.ForeColorBookmark",      theme.editor.bookmark.forecolor )
     DUMPCLR( "editor.BackColorBookmark",      theme.editor.bookmark.backcolor )
     DUMPCLR( "editor.ForeColorBreakpoint",    theme.editor.breakpoint.forecolor )

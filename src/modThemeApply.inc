@@ -247,13 +247,8 @@ end sub
 ' (frmFind, frmPanel, ...) and a control's PsTipHost-owned tip cannot come to disagree.
 ' PRIVATE, and it has to be: modThemeApply.bi is included at tiko.bas:86, well before
 ' PsTooltip.bi at 148, so a declaration naming PSTOOLTIP_COLORS cannot live in the header.
-private sub Theme_FillTooltipColors( byref tipc as PSTOOLTIP_COLORS )
-    tipc.BackColor   = theme.topmenu.text.backcolor
-    tipc.BorderColor = theme.editor.divider
-    tipc.ForeColor   = theme.topmenu.text.forecolor
-    tipc.TitleColor  = theme.panel.texthot.forecolor
-    tipc.GlyphColor  = theme.ui.accent
-end sub
+' Theme_FillTooltipColors lives in modThemeTips.inc now, beside its code-tip sibling
+' and ahead of the four tip owners that could not see it from here.
 
 
 ' Theme ONE tip -- the door the hand-built tips (frmFind, frmPanel, frmReplace, frmDebug,
@@ -986,7 +981,7 @@ sub Theme_RunSelfTest()
         '      group per migration commit while this number must not move at all. Written as
         '      a tripwire -- adding a key in Phase 4 is supposed to fail here until the
         '      number is updated on purpose.
-        const THEME_TOTAL_KEYS = 63
+        const THEME_TOTAL_KEYS = 71
         THASSERT( nKeys = THEME_TOTAL_KEYS, _
                   "key table has " & nKeys & " rows, expected " & THEME_TOTAL_KEYS )
         THASSERT( Theme_KeyIndex( "general.description" ) >= 0, _
@@ -1085,6 +1080,26 @@ sub Theme_RunSelfTest()
         end scope
     end scope
 
+    ' -- 22h. A role.* LINE IN THE FILE IS PARSED AS A COLOUR. ---------------------------
+    '    role.accent has only TWO dot segments, and two-segment keys are the TEXT path --
+    '    it is the path general.description takes. So a role parsed perfectly happily,
+    '    stored its digits as a string, set no colour, and silently fell through to the
+    '    built-in default. A full 20-line palette was added to both shipped themes and
+    '    changed absolutely nothing, with a clean build and every assertion green.
+    '
+    '    Asserted on the PARSE, not on the resolved value: a resolved role equal to its
+    '    built-in default is legitimate, so comparing those cannot tell the two apart.
+    scope
+        dim as long n = Theme_FindEntry( "role.background" )
+        THASSERT( n >= 0, "role.background is not in the parsed theme" )
+        if n >= 0 then
+            THASSERT( gTheme(n).hasFore, _
+                      "role.background parsed as TEXT, not as a colour -- the palette is inert" )
+            THASSERT( theme.role.clr(THROLE_BACKGROUND) = gTheme(n).foreground, _
+                      "the resolved palette does not match the file" )
+        end if
+    end scope
+
     ' -- 23. A THEME THAT DEFINES NOTHING IS STILL COMPLETE. -----------------------------
     '    This is the role layer's entire promise, in its only testable form: every colour
     '    key resolves, from the built-in defaults alone, with no file involved. It is what
@@ -1140,6 +1155,52 @@ sub Theme_RunSelfTest()
             Theme_ResolveRoles()
             THASSERT( theme.role.clr(THROLE_ACCENT) = BGR(1,2,3), _
                       "a role named in the file did not beat the built-in default" )
+        end scope
+
+        ' 23b. A ROLES-ONLY THEME SURVIVES A SAVE. This is what the foreFromRole /
+        '      backFromRole provenance flags buy, and it is the same failure the %MACRO
+        '      round trip exists to prevent, one layer up: role resolution sets hasFore
+        '      exactly as a parse does, so without provenance the writer cannot tell an
+        '      authored colour from an inherited one and would flatten the whole palette
+        '      into hard-coded literals on the first save.
+        scope
+            dim as string sTmp = *AfxGetExePathName() & "_theme_roletest.tmp"
+
+            ' A theme with ONE authored key and everything else inherited.
+            erase gTheme
+            dim as long na = Theme_EnsureEntry( "editor.keyword" )
+            gTheme(na).foreground = BGR( 9, 9, 9 )
+            gTheme(na).hasFore    = true
+            Theme_ResolveFallbacks()
+
+            THASSERT( Theme_WriteFile( sTmp, "roles only" ) = false, "roles-only write failed" )
+
+            dim as long nLines
+            dim as long f = freefile
+            if open( sTmp for input encoding "utf-8" as #f ) = 0 then
+                dim as string sLineIn
+                while eof(f) = 0
+                    line input #f, sLineIn
+                    dim as boolean bReal = (len(trim(sLineIn)) > 0)
+                    bReal = (bReal andalso (left(trim(sLineIn),1) <> "#"))
+                    if bReal then nLines += 1
+                wend
+                close #f
+            end if
+
+            ' The authored key comes back...
+            erase gTheme
+            Theme_ParseFile( sTmp )
+            dim as long nb = Theme_FindEntry( "editor.keyword" )
+            THASSERT( nb >= 0, "the authored key did not survive the save" )
+            if nb >= 0 then
+                THASSERT( gTheme(nb).foreground = BGR(9,9,9), "the authored colour changed" )
+            end if
+            ' ...and the inherited ones did NOT get baked into the file. Without provenance
+            ' this file carries a line for all 69 colour keys.
+            THASSERT( nLines < 20, _
+                      "a roles-only save emitted " & nLines & " lines -- the palette was flattened" )
+            kill( sTmp )
         end scope
 
         Theme_Restore()

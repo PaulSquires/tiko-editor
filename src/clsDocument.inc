@@ -1635,6 +1635,16 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
         '' RIGHT EDGE COLUMN
         SciMsg( pSciView, SCI_SETEDGEMODE, iif(gConfig.RightEdge, EDGE_LINE, EDGE_NONE), 0 )
         SciMsg( pSciView, SCI_SETEDGECOLUMN, val(gConfig.RightEdgePosition), 0 )
+        ' SCI_SETEDGECOLOUR was never sent anywhere, so the right-margin guide drew in
+        ' Scintilla's built-in #C0C0C0 in every theme -- a light grey line down a dark
+        ' editor. It has a key now.
+        SciMsg( pSciView, SCI_SETEDGECOLOUR, theme.editor.edge, 0 )
+        ' Likewise visible whitespace and the multi-cursor selections/carets: all four of
+        ' these messages were absent, so they used Scintilla's defaults regardless of theme.
+        SciMsg( pSciView, SCI_SETWHITESPACEFORE, 1, theme.editor.whitespace.forecolor )
+        SciMsg( pSciView, SCI_SETWHITESPACEBACK, 1, theme.editor.whitespace.backcolor )
+        SciMsg( pSciView, SCI_SETADDITIONALSELBACK, theme.editor.additionalselection, 0 )
+        SciMsg( pSciView, SCI_SETADDITIONALCARETFORE, theme.editor.additionalcaret, 0 )
 
         ''
         ''  OTHER

@@ -11,6 +11,36 @@ general.version: 1.0.0
 %LIGHT_WHITE: 215,218,224
 %WHITE: 255,255,255
 
+# ---------------------------------------------------------------------------------------
+# THE ROLE PALETTE
+#
+# Every widget key falls back to one of these when this file does not name it, so a key
+# added to tiko later is themed here for free instead of arriving as a built-in default
+# from some other palette. Values below are this theme's own colours, not new ones.
+#
+# Resolution order:  the key itself  ->  its role  ->  tiko's built-in default
+# ---------------------------------------------------------------------------------------
+role.background: %LIGHT_BLACK
+role.backgroundalt: %EVENING_BLACK
+role.backgroundraised: 53,59,69
+role.foreground: %LIGHT_GRAY
+role.foregrounddim: %GRAY
+role.border: 64,67,73
+role.accent: 49,73,123
+role.hot: 44,49,58
+role.selection: 38,79,120
+role.error: 255,0,0
+role.warning: 240,178,102
+role.success: 0,128,0
+role.keyword: 148,202,240
+role.apikeyword: 187,111,78
+role.userkeyword: 179,48,142
+role.comment: 95,125,49
+role.string: 195,137,80
+role.number: 198,107,60
+role.operator: %LIGHT_GRAY
+role.preprocessor: 165,134,181
+
 compile.iconsuccess.foreground: 0,128,0    # green
 compile.iconfail.foreground: 255,0,0       # red
 output.valuechanged.foreground: 240,178,102  # soft orange - a debugger value that changed on the last step

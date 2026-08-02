@@ -197,36 +197,17 @@ end function
 ' structure cannot be keyed on display text in any language.
 function frmThemes_CategoryIdForKey( byval sKey as string ) as long
 
-    dim as string ns = AfxStrParse( sKey, 1, "." )
-
-    if ns <> "editor" then
-        select case ns
-            case "main":      return THEMECAT_MAIN
-            case "panel":     return THEMECAT_PANEL
-            case "toptabs":   return THEMECAT_TOPTABS
-            case "menubar":   return THEMECAT_MENUBAR
-            case "topmenu":   return THEMECAT_POPUP
-            case "statusbar": return THEMECAT_STATUSBAR
-            case "output":    return THEMECAT_OUTPUT
-            case "compile":   return THEMECAT_COMPILE
-            case "ui":        return THEMECAT_SHARED
-        end select
-        return THEMECAT_OTHER
-    end if
-
-    select case AfxStrParse( sKey, 2, "." )
-        case "text", "comments", "keyword", "keyword2", "keyword3", _
-             "numbers", "operators", "preprocessor", "strings"
-            return THEMECAT_SYNTAX
-        case "caret", "currentline", "selection", "indentguides"
-            return THEMECAT_CURSOR
-        case "linenumbers", "foldmargin", "foldsymbol"
-            return THEMECAT_MARGINS
-        case "bookmark", "breakpoint", "debugline", "bracegood", "bracebad", "occurrence"
-            return THEMECAT_MARKERS
-        case "scrollbar", "divider"
-            return THEMECAT_EDCHROME
-    end select
+    ' THE KEY TABLE ANSWERS THIS NOW. It was a hand-written select case on the namespace for
+    ' the interface side and on the second segment for the syntax side -- a third place the
+    ' key list was written out, and the one the self-test's "no key lands in Other" assertion
+    ' was really policing.
+    '
+    ' It went red the moment eight keys were added to the engine, which is that assertion
+    ' doing exactly its job -- and is also the argument for deleting the duplicate rather
+    ' than extending it. A key now carries its category from the same row that carries its
+    ' member, its subsystem and its role, so the two cannot disagree.
+    dim as long n = Theme_KeyIndex( sKey )
+    if n >= 0 then return gThemeKeys(n).nCat
 
     return THEMECAT_OTHER
 

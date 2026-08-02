@@ -112,6 +112,22 @@ THPAIRKEY("editor.scrollbar",    editor.scrollbar,    THEMECAT_EDCHROME, _
 ' control border, message-box frames, the autocomplete frame. Read in 20 files.
 THFOREKEY("editor.divider",      editor.divider,      THEMECAT_EDCHROME, THSUB_ALL, THROLE_BORDER, THROLE_NONE )
 
+' The four Scintilla messages tiko never sent, so these drew in Scintilla's own defaults
+' regardless of theme: a light-grey right-margin guide down a dark editor, default
+' whitespace dots, and default multi-cursor selections and carets.
+THFOREKEY("editor.edge",         editor.edge,         THEMECAT_EDCHROME, 0, THROLE_BORDER, THROLE_NONE )
+THPAIRKEY("editor.whitespace",   editor.whitespace,   THEMECAT_EDCHROME, 0, THROLE_FOREGROUNDDIM, THROLE_BACKGROUND )
+THBACKKEY("editor.additionalselection", editor.additionalselection, THEMECAT_CURSOR, 0, THROLE_NONE, THROLE_SELECTION )
+THFOREKEY("editor.additionalcaret",     editor.additionalcaret,     THEMECAT_CURSOR, 0, THROLE_FOREGROUND, THROLE_NONE )
+
+' ---- tooltip: hover tips, code tips, the debugger's data tips -----------------------------
+' These had no keys at all; the recipe was hand-copied into four files, two of which had
+' already drifted apart. THSUB_ALL because a tip can be owned by any subsystem.
+THPAIRKEY("tooltip.text",   tooltip.text,   THEMECAT_SHARED, THSUB_ALL, THROLE_FOREGROUND, THROLE_BACKGROUNDRAISED )
+THFOREKEY("tooltip.border", tooltip.border, THEMECAT_SHARED, THSUB_ALL, THROLE_BORDER, THROLE_NONE )
+THFOREKEY("tooltip.title",  tooltip.title,  THEMECAT_SHARED, THSUB_ALL, THROLE_FOREGROUND, THROLE_NONE )
+THFOREKEY("tooltip.glyph",  tooltip.glyph,  THEMECAT_SHARED, THSUB_ALL, THROLE_ACCENT, THROLE_NONE )
+
 ' ---- ui: chrome split out of the editor namespace, all app-wide ---------------------------
 THFOREKEY("ui.divider",          ui.divider,          THEMECAT_SHARED, THSUB_ALL, THROLE_BORDER, THROLE_NONE )
 THPAIRKEY("ui.field",            ui.field,            THEMECAT_SHARED, THSUB_ALL, THROLE_FOREGROUND, THROLE_BACKGROUND )

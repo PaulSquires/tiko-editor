@@ -123,11 +123,9 @@ end sub
 sub Codetip_SyncTheme()
     if ghCodetip = 0 then exit sub
     dim as PSTOOLTIP_COLORS tipc
-    tipc.BackColor   = theme.editor.text.backcolor
-    tipc.BorderColor = theme.editor.divider
-    tipc.ForeColor   = theme.editor.text.forecolor
-    tipc.TitleColor  = theme.editor.text.forecolor
-    tipc.GlyphColor  = theme.editor.text.forecolor
+    ' Editor palette on purpose -- see modThemeTips.inc. This used to be five lines here
+    ' and five more (with a DIFFERENT title colour) in frmDebug.
+    Theme_FillCodeTipColors( tipc )
     PsTooltip_SetColors( ghCodetip, @tipc )
 end sub
 

@@ -1779,11 +1779,7 @@ sub frmDebug_InitDataTip()
     ' The EDITOR palette, not the popup one -- this tip appears over source text and has to
     ' read as part of it. Same call the code tips make, for the same reason.
     dim as PSTOOLTIP_COLORS tipc
-    tipc.BackColor   = theme.editor.text.backcolor
-    tipc.BorderColor = theme.editor.divider
-    tipc.ForeColor   = theme.editor.text.forecolor
-    tipc.TitleColor  = theme.editor.keyword1.forecolor
-    tipc.GlyphColor  = theme.editor.text.forecolor
+    Theme_FillCodeTipColors( tipc )
     PsTooltip_SetColors( gDbgDataTip, @tipc )
 end sub
 
