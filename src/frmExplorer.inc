@@ -80,7 +80,7 @@ function frmExplorer_SelectItemData( byval pDoc as clsDocument ptr ) as boolean
 
     dim as long nCount = PsListTree_GetCount(hCtrl)
     for i as long = 0 to nCount - 1
-        if PsListTree_GetItemData(hCtrl, i) = cast(integer, pDoc) then 
+        if frmExplorer_DocFromRow(hCtrl, i) = pDoc then
             ' Only attempt to reposition if the row is not currently collapsed
             if PsListTree_IsCollapsed(hCtrl, i) then return false
 
@@ -213,20 +213,32 @@ sub frmExplorer_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     
     dim as DWSTRING wszCaption = p->wszCaption
 
+    ' PSLISTTREE_PAINTINFO carries the model row but no itemData and no control handle, so
+    ' the row descriptor is fetched by index. Safe here only because this painter serves
+    ' exactly one control; a shared painter would need a per-tree wrapper naming its HWND.
+    dim as EXPLORER_ROWKIND kind = frmExplorer_KindFromRow( HWND_FRMEXPLORER, p->itemID )
+
     ' indent the text based on its type
-    if p->isHeader then
-        p->b->SetFont( ghFont(SYMBOLFONT_10) )
+    if kind = EXPKIND_ROOT then
+        ' Keyed on the row KIND, not on p->isHeader -- a root group is a plain tree parent
+        ' now, so isHeader is never true here (see LoadExplorerFiles).
         rcIcon.right = rcIcon.left + nIconWidth
-        dim as DWSTRING wszIcon = iif(p->isCollapsed, wszIconChevronRight, wszIconChevronDown) 
-        p->b->PaintText( wszIcon, @rcIcon, DT_CENTER )
+        ' The chevron is painted only when there is actually a subtree to fold. An empty
+        ' group offering a control that does nothing is the wart the header row had; it is
+        ' also what PsListTree_CanCollapse already believes -- it refuses a childless node,
+        ' so under ExpandAll/CollapseAll an empty group's chevron would sit at odds with
+        ' every other group's. The caption's x is unchanged either way, so the captions of
+        ' populated and empty groups still line up.
+        if p->hasChildren then
+            p->b->SetFont( ghFont(SYMBOLFONT_10) )
+            dim as DWSTRING wszIcon = iif(p->isCollapsed, wszIconChevronRight, wszIconChevronDown)
+            p->b->PaintText( wszIcon, @rcIcon, DT_CENTER )
+        end if
 
         p->b->SetFont( ghFont(GUIFONT_10) )
         rcText.left = rcIcon.right
         p->b->PaintText( wszCaption, @rcText, DT_LEFT )
-    ' PSLISTTREE_PAINTINFO carries the model row but no itemData and no control handle, so
-    ' the row descriptor is fetched by index. Safe here only because this painter serves
-    ' exactly one control; a shared painter would need a per-tree wrapper naming its HWND.
-    elseif frmExplorer_KindFromRow( HWND_FRMEXPLORER, p->itemID ) = EXPKIND_PROMOTE then
+    elseif kind = EXPKIND_PROMOTE then
         ' The promotion row reads as an action, not a file: accent-coloured, no document
         ' glyph, and indented to the header's text column rather than the file column.
         p->b->SetForeColor( ghEditor.ForeColorKeyword )
@@ -265,10 +277,29 @@ function frmExplorer_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as
             ' Tooltips are now on-demand via the tooltip callback; nothing to push.
             return true
             
+        case WM_LBUTTONDOWN
+            ' Whole-row collapse/expand for a group, implemented HERE because the control no
+            ' longer does it. A root group used to be an AddHeader row, which the control
+            ' toggles on a click anywhere in it -- but it does that before the callback runs
+            ' and so cannot be vetoed, which is unusable once the row carries an icon. As a
+            ' plain parent it toggles only via a twisty (not shown here), so the gesture is
+            ' reinstated by hand and the icon zone can be carved out of it later.
+            '
+            ' Guarded on hasChildren to agree with the painter: no chevron is drawn on an
+            ' empty group, so clicking one must not silently flip a state nothing displays.
+            dim as HWND hCtlDn = GetParent(m->hList)
+            if frmExplorer_KindFromRow( hCtlDn, m->idx ) = EXPKIND_ROOT then
+                if PsListTree_HasChildren( hCtlDn, m->idx ) then
+                    PsListTree_ToggleRow( hCtlDn, m->idx )
+                end if
+                return true
+            end if
+            return false
+
         case WM_LBUTTONUP
             ' Attempt to show the file
             dim as HWND hCtl = GetParent(m->hList)
-            if PsListTree_IsHeader( hCtl, m->idx ) = false then
+            if frmExplorer_KindFromRow( hCtl, m->idx ) <> EXPKIND_ROOT then
                 ' The one reader that cares WHICH non-document row it is on. It asks for the
                 ' kind and never touches itemData, so there is nothing here to mis-cast.
                 if frmExplorer_KindFromRow( hCtl, m->idx ) = EXPKIND_PROMOTE then
@@ -286,16 +317,15 @@ function frmExplorer_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as
                 frmMain_SetFocusToCurrentCodeWindow()
             end if
 
-            ' Header collapse/expand is handled inside the control on the mouse-down,
-            ' and it preserves the current selection. Return FALSE: the listbox needs
-            ' its default WM_LBUTTONUP handling to release the mouse capture it took
-            ' on the button-down.
+            ' Group collapse/expand happened on the mouse-down above. Return FALSE: the
+            ' listbox needs its default WM_LBUTTONUP handling to release the mouse capture
+            ' it took on the button-down.
             return false
     
         case WM_RBUTTONDOWN
             ' Create the popup menu
             dim as HWND hCtl = GetParent(m->hList)
-            if PsListTree_IsHeader( hCtl, m->idx ) then return false
+            if frmExplorer_KindFromRow( hCtl, m->idx ) = EXPKIND_ROOT then return false
 
             ' No context menu on the promotion row -- every item on it is a file action.
             ' DocFromRow returns NULL for it, so the existing null test covers that too.
@@ -417,8 +447,21 @@ function LoadExplorerFiles() as long
     redim pDocs(any) as clsDocument ptr
 
     for ii as long = nStart to nEnd
+        ' A root group is an AddNode PARENT, not an AddHeader row. The control toggles a
+        ' header on a click ANYWHERE in it, and does so BEFORE offering the message callback
+        ' (PsListTree.inc, WM_LBUTTONDOWN) -- so the callback cannot veto it, and the
+        ' add-folder icon this row is about to carry would collapse the group on every
+        ' click. As a plain parent nothing toggles by itself and the host owns the gesture.
+        '
+        ' Non-selectable for the second half of that: WM_LBUTTONDOWN computes
+        ' canDrag = bDragReorder andalso bSelectable, and a root group must never be
+        ' draggable. Headers got that exclusion for free; plain parents do not. Nothing
+        ' depended on selecting a group row -- the context menu and the up-handler both bail
+        ' on them -- and a non-selectable row still reports its index to the message
+        ' callback, so the host toggle is unaffected.
         wszText = gConfig.Cat(ii).wszDescription
-        PsListTree_AddHeader( hCtrl, wszText, ii, EXPKIND_ROOT )
+        dim as integer nRootRow = PsListTree_AddNode( hCtrl, -1, wszText, ii, EXPKIND_ROOT )
+        PsListTree_SetRowSelectable( hCtrl, nRootRow, false )
 
         ' Iterate all pDoc in the project/files list. Create an array and then
         ' sort it alphabetically.
@@ -438,8 +481,13 @@ function LoadExplorerFiles() as long
         QuickSortpDocs( pDocs(), lbound(pDocs), ubound(pDocs) )
     
         for i as long = lbound(pDocs) to ubound(pDocs)
+            ' AddNode, not AddString: AddString derives its level from the PRECEDING row and
+            ' only ever produces level 1 when that row is a header or is itself level 1.
+            ' With the group now a plain parent, AddString would put every file at level 0 --
+            ' a flat list with no subtree to collapse. Each file is appended as the group's
+            ' last child, so the sorted order above is preserved.
             dim as DWSTRING wszText = AfxStrPathName( "NAMEX", pDocs(i)->DiskFilename )
-            PsListTree_AddString( hCtrl, wszText, cast(integer, pDocs(i)), EXPKIND_FILE )
+            PsListTree_AddNode( hCtrl, nRootRow, wszText, cast(integer, pDocs(i)), EXPKIND_FILE )
         next   
         
     next

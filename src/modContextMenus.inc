@@ -407,11 +407,11 @@ private sub ExplorerContextMenu_OnSelect( byval hPopup as HWND, byval id as long
     dim pDocArray(nSelCount-1) as clsDocument ptr
     dim as integer nextIdx = 0
     for i as integer = 0 to PsListTree_GetCount(hCtl) - 1
-        if PsListTree_IsHeader(hCtl, i) then continue for
         if PsListTree_GetSel( hCtl, i ) = true then
             if nextIdx > ubound(pDocArray) then exit for
-            ' DocFromRow returns NULL for the Explorer's promotion row, whose sentinel is
-            ' not a valid pointer. The loop below already skips nulls.
+            ' No IsHeader skip: group rows are plain tree parents now, and non-selectable
+            ' besides, so GetSel is false for them. DocFromRow returns NULL for every
+            ' non-file row regardless, and the loop below already skips nulls.
             pDocArray(nextIdx) = frmExplorer_DocFromRow( hCtl, i )
             nextIdx = nextIdx + 1
         end if

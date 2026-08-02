@@ -216,6 +216,44 @@ sub Workspace_RunSelfTest()
     Workspace_Check( "every Explorer row resolves to a live document or to nothing", _
         nBadRow = -1, iif( nBadRow = -1, "all rows clean", "row " & str(nBadRow) ) )
 
+    ' --- the Explorer is a TREE, not a flat list ------------------------------------------
+    ' The row COUNT cannot see this. Group rows became plain tree parents and files became
+    ' their children; get the parenting wrong -- AddString instead of AddNode, say, which
+    ' derives its level from the preceding row and would leave every file at level 0 -- and
+    ' the count is unchanged, every row still resolves, and nothing above goes red. What
+    ' would break is collapsing a group, which is not reachable from a headless suite.
+    ' The loop deliberately runs to completion and only REMEMBERS the first offending row,
+    ' rather than exiting on it. Bailing early would leave nRoots short and fail the
+    ' unrelated category assertion below as collateral -- measured: the A/B that reverts the
+    ' file insert to AddString reported 2 failures that way, only one of them a finding.
+    dim as long nBadTree = -1
+    dim as long nRoots = 0
+    for i as long = 0 to PsListTree_GetCount( HWND_FRMEXPLORER ) - 1
+        dim as boolean bBad = false
+        select case frmExplorer_KindFromRow( HWND_FRMEXPLORER, i )
+            case EXPKIND_ROOT
+                nRoots += 1
+                ' A group sits at the top level, and must not be selectable: WM_LBUTTONDOWN
+                ' computes canDrag from bSelectable, so a selectable group row would be
+                ' draggable once drag-reorder is on.
+                if PsListTree_GetLevel( HWND_FRMEXPLORER, i ) <> 0 then bBad = true
+                if PsListTree_GetRowSelectable( HWND_FRMEXPLORER, i ) then bBad = true
+            case EXPKIND_FILE
+                ' A file is a child OF A GROUP -- both halves checked, since a file at
+                ' level 1 under the wrong kind of parent would still read as depth-correct.
+                if PsListTree_GetLevel( HWND_FRMEXPLORER, i ) <> 1 then bBad = true
+                dim as long nParent = PsListTree_GetParent( HWND_FRMEXPLORER, i )
+                if frmExplorer_KindFromRow( HWND_FRMEXPLORER, nParent ) <> EXPKIND_ROOT then
+                    bBad = true
+                end if
+        end select
+        if bBad andalso (nBadTree = -1) then nBadTree = i
+    next
+    Workspace_Check( "every Explorer file is a child of a group row", _
+        nBadTree = -1, iif( nBadTree = -1, "tree well-formed", "row " & str(nBadTree) ) )
+    Workspace_Check( "the Explorer shows one row per category", _
+        nRoots = nHeaders, "roots=" & str(nRoots) & " categories=" & str(nHeaders) )
+
     Workspace_Check( "the promotion row is present iff the workspace is untitled", _
         bPromoteAtTop = ( gApp.IsProjectNamed() = false ), _
         iif( gApp.IsProjectNamed(), "named", "untitled" ) & _
