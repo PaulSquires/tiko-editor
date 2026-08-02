@@ -243,6 +243,36 @@ sub frmExplorer_RunSelfTest()
             print "  NOTE  folder normalization not exercised: the workspace has no documents"
         end if
 
+        ' --- reloading must not change the panel's visibility ---------------------------------
+        ' LoadExplorerFiles hides the control while it refills. It used to leave it hidden and
+        ' rely on frmPanel_ShowPanel to bring it back, which held only while every caller was a
+        ' project load. Folder create/rename/delete all rebuild the tree with nothing behind
+        ' them, so the whole panel went blank on the first click of the add-folder icon.
+        '
+        ' Checked on the control's OWN style bit, deliberately, because that is what the fix
+        ' reads: IsWindowVisible walks the ancestor chain and would answer false at startup for
+        ' a control that is visible in its own right.
+        ' BOTH STATES ARE FORCED, and that is the whole assertion. Simply reading the
+        ' visibility, reloading, and comparing is VACUOUS here: this suite runs at startup
+        ' before frmPanel has shown the Explorer, so the bit is already false, and "hide and
+        ' never restore" is then indistinguishable from "hide and restore". Measured -- the
+        ' A/B that deletes the restore left that version passing at before=false after=false.
+        dim as boolean bVisOrig = ( (GetWindowLongPtrW( HWND_FRMEXPLORER, GWL_STYLE ) and WS_VISIBLE) <> 0 )
+
+        ShowWindow( HWND_FRMEXPLORER, SW_SHOW )
+        LoadExplorerFiles()
+        Exp_Check( "reloading leaves a visible Explorer visible", _
+            (GetWindowLongPtrW( HWND_FRMEXPLORER, GWL_STYLE ) and WS_VISIBLE) <> 0 )
+
+        ' The other direction matters too: the Explorer is legitimately hidden whenever the
+        ' panel is showing Functions or Bookmarks, and a reload must not yank it forward.
+        ShowWindow( HWND_FRMEXPLORER, SW_HIDE )
+        LoadExplorerFiles()
+        Exp_Check( "reloading leaves a hidden Explorer hidden", _
+            (GetWindowLongPtrW( HWND_FRMEXPLORER, GWL_STYLE ) and WS_VISIBLE) = 0 )
+
+        if bVisOrig then ShowWindow( HWND_FRMEXPLORER, SW_SHOW ) else ShowWindow( HWND_FRMEXPLORER, SW_HIDE )
+
         ' --- the icon rects ------------------------------------------------------------------
         ' Which icons a row offers is expressed by the SAME call that places them, so these
         ' assertions cover the offer rule and the geometry at once. rcRow is a synthetic

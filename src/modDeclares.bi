@@ -441,7 +441,7 @@ dim shared as wstring * 10 _
     wszIconSplitEditor, wszIconThemes, _
     wszIconSettings, wszIconCheckBoxEmpty, wszIconCheckBoxMarked, _
     wszIconContinue, wszIconStop, wszIconStepNext, wszIconStepOver, wszIconStepOut, wszIconRunToCursor, _
-    wszIconPause, wszIconSortAsc, wszIconSortDesc, wszIconTrash, _
+    wszIconPause, wszIconSortAsc, wszIconSortDesc, wszIconTrash, wszIconNewFolder, _
     wszIconSave, wszIconFind, wszIconToggleReplace, _
     wszIconGotoMain, wszIconGotoHeader, wszIconGotoSource, _
     wszIconUndock, wszIconDock, _
@@ -534,6 +534,10 @@ dim shared spinner(0 to 7) as DWSTRING => { _
     wszIconSortAsc           = !"\uE70E"     ' chevron up
     wszIconSortDesc          = !"\uE70D"     ' chevron down
     wszIconTrash             = !"\uE74D"     ' trashcan - delete the selected watch
+    wszIconNewFolder         = !"\uE8F4"     ' new folder - Explorer add-folder icon. Its own
+                                             ' define rather than reusing wszIconAddFileButton,
+                                             ' which is the generic plus and is also the
+                                             ' debugger's Add Watch and a statusbar glyph.
 
     ' Autocomplete popup kind markers. Plain geometric characters drawn in the regular
     ' GUI font, NOT Segoe Fluent Icons: the popup already switches colour per kind, and

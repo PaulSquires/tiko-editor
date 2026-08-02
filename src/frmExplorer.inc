@@ -412,7 +412,7 @@ sub frmExplorer_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     if IsRectEmpty( @rcAdd ) = 0 then
         p->b->SetFont( ghFont(SYMBOLFONT_10) )
         p->b->SetForeColor( foreclr )
-        p->b->PaintText( wszIconAddFileButton, @rcAdd, DT_CENTER )
+        p->b->PaintText( wszIconNewFolder, @rcAdd, DT_CENTER )
     end if
     if IsRectEmpty( @rcDel ) = 0 then
         p->b->SetFont( ghFont(SYMBOLFONT_10) )
@@ -866,7 +866,20 @@ function LoadExplorerFiles() as long
     dim as HWND hCtrl = HWND_FRMEXPLORER
 
     ' Hide the listbox while it is loading so that we don't get the unpainted
-    ' white background from the empty listbox
+    ' white background from the empty listbox.
+    '
+    ' THE VISIBILITY IS RESTORED AT THE BOTTOM, and it was not always. This function used to
+    ' hide the control and simply leave it hidden, which worked only because every caller was
+    ' a project/workspace load with frmPanel_ShowPanel behind it to show the Explorer again.
+    ' It is called from user gestures now -- creating, renaming and deleting a folder all
+    ' rebuild the tree -- and on those paths nothing follows to undo the hide, so the whole
+    ' panel went blank on the first click of the add-folder icon.
+    '
+    ' The saved state is the control's OWN style bit, never IsWindowVisible: that walks the
+    ' ancestor chain, so during startup -- when frmMain is not shown yet -- it reports false
+    ' for a control that is perfectly visible in its own right, and restoring from it would
+    ' leave the Explorer hidden for the rest of the session. Same trap PsScrollPanel hit.
+    dim as boolean bWasVisible = ( (GetWindowLongPtrW( hCtrl, GWL_STYLE ) and WS_VISIBLE) <> 0 )
     ShowWindow( hCtrl, SW_HIDE )
 
     ' Save the topindex because we will restore it after filling the new contents
@@ -932,6 +945,11 @@ function LoadExplorerFiles() as long
     PsListTree_SetTopIndex( hCtrl, nTopIndex )
     nCurSel = MIN( nCurSel, PsListTree_GetCount(hCtrl) - 1 )
     PsListTree_SetCurSel( hCtrl, nCurSel )
+
+    ' Put the control back exactly as it was found -- see the note on the hide above. A
+    ' plain SW_SHOW would be wrong: the Explorer is legitimately hidden whenever the panel
+    ' is showing Functions or Bookmarks instead, and reloading it must not yank it forward.
+    if bWasVisible then ShowWindow( hCtrl, SW_SHOW )
 
     function = 0
 end function
