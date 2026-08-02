@@ -825,6 +825,90 @@ end sub
 
 
 ''
+''  THE ROLE PALETTE, AS THE THEME EDITOR SEES IT
+''
+''  Index-addressed so a list control can walk it without knowing the enum.
+''
+function Theme_RoleCount() as long
+    Theme_BuildRoleTable()
+    return ubound(gThemeRoleDef) - lbound(gThemeRoleDef) + 1
+end function
+
+function Theme_RoleName( byval idx as long ) as DWSTRING
+    Theme_BuildRoleTable()
+    if (idx < lbound(gThemeRoleDef)) orelse (idx > ubound(gThemeRoleDef)) then return ""
+    return gThemeRoleDef(idx).name
+end function
+
+function Theme_RoleColor( byval idx as long ) as COLORREF
+    Theme_BuildRoleTable()
+    if (idx < lbound(gThemeRoleDef)) orelse (idx > ubound(gThemeRoleDef)) then return 0
+    return theme.role.clr( gThemeRoleDef(idx).nRole )
+end function
+
+' Is this role NAMED IN THE FILE, or is it coming from the built-in default? The editor marks
+' the difference so a user can see which of the twenty-one this theme actually chose.
+function Theme_RoleIsExplicit( byval idx as long ) as boolean
+    Theme_BuildRoleTable()
+    if (idx < lbound(gThemeRoleDef)) orelse (idx > ubound(gThemeRoleDef)) then return false
+    dim as long n = Theme_FindEntry( gThemeRoleDef(idx).name )
+    if n < 0 then return false
+    return gTheme(n).hasFore
+end function
+
+
+''
+''  RE-RESOLVE EVERY KEY THAT INHERITS FROM A ROLE
+''
+''  MUST BE CALLED AFTER EDITING A ROLE, and this is the whole reason it exists: role
+''  resolution only fills a channel whose has* flag is FALSE, so once a key has taken its
+''  role's colour it is indistinguishable from an authored one and a later change to that
+''  role would reach nothing at all. The edit would appear to do nothing, silently, which is
+''  the exact shape of bug this branch has hit repeatedly.
+''
+''  So the role-derived values are UN-RESOLVED first -- and only those, which is what the
+''  foreFromRole/backFromRole provenance is for. An authored colour is never disturbed.
+''
+sub Theme_ReapplyRoles()
+
+    for i as long = lbound(gTheme) to ubound(gTheme)
+        if gTheme(i).foreFromRole then
+            gTheme(i).hasFore      = false
+            gTheme(i).foreFromRole = false
+        end if
+        if gTheme(i).backFromRole then
+            gTheme(i).hasBack      = false
+            gTheme(i).backFromRole = false
+        end if
+    next
+
+    Theme_ResolveRoles()
+    Theme_ResolveKeyRoles()
+
+end sub
+
+
+''
+''  SET ONE ROLE AND RE-RESOLVE. Returns the subsystems to repaint -- always everything,
+''  because a role feeds keys across every namespace by design.
+''
+function Theme_SetRole( byval idx as long, byval clr as COLORREF ) as ulong
+
+    Theme_BuildRoleTable()
+    if (idx < lbound(gThemeRoleDef)) orelse (idx > ubound(gThemeRoleDef)) then return THSUB_NONE
+
+    dim as long n = Theme_EnsureEntry( gThemeRoleDef(idx).name )
+    gTheme(n).foreground   = clr
+    gTheme(n).hasFore      = true
+    gTheme(n).foreFromRole = false      ' a role is authored, never inherited from itself
+
+    Theme_ReapplyRoles()
+    return THSUB_ALL
+
+end function
+
+
+''
 ''  READ ONE CHANNEL BACK THROUGH AN OFFSET
 ''
 ''  Public because the self-test's whole job in this phase is to compare what the generated
@@ -1533,6 +1617,35 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
     sLine = "# Colors are red,green,blue (0-255), optionally red,green,blue,alpha."
     print #f, sLine
     print #f, ""
+
+    ' THE ROLE PALETTE, and it MUST be written or the theme loses it.
+    '
+    ' The writer walks the KEY table, and roles are not in it -- so without this block a save
+    ' emitted no role.* lines at all. For a theme whose keys are all explicit that is
+    ' invisible (default_dark forked and rendered identically); for a ROLES-ONLY theme it is
+    ' catastrophic, because every key is fromRole and therefore skipped below, so the saved
+    ' file would come back very nearly empty. Found by forking a theme and reading what came
+    ' out, not by any assertion -- assertion 23b checked that a roles-only save stayed SHORT
+    ' and was perfectly happy with short-because-empty.
+    '
+    ' Only EXPLICIT roles are written. One left at its built-in default is not part of this
+    ' theme's palette and writing it would freeze today's default into the file forever.
+    scope
+        dim as long nWritten
+        for i as long = 0 to Theme_RoleCount() - 1
+            if Theme_RoleIsExplicit(i) = false then continue for
+            if nWritten = 0 then
+                sLine = "# The palette. Every key that does not name a colour of its own"
+                print #f, sLine
+                sLine = "# inherits from one of these."
+                print #f, sLine
+            end if
+            sLine = Theme_RoleName(i) & ": " & Theme_FormatColor( Theme_RoleColor(i), -1 )
+            print #f, sLine
+            nWritten += 1
+        next
+        if nWritten > 0 then print #f, ""
+    end scope
 
     ' NO %MACRO BLOCK. The writer used to echo the palette back here so a hand-authored
     ' theme kept its named colours; the ROLE layer replaced that job outright and does it

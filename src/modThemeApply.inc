@@ -1132,6 +1132,57 @@ sub Theme_RunSelfTest()
         #undef LUMA
     end scope
 
+    ' -- 22j. EDITING A ROLE MOVES THE KEYS THAT INHERIT IT. -----------------------------
+    '    The palette page's entire promise, and a silent no-op without Theme_ReapplyRoles:
+    '    role resolution only fills a channel whose has* flag is FALSE, so once a key has
+    '    taken its role's colour it looks exactly like an authored one and a later change to
+    '    that role reaches nothing. The page would appear to work and change nothing.
+    '
+    '    Also asserts the other half -- that an AUTHORED colour is NOT dragged along. The
+    '    provenance flags exist to tell those two apart and this is what checks they do.
+    scope
+        Theme_Snapshot()
+
+        ' editor.keyword2 inherits role.apikeyword in every shipped theme; editor.keyword is
+        ' authored in the two defaults, so pin it explicitly to be independent of the file.
+        Theme_SetColor( "editor.keyword", THEMECH_FORE, BGR(7,7,7) )
+
+        dim as long nInherit = Theme_FindEntry( "editor.keyword2" )
+        dim as long nAuthored = Theme_FindEntry( "editor.keyword" )
+        if (nInherit >= 0) andalso (nAuthored >= 0) then
+            dim as boolean bWasInherited = gTheme(nInherit).foreFromRole
+
+            ' find role.apikeyword by name rather than by index
+            dim as long idxRole = -1
+            for i as long = 0 to Theme_RoleCount() - 1
+                if Theme_RoleName(i) = "role.apikeyword" then idxRole = i : exit for
+            next
+            THASSERT( idxRole >= 0, "role.apikeyword is not in the role table" )
+
+            if (idxRole >= 0) andalso bWasInherited then
+                Theme_SetRole( idxRole, BGR(3,5,7) )
+                dim as long n2 = Theme_FindEntry( "editor.keyword2" )
+                THASSERT( n2 >= 0, "editor.keyword2 vanished when its role was edited" )
+                if n2 >= 0 then
+                    THASSERT( gTheme(n2).foreground = BGR(3,5,7), _
+                              "editing a role did not move the key that inherits it" )
+                end if
+                dim as long n3 = Theme_FindEntry( "editor.keyword" )
+                if n3 >= 0 then
+                    THASSERT( gTheme(n3).foreground = BGR(7,7,7), _
+                              "editing a role overwrote an AUTHORED colour" )
+                end if
+                THASSERT( theme.role.clr(THROLE_APIKEYWORD) = BGR(3,5,7), _
+                          "the palette did not take the new value" )
+            end if
+        end if
+
+        Theme_Restore()
+        Theme_DiscardSnapshot()
+        Theme_ResolveFallbacks()
+        Theme_FillGlobals()
+    end scope
+
     ' -- 23. A THEME THAT DEFINES NOTHING IS STILL COMPLETE. -----------------------------
     '    This is the role layer's entire promise, in its only testable form: every colour
     '    key resolves, from the built-in defaults alone, with no file involved. It is what
@@ -1203,6 +1254,10 @@ sub Theme_RunSelfTest()
             dim as long na = Theme_EnsureEntry( "editor.keyword" )
             gTheme(na).foreground = BGR( 9, 9, 9 )
             gTheme(na).hasFore    = true
+            ' One authored ROLE too, so the round trip has a palette to lose.
+            dim as long nr = Theme_EnsureEntry( "role.accent" )
+            gTheme(nr).foreground = BGR( 4, 4, 4 )
+            gTheme(nr).hasFore    = true
             Theme_ResolveFallbacks()
 
             THASSERT( Theme_WriteFile( sTmp, "roles only" ) = false, "roles-only write failed" )
@@ -1229,9 +1284,22 @@ sub Theme_RunSelfTest()
                 THASSERT( gTheme(nb).foreground = BGR(9,9,9), "the authored colour changed" )
             end if
             ' ...and the inherited ones did NOT get baked into the file. Without provenance
-            ' this file carries a line for all 69 colour keys.
-            THASSERT( nLines < 20, _
+            ' this file carries a line for every colour key.
+            THASSERT( nLines < 40, _
                       "a roles-only save emitted " & nLines & " lines -- the palette was flattened" )
+
+            ' AND THE PALETTE ITSELF SURVIVED. This assertion was previously the line count
+            ' alone, and it was happy with short-because-EMPTY: the writer emitted no role.*
+            ' block at all, so a roles-only theme saved as a handful of lines and lost every
+            ' colour it had. Found by forking a theme and reading the file, not by this test.
+            ' A count is not a round trip.
+            dim as long nRoles
+            for i as long = 0 to Theme_RoleCount() - 1
+                if Theme_RoleIsExplicit(i) then nRoles += 1
+            next
+            THASSERT( nRoles > 0, "the role palette did not survive the save" )
+            THASSERT( theme.role.clr(THROLE_ACCENT) = BGR(4,4,4), _
+                      "an authored role came back with a different colour" )
             kill( sTmp )
         end scope
 
