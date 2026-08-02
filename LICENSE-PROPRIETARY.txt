@@ -1,0 +1,137 @@
+PLANETSQUIRES SOFTWARE
+PROPRIETARY COMPONENT LICENSE
+
+fbcParser and debugParser
+Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
+All rights reserved.
+
+--------------------------------------------------------------------------
+0. WHAT THIS LICENSE COVERS
+--------------------------------------------------------------------------
+
+This license applies only to the following components (the "Proprietary
+Components"):
+
+    fbcParser.dll        the FreeBASIC symbol-extraction engine
+    fbcParser.bi         its public header
+    debugParser.dll      the FreeBASIC debug engine
+    debugParser.bi       its public header
+
+and to any other file distributed with tiko that carries a notice
+referring to this license.
+
+The Proprietary Components are NOT open source. Their source code is not
+published and is not part of the tiko repository.
+
+Everything else in tiko is licensed under the GNU General Public License
+version 3 or later; see the file LICENSE. Where the two licenses could be
+read to conflict, this license governs the Proprietary Components and the
+GPL governs everything else. Nothing in this license reduces any right you
+have in the GPL-licensed portion of tiko.
+
+--------------------------------------------------------------------------
+1. GRANT
+--------------------------------------------------------------------------
+
+Subject to the terms below, PlanetSquires Software grants you a
+perpetual, worldwide, royalty-free, non-exclusive license to:
+
+  (a) Use the Proprietary Components, without limit as to the number of
+      machines or users, for any purpose including commercial software
+      development;
+
+  (b) Distribute exact, unmodified copies of the Proprietary Components,
+      but only as part of a distribution of tiko or of a work derived
+      from tiko, and only accompanied by this license file;
+
+  (c) Use the published headers named in section 0 to compile and link the
+      tiko source code, or the source code of a work derived from tiko,
+      against the Proprietary Components.
+
+The grant in (c) extends only to building tiko and works derived from tiko.
+It does not permit calling the Proprietary Components from any other
+software, whether through the published headers or by any other means.
+
+No fee is charged for any of the above.
+
+--------------------------------------------------------------------------
+2. RESTRICTIONS
+--------------------------------------------------------------------------
+
+You may not:
+
+  (a) Reverse engineer, decompile, disassemble, or otherwise attempt to
+      derive the source code, internal design, or algorithms of the
+      Proprietary Components, except to the extent that this restriction
+      is expressly prohibited by applicable law;
+
+  (b) Modify, patch, translate, or create derivative works of the
+      Proprietary Components;
+
+  (c) Distribute the Proprietary Components separately from tiko, or
+      bundle them into any product that is not tiko or a work derived
+      from tiko, without prior written permission;
+
+  (d) Sell, rent, lease, or sublicense the Proprietary Components on
+      their own, or charge a fee attributable to them;
+
+  (e) Remove or alter any copyright, trademark, or license notice in or
+      accompanying the Proprietary Components.
+
+--------------------------------------------------------------------------
+3. RESERVATION OF RIGHTS
+--------------------------------------------------------------------------
+
+The Proprietary Components are licensed, not sold. PlanetSquires Software
+retains all right, title, and interest in and to them, including all
+copyright and other intellectual property rights. All rights not expressly
+granted in section 1 are reserved.
+
+--------------------------------------------------------------------------
+4. NO WARRANTY
+--------------------------------------------------------------------------
+
+THE PROPRIETARY COMPONENTS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+--------------------------------------------------------------------------
+5. LIMITATION OF LIABILITY
+--------------------------------------------------------------------------
+
+IN NO EVENT SHALL PLANETSQUIRES SOFTWARE OR PAUL SQUIRES BE LIABLE FOR ANY
+CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT,
+OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE PROPRIETARY
+COMPONENTS OR THE USE OR OTHER DEALINGS IN THEM. THIS INCLUDES, WITHOUT
+LIMITATION, LOSS OF DATA, LOSS OF PROFITS, AND BUSINESS INTERRUPTION, EVEN
+IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+--------------------------------------------------------------------------
+6. TERMINATION
+--------------------------------------------------------------------------
+
+This license terminates automatically if you breach any of its terms. On
+termination you must stop using and distributing the Proprietary
+Components. Sections 3, 4, and 5 survive termination.
+
+If you cease all violation of this license, your rights are reinstated
+provisionally unless and until PlanetSquires Software terminates them
+explicitly and finally.
+
+--------------------------------------------------------------------------
+7. GOVERNING LAW
+--------------------------------------------------------------------------
+
+This license is governed by the laws of the Province of Newfoundland and
+Labrador and the laws of Canada applicable therein, without regard to
+conflict-of-law principles.
+
+--------------------------------------------------------------------------
+8. CONTACT
+--------------------------------------------------------------------------
+
+For permissions beyond the scope of this license, including use of the
+Proprietary Components in products other than tiko:
+
+    PlanetSquires Software
+    https://www.planetsquires.com
