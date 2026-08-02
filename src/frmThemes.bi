@@ -55,11 +55,18 @@
 ' in the Options nav strip; they are tabs on a PsSelectBar now, so they are numbered from zero
 ' and are local to this dialog. Nothing outside this file should name them.
 #Define THEMEPAGE_NONE       -1
-#Define THEMEPAGE_SYNTAX      0
-#Define THEMEPAGE_INTERFACE   1
-' The role palette. APPENDED rather than slotted in front, so the two existing ids keep their
-' values; the bar shows it FIRST regardless, because display order is add order.
-#Define THEMEPAGE_PALETTE     2
+' THE PAGE ID IS THE SELECT-BAR PANEL INDEX. They must be equal, and the order of these
+' defines must match the order of the PsSelectBar_AddPanel calls in frmThemes_Build.
+'
+' That is not a style preference. frmThemes_BarSelChange receives the panel INDEX from the
+' control and passes it straight to frmThemes_SelectPage as a page ID, and
+' PsSelectBar_SetCurSel takes an INDEX too -- so the dialog conflates the two throughout and
+' only ever worked because they happened to match. Appending THEMEPAGE_PALETTE = 2 while
+' showing it FIRST broke that silently: the bar highlighted Interface (index 2) while the
+' list filled with roles. The invariant is asserted rather than remembered.
+#Define THEMEPAGE_PALETTE     0
+#Define THEMEPAGE_SYNTAX      1
+#Define THEMEPAGE_INTERFACE   2
 #Define THEMEPAGE_COUNT       3
 
 ' Shell metrics, UNSCALED -- run through AfxScaleX/AfxScaleY at use. FIXED SIZE, like

@@ -1132,6 +1132,23 @@ sub Theme_RunSelfTest()
         #undef LUMA
     end scope
 
+    ' -- 22l. PAGE ID == SELECT-BAR PANEL INDEX. -----------------------------------------
+    '    frmThemes_BarSelChange receives the panel INDEX from PsSelectBar and hands it to
+    '    frmThemes_SelectPage as a page ID; PsSelectBar_SetCurSel takes an index too. So the
+    '    dialog uses the two interchangeably and only ever worked because they matched.
+    '
+    '    Adding the Palette tab as id 2 while showing it FIRST broke that silently: the bar
+    '    highlighted Interface (index 2) while the list filled with roles, so the tab and its
+    '    contents disagreed and nothing failed. Reported by the author, invisible to every
+    '    assertion here at the time.
+    '
+    '    The ids are the panel order now, and this says so. It cannot see the bar -- that
+    '    only exists while the dialog is open -- but it pins the half a reorder would move.
+    THASSERT( THEMEPAGE_PALETTE = 0, "THEMEPAGE_PALETTE is not the first panel" )
+    THASSERT( THEMEPAGE_SYNTAX = 1, "THEMEPAGE_SYNTAX is not the second panel" )
+    THASSERT( THEMEPAGE_INTERFACE = 2, "THEMEPAGE_INTERFACE is not the third panel" )
+    THASSERT( THEMEPAGE_COUNT = 3, "THEMEPAGE_COUNT does not match the panel count" )
+
     ' -- 22k. THE PALETTE PAGE'S OWN STRINGS RESOLVE, AND TO THE RIGHT THING. ------------
     '    L(id, "default") DISCARDS the default -- an id with no entry renders EMPTY, and an
     '    id belonging to something else renders THAT. Both were live here: 327 and 328 were

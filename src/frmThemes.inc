@@ -1058,9 +1058,23 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
     ghThemesBar = PsSelectBar_Create( HWND_FRMTHEMES, IDC_FRMTHEMES_SELECTBAR )
     ' PALETTE FIRST: editing the twenty-one roles is how a theme is actually retuned, and
     ' the two key lists behind it are for departing from that palette one key at a time.
-    PsSelectBar_AddPanel( ghThemesBar, L(671,"Palette"), THEMEPAGE_PALETTE )
-    PsSelectBar_AddPanel( ghThemesBar, L(306,"Syntax Colors"), THEMEPAGE_SYNTAX )
-    PsSelectBar_AddPanel( ghThemesBar, L(307,"Interface Colors"), THEMEPAGE_INTERFACE )
+    '
+    ' ADD ORDER IS PAGE-ID ORDER. AddPanel returns the model index and the dialog uses the
+    ' index and the page id interchangeably -- see the note on THEMEPAGE_* in frmThemes.bi.
+    ' The assertion below is what stops a future reorder from breaking that silently.
+    scope
+        dim as long i0 = PsSelectBar_AddPanel( ghThemesBar, L(671,"Palette"), THEMEPAGE_PALETTE )
+        dim as long i1 = PsSelectBar_AddPanel( ghThemesBar, L(306,"Syntax Colors"), THEMEPAGE_SYNTAX )
+        dim as long i2 = PsSelectBar_AddPanel( ghThemesBar, L(307,"Interface Colors"), THEMEPAGE_INTERFACE )
+        if (i0 <> THEMEPAGE_PALETTE) orelse (i1 <> THEMEPAGE_SYNTAX) orelse _
+           (i2 <> THEMEPAGE_INTERFACE) then
+            ' Loud, and at the only moment it can be caught: the panel index and the page id
+            ' have diverged, so the highlighted tab and the visible list are about to disagree.
+            dim as string sMsg = "frmThemes: select-bar index/page-id mismatch (" & _
+                                 i0 & "," & i1 & "," & i2 & ")"
+            ? sMsg
+        end if
+    end scope
     ' Zero the FIRST tab's left padding so its text starts at the bar's left edge (aligned with
     ' the Back button); -1 keeps its right padding at the bar default.
     PsSelectBar_SetPanelPadding( ghThemesBar, 0, 0, -1 )
