@@ -163,6 +163,7 @@ type OPTIONS_WORK
     BraceHighlight        as long
     OccurrenceHighlight   as long
     DetectExternalFileChanges as long
+    StripTrailingWhitespace as long
     ' The combo's selected INDEX -- which is also the FILE_ENCODING_* value, because the
     ' row's item list is built by walking those constants in order. See the row's own
     ' comment in OptionsRows_Init and Doc_EncodingName in modRoutines.inc.

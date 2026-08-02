@@ -26,17 +26,17 @@
 #include once "frmTopTabs.bi"
 #include once "frmOutput.bi"
 #include once "frmMainOnCommand.bi"
-                
+
 ''
 ''  CONSTRUCTOR
 ''
 constructor clsConfig
-    dim as DWSTRING exe_path = AfxGetExePathName 
-    ConfigFilename            = exe_path & "settings\settings.ini" 
-    FBKeywordsFilename        = exe_path & "settings\keywords\freebasic_keywords.txt" 
-    WinApiKeywordsFilename    = exe_path & "settings\keywords\winapi_keywords.txt" 
-    ExtraKeywordsFilename     = exe_path & "settings\keywords\extra_keywords.txt" 
-    FBKeywordsDefaultFilename = exe_path & "settings\keywords\freebasic_keywords_default.txt" 
+    dim as DWSTRING exe_path = AfxGetExePathName
+    ConfigFilename            = exe_path & "settings\settings.ini"
+    FBKeywordsFilename        = exe_path & "settings\keywords\freebasic_keywords.txt"
+    WinApiKeywordsFilename    = exe_path & "settings\keywords\winapi_keywords.txt"
+    ExtraKeywordsFilename     = exe_path & "settings\keywords\extra_keywords.txt"
+    FBKeywordsDefaultFilename = exe_path & "settings\keywords\freebasic_keywords_default.txt"
     FBCodetipsFilename        = exe_path & "settings\keywords\codetips.ini"
     UntitledProjectFilename   = exe_path & "settings\default" & APPEXTENSION
 end constructor
@@ -44,10 +44,10 @@ end constructor
 ''
 ''
 function clsConfig.LoadKeywords() as long
-    if AfxFileExists(this.FBKeywordsFilename) = false then 
+    if AfxFileExists(this.FBKeywordsFilename) = false then
         ' The FB keywords file does not exist. Try copying the "default" keywords over
         ' to the main file that the user can modify.
-        if AfxFileExists(this.FBKeywordsDefaultFilename) then 
+        if AfxFileExists(this.FBKeywordsDefaultFilename) then
             if AfxCopyFile( this.FBKeywordsDefaultFilename.sptr, this.FBKeywordsFilename.sptr, true ) = false then
                 exit function
             end if
@@ -56,17 +56,17 @@ function clsConfig.LoadKeywords() as long
     if AfxFileExists(this.FBKeywordsFilename) = false then exit function
 
     dim pStream as CTextStream
-    if pStream.Open(this.FBKeywordsFilename) = S_OK then 
+    if pStream.Open(this.FBKeywordsFilename) = S_OK then
         this.FBKeywords = pStream.ReadAll
         pStream.Close
     end if
 
-    if pStream.Open(this.WinApiKeywordsFilename) = S_OK then 
+    if pStream.Open(this.WinApiKeywordsFilename) = S_OK then
         this.WinApiKeywords = pStream.ReadAll
         pStream.Close
     end if
 
-    if pStream.Open(this.ExtraKeywordsFilename) = S_OK then 
+    if pStream.Open(this.ExtraKeywordsFilename) = S_OK then
         this.ExtraKeywords = pStream.ReadAll
         pStream.Close
     end if
@@ -82,17 +82,17 @@ function clsConfig.SaveKeywords() as long
         pStream.WriteLine this.FBKeywords
         pStream.Close
     end if
-    if pStream.Create(this.WinApiKeywordsFilename) = S_OK then 
+    if pStream.Create(this.WinApiKeywordsFilename) = S_OK then
         pStream.WriteLine this.WinApiKeywords
         pStream.Close
     end if
-    if pStream.Create(this.ExtraKeywordsFilename) = S_OK then 
+    if pStream.Create(this.ExtraKeywordsFilename) = S_OK then
         pStream.WriteLine this.ExtraKeywords
         pStream.Close
     end if
     function = 0
 end function
-    
+
 ''
 ''
 function clsConfig.LoadCodetipsFB() as boolean
@@ -165,7 +165,7 @@ function fonts_EnumFontName( _
             ) as long
     dim as long ub = ubound(gFontNames)
     redim preserve gFontNames(ub + 1) as DWSTRING
-    gFontNames(ub + 1) = lf.lfFaceName 
+    gFontNames(ub + 1) = lf.lfFaceName
     function = true
 end function
 
@@ -175,7 +175,7 @@ end function
 function isFontNameExist( byval wszFontName as DWSTRING ) as boolean
     wszFontName = ucase(wszFontName)
     for i as long = lbound(gFontnames) to ubound(gFontNames)
-        if wszFontName = ucase(gFontNames(i)) then return true   
+        if wszFontName = ucase(gFontNames(i)) then return true
     next
     return false
 end function
@@ -192,13 +192,13 @@ function doFontSanityCheck() as long
     dim hDC as HDC = GetDC(0)
     EnumFontFamilies( hDC, ByVal 0, Cast(FONTENUMPROCW, @fonts_EnumFontName), 0 )
     ReleaseDC( 0, hDC )
-    
+
     ' Is the font defined in the config file okay?
     if isFontNameExist( gConfig.EditorFontname ) then return true
 
     'print "Defined font not found. Finding an alternative..."
-    
-    ' Test other valid Windows fonts   
+
+    ' Test other valid Windows fonts
     if isFontNameExist( "Consolas" ) then gConfig.EditorFontname = "Consolas": return false
     if isFontNameExist( "MonoLisa" ) then gConfig.EditorFontname = "MonoLisa": return false
     if isFontNameExist( "Apercu Mono" ) then gConfig.EditorFontname = "Apercu Mono": return false
@@ -216,21 +216,21 @@ end function
 ''
 function clsConfig.SaveConfigFile() as long
     gApp.PreventConfigLoad = true
-    
-    ' Determine the current editor positioning 
+
+    ' Determine the current editor positioning
     ' Do not save if editor is minimized
     if isiconic( HWND_FRMMAIN ) = 0 then
         dim WinPla as WINDOWPLACEMENT
         WinPla.Length = sizeof(WinPla)
         GetWindowPlacement( HWND_FRMMAIN, @WinPla )
         With this
-            .StartupLeft   = WinPla.rcNormalPosition.Left 
+            .StartupLeft   = WinPla.rcNormalPosition.Left
             .StartupTop    = WinPla.rcNormalPosition.Top
             .StartupRight  = WinPla.rcNormalPosition.Right
             .StartupBottom = WinPla.rcNormalPosition.Bottom
             .StartupMaximized = iif( WinPla.showCmd = SW_MAXIMIZE, true, false )
         end With
-        
+
         dim as RECT rc
         GetWindowRect( HWND_FRMMAIN, @rc )
         if this.StartupLeft <> rc.Left then this.StartupLeft = rc.Left
@@ -258,7 +258,7 @@ function clsConfig.SaveConfigFile() as long
 
     dim pStream as CTextStream   '(utf16)
     if pStream.Create(this.ConfigFilename, true, true) <> S_OK then return true   ' error
-    
+
     pStream.WriteLine "' SETTINGS FILE"
     pStream.WriteLine ""
     pStream.WriteLine "SettingsVersion="       & APPVERSION
@@ -271,57 +271,58 @@ function clsConfig.SaveConfigFile() as long
     if this.RestoreSession = 0 then this.wszLastActiveProject = ""
     pStream.WriteLine "LastActiveProjectFile=" & ProcessToCurdriveApp(this.wszLastActiveProject)
     pStream.WriteLine "CompactMenus="          & this.CompactMenus
-    pStream.WriteLine "MultipleInstances="     & this.MultipleInstances    
-    pStream.WriteLine "CompileAutosave="       & this.CompileAutosave      
+    pStream.WriteLine "MultipleInstances="     & this.MultipleInstances
+    pStream.WriteLine "CompileAutosave="       & this.CompileAutosave
     pStream.WriteLine "CheckUpdates="          & this.CheckUpdates
-    pStream.WriteLine "SyntaxHighlighting="    & this.SyntaxHighlighting   
-    pStream.WriteLine "Codetips="              & this.Codetips             
+    pStream.WriteLine "SyntaxHighlighting="    & this.SyntaxHighlighting
+    pStream.WriteLine "Codetips="              & this.Codetips
     pStream.WriteLine "AutoComplete="          & this.AutoComplete
     pStream.WriteLine "CharacterAutoComplete=" & this.CharacterAutoComplete
     pStream.WriteLine "RightEdge="             & this.RightEdge
-    pStream.WriteLine "RightEdgePosition="     & this.RightEdgePosition           
-    pStream.WriteLine "LeftMargin="            & this.LeftMargin           
-    pStream.WriteLine "FoldMargin="            & this.FoldMargin           
-    pStream.WriteLine "AutoIndentation="       & this.AutoIndentation      
+    pStream.WriteLine "RightEdgePosition="     & this.RightEdgePosition
+    pStream.WriteLine "LeftMargin="            & this.LeftMargin
+    pStream.WriteLine "FoldMargin="            & this.FoldMargin
+    pStream.WriteLine "AutoIndentation="       & this.AutoIndentation
     pStream.WriteLine "FornextVariable="       & this.FornextVariable
-    pStream.WriteLine "ConfineCaret="          & this.ConfineCaret         
-    pStream.WriteLine "LineNumbering="         & this.LineNumbering        
-    pStream.WriteLine "HighlightCurrentLine="  & this.HighlightCurrentLine 
-    pStream.WriteLine "IndentGuides="          & this.IndentGuides         
-    pStream.WriteLine "TabIndentSpaces="       & this.TabIndentSpaces      
+    pStream.WriteLine "ConfineCaret="          & this.ConfineCaret
+    pStream.WriteLine "LineNumbering="         & this.LineNumbering
+    pStream.WriteLine "HighlightCurrentLine="  & this.HighlightCurrentLine
+    pStream.WriteLine "IndentGuides="          & this.IndentGuides
+    pStream.WriteLine "TabIndentSpaces="       & this.TabIndentSpaces
     pStream.WriteLine "UnicodeEncoding="       & this.UnicodeEncoding
     pStream.WriteLine "NewFileEncoding="       & this.NewFileEncoding
     pStream.WriteLine "KeywordCase="           & this.KeywordCase
-    pStream.WriteLine "LocalizationFile="      & this.LocalizationFile     
-    pStream.WriteLine "TabSize="               & this.TabSize              
+    pStream.WriteLine "LocalizationFile="      & this.LocalizationFile
+    pStream.WriteLine "TabSize="               & this.TabSize
     pStream.WriteLine "PositionMiddle="        & this.PositionMiddle
     pStream.WriteLine "ClickToggleBreakpoint=" & this.ClickToggleBreakpoint
     pStream.WriteLine "BraceHighlight="        & this.BraceHighlight
     pStream.WriteLine "OccurrenceHighlight="   & this.OccurrenceHighlight
     pStream.WriteLine "DetectExternalFileChanges=" & this.DetectExternalFileChanges
-    pStream.WriteLine "EditorFontname="        & this.EditorFontname       
-    pStream.WriteLine "EditorFontsize="        & this.EditorFontsize       
-    pStream.WriteLine "EditorFontCharSet="     & this.EditorFontCharSet    
+    pStream.WriteLine "StripTrailingWhitespace=" & this.StripTrailingWhitespace
+    pStream.WriteLine "EditorFontname="        & this.EditorFontname
+    pStream.WriteLine "EditorFontsize="        & this.EditorFontsize
+    pStream.WriteLine "EditorFontCharSet="     & this.EditorFontCharSet
     pStream.WriteLine "FontExtraSpace="        & this.FontExtraSpace
     pStream.WriteLine "Theme="                 & this.ThemeShortFilename
     pStream.WriteLine "ExplorerPositionRight=" & this.ExplorerPositionRight
     pStream.WriteLine ""
     ' Note: Main window StartUp positions are in scaled screen coordinates.
-    pStream.WriteLine "[Startup]" 
-    pStream.WriteLine "StartupLeft="              & this.StartupLeft          
-    pStream.WriteLine "StartupTop="               & this.StartupTop           
-    pStream.WriteLine "StartupRight="             & this.StartupRight         
-    pStream.WriteLine "StartupBottom="            & this.StartupBottom        
-    pStream.WriteLine "StartupMaximized="         & this.StartupMaximized     
+    pStream.WriteLine "[Startup]"
+    pStream.WriteLine "StartupLeft="              & this.StartupLeft
+    pStream.WriteLine "StartupTop="               & this.StartupTop
+    pStream.WriteLine "StartupRight="             & this.StartupRight
+    pStream.WriteLine "StartupBottom="            & this.StartupBottom
+    pStream.WriteLine "StartupMaximized="         & this.StartupMaximized
     ' Note: HelpViewer StartUp positions are in scaled screen coordinates.
-    pStream.WriteLine "HelpStartupLeft="          & this.HelpStartupLeft          
-    pStream.WriteLine "HelpStartupTop="           & this.HelpStartupTop           
-    pStream.WriteLine "HelpStartupRight="         & this.HelpStartupRight         
-    pStream.WriteLine "HelpStartupBottom="        & this.HelpStartupBottom        
-    pStream.WriteLine "HelpStartupMaximized="     & this.HelpStartupMaximized     
+    pStream.WriteLine "HelpStartupLeft="          & this.HelpStartupLeft
+    pStream.WriteLine "HelpStartupTop="           & this.HelpStartupTop
+    pStream.WriteLine "HelpStartupRight="         & this.HelpStartupRight
+    pStream.WriteLine "HelpStartupBottom="        & this.HelpStartupBottom
+    pStream.WriteLine "HelpStartupMaximized="     & this.HelpStartupMaximized
     ' Note: SidePanel and OutputPanel positions are in unscaled screen coordinates.
     pStream.WriteLine "ShowPanel="                & this.ShowPanel
-    pStream.WriteLine "ShowPanelWidth="           & this.ShowPanelWidth    
+    pStream.WriteLine "ShowPanelWidth="           & this.ShowPanelWidth
     pStream.WriteLine "ShowOutputPanel="          & this.ShowOutputPanel
     pStream.WriteLine "ShowOutputPanelHeight="    & this.ShowOutputPanelHeight
     pStream.WriteLine "ShowOutputPanelMinimized=" & this.ShowOutputPanelMinimized
@@ -371,24 +372,24 @@ function clsConfig.SaveConfigFile() as long
     dim as long numpaths = AfxStrParseCount(allIncludes, ";")
     for i as long = 1 to numpaths
         includePath = trim(AfxStrParse(allIncludes, i, ";"))
-        if len(includePath) then 
+        if len(includePath) then
             includePath = ProcessToCurdriveApp(includePath)
             SaveCompilerIncludes = SaveCompilerIncludes + includePath + ";"
         end if
     next
 
-    pStream.WriteLine "[Compiler]" 
-    pStream.WriteLine "FBWINCompiler32="       & this.FBWINCompiler32      
-    pStream.WriteLine "FBWINCompiler64="       & this.FBWINCompiler64      
-    pStream.WriteLine "CompilerBuild="         & this.CompilerBuild     
-    pStream.WriteLine "CompilerSwitches="      & this.CompilerSwitches     
+    pStream.WriteLine "[Compiler]"
+    pStream.WriteLine "FBWINCompiler32="       & this.FBWINCompiler32
+    pStream.WriteLine "FBWINCompiler64="       & this.FBWINCompiler64
+    pStream.WriteLine "CompilerBuild="         & this.CompilerBuild
+    pStream.WriteLine "CompilerSwitches="      & this.CompilerSwitches
     pStream.WriteLine "CompilerIncludes="      & SaveCompilerIncludes
-    pStream.WriteLine "CompilerHelpfile="      & this.CompilerHelpfile     
+    pStream.WriteLine "CompilerHelpfile="      & this.CompilerHelpfile
     pStream.WriteLine "RunViaCommandWindow="   & this.RunViaCommandWindow
     pStream.WriteLine "DisableCompileBeep="    & this.DisableCompileBeep
 
     pStream.WriteLine ""
-    pStream.WriteLine "[Categories]"  
+    pStream.WriteLine "[Categories]"
     dim as long nNext = 0
     for i as long = lbound(this.Cat) to ubound(this.Cat)
         if left(this.Cat(i).wszDescription, 2) <> "%%" then
@@ -398,59 +399,59 @@ function clsConfig.SaveConfigFile() as long
                 pStream.WriteLine this.Cat(i).wszDescription
                 nNext = nNext + 1
             end if
-        end if   
-    next
-    
-    pStream.WriteLine ""
-    pStream.WriteLine "[UserTools]"  
-    for i as long = lbound(this.Tools) to ubound(this.Tools)
-        pStream.Write "USERTOOL_" & right("00" & str(i), 2) & "="
-        pStream.Write this.Tools(i).wszDescription & "|-|"
-        pStream.Write ProcessToCurdriveApp(this.Tools(i).wszCommand) & "|-|" 
-        pStream.Write this.Tools(i).wszParameters & "|-|"
-        pStream.Write this.Tools(i).wszKey & "|-|" 
-        pStream.Write ProcessToCurdriveApp(this.Tools(i).wszWorkingFolder) & "|-|"
-        pStream.Write this.Tools(i).IsCtrl & "|-|"
-        pStream.Write this.Tools(i).IsAlt & "|-|"  
-        pStream.Write this.Tools(i).IsShift & "|-|"
-        pStream.Write this.Tools(i).IsPromptRun & "|-|"
-        pStream.Write this.Tools(i).IsMinimized & "|-|"  
-        pStream.Write this.Tools(i).IsWaitFinish & "|-|"
-        pStream.Write this.Tools(i).IsDisplayMenu & "|-|"    
-        pStream.WriteLine wstr(this.Tools(i).Action)   
+        end if
     next
 
     pStream.WriteLine ""
-    pStream.WriteLine "[Builds]"  
+    pStream.WriteLine "[UserTools]"
+    for i as long = lbound(this.Tools) to ubound(this.Tools)
+        pStream.Write "USERTOOL_" & right("00" & str(i), 2) & "="
+        pStream.Write this.Tools(i).wszDescription & "|-|"
+        pStream.Write ProcessToCurdriveApp(this.Tools(i).wszCommand) & "|-|"
+        pStream.Write this.Tools(i).wszParameters & "|-|"
+        pStream.Write this.Tools(i).wszKey & "|-|"
+        pStream.Write ProcessToCurdriveApp(this.Tools(i).wszWorkingFolder) & "|-|"
+        pStream.Write this.Tools(i).IsCtrl & "|-|"
+        pStream.Write this.Tools(i).IsAlt & "|-|"
+        pStream.Write this.Tools(i).IsShift & "|-|"
+        pStream.Write this.Tools(i).IsPromptRun & "|-|"
+        pStream.Write this.Tools(i).IsMinimized & "|-|"
+        pStream.Write this.Tools(i).IsWaitFinish & "|-|"
+        pStream.Write this.Tools(i).IsDisplayMenu & "|-|"
+        pStream.WriteLine wstr(this.Tools(i).Action)
+    next
+
+    pStream.WriteLine ""
+    pStream.WriteLine "[Builds]"
     for i as long = lbound(this.Builds) to ubound(this.Builds)
         pStream.Write "BUILD_" & right("00" & str(i), 2) & "="
         pStream.Write this.Builds(i).id & "|-|"
         pStream.Write this.Builds(i).wszDescription & "|-|"
-        pStream.Write this.Builds(i).wszOptions & "|-|" 
-        pStream.Write this.Builds(i).IsDefault & "|-|"  
-        pStream.Write this.Builds(i).Is32bit & "|-|"  
-        pStream.Write this.Builds(i).Is64bit & "|-|"  
-        pStream.Write this.Builds(i).ExcludeInPopup & "|-|" 
+        pStream.Write this.Builds(i).wszOptions & "|-|"
+        pStream.Write this.Builds(i).IsDefault & "|-|"
+        pStream.Write this.Builds(i).Is32bit & "|-|"
+        pStream.Write this.Builds(i).Is64bit & "|-|"
+        pStream.Write this.Builds(i).ExcludeInPopup & "|-|"
         pStream.Write this.Builds(i).IsCtrl & "|-|"
-        pStream.Write this.Builds(i).IsAlt & "|-|"  
+        pStream.Write this.Builds(i).IsAlt & "|-|"
         pStream.Write this.Builds(i).IsShift & "|-|"
         pStream.WriteLine this.Builds(i).wszKey
     next
 
-    
+
     pStream.WriteLine ""
-    pStream.WriteLine "[MRU]"  
+    pStream.WriteLine "[MRU]"
     for i as long = 0 To 9
         this.MRU(i) = ProcessToCurdriveApp(this.MRU(i))
-        pStream.WriteLine "MRU_" & right("00" & str(i), 2) & "=" & this.MRU(i) 
-    next         
-    
+        pStream.WriteLine "MRU_" & right("00" & str(i), 2) & "=" & this.MRU(i)
+    next
+
     pStream.WriteLine ""
-    pStream.WriteLine "[MRUPROJECTS]"  
+    pStream.WriteLine "[MRUPROJECTS]"
     for i as long = 0 To 9
         this.MRUProject(i) = ProcessToCurdriveApp(this.MRUProject(i))
-        pStream.WriteLine "MRUPROJECT_" & right("00" & str(i), 2) & "=" & this.MRUProject(i) 
-    next         
+        pStream.WriteLine "MRUPROJECT_" & right("00" & str(i), 2) & "=" & this.MRUProject(i)
+    next
 
     ' The [Notes] block is no longer WRITTEN. Notes belong to the workspace and are stored
     ' in its own .tiko file; the reader below survives only to migrate an existing
@@ -462,7 +463,7 @@ function clsConfig.SaveConfigFile() as long
     ' Save the last write time so that it can be checked in the message loop
     ' in order to detect external changes to it.
     this.DateFileTime = AfxGetFileLastWriteTime( this.ConfigFilename )
-    
+
     gApp.PreventConfigLoad = false
 
     function = 0
@@ -473,21 +474,21 @@ end function
 ' the ini file rather than overwriting the whole file. This enables
 ' the editor to work better with external tools that manually modify the
 ' settings.ini file.
-function clsConfig.WriteMRU() as long 
+function clsConfig.WriteMRU() as long
     dim as DWSTRING wszKeyName, wszValue
-    
+
     ' Delete the section name
     dim as DWSTRING wszSectionName = "MRU"
     WritePrivateProfileString( wszSectionName, null, null, this.ConfigFilename )
-    
+
     ' Write the new values.
     for i as long = 0 To 9
         this.MRU(i) = ProcessToCurdriveApp(this.MRU(i))
         wszKeyName = "MRU_" & right("00" & str(i), 2)
-        wszValue   = this.MRU(i) 
+        wszValue   = this.MRU(i)
         WritePrivateProfileString(wszSectionName, wszKeyName, wszValue, this.ConfigFilename)
-    next         
-    
+    next
+
     function = 0
 end function
 
@@ -496,21 +497,21 @@ end function
 ' the ini file rather than overwriting the whole file. This enables
 ' the editor to work better with external tools that manually modify the
 ' settings.ini file.
-function clsConfig.WriteMRUProjects() as long 
+function clsConfig.WriteMRUProjects() as long
     dim as DWSTRING wszKeyName, wszValue
-    
+
     ' Delete the section name
     dim as DWSTRING wszSectionName = "MRUPROJECTS"
     WritePrivateProfileString( wszSectionName, null, null, this.ConfigFilename )
-    
+
     ' Write the new values.
     for i as long = 0 To 9
         this.MRUProject(i) = ProcessToCurdriveApp(this.MRUProject(i))
-        wszKeyName = "MRUPROJECT_" & right("00" & str(i), 2) 
-        wszValue   = this.MRUProject(i) 
+        wszKeyName = "MRUPROJECT_" & right("00" & str(i), 2)
+        wszValue   = this.MRUProject(i)
         WritePrivateProfileString( wszSectionName, wszKeyName, wszValue, this.ConfigFilename )
-    next         
-    
+    next
+
     function = 0
 end function
 
@@ -524,19 +525,19 @@ function clsConfig.SetCategoryDefaults() as long
 
         this.Cat(CATINDEX_FILES).idFileType = FILETYPE_UNDEFINED
         this.Cat(CATINDEX_FILES).wszDescription = L(2, "File")
-        
+
         this.Cat(CATINDEX_MAIN).idFileType = FILETYPE_MAIN
         this.Cat(CATINDEX_MAIN).wszDescription = L(175, "Main")
-        
+
         this.Cat(CATINDEX_RESOURCE).idFileType = FILETYPE_RESOURCE
         this.Cat(CATINDEX_RESOURCE).wszDescription = L(176, "Resource")
-        
+
         this.Cat(CATINDEX_HEADER).idFileType = FILETYPE_HEADER
         this.Cat(CATINDEX_HEADER).wszDescription = L(141, "Header")
-        
+
         this.Cat(CATINDEX_MODULE).idFileType = FILETYPE_MODULE
         this.Cat(CATINDEX_MODULE).wszDescription = L(174, "Module")
-        
+
         this.Cat(CATINDEX_NORMAL).idFileType = FILETYPE_NORMAL
         this.Cat(CATINDEX_NORMAL).wszDescription = L(173, "Normal")
     end if
@@ -560,7 +561,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
     gApp.PreventConfigLoad = true
 
     dim as DWSTRING wst, wKey, wData
-    dim nData          as long  
+    dim nData          as long
     dim i              as long
     dim bReadingNote   as boolean
     dim bNewConfigFile as boolean
@@ -569,7 +570,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
     ' We can not recreate the Categories each time the config reloads because the
     ' structure contains references to existing nodes.
     erase this.Builds
-    
+
     if AfxFileExists(this.ConfigFilename) = 0 then
         bNewConfigFile = true
     else
@@ -577,19 +578,19 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
         if pStream.OpenUnicode(this.ConfigFilename) <> S_OK then return true   ' error
 
         gApp.NonProjectNotes = ""
-        
+
         do until pStream.EOS
             wst = pStream.ReadLine
 
             if len(wst) = 0 then continue do
             if left(wst, 1) = "'" then continue do
             if left(wst, 1) = "[" then continue do
-            
-            if left(wst, 11) = "NOTES-START" then  
+
+            if left(wst, 11) = "NOTES-START" then
                 bReadingNote = true
                 continue do
-            end if   
-            if left(wst, 9) = "NOTES-END" then  
+            end if
+            if left(wst, 9) = "NOTES-END" then
                 bReadingNote = false
                 continue do
             end if
@@ -600,18 +601,18 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
 
             i = instr(wst, "=")
             if i = 0 then continue do
-            
+
             wKey = "": wData = "": nData = 0
-            
+
             wKey  = left(wst, i-1)
             wData = mid(wst, i+1)
             nData = val(wData)
-            
+
 
             if left(wKey, 9) = "CATEGORY_" then  ' is this a CATEGORY entry
             i = val(right(wKey,2))
             if i > ubound(this.Cat) then
-                redim preserve this.Cat(i) 
+                redim preserve this.Cat(i)
                 ' trim() is not cosmetic. idFileType is compared against the FILETYPE_*
                 ' string digits to decide which Explorer header a document belongs under,
                 ' so one stray space in a hand-edited "CATEGORY_01= 1|-|Main" makes that
@@ -621,16 +622,16 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
                 continue do
             end if
             end if
-            
+
             if left(wKey, 9) = "USERTOOL_" then  ' is this a User Tool entry
             i = val(right(wKey,2))
                 if i > ubound(this.Tools) then
                     redim preserve this.Tools(i)
                     this.Tools(i).wszDescription   = AfxStrParse(wData, 1, "|-|")
-                    this.Tools(i).wszCommand       = ProcessFromCurdriveApp( AfxStrParse(wData, 2, "|-|") ) 
+                    this.Tools(i).wszCommand       = ProcessFromCurdriveApp( AfxStrParse(wData, 2, "|-|") )
                     this.Tools(i).wszParameters    = AfxStrParse(wData, 3, "|-|")
                     this.Tools(i).wszKey           = AfxStrParse(wData, 4, "|-|")
-                    this.Tools(i).wszWorkingFolder = ProcessFromCurdriveApp( AfxStrParse(wData, 5, "|-|") ) 
+                    this.Tools(i).wszWorkingFolder = ProcessFromCurdriveApp( AfxStrParse(wData, 5, "|-|") )
                     this.Tools(i).IsCtrl           = val(AfxStrParse(wData, 6, "|-|"))
                     this.Tools(i).IsAlt            = val(AfxStrParse(wData, 7, "|-|"))
                     this.Tools(i).IsShift          = val(AfxStrParse(wData, 8, "|-|"))
@@ -646,7 +647,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
             if left(wKey, 6) = "BUILD_" then  ' is this a BUILD entry
             i = val(right(wKey,2))
                 if i > ubound(this.Builds) then
-                    redim preserve this.Builds(i) 
+                    redim preserve this.Builds(i)
                     this.Builds(i).id             = AfxStrParse(wData, 1, "|-|")
                     this.Builds(i).wszDescription = AfxStrParse(wData, 2, "|-|")
                     this.Builds(i).wszOptions     = AfxStrParse(wData, 3, "|-|")
@@ -664,15 +665,15 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
 
             if left(wKey, 4) = "MRU_" then  ' is this an MRU entry
             i = val(right(wKey,2))
-                if (i >= 0) And (i <= 9) then 
+                if (i >= 0) And (i <= 9) then
                     this.MRU(i) = ProcessFromCurdriveApp(wData)
                     continue do
                 end If
             end If
-            
+
             if left(wKey, 11) = "MRUPROJECT_" then  ' is this an MRU Project entry
             i = val(right(wKey,2))
-                if (i >= 0) And (i <= 9) then 
+                if (i >= 0) And (i <= 9) then
                     this.MRUProject(i) = ProcessFromCurdriveApp(wData)
                     continue do
                 end If
@@ -716,6 +717,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
             case "BraceHighlight":           this.BraceHighlight        = nData
             case "OccurrenceHighlight":      this.OccurrenceHighlight   = nData
             case "DetectExternalFileChanges": this.DetectExternalFileChanges = nData
+            case "StripTrailingWhitespace":  this.StripTrailingWhitespace = nData
             case "LocalizationFile":         this.LocalizationFile      = ProcessFromCurdriveApp(wData)
             case "TabSize":                  this.TabSize               = wData
             case "UnicodeEncoding":          this.UnicodeEncoding       = nData
@@ -745,7 +747,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
             case "RunViaCommandWindow":      this.RunViaCommandWindow   = nData
             case "DisableCompileBeep":       this.DisableCompileBeep    = nData
             end select
-        
+
             ' Only reload data affect instance states for heights and positions if
             ' this is not a hot reload. A hot reload is when the message loop detects
             ' that the config file has been externally modified (eg by a User Tool)
@@ -804,7 +806,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
                     case "DebugSplitRight":          this.DebugSplitRight = iif( (nData > 0) andalso (nData < FRMDEBUG_PCTSCALE), nData, FRMDEBUG_DEFPCTRIGHT )
                 end select
             end if
-            
+
         loop
         pStream.Close
     end if
@@ -820,20 +822,20 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
     dim as long numpaths = AfxStrParseCount(allIncludes, ";")
     for i as long = 1 to numpaths
         includePath = trim(AfxStrParse(allIncludes, i, ";"))
-        if len(includePath) then 
+        if len(includePath) then
             includePath = ProcessFromCurdriveApp(includePath)
             this.CompilerIncludes = this.CompilerIncludes + includePath + ";"
         end if
     next
 
     ' Set some defaults if the config file was missing or corrupt
-    ' if no Categories exist then create some default ones... 
+    ' if no Categories exist then create some default ones...
     ' NOTE: The default for Categories are not set here because some
     ' category names depend on the translation from the Localization
     ' file and that file is not loaded until the Config file is read.
     ' We do the setting of default Categories in gConfig.SetCategoryDefaults
     ' in WinMain after the localization is correctly loaded.
-    
+
     ' Set some defaults if the config file was missing.
     ' if no Tools exist then create some default ones...
     if (ubound(this.Tools) = -1) andalso (bNewConfigFile = true) then
@@ -845,10 +847,10 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
                 redim preserve this.Tools(i)
                 wData = wszTools(i)
                 this.Tools(i).wszDescription   = AfxStrParse(wData, 1, "|-|")
-                this.Tools(i).wszCommand       = ProcessFromCurdriveApp( AfxStrParse(wData, 2, "|-|") ) 
+                this.Tools(i).wszCommand       = ProcessFromCurdriveApp( AfxStrParse(wData, 2, "|-|") )
                 this.Tools(i).wszParameters    = AfxStrParse(wData, 3, "|-|")
                 this.Tools(i).wszKey           = AfxStrParse(wData, 4, "|-|")
-                this.Tools(i).wszWorkingFolder = ProcessFromCurdriveApp( AfxStrParse(wData, 5, "|-|") ) 
+                this.Tools(i).wszWorkingFolder = ProcessFromCurdriveApp( AfxStrParse(wData, 5, "|-|") )
                 this.Tools(i).IsCtrl           = val(AfxStrParse(wData, 6, "|-|"))
                 this.Tools(i).IsAlt            = val(AfxStrParse(wData, 7, "|-|"))
                 this.Tools(i).IsShift          = val(AfxStrParse(wData, 8, "|-|"))
@@ -860,33 +862,33 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
             end If
         next
     end if
-            
+
     ' Set some defaults if the config file was missing or corrupt
     ' if no builds exist then create some default ones... We do this
     ' no matter if it is a bNewConfigFile or not.
     if ubound(this.Builds) = -1 then
-        redim this.Builds(11) 
+        redim this.Builds(11)
         this.Builds(0).id = AfxGuidText(AfxGuid())
         this.Builds(0).wszDescription = "Win32 GUI (Release)"
         this.Builds(0).wszOptions = "-s gui"
         this.Builds(0).Is32bit = 1
         this.Builds(0).Is64bit = 0
         this.Builds(0).ExcludeInPopup = 0
-        
+
         this.Builds(1).id = AfxGuidText(AfxGuid())
         this.Builds(1).wszDescription = "Win32 GUI (Debug)"
         this.Builds(1).wszOptions = "-g -exx -s gui"
         this.Builds(1).Is32bit = 1
         this.Builds(1).Is64bit = 0
         this.Builds(1).ExcludeInPopup = 1
-        
+
         this.Builds(2).id = AfxGuidText(AfxGuid())
         this.Builds(2).wszDescription = "Win32 Console (Release)"
         this.Builds(2).wszOptions = "-s console"
         this.Builds(2).Is32bit = 1
         this.Builds(2).Is64bit = 0
         this.Builds(2).ExcludeInPopup = 0
-        
+
         this.Builds(3).id = AfxGuidText(AfxGuid())
         this.Builds(3).wszDescription = "Win32 Console (Debug)"
         this.Builds(3).wszOptions = "-g -exx -s console"
@@ -914,14 +916,14 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
         this.Builds(6).Is32bit = 0
         this.Builds(6).Is64bit = 1
         this.Builds(6).ExcludeInPopup = 0
-        
+
         this.Builds(7).id = AfxGuidText(AfxGuid())
         this.Builds(7).wszDescription = "Win64 GUI (Debug)"
         this.Builds(7).wszOptions = "-g -exx -s gui -gen gas64"
         this.Builds(7).Is32bit = 0
         this.Builds(7).Is64bit = 1
         this.Builds(7).ExcludeInPopup = 1
-        
+
         this.Builds(8).id = AfxGuidText(AfxGuid())
         this.Builds(8).wszDescription = "Win64 Console (Release)"
         this.Builds(8).wszOptions = "-s console -gen gcc"
@@ -956,11 +958,11 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
     ' Attempt to fill in any missing compiler paths and help files
     dim as DWSTRING wszText
     if len(this.FBWINCompiler32) = 0 then
-        wszText = AfxGetExePathName & "toolchains\" & gwszDefaultToolchain & "\fbc32.exe"      
+        wszText = AfxGetExePathName & "toolchains\" & gwszDefaultToolchain & "\fbc32.exe"
         if AfxFileExists(wszText) then this.FBWINCompiler32 = wszText
     end if
     if len(this.FBWINCompiler64) = 0 then
-        wszText = AfxGetExePathName & "toolchains\" & gwszDefaultToolchain & "\fbc64.exe"      
+        wszText = AfxGetExePathName & "toolchains\" & gwszDefaultToolchain & "\fbc64.exe"
         if AfxFileExists(wszText) then this.FBWINCompiler64 = wszText
     end if
     if len(this.CompilerHelpfile) = 0 then
@@ -987,10 +989,10 @@ end function
 ' ========================================================================================
 ' Save all options for the Project to a diskfile
 ' ========================================================================================
-function clsConfig.ProjectSaveToFile() as boolean    
+function clsConfig.ProjectSaveToFile() as boolean
 
-    dim as DWSTRING cwzRelative, wszText 
-    dim as long nCount 
+    dim as DWSTRING cwzRelative, wszText
+    dim as long nCount
     dim as long i
 
     dim pDoc as clsDocument ptr
@@ -1025,10 +1027,10 @@ function clsConfig.ProjectSaveToFile() as boolean
         if gTTabCtl.IsValidTab(i) = false then continue for
         pDoc = gTTabCtl.GetpDoc(i)
         if pDoc = 0 then continue for
-        
+
         ' Only deal with files that are no longer "new"
-        if pDoc->IsNewFlag = false then 
-            pDoc->SetDocInfo()   
+        if pDoc->IsNewFlag = false then
+            pDoc->SetDocInfo()
             wszText = pDoc->DiskFilename
             if bRelativize then
                 cwzRelative = AfxPathRelativePathTo( gApp.ProjectFilename, FILE_ATTRIBUTE_NORMAL, wszText, FILE_ATTRIBUTE_NORMAL)
@@ -1043,24 +1045,24 @@ function clsConfig.ProjectSaveToFile() as boolean
             pStream.WriteLine "Bookmarks=" & pDoc->docData.wszBookmarks
             pStream.WriteLine "BreakPoints=" & pDoc->docData.wszBreakPoints
             pStream.WriteLine "FoldPoints=" & pDoc->docData.wszFoldPoints
-            pStream.WriteLine "FirstLine=" & pDoc->docData.nFirstLine 
-            pStream.WriteLine "Position=" & pDoc->docData.nPosition  
-            pStream.WriteLine "FirstLine1=" & pDoc->docData.nFirstLine1  
-            pStream.WriteLine "Position1=" & pDoc->docData.nPosition1  
+            pStream.WriteLine "FirstLine=" & pDoc->docData.nFirstLine
+            pStream.WriteLine "Position=" & pDoc->docData.nPosition
+            pStream.WriteLine "FirstLine1=" & pDoc->docData.nFirstLine1
+            pStream.WriteLine "Position1=" & pDoc->docData.nPosition1
             pStream.WriteLine "SplitMode=" & pDoc->docData.nSplitMode
             pStream.WriteLine "SplitPositionX=" & pDoc->docData.nSplitPositionX
             pStream.WriteLine "SplitPositionY=" & pDoc->docData.nSplitPositionY
             pStream.WriteLine "FocusEdit=" & pDoc->docData.nFocusEdit
-            pStream.WriteLine "FileEnd=[-]" 
+            pStream.WriteLine "FileEnd=[-]"
         end if
     next
-            
+
     ' Save all other non-displayed documents for the project
 
     pDoc = gApp.pDocList
     do until pDoc = 0
         ' Only deal with files that are no longer "new"
-        if pDoc->IsNewFlag = false then 
+        if pDoc->IsNewFlag = false then
             if gTTabCtl.GetTabIndexByDocumentPtr(pDoc) = -1 then
                 wszText = pDoc->DiskFilename
                 if bRelativize then
@@ -1081,10 +1083,10 @@ function clsConfig.ProjectSaveToFile() as boolean
                 pStream.WriteLine "Bookmarks=" & pDoc->docData.wszBookmarks
                 pStream.WriteLine "BreakPoints=" & pDoc->docData.wszBreakPoints
                 pStream.WriteLine "FoldPoints=" & pDoc->docData.wszFoldPoints
-                pStream.WriteLine "FirstLine=" & pDoc->docData.nFirstLine 
-                pStream.WriteLine "Position=" & pDoc->docData.nPosition  
-                pStream.WriteLine "FirstLine1=" & pDoc->docData.nFirstLine1  
-                pStream.WriteLine "Position1=" & pDoc->docData.nPosition1  
+                pStream.WriteLine "FirstLine=" & pDoc->docData.nFirstLine
+                pStream.WriteLine "Position=" & pDoc->docData.nPosition
+                pStream.WriteLine "FirstLine1=" & pDoc->docData.nFirstLine1
+                pStream.WriteLine "Position1=" & pDoc->docData.nPosition1
                 pStream.WriteLine "SplitMode=" & pDoc->docData.nSplitMode
                 pStream.WriteLine "SplitPositionX=" & pDoc->docData.nSplitPositionX
                 pStream.WriteLine "SplitPositionY=" & pDoc->docData.nSplitPositionY
@@ -1124,11 +1126,11 @@ end function
 ' ========================================================================================
 ' Load all options for the Project from a diskfile
 ' ========================================================================================
-function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean    
+function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
 
     dim pDoc as clsDocument ptr
     dim as DWSTRING wst, wKey, wData, wszFilename
-        
+
     dim sBookmarks as string
     dim sBreakPoints as string
     dim sFoldPoints as string
@@ -1140,11 +1142,11 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     ' Info saved for each File and used to create the file once Fileend is found
     dim as long nTabIndex
     dim as long nActiveTab = -1
-    
+
     dim as DWSTRING wszFileType
     dim as boolean bLoadInTab
     dim as boolean bReadingNote
-    
+
     if AfxFileExists(wszFile) = 0 then exit function
 
     dim as HCURSOR hCurSave = GetCursor()
@@ -1153,27 +1155,27 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     gApp.ProjectFilename = wszFile
     gApp.ProjectName = AfxStrPathname( "NAMEX", gApp.ProjectFilename )
     gApp.ProjectNotes = ""
-    
+
     dim pStream as CTextStream  ' (utf16)
     if pStream.OpenUnicode(gApp.ProjectFilename) <> S_OK then return false
 
     ' Variable length array to hold sequence of all project files
     dim docData(any) as PROJECT_FILELOAD_DATA
-    
-    gApp.IsProjectLoading = true 
-            
+
+    gApp.IsProjectLoading = true
+
     do until pStream.EOS
         wst = pStream.ReadLine
-        
+
         if len(wst) = 0 then continue do
         if left(wst, 1) = "'" then continue do
         if left(wst, 1) = "[" then continue do
-        
-        if left(wst, 11) = "NOTES-START" then  
+
+        if left(wst, 11) = "NOTES-START" then
             bReadingNote = true
             continue do
-        end if   
-        if left(wst, 9) = "NOTES-END" then  
+        end if
+        if left(wst, 9) = "NOTES-END" then
             bReadingNote = false
             continue do
         end if
@@ -1184,10 +1186,10 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
 
         i = instr(wst, "=")
         if i = 0 then continue do
-        
+
         wKey  = left(wst, i-1)
         wData = mid(wst, i+1)
-        
+
         select case ucase(wData)
             case "TRUE":   nData = true
             case "FALSE":  nData = false
@@ -1216,17 +1218,17 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
             case "SplitPositionX":      nSplitPositionX         = nData
             case "SplitPositionY":      nSplitPositionY         = nData
             case "FocusEdit":           nFocusEdit              = nData
-            
+
             case "FileEnd":
             ' if this is a relative filename then convert it back.
-            if AfxPathIsRelative(wszFilename) then 
+            if AfxPathIsRelative(wszFilename) then
                 wszFilename = AfxPathCombine( AfxStrPathName("PATH", gApp.ProjectFilename), wszFilename)
             end if
             if AfxFileExists(wszFilename) then
 
                 nFileIndex = nFileIndex + 1
                 if nFileIndex > ubound(docData) then
-                    redim preserve docData( ubound(docData) + 100 ) 
+                    redim preserve docData( ubound(docData) + 100 )
                 end If
 
                 with docData(nFileIndex)
@@ -1253,18 +1255,18 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
                 sBookmarks  = "": sBreakPoints = "": sFoldPoints = ""
                 bLoadInTab    = false
             end if
-            
+
         end select
-    
-    loop                        
+
+    loop
     pStream.Close
-    
+
 
     ' Load/Display all of the project files
     for i as long = lbound(docData) to ubound(docData)
-    
+
         if AfxFileExists( docData(i).wszFilename ) = false then continue for
-        
+
         pDoc = gApp.CreateEmptyDocument()
         pDoc->LoadDiskFile( docData(i).wszFilename )
         ' Never let a loaded document stay uncategorized. The Explorer groups strictly by
@@ -1288,29 +1290,29 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     gApp.IsProjectLoading = false
     gApp.hIconPanel = 0
     gApp.wszLastOpenFolder = ""
-    
+
     ' Load all of the filenames into the Explorer listbox.
     LoadExplorerFiles()
 
-    ' Load all of the bookmarks into the Bookmarks listbox. 
+    ' Load all of the bookmarks into the Bookmarks listbox.
     LoadBookmarksFiles()
 
-    ' Load all of the functions into the Function List listbox. 
+    ' Load all of the functions into the Function List listbox.
     LoadFunctionsFiles()
 
     ' Display the active editing window
-    if gTTabCtl.IsValidTab(nActiveTab) = false then 
+    if gTTabCtl.IsValidTab(nActiveTab) = false then
         ' active tab as stored in the config file is not valid. Could be that the
         ' filename no longer exists of trouble loading that particular project file.
         ' Try to use an alternate tab number
         nActiveTab = gTTabCtl.GetItemCount - 1
     end if
-    gTTabCtl.SetFocusTab(nActiveTab)      
+    gTTabCtl.SetFocusTab(nActiveTab)
 
     ' if no active build configuration then assign the currently active selection
-    if gApp.ProjectBuild = "" then 
+    if gApp.ProjectBuild = "" then
         gApp.ProjectBuild = frmBuildConfig_GetSelectedBuildGUID()
-    end if   
+    end if
 
     frmMain_SetStatusbar()
     SetCursor( hCurSave )
@@ -1335,13 +1337,13 @@ end function
 ' ========================================================================================
 ' Reload the config file should it have been changed by an external program.
 ' ========================================================================================
-function clsConfig.ReloadConfigFileTest() as boolean    
+function clsConfig.ReloadConfigFileTest() as boolean
 
     if gApp.IsShutdown = true then return false
     if gApp.PreventConfigLoad = true then return false
-    
+
     dim as FILETIME ft
-    
+
     ' Compare the disk file date time to the value currently stored in static variable.
     ft = AfxGetFileLastWriteTime(this.ConfigFilename)
     if AfxFileTimeToVariantTime(ft) <> AfxFileTimeToVariantTime(this.DateFileTime) then
@@ -1351,8 +1353,8 @@ function clsConfig.ReloadConfigFileTest() as boolean
         do until pDoc = 0
             pDoc->ApplyProperties
             pDoc = pDoc->pDocnext
-        loop   
+        loop
     end if
-    
+
     function = 0
 end function

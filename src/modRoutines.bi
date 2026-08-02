@@ -42,6 +42,7 @@ declare function GetTemporaryFilename( byref wszFolder as wstring, byref wszExte
 declare function GetFontCharSetID(byref wzCharsetName as DWSTRING ) as long
 declare function isUTF8encoded(byref s as string) as boolean
 declare function Scintilla_GetTextBytes( byval hEdit as hwnd ) as string
+declare function Scintilla_StripTrailingWhitespace( byval hEdit as hwnd ) as long
 declare function Doc_EncodeForDisk( byref sBuffer as string, byval bSourceIsUtf8 as boolean, byval nTargetEnc as long, byref bLossy as boolean ) as string
 declare function Doc_EncodingName( byval nEnc as long ) as DWSTRING
 declare function ConvertTextBuffer( byval pDoc as clsDocument ptr, byval nNewEncoding as long ) as boolean

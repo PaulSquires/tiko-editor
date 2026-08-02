@@ -144,6 +144,10 @@ type clsConfig
         ' DEFAULT OFF: a silent reload discards nothing only while the buffer is unmodified,
         ' so opting in is the user's call, not ours.
         DetectExternalFileChanges as long = false
+        ' Delete spaces and tabs sitting at the end of a line when the document is written
+        ' to disk. DEFAULT OFF: it rewrites lines the user never touched, which shows up as
+        ' noise in a diff of a file shared with someone else, so opting in is their call.
+        StripTrailingWhitespace   as long = false
         TabIndentSpaces           as long = true
         MultipleInstances         as long = true
         CompileAutosave           as long = true

@@ -235,6 +235,7 @@ sub OptionsRows_Init()
     OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 267, @gOptWork.BraceHighlight )        ' "Enable Brace Highlighting"
     OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 272, @gOptWork.OccurrenceHighlight )   ' "Enable Occurrences Highlighting"
     OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE,  94, @gOptWork.DetectExternalFileChanges ) ' "Detect external file changes and silently reload"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 407, @gOptWork.StripTrailingWhitespace )   ' "Strip line ending whitespace when saving"
 
     ' The encoding a File>New document starts life with. THE FIRST OPT_COMBO ROW IN THE
     ' TABLE -- the kind has been fully implemented and unused since the dialog was rebuilt.
@@ -310,6 +311,7 @@ sub OptionsWork_Load()
     gOptWork.BraceHighlight        = gConfig.BraceHighlight
     gOptWork.OccurrenceHighlight   = gConfig.OccurrenceHighlight
     gOptWork.DetectExternalFileChanges = gConfig.DetectExternalFileChanges
+    gOptWork.StripTrailingWhitespace = gConfig.StripTrailingWhitespace
     gOptWork.NewFileEncoding       = gConfig.NewFileEncoding
 
     ' The help file path is stored curdrive-relative and expanded for display, matching
@@ -368,6 +370,7 @@ sub OptionsWork_Commit()
     gConfig.BraceHighlight        = gOptWork.BraceHighlight
     gConfig.OccurrenceHighlight   = gOptWork.OccurrenceHighlight
     gConfig.DetectExternalFileChanges = gOptWork.DetectExternalFileChanges
+    gConfig.StripTrailingWhitespace = gOptWork.StripTrailingWhitespace
     ' No conversion: the combo index and the FILE_ENCODING_* value are the same number by
     ' construction, and OptionsRows_BuildPage has already read back whatever the control
     ' actually accepted, so an out-of-range stored value cannot survive to here.

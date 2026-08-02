@@ -422,6 +422,13 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
     ' displayed in order to create a Scintilla window. Simply need to exit.
     if pSci = 0 then return true
     
+    ' Drop end-of-line whitespace before the buffer is read, so the file and the buffer the
+    ' user is still looking at stay identical. hWindow(0) rather than the active view: the
+    ' split views share one document, and this is the handle the byte read below uses.
+    if gConfig.StripTrailingWhitespace then
+        Scintilla_StripTrailingWhitespace( this.hWindow(0) )
+    end if
+
     ' Encode the full Scintilla buffer to the document's target disk encoding (BOM included)
     ' through the single shared writer, then write it in one call. See Doc_EncodeForDisk for
     ' why the buffer is read by SCI_GETLENGTH and why UTF-16 no longer routes through DWSTRING.
