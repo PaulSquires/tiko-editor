@@ -2017,6 +2017,14 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         ' PsListTree in the application.
         if PsListTree_FilterMessage( @uMsg ) then continue do
 
+        ' F2 on its way to the Explorer's folder rename. F2 is a BOUND ACCELERATOR in tiko
+        ' -- IDM_BOOKMARKNEXT -- so TranslateAccelerator further down consumes it before the
+        ' control's own VK_F2 handler can run, and rename by keyboard silently did nothing.
+        ' This must therefore sit AHEAD of the accelerator chain. It claims the key only
+        ' while the focus is inside the Explorer and only on a folder row, so Goto Next
+        ' Bookmark keeps working everywhere else.
+        if frmExplorer_FilterMessage( @uMsg ) then continue do
+
         ' The code-completion popup. Unlike every filter above it, this one consumes ONLY
         ' the navigation and commit keys -- ordinary typing MUST reach Scintilla, which is
         ' what drives the incremental filtering. It sits here for two reasons: ahead of

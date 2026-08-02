@@ -28,6 +28,11 @@
 dim shared as EXPLORER_ICONHIT gExpTipIcon = EXPICON_NONE
 dim shared as long gExpTipRow = -1
 
+' The row the folder context menu was opened on. PsPopupMenu is not modal, so its select
+' callback runs after the menu closes -- and every command on that menu rebuilds the tree,
+' so the row has to be captured when the menu is raised rather than looked up afterwards.
+dim shared as long gExpMenuRow = -1
+
 
 
 
@@ -230,39 +235,46 @@ end sub
 
 
 sub frmExplorer_IconRects( byval hCtl as HWND, byval row as integer, byref rcRow as RECT, _
-                           byref rcAdd as RECT, byref rcDel as RECT )
+                           byref rcAdd as RECT, byref rcRen as RECT, byref rcDel as RECT )
     SetRectEmpty( @rcAdd )
+    SetRectEmpty( @rcRen )
     SetRectEmpty( @rcDel )
 
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
     if pWindow = 0 then exit sub
 
-    dim as boolean bWantAdd = false, bWantDel = false
+    dim as boolean bWantAdd = false, bWantRen = false, bWantDel = false
     select case frmExplorer_KindFromRow( hCtl, row )
         case EXPKIND_ROOT
+            ' A group can be added to but never renamed or deleted: its caption comes from
+            ' gConfig.Cat() and its existence is what every file's ProjectFileType names.
             bWantAdd = ProjectFolders_CatAllowsFolders( PsListTree_GetItemData( hCtl, row ) )
         case EXPKIND_FOLDER
             bWantAdd = true
+            bWantRen = true
             bWantDel = true
     end select
-    if (bWantAdd = false) andalso (bWantDel = false) then exit sub
+    if (bWantAdd = false) andalso (bWantRen = false) andalso (bWantDel = false) then exit sub
 
     dim as long nIcon = pWindow->ScaleX(22)
     dim as long nPad  = pWindow->ScaleX(2)
     dim as long xRight = rcRow.right - nPad
 
+    ' Laid out from the RIGHT inwards, so the reading order left-to-right ends up
+    ' Add, Rename, Delete. Each row right-aligns its OWN set, so a group row -- which has
+    ' only Add -- puts it at the margin rather than three columns in where a folder's Add
+    ' sits. That is deliberate: a ragged left edge across rows with different icon counts
+    ' would read worse than a straight right one.
     if bWantDel then
-        rcDel.right  = xRight
-        rcDel.left   = xRight - nIcon
-        rcDel.top    = rcRow.top
-        rcDel.bottom = rcRow.bottom
+        SetRect( @rcDel, xRight - nIcon, rcRow.top, xRight, rcRow.bottom )
         xRight = rcDel.left
     end if
+    if bWantRen then
+        SetRect( @rcRen, xRight - nIcon, rcRow.top, xRight, rcRow.bottom )
+        xRight = rcRen.left
+    end if
     if bWantAdd then
-        rcAdd.right  = xRight
-        rcAdd.left   = xRight - nIcon
-        rcAdd.top    = rcRow.top
-        rcAdd.bottom = rcRow.bottom
+        SetRect( @rcAdd, xRight - nIcon, rcRow.top, xRight, rcRow.bottom )
     end if
 end sub
 
@@ -285,11 +297,14 @@ function frmExplorer_IconHitTest( byval hCtl as HWND, byval row as integer, byva
     rcRow.top = 0
     rcRow.bottom = PsListTree_GetRowHeight( hCtl )
 
-    dim as RECT rcAdd, rcDel
-    frmExplorer_IconRects( hCtl, row, rcRow, rcAdd, rcDel )
+    dim as RECT rcAdd, rcRen, rcDel
+    frmExplorer_IconRects( hCtl, row, rcRow, rcAdd, rcRen, rcDel )
 
     if IsRectEmpty( @rcDel ) = 0 then
         if (x >= rcDel.left) andalso (x < rcDel.right) then return EXPICON_DELETE
+    end if
+    if IsRectEmpty( @rcRen ) = 0 then
+        if (x >= rcRen.left) andalso (x < rcRen.right) then return EXPICON_RENAME
     end if
     if IsRectEmpty( @rcAdd ) = 0 then
         if (x >= rcAdd.left) andalso (x < rcAdd.right) then return EXPICON_ADD
@@ -368,12 +383,13 @@ sub frmExplorer_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     ' with the filenames for attention and read as chrome rather than as a control. Placed
     ' BEFORE the caption is drawn so the caption can be clipped short of them: a long folder
     ' name would otherwise run underneath, and DrawText ellipsizes without reporting it.
-    dim as RECT rcAdd, rcDel
+    dim as RECT rcAdd, rcRen, rcDel
     if p->isHot then
-        frmExplorer_IconRects( HWND_FRMEXPLORER, p->itemID, p->rc, rcAdd, rcDel )
+        frmExplorer_IconRects( HWND_FRMEXPLORER, p->itemID, p->rc, rcAdd, rcRen, rcDel )
     end if
     dim as long xIconsLeft = p->rc.right
     if IsRectEmpty( @rcAdd ) = 0 then xIconsLeft = MIN( xIconsLeft, rcAdd.left )
+    if IsRectEmpty( @rcRen ) = 0 then xIconsLeft = MIN( xIconsLeft, rcRen.left )
     if IsRectEmpty( @rcDel ) = 0 then xIconsLeft = MIN( xIconsLeft, rcDel.left )
     rcText.right = xIconsLeft
 
@@ -426,6 +442,11 @@ sub frmExplorer_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
         p->b->SetFont( ghFont(SYMBOLFONT_10) )
         p->b->SetForeColor( foreclr )
         p->b->PaintText( wszIconNewFolder, @rcAdd, DT_CENTER )
+    end if
+    if IsRectEmpty( @rcRen ) = 0 then
+        p->b->SetFont( ghFont(SYMBOLFONT_10) )
+        p->b->SetForeColor( foreclr )
+        p->b->PaintText( wszIconRename, @rcRen, DT_CENTER )
     end if
     if IsRectEmpty( @rcDel ) = 0 then
         p->b->SetFont( ghFont(SYMBOLFONT_10) )
@@ -512,6 +533,51 @@ sub frmExplorer_DeleteFolder( byval hCtl as HWND, byval row as integer )
 
     LoadExplorerFiles()
 end sub
+
+
+' ========================================================================================
+' Open the in-place editor on a folder row.
+'
+' Its own entry point rather than a bare BeginEdit at each call site, because there are
+' three of them now -- the rename icon, the context menu and F2 -- and each has to select
+' the row first: BeginEdit is happy to open an editor on a row that is not the current one,
+' which leaves the selection highlight somewhere else entirely while the user types.
+' ========================================================================================
+sub frmExplorer_RenameFolder( byval hCtl as HWND, byval row as integer )
+    if frmExplorer_KindFromRow( hCtl, row ) <> EXPKIND_FOLDER then exit sub
+    PsListTree_SetCurSel( hCtl, row )
+    PsListTree_BeginEdit( hCtl, row, 0 )
+end sub
+
+
+' ========================================================================================
+' F2, on its way to the Explorer.
+'
+' F2 IS A BOUND ACCELERATOR IN TIKO -- IDM_BOOKMARKNEXT, "Goto the next bookmark" -- so
+' TranslateAccelerator consumes it before the control's own VK_F2 handler can ever run, and
+' rename by keyboard simply did nothing. This claims it back, but ONLY while the focus is
+' inside the Explorer and only on a folder row, so the bookmark binding keeps working
+' everywhere else. Called from frmMain's pump AHEAD of the accelerator table, which is the
+' only place the interception can happen.
+' ========================================================================================
+function frmExplorer_FilterMessage( byval pMsg as MSG ptr ) as boolean
+    if pMsg = 0 then return false
+    if pMsg->message <> WM_KEYDOWN then return false
+    if pMsg->wParam <> VK_F2 then return false
+    if HWND_FRMEXPLORER = 0 then return false
+
+    ' Focus sits on the control's SURFACE, a child of the container, so the test is
+    ' "inside the Explorer" rather than "is the Explorer".
+    dim as HWND hFocus = GetFocus()
+    if hFocus = 0 then return false
+    if (hFocus <> HWND_FRMEXPLORER) andalso (IsChild( HWND_FRMEXPLORER, hFocus ) = 0) then return false
+
+    dim as long row = PsListTree_GetCurSel( HWND_FRMEXPLORER )
+    if frmExplorer_KindFromRow( HWND_FRMEXPLORER, row ) <> EXPKIND_FOLDER then return false
+
+    frmExplorer_RenameFolder( HWND_FRMEXPLORER, row )
+    return true
+end function
 
 
 ' ========================================================================================
@@ -615,6 +681,7 @@ function frmExplorer_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as
             ' would also be delivered as a click on the row it landed on.
             select case frmExplorer_IconHitTest( hCtlDn, m->idx, xDn )
                 case EXPICON_ADD:    frmExplorer_NewFolder( hCtlDn, m->idx ):    return true
+                case EXPICON_RENAME: frmExplorer_RenameFolder( hCtlDn, m->idx ): return true
                 case EXPICON_DELETE: frmExplorer_DeleteFolder( hCtlDn, m->idx ): return true
             end select
 
@@ -683,7 +750,13 @@ function frmExplorer_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as
         case WM_RBUTTONDOWN
             ' Create the popup menu
             dim as HWND hCtl = GetParent(m->hList)
-            if frmExplorer_KindFromRow( hCtl, m->idx ) = EXPKIND_ROOT then return false
+            ' Groups and folders get the folder menu instead of the file menu -- and a group
+            ' gets one at all now, where a right-click on a header used to do nothing.
+            select case frmExplorer_KindFromRow( hCtl, m->idx )
+                case EXPKIND_ROOT, EXPKIND_FOLDER
+                    ShowExplorerFolderContextMenu( hCtl, m->idx )
+                    return true   ' prevent further processing that leads to WM_CONTEXTMENU
+            end select
 
             ' No context menu on the promotion row -- every item on it is a file action.
             ' DocFromRow returns NULL for it, so the existing null test covers that too.
@@ -722,8 +795,11 @@ function frmExplorer_TooltipCallback( byval hCtl as HWND, byval row as integer, 
     ' folder rows, and those resolve to no document and so to no tip -- but the guard keeps
     ' that from being load-bearing if a file row ever grows an icon.
     if (row = gExpTipRow) andalso (gExpTipIcon <> EXPICON_NONE) then
-        if gExpTipIcon = EXPICON_ADD then return L(630, "New Folder")
-        return L(631, "Delete Folder")
+        select case gExpTipIcon
+            case EXPICON_ADD:    return L(630, "New Folder")
+            case EXPICON_RENAME: return L(632, "Rename Folder")
+            case else:           return L(631, "Delete Folder")
+        end select
     end if
 
     dim as DWSTRING wszTooltip

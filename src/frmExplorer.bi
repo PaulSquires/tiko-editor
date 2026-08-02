@@ -79,10 +79,14 @@ enum EXPLORER_ICONHIT
     EXPICON_NONE   = 0
     EXPICON_ADD    = 1
     EXPICON_DELETE = 2
+    EXPICON_RENAME = 3
 end enum
 
 declare sub frmExplorer_IconRects( byval hCtl as HWND, byval row as integer, byref rcRow as RECT, _
-                                   byref rcAdd as RECT, byref rcDel as RECT )
+                                   byref rcAdd as RECT, byref rcRen as RECT, byref rcDel as RECT )
+declare sub frmExplorer_RenameFolder( byval hCtl as HWND, byval row as integer )
+declare sub ShowExplorerFolderContextMenu( byval hCtl as HWND, byval row as integer )
+declare function frmExplorer_FilterMessage( byval pMsg as MSG ptr ) as boolean
 declare function frmExplorer_IconHitTest( byval hCtl as HWND, byval row as integer, byval x as long ) as EXPLORER_ICONHIT
 declare function frmExplorer_FolderPathFromRow( byval hCtl as HWND, byval row as integer, byref catIndex as long ) as DWSTRING
 declare sub frmExplorer_TwistyRect( byval hCtl as HWND, byval row as integer, byref rcRow as RECT, byref rcOut as RECT )

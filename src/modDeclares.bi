@@ -1,4 +1,4 @@
-'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
+﻿'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
 '    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
@@ -118,6 +118,10 @@ enum
     IDM_PROJECTNEW, IDM_PROJECTMANAGER, IDM_PROJECTOPEN, IDM_MRUPROJECT, IDM_MRUPROJECTFILES
     IDM_PROJECTCLOSE, IDM_PROJECTSAVE, IDM_PROJECTSAVEAS, IDM_PROJECTFILESADD, IDM_PROJECTOPTIONS  
     IDM_PROJECTFILETYPE, IDM_REMOVEFILEFROMPROJECT, IDM_REMOVEFILEFROMPROJECT_EXPLORERLISTBOX
+    ' Explorer folder commands. Handled by the Explorer folder popup's own select
+    ' callback, NOT posted as WM_COMMAND -- they act on a remembered row index rather
+    ' than on a document, so the generic dispatcher has nothing to give them.
+    IDM_EXPLORER_NEWFOLDER, IDM_EXPLORER_RENAMEFOLDER, IDM_EXPLORER_DELETEFOLDER
     IDM_PROJECT_END
         
     '' COMPILE
@@ -441,7 +445,7 @@ dim shared as wstring * 10 _
     wszIconSplitEditor, wszIconThemes, _
     wszIconSettings, wszIconCheckBoxEmpty, wszIconCheckBoxMarked, _
     wszIconContinue, wszIconStop, wszIconStepNext, wszIconStepOver, wszIconStepOut, wszIconRunToCursor, _
-    wszIconPause, wszIconSortAsc, wszIconSortDesc, wszIconTrash, wszIconNewFolder, _
+    wszIconPause, wszIconSortAsc, wszIconSortDesc, wszIconTrash, wszIconNewFolder, wszIconRename, _
     wszIconSave, wszIconFind, wszIconToggleReplace, _
     wszIconGotoMain, wszIconGotoHeader, wszIconGotoSource, _
     wszIconUndock, wszIconDock, _
@@ -534,6 +538,7 @@ dim shared spinner(0 to 7) as DWSTRING => { _
     wszIconSortAsc           = !"\uE70E"     ' chevron up
     wszIconSortDesc          = !"\uE70D"     ' chevron down
     wszIconTrash             = !"\uE74D"     ' trashcan - delete the selected watch
+    wszIconRename            = !"\uE8AC"     ' rename - Explorer rename-folder icon
     wszIconNewFolder         = !"\uE8F4"     ' new folder - Explorer add-folder icon. Its own
                                              ' define rather than reusing wszIconAddFileButton,
                                              ' which is the generic plus and is also the

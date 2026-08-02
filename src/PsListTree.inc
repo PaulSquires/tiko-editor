@@ -3388,6 +3388,16 @@ function PsListTreeSurface_WndProc ( _
                     PsTipHost_SetToolIndex( @pList->tip, idx )
                 end if
             end if
+            ' PSLISTTREE_MESSAGEINFO.idx is documented as "the MODEL row index under the
+            ' mouse (-1 if none)", and every other mouse message sets it -- but this one did
+            ' not, so a host handling WM_MOUSEMOVE read a hard 0 and silently acted on row 0
+            ' for the entire width and height of the control. Zero is a plausible row, so
+            ' nothing faults and nothing looks wrong; the handler simply works on the wrong
+            ' row forever. Found from tiko's Explorer, whose per-icon tooltips never appeared
+            ' because every mouse-move hit-tested row 0.
+            if pList then
+                if idx >= 0 then m.idx = pList->VisibleToModel( idx ) else m.idx = -1
+            end if
             if pList andalso pList->MessageCallback then
                 if pList->MessageCallback( @m ) then return 0
             end if

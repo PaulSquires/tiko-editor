@@ -1,4 +1,4 @@
-'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
+﻿'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
 '    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
@@ -58,6 +58,7 @@ dim shared as HWND ghPopupLineEndings
 dim shared as HWND ghPopupSpaces
 dim shared as HWND ghPopupScintilla
 dim shared as HWND ghPopupExplorer
+dim shared as HWND ghPopupExplorerFolder
 dim shared as HWND ghPopupExplorerAction
 dim shared as HWND ghPopupFunctionsAction
 dim shared as HWND ghPopupBookmarksAction
@@ -441,6 +442,63 @@ private sub ExplorerContextMenu_OnSelect( byval hPopup as HWND, byval id as long
     frmMain_PositionWindows()
 end sub
 
+' ========================================================================================
+' Right-click menu for a group or folder row.
+'
+' The action icons only appear on the hot row, so they are a mouse-only affordance and one
+' the user has to discover by hovering. This is the same three actions spelled out. Rename
+' and Delete are offered on folders alone -- a root group has neither, its caption coming
+' from gConfig.Cat() and its existence being what every file's ProjectFileType names --
+' which is the same rule frmExplorer_IconRects applies, expressed the same way round.
+'
+' Lives here rather than in frmExplorer.inc because that file is included 58 lines earlier
+' than this one and so can see neither the popup handles nor ContextMenu_ShowAtCursor. Same
+' reason ShowExplorerContextMenu below is here.
+' ========================================================================================
+sub ShowExplorerFolderContextMenu( byval hCtl as HWND, byval row as integer )
+    dim as EXPLORER_ROWKIND kind = frmExplorer_KindFromRow( hCtl, row )
+    dim as long catIndex
+    frmExplorer_FolderPathFromRow( hCtl, row, catIndex )
+    if catIndex < 0 then exit sub
+    if ProjectFolders_CatAllowsFolders( catIndex ) = false then exit sub
+
+    ' The row the commands will act on, remembered rather than re-derived when the menu
+    ' closes. PsPopupMenu is NOT modal, so the callback runs later -- and every one of these
+    ' commands rebuilds the tree, so an index resolved at that point would be meaningless.
+    gExpMenuRow = row
+
+    PsPopupMenu_Clear( ghPopupExplorerFolder )
+    PsPopupMenu_AddItem( ghPopupExplorerFolder, IDM_EXPLORER_NEWFOLDER, L(630,"New Folder") )
+    if kind = EXPKIND_FOLDER then
+        PsPopupMenu_AddItem( ghPopupExplorerFolder, IDM_EXPLORER_RENAMEFOLDER, L(632,"Rename Folder") )
+        PsPopupMenu_AddSeparator( ghPopupExplorerFolder )
+        PsPopupMenu_AddItem( ghPopupExplorerFolder, IDM_EXPLORER_DELETEFOLDER, L(631,"Delete Folder") )
+    end if
+    ContextMenu_ShowAtCursor( ghPopupExplorerFolder )
+end sub
+
+
+' ========================================================================================
+' The folder menu's command handler, fired by PsPopupMenu once the menu has closed.
+'
+' Reads gExpMenuRow rather than the live selection, and clears it on the way in so a second
+' delivery cannot act twice. NOT routed through ContextMenu_PostCommand: these ids act on a
+' remembered row index, not on a document, so the generic WM_COMMAND dispatcher has nothing
+' to hand them.
+' ========================================================================================
+private sub ExplorerFolderContextMenu_OnSelect( byval hPopup as HWND, byval id as long )
+    dim as long row = gExpMenuRow
+    gExpMenuRow = -1
+    if row < 0 then exit sub
+
+    select case id
+        case IDM_EXPLORER_NEWFOLDER:    frmExplorer_NewFolder( HWND_FRMEXPLORER, row )
+        case IDM_EXPLORER_RENAMEFOLDER: frmExplorer_RenameFolder( HWND_FRMEXPLORER, row )
+        case IDM_EXPLORER_DELETEFOLDER: frmExplorer_DeleteFolder( HWND_FRMEXPLORER, row )
+    end select
+end sub
+
+
 sub ShowExplorerContextMenu( byval pDoc as clsDocument ptr )
     ' if pDoc is zero then most likely we have right clicked on a Project or FILES root node
     if pDoc = 0 then exit sub
@@ -750,6 +808,7 @@ sub ContextMenus_Init()
     ghPopupSpaces           = frmMenuBar_CreatePopup( true )
     ghPopupScintilla        = frmMenuBar_CreatePopup( true )
     ghPopupExplorer         = frmMenuBar_CreatePopup( true )
+    ghPopupExplorerFolder   = frmMenuBar_CreatePopup( true )
     ghPopupExplorerAction   = frmMenuBar_CreatePopup( true )
     ghPopupFunctionsAction  = frmMenuBar_CreatePopup( true )
     ghPopupBookmarksAction  = frmMenuBar_CreatePopup( true )
@@ -775,6 +834,7 @@ sub ContextMenus_Init()
     PsPopupMenu_SetSelectCallback( ghPopupSpaces,       @SpacesContextMenu_OnSelect )
     PsPopupMenu_SetSelectCallback( ghPopupTopTabsList,  @TopTabsListContextMenu_OnSelect )
     PsPopupMenu_SetSelectCallback( ghPopupExplorer,     @ExplorerContextMenu_OnSelect )
+    PsPopupMenu_SetSelectCallback( ghPopupExplorerFolder,   @ExplorerFolderContextMenu_OnSelect )
     PsPopupMenu_SetSelectCallback( ghPopupOutputResults, @OutputResultsContextMenu_OnSelect )
     PsPopupMenu_SetSelectCallback( ghPopupOutputDock,    @OutputDockContextMenu_OnSelect )
 

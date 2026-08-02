@@ -1,4 +1,4 @@
-'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
+﻿'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
 '    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
@@ -314,7 +314,7 @@ sub frmExplorer_RunSelfTest()
         ' The remaining link, that the painter's p->rc spans the same x, holds because
         ' PsListTree's paint loop and its own hit test both read GetClientRect on this same
         ' surface -- that one is verified by reading the control, not from here.
-        dim as RECT rcRowT, rcAddT, rcDelT
+        dim as RECT rcRowT, rcAddT, rcRenT, rcDelT
         dim as HWND hSurfT = GetDlgItem( HWND_FRMEXPLORER, IDC_FRMEXPLORER_LISTBOX )
         GetClientRect( hSurfT, @rcRowT )
         rcRowT.top = 0
@@ -324,15 +324,20 @@ sub frmExplorer_RunSelfTest()
         Exp_Check( "the Explorer surface has a measurable width", rcRowT.right > 60, _
             "width=" & str(rcRowT.right) )
 
-        frmExplorer_IconRects( HWND_FRMEXPLORER, nRootNormal, rcRowT, rcAddT, rcDelT )
+        frmExplorer_IconRects( HWND_FRMEXPLORER, nRootNormal, rcRowT, rcAddT, rcRenT, rcDelT )
         Exp_Check( "a foldering group offers Add", IsRectEmpty( @rcAddT ) = 0 )
         Exp_Check( "a group offers no Delete", IsRectEmpty( @rcDelT ) <> 0 )
+        Exp_Check( "a group offers no Rename", IsRectEmpty( @rcRenT ) <> 0 )
 
-        frmExplorer_IconRects( HWND_FRMEXPLORER, nRowAlpha, rcRowT, rcAddT, rcDelT )
-        Exp_Check( "a folder offers both icons", _
-            (IsRectEmpty( @rcAddT ) = 0) andalso (IsRectEmpty( @rcDelT ) = 0) )
-        Exp_Check( "Delete sits outboard of Add", rcAddT.right <= rcDelT.left, _
-            "add.right=" & str(rcAddT.right) & " del.left=" & str(rcDelT.left) )
+        frmExplorer_IconRects( HWND_FRMEXPLORER, nRowAlpha, rcRowT, rcAddT, rcRenT, rcDelT )
+        Exp_Check( "a folder offers all three icons", _
+            (IsRectEmpty( @rcAddT ) = 0) andalso (IsRectEmpty( @rcRenT ) = 0) andalso _
+            (IsRectEmpty( @rcDelT ) = 0) )
+        ' Reading order left to right is Add, Rename, Delete.
+        Exp_Check( "Rename sits between Add and Delete", _
+            (rcAddT.right <= rcRenT.left) andalso (rcRenT.right <= rcDelT.left), _
+            "add.right=" & str(rcAddT.right) & " ren=[" & str(rcRenT.left) & "," & _
+            str(rcRenT.right) & "] del.left=" & str(rcDelT.left) )
         Exp_Check( "both icons stay inside the row", rcDelT.right <= rcRowT.right )
         ' The hit test must answer with what was drawn, AT THE DRAWN EDGES.
         '
@@ -348,6 +353,10 @@ sub frmExplorer_RunSelfTest()
             frmExplorer_IconHitTest( HWND_FRMEXPLORER, nRowAlpha, rcDelT.right - 1 ) = EXPICON_DELETE )
         Exp_Check( "nothing answers past Delete's right edge", _
             frmExplorer_IconHitTest( HWND_FRMEXPLORER, nRowAlpha, rcDelT.right ) = EXPICON_NONE )
+        Exp_Check( "Rename answers at its left edge", _
+            frmExplorer_IconHitTest( HWND_FRMEXPLORER, nRowAlpha, rcRenT.left ) = EXPICON_RENAME )
+        Exp_Check( "Rename answers at its right edge", _
+            frmExplorer_IconHitTest( HWND_FRMEXPLORER, nRowAlpha, rcRenT.right - 1 ) = EXPICON_RENAME )
         Exp_Check( "Add answers at its left edge", _
             frmExplorer_IconHitTest( HWND_FRMEXPLORER, nRowAlpha, rcAddT.left ) = EXPICON_ADD )
         Exp_Check( "Add answers at its right edge", _
@@ -365,7 +374,7 @@ sub frmExplorer_RunSelfTest()
             if PsListTree_GetItemData( HWND_FRMEXPLORER, i ) = CATINDEX_MAIN then nRootMain = i
         next
         if nRootMain >= 0 then
-            frmExplorer_IconRects( HWND_FRMEXPLORER, nRootMain, rcRowT, rcAddT, rcDelT )
+            frmExplorer_IconRects( HWND_FRMEXPLORER, nRootMain, rcRowT, rcAddT, rcRenT, rcDelT )
             Exp_Check( "a non-foldering group offers no icons", _
                 (IsRectEmpty( @rcAddT ) <> 0) andalso (IsRectEmpty( @rcDelT ) <> 0) )
         end if
@@ -411,6 +420,10 @@ sub frmExplorer_RunSelfTest()
         ' exactly this reason.
         Exp_Check( "an icon tip does not leak onto another row", _
             frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRootNormal, 0 ) <> L(630,"New Folder") )
+        gExpTipIcon = EXPICON_RENAME
+        Exp_Check( "the Rename icon names itself", _
+            frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRowAlpha, 0 ) = L(632,"Rename Folder"), _
+            frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRowAlpha, 0 ) )
         gExpTipIcon = EXPICON_NONE
         gExpTipRow = -1
         Exp_Check( "with no icon under the cursor a folder row has no tip", _
@@ -504,6 +517,11 @@ sub frmExplorer_RunSelfTest()
     next
     Exp_Check( "the restored documents keep their own folders", bDocsOK )
 
-    print "--- TIKO_EXPLORER_SELFTEST: " & str(gExpTestPass) & " passed, " & _
-          str(gExpTestFail) & " failed ---"
+    ' Through a `dim as string` first, like Exp_Check does. A direct print of a concat can
+    ' come out UTF-16 with interleaved nulls, which renders fine in a console and is
+    ' invisible to every text tool that reads the redirected output -- so the one line that
+    ' reports whether the suite passed was the one line that could not be grepped.
+    dim as string sTotals = "--- TIKO_EXPLORER_SELFTEST: " & str(gExpTestPass) & _
+                            " passed, " & str(gExpTestFail) & " failed ---"
+    print sTotals
 end sub
