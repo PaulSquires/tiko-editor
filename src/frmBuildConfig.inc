@@ -2215,7 +2215,16 @@ function frmBuildConfig_Show( byval hWndParent as HWND ) as LRESULT
 
     frmBuildConfig_ApplyTheme( HWND_FRMBUILDCONFIG )
     frmBuildConfig_PositionWindows( HWND_FRMBUILDCONFIG )
-    frmBuildConfig_BuildList()
+    ' OPEN ON THE BUILD THAT IS ACTUALLY IN EFFECT, not on row 0. gBCCurrent is -1 at this
+    ' point and BuildList clamps a negative index to 0, so the dialog always came up on the
+    ' first configuration -- and since the detail pane follows the selection, that showed
+    ' the wrong build's switches to anyone who opened this to check the current one.
+    '
+    ' getActiveBuildIndex is the same answer the compile path uses: the workspace's own
+    ' gApp.ProjectBuild if it names a build that still exists, otherwise the one marked
+    ' Default. It indexes gConfig.Builds, which gBuildsWork was copied from row for row in
+    ' LoadWork above, so the index is valid here.
+    frmBuildConfig_BuildList( frmBuildConfig_getActiveBuildIndex() )
 
     SetTimer( HWND_FRMBUILDCONFIG, IDT_BCPREVIEW, 100, 0 )
 
