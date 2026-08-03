@@ -214,8 +214,20 @@ end function
 ''
 ''  SAVE CONFIGURATION TO DISK FILE
 ''
+' Same shape as LoadConfigFile, and for the same reason: the body has an early "return
+' true" when the file cannot be created, which used to strand gApp.PreventConfigLoad -- an
+' unwritable settings.ini (read-only volume, a locked file, no disk space) killed external
+' config-change detection for the session just as surely as an unreadable one did.
 function clsConfig.SaveConfigFile() as long
     gApp.PreventConfigLoad = true
+    dim as long nResult = this.SaveConfigFileBody()
+    gApp.PreventConfigLoad = false
+    return nResult
+end function
+
+
+' The body. Non-zero on error, 0 on success.
+function clsConfig.SaveConfigFileBody() as long
 
     ' Determine the current editor positioning
     ' Do not save if editor is minimized
@@ -482,8 +494,7 @@ function clsConfig.SaveConfigFile() as long
     ' in order to detect external changes to it.
     this.DateFileTime = AfxGetFileLastWriteTime( this.ConfigFilename )
 
-    gApp.PreventConfigLoad = false
-
+    ' (The wrapper clears gApp.PreventConfigLoad; it is deliberately not touched here.)
     function = 0
 end function
 
@@ -574,9 +585,24 @@ end function
 ' into memory -- so Project > Close followed by exit wrote that path out again and the
 ' project reopened on the next launch, exactly as if it had never been closed.
 ' The geometry fields are already exempted from a hot reload for the same class of reason.
+' The flag is set and cleared HERE, around a call, so no exit path inside the body can
+' leak it. It used to be set at the top of the body and cleared at the bottom, and the one
+' early "return true" between them -- an unopenable settings.ini -- left it latched. Its
+' only reader is ReloadConfigFileTest, which short-circuits on it, so a single transient
+' failure (an antivirus scan, a second instance mid-write, a network hiccup) permanently
+' disabled external config-change detection for the rest of the session, silently.
 function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as long
-    dim as DWSTRING wszLiveLastProject = this.wszLastActiveProject
     gApp.PreventConfigLoad = true
+    dim as long nResult = this.LoadConfigFileBody( isHotReload )
+    gApp.PreventConfigLoad = false
+    return nResult
+end function
+
+
+' The body. Returns non-zero on error, 0 on success -- an inverted convention it has always
+' had; no caller currently checks it.
+function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
+    dim as DWSTRING wszLiveLastProject = this.wszLastActiveProject
 
     dim as DWSTRING wst, wKey, wData
     dim nData          as long
@@ -593,6 +619,8 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
         bNewConfigFile = true
     else
         dim pStream as CTextStream   '(utf16)
+        ' The wrapper owns gApp.PreventConfigLoad, so this early return can no longer
+        ' strand it -- which is exactly what it used to do.
         if pStream.OpenUnicode(this.ConfigFilename) <> S_OK then return true   ' error
 
         gApp.NonProjectNotes = ""
@@ -1015,8 +1043,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
     ' in order to detect external changes to it.
     this.DateFileTime = AfxGetFileLastWriteTime( this.ConfigFilename )
 
-    gApp.PreventConfigLoad = false
-
+    ' (The wrapper clears gApp.PreventConfigLoad; it is deliberately not touched here.)
     function = 0
 end function
 

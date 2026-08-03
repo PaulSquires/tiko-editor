@@ -176,6 +176,49 @@ sub Save_RunSelfTest()
         AfxDeleteFile( wszLossy )
     end scope
 
+    ' ---- 9. a failed config load/save must not strand PreventConfigLoad ----------------
+    ' gApp.PreventConfigLoad is set around both, and its only reader is
+    ' ReloadConfigFileTest, which short-circuits on it. Both bodies had an early "return
+    ' true" between the set and the clear -- an unreadable or uncreatable settings.ini --
+    ' so ONE transient failure permanently killed external config-change detection for the
+    ' session, silently and irrecoverably.
+    '
+    ' Driven by pointing ConfigFilename at a path that cannot be opened OR created, which
+    ' takes both bodies down their early-return path for real rather than by inspection.
+    scope
+        dim as DWSTRING wszSavedCfg = gConfig.ConfigFilename
+        dim as boolean bSavedFlag   = gApp.PreventConfigLoad
+
+        ' A directory that does not exist: OpenUnicode and Create both fail.
+        gConfig.ConfigFilename = wszDir & "\no_such_dir\settings.ini"
+
+        gApp.PreventConfigLoad = false
+        gConfig.SaveConfigFile()
+        SAVEASSERT( gApp.PreventConfigLoad = false, _
+            "a FAILED SaveConfigFile left PreventConfigLoad latched -- config-change detection is dead for the session" )
+
+        ' LoadConfigFile only reaches OpenUnicode when the file appears to exist, so the
+        ' missing-directory case above exercises Save; for Load, create the file and then
+        ' hold it open with no sharing at all.
+        gConfig.ConfigFilename = wszDir & "\lockedcfg.ini"
+        Doc_WriteToDisk( gConfig.ConfigFilename, "MAXIMUM:1", wszErr )
+        dim as HANDLE hCfgLock = CreateFileW( gConfig.ConfigFilename, GENERIC_READ or GENERIC_WRITE, _
+                                              0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 )
+        if hCfgLock = INVALID_HANDLE_VALUE then
+            ? "  NOTE: could not lock a config file; the Load half did NOT run."
+        else
+            gApp.PreventConfigLoad = false
+            gConfig.LoadConfigFile( true )
+            CloseHandle( hCfgLock )
+            SAVEASSERT( gApp.PreventConfigLoad = false, _
+                "a FAILED LoadConfigFile left PreventConfigLoad latched -- config-change detection is dead for the session" )
+        end if
+        AfxDeleteFile( gConfig.ConfigFilename )
+
+        gConfig.ConfigFilename = wszSavedCfg
+        gApp.PreventConfigLoad = bSavedFlag
+    end scope
+
     AfxDeleteFile( wszFile )
 
     sMsg = "TIKO_SAVE_SELFTEST: " & nPass & " passed, " & nFail & " failed."
