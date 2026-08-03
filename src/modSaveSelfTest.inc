@@ -219,6 +219,57 @@ sub Save_RunSelfTest()
         gApp.PreventConfigLoad = bSavedFlag
     end scope
 
+    ' ---- 10. a SECOND config load must re-read the indexed arrays ----------------------
+    ' The assignments used to be nested inside "if i > ubound(...)", so an entry was stored
+    ' only when its index GREW the array. Tools was never erased, so on every load after the
+    ' first, ubound was already large and EVERY USERTOOL_ line was skipped -- user tools
+    ' silently kept their pre-edit values while the file said otherwise. It also dropped a
+    ' duplicate key and any non-ascending index in a hand-edited file.
+    '
+    ' Loading the SAME file twice and requiring the same result is the shape that catches
+    ' it; a single load passes either way, which is why this went unnoticed.
+    scope
+        dim as DWSTRING wszSavedCfg = gConfig.ConfigFilename
+        dim as DWSTRING wszCfg = wszDir & "\arrays.ini"
+
+        dim as string sIni = _
+            "MAXIMUM:1" & chr(13,10) & _
+            "USERTOOL_00=ToolAlpha|-|a.exe|-||-||-||-|0|-|0|-|0|-|0|-|0|-|0|-|1|-|0" & chr(13,10) & _
+            "USERTOOL_01=ToolBeta|-|b.exe|-||-||-||-|0|-|0|-|0|-|0|-|0|-|0|-|1|-|0" & chr(13,10)
+        ' UTF-16LE with BOM: OpenUnicode is what reads this. Built byte by byte on purpose --
+        ' casting the buffer to a zstring would stop at the first NUL, and in UTF-16 every
+        ' second byte of ASCII text IS a NUL, so that yields one character.
+        dim as string sOut16 = chr(&HFF,&HFE)
+        for iC as long = 1 to len(sIni)
+            sOut16 &= chr( asc(sIni, iC) ) & chr(0)
+        next
+        Doc_WriteToDisk( wszCfg, sOut16, wszErr )
+
+        gConfig.ConfigFilename = wszCfg
+        gConfig.LoadConfigFile( true )
+        dim as long nFirst = ubound( gConfig.Tools )
+        dim as DWSTRING wszFirst0
+        if nFirst >= 0 then wszFirst0 = gConfig.Tools(0).wszDescription
+
+        gConfig.LoadConfigFile( true )
+        dim as long nSecond = ubound( gConfig.Tools )
+        dim as DWSTRING wszSecond0
+        if nSecond >= 0 then wszSecond0 = gConfig.Tools(0).wszDescription
+
+        SAVEASSERT( nFirst = 1, "first load read " & (nFirst + 1) & " tools, expected 2" )
+        SAVEASSERT( wszFirst0 = "ToolAlpha", "first load got [" & wszFirst0 & "]" )
+        SAVEASSERT( nSecond = nFirst, _
+            "SECOND load read " & (nSecond + 1) & " tools where the first read " & (nFirst + 1) & _
+            " -- a hot reload does not re-read USERTOOL_ lines" )
+        SAVEASSERT( wszSecond0 = "ToolAlpha", _
+            "second load left a stale value: [" & wszSecond0 & "]" )
+
+        gConfig.ConfigFilename = wszSavedCfg
+        AfxDeleteFile( wszCfg )
+        erase gConfig.Tools
+        gConfig.LoadConfigFile( true )     ' restore the real configuration
+    end scope
+
     AfxDeleteFile( wszFile )
 
     sMsg = "TIKO_SAVE_SELFTEST: " & nPass & " passed, " & nFail & " failed."

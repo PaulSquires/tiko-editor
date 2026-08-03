@@ -27,6 +27,11 @@
 #include once "frmOutput.bi"
 #include once "frmMainOnCommand.bi"
 
+' ReloadConfigFileTest has to rebuild the tool accelerators now that a hot reload can
+' actually change gConfig.Tools. Safe to include this early -- the header states its own
+' contract that nothing in it may name a Ps* type, for exactly this reason.
+#include once "frmUserTools.bi"
+
 ''
 ''  CONSTRUCTOR
 ''
@@ -610,10 +615,22 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
     dim bReadingNote   as boolean
     dim bNewConfigFile as boolean
 
-    ' Remove any existing Builds
-    ' We can not recreate the Categories each time the config reloads because the
-    ' structure contains references to existing nodes.
+    ' Builds AND Tools are rebuilt from the file on every load, including a hot reload.
+    '
+    ' Tools was NOT erased here before, and because its assignments were nested inside
+    ' "if i > ubound(this.Tools)", the second and every later load skipped every
+    ' USERTOOL_ line: user tools silently kept their pre-edit values while the file on
+    ' disk said otherwise. Erasing is what makes them mirror the file.
+    '
+    ' CATEGORIES ARE DELIBERATELY NOT ERASED, but not for the reason the old comment
+    ' here gave. It claimed "the structure contains references to existing nodes";
+    ' TYPE_CATEGORIES is two DWSTRINGs and holds no references at all -- that comment is
+    ' stale. The real reason is SetCategoryDefaults: it only fills the array when it is
+    ' EMPTY and runs once at startup, so erasing here would leave a settings.ini with no
+    ' CATEGORY_ lines with no categories at all and nothing to restore them. The values
+    ' are refreshed in place instead, which a hot reload could not do before.
     erase this.Builds
+    erase this.Tools
 
     if AfxFileExists(this.ConfigFilename) = 0 then
         bNewConfigFile = true
@@ -655,10 +672,17 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
             nData = val(wData)
 
 
+            ' SIZING AND ASSIGNMENT ARE SEPARATE, in all three indexed blocks below.
+            '
+            ' They used to be nested -- the assignments sat INSIDE "if i > ubound(...)",
+            ' so an entry was only stored when its index grew the array. Any index the
+            ' array already covered was silently dropped: a duplicate key, a
+            ' non-ascending index in a hand-edited file, and -- for Tools, which is now
+            ' erased above but was not -- EVERY entry on every reload after the first.
             if left(wKey, 9) = "CATEGORY_" then  ' is this a CATEGORY entry
             i = val(right(wKey,2))
-            if i > ubound(this.Cat) then
-                redim preserve this.Cat(i)
+            if i >= 0 then
+                if i > ubound(this.Cat) then redim preserve this.Cat(i)
                 ' trim() is not cosmetic. idFileType is compared against the FILETYPE_*
                 ' string digits to decide which Explorer header a document belongs under,
                 ' so one stray space in a hand-edited "CATEGORY_01= 1|-|Main" makes that
@@ -671,8 +695,8 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
 
             if left(wKey, 9) = "USERTOOL_" then  ' is this a User Tool entry
             i = val(right(wKey,2))
-                if i > ubound(this.Tools) then
-                    redim preserve this.Tools(i)
+                if i >= 0 then
+                    if i > ubound(this.Tools) then redim preserve this.Tools(i)
                     this.Tools(i).wszDescription   = AfxStrParse(wData, 1, "|-|")
                     this.Tools(i).wszCommand       = ProcessFromCurdriveApp( AfxStrParse(wData, 2, "|-|") )
                     this.Tools(i).wszParameters    = AfxStrParse(wData, 3, "|-|")
@@ -692,8 +716,8 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
 
             if left(wKey, 6) = "BUILD_" then  ' is this a BUILD entry
             i = val(right(wKey,2))
-                if i > ubound(this.Builds) then
-                    redim preserve this.Builds(i)
+                if i >= 0 then
+                    if i > ubound(this.Builds) then redim preserve this.Builds(i)
                     this.Builds(i).id             = AfxStrParse(wData, 1, "|-|")
                     this.Builds(i).wszDescription = AfxStrParse(wData, 2, "|-|")
                     this.Builds(i).wszOptions     = AfxStrParse(wData, 3, "|-|")
@@ -1457,6 +1481,14 @@ function clsConfig.ReloadConfigFileTest() as boolean
             pDoc->ApplyProperties
             pDoc = pDoc->pDocnext
         loop
+
+        ' The accelerator tables read gConfig.Tools and gConfig.Builds, and BOTH arrays are
+        ' now rebuilt from the file by the load above. They were not before -- Tools was
+        ' never erased, so a hot reload could not change it and the tables stayed correct
+        ' by accident. Now they have to be rebuilt or the shortcuts describe the previous
+        ' contents of a file that has already changed.
+        frmUserTools_CreateAcceleratorTable()
+        frmBuildConfig_CreateAcceleratorTable()
     end if
 
     function = 0
