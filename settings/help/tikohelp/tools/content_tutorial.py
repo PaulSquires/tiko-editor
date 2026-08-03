@@ -65,7 +65,7 @@ TV += cards([
     ("lesson-03.html", "edit", "3 — Editing text",
      "Selections, clipboard, line operations and column mode. 20 minutes."),
     ("lesson-04.html", "find", "4 — Searching",
-     "Find, Replace, Find in Project and regular expressions. 15 minutes."),
+     "Find, Replace, Find in Project, and searching within a selection. 15 minutes."),
     ("lesson-05.html", "folder", "5 — Projects",
      "Turn loose files into a named project. 15 minutes."),
     ("lesson-06.html", "build", "6 — Building a program",
@@ -122,9 +122,9 @@ L1 += table(
     ["Region", "Where", "Try it"],
     [
         ("Menu bar", "Across the top.", "Open the File menu, then press " + kbd("Esc") + "."),
-        ("Panel icon strip", "The narrow column of buttons at the side.",
-         "Hover a button to see its tooltip."),
-        ("Side panel", "Beside the icon strip.", "Press " + kbd("Ctrl", "B") +
+        ("Panel icon strip", "A row of buttons across the top of the side panel.",
+         "Hover a button to see its tooltip and shortcut."),
+        ("Side panel", "Below the icon strip.", "Press " + kbd("Ctrl", "B") +
          " twice to hide and show it."),
         ("Document tabs", "Above the editor.", "Empty until you open a file."),
         ("Editor", "The centre.", "Click in it and type something."),
@@ -391,8 +391,8 @@ lesson(
      (kbd("Ctrl", "D") + " does nothing.",
       "The editor does not have focus. Click in it, or press " + kbd("Ctrl", "`") + "."),
      ("Comment block used the wrong comment character.",
-      "The file's language is wrong for its extension. Check the language field in the "
-      "status bar.")],
+      "Tiko chooses the comment character from the file's extension. Save the file with a "
+      "<code>.bas</code> or <code>.bi</code> extension and it will use an apostrophe.")],
     [kbd("Ctrl", "D") + " duplicates, " + kbd("Ctrl", "Y") + " deletes, " +
      kbd("Alt", "↑") + "/" + kbd("Alt", "↓") + " moves a line.",
      "Cut and Copy act on the whole line when nothing is selected.",
@@ -466,43 +466,48 @@ L4 += p(
     "you answer \"where is this used?\" in a couple of seconds."
 )
 
-L4 += h2("A regular expression")
+L4 += h2("Searching inside a selection")
 L4 += ol([
-    "Open Find and turn on <strong>Regular expression</strong>.",
-    "Search for <code>^Print</code> — the caret means <em>start of line</em>. Only the "
-    "lines beginning with <code>Print</code> match.",
-    "Now search for <code>\\d+</code> — one or more digits. Every number in the file "
-    "matches.",
-    "Turn the option off again when you have finished.",
+    "Select the three <code>Print</code> lines — a multi-line selection.",
+    "Press %s. Notice two things: the search box is empty, and the "
+    "<strong>Selection</strong> icon is lit. Tiko turned it on for you." % kbd("Ctrl", "F"),
+    "Search for <code>item</code>. Only matches inside your selection are found.",
+    "Turn <strong>Selection</strong> off by clicking its icon, and search again. Now the "
+    "whole file is searched.",
 ], steps=True)
+L4 += important(
+    "This is the safe way to run a Replace All over one procedure instead of a whole file: "
+    "select the region first, then replace."
+)
 L4 += note(
-    "Leaving <strong>Regular expression</strong> on catches people out later, when an "
-    "ordinary search containing a full stop or a bracket behaves oddly."
+    "<strong>Tiko does not support regular expressions.</strong> Searches are literal text, "
+    "refined by the three latching options — Match Case, Match Whole Words and Selection."
 )
 
 L4 += h2("Expected result")
 L4 += p(
     "The file is back to using <code>qty</code>, and you have used Find, Replace, Find in "
-    "Project and a regular expression at least once each."
+    "Project and the Selection option at least once each."
 )
 
 lesson(
     4, "lesson-04", "Searching",
-    "Find and replace text in a file, search a whole project, and use a simple regular "
-    "expression.",
+    "Find and replace text in a file, search a whole project, and confine a search to the "
+    "text you selected.",
     "15 minutes", "Lessons 1–3.",
     ["Finding text and repeating a search with " + kbd("F3") + ".",
      "What Whole word and Match case actually change.",
      "Replacing one match at a time, and all at once.",
      "Searching every file in the project.",
-     "The idea behind regular expressions."],
+     "Confining a search to the selected text."],
     L4,
     [("Replace All changed far more than expected.",
       "<strong>Whole word</strong> was off. Press " + kbd("Ctrl", "Z") +
       " — it undoes the whole operation — and try again."),
      ("A search finds nothing that is clearly there.",
-      "<strong>Match case</strong> or <strong>Regular expression</strong> is on from a "
-      "previous search."),
+      "<strong>Match Case</strong>, <strong>Match Whole Words</strong> or "
+      "<strong>Selection</strong> is still latched on from a previous search. Look for a "
+      "lit icon on the Find bar."),
      (kbd("F3") + " does nothing.",
       "No search has been made yet in this session. Open Find once first."),
      ("Find in Project returns nothing.",
@@ -514,11 +519,11 @@ lesson(
      "Replace All is a single undoable action."],
     ["Use Replace to rename <code>item</code> to <code>part</code> throughout, then undo it.",
      "Use Find in Project to find every line containing <code>Dim</code>.",
-     "Write a regular expression that finds every line ending in a digit. (Hint: "
-     "<code>\\d$</code>.)"],
+     "Select just the assignment lines and use Selection to replace <code>qty</code> "
+     "there only, leaving the Print lines untouched."],
     'In <a href="lesson-05.html">Lesson 5</a> you turn these loose files into a real, named '
     "project.",
-    "tutorial lesson 4 find replace search project regular expression whole word")
+    "tutorial lesson 4 find replace search project selection match case whole words")
 
 # ==========================================================================
 # Lesson 5
@@ -534,7 +539,8 @@ L5 += important(
 L5 += h2("Look at what you have")
 L5 += ol([
     "Press %s to show the Explorer." % kbd("Ctrl", "F4"),
-    "You will see the category headers — Main, Modules, Headers, Resource, Other — with "
+    "You will see the five permanent category headers — Main, Resource, Header, Module "
+    "and Normal — with "
     "your files under them.",
     "At the top there is a pinned <strong>Save as Project…</strong> row. That row is "
     "telling you the workspace has no name yet.",
@@ -570,7 +576,7 @@ Function Describe( ByVal qty As Integer ) As String
 End Function
 """, lang="fb", title="helpers.bi")
 L5 += p(
-    "Look at the Explorer. <code>helpers.bi</code> has been filed under Headers, because "
+    "Look at the Explorer. <code>helpers.bi</code> has been filed under Header, because "
     "Tiko categorises by extension."
 )
 
@@ -594,16 +600,27 @@ Print item3, qty3, Describe( qty3 )
 Sleep
 """, lang="fb", title="inventory.bas")
 
-L5 += h2("Closing a tab is not removing a file")
+L5 += h2("Tabs versus project membership")
 L5 += ol([
     "Close <code>helpers.bi</code> with %s." % kbd("Ctrl", "W"),
     "Look at the Explorer. The file is still listed.",
     "Click it. It opens again.",
 ], steps=True)
 L5 += important(
-    "A tab is a view of a file. Closing the tab stops displaying the file; it does not "
-    "take it out of the project. It is still compiled, still searched by Find in Project, "
-    "and still listed."
+    "A tab is a view of a file. In a named project, closing the tab stops displaying the "
+    "file; it does not take it out of the project. It is still compiled, still searched by "
+    "Find in Project, and still listed."
+)
+L5 += p(
+    "To take a file out for real, right-click it in the Explorer — or right-click its tab — "
+    "and choose <strong>Remove from project</strong>. It is removed from the project, not "
+    "deleted from disk."
+)
+L5 += note(
+    "You did this in an untitled workspace earlier and it behaved differently: with no "
+    "project to remove from, <strong>Remove from project</strong> is not offered and "
+    "closing the tab is what takes the file out. Naming the project is what separates the "
+    "two ideas."
 )
 
 L5 += h2("Reopen the project")
@@ -628,7 +645,8 @@ lesson(
     ["Why every workspace is already a project.",
      "Naming a workspace with Save as Project.",
      "How files are categorised in the Explorer.",
-     "Why closing a tab does not remove a file from the project."],
+     "Why closing a tab does not remove a file from a named project, and how to "
+     "remove one properly."],
     L5,
     [("The Save as Project row is not there.",
       "The workspace already has a name. Check the window caption."),
@@ -636,13 +654,17 @@ lesson(
       "Categories come from the file extension. Change the category from the Explorer's "
       "context menu."),
      ("Closing a tab seemed to lose a file.",
-      "It is still in the Explorer. Click it to reopen."),
+      "In a named project it is still in the Explorer — click it to reopen. On an untitled "
+      "workspace, closing really does remove it."),
+     ("There is no Remove from project command on the menu.",
+      "The workspace is still untitled. Save it as a project first."),
      ("Find in Project misses a file.",
       "That file is not in the workspace. Add it with " +
       menu("Project", "Add Files to Project…") + ".")],
     ["Every set of open files is a project; naming it is a save.",
      "The untitled workspace is restored automatically at start-up.",
-     "Files are categorised by extension into Main, Modules, Headers, Resource and Other.",
+     "Files are categorised by extension into Main, Resource, Header, Module and Normal; "
+     "Main and Resource hold exactly one file each.",
      "Tabs and project membership are separate things."],
     ["Add <code>notes.txt</code> from Lesson 2 to the project and see which category it "
      "lands in.",
@@ -667,7 +689,8 @@ L6 += h2("Point Tiko at the compiler")
 L6 += ol([
     "Open %s." % menu("File", "Settings", "Options…"),
     "Select the <strong>Compiler</strong> page.",
-    "Browse to your FreeBASIC installation and select the compiler executable.",
+    "Confirm a toolchain is selected in the list. One ships with Tiko and is already "
+    "chosen, so this is normally just a look.",
     "Choose <strong>OK</strong>.",
 ], steps=True)
 L6 += p("This is a one-off. Tiko remembers it for every project.")
@@ -735,8 +758,9 @@ lesson(
      "When to use Compile, Run Executable and Quick Run."],
     L6,
     [("The build fails saying the compiler was not found.",
-      "The compiler path is wrong. Go back to " + menu("File", "Settings", "Options…") +
-      " and check it — this is a configuration error, not a code error."),
+      "No toolchain is selected, or its folder no longer holds both <code>fbc32.exe</code> "
+      "and <code>fbc64.exe</code>. Check " + menu("File", "Settings", "Options…") +
+      " — this is a configuration error, not a code error."),
      ("The program window flashes and vanishes.",
       "Your program ended without waiting. Add <code>Sleep</code> at the end."),
      ("Errors point at lines that look fine.",
@@ -1185,17 +1209,13 @@ L10 += p(
 L10 += h2("Define a user tool")
 L10 += ol([
     "Open %s and choose <strong>Add</strong>." % menu("File", "User Tools…"),
-    "Description: <code>Open project folder</code>.",
+    "Description: <code>Show built program</code>.",
     "Program: <code>explorer.exe</code>.",
-    "Parameters: the substitution code for the current file's folder — the Parameters "
-    "field's tooltip lists the codes available.",
+    "Parameters: <code>/select,&lt;E&gt;</code> — <code>&lt;E&gt;</code> is replaced with "
+    "your compiled executable, so Explorer opens with it highlighted. Hover the Parameters "
+    "field to see all four codes.",
     "Choose <strong>OK</strong>, then run it from %s." % menu("File", "User Tools"),
 ], steps=True)
-L10 += todo(
-    "Insert the exact parameter substitution code for the current file's directory once it "
-    "has been confirmed against the shipping build.",
-    title="TODO — supply the exact substitution code",
-)
 
 L10 += h2("Use the Output panel's TODO tab")
 L10 += ol([

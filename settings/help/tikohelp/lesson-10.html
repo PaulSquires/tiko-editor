@@ -71,7 +71,6 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <div class="nav-section-body" id="navsec-searching"><ul>
 <li><a href="find-replace.html">Find and Replace</a></li>
 <li><a href="find-in-project.html">Find in Project</a></li>
-<li><a href="regular-expressions.html">Regular expressions</a></li>
 </ul></div></li>
 <li class="nav-section">
 <button class="nav-section-btn" type="button" data-section="navigation" aria-expanded="false" aria-controls="navsec-navigation"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M13.2 6.8l-1.7 4.7-4.7 1.7 1.7-4.7z"/></svg><span>Navigation</span></button>
@@ -187,11 +186,11 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <li>Press <kbd>Ctrl</kbd> + <kbd>Z</kbd> to undo, and click once to collapse to a single caret.</li>
 </ol><p>Multiple selections need not line up, which is what makes them different from column mode. Use column mode when things do line up, and this when they do not.</p><h2 id="define-a-user-tool">Define a user tool</h2><ol class="steps">
   <li>Open <span class="ui path">File<span class="sep">›</span>User Tools…</span> and choose <strong>Add</strong>.</li>
-  <li>Description: <code>Open project folder</code>.</li>
+  <li>Description: <code>Show built program</code>.</li>
   <li>Program: <code>explorer.exe</code>.</li>
-  <li>Parameters: the substitution code for the current file's folder — the Parameters field's tooltip lists the codes available.</li>
+  <li>Parameters: <code>/select,&lt;E&gt;</code> — <code>&lt;E&gt;</code> is replaced with your compiled executable, so Explorer opens with it highlighted. Hover the Parameters field to see all four codes.</li>
   <li>Choose <strong>OK</strong>, then run it from <span class="ui path">File<span class="sep">›</span>User Tools</span>.</li>
-</ol><div class="callout todo"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2.5"/><path d="M6.8 10.2l2.2 2.2 4.2-4.6"/></svg><div class="callout-body"><span class="callout-title">TODO — supply the exact substitution code</span><p>Insert the exact parameter substitution code for the current file's directory once it has been confirmed against the shipping build.</p></div></div><h2 id="use-the-output-panels-todo-tab">Use the Output panel's TODO tab</h2><ol class="steps">
+</ol><h2 id="use-the-output-panels-todo-tab">Use the Output panel's TODO tab</h2><ol class="steps">
   <li>Add a comment to <code>helpers.bi</code>: <code>' TODO: handle negative quantities</code>.</li>
   <li>Open the Output panel (<kbd>Ctrl</kbd> + <kbd>F9</kbd>) and select the <strong>TODO</strong> tab.</li>
   <li>Your comment is listed. Click it to jump there.</li>

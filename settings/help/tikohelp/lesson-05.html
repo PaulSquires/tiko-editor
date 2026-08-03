@@ -71,7 +71,6 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <div class="nav-section-body" id="navsec-searching"><ul>
 <li><a href="find-replace.html">Find and Replace</a></li>
 <li><a href="find-in-project.html">Find in Project</a></li>
-<li><a href="regular-expressions.html">Regular expressions</a></li>
 </ul></div></li>
 <li class="nav-section">
 <button class="nav-section-btn" type="button" data-section="navigation" aria-expanded="false" aria-controls="navsec-navigation"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M13.2 6.8l-1.7 4.7-4.7 1.7 1.7-4.7z"/></svg><span>Navigation</span></button>
@@ -167,10 +166,10 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <li>Why every workspace is already a project.</li>
   <li>Naming a workspace with Save as Project.</li>
   <li>How files are categorised in the Explorer.</li>
-  <li>Why closing a tab does not remove a file from the project.</li>
+  <li>Why closing a tab does not remove a file from a named project, and how to remove one properly.</li>
 </ul><div class="callout important"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M10 2.2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L2.2 7.9l5.4-.8z"/></svg><div class="callout-body"><span class="callout-title">Important</span><p>Before you start, understand the central idea: <strong>in Tiko you already have a project</strong>. The files you have been editing form an untitled one. This lesson gives it a name.</p></div></div><h2 id="look-at-what-you-have">Look at what you have</h2><ol class="steps">
   <li>Press <kbd>Ctrl</kbd> + <kbd>F4</kbd> to show the Explorer.</li>
-  <li>You will see the category headers — Main, Modules, Headers, Resource, Other — with your files under them.</li>
+  <li>You will see the five permanent category headers — Main, Resource, Header, Module and Normal — with your files under them.</li>
   <li>At the top there is a pinned <strong>Save as Project…</strong> row. That row is telling you the workspace has no name yet.</li>
 </ol><h2 id="name-the-project">Name the project</h2><ol class="steps">
   <li>Click <strong>Save as Project…</strong>, or choose <span class="ui path">Project<span class="sep">›</span>Save Project As…</span>.</li>
@@ -188,7 +187,7 @@ Function Describe( ByVal qty As Integer ) As String
     If qty = 0 Then Return "out of stock"
     If qty &lt; 100 Then Return "low"
     Return "plenty"
-End Function</code></pre></div><p>Look at the Explorer. <code>helpers.bi</code> has been filed under Headers, because Tiko categorises by extension.</p><h2 id="use-it">Use it</h2><p>Edit <code>inventory.bas</code> so it includes and calls the helper:</p><div class="code-block numbered" data-lang="fb"><div class="code-head"><span class="code-lang">fb</span><span class="code-title">inventory.bas</span><button class="copy-btn" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 3.5h-7a1 1 0 00-1 1v7"/></svg><span class="copy-label">Copy</span></button></div><pre><code>' inventory.bas - Lesson 5
+End Function</code></pre></div><p>Look at the Explorer. <code>helpers.bi</code> has been filed under Header, because Tiko categorises by extension.</p><h2 id="use-it">Use it</h2><p>Edit <code>inventory.bas</code> so it includes and calls the helper:</p><div class="code-block numbered" data-lang="fb"><div class="code-head"><span class="code-lang">fb</span><span class="code-title">inventory.bas</span><button class="copy-btn" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 3.5h-7a1 1 0 00-1 1v7"/></svg><span class="copy-label">Copy</span></button></div><pre><code>' inventory.bas - Lesson 5
 #include once "helpers.bi"
 
 Dim As String item1, item2, item3
@@ -202,19 +201,19 @@ Print item1, qty1, Describe( qty1 )
 Print item2, qty2, Describe( qty2 )
 Print item3, qty3, Describe( qty3 )
 
-Sleep</code></pre></div><h2 id="closing-a-tab-is-not-removing-a-file">Closing a tab is not removing a file</h2><ol class="steps">
+Sleep</code></pre></div><h2 id="tabs-versus-project-membership">Tabs versus project membership</h2><ol class="steps">
   <li>Close <code>helpers.bi</code> with <kbd>Ctrl</kbd> + <kbd>W</kbd>.</li>
   <li>Look at the Explorer. The file is still listed.</li>
   <li>Click it. It opens again.</li>
-</ol><div class="callout important"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M10 2.2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L2.2 7.9l5.4-.8z"/></svg><div class="callout-body"><span class="callout-title">Important</span><p>A tab is a view of a file. Closing the tab stops displaying the file; it does not take it out of the project. It is still compiled, still searched by Find in Project, and still listed.</p></div></div><h2 id="reopen-the-project">Reopen the project</h2><ol class="steps">
+</ol><div class="callout important"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M10 2.2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L2.2 7.9l5.4-.8z"/></svg><div class="callout-body"><span class="callout-title">Important</span><p>A tab is a view of a file. In a named project, closing the tab stops displaying the file; it does not take it out of the project. It is still compiled, still searched by Find in Project, and still listed.</p></div></div><p>To take a file out for real, right-click it in the Explorer — or right-click its tab — and choose <strong>Remove from project</strong>. It is removed from the project, not deleted from disk.</p><div class="callout note"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 9v5M10 6.2v.1"/></svg><div class="callout-body"><span class="callout-title">Note</span><p>You did this in an untitled workspace earlier and it behaved differently: with no project to remove from, <strong>Remove from project</strong> is not offered and closing the tab is what takes the file out. Naming the project is what separates the two ideas.</p></div></div><h2 id="reopen-the-project">Reopen the project</h2><ol class="steps">
   <li>Choose <span class="ui path">Project<span class="sep">›</span>Close Project</span>.</li>
   <li>Everything closes and you are given a fresh untitled workspace — because there is always a workspace.</li>
   <li>Choose <span class="ui path">Project<span class="sep">›</span>Recent Projects</span> and pick <code>tutorial</code>.</li>
   <li>Your files come back.</li>
-</ol><h2 id="expected-result">Expected result</h2><p>A named project, <code>tutorial.tiko</code>, containing <code>inventory.bas</code> and <code>helpers.bi</code>, which you can close and reopen at will.</p><h2 id="common-mistakes">Common mistakes</h2><div class="table-wrap"><table><thead><tr><th>Symptom</th><th>Cause and fix</th></tr></thead><tbody><tr><td>The Save as Project row is not there.</td><td>The workspace already has a name. Check the window caption.</td></tr><tr><td>A new file went into the wrong category.</td><td>Categories come from the file extension. Change the category from the Explorer's context menu.</td></tr><tr><td>Closing a tab seemed to lose a file.</td><td>It is still in the Explorer. Click it to reopen.</td></tr><tr><td>Find in Project misses a file.</td><td>That file is not in the workspace. Add it with <span class="ui path">Project<span class="sep">›</span>Add Files to Project…</span>.</td></tr></tbody></table></div><h2 id="review">Review</h2><ul>
+</ol><h2 id="expected-result">Expected result</h2><p>A named project, <code>tutorial.tiko</code>, containing <code>inventory.bas</code> and <code>helpers.bi</code>, which you can close and reopen at will.</p><h2 id="common-mistakes">Common mistakes</h2><div class="table-wrap"><table><thead><tr><th>Symptom</th><th>Cause and fix</th></tr></thead><tbody><tr><td>The Save as Project row is not there.</td><td>The workspace already has a name. Check the window caption.</td></tr><tr><td>A new file went into the wrong category.</td><td>Categories come from the file extension. Change the category from the Explorer's context menu.</td></tr><tr><td>Closing a tab seemed to lose a file.</td><td>In a named project it is still in the Explorer — click it to reopen. On an untitled workspace, closing really does remove it.</td></tr><tr><td>There is no Remove from project command on the menu.</td><td>The workspace is still untitled. Save it as a project first.</td></tr><tr><td>Find in Project misses a file.</td><td>That file is not in the workspace. Add it with <span class="ui path">Project<span class="sep">›</span>Add Files to Project…</span>.</td></tr></tbody></table></div><h2 id="review">Review</h2><ul>
   <li>Every set of open files is a project; naming it is a save.</li>
   <li>The untitled workspace is restored automatically at start-up.</li>
-  <li>Files are categorised by extension into Main, Modules, Headers, Resource and Other.</li>
+  <li>Files are categorised by extension into Main, Resource, Header, Module and Normal; Main and Resource hold exactly one file each.</li>
   <li>Tabs and project membership are separate things.</li>
 </ul><h2 id="practice">Practice</h2><ol class="steps">
   <li>Add <code>notes.txt</code> from Lesson 2 to the project and see which category it lands in.</li>

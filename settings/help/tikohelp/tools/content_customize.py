@@ -3,7 +3,7 @@
 
 from build import (section, page, h2, h3, h4, p, ul, ol, dl, code, table, cards,
                    note, tip, warn, important, todo, kbd, menu, ui,
-                   placeholder, diagram)
+                   figure_img, placeholder, diagram)
 
 section("customize", "Customization", "sliders")
 
@@ -86,9 +86,11 @@ TH += important(
 
 TH += h2("Making a theme your own")
 TH += p(
-    'Use the theme editor to adjust colours — see <a href="theme-editor.html">The theme '
-    "editor</a>. To keep a customised theme safe from a future update, save it under a new "
-    "name; the shipped themes may be replaced when you upgrade."
+    "Start by <strong>cloning</strong> a theme you like, then edit the copy — see "
+    '<a href="theme-editor.html">The theme editor</a>. Two themes, '
+    "<code>default_dark</code> and <code>default_light</code>, cannot be edited or deleted "
+    "at all; cloning is the way to build on those. The other twelve can be edited in "
+    "place, but cloning still keeps your work clear of a file an update might replace."
 )
 
 TH += h2("Related topics")
@@ -135,9 +137,11 @@ TE += p(
     "Every row shows, per colour channel, which role it currently inherits from, so you "
     "always know what a value will fall back to if you clear it."
 )
-TE += placeholder("Theme editor", "Screenshot of the theme editor",
-                  caption="Replace with a capture showing the key list, the colour picker "
-                          "and the R/G/B entry rows.")
+TE += figure_img(
+    "assets/img/theme-editor.png",
+    "The theme editor with the colour picker open. Each row shows the role a colour "
+    "inherits from, so you can always see what clearing a value will fall back to.",
+    alt="The Tiko theme editor with the colour picker open")
 
 TE += h2("Choosing a colour")
 TE += p("Clicking a colour button opens the colour picker, which has three tabs:")
@@ -160,15 +164,66 @@ TE += note(
     "cancelling leaves the previous colour untouched."
 )
 
-TE += h2("Saving a theme")
-TE += p(
-    "Save your changes to a new <code>.theme</code> file rather than overwriting a shipped "
-    "one, so that an update cannot replace your work."
+TE += h2("The two views")
+TE += p("The Themes dialog has a list view and an editor view.")
+TE += table(
+    ["View", "Shows"],
+    [
+        ("List", "Every theme in three columns — <strong>Theme</strong>, "
+         "<strong>Description</strong> and <strong>Active</strong> — with "
+         "<strong>Edit</strong>, <strong>Clone</strong>, <strong>Delete</strong> and "
+         "<strong>Set as active</strong> beside it, and <strong>Close</strong> below."),
+        ("Editor", "The palette and key pages for one theme, with its description in the "
+         "header and a <strong>Back</strong> button to return to the list."),
+    ],
+    key_first=True,
 )
-TE += todo(
-    "Confirm the exact save, save-as, rename and delete commands in the Themes dialog of "
-    "the shipping build, and document them step by step.",
-    title="TODO — verify theme save commands",
+TE += note(
+    "<strong>Edit does not activate a theme.</strong> You can edit one while continuing to "
+    "work in another; use <strong>Set as active</strong> when you want to switch to it."
+)
+
+TE += h2("Making your own theme")
+TE += p("The intended route is to clone an existing theme and edit the copy.")
+TE += ol([
+    "Select the theme you want to start from and click <strong>Clone</strong>.",
+    "Give the copy a file name. Tiko adds the <code>.theme</code> extension if you leave "
+    "it off, and will not let you overwrite the theme you are cloning.",
+    "The copy's description is tagged <strong>(cloned)</strong> so you can tell it apart "
+    "in the list.",
+    "Select the copy and click <strong>Edit</strong>.",
+    "Change whatever you like. Click the <strong>pencil icon</strong> beside the "
+    "description in the header to give the theme a proper description of its own.",
+    "Click <strong>Back</strong> when you are done, then <strong>Set as active</strong> "
+    "to start using it.",
+], steps=True)
+
+TE += h3("The two themes you cannot edit")
+TE += important(
+    "<strong><code>default_dark</code> and <code>default_light</code> are protected.</strong> "
+    "The <strong>Edit</strong> and <strong>Delete</strong> buttons are disabled while "
+    "either is selected — they are the fallback the editor always has to be able to fall "
+    "back to. <strong>Clone</strong> and <strong>Set as active</strong> stay available, so "
+    "cloning is how you build on them."
+)
+TE += p(
+    "Every other theme is fully editable and deletable, including the twelve other themes "
+    "that ship with Tiko — <code>studio_*</code>, <code>slate_*</code>, "
+    "<code>midnight</code>, <code>neon</code> and the rest. Protection matches the "
+    "<code>default_</code> prefix only, so a theme of your own called "
+    "<code>my_default_x.theme</code> is not protected."
+)
+TE += tip(
+    "Even though the other shipped themes can be edited in place, clone before you "
+    "customise one. An update may replace the file it ships, and a clone is out of that "
+    "file's way."
+)
+
+TE += h3("Deleting themes")
+TE += p(
+    "<strong>Delete</strong> removes the selected theme's file. If you ever delete your "
+    "way down to no themes at all, Tiko restores <code>default_dark.theme</code> from a "
+    "backup copy it keeps — you cannot end up with an editor that has no theme to load."
 )
 
 TE += h2("Practical advice")
@@ -250,11 +305,6 @@ FA += p(
     "Tiko scales its interface to the display's DPI setting, so it stays legible on "
     "high-resolution screens. Colours and fonts behave the same at any scale."
 )
-FA += todo(
-    "Document any per-monitor DPI behaviour worth knowing about — for example what happens "
-    "when the window is dragged between monitors with different scaling factors.",
-    title="TODO — confirm per-monitor DPI behaviour",
-)
 
 FA += h2("Related topics")
 FA += ul([
@@ -312,9 +362,11 @@ KC += ol([
     "Choose <strong>OK</strong> in the assignment dialog, then <strong>OK</strong> in the "
     "main dialog to commit.",
 ], steps=True)
-KC += placeholder("Assign shortcut", "Screenshot of the shortcut assignment dialog",
-                  caption="Replace with a capture showing the capture field, the modifier "
-                          "switches and the key list.")
+KC += figure_img(
+    "assets/img/assign-shortcut.png",
+    "The shortcut assignment dialog. Press the keystroke you want in the capture field, "
+    "or build it from the modifier switches and the key list.",
+    alt="The Assign Shortcut dialog")
 
 KC += h2("Conflicts")
 KC += p(
@@ -402,19 +454,55 @@ UT += table(
     ],
     key_first=True,
 )
-UT += p(
-    "The Parameters field carries a tooltip listing the substitution codes available — the "
-    "current file name, its folder, the project file, the line number and so on."
-)
-UT += todo(
-    "List every parameter substitution code the shipping build supports, with an example "
-    "of each, and replace this note with that table.",
-    title="TODO — enumerate parameter substitution codes",
-)
-UT += placeholder("User Tools", "Screenshot of the User Tools dialog",
-                  caption="Replace with a capture showing the tool list and the detail "
-                          "fields.")
+UT += figure_img(
+    "assets/img/user-tools.png",
+    "The User Tools dialog. Tools appear on the User Tools menu in the order shown here.",
+    alt="The User Tools dialog")
 
+UT += h2("Parameter substitution codes")
+UT += p(
+    "The <strong>Parameters</strong> field understands four codes. Each is replaced with a "
+    "value from your current workspace when the tool runs. Hover the field in the dialog "
+    "and its tooltip lists them too."
+)
+UT += table(
+    ["Code", "Replaced with", "Notes"],
+    [
+        ("<code>&lt;P&gt;</code>", "The project name",
+         "Empty on an untitled workspace — there is no name to substitute."),
+        ("<code>&lt;S&gt;</code>", "The main source file",
+         "Supplied already quoted, so a path containing spaces works without you adding "
+         "quotation marks."),
+        ("<code>&lt;W&gt;</code>", "The word at the caret",
+         "Surrounding punctuation is stripped, so you get the identifier rather than the "
+         "bracket beside it."),
+        ("<code>&lt;E&gt;</code>", "The compiled EXE, DLL or LIB",
+         "The output name from the active build configuration."),
+    ],
+    key_first=True,
+)
+UT += note(
+    "The codes are case-insensitive — <code>&lt;p&gt;</code> works exactly as "
+    "<code>&lt;P&gt;</code> does."
+)
+UT += h3("Examples")
+UT += table(
+    ["To do this", "Program", "Parameters"],
+    [
+        ("Show the built program in Explorer", "<code>explorer.exe</code>",
+         "<code>/select,&lt;E&gt;</code>"),
+        ("Open the main source in another editor", "your editor",
+         "<code>&lt;S&gt;</code>"),
+        ("Look up the word at the caret on the web", "<code>explorer.exe</code>",
+         "a search URL ending <code>&lt;W&gt;</code>"),
+    ],
+    key_first=True,
+)
+UT += important(
+    "There is <strong>no code for the current file</strong> or for a folder path. "
+    "<code>&lt;S&gt;</code> gives the project's <em>main</em> source file, not whichever "
+    "document you happen to be looking at."
+)
 UT += h2("Ordering and shortcuts")
 UT += p(
     "Reorder tools with the up and down chevrons — the order in the list is the order on "

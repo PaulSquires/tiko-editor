@@ -71,7 +71,6 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <div class="nav-section-body" id="navsec-searching"><ul>
 <li><a href="find-replace.html">Find and Replace</a></li>
 <li><a href="find-in-project.html">Find in Project</a></li>
-<li><a href="regular-expressions.html">Regular expressions</a></li>
 </ul></div></li>
 <li class="nav-section">
 <button class="nav-section-btn" type="button" data-section="navigation" aria-expanded="false" aria-controls="navsec-navigation"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M13.2 6.8l-1.7 4.7-4.7 1.7 1.7-4.7z"/></svg><span>Navigation</span></button>
@@ -179,8 +178,8 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </ul><h2 id="search-tricks">Search tricks</h2><ul>
   <li><strong>Select text before pressing <kbd>Ctrl</kbd> + <kbd>F</kbd></strong> and it becomes the search term.</li>
   <li><strong>Use Find in Project as a preview for Replace All.</strong> Search first, see how many places would change and whether they are all what you expect, then replace.</li>
-  <li><strong>Regular expressions for structural searches.</strong> <code>^\s*(Sub|Function)\s+\w+</code> lists every procedure declaration in the project.</li>
-  <li><strong>Turn Regular expression off again</strong> when you are done. Leaving it on makes ordinary searches containing a full stop or a bracket behave strangely later.</li>
+  <li><strong>Select first, then search.</strong> Opening Find with a multi-line selection turns on <strong>Selection</strong> automatically, so a Replace All is confined to the region you highlighted — the safe way to rename inside one procedure only.</li>
+  <li><strong>Watch for latched icons.</strong> Match Case, Match Whole Words and Selection stay lit until you turn them off, and are the usual reason a search stops finding what you expect.</li>
 </ul><h2 id="navigation-tricks">Navigation tricks</h2><ul>
   <li><strong><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>H</kbd> and <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd> toggle between a module and its header</strong> — the pair you move between most while writing code.</li>
   <li><strong><kbd>Ctrl</kbd> + <kbd>PgDn</kbd> and <kbd>Ctrl</kbd> + <kbd>PgUp</kbd> step between procedures</strong> without leaving the keyboard.</li>

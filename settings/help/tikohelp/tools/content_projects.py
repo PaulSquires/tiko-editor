@@ -3,7 +3,7 @@
 
 from build import (section, page, h2, h3, h4, p, ul, ol, dl, code, table, cards,
                    note, tip, warn, important, todo, kbd, menu, ui,
-                   placeholder, diagram)
+                   figure_img, placeholder, diagram)
 
 section("projects", "Projects", "folder")
 
@@ -104,32 +104,72 @@ PO += note(
 
 PO += h2("File categories")
 PO += p(
-    "Files in a project are grouped into five categories, shown as headers in the "
-    "Explorer. The headers are always present, whether or not they currently contain "
-    "anything."
+    "Every file in a project sits in exactly one of five categories, shown as permanent "
+    "group headers in the Explorer. All five are always present, whether or not they "
+    "currently hold anything — an empty category is visible as an empty group, which makes "
+    "it obvious where a file would go."
 )
 PO += table(
-    ["Category", "Typically"],
+    ["Category", "Holds", "Limit"],
     [
-        ("Main", "The single module holding your program's entry point."),
-        ("Modules", "The rest of your <code>.bas</code> source files."),
-        ("Headers", "Your <code>.bi</code> include files."),
-        ("Resource", "The resource script (<code>.rc</code>) and its dependencies."),
-        ("Other", "Anything else you want to keep with the project — notes, data files, "
-         "build scripts."),
+        ("<strong>Main</strong>", "The module with your program's entry point — the file "
+         "the build commands compile.", "Exactly one file"),
+        ("<strong>Resource</strong>", "The resource script (<code>.rc</code>).",
+         "Exactly one file"),
+        ("<strong>Header</strong>", "Your <code>.bi</code> include files.", "Any number"),
+        ("<strong>Module</strong>", "The rest of your <code>.bas</code> source files.",
+         "Any number"),
+        ("<strong>Normal</strong>", "Anything else you want kept with the project — "
+         "notes, data files, build scripts.", "Any number"),
     ],
     key_first=True,
 )
-PO += p(
-    "Tiko assigns a category when you add a file, based on its extension. The first "
-    "<code>.bas</code> file to enter a workspace that has no main module becomes the main "
-    "module; later ones are added as ordinary modules. You can change any file's category "
-    "afterwards."
+PO += important(
+    "<strong>Main and Resource hold exactly one file each.</strong> That is what makes "
+    "them meaningful — they name <em>the</em> entry point and <em>the</em> resource "
+    "script. Setting a new one displaces the old, which moves to <strong>Normal</strong> "
+    "rather than being lost."
 )
-PO += todo(
-    "Confirm the exact category names shown in the Explorer and the precise commands for "
-    "changing a file's category in the shipping build.",
-    title="TODO — verify category names and the change-category command",
+PO += p(
+    "Tiko assigns a category from the file's extension when you add it. The first "
+    "<code>.bas</code> file to enter a workspace with no main module becomes the main "
+    "module; later ones become ordinary modules. To change a file's category afterwards, "
+    "right-click it in the Explorer or on its tab and pick the type, or drag it to another "
+    'group — see <a href="project-files.html">Adding and removing files</a>.'
+)
+PO += note(
+    "The category captions are stored in the project, so you can rename them to suit a "
+    "particular project's vocabulary. The five categories themselves are permanent and "
+    "cannot be deleted or added to."
+)
+
+PO += h2("Folders inside a category")
+PO += p(
+    "The three unlimited categories — Header, Module and Normal — can be given "
+    "<strong>folders</strong> to organise a project with many files. Main and Resource "
+    "cannot: a folder holding one file would have nothing useful in it."
+)
+PO += table(
+    ["Action", "How"],
+    [
+        ("Create a folder", "Use the add icon on a category header, or its context menu."),
+        ("Rename a folder", "Click its rename icon, press " + kbd("F2") + ", or use the "
+         "context menu. The name is edited in place."),
+        ("Delete a folder", "Use its delete icon. See the note below about what happens "
+         "to its contents."),
+        ("Move files or folders", "Drag them within or between categories."),
+    ],
+    key_first=True,
+)
+PO += important(
+    "<strong>Deleting a folder dissolves it — it never destroys anything.</strong> The "
+    "files and any sub-folders inside it move up one level to the deleted folder's parent. "
+    "That is why no confirmation is asked for: nothing can be lost."
+)
+PO += note(
+    "These folders are Tiko's own organisation, not folders on disk. A file's folder is "
+    "remembered per category, so moving a file to a different category clears its folder — "
+    "a folder under Module is not the same place as a folder under Normal."
 )
 
 PO += h2("Related topics")
@@ -159,18 +199,25 @@ PE += p(
 
 PE += h2("Reading the tree")
 PE += p(
-    "Files are grouped under the five category headers described in "
+    "Files are grouped under the five permanent category headers — <strong>Main</strong>, "
+    "<strong>Resource</strong>, <strong>Header</strong>, <strong>Module</strong> and "
+    "<strong>Normal</strong> — described in "
     '<a href="projects-overview.html">Projects and workspaces</a>. Every header is always '
-    "shown, so an empty category is visible as an empty group rather than absent — which "
-    "makes it obvious where a file would go."
+    "shown, so an empty category is visible as an empty group rather than absent."
+)
+PE += p(
+    "Header, Module and Normal can additionally contain folders you create yourself, so a "
+    "large project need not be one flat list."
 )
 PE += p(
     "While the workspace is untitled, a pinned <strong>Save as Project…</strong> row sits "
     "at the top of the tree. It disappears once the project has a name."
 )
-PE += placeholder("Project Explorer", "Screenshot of the Explorer tree",
-                  caption="Replace with a capture of the Explorer showing the category "
-                          "headers, several files, and the pinned Save as Project row.")
+PE += figure_img(
+    "assets/img/explorer-tree.png",
+    "The Explorer. Files sit under the five permanent category headers, and the pinned "
+    "<strong>Save as Project…</strong> row appears while the workspace is still untitled.",
+    alt="The Tiko Project Explorer tree")
 
 PE += h2("Working in the Explorer")
 PE += table(
@@ -179,6 +226,10 @@ PE += table(
         ("Open a file", "Click it. If it is already open, its tab comes forward."),
         ("Expand or collapse a group", "Click the twisty beside it."),
         ("Expand or collapse everything", "Use the expand-all and collapse-all commands."),
+        ("Move a file to another category or folder",
+         "Drag it there, or right-click it and choose the file type."),
+        ("Create, rename or delete a folder",
+         "Use the icons on the row, its context menu, or " + kbd("F2") + " to rename."),
         ("File commands", "Right-click for the context menu."),
         ("Move the panel to the other side", menu("View", "Move Explorer Window Left/Right")),
         ("Hide the panel", kbd("Ctrl", "B")),
@@ -186,10 +237,12 @@ PE += table(
     key_first=True,
 )
 PE += note(
-    "<strong>Closing a file's tab does not remove it from the project.</strong> The tab "
-    "and the project membership are separate things — closing the tab just stops "
-    "displaying the file. It is still listed in the Explorer, still searched by Find in "
-    "Project, and still compiled."
+    "<strong>In a named project, closing a file's tab does not remove it.</strong> The tab "
+    "and project membership are separate things — closing the tab just stops displaying "
+    "the file. It is still listed in the Explorer, still searched by Find in Project, and "
+    "still compiled. Use <strong>Remove from project</strong> to take it out. (On an "
+    'untitled workspace, closing <em>is</em> removing — see <a href="project-files.html">'
+    "Adding and removing files</a>.)"
 )
 
 PE += h2("Related topics")
@@ -230,18 +283,56 @@ PF += p(
 
 PF += h2("Removing files")
 PF += p(
-    "Removing a file from a project takes it out of the project's file list. It does "
-    "<strong>not</strong> delete the file from disk."
+    "Removing a file takes it out of the project's file list. It never deletes anything "
+    "from disk."
 )
-PF += warn(
-    "Do not confuse closing with removing. %s closes a tab and leaves the file in the "
-    "project; removing it from the Explorer takes it out of the project but leaves the "
-    "file on disk." % kbd("Ctrl", "W")
+PF += table(
+    ["The file is", "Do this"],
+    [
+        ("Listed in the Explorer",
+         "Right-click it and choose <strong>Remove from project</strong>."),
+        ("Open in a tab",
+         "Right-click the <em>tab</em> and choose <strong>Remove from project</strong>."),
+    ],
+    key_first=True,
 )
-PF += todo(
-    "Confirm the exact Explorer context-menu command used to remove a file from a project, "
-    "and whether Tiko offers to delete the file from disk as well.",
-    title="TODO — verify the remove-file command",
+PF += p(
+    "Both routes do the same thing. If the file is open, Tiko closes its tab first — so "
+    "you get the usual prompt if it has unsaved changes. <strong>Cancelling that prompt "
+    "abandons the removal</strong> and the file stays in the project."
+)
+PF += important(
+    "<strong>Remove from project only appears while the project has a name.</strong> An "
+    "untitled workspace has no project for a file to be removed <em>from</em>, so the "
+    "command is withheld from both context menus — see below for what to do instead."
+)
+
+PF += h3("On an untitled workspace, closing is removing")
+PF += p(
+    "The general rule is that closing a tab leaves the file in the workspace. There are "
+    "exactly two exceptions, and both exist so a file can always be got rid of somehow:"
+)
+PF += table(
+    ["Case", "Closing the tab…"],
+    [
+        ("An <strong>untitled</strong> workspace",
+         "…also removes the file from the Explorer. With no <strong>Remove from "
+         "project</strong> command available, closing has to be what takes the row out, or "
+         "the file could never leave."),
+        ("A <strong>never-saved</strong> document",
+         "…ends it for good. There is no file on disk to go back to, so keeping a row "
+         "pointing at nothing would be meaningless."),
+    ],
+    key_first=True,
+)
+PF += tip(
+    'Name the workspace — see <a href="projects-overview.html">Projects and '
+    "workspaces</a> — and you get explicit control over membership: closing a tab then "
+    "only hides a file, and removal becomes a deliberate act."
+)
+PF += note(
+    "Removing a file refreshes both the Explorer and the Functions panel, since the "
+    "function list is built from the workspace's files."
 )
 
 PF += h2("File commands")
@@ -266,17 +357,60 @@ PF += tip(
     "result under the new name — the skeleton itself is never at risk."
 )
 
-PF += h2("The main module and the resource file")
+PF += h2("Setting a file's type")
 PF += p(
-    "A project designates one file as its <strong>main module</strong> — the one with the "
-    "program entry point, which the build commands compile. One file can also be marked as "
-    "the <strong>resource script</strong>. Jump to either at any time with %s and %s."
-    % (kbd("Ctrl", "Shift", "M"), kbd("Ctrl", "Shift", "R"))
+    "A file's <strong>type</strong> is what decides which Explorer group it sits in, which "
+    "file the build commands treat as the entry point, and which one is the resource "
+    "script. You can change it at any time, by menu or by dragging."
 )
-PF += todo(
-    "Document the exact procedure for changing which file is the main module or the "
-    "resource file in the shipping build.",
-    title="TODO — verify how to set the main module",
+
+PF += h3("From the context menu")
+PF += ol([
+    "Right-click the file — either its row in the <strong>Explorer</strong> or its "
+    "<strong>tab</strong>, whichever is to hand.",
+    "Choose the type from the popup menu.",
+], steps=True)
+PF += p("Five types are offered, with a mark beside the file's current one:")
+PF += table(
+    ["Type", "Explorer group", "How many"],
+    [
+        ("Main file", "Main", "One per project"),
+        ("Header file", "Header", "Any number"),
+        ("Module file", "Module", "Any number"),
+        ("Resource file", "Resource", "One per project"),
+        ("Normal file", "Normal", "Any number"),
+    ],
+    key_first=True,
+)
+PF += tip(
+    "Select several files in the Explorer before right-clicking and the type applies to "
+    "all of them at once. With more than one selected no type is marked as current, since "
+    "there is no single answer to mark."
+)
+
+PF += h3("By dragging")
+PF += p(
+    "Drag a file in the Explorer from one group to another — or into a folder within a "
+    "group. This does exactly what the menu does, and is quicker when the Explorer is "
+    "already open."
+)
+
+PF += h3("What happens to the previous Main or Resource file")
+PF += important(
+    "<strong>Main and Resource hold one file each, so setting a new one displaces the "
+    "old.</strong> The file that was Main (or Resource) is moved to <strong>Normal</strong> "
+    "— it stays in the project, and nothing is deleted. If you want it back as a module, "
+    "set its type again afterwards."
+)
+PF += note(
+    "That is worth knowing before you promote a file: the previous main module does not "
+    "return to Module, it lands in Normal."
+)
+
+PF += h3("Jumping to them")
+PF += p(
+    "Once set, %s goes to the main module and %s to the resource script from anywhere in "
+    "the project." % (kbd("Ctrl", "Shift", "M"), kbd("Ctrl", "Shift", "R"))
 )
 
 PF += h2("Related topics")
@@ -323,14 +457,15 @@ PP += h3("Build output")
 PP += p(
     "Where the compiler should put the executable it produces, and related output settings."
 )
-PP += todo(
-    "Confirm the exact fields on each page of the Project Options dialog in the shipping "
-    "build and replace the summaries above with a field-by-field table.",
-    title="TODO — enumerate Project Options fields",
+PP += note(
+    "The fields are labelled plainly in the dialog and behave as their names suggest, so "
+    "they are not listed individually here."
 )
-PP += placeholder("Project Options", "Screenshot of the Project Options dialog",
-                  caption="Replace with a capture showing the three sections and their "
-                          "fields.")
+PP += figure_img(
+    "assets/img/project-options.png",
+    "The Project Options dialog, holding the settings that belong to this project rather "
+    "than to your editor installation.",
+    alt="The Project Options dialog")
 
 PP += h2("Project options versus build configurations versus editor settings")
 PP += table(

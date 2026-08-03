@@ -3,43 +3,111 @@
 
 from build import (section, page, h2, h3, h4, p, ul, ol, dl, code, table, cards,
                    note, tip, warn, important, todo, kbd, menu, ui,
-                   placeholder, diagram)
+                   figure_img, placeholder, diagram)
 
 # ==========================================================================
 section("building", "Building Programs", "build")
 # ==========================================================================
 
 CS = ""
+CS += important(
+    "<strong>Tiko already comes with a compiler.</strong> The most recent FreeBASIC "
+    "toolchain ships with the editor and is installed and selected out of the box, so "
+    "there is normally nothing to set up — you can build and run from the moment you "
+    "unpack it."
+)
 CS += p(
-    "Tiko does not include a compiler. It drives the FreeBASIC compiler you already have "
-    "installed, so the first thing to do is tell it where that compiler is."
+    "You only need this page if you want to <em>add</em> a toolchain — an older FreeBASIC "
+    "version to check compatibility against, a newer one to try, or a variant built with a "
+    "different backend — and switch between them."
 )
 
-CS += h2("Setting the compiler path")
+CS += h2("How toolchains are organised")
+CS += p(
+    "Compiler toolchains live as <strong>subfolders of the <code>toolchains\\</code> "
+    "folder</strong>, beside <code>tiko.exe</code>. Each subfolder is one complete "
+    "toolchain, and you may install as many as you like."
+)
+CS += code("""
+tiko.exe
+toolchains\\
+    FreeBASIC-1.10.1-winlibs-gcc-9.3.0\\     <- ships with Tiko
+        fbc32.exe                            <- both executables are required
+        fbc64.exe
+        bin\\  inc\\  lib\\  examples\\  doc\\
+    FreeBASIC-1.09.0\\                        <- add as many as you like
+        fbc32.exe
+        fbc64.exe
+        ...
+""", lang="text", title="The toolchains folder", numbered=False)
+CS += important(
+    "<strong>Each toolchain must have both <code>fbc32.exe</code> and "
+    "<code>fbc64.exe</code> in its root folder.</strong> Tiko always resolves both from "
+    "the one folder you select, because the 32-bit or 64-bit choice is made per build, not "
+    "per toolchain — see below."
+)
+
+CS += h2("Adding a toolchain")
+CS += ol([
+    "Unpack the FreeBASIC distribution into a new subfolder of <code>toolchains\\</code>. "
+    "Name the folder something you will recognise in a list — the version number is the "
+    "obvious choice.",
+    "Check that <code>fbc32.exe</code> and <code>fbc64.exe</code> are both directly in "
+    "that folder, not one level down.",
+    "Open %s and select the <strong>Compiler</strong> page." % menu("File", "Settings", "Options…"),
+    "The new toolchain appears in the list — Tiko scans the folder each time the page "
+    "opens, so nothing needs registering.",
+], steps=True)
+
+CS += h2("Choosing which toolchain to use")
 CS += ol([
     "Open %s." % menu("File", "Settings", "Options…"),
     "Select the <strong>Compiler</strong> page.",
-    "Browse to your FreeBASIC installation and select the compiler executable — "
-    "<code>fbc.exe</code>, or <code>fbc64.exe</code> / <code>fbc32.exe</code> in "
-    "toolchains that ship separate binaries per architecture.",
+    "Click the toolchain you want in the list.",
     "Choose <strong>OK</strong>.",
 ], steps=True)
-CS += todo(
-    "Confirm the exact fields on the Compiler options page — whether Tiko asks for the "
-    "compiler executable or the installation folder, and what additional paths it accepts "
-    "— and replace the placeholder screenshot with a real capture.",
-    title="TODO — verify Compiler options page",
+CS += figure_img(
+    "assets/img/options-compiler.png",
+    "The Compiler page. The list shows every subfolder of <code>toolchains\\</code>; "
+    "selecting one points the editor at both of its compilers at once.",
+    alt="The Compiler page of the Tiko options dialog")
+CS += note(
+    "Selecting a toolchain sets the paths to <em>both</em> its compilers together. You "
+    "never pick an individual <code>.exe</code>, which is why the two files must both be "
+    "present."
 )
-CS += placeholder("Options ▸ Compiler", "Screenshot of the compiler configuration page",
-                  caption="Replace with a capture of the Compiler page showing every "
-                          "field.")
+
+CS += h2("The rest of the Compiler page")
+CS += table(
+    ["Control", "What it does"],
+    [
+        ("Toolchain list", "Every subfolder of <code>toolchains\\</code>. The selected one "
+         "supplies both compilers."),
+        ("Compiler switches", "Extra switches added to <em>every</em> build, whatever the "
+         "project or build configuration. Normally left empty — switches usually belong "
+         'in a <a href="build-configurations.html">build configuration</a> or in '
+         '<a href="project-options.html">project options</a> instead.'),
+        ("Include paths", "Additional directories searched for <code>#include</code> "
+         "files, on top of the toolchain's own <code>inc</code> folder."),
+        ("Run via command window", "Launch your compiled program through a command window "
+         "rather than directly. Useful for a console program that exits immediately, so "
+         "you can still read its output."),
+        ("Disable compile beep", "Suppress the sound Tiko makes when a build finishes."),
+    ],
+    key_first=True,
+)
 
 CS += h2("32-bit and 64-bit")
+CS += important(
+    "<strong>Architecture is chosen by the build configuration, not by the toolchain.</strong> "
+    "Because every toolchain provides both <code>fbc32.exe</code> and "
+    "<code>fbc64.exe</code>, switching between a Win32 and a Win64 build is a matter of "
+    'selecting a different <a href="build-configurations.html">build configuration</a> — '
+    "Tiko then invokes the matching compiler from the toolchain you selected."
+)
 CS += p(
-    "FreeBASIC toolchains commonly provide separate 32-bit and 64-bit compilers. Which one "
-    "you point Tiko at determines the architecture of the programs you build. If your "
-    "project links against a DLL of a particular architecture, the two must match — a "
-    "64-bit program cannot load a 32-bit DLL."
+    "If your project links against a DLL or static library of a particular architecture, "
+    "the two must match: a 64-bit program cannot load a 32-bit DLL."
 )
 
 CS += h2("Checking that it works")
@@ -51,17 +119,21 @@ CS += ol([
 ], steps=True)
 CS += warn(
     "If the build fails immediately with a message about the compiler not being found, the "
-    "path is wrong — the error is about Tiko's configuration, not your code. See "
+    "problem is Tiko's configuration rather than your code. Check that a toolchain is "
+    "selected on the Compiler page, and that the folder it names still contains both "
+    "<code>fbc32.exe</code> and <code>fbc64.exe</code>. See "
     '<a href="troubleshooting.html">Troubleshooting</a>.'
 )
 
 CS += h2("Compiler switches")
-CS += p("Switches reach the compiler from three places, which combine:")
+CS += p("Switches reach the compiler from four places, which combine:")
 CS += ol([
     "The active <a href=\"build-configurations.html\">build configuration</a> — the "
-    "reusable set, such as debug or release.",
+    "reusable set, such as debug or release, and the one that decides 32- or 64-bit.",
     "The <a href=\"project-options.html\">project's own compiler options</a> — switches "
     "specific to this project.",
+    "The <strong>Compiler switches</strong> field on the Compiler options page — applied "
+    "to every build in every project. Use sparingly.",
     "Anything Tiko must add itself, such as the output file name.",
 ], steps=True)
 CS += tip(
@@ -78,11 +150,12 @@ CS += ul([
 ])
 
 page("compiler-setup", "Compiler setup", "building",
-     "Pointing Tiko at your FreeBASIC compiler, choosing between 32-bit and 64-bit, and "
-     "where compiler switches come from.",
+     "Tiko ships with a FreeBASIC toolchain ready to use. How toolchains are organised, "
+     "how to add more, and how the 32- and 64-bit choice is really made.",
      CS,
-     keywords="compiler setup fbc path freebasic compiler configuration 32-bit 64-bit "
-              "switches command line")
+     keywords="compiler setup toolchain toolchains folder fbc32 fbc64 freebasic bundled "
+              "included compiler configuration 32-bit 64-bit switches include paths "
+              "run via command window compile beep add toolchain")
 
 # --------------------------------------------------------------------------
 
@@ -209,9 +282,11 @@ BC += p(
     "checklist. Switches that are mutually exclusive are grouped, so choosing one clears "
     "the others in that group."
 )
-BC += placeholder("Build Configurations", "Screenshot of the Build Configurations dialog",
-                  caption="Replace with a capture showing the configuration list, the "
-                          "General page and the switch checklist.")
+BC += figure_img(
+    "assets/img/build-configurations.png",
+    "The Build Configurations dialog. Configurations are listed on the left; the right "
+    "side holds the General settings and the compiler-switch checklist.",
+    alt="The Build Configurations dialog")
 
 BC += h2("Shortcuts and clashes")
 BC += p(
@@ -239,14 +314,62 @@ BC += warn(
 
 BC += h2("Debug builds")
 BC += p(
-    "Debugging needs a build that carries debug information. Tiko ships debug "
-    "configurations set up correctly for its own debugger, so in normal use you can simply "
-    'select one and press %s. See <a href="debugging.html">Debugging</a>.' % kbd("F6")
+    "Debugging needs a build that carries debug information — the <code>-g</code> switch. "
+    "The four <strong>(Debug)</strong> configurations above set it, so in normal use you "
+    "select the one matching your program (Win64 Console (Debug), say) and press %s. See "
+    '<a href="debugging.html">Debugging</a>.' % kbd("F6")
 )
-BC += todo(
-    "List the build configurations Tiko ships with by default and the switches each one "
-    "sets, so users can tell at a glance which to select.",
-    title="TODO — document the shipped default configurations",
+BC += p(
+    "Tiko ships with twelve configurations covering the usual combinations — 32- and "
+    "64-bit, GUI and console, release and debug, plus DLL and static library targets:"
+)
+BC += table(
+    ["Configuration", "Switches", "Architecture"],
+    [
+        ("Win32 GUI (Release)", "<code>-s gui</code>", "32-bit"),
+        ("Win32 GUI (Debug)", "<code>-g -exx -s gui</code>", "32-bit"),
+        ("Win32 Console (Release)", "<code>-s console</code>", "32-bit"),
+        ("Win32 Console (Debug)", "<code>-g -exx -s console</code>", "32-bit"),
+        ("Win32 Windows DLL", "<code>-s gui -dll -export</code>", "32-bit"),
+        ("Win32 Static Library", "<code>-lib</code>", "32-bit"),
+        ("Win64 GUI (Release)", "<code>-s gui -gen gcc</code>", "64-bit"),
+        ("Win64 GUI (Debug)", "<code>-g -exx -s gui -gen gas64</code>", "64-bit"),
+        ("Win64 Console (Release)", "<code>-s console -gen gcc</code>", "64-bit"),
+        ("Win64 Console (Debug)", "<code>-g -exx -s console -gen gas64</code>", "64-bit"),
+        ("Win64 Windows DLL", "<code>-s gui -dll -export -gen gcc</code>", "64-bit"),
+        ("Win64 Static Library", "<code>-lib</code>", "64-bit"),
+    ],
+    key_first=True,
+)
+BC += h3("Reading those switches")
+BC += table(
+    ["Switch", "Meaning"],
+    [
+        ("<code>-g</code>", "Emit debug information. <strong>Required for debugging</strong> "
+         "— this is what makes the Debug configurations debuggable."),
+        ("<code>-exx</code>", "Full runtime error checking: array bounds, null pointers, "
+         "file I/O. Slower, and worth every cycle while developing."),
+        ("<code>-s gui</code>", "A windowed program, with no console attached."),
+        ("<code>-s console</code>", "A console program."),
+        ("<code>-dll -export</code>", "Build a DLL and export its public symbols."),
+        ("<code>-lib</code>", "Build a static library rather than an executable."),
+        ("<code>-gen gcc</code>", "Use the gcc backend — slower to compile, better "
+         "optimised. Used by the 64-bit release configurations."),
+        ("<code>-gen gas64</code>", "Use the gas64 backend — much faster to compile. Used "
+         "by the 64-bit debug configurations, where build speed matters most."),
+    ],
+    key_first=True,
+)
+BC += important(
+    "<strong>The configuration decides the architecture, not the toolchain.</strong> Every "
+    "toolchain carries both <code>fbc32.exe</code> and <code>fbc64.exe</code>, so choosing "
+    "a Win32 or Win64 configuration is what selects which compiler runs. See "
+    '<a href="compiler-setup.html">Compiler setup</a>.'
+)
+BC += note(
+    "The DLL and static library configurations are marked to stay out of the quick popup "
+    "list, since they are not what most projects build. They are still selectable in this "
+    "dialog."
 )
 
 BC += h2("Related topics")

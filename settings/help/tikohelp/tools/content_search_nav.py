@@ -3,7 +3,7 @@
 
 from build import (section, page, h2, h3, h4, p, ul, ol, dl, code, table, cards,
                    note, tip, warn, important, todo, kbd, menu, ui,
-                   placeholder, diagram)
+                   figure_img, placeholder, diagram)
 
 # ==========================================================================
 section("searching", "Searching", "find")
@@ -30,30 +30,58 @@ FR += important(
     % (kbd("F3"), kbd("Shift", "F3"))
 )
 
-FR += h2("Search options")
+FR += h2("The Find bar")
+FR += figure_img(
+    "assets/img/find-bar.png",
+    "The Find bar. Six icons flank the search box; three of them latch on and stay lit.",
+    alt="The Tiko Find bar")
 FR += table(
-    ["Option", "Effect"],
+    ["Icon", "What it does", "Latches?"],
     [
-        ("Match case", "<code>Print</code> no longer matches <code>print</code>. Off by "
-         "default, which suits FreeBASIC's case-insensitive keywords."),
-        ("Whole word", "Matches only complete words: <code>count</code> will not match "
-         "<code>counter</code> or <code>rowcount</code>."),
-        ("Regular expression", "Treats the search text as a pattern rather than literal "
-         'text. See <a href="regular-expressions.html">Regular expressions</a>.'),
-        ("Search up", "Searches backwards from the caret rather than forwards."),
-        ("Wrap around", "Continues from the top when the search reaches the end of the "
-         "document."),
+        ("Match Case", "Require the same capitalisation. Off by default, which suits "
+         "FreeBASIC's case-insensitive keywords.", "Yes"),
+        ("Match Whole Words", "Match complete words only: <code>count</code> will not "
+         "match <code>counter</code> or <code>rowcount</code>.", "Yes"),
+        ("Selection", "Search only within the selected text rather than the whole "
+         "document.", "Yes"),
+        ("Toggle Replace", "Show or hide the replacement field, turning the Find bar into "
+         "the Replace bar.", "No"),
+        ("Search Previous", "Jump to the previous match (" + kbd("Shift", "F3") + ").",
+         "No"),
+        ("Search Next", "Jump to the next match (" + kbd("F3") + ").", "No"),
     ],
     key_first=True,
 )
-FR += todo(
-    "Confirm the exact option set and labels on the Find and Replace bars against the "
-    "shipping build, and replace the placeholder below with a real screenshot.",
-    title="TODO — verify Find bar options",
+FR += p(
+    "A latching icon stays lit while its option is on; click it again to turn it off. "
+    "The three latching options are the whole of Tiko's matching behaviour — there is "
+    "nothing else to configure."
 )
-FR += placeholder("Find bar", "Screenshot of the Find bar with its options",
-                  caption="Replace with a capture of the Find bar showing the search "
-                          "field and option toggles.")
+
+FR += h3("Searching within a selection")
+FR += p(
+    "The <strong>Selection</strong> option confines the search to the text you have "
+    "selected, which is the safe way to run a Replace All over one procedure instead of a "
+    "whole file."
+)
+FR += important(
+    "Tiko sets this up for you. Open the Find bar with a <strong>multi-line</strong> "
+    "selection and Selection switches on automatically with the search box left empty — "
+    "because \"search inside this selection\" begins with no search term by definition. "
+    "Open it with a <strong>single-line</strong> selection and that text becomes the "
+    "search term instead."
+)
+FR += note(
+    "Closing the Find bar clears the Selection latch along with the highlighting, so it "
+    "cannot come back lit against a selection that no longer exists."
+)
+
+FR += important(
+    "<strong>Tiko does not support regular expressions.</strong> Searches are literal "
+    "text, refined by the three options above. If you need pattern matching — extracting "
+    "captured groups, matching optional or repeated text — do it in a tool built for it "
+    "and bring the results back."
+)
 
 FR += h2("Replace")
 FR += p("Press %s, or choose %s." % (kbd("Ctrl", "H"), menu("Search", "Replace…")))
@@ -94,8 +122,7 @@ FR += p(
 FR += h2("Related topics")
 FR += ul([
     '<a href="find-in-project.html">Find in Project</a>',
-    '<a href="regular-expressions.html">Regular expressions</a>',
-    '<a href="multiple-selections.html">Multiple selections</a> — an alternative for '
+    '<a href="multiple-selections.html">Multi-cursor editing</a> — an alternative for '
     "small, local edits.",
 ])
 
@@ -104,7 +131,8 @@ page("find-replace", "Find and Replace", "searching",
      "search history.",
      FR,
      keywords="find search replace replace all find next find previous f3 incremental "
-              "match case whole word wrap search up history")
+              "match case whole word match whole words selection search selection toggle "
+              "replace find bar icons no regular expressions")
 
 # --------------------------------------------------------------------------
 
@@ -124,18 +152,33 @@ FP += ol([
 
 FP += h2("Options")
 FP += p(
-    "Find in Project offers the same matching options as Find — case sensitivity, whole "
-    "word and regular expressions — plus filters over which files are searched."
+    "Find in Project uses the <strong>same two matching options as Find</strong>, and "
+    "nothing more:"
 )
-FP += todo(
-    "Confirm the exact filter controls (file masks, folder scope, include/exclude "
-    "patterns) offered by the Find in Project dialog in the shipping build, and document "
-    "each one.",
-    title="TODO — verify Find in Project filters",
+FP += table(
+    ["Option", "Effect"],
+    [
+        ("Match Case", "Require the same capitalisation."),
+        ("Match Whole Words", "Match complete words only, not fragments inside longer "
+         "ones."),
+    ],
+    key_first=True,
 )
-FP += placeholder("Find in Project", "Screenshot of the Find in Project dialog",
-                  caption="Replace with a capture of the dialog showing its options and "
-                          "filter fields.")
+FP += important(
+    "<strong>There are no file filters.</strong> No masks, no folder scope, no "
+    "include/exclude patterns — and no regular expressions. Find in Project searches every "
+    "file in the workspace, every time, for literal text."
+)
+FP += p(
+    "That makes the workspace itself the only scope control you have. If a search returns "
+    "more than you want, the answer is a more specific search term, or a project holding "
+    'fewer files — see <a href="projects-overview.html">Projects and workspaces</a>.'
+)
+FP += figure_img(
+    "assets/img/find-in-project.png",
+    "Find in Project searches every file in the workspace and collects the matches in the "
+    "Output panel.",
+    alt="The Find in Project dialog")
 
 FP += h2("Reading the results")
 FP += p(
@@ -147,6 +190,11 @@ FP += note(
     "Results stay in the panel until your next project search, so you can work through a "
     "long list at your own pace. Switching tabs in the Output panel does not clear them."
 )
+FP += p(
+    "A very large result set is capped. When that happens the match count is shown with a "
+    "<code>+</code> after it, meaning \"at least this many\" — narrow the search term to "
+    "see them all."
+)
 
 FP += h2("Typical uses")
 FP += ul([
@@ -154,7 +202,7 @@ FP += ul([
     "every place it appears, including comments and strings that a rename would miss.",
     "<strong>Finding where a procedure is called from.</strong> Goto Definition (%s) goes "
     "the other way; this finds the callers." % kbd("F12"),
-    "<strong>Auditing.</strong> Search for a pattern such as <code>TODO</code>, "
+    "<strong>Auditing.</strong> Search for a term such as <code>TODO</code>, "
     "<code>HACK</code> or a deprecated API name across the whole codebase.",
 ])
 FP += tip(
@@ -165,7 +213,6 @@ FP += tip(
 FP += h2("Related topics")
 FP += ul([
     '<a href="find-replace.html">Find and Replace</a>',
-    '<a href="regular-expressions.html">Regular expressions</a>',
     '<a href="output-panel.html">Output panel</a>',
     '<a href="projects-overview.html">Projects and workspaces</a> — what "the project" '
     "means for a search.",
@@ -179,110 +226,6 @@ page("find-in-project", "Find in Project", "searching",
               "ctrl shift f")
 
 # --------------------------------------------------------------------------
-
-RE = ""
-RE += p(
-    "Turning on the <strong>Regular expression</strong> option changes the search text "
-    "from something matched literally into a <em>pattern</em>. Patterns let you find "
-    "things you could not otherwise describe — any number, any line starting with a "
-    "comment, an identifier followed by an opening parenthesis."
-)
-RE += warn(
-    "Regular-expression syntax varies between tools. The table below covers constructs "
-    "that are near-universal and safe to rely on. Confirm the exact dialect against the "
-    "shipping build before depending on anything more exotic."
-)
-RE += todo(
-    "Confirm which regular-expression engine Tiko uses for Find and for Find in Project "
-    "(the Scintilla built-in engine and its C++ <code>std::regex</code> option behave "
-    "differently), and document the supported syntax precisely.",
-    title="TODO — confirm the regular expression dialect",
-)
-
-RE += h2("Pattern basics")
-RE += table(
-    ["Pattern", "Matches", "Example"],
-    [
-        ("<code>.</code>", "Any single character",
-         "<code>b.t</code> matches <code>bat</code>, <code>bit</code>, <code>but</code>"),
-        ("<code>[abc]</code>", "Any one of the listed characters",
-         "<code>[0-9]</code> matches any digit"),
-        ("<code>[^abc]</code>", "Any character <em>not</em> listed", ""),
-        ("<code>*</code>", "Zero or more of the preceding item",
-         "<code>ab*c</code> matches <code>ac</code>, <code>abc</code>, <code>abbc</code>"),
-        ("<code>+</code>", "One or more of the preceding item", ""),
-        ("<code>?</code>", "Zero or one of the preceding item", ""),
-        ("<code>^</code>", "Start of a line",
-         "<code>^Dim</code> matches <code>Dim</code> only at the line start"),
-        ("<code>$</code>", "End of a line", ""),
-        ("<code>\\d</code>", "A digit", ""),
-        ("<code>\\w</code>", "A word character (letter, digit or underscore)", ""),
-        ("<code>\\s</code>", "Whitespace", ""),
-        ("<code>\\</code>", "Escapes the next character",
-         "<code>\\.</code> matches a literal full stop"),
-        ("<code>(…)</code>", "A group, captured for use in the replacement", ""),
-        ("<code>|</code>", "Either alternative",
-         "<code>Sub|Function</code> matches either word"),
-    ],
-    key_first=True,
-)
-
-RE += h2("Using captures in a replacement")
-RE += p(
-    "Text captured by a group in the search pattern can be inserted into the replacement, "
-    "normally with <code>\\1</code> for the first group, <code>\\2</code> for the second "
-    "and so on. This is what makes regular-expression replace powerful rather than merely "
-    "clever."
-)
-RE += code("""
-Find:     Print (.+)
-Replace:  Debug.Write \\1
-
-' Before
-Print "starting"
-Print count
-
-' After
-Debug.Write "starting"
-Debug.Write count
-""", lang="text", title="A capture-and-reuse replacement", numbered=False)
-
-RE += h2("Practical FreeBASIC patterns")
-RE += table(
-    ["Goal", "Pattern"],
-    [
-        ("Lines that are only a comment", "<code>^\\s*'</code>"),
-        ("Any Sub or Function declaration", "<code>^\\s*(Sub|Function)\\s+\\w+</code>"),
-        ("A number literal", "<code>\\b\\d+\\b</code>"),
-        ("Trailing whitespace", "<code>\\s+$</code>"),
-        ("An empty line", "<code>^$</code>"),
-        ("A call to a specific procedure", "<code>\\bDrawBox\\s*\\(</code>"),
-    ],
-)
-RE += tip(
-    "Test a pattern with Find first, then switch to Replace once you are satisfied it "
-    "matches exactly what you intended. A pattern that is slightly too greedy can rewrite "
-    "far more than you expect."
-)
-RE += note(
-    "For trailing whitespace specifically, the formatter's <strong>Trim trailing "
-    "whitespace</strong> rule is safer and more convenient than a regular-expression "
-    'replace. See <a href="code-formatting.html">Code formatting</a>.'
-)
-
-RE += h2("Related topics")
-RE += ul([
-    '<a href="find-replace.html">Find and Replace</a>',
-    '<a href="find-in-project.html">Find in Project</a>',
-    '<a href="glossary.html">Glossary</a>',
-])
-
-page("regular-expressions", "Regular expressions", "searching",
-     "Pattern-based searching: the common syntax, using captured groups in replacements, "
-     "and practical patterns for FreeBASIC source.",
-     RE,
-     keywords="regular expression regex pattern search wildcard capture group replace "
-              "backreference anchor character class")
 
 # ==========================================================================
 section("navigation", "Navigation", "compass")
@@ -328,20 +271,58 @@ NV += tip(
     % (kbd("F12"), kbd("Alt", "←"))
 )
 
-NV += h2("Search Symbol")
+NV += h2("Search Symbol — the fuzzy finder")
 NV += p(
-    "%s opens Search Symbol — a filter box over every symbol in the project. Start typing "
-    "a procedure or type name and the list narrows as you type; choose an entry to jump "
-    "straight to it." % kbd("Ctrl", "P")
+    "%s opens Search Symbol, a popup that appears just under the tab strip. It is Tiko's "
+    "universal \"go to anything\" command, and it is a <strong>fast fuzzy finder</strong> "
+    "rather than a plain substring filter." % kbd("Ctrl", "P")
+)
+
+NV += h3("What it searches")
+NV += p("One list, built from two sources and ranked together:")
+NV += ul([
+    "<strong>Every file the symbol database knows about</strong> — including include "
+    "files you have never opened in the editor. This is a superset of the files with tabs "
+    "open.",
+    "<strong>Every procedure and type in the project</strong> — subs, functions, types and "
+    "enumerations, shown by their qualified name, so a method inside a type appears under "
+    "its full name rather than on its own.",
+])
+NV += p(
+    "Leave the box empty and it simply lists all the files, which makes it a file switcher "
+    "as well as a symbol finder."
+)
+
+NV += h3("How fuzzy matching works")
+NV += p(
+    "You do not have to type a contiguous piece of the name. The characters you type need "
+    "only appear <strong>in order</strong> somewhere in it — so <code>fpm</code> finds "
+    "<code>frmPanelMenu</code>, and <code>sdoc</code> finds "
+    "<code>SaveDocument</code>."
 )
 NV += p(
-    "Use this when you know <em>what</em> you are looking for but not which file it is in. "
-    "It is the closest thing Tiko has to a universal \"go to anything\" command."
+    "Every candidate is then <strong>scored</strong>, and the list is sorted best-first. "
+    "The scoring favours matches that look deliberate:"
 )
-NV += todo(
-    "Confirm whether Search Symbol also matches file names and line numbers, or symbols "
-    "only, and document its matching rules (substring, prefix or fuzzy).",
-    title="TODO — verify Search Symbol matching",
+NV += ul([
+    "characters at the start of a word, or just after an underscore or a capital, count "
+    "for more than characters in the middle of one;",
+    "consecutive matched characters score better than scattered ones;",
+    "a shorter name matching the same letters outranks a longer one.",
+])
+NV += p(
+    "In the results, <strong>the characters your search matched are highlighted</strong> "
+    "within each name, so you can see at a glance why a row is in the list and whether the "
+    "top hit is the one you meant."
+)
+NV += tip(
+    "Type the initials of a camel-case or underscore-separated name. Three or four "
+    "well-chosen letters usually put the item you want at the top of the list — that is "
+    "what fuzzy matching is for, and it is much faster than typing a prefix."
+)
+NV += note(
+    "The result list is capped, so an extremely broad search shows the best matches rather "
+    "than everything. Type another character or two and the item you want rises into view."
 )
 
 NV += h2("Moving between procedures")
@@ -358,19 +339,33 @@ NV += p(
     "to skim a file's structure without leaving the keyboard."
 )
 
-NV += h2("Goto Line")
+NV += h2("Going to a line number")
+NV += important(
+    "<strong>There is no Goto Line dialog.</strong> Tiko has no command that asks you to "
+    "type a line number, because in practice you never need one — everything that knows "
+    "about a line number takes you there directly."
+)
+NV += table(
+    ["You have", "Do this"],
+    [
+        ("A compiler error or warning",
+         "Click the row in the Output panel. It opens the file and puts the caret on the "
+         "line."),
+        ("A search result from Find in Project",
+         "Click the row. Same behaviour."),
+        ("A TODO comment", "Click it in the Output panel's TODO tab."),
+        ("A procedure or type name", "Search Symbol (" + kbd("Ctrl", "P") + "), or " +
+         kbd("F12") + " on the name itself."),
+        ("A bookmark", kbd("F2") + " cycles through them; the bookmarks list shows the "
+         "file and line of each."),
+        ("A rough idea of where it is",
+         "The function list (" + kbd("F4") + ") to jump by procedure, or " +
+         kbd("Ctrl", "PgDn") + " / " + kbd("Ctrl", "PgUp") + " to step between them."),
+    ],
+)
 NV += p(
-    "Compiler messages and colleagues both talk in line numbers. To jump to a specific "
-    "line, use the Goto command and enter the number."
-)
-NV += todo(
-    "Confirm the exact Goto Line command and its default shortcut in the shipping build "
-    "and document it here.",
-    title="TODO — verify the Goto Line command",
-)
-NV += note(
-    "Clicking a compiler error in the Output panel jumps to the right line directly, so "
-    "you rarely need to type a line number by hand."
+    "The status bar always shows the current line and column, so you can still tell "
+    "someone else where you are."
 )
 
 NV += h2("Switching between related files")
@@ -459,16 +454,109 @@ SY += p(
     "Expand-all and collapse-all commands are available for the tree."
 )
 
-SY += h2("Unused symbols")
+SY += h2("The Unused Symbols report")
 SY += p(
-    "%s reports symbols the parser found declared but could not find used. It is a useful "
-    "periodic tidy-up: dead procedures, leftover variables and stale types."
-    % menu("Debug", "Unused Symbols…")
+    "%s scans the project and reports every symbol that was declared but never read. It is "
+    "a periodic tidy-up tool: dead procedures, leftover variables, parameters nothing "
+    "passes, stale types." % menu("Debug", "Unused Symbols…")
 )
+
+SY += h3("The three statuses")
+SY += p(
+    "A row only appears for a symbol with <strong>zero reads</strong>, but there are three "
+    "quite different reasons that can happen, and the report distinguishes them."
+)
+SY += table(
+    ["Status", "Means", "What to do"],
+    [
+        ("<strong>Dead</strong>", "No references at all — never read, never written.",
+         "Usually safe to delete. The clearest win in the report."),
+        ("<strong>Write-only</strong>",
+         "Assigned to, but its value is never read afterwards.",
+         "Often a real bug rather than dead code: a result computed and then dropped, or "
+         "an assignment to the wrong variable."),
+        ("<strong>Unknown</strong>",
+         "The reference counts cannot be trusted for this symbol — it is exported, part of "
+         "an overloaded set, or a constructor or destructor.",
+         "Shown for your judgement, never asserted to be dead. Check by hand."),
+    ],
+    key_first=True,
+)
+SY += important(
+    "<strong>Write-only is the status worth reading carefully.</strong> Dead code is "
+    "untidy; a variable that is written and never read is frequently a mistake that "
+    "compiles cleanly and runs wrongly."
+)
+
+SY += h3("Filtering by kind")
+SY += p(
+    "Six toggles filter the report by what kind of thing each symbol is. The grouping is "
+    "deliberately coarser than the compiler's — you think in terms of \"parameters\", not "
+    "in terms of sub-parameters and function-parameters separately."
+)
+SY += table(
+    ["Kind", "Covers"],
+    [
+        ("Variables", "Locals, module-level and global variables."),
+        ("Procedures", "Subs and functions."),
+        ("Parameters", "Procedure parameters nothing reads."),
+        ("Types", "Type and union declarations."),
+        ("Fields", "Members of a type."),
+        ("Constants", "Named constants and enumeration members."),
+    ],
+    key_first=True,
+)
+SY += p(
+    "Your choice of toggles is remembered between sessions. Turning off Parameters and "
+    "Fields is a common first move — they are the noisiest categories on a large codebase."
+)
+
+SY += h3("Reading and sorting the list")
+SY += p("The report has five columns:")
+SY += table(
+    ["Column", "Shows"],
+    [
+        ("File", "The file the symbol was declared in."),
+        ("Line", "Its line number."),
+        ("Class", "Which of the six kinds it is."),
+        ("Name", "The symbol's name, qualified where it belongs to a type or namespace."),
+        ("Status", "Dead, write-only or unknown."),
+    ],
+    key_first=True,
+)
+SY += ul([
+    "<strong>Click a column header</strong> to sort by it. Line numbers and reference "
+    "counts sort numerically rather than as text, so line 9 comes before line 10.",
+    "Sorting is stable with a deterministic tiebreak, so re-clicking a header cannot "
+    "shuffle rows that compare equal.",
+    "A filter box matches case-insensitively against any displayed column.",
+    "<strong>Click a row</strong> to open that file at the declaration.",
+])
+
+SY += h3("How far to trust it")
 SY += warn(
-    "Treat the report as a list of candidates, not a list of certainties. A symbol reached "
-    "only through a function pointer, a conditional-compilation branch or an external "
-    "reference can look unused while being essential."
+    "Treat the report as a list of <strong>candidates</strong>, not a list of certainties. "
+    "The counts come from one scan of the project, so a symbol referenced only from a file "
+    "that scan never reached will read as unused."
+)
+SY += p("In particular, be careful with:")
+SY += ul([
+    "<strong>Exported procedures</strong> — used by callers outside this project "
+    "entirely, which is why they are reported as <em>unknown</em> rather than dead.",
+    "<strong>Anything reached through a function pointer</strong> or a callback, where no "
+    "reference to the name appears at the call site.",
+    "<strong>Code behind conditional compilation</strong> that this build excluded.",
+    "<strong>Symbols used only from a resource script</strong> or another non-source "
+    "file.",
+])
+SY += note(
+    "If any open document has unsaved edits when you run the report, Tiko names those "
+    "files and warns you that their line numbers may be stale — it reports rather than "
+    "refusing to run. Save first if you intend to work from the line numbers."
+)
+SY += tip(
+    "Run it before a release rather than during active work, sort by Status to bring the "
+    "write-only rows together, and read those first."
 )
 
 SY += h2("Code tips")
@@ -503,8 +591,48 @@ section("productivity", "Editing Productivity", "bolt")
 
 AC = ""
 AC += p(
-    "Autocomplete offers completions as you type, drawn from the symbols Tiko has parsed "
-    "out of your project plus the keyword lists for the current language."
+    "Autocomplete offers completions drawn from the symbols Tiko has parsed out of your "
+    "project plus the keyword lists for the current language. Some lists appear on their "
+    "own as you type; the general word list you ask for with %s." % kbd("Ctrl", "Space")
+)
+
+AC += h2("Ctrl+Space — complete the word", anchor="ctrl-space")
+AC += important(
+    "<strong>%s is the keyboard trigger for the word completion list.</strong> Ordinary "
+    "typing deliberately does not raise it, so if you want a completion for a partly typed "
+    "identifier, this is how you ask for one." % kbd("Ctrl", "Space")
+)
+AC += p(
+    "Type as much of a name as you care to — or none of it — and press %s. The list opens "
+    "with everything that matches, and filters itself as you carry on typing."
+    % kbd("Ctrl", "Space")
+)
+AC += p("Tiko only claims the keystroke when it is genuinely useful:")
+AC += table(
+    ["Situation", "What happens"],
+    [
+        ("The caret is in the editor", "The word list opens. This is the normal case."),
+        ("The list is already open",
+         "Nothing is rebuilt — it is already filtering as you type — but the keystroke is "
+         "still consumed, so no stray character reaches your document."),
+        ("Autocomplete is turned off in the options",
+         "The keystroke is ignored, and " + kbd("Ctrl", "Space") + " does nothing."),
+        ("The caret is in the Find box or the Notes pane",
+         "Those are ordinary text fields and keep their own " + kbd("Ctrl", "Space") + "."),
+        (kbd("Ctrl", "Alt", "Space"),
+         "Left alone. On several keyboard layouts that combination is AltGr, so it belongs "
+         "to the editor as a normal keystroke."),
+    ],
+)
+AC += note(
+    "Because Tiko consumes the keystroke rather than passing it on, %s never inserts a "
+    "stray character — which is what an unclaimed one would otherwise do."
+    % kbd("Ctrl", "Space")
+)
+AC += tip(
+    "Press %s with no partial word typed to see everything available at that point. It is "
+    "a quick way to remind yourself of a name you half-remember."
+    % kbd("Ctrl", "Space")
 )
 
 AC += h2("Using autocomplete")
@@ -537,7 +665,8 @@ AC += p(
 
 AC += h2("Settings")
 AC += dl([
-    ("Auto complete", "Turns the completion list on and off."),
+    ("Auto complete", "Turns the completion list on and off. With it off, "
+     + kbd("Ctrl", "Space") + " does nothing either."),
     ("Code tips", "Turns parameter hints on and off."),
     ("Character auto completion",
      "Automatically inserts the closing member of a pair when you type an opening "
@@ -645,18 +774,31 @@ LO += p(
     '<a href="indentation.html">Indentation</a>.' % (kbd("Tab"), kbd("Shift", "Tab"))
 )
 
-LO += h2("Sorting, joining and trimming lines")
-LO += todo(
-    "Confirm whether the shipping build provides Sort Lines, Join Lines, Transpose Lines "
-    "and a standalone Trim Trailing Whitespace command, and document them here. The "
-    "formatter provides trailing-whitespace trimming as a rule; a separate editor command "
-    "may or may not exist.",
-    title="TODO — confirm sort / join / transpose / trim commands",
+LO += h2("Commands Tiko does not have")
+LO += p(
+    "For completeness, because they exist in some other editors and are worth not hunting "
+    "for: Tiko has <strong>no Sort Lines, Join Lines or Transpose Lines command</strong>, "
+    "and no standalone Trim Trailing Whitespace command."
 )
-FMT_LINK = ('The formatter\'s <strong>Trim trailing whitespace</strong> rule removes '
-            'trailing spaces across a document — see '
-            '<a href="code-formatting.html">Code formatting</a>.')
-LO += p(FMT_LINK)
+LO += p("Trailing whitespace is handled two other ways:")
+LO += table(
+    ["Route", "What it does", "Where"],
+    [
+        ("<strong>Strip line ending whitespace when saving</strong>",
+         "Removes trailing spaces and tabs from every line each time you save. Set it "
+         "once and forget it.",
+         menu("File", "Settings", "Options…") + " ▸ Advanced Code Editor"),
+        ("<strong>Trim trailing whitespace</strong>",
+         "A formatter rule, applied when you run one of the Format commands.",
+         menu("Edit", "Format", "Format Options…")),
+    ],
+    key_first=True,
+)
+LO += tip(
+    "Turning on <strong>Strip line ending whitespace when saving</strong> is the "
+    "low-effort option — it keeps a file clean without you ever running a command, and it "
+    "keeps trailing-space noise out of your diffs."
+)
 
 LO += h2("Related topics")
 LO += ul([
@@ -670,7 +812,8 @@ page("line-operations", "Line and block operations", "productivity",
      "the case of a selection.",
      LO,
      keywords="duplicate line delete line move line up down comment block uncomment "
-              "select line uppercase lowercase mixed case sort join transpose trim")
+              "select line uppercase lowercase mixed case no sort join transpose "
+              "strip trailing whitespace on save")
 
 # --------------------------------------------------------------------------
 
@@ -690,19 +833,39 @@ SH += p(
 
 SH += h2("Choosing the language for a file")
 SH += p(
-    "Tiko picks a language from the file's extension. The status bar shows the current "
-    "choice and lets you override it for that document — useful for a file with an unusual "
-    "extension, or a fragment you want highlighted as something else."
+    "Tiko picks a syntax scheme from the file's extension. There is no language selector on "
+    "the status bar, so a file with an unusual extension is highlighted according to that "
+    "extension."
 )
 
 SH += h2("Keyword lists")
 SH += p(
-    "The words highlighted as keywords come from plain text files in "
-    "<code>settings\\keywords</code>. These are editable, and this is how you teach Tiko "
-    "about an API it does not know about — a third-party library's function names, for "
-    "example."
+    "The words highlighted as keywords come from three plain-text files in "
+    "<code>settings" + chr(92) + "keywords</code>. Each has its own page in "
+    + menu("File", "Settings", "Options…") + ", so you can edit them without leaving the "
+    "editor."
 )
-SH += p("Those same lists do three jobs at once:")
+SH += table(
+    ["Options page", "File", "Holds"],
+    [
+        ("FreeBASIC Keywords", "<code>freebasic_keywords.txt</code>",
+         "The FreeBASIC language itself — statements, types, operators and the "
+         "<code>#</code> and <code>$</code> directives."),
+        ("Windows API Keywords", "<code>winapi_keywords.txt</code>",
+         "Win32 API function names, from <code>AbortDoc</code> onwards. Several thousand "
+         "of them."),
+        ("Extra Keywords", "<code>extra_keywords.txt</code>",
+         "Everything else you want recognised — third-party library and framework names. "
+         "This is the one to add your own to."),
+    ],
+    key_first=True,
+)
+SH += p(
+    "The files are simply whitespace-separated lists of names, so they are easy to edit or "
+    "generate. A fourth file, <code>freebasic_keywords_default.txt</code>, holds the "
+    "shipped baseline so the FreeBASIC list can be restored if you edit it into a corner."
+)
+SH += p("Those lists do three jobs at once:")
 SH += ul([
     "they decide what gets highlighted as a keyword;",
     "they supply entries to the autocomplete list;",
@@ -715,21 +878,38 @@ SH += important(
     "<code>MessageBox</code> — rather than in lower case. Matching itself is not "
     "case-sensitive, so the spelling in the file is purely about presentation."
 )
-SH += p(
-    "The keyword pages in the options dialog let you edit these lists without leaving the "
-    "editor."
+SH += tip(
+    "Adding your library's procedure names to <strong>Extra Keywords</strong> is one of "
+    "the highest-value five minutes you can spend in Tiko: those names then colour "
+    "correctly <em>and</em> appear in autocomplete throughout the project."
 )
-SH += todo(
-    "List the exact keyword list files shipped in <code>settings\\keywords</code> and what "
-    "each one covers, and document the keyword editor pages in the options dialog.",
-    title="TODO — enumerate keyword lists",
+SH += note(
+    "A separate file in the same folder, <code>codetips.ini</code>, supplies the parameter "
+    "hints shown for built-in FreeBASIC keywords — entries such as "
+    "<code>ABS=Abs(number)</code>. Your own procedures get their code tips from the parser "
+    'instead. See <a href="autocomplete.html">Autocomplete and code tips</a>.'
 )
 
 SH += h2("Keyword case display")
 SH += p(
-    "The <strong>Keyword case</strong> setting controls how keywords are <em>displayed</em> "
-    "— unchanged, upper case, lower case or proper case. It is a display setting only: it "
-    "never changes a byte in your file."
+    "The <strong>Keyword case</strong> setting controls how keywords are "
+    "<em>displayed</em>. It is a display setting only: it never changes a byte in your file."
+)
+SH += table(
+    ["Setting", "Keywords appear as"],
+    [
+        ("Original case", "Exactly as you typed them. The default."),
+        ("Proper case", "The canonical spelling from the keyword lists — so "
+         "<code>byval</code> displays as <code>ByVal</code> however you typed it."),
+        ("Upper case", "<code>BYVAL</code>"),
+        ("Lower case", "<code>byval</code>"),
+    ],
+    key_first=True,
+)
+SH += p(
+    "<strong>Proper case</strong> is the interesting one: it lets you type in whatever case "
+    "you find quickest and still read consistently-cased code, without a single byte of the "
+    "file changing. That is why the spelling you enter in the keyword lists matters."
 )
 SH += important(
     "This is a different thing from the formatter's <strong>Case keywords</strong> rule, "

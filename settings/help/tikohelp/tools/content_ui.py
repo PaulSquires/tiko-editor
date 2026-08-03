@@ -29,8 +29,9 @@ MW += table(
     [
         ("Menu bar", "Every command in the application, grouped into eight menus.",
          "Always visible"),
-        ("Panel icon strip", "Buttons that switch the side panel and run common "
-         "commands such as Save, Find, Compile and Debug.", "With the side panel"),
+        ("Panel icon strip", "A horizontal band across the top of the side panel: "
+         "buttons that switch which panel is shown, plus common commands.",
+         "With the side panel"),
         ("Side panel", "Hosts the Explorer, the function list and the bookmarks list.",
          kbd("Ctrl", "B")),
         ("Document tabs", "One tab per open file, with a close button and a tab list.",
@@ -39,8 +40,9 @@ MW += table(
          "Always visible"),
         ("Output panel", "Compiler results, search results, TODO items and Notes.",
          kbd("Ctrl", "F9")),
-        ("Status bar", "Caret position, insert mode, encoding, line endings and "
-         "language.", "Always visible"),
+        ("Status bar", "Caret position, compile status, and click-to-change panels for "
+         "the theme, build configuration, tab size, encoding and line endings.",
+         "Always visible"),
     ],
 )
 
@@ -196,49 +198,61 @@ page("menu-bar", "Menu bar", "ui",
 
 TB = ""
 TB += p(
-    "Tiko does not have a traditional wide toolbar across the top of the window. Instead a "
-    "narrow <strong>icon strip</strong> runs down the side of the window, beside the side "
-    "panel. It does the same job in less space."
+    "Tiko does not have a traditional wide toolbar spanning the window. Instead a compact "
+    "<strong>icon strip runs horizontally across the top of the side panel</strong>, in a "
+    "band the same height as the document tab strip beside it. The panel's contents begin "
+    "directly below it."
 )
-TB += p("The strip is split into two groups:")
-TB += ul([
-    "<strong>Panel selectors</strong> at one end — Explorer, Functions, Bookmarks and "
-    "Settings. These <em>latch</em>: the active panel stays highlighted, and an underline "
-    "marks which one you are looking at.",
-    "<strong>Commands</strong> at the other end — Find, Save, Debug, Compile and Build. "
-    "These are momentary buttons that fire and return to normal.",
-])
-TB += note(
-    "Hover any button to see a tooltip naming the command and its keyboard shortcut."
-)
-
-TB += h2("Buttons")
+TB += p("The strip holds two groups of buttons, one aligned to each end:")
 TB += table(
-    ["Button", "Action", "Shortcut"],
+    ["Group", "Aligned", "Contains"],
     [
-        ("Explorer", "Show the project Explorer in the side panel.", kbd("Ctrl", "F4")),
-        ("Functions", "Show the function list for the current file.", kbd("F4")),
-        ("Bookmarks", "Show the bookmarks list.", kbd("Shift", "F4")),
-        ("Settings", "Open the options dialog.", kbd("Ctrl", ",")),
-        ("Find", "Open the Find bar.", kbd("Ctrl", "F")),
-        ("Save", "Save the current document.", kbd("Ctrl", "S")),
-        ("Debug", "Start or continue debugging.", kbd("F6")),
-        ("Compile", "Compile without running.", kbd("Ctrl", "F5")),
-        ("Build", "Build and execute.", kbd("F5")),
+        ("Panel selectors", "Left",
+         "Explorer, Functions, Bookmarks and Settings — what the panel below shows."),
+        ("Commands", "Right",
+         "Find in Project, Save All, Debug, Compile and Build — actions that fire and "
+         "return to normal."),
     ],
     key_first=True,
 )
-TB += todo(
-    "Confirm the exact button set and their order against the shipping build, and add a "
-    "close-up screenshot of the icon strip.",
-    title="TODO — verify icon strip contents",
+TB += note(
+    "Each button is drawn as a rounded pill that highlights as you point at it. Hover any "
+    "of them for a tooltip naming the command <em>and</em> its current keyboard shortcut — "
+    "so the strip doubles as a reminder of the five shortcuts you use most."
 )
-TB += placeholder("Panel icon strip", "Close-up screenshot of the icon strip",
-                  caption="Replace with a capture of the icon strip showing both groups.")
+
+TB += h2("Buttons, left to right")
+TB += table(
+    ["Button", "Group", "Action", "Shortcut"],
+    [
+        ("Explorer", "Left", "Show the project Explorer in the panel below.",
+         kbd("Ctrl", "F4")),
+        ("Functions", "Left", "Show the function list for the current file.", kbd("F4")),
+        ("Bookmarks", "Left", "Show the bookmarks list.", kbd("Shift", "F4")),
+        ("Settings", "Left", "Open the options dialog.", kbd("Ctrl", ",")),
+        ("Find in Project", "Right", "Search every file in the workspace.",
+         kbd("Ctrl", "Shift", "F")),
+        ("Save All", "Right", "Save every modified document.", kbd("Ctrl", "Shift", "S")),
+        ("Debug", "Right", "Start or continue debugging.", kbd("F6")),
+        ("Compile", "Right", "Compile without running.", kbd("Ctrl", "F5")),
+        ("Build", "Right", "Build and execute.", kbd("F5")),
+    ],
+    key_first=True,
+)
+TB += important(
+    "The two commands most easily misread are <strong>Find in Project</strong> — the "
+    "whole-workspace search, not the current-file Find bar — and <strong>Save All</strong>, "
+    "which saves every modified document rather than just the active one."
+)
+TB += figure_img(
+    "assets/img/panel-icon-strip.png",
+    "The icon strip across the top of the side panel: panel selectors on the left, "
+    "commands on the right.",
+    alt="The panel icon strip, showing the left and right button groups")
 
 TB += h2("Hiding the strip")
 TB += p(
-    "The icon strip is part of the side panel, so %s hides and shows both together. With "
+    "The icon strip belongs to the side panel, so %s hides and shows both together. With "
     "them hidden, the editor takes the whole window width." % kbd("Ctrl", "B")
 )
 
@@ -295,12 +309,15 @@ SP += ul([
     "at the top — the quickest way to give the workspace a name.",
 ])
 SP += note(
-    "Closing a file's tab does not remove it from the workspace. Files are removed "
-    'explicitly. See <a href="project-files.html">Adding and removing project files</a>.'
+    "In a named project, closing a file's tab does not remove it from the workspace — use "
+    "<strong>Remove from project</strong> on the file's context menu for that. On an "
+    "untitled workspace, closing the tab is what removes the file. See "
+    '<a href="project-files.html">Adding and removing files</a>.'
 )
-SP += placeholder("Explorer panel", "Screenshot of the Explorer tree with categories",
-                  caption="Replace with a capture of the Explorer showing the five "
-                          "category headers and several files.")
+SP += figure_img(
+    "assets/img/explorer-panel.png",
+    "The Explorer in the side panel, showing the five category headers.",
+    alt="The Explorer view in the Tiko side panel")
 
 SP += h2("Functions")
 SP += p(
@@ -479,35 +496,75 @@ page("tabs-and-splits", "Tabs and split views", "ui",
 SB = ""
 SB += p(
     "The status bar along the bottom of the window reports the state of the active "
-    "document. Several of its fields are interactive."
+    "document. <strong>All but the first two panels are buttons</strong> — click one to "
+    "change that setting."
 )
+SB += figure_img(
+    "assets/img/status-bar.png",
+    "The status bar. The caret readout sits at the left, the build and document settings "
+    "at the right.",
+    alt="The Tiko status bar")
+
+SB += h2("The panels, left to right")
 SB += table(
-    ["Field", "Shows", "Click to"],
+    ["Panel", "Shows", "Click to"],
     [
-        ("Caret position", "Current line and column number.",
-         "Nothing — informational."),
-        ("Insert mode", "Whether typing inserts or overwrites.",
-         "Toggle, or press " + kbd("Insert") + "."),
-        ("Encoding", "The document's character encoding, such as UTF-8.",
-         "Change the encoding — see " +
-         '<a href="encoding.html">Encoding</a>.'),
-        ("Line endings", "CRLF (Windows), LF (Unix) or CR.",
-         "Change the line-ending style."),
-        ("Language", "The syntax highlighting scheme in use.",
-         "Choose a different language for this file."),
-        ("Build configuration", "The active build configuration.",
-         "Switch configuration — see " +
-         '<a href="build-configurations.html">Build configurations</a>.'),
+        ("Caret position", "<code>Ln 12, Col 34</code> — and, when text is selected, how "
+         "many characters are selected: <code>(214 selected)</code>.",
+         "Nothing. This one is a readout, not a button."),
+        ("Compile status", "The result of the last build — a success or failure marker, "
+         "or a spinner while a build is running. Also shows <strong>Read Only</strong> "
+         "when the document cannot be edited.",
+         "Open the Output window."),
+        ("Theme Designer", "A single glyph.", "Open the Themes dialog."),
+        ("Build configuration", "The active configuration, by name.",
+         "Open a menu of your configurations, with <strong>Build Configurations…</strong> "
+         "at the top."),
+        ("Spaces", "The tab size — <code>Spaces: 4</code>.",
+         "Choose a different tab size."),
+        ("Encoding", "The document's encoding — ANSI, UTF-8 or UTF-16.",
+         "Convert the document to another encoding."),
+        ("Line endings", "<code>CRLF</code>, <code>CR</code> or <code>LF</code>.",
+         "Convert the document's line endings."),
     ],
+    key_first=True,
 )
-SB += todo(
-    "Confirm the exact field set, order and click behaviour of the status bar against the "
-    "shipping build, and add an annotated close-up screenshot.",
-    title="TODO — verify status bar fields",
+SB += note(
+    "The caret readout has a floor on its width so it stops nudging its neighbours along "
+    "every time you move the caret. The compile status panel takes up whatever width is "
+    "left over, which is why the settings panels stay put at the right-hand end."
 )
-SB += placeholder("Status bar", "Annotated close-up of the status bar",
-                  caption="Replace with a capture of the status bar with each field "
-                          "labelled.")
+
+SB += h2("The caret readout")
+SB += p(
+    "Line and column are both 1-based, so <code>Ln 1, Col 1</code> is the very start of the "
+    "file. Selecting text adds a character count, which is a quick way to check the length "
+    "of something without counting it."
+)
+SB += important(
+    "There is <strong>no insert/overwrite indicator and no language indicator</strong> on "
+    "Tiko's status bar. " + kbd("Insert") + " still toggles overwrite mode in the editor; "
+    "the status bar simply does not report which mode you are in."
+)
+
+SB += h2("Changing a setting from the bar")
+SB += p(
+    "The four right-hand panels are the fastest route to the settings you change most "
+    "often per document:"
+)
+SB += ul([
+    "<strong>Build configuration</strong> — switch between debug and release without "
+    'opening a dialog. See <a href="build-configurations.html">Build configurations</a>.',
+    "<strong>Spaces</strong> — change the tab size for editing. See "
+    '<a href="indentation.html">Indentation</a>.',
+    "<strong>Encoding</strong> and <strong>Line endings</strong> — convert the current "
+    'document. See <a href="encoding.html">Encoding and line endings</a>.',
+])
+SB += warn(
+    "Encoding and line-ending panels <em>convert</em> the document rather than just "
+    "relabelling it. Converting to a narrower encoding can lose characters — save first if "
+    "you are unsure."
+)
 
 SB += h2("Related topics")
 SB += ul([
@@ -549,11 +606,6 @@ CM += note(
     "Context menus support full keyboard navigation: arrow keys to move, %s to choose, "
     "%s to dismiss. They also close when you click outside them."
     % (kbd("Enter"), kbd("Esc"))
-)
-CM += todo(
-    "Enumerate the exact items on each context menu from the shipping build and replace "
-    "the summary table above with per-menu item lists.",
-    title="TODO — enumerate context menu items",
 )
 
 CM += h2("Related topics")

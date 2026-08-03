@@ -713,6 +713,18 @@ figure .fig-frame {
   background: var(--c-bg-sunken);
   box-shadow: var(--shadow-sm);
 }
+
+/* Screenshots vary from full-window captures to thin strips a few pixels tall.
+   Centre them all, and cap the height so a tall narrow panel capture cannot take
+   over the page. width/height auto keeps the aspect ratio intact. */
+figure img {
+  display: block;
+  margin-inline: auto;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 700px;
+}
 figure svg { display: block; width: 100%; height: auto; }
 figcaption {
   margin-top: .6rem;

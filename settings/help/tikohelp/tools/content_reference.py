@@ -336,14 +336,18 @@ for cat in CATEGORIES:
     KS += p(CATEGORY_BLURB[cat])
     KS += table(["Shortcut", "Command", "Description"], rows, key_first=True)
 
-KS += h2("Editing keys handled by the editing surface")
+KS += h2("Keys handled outside the command table")
 KS += p(
-    "These are standard Scintilla editing keys rather than Tiko commands, so they do not "
-    "appear in the Keyboard Shortcuts dialog."
+    "These are handled by the editing surface itself, or claimed before the accelerator "
+    "tables, so they do not appear in the Keyboard Shortcuts dialog and cannot be remapped "
+    "there."
 )
 KS += table(
     ["Shortcut", "Action"],
     [
+        (fmt_keys("Ctrl+Space"),
+         "Raise the word autocomplete list. The only keyboard trigger for it — see "
+         '<a href="autocomplete.html#ctrl-space">Autocomplete</a>.'),
         (fmt_keys("Home") + " / " + fmt_keys("End"), "Start / end of line."),
         (fmt_keys("Ctrl+Home") + " / " + fmt_keys("Ctrl+End"),
          "Start / end of document."),
@@ -351,7 +355,8 @@ KS += table(
         (fmt_keys("Shift") + " + any movement", "Extend the selection."),
         (fmt_keys("Alt") + " + drag", "Rectangular (column) selection."),
         (fmt_keys("Alt+Shift") + " + arrows", "Rectangular selection by keyboard."),
-        (fmt_keys("Ctrl") + " + drag or click", "Add another selection or caret."),
+        (fmt_keys("Ctrl") + " + drag, click or double-click",
+         "Add another selection or caret (multi-cursor editing)."),
         (fmt_keys("Insert"), "Toggle insert and overwrite mode."),
         (fmt_keys("Ctrl") + " + mouse wheel", "Zoom in and out."),
         (fmt_keys("Shift") + " + mouse wheel", "Scroll horizontally."),

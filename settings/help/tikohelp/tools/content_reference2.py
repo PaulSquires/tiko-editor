@@ -85,16 +85,11 @@ CFG += cfgrow("OccurrenceHighlight",
 CFG += cfgrow("KeywordCase",
               "How keywords are <em>displayed</em>. This never changes the file — see "
               "<code>FmtCaseKeywords</code> for the rule that rewrites it.", "3",
-              "<code>0</code> unchanged, <code>1</code> upper, <code>2</code> lower, "
-              "<code>3</code> proper case",
-              "<code>FmtCaseKeywords</code>")
-CFG += todo(
-    "Confirm the numeric meanings of <code>KeywordCase</code>, "
-    "<code>UnicodeEncoding</code>, <code>NewFileEncoding</code> and "
-    "<code>UnusedKindMask</code> against the shipping build. The values documented here "
-    "are inferred from the defaults and should be verified before being relied on.",
-    title="TODO — verify enumerated setting values",
-)
+              "<code>0</code> lower case, <code>1</code> upper case, <code>2</code> proper "
+              "case (the canonical spelling from the keyword files), <code>3</code> "
+              "original case — exactly as typed",
+              "<code>FmtCaseKeywords</code>, "
+              '<a href="syntax-highlighting.html">Syntax highlighting</a>')
 
 CFG += h2("[Editor] — display")
 CFG += cfgrow("LineNumbering", "Show the line number margin.", "-1", BOOL)
@@ -136,18 +131,24 @@ CFG += cfgrow("FornextVariable",
               "Include the loop variable when completing a <code>For</code> block's "
               "<code>Next</code>.", "0", BOOL, "<code>AutoIndentation</code>")
 CFG += cfgrow("StripTrailingWhitespace",
-              "Remove trailing spaces and tabs from every line when saving.", "0", BOOL,
+              "Remove trailing spaces and tabs from every line when saving. Shown as "
+              "<strong>Strip line ending whitespace when saving</strong> on the Advanced "
+              "Code Editor options page.", "0", BOOL,
               "<code>FmtTrimTrailing</code>")
 CFG += cfgrow("ClickToggleBreakpoint",
               "Clicking the left margin sets or clears a breakpoint rather than selecting "
               "the line.", "0", BOOL, '<a href="breakpoints.html">Breakpoints</a>')
 
 CFG += h2("[Editor] — encoding")
-CFG += cfgrow("NewFileEncoding", "The encoding given to newly created files.", "1",
-              "An encoding identifier", '<a href="encoding.html">Encoding</a>')
+ENC_VALUES = ("<code>0</code> ANSI, <code>1</code> UTF-8, <code>2</code> UTF-8 (BOM), "
+              "<code>3</code> UTF-16 (BOM)")
+CFG += cfgrow("NewFileEncoding",
+              "The encoding given to newly created files. The default, <code>1</code>, is "
+              "UTF-8 without a byte-order mark.", "1",
+              ENC_VALUES, '<a href="encoding.html">Encoding and line endings</a>')
 CFG += cfgrow("UnicodeEncoding",
               "How Tiko treats files whose encoding it cannot determine.", "0",
-              "An encoding identifier", '<a href="encoding.html">Encoding</a>')
+              ENC_VALUES, '<a href="encoding.html">Encoding and line endings</a>')
 
 CFG += h2("[Editor] — formatter rules")
 CFG += p(
@@ -196,6 +197,42 @@ CFG += h2("[Editor] — building")
 CFG += cfgrow("CompileAutosave", "Save modified documents before each build.", "-1", BOOL,
               '<a href="building.html">Building and running</a>')
 
+CFG += h2("[Compiler]")
+CFG += p(
+    "The compiler section is written from the Compiler page of the options dialog. You "
+    'normally change it there rather than by hand — see '
+    '<a href="compiler-setup.html">Compiler setup</a>.'
+)
+CFG += cfgrow("FBWINCompiler32",
+              "Full path to the 32-bit compiler. Tiko rebuilds this from the toolchain you "
+              "select; it is not edited directly.",
+              "toolchains\\&lt;toolchain&gt;\\fbc32.exe",
+              "A path to an <code>fbc32.exe</code>", "<code>FBWINCompiler64</code>")
+CFG += cfgrow("FBWINCompiler64",
+              "Full path to the 64-bit compiler, from the same selected toolchain.",
+              "toolchains\\&lt;toolchain&gt;\\fbc64.exe",
+              "A path to an <code>fbc64.exe</code>", "<code>FBWINCompiler32</code>")
+CFG += cfgrow("CompilerBuild", "The active build configuration, stored by its identifier.",
+              "(a GUID)", "A build configuration GUID",
+              '<a href="build-configurations.html">Build configurations</a>')
+CFG += cfgrow("CompilerSwitches",
+              "Switches appended to every build in every project.", "(empty)",
+              "Compiler switches, space separated")
+CFG += cfgrow("CompilerIncludes",
+              "Extra directories searched for <code>#include</code> files, beyond the "
+              "toolchain's own <code>inc</code> folder.", "(empty)", "Directory paths")
+CFG += cfgrow("RunViaCommandWindow",
+              "Launch the compiled program through a command window rather than directly.",
+              "0", BOOL)
+CFG += cfgrow("DisableCompileBeep", "Suppress the sound played when a build finishes.",
+              "0", BOOL)
+CFG += note(
+    "Compiler paths are stored with a <code>{CURDRIVE}</code> token in place of the drive "
+    "letter, so an installation keeps working when the same folder is opened from a "
+    "different drive — a USB stick that mounts as <code>E:</code> on one machine and "
+    "<code>F:</code> on another."
+)
+
 CFG += h2("[Startup] — window and layout")
 CFG += p(
     "These are maintained by Tiko as you move and resize things. They are listed for "
@@ -219,7 +256,9 @@ CFG += table(
          "Whether the Output panel is collapsed to its tab strip."),
         ("<code>ShowOutputPanelIndex</code>", "Which Output panel tab was active."),
         ("<code>UnusedKindMask</code>",
-         "Which symbol kinds the Unused Symbols report includes."),
+         "Which symbol kinds the Unused Symbols report includes — a bitmask over the six "
+         "kinds, in order: variables (1), procedures (2), parameters (4), types (8), "
+         "fields (16), constants (32). The default <code>63</code> is all six."),
     ],
     key_first=True,
 )
@@ -240,6 +279,10 @@ CFG += table(
         ("<code>settings\\themes\\*.theme</code>", "Colour themes."),
         ("<code>settings\\languages\\*.lang</code>", "Interface translations."),
         ("<code>settings\\keywords\\*.txt</code>", "Syntax highlighting keyword lists."),
+        ("<code>toolchains\\</code>",
+         "One subfolder per compiler toolchain, each holding <code>fbc32.exe</code> and "
+         "<code>fbc64.exe</code>. Not a settings file, but Tiko scans it — see "
+         '<a href="compiler-setup.html">Compiler setup</a>.'),
     ],
     key_first=True,
 )
@@ -270,31 +313,50 @@ DR += p(
 )
 
 DR += h2("Options", anchor="options")
-DR += p("Opened with %s or %s. Eight pages, listed down the left."
+DR += p("Opened with %s or %s. Nine pages, listed down the left."
         % (menu("File", "Settings", "Options…"), kbd("Ctrl", ",")))
 DR += table(
     ["Page", "Covers"],
     [
-        ("General", "Start-up behaviour, autosave, update checking, multiple instances "
-         "and menu density."),
+        ("General Options", "Start-up behaviour, autosave, update checking, multiple "
+         "instances and menu density."),
         ("Code Editor", "Line numbers, margins, current-line highlighting, indent guides, "
          "the right-edge marker, tabs and indentation."),
         ("Advanced Code Editor", "Code tips, autocomplete, character auto-completion, "
-         "auto-indentation and its For/Next option, brace and occurrence highlighting."),
-        ("Compiler", "Where your FreeBASIC compiler is installed."),
+         "auto-indentation and its For/Next option, brace and occurrence highlighting, and "
+         "<strong>Strip line ending whitespace when saving</strong>."),
+        ("Editor Font", "The editor font name, size, character set and extra line "
+         "spacing."),
+        ("Compiler Setup", "Which bundled toolchain to build with, plus global compiler "
+         "switches, extra include paths, and two build behaviour toggles."),
         ("Localization", "The interface language, and the phrase editor."),
-        ("Colors", "Editor and interface colours."),
-        ("Keywords", "The syntax highlighting keyword lists."),
-        ("Font", "The editor font name, size, character set and extra line spacing."),
+        ("FreeBASIC Keywords", "The FreeBASIC language keyword list."),
+        ("Windows API Keywords", "The Windows API name list."),
+        ("Extra Keywords", "Any further names you want highlighted and offered by "
+         "autocomplete."),
     ],
     key_first=True,
 )
 DR += p("<strong>OK</strong> applies and saves; <strong>Cancel</strong> discards everything.")
-DR += todo(
-    "Confirm the exact page names and their order in the shipping build's options dialog, "
-    "and document each page control by control.",
-    title="TODO — enumerate Options pages and controls",
+DR += note(
+    "There is no colours page here — every colour in Tiko belongs to the theme. Use "
+    "%s instead." % menu("File", "Settings", "Themes…")
 )
+
+DR += h3("Compiler Setup page", anchor="options-compiler")
+DR += table(
+    ["Control", "Purpose"],
+    [
+        ("Toolchain list", "Every subfolder of <code>toolchains\\</code>. Selecting one "
+         "sets the paths to both its <code>fbc32.exe</code> and <code>fbc64.exe</code>."),
+        ("Compiler switches", "Switches appended to every build in every project."),
+        ("Include paths", "Extra directories searched for <code>#include</code> files."),
+        ("Run via command window", "Launch the compiled program through a command window."),
+        ("Disable compile beep", "Suppress the sound played when a build finishes."),
+    ],
+    key_first=True,
+)
+DR += p('See <a href="compiler-setup.html">Compiler setup</a>.')
 
 DR += h2("Themes", anchor="themes")
 DR += p("Opened with %s or %s."
@@ -302,7 +364,17 @@ DR += p("Opened with %s or %s."
 DR += table(
     ["Control", "Purpose"],
     [
-        ("Theme list", "The themes available in <code>settings\\themes</code>."),
+        ("Theme list", "The themes in <code>settings\\themes</code>, in three columns: "
+         "Theme, Description and Active."),
+        ("Edit", "Open the selected theme in the colour editor. Does not activate it. "
+         "Disabled for <code>default_dark</code> and <code>default_light</code>."),
+        ("Clone", "Copy the selected theme to a new file — the way to build on a "
+         "protected theme."),
+        ("Delete", "Delete the selected theme's file. Disabled for the two protected "
+         "themes."),
+        ("Set as active", "Switch the editor to the selected theme."),
+        ("Pencil icon", "In the editor view, edit the theme's description."),
+        ("Back", "Return from the editor view to the list."),
         ("Palette page", "The theme's semantic roles. Changing one changes everything "
          "that inherits from it."),
         ("Key pages", "Individual colour keys, grouped by the part of the interface they "
@@ -413,12 +485,14 @@ DR += h2("Find and Replace", anchor="find")
 DR += table(
     ["Control", "Purpose"],
     [
-        ("Find what", "The text or pattern to search for."),
+        ("Find what", "The text to search for. Literal text — there is no regular "
+         "expression mode."),
         ("Replace with", "The replacement text (Replace only)."),
-        ("Match case", "Make the search case-sensitive."),
-        ("Whole word", "Match complete words only."),
-        ("Regular expression", "Treat the search text as a pattern."),
-        ("Find Next / Find Previous", "Move to the next or previous match."),
+        ("Match Case", "Make the search case-sensitive."),
+        ("Match Whole Words", "Match complete words only."),
+        ("Selection", "Confine the search to the selected text."),
+        ("Toggle Replace", "Show or hide the replacement field."),
+        ("Search Previous / Search Next", "Move to the previous or next match."),
         ("Replace", "Replace the current match and find the next."),
         ("Replace All", "Replace every match, as a single undoable action."),
     ],
@@ -429,14 +503,11 @@ DR += p('See <a href="find-replace.html">Find and Replace</a>.')
 DR += h2("Find in Project", anchor="find-in-project")
 DR += p("Opened with %s." % kbd("Ctrl", "Shift", "F"))
 DR += p(
-    "Offers the same matching options as Find, plus filters over which files are searched. "
-    "Results go to the Output panel's Search results tab."
+    "Offers the same two matching options as Find — Match Case and Match Whole Words. "
+    "There are no file filters and no regular expressions: every file in the workspace is "
+    "searched for literal text. Results go to the Output panel's Search results tab."
 )
-DR += todo(
-    "Document the Find in Project dialog control by control once the filter controls have "
-    "been confirmed against the shipping build.",
-    title="TODO — enumerate Find in Project controls",
-)
+DR += p('See <a href="find-in-project.html">Find in Project</a>.')
 
 DR += h2("About", anchor="about")
 DR += p("Opened with %s." % menu("Help", "About"))

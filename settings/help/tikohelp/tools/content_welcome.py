@@ -49,7 +49,7 @@ HOME += cards([
     ("editing-basics.html", "edit", "Editing text",
      "Cursors, selections, clipboard, indentation, encoding and folding."),
     ("find-replace.html", "find", "Searching",
-     "Find, Replace, Find in Project, regular expressions and search history."),
+     "Find, Replace, Find in Project, search options and search history."),
     ("navigation.html", "compass", "Navigation",
      "Goto Definition, symbol search, bookmarks, function list and history."),
     ("autocomplete.html", "bolt", "Productivity",
@@ -182,7 +182,7 @@ WHAT += table(
          % (kbd("F12"), kbd("Ctrl", "P"))),
         ("Search",
          "Find and Replace in the current file, Find in Project across every project file, "
-         "regular expressions, whole-word and case-sensitive matching."),
+         "whole-word and case-sensitive matching, and searching within a selection."),
         ("Projects",
          "A single workspace model — every set of open files is a project — with an "
          "Explorer tree, per-project options and per-project notes and TODO lists."),
@@ -226,9 +226,9 @@ WHAT += dl([
      "both 32-bit and 64-bit builds are supported."),
     ("Disk space", "A few tens of megabytes for the editor, its DLLs and its settings."),
     ("Runtime", "None. There is no .NET, Java or scripting runtime dependency."),
-    ("For building programs", "A FreeBASIC compiler installation. Tiko does not include "
-     "a compiler — you point it at the one you already use. See "
-     '<a href="compiler-setup.html">Compiler setup</a>.'),
+    ("For building programs", "Nothing extra. Tiko ships with the most recent FreeBASIC "
+     "toolchain already installed and selected. You can add other toolchains and switch "
+     'between them — see <a href="compiler-setup.html">Compiler setup</a>.'),
     ("For debugging", "A program compiled with debug information. See "
      '<a href="debugging.html">Debugging</a>.'),
 ])
@@ -328,16 +328,17 @@ QS += diagram("""
 <text x="34" y="38" class="dg-t">File  Edit  Search  View  Project  Compile  Debug  Help</text>
 <circle cx="742" cy="33" r="11" class="dg-c"/><text x="738" y="38" class="dg-n">1</text>
 
-<rect x="20" y="56" width="46" height="266" class="dg-box"/>
-<text x="26" y="80" class="dg-s">icons</text>
-<circle cx="43" cy="110" r="11" class="dg-c"/><text x="39" y="115" class="dg-n">2</text>
+<rect x="20" y="56" width="228" height="34" class="dg-box"/>
+<text x="30" y="78" class="dg-s">▤  ƒ  ⚑  ⚙</text>
+<text x="170" y="78" class="dg-s">🔍 💾 ▶</text>
+<circle cx="230" cy="72" r="11" class="dg-c"/><text x="226" y="77" class="dg-n">2</text>
 
-<rect x="72" y="56" width="176" height="266" class="dg-box"/>
-<text x="86" y="78" class="dg-t">Explorer</text>
-<text x="86" y="98" class="dg-s">project files</text>
-<text x="86" y="116" class="dg-s">functions</text>
-<text x="86" y="134" class="dg-s">bookmarks</text>
-<circle cx="230" cy="72" r="11" class="dg-c"/><text x="226" y="77" class="dg-n">3</text>
+<rect x="20" y="96" width="228" height="226" class="dg-box"/>
+<text x="34" y="118" class="dg-t">Explorer</text>
+<text x="34" y="140" class="dg-s">project files</text>
+<text x="34" y="158" class="dg-s">functions</text>
+<text x="34" y="176" class="dg-s">bookmarks</text>
+<circle cx="230" cy="112" r="11" class="dg-c"/><text x="226" y="117" class="dg-n">3</text>
 
 <rect x="254" y="56" width="526" height="34" class="dg-box"/>
 <text x="268" y="78" class="dg-t">main.bas  ×    utils.bi  ×</text>
@@ -355,10 +356,12 @@ QS += diagram("""
 <circle cx="762" cy="260" r="11" class="dg-c"/><text x="758" y="265" class="dg-n">6</text>
 
 <rect x="20" y="330" width="760" height="28" class="dg-box"/>
-<text x="34" y="349" class="dg-s">Ln 2, Col 24    INS    UTF-8    CRLF    FreeBASIC</text>
+<text x="34" y="349" class="dg-s">Ln 2, Col 24</text>
+<text x="470" y="349" class="dg-s">Win64 Console (Debug)   Spaces: 4   UTF-8   CRLF</text>
 <circle cx="742" cy="344" r="11" class="dg-c"/><text x="738" y="349" class="dg-n">7</text>
 """, "The Tiko main window. <strong>1</strong> Menu bar · <strong>2</strong> Panel icon "
-     "strip · <strong>3</strong> Side panel (Explorer, Functions, Bookmarks) · "
+     "strip, running across the top of the side panel · "
+     "<strong>3</strong> Side panel (Explorer, Functions, Bookmarks) · "
      "<strong>4</strong> Document tabs · <strong>5</strong> Editor surface · "
      "<strong>6</strong> Output panel · <strong>7</strong> Status bar.")
 
@@ -467,18 +470,20 @@ QS += ol([
     % kbd("Ctrl", "Shift", "F"),
 ], steps=True)
 QS += note(
-    "Find offers case-sensitive, whole-word and regular-expression matching. See "
-    '<a href="regular-expressions.html">Regular expressions</a> for the syntax.'
+    "Find offers three latching options — <strong>Match Case</strong>, <strong>Match Whole "
+    "Words</strong> and <strong>Selection</strong>. Tiko does not support regular "
+    'expressions. See <a href="find-replace.html">Find and Replace</a>.'
 )
 
 QS += h2("8. Jump around the file")
 QS += table(
     ["Goal", "How"],
     [
-        ("Go to a specific line", "Use the line number box or the Goto command — see "
-         '<a href="navigation.html">Navigation</a>.'),
-        ("Go to a symbol anywhere in the project", kbd("Ctrl", "P") +
-         " opens Search Symbol; start typing a procedure or type name."),
+        ("Go to a symbol or file anywhere in the project", kbd("Ctrl", "P") +
+         " opens the fuzzy finder; type a few letters of a procedure, type or file name."),
+        ("Go to a specific line",
+         "There is no Goto Line dialog — click the compiler error, search result or "
+         "bookmark instead. See " + '<a href="navigation.html">Navigation</a>.'),
         ("Jump to a definition", "Put the caret on a name and press " + kbd("F12") + "."),
         ("Come back again", kbd("Alt", "←") + " goes back, " + kbd("Alt", "→") +
          " goes forward."),
@@ -490,34 +495,35 @@ QS += table(
     key_first=True,
 )
 
-QS += h2("9. Point Tiko at your compiler")
+QS += h2("9. Check your compiler")
+QS += important(
+    "<strong>There is nothing to install.</strong> Tiko ships with the most recent "
+    "FreeBASIC toolchain already set up, so you can skip this step entirely and go "
+    "straight to building. It is here so you know where the setting lives."
+)
 QS += p(
-    "Before you can build anything, Tiko needs to know where your FreeBASIC compiler is."
+    "Compiler toolchains are subfolders of the <code>toolchains\\</code> folder beside "
+    "<code>tiko.exe</code>, and each one holds both <code>fbc32.exe</code> and "
+    "<code>fbc64.exe</code>. To see which is selected, or to switch to another you have "
+    "installed:"
 )
 QS += ol([
     "Open %s." % menu("File", "Settings", "Options…"),
     "Select the <strong>Compiler</strong> page.",
-    "Browse to the folder containing <code>fbc.exe</code> (or the specific compiler "
-    "executable, depending on how your toolchain is laid out).",
+    "The list shows every toolchain found in <code>toolchains\\</code>. Click one to "
+    "select it.",
     "Choose <strong>OK</strong>.",
 ], steps=True)
-QS += warn(
-    "If the compiler path is wrong, builds fail immediately with a message about the "
-    'compiler not being found rather than any error in your code. See '
-    '<a href="troubleshooting.html">Troubleshooting</a> if that happens.'
+QS += note(
+    "Whether you build 32-bit or 64-bit is decided by the <strong>build "
+    "configuration</strong>, not by the toolchain — every toolchain contains both "
+    'compilers. See <a href="build-configurations.html">Build configurations</a>.'
 )
-QS += todo(
-    "Confirm the exact field names and layout of the Compiler options page against the "
-    "shipping build, and replace the placeholder screenshot below with a real capture.",
-    title="TODO — verify compiler page fields",
-)
-QS += placeholder(
-    "Options ▸ Compiler",
-    "Screenshot of the compiler configuration page",
-    caption="Replace with a capture of "
-            "<span class='ui path'>File<span class='sep'>›</span>Settings"
-            "<span class='sep'>›</span>Options…<span class='sep'>›</span>Compiler</span>.",
-)
+QS += figure_img(
+    "assets/img/options-compiler.png",
+    "The Compiler page of the options dialog. This is a one-off: set it once and every "
+    "project uses it.",
+    alt="The Compiler page of the Tiko options dialog")
 
 QS += h2("10. Build and run")
 QS += p("With a compiler configured, the whole cycle is three keys:")

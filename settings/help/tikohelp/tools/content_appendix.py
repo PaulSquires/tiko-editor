@@ -44,8 +44,14 @@ FAQ_ITEMS = [
      "<p>Yes — " + kbd("Ctrl", "+") + " and " + kbd("Ctrl", "-") + " zoom, and " +
      kbd("Ctrl", "0") + " resets. Zoom does not change the configured font size.</p>"),
     ("Can I make my own theme?",
-     "<p>Yes. Edit colours in the Themes dialog and save under a new name so an update "
-     "cannot overwrite it. See <a href=\"theme-editor.html\">The theme editor</a>.</p>"),
+     "<p>Yes. Select a theme you like, click <strong>Clone</strong>, then "
+     "<strong>Edit</strong> the copy. Use the pencil icon beside the description to "
+     "name it. See <a href=\"theme-editor.html\">The theme editor</a>.</p>"),
+    ("Why are Edit and Delete greyed out for a theme?",
+     "<p>You have <code>default_dark</code> or <code>default_light</code> selected. "
+     "Those two are protected so the editor always has a theme to fall back on. Clone "
+     "one and edit the copy instead — every other theme, including the twelve other "
+     "shipped ones, can be edited directly.</p>"),
     ("How do I show line numbers?",
      "<p>Turn on <strong>Line numbering</strong> in " +
      menu("File", "Settings", "Options…") + ". It is on by default.</p>"),
@@ -56,9 +62,15 @@ FAQ_ITEMS = [
 
     # --- Editing ---
     ("How do I edit several lines at once?",
-     "<p>Hold " + kbd("Alt") + " and drag for a column selection, or hold " +
-     kbd("Ctrl") + " and click or drag to add independent selections. See "
-     "<a href=\"multiple-selections.html\">Multiple selections and column mode</a>.</p>"),
+     "<p>Two ways. Hold " + kbd("Alt") + " and drag for a <strong>column "
+     "selection</strong> when the places line up vertically; hold " + kbd("Ctrl") + " and "
+     "click, drag or double-click to add <strong>independent carets</strong> when they do "
+     "not. Typing then goes into every caret at once. See "
+     "<a href=\"multiple-selections.html\">Multi-cursor editing and column mode</a>.</p>"),
+    ("Is there a “select next occurrence” command for multi-cursor editing?",
+     "<p>No. You place each caret yourself with " + kbd("Ctrl") + "-click. For changing "
+     "every occurrence of something, Replace is quicker and lets you review each "
+     "change.</p>"),
     ("How do I comment out a block of code?",
      "<p>Select the lines and press " + kbd("Ctrl", "/") + ". " +
      kbd("Ctrl", "Shift", "/") + " uncomments.</p>"),
@@ -96,16 +108,36 @@ FAQ_ITEMS = [
      "<p>Put the caret on its name and press " + kbd("F12") + ". " + kbd("Alt", "←") +
      " brings you back.</p>"),
     ("How do I find a function when I do not know which file it is in?",
-     "<p>" + kbd("Ctrl", "P") + " — Search Symbol — filters every symbol in the project as "
-     "you type.</p>"),
+     "<p>" + kbd("Ctrl", "P") + " — Search Symbol. It is a fuzzy finder over every "
+     "procedure, type <em>and</em> file in the project, so the letters you type only have "
+     "to appear in order: <code>fpm</code> finds <code>frmPanelMenu</code>. Matches are "
+     "ranked best-first with the matched characters highlighted. See "
+     "<a href=\"navigation.html\">Navigation</a>.</p>"),
+    ("Is there a Goto Line command?",
+     "<p>No — Tiko has no Goto Line dialog, because nothing needs one. Click a compiler "
+     "error, a search result, a TODO entry or a bookmark and it takes you straight to the "
+     "line. The status bar always shows where you are.</p>"),
+    ("How do I get a completion list on demand?",
+     "<p>Press " + kbd("Ctrl", "Space") + ". It is the only keyboard trigger for the word "
+     "list — ordinary typing deliberately does not raise it. See "
+     "<a href=\"autocomplete.html#ctrl-space\">Autocomplete</a>.</p>"),
     ("How do I see all the functions in the current file?",
      "<p>" + kbd("F4") + " opens the function list in the side panel.</p>"),
     ("How do I switch between a module and its header?",
      "<p>" + kbd("Ctrl", "Shift", "H") + " goes to the header and " +
      kbd("Ctrl", "Shift", "C") + " back to the code file.</p>"),
     ("Does Tiko support regular expressions?",
-     "<p>Yes — turn on <strong>Regular expression</strong> in Find or Find in Project. See "
-     "<a href=\"regular-expressions.html\">Regular expressions</a>.</p>"),
+     "<p><strong>No.</strong> Searches are literal text. The only matching options are "
+     "Match Case, Match Whole Words and Selection, in both Find and Find in Project.</p>"),
+    ("What are the icons on the Find bar?",
+     "<p>Six: <strong>Match Case</strong>, <strong>Match Whole Words</strong>, "
+     "<strong>Selection</strong>, <strong>Toggle Replace</strong>, <strong>Search "
+     "Previous</strong> and <strong>Search Next</strong>. The first three latch on and stay "
+     "lit; the other three act immediately.</p>"),
+    ("How do I search only part of a file?",
+     "<p>Select the text and turn on <strong>Selection</strong> on the Find bar. If you "
+     "open Find with a multi-line selection already made, Tiko turns Selection on for you "
+     "and leaves the search box empty.</p>"),
 
     # --- Projects ---
     ("Do I have to create a project to use Tiko?",
@@ -115,8 +147,37 @@ FAQ_ITEMS = [
      "<p>Click the pinned <strong>Save as Project…</strong> row at the top of the "
      "Explorer, or choose " + menu("Project", "Save Project As…") + ".</p>"),
     ("I closed a tab. Did I remove the file from my project?",
-     "<p>No. Closing a tab only stops displaying the file. It is still in the Explorer, "
-     "still searched and still compiled.</p>"),
+     "<p>In a <strong>named</strong> project, no — closing a tab only stops displaying the "
+     "file. It is still in the Explorer, still searched and still compiled. On an "
+     "<strong>untitled</strong> workspace it is the opposite: closing the tab does take the "
+     "file out, because there is no project to remove it from.</p>"),
+    ("How do I remove a file from a project?",
+     "<p>Right-click it in the Explorer — or right-click its tab if it is open — and choose "
+     "<strong>Remove from project</strong>. The file is not deleted from disk. The command "
+     "only appears once the project has a name.</p>"),
+    ("Why is there no Remove from project command?",
+     "<p>The workspace is still untitled, so there is no project to remove the file from. "
+     "Save it as a project first, or just close the tab — on an untitled workspace that "
+     "takes the file out of the Explorer.</p>"),
+    ("What are the five groups in the Explorer?",
+     "<p>Main, Resource, Header, Module and Normal. They are permanent, and every project "
+     "file sits in exactly one of them. <strong>Main and Resource hold exactly one file "
+     "each</strong> — the entry point and the resource script. The other three take any "
+     "number, and can contain folders you create yourself.</p>"),
+    ("Can I organise project files into folders?",
+     "<p>Yes, within Header, Module and Normal. These are Tiko's own folders, not folders "
+     "on disk. Deleting one dissolves it — its contents move up to the parent — so nothing "
+     "is ever lost.</p>"),
+    ("How do I change which file is the main module?",
+     "<p>Right-click the file — in the Explorer or on its tab — and choose <strong>Main "
+     "file</strong>. You can also drag it onto the Main group in the Explorer. Whichever "
+     "file was Main before is moved to <strong>Normal</strong>, not deleted.</p>"),
+    ("How do I change a file's type or category?",
+     "<p>Right-click it in the Explorer or on its tab and pick from <strong>Main "
+     "file</strong>, <strong>Header file</strong>, <strong>Module file</strong>, "
+     "<strong>Resource file</strong> or <strong>Normal file</strong> — the current one is "
+     "marked. Dragging it between Explorer groups does the same. Select several files "
+     "first to retype them all at once.</p>"),
     ("How do I add an existing file to a project?",
      "<p>" + menu("Project", "Add Files to Project…") + " (" + kbd("Ctrl", "F11") +
      "), or simply open it — opening a file adds it to the current workspace.</p>"),
@@ -126,10 +187,24 @@ FAQ_ITEMS = [
      "debug versus release, shared across projects.</p>"),
 
     # --- Building ---
+    ("Do I need to install FreeBASIC separately?",
+     "<p>No. Tiko ships with the most recent FreeBASIC toolchain already installed and "
+     "selected, so you can build and run straight away.</p>"),
+    ("How do I install an additional compiler toolchain?",
+     "<p>Unpack it into its own subfolder of <code>toolchains\\</code> beside "
+     "<code>tiko.exe</code>, making sure both <code>fbc32.exe</code> and "
+     "<code>fbc64.exe</code> sit in that folder's root. It then appears in the list on the "
+     "Compiler page of " + menu("File", "Settings", "Options…") + ". You can install as "
+     "many as you like and switch between them.</p>"),
     ("Tiko says the compiler was not found.",
-     "<p>Set the compiler path in " + menu("File", "Settings", "Options…") +
-     " on the Compiler page. This is a configuration problem, not a problem with your "
-     "code.</p>"),
+     "<p>Check the Compiler page of " + menu("File", "Settings", "Options…") + ": either "
+     "no toolchain is selected, or the folder it names no longer contains both "
+     "<code>fbc32.exe</code> and <code>fbc64.exe</code>. This is a configuration problem, "
+     "not a problem with your code.</p>"),
+    ("How do I switch between building 32-bit and 64-bit?",
+     "<p>Choose a different build configuration — Win32 or Win64. Every toolchain carries "
+     "both compilers, so the configuration is what decides which one runs. See "
+     "<a href=\"build-configurations.html\">Build configurations</a>.</p>"),
     ("What is the difference between Build and Execute, Compile and Quick Run?",
      "<p>Build and Execute (" + kbd("F5") + ") compiles the project and runs it. Compile "
      "(" + kbd("Ctrl", "F5") + ") only compiles. Quick Run (" +
@@ -213,12 +288,22 @@ FAQ_ITEMS = [
      "<p>Yes, if <strong>Multiple instances</strong> is enabled. Note that instances "
      "sharing a folder share one <code>settings.ini</code>, and the last one to close "
      "wins.</p>"),
+    ("What does the Unused Symbols report tell me?",
+     "<p>It lists declared symbols with zero reads, in three flavours: <strong>dead</strong> "
+     "(no references at all), <strong>write-only</strong> (assigned but never read — often "
+     "a real bug) and <strong>unknown</strong> (counts cannot be trusted, such as exported "
+     "procedures). Filter by six kinds, sort any column, and click a row to jump to it. See "
+     "<a href=\"symbol-navigation.html\">Symbols and the function list</a>.</p>"),
+    ("Can I trust Unused Symbols to tell me what is safe to delete?",
+     "<p>Treat it as candidates, not certainties. Counts come from one scan, so anything "
+     "reached through a function pointer, excluded by conditional compilation, or called "
+     "from outside the project can look unused while being essential.</p>"),
     ("Does Tiko work with languages other than FreeBASIC?",
      "<p>Yes. It edits any text file, and highlights the languages its lexers support. The "
      "project system, symbol engine and debugger are FreeBASIC-specific.</p>"),
     ("Is there a minimap?",
-     "<p>Not in the current build. Use " + kbd("Shift", "F8") + " (Fold All) or the "
-     "function list (" + kbd("F4") + ") for an overview of a file.</p>"),
+     "<p>No. Use <strong>Fold All</strong> (" + kbd("Shift", "F8") + ") or the function "
+     "list (" + kbd("F4") + ") for an overview of a file.</p>"),
     ("What is the Help Center?",
      "<p>The documentation browser built into Tiko, opened with " + kbd("F1") + ". It "
      "searches for the selected text, or the word under the caret.</p>"),
@@ -297,11 +382,12 @@ TT += ul([
     % kbd("Ctrl", "F"),
     "<strong>Use Find in Project as a preview for Replace All.</strong> Search first, see "
     "how many places would change and whether they are all what you expect, then replace.",
-    "<strong>Regular expressions for structural searches.</strong> "
-    "<code>^\\s*(Sub|Function)\\s+\\w+</code> lists every procedure declaration in the "
-    "project.",
-    "<strong>Turn Regular expression off again</strong> when you are done. Leaving it on "
-    "makes ordinary searches containing a full stop or a bracket behave strangely later.",
+    "<strong>Select first, then search.</strong> Opening Find with a multi-line selection "
+    "turns on <strong>Selection</strong> automatically, so a Replace All is confined to "
+    "the region you highlighted — the safe way to rename inside one procedure only.",
+    "<strong>Watch for latched icons.</strong> Match Case, Match Whole Words and Selection "
+    "stay lit until you turn them off, and are the usual reason a search stops finding "
+    "what you expect.",
 ])
 
 TT += h2("Navigation tricks")
@@ -428,8 +514,14 @@ TS += table(
     ["Symptom", "Cause and fix"],
     [
         ("“Compiler not found”, or the build does nothing.",
-         "The compiler path is unset or wrong. Set it in " +
-         menu("File", "Settings", "Options…") + " on the Compiler page."),
+         "Open the Compiler page of " + menu("File", "Settings", "Options…") + ". Either "
+         "no toolchain is selected, or the selected folder no longer holds both "
+         "<code>fbc32.exe</code> and <code>fbc64.exe</code> — both are required."),
+        ("A toolchain I installed does not appear in the list.",
+         "It must be a <em>direct</em> subfolder of <code>toolchains\\</code>, with the "
+         "two compiler executables in that folder's root rather than one level down in a "
+         "<code>bin</code> folder. Reopen the options dialog — the folder is rescanned "
+         "each time the page opens."),
         ("The build fails with errors that make no sense.",
          "Fix the first error and rebuild. One early mistake commonly produces a cascade."),
         ("The build succeeds but runs old behaviour.",
@@ -441,8 +533,9 @@ TS += table(
          "Your program ended immediately. Add <code>Sleep</code> at the end, or run it "
          "from a console."),
         ("Linker errors about a library or an architecture mismatch.",
-         "A 32-bit program cannot link a 64-bit library. Check which compiler Tiko is "
-         "configured to use."),
+         "A 32-bit program cannot link a 64-bit library. Check whether you are building "
+         "with a Win32 or a Win64 build configuration — that, not the toolchain, decides "
+         "the architecture."),
     ],
 )
 
@@ -496,17 +589,19 @@ TS += table(
     ["Symptom", "Cause and fix"],
     [
         ("A search finds nothing that is obviously there.",
-         "<strong>Match case</strong>, <strong>Whole word</strong> or <strong>Regular "
-         "expression</strong> is still on from an earlier search."),
+         "<strong>Match Case</strong>, <strong>Match Whole Words</strong> or "
+         "<strong>Selection</strong> is still latched on from an earlier search — look for "
+         "a lit icon on the Find bar."),
         ("Find in Project misses files.",
          "Those files are not in the workspace. Add them with " +
          menu("Project", "Add Files to Project…") + "."),
-        ("A search containing a bracket or a full stop behaves oddly.",
-         "Regular expression mode is on and those characters are pattern syntax. Turn it "
-         "off, or escape them with <code>\\</code>."),
+        ("A search only looks at part of the file.",
+         "The <strong>Selection</strong> option is latched on, confining the search to the "
+         "selected text. Click the icon to turn it off."),
         ("Replace All changed too much.",
-         kbd("Ctrl", "Z") + " undoes the whole operation. Enable <strong>Whole "
-         "word</strong> and repeat."),
+         kbd("Ctrl", "Z") + " undoes the whole operation. Enable <strong>Match Whole "
+         "Words</strong>, or select a region and use <strong>Selection</strong>, then "
+         "repeat."),
     ],
 )
 
@@ -520,8 +615,8 @@ TS += table(
         ("Goto Definition does nothing.",
          "Same cause — the defining file must be part of the project."),
         ("The function list is empty.",
-         "The active file has no procedures the parser recognised, or its language is set "
-         "incorrectly. Check the status bar."),
+         "The active file has no procedures the parser recognised, or its extension is not "
+         "one Tiko parses as FreeBASIC source."),
         ("Typing feels slow on a very large file.",
          "Turn off occurrence highlighting and, if necessary, syntax highlighting. Splitting "
          "a very large file is usually the better answer."),
@@ -647,8 +742,10 @@ GLOSSARY = [
     ("Project", "A named workspace: a set of files plus its options, stored in a "
      "<code>.tiko</code> file. See <a href=\"projects-overview.html\">Projects and "
      "workspaces</a>."),
-    ("Regular expression", "A pattern describing a set of strings, used for structural "
-     "searching. See <a href=\"regular-expressions.html\">Regular expressions</a>."),
+    ("Regular expression", "A pattern language for describing sets of strings, offered by "
+     "some editors for advanced searching. <strong>Tiko does not support them</strong> — "
+     "its searches are literal text, refined by Match Case, Match Whole Words and "
+     "Selection."),
     ("Resource script", "A <code>.rc</code> file describing icons, menus, dialogs and "
      "version information compiled into a Windows program."),
     ("Scintilla", "The open-source editing component Tiko's editing surface is built on, "
@@ -708,6 +805,7 @@ INDEX_ENTRIES = [
     ("Add files to project", "project-files.html"),
     ("ANSI encoding", "encoding.html"),
     ("Autocomplete", "autocomplete.html"),
+    ("Autocomplete word (Ctrl+Space)", "autocomplete.html#ctrl-space"),
     ("Auto indentation", "indentation.html"),
     ("Auto save", "configuration-reference.html#cfg-autosavefiles"),
     ("Backing up settings", "settings-files.html"),
@@ -750,6 +848,8 @@ INDEX_ENTRIES = [
     ("Duplicate line", "line-operations.html"),
     ("Encoding", "encoding.html"),
     ("Explorer", "project-explorer.html"),
+    ("Folders (in the Explorer)", "projects-overview.html"),
+    ("File categories", "projects-overview.html"),
     ("Exporting settings", "settings-files.html"),
     ("FAQ", "faq.html"),
     ("Find", "find-replace.html"),
@@ -763,11 +863,11 @@ INDEX_ENTRIES = [
     ("Format Options dialog", "dialog-reference.html#format-options"),
     ("Format Project", "code-formatting.html"),
     ("Function list", "symbol-navigation.html"),
+    ("Fuzzy finder (Ctrl+P)", "navigation.html"),
     ("Glossary", "glossary.html"),
     ("Go Back / Go Forward", "navigation.html"),
     ("Goto Definition", "navigation.html"),
     ("Goto Header File", "navigation.html"),
-    ("Goto Line", "navigation.html"),
     ("Help Center", "what-is-tiko.html"),
     ("High-DPI displays", "editor-appearance.html"),
     ("Highlight occurrences", "brace-matching.html"),
@@ -796,6 +896,7 @@ INDEX_ENTRIES = [
     ("Move line", "line-operations.html"),
     ("Multiple instances", "configuration-reference.html#cfg-multipleinstances"),
     ("Multiple selections", "multiple-selections.html"),
+    ("Multi-cursor editing", "multiple-selections.html"),
     ("Navigation", "navigation.html"),
     ("Notes tab", "output-panel.html"),
     ("Open file", "quick-start.html"),
@@ -816,7 +917,9 @@ INDEX_ENTRIES = [
     ("Recent Files", "quick-start.html"),
     ("Recent Projects", "projects-overview.html"),
     ("Redo", "editing-basics.html"),
-    ("Regular expressions", "regular-expressions.html"),
+    ("Regular expressions (not supported)", "glossary.html"),
+    ("Search options", "find-replace.html"),
+    ("Selection (search option)", "find-replace.html"),
     ("Rename file", "project-files.html"),
     ("Replace", "find-replace.html"),
     ("Replace All", "find-replace.html"),
@@ -830,6 +933,7 @@ INDEX_ENTRIES = [
     ("Scintilla", "glossary.html"),
     ("Scrolling", "view-options.html"),
     ("Search Symbol", "navigation.html"),
+    ("Symbol search (fuzzy)", "navigation.html"),
     ("Selecting text", "editing-basics.html"),
     ("Settings files", "settings-files.html"),
     ("Side panels", "side-panels.html"),
@@ -852,6 +956,8 @@ INDEX_ENTRIES = [
     ("Undo", "editing-basics.html"),
     ("Unicode", "encoding.html"),
     ("Unused Symbols", "symbol-navigation.html"),
+    ("Unused Symbols report", "symbol-navigation.html"),
+    ("Write-only symbols", "symbol-navigation.html"),
     ("User tools", "user-tools.html"),
     ("UTF-8", "encoding.html"),
     ("Watches", "watches.html"),

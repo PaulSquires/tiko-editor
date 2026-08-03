@@ -111,7 +111,9 @@ EB += table(
          "Opens a new line beneath the current one and moves there, wherever the caret "
          "is on the line."),
         ("Overwrite mode", kbd("Insert"),
-         "Toggles insert and overwrite. The status bar shows which mode you are in."),
+         "Toggles between inserting and overwriting. Nothing in the interface reports "
+         "which mode you are in — watch what typing does, or press " + kbd("Insert") +
+         " again if the caret starts replacing characters."),
     ],
     key_first=True,
 )
@@ -171,20 +173,39 @@ Static Dim As Integer height
 Static Dim As Integer depth
 """, lang="fb", title="Column editing")
 
-MS += h2("Multiple selections")
+MS += h2("Multi-cursor editing")
 MS += p(
-    "Multiple selections are independent — they need not line up. Hold %s while dragging "
-    "or clicking to add another selection or caret. Typing then affects all of them."
-    % kbd("Ctrl")
+    "Multiple selections are independent of one another — unlike a column selection, they "
+    "need not line up. Each carries its own caret, and typing goes into all of them at "
+    "once."
 )
-MS += ul([
-    "Each selection keeps its own caret, so word movement and %s behave sensibly in each.",
-    "Click anywhere without %s to collapse back to a single caret.",
-])
+MS += table(
+    ["Action", "How"],
+    [
+        ("Add another caret", "Hold " + kbd("Ctrl") + " and click."),
+        ("Add another selection", "Hold " + kbd("Ctrl") + " and drag."),
+        ("Add a whole word", "Hold " + kbd("Ctrl") + " and double-click it."),
+        ("Type into every caret", "Just type — each caret receives what you type."),
+        ("Delete at every caret", kbd("Backspace") + " or " + kbd("Delete") + "."),
+        ("Collapse back to one caret", "Click anywhere without " + kbd("Ctrl") + "."),
+    ],
+    key_first=True,
+)
 MS += p(
-    "Additional carets and selections are drawn using dedicated theme colours, so they "
-    'stay visible against your chosen background. See <a href="theme-editor.html">'
-    "The theme editor</a>."
+    "Word movement, %s and %s act at each caret independently, so carets sitting at "
+    "different offsets on different lines still do the right thing individually while you "
+    "edit them together." % (kbd("Home"), kbd("End"))
+)
+MS += p(
+    "Additional carets and selections are drawn in their own theme colour so they stay "
+    'visible against your background. See <a href="theme-editor.html">The theme '
+    "editor</a>."
+)
+MS += note(
+    "Tiko has no \"select next occurrence\" command that grows a multi-selection one match "
+    "at a time — you place the carets yourself with %s. To change every occurrence of "
+    'something, use <a href="find-replace.html">Replace</a>: beyond a handful of places it '
+    "is both quicker and reviewable." % kbd("Ctrl")
 )
 MS += tip(
     "Multiple selections shine for renaming a local variable within one procedure: select "
@@ -349,25 +370,26 @@ EN += p(
 )
 
 EN += h2("Encodings Tiko works with")
+EN += p(
+    "Four, and the names below are exactly what the status bar shows:"
+)
 EN += table(
-    ["Encoding", "Notes"],
+    ["Shown as", "Encoding", "Notes"],
     [
-        ("UTF-8", "The modern default. Represents every Unicode character, and is "
-         "byte-compatible with ASCII for plain English text. Use this unless you have a "
-         "reason not to."),
-        ("UTF-8 with BOM", "UTF-8 preceded by a byte-order mark. Some tools require it; "
-         "others choke on it."),
-        ("ANSI / system code page", "The legacy Windows encoding for your locale. Fine "
-         "for plain ASCII, unreliable for anything else."),
-        ("UTF-16", "Two bytes per character. Common in Windows APIs, less so in source "
-         "files."),
+        ("<code>UTF-8</code>", "UTF-8, no byte-order mark",
+         "The modern default. Represents every Unicode character and is byte-compatible "
+         "with ASCII for plain English text. Use this unless you have a reason not to."),
+        ("<code>UTF-8 (BOM)</code>", "UTF-8 with a byte-order mark",
+         "The same encoding, preceded by a marker identifying it. Some tools require the "
+         "marker; others choke on it."),
+        ("<code>UTF-16 (BOM)</code>", "UTF-16 with a byte-order mark",
+         "Two bytes per character. Common in Windows APIs, less so in source files. Tiko "
+         "always writes the byte-order mark for UTF-16 — there is no BOM-less variant."),
+        ("<code>ANSI</code>", "The system code page",
+         "The legacy Windows encoding for your locale. Fine for plain ASCII, unreliable "
+         "for anything else."),
     ],
     key_first=True,
-)
-EN += todo(
-    "Confirm the exact set of encodings Tiko offers, and the precise wording of the "
-    "encoding options, against the shipping build.",
-    title="TODO — verify supported encodings",
 )
 
 EN += h2("Seeing and changing the encoding")
@@ -476,18 +498,6 @@ VW += dl([
      "Highlights every other occurrence of the word under the caret."),
 ])
 
-VW += h2("Whitespace and word wrap")
-VW += p(
-    "Displaying whitespace draws dots for spaces and arrows for tabs, which is the quickest "
-    "way to diagnose a file with mixed indentation. Word wrap folds long lines to the "
-    "window width instead of scrolling horizontally."
-)
-VW += todo(
-    "Confirm where the whitespace-display and word-wrap toggles live in the shipping "
-    "build's options dialog or View menu, and document the exact commands.",
-    title="TODO — verify whitespace and word wrap commands",
-)
-
 VW += h2("Zoom")
 VW += table(
     ["Command", "Shortcut"],
@@ -517,11 +527,11 @@ VW += ul([
 ])
 
 VW += h2("Minimap")
-VW += todo(
-    "Tiko's current build does not appear to provide a minimap (the miniature overview of "
-    "the whole file shown alongside the scrollbar in some editors). Confirm this and either "
-    "remove this section or document the feature.",
-    title="TODO — confirm whether a minimap exists",
+VW += p(
+    "<strong>Tiko has no minimap</strong> — the miniature overview of a whole file that "
+    "some editors show beside the scrollbar. For an overview of a file's structure, use "
+    "<strong>Fold All</strong> (" + kbd("Shift", "F8") + ") or the function list (" +
+    kbd("F4") + ") instead; both are quicker to read than a thumbnail of the text."
 )
 
 VW += h2("Related topics")
@@ -532,11 +542,10 @@ VW += ul([
 ])
 
 page("view-options", "Display and view options", "editing",
-     "Margins, line numbers, indent guides, the right-edge marker, whitespace display, "
-     "word wrap, zoom and scrolling.",
+     "Margins, line numbers, indent guides, the right-edge marker, zoom and scrolling.",
      VW,
      keywords="view display margins line numbers fold margin right edge highlight current "
-              "line indent guides whitespace word wrap zoom scroll minimap occurrence")
+              "line indent guides zoom scroll no minimap occurrence highlight")
 
 # ==========================================================================
 # Code folding

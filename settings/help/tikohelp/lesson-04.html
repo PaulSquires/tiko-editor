@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Find and replace text in a file, search a whole project, and use a simple regular expression.">
+<meta name="description" content="Find and replace text in a file, search a whole project, and confine a search to the text you selected.">
 <meta name="generator" content="Tiko Help build.py">
 <title>Lesson 4 — Searching — Tiko Editor Help</title>
 <link rel="stylesheet" href="assets/styles.css">
@@ -71,7 +71,6 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <div class="nav-section-body" id="navsec-searching"><ul>
 <li><a href="find-replace.html">Find and Replace</a></li>
 <li><a href="find-in-project.html">Find in Project</a></li>
-<li><a href="regular-expressions.html">Regular expressions</a></li>
 </ul></div></li>
 <li class="nav-section">
 <button class="nav-section-btn" type="button" data-section="navigation" aria-expanded="false" aria-controls="navsec-navigation"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M13.2 6.8l-1.7 4.7-4.7 1.7 1.7-4.7z"/></svg><span>Navigation</span></button>
@@ -162,13 +161,13 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
     <main class="content" id="content">
 <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="index.html">Home</a></li><li><a href="tutorial.html">Tutorial</a></li><li><span aria-current="page">Lesson 4 — Searching</span></li></ol></nav>
       <h1>Lesson 4 — Searching</h1>
-<p class="page-summary">Find and replace text in a file, search a whole project, and use a simple regular expression.</p>
-<div class="lesson-meta"><span class="lm-item"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><circle cx="10" cy="10" r="3.6"/><circle cx="10" cy="10" r=".8" fill="currentColor"/></svg><span><strong>Goal:</strong> Find and replace text in a file, search a whole project, and use a simple regular expression.</span></span><span class="lm-item"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 5.8V10l2.8 2"/></svg><span><strong>Time:</strong> 15 minutes</span></span><span class="lm-item"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5A1.5 1.5 0 014.5 3H9v14H4.5A1.5 1.5 0 013 15.5z"/><path d="M17 4.5A1.5 1.5 0 0015.5 3H11v14h4.5a1.5 1.5 0 001.5-1.5z"/></svg><span><strong>Before you start:</strong> Lessons 1–3.</span></span></div><h2 id="what-you-will-learn">What you will learn</h2><ul>
+<p class="page-summary">Find and replace text in a file, search a whole project, and confine a search to the text you selected.</p>
+<div class="lesson-meta"><span class="lm-item"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><circle cx="10" cy="10" r="3.6"/><circle cx="10" cy="10" r=".8" fill="currentColor"/></svg><span><strong>Goal:</strong> Find and replace text in a file, search a whole project, and confine a search to the text you selected.</span></span><span class="lm-item"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 5.8V10l2.8 2"/></svg><span><strong>Time:</strong> 15 minutes</span></span><span class="lm-item"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5A1.5 1.5 0 014.5 3H9v14H4.5A1.5 1.5 0 013 15.5z"/><path d="M17 4.5A1.5 1.5 0 0015.5 3H11v14h4.5a1.5 1.5 0 001.5-1.5z"/></svg><span><strong>Before you start:</strong> Lessons 1–3.</span></span></div><h2 id="what-you-will-learn">What you will learn</h2><ul>
   <li>Finding text and repeating a search with <kbd>F3</kbd>.</li>
   <li>What Whole word and Match case actually change.</li>
   <li>Replacing one match at a time, and all at once.</li>
   <li>Searching every file in the project.</li>
-  <li>The idea behind regular expressions.</li>
+  <li>Confining a search to the selected text.</li>
 </ul><p>Keep <code>inventory.bas</code> open for this lesson.</p><h2 id="find">Find</h2><ol class="steps">
   <li>Press <kbd>Ctrl</kbd> + <kbd>F</kbd>.</li>
   <li>Type <code>qty</code>. Matches are highlighted as you type.</li>
@@ -190,12 +189,12 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <li>Search for <code>Print</code>.</li>
   <li>The Output panel opens on its Search results tab, listing every match in every file of the workspace.</li>
   <li>Click a result. That file opens with the caret on the line.</li>
-</ol><p>With only two or three files this seems like overkill. On a real project it is how you answer "where is this used?" in a couple of seconds.</p><h2 id="a-regular-expression">A regular expression</h2><ol class="steps">
-  <li>Open Find and turn on <strong>Regular expression</strong>.</li>
-  <li>Search for <code>^Print</code> — the caret means <em>start of line</em>. Only the lines beginning with <code>Print</code> match.</li>
-  <li>Now search for <code>\d+</code> — one or more digits. Every number in the file matches.</li>
-  <li>Turn the option off again when you have finished.</li>
-</ol><div class="callout note"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 9v5M10 6.2v.1"/></svg><div class="callout-body"><span class="callout-title">Note</span><p>Leaving <strong>Regular expression</strong> on catches people out later, when an ordinary search containing a full stop or a bracket behaves oddly.</p></div></div><h2 id="expected-result">Expected result</h2><p>The file is back to using <code>qty</code>, and you have used Find, Replace, Find in Project and a regular expression at least once each.</p><h2 id="common-mistakes">Common mistakes</h2><div class="table-wrap"><table><thead><tr><th>Symptom</th><th>Cause and fix</th></tr></thead><tbody><tr><td>Replace All changed far more than expected.</td><td><strong>Whole word</strong> was off. Press <kbd>Ctrl</kbd> + <kbd>Z</kbd> — it undoes the whole operation — and try again.</td></tr><tr><td>A search finds nothing that is clearly there.</td><td><strong>Match case</strong> or <strong>Regular expression</strong> is on from a previous search.</td></tr><tr><td><kbd>F3</kbd> does nothing.</td><td>No search has been made yet in this session. Open Find once first.</td></tr><tr><td>Find in Project returns nothing.</td><td>The files are not in the workspace. Lesson 5 covers this.</td></tr></tbody></table></div><h2 id="review">Review</h2><ul>
+</ol><p>With only two or three files this seems like overkill. On a real project it is how you answer "where is this used?" in a couple of seconds.</p><h2 id="searching-inside-a-selection">Searching inside a selection</h2><ol class="steps">
+  <li>Select the three <code>Print</code> lines — a multi-line selection.</li>
+  <li>Press <kbd>Ctrl</kbd> + <kbd>F</kbd>. Notice two things: the search box is empty, and the <strong>Selection</strong> icon is lit. Tiko turned it on for you.</li>
+  <li>Search for <code>item</code>. Only matches inside your selection are found.</li>
+  <li>Turn <strong>Selection</strong> off by clicking its icon, and search again. Now the whole file is searched.</li>
+</ol><div class="callout important"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M10 2.2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L2.2 7.9l5.4-.8z"/></svg><div class="callout-body"><span class="callout-title">Important</span><p>This is the safe way to run a Replace All over one procedure instead of a whole file: select the region first, then replace.</p></div></div><div class="callout note"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 9v5M10 6.2v.1"/></svg><div class="callout-body"><span class="callout-title">Note</span><strong>Tiko does not support regular expressions.</strong> Searches are literal text, refined by the three latching options — Match Case, Match Whole Words and Selection.</div></div><h2 id="expected-result">Expected result</h2><p>The file is back to using <code>qty</code>, and you have used Find, Replace, Find in Project and the Selection option at least once each.</p><h2 id="common-mistakes">Common mistakes</h2><div class="table-wrap"><table><thead><tr><th>Symptom</th><th>Cause and fix</th></tr></thead><tbody><tr><td>Replace All changed far more than expected.</td><td><strong>Whole word</strong> was off. Press <kbd>Ctrl</kbd> + <kbd>Z</kbd> — it undoes the whole operation — and try again.</td></tr><tr><td>A search finds nothing that is clearly there.</td><td><strong>Match Case</strong>, <strong>Match Whole Words</strong> or <strong>Selection</strong> is still latched on from a previous search. Look for a lit icon on the Find bar.</td></tr><tr><td><kbd>F3</kbd> does nothing.</td><td>No search has been made yet in this session. Open Find once first.</td></tr><tr><td>Find in Project returns nothing.</td><td>The files are not in the workspace. Lesson 5 covers this.</td></tr></tbody></table></div><h2 id="review">Review</h2><ul>
   <li><kbd>Ctrl</kbd> + <kbd>F</kbd> finds, <kbd>F3</kbd> repeats, <kbd>Ctrl</kbd> + <kbd>H</kbd> replaces.</li>
   <li><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> searches every file, with results in the Output panel.</li>
   <li>Whole word prevents matches inside longer words.</li>
@@ -203,7 +202,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </ul><h2 id="practice">Practice</h2><ol class="steps">
   <li>Use Replace to rename <code>item</code> to <code>part</code> throughout, then undo it.</li>
   <li>Use Find in Project to find every line containing <code>Dim</code>.</li>
-  <li>Write a regular expression that finds every line ending in a digit. (Hint: <code>\d$</code>.)</li>
+  <li>Select just the assignment lines and use Selection to replace <code>qty</code> there only, leaving the Print lines untouched.</li>
 </ol><h2 id="whats-next">What's next?</h2><p>In <a href="lesson-05.html">Lesson 5</a> you turn these loose files into a real, named project.</p>
 <nav class="pager" aria-label="Page navigation"><a class="prev" href="lesson-03.html" rel="prev"><span class="dir">← Previous</span><span class="ttl">Lesson 3 — Editing text</span></a><a class="next" href="lesson-05.html" rel="next"><span class="dir">Next →</span><span class="ttl">Lesson 5 — Projects</span></a></nav>
       <footer class="site-footer">
