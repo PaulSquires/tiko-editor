@@ -42,7 +42,8 @@ function RichEditCenterSingleLineText( byval hRichEdit as HWND ) as long
     SelectObject(hdc, hOldFont)
     ReleaseDC(hRichEdit, hdc)
 
-    dim as long topMargin = ((rc.bottom - rc.top) - tm.tmHeight) / 2
+    ' \ not /: / is floating point in FB and assigning it to a long rounds.
+    dim as long topMargin = ((rc.bottom - rc.top) - tm.tmHeight) \ 2
     if (topMargin < 0) then topMargin = 0
 
     rc.top = topMargin
@@ -211,6 +212,67 @@ function SpawnPreviousInstance() as boolean
     function = false
 end function
     
+
+' ========================================================================================
+' Safely read the wide string out of a WM_COPYDATA payload.
+'
+' WM_COPYDATA IS AN OPEN DOOR. Any process on the same desktop can send it to tiko's main
+' window; nothing about it is privileged. The handler used to do:
+'
+'     dim as DWSTRING wszCommandLine = *cast(wstring ptr, pDataToGet->lpData)
+'
+' which dereferences another process's buffer as a NUL-terminated string without checking
+' lpData for null, without consulting cbData at all, and without any guarantee a terminator
+' exists inside the mapped copy. A payload that is simply not terminated reads off the end
+' of the mapping -- an access violation, i.e. any unprivileged process can close the editor
+' at will. The resulting string is then treated as a list of files to open.
+'
+' Every rule here is about staying inside cbData:
+'   - a null pointer, or fewer than 2 bytes, cannot hold even one UTF-16 code unit
+'   - an odd trailing byte cannot form a code unit, so integer division drops it
+'   - the scan for the terminator NEVER passes cbData\2, and the result is terminated by
+'     this function rather than trusted from the sender
+'   - the length is capped: a command line is bounded by the OS at 32767 characters, so
+'     anything longer is not one, whatever the sender claims
+'
+' Pure -- pointer and length in, string out -- so all of that is assertable without a second
+' process. Returns "" for anything malformed.
+'
+' NOTE: this validates the CONTENT, not the SENDER. tiko still acts on a file list from any
+' process that asks. Restricting that (checking the sender's image path) is a separate
+' decision and is deliberately not made here.
+' ========================================================================================
+function SafeCopyDataString( byval pData as any ptr, byval cbData as ulong ) as DWSTRING
+    const MAX_COPYDATA_CHARS = 32767      ' the OS command-line limit
+
+    if pData = 0 then return ""
+    if cbData < 2 then return ""
+
+    dim as ulong nMax = cbData \ 2        ' an odd trailing byte cannot be a code unit
+    if nMax > MAX_COPYDATA_CHARS then nMax = MAX_COPYDATA_CHARS
+
+    ' Find the terminator WITHIN the declared length. A well-formed sender includes one
+    ' (SpawnPreviousInstance sends (len+1)*2); a hostile or buggy one may not, and that is
+    ' precisely the case the old code read past.
+    dim as ushort ptr p = cast(ushort ptr, pData)
+    dim as ulong n = 0
+    while n < nMax
+        if p[n] = 0 then exit while
+        n += 1
+    wend
+    if n = 0 then return ""
+
+    ' Copy into our own buffer and terminate it ourselves.
+    dim as wstring ptr pBuf = allocate( (n + 1) * 2 )
+    if pBuf = 0 then return ""
+    memcpy( pBuf, pData, n * 2 )
+    pBuf[n] = 0
+    dim as DWSTRING wszOut = *pBuf
+    deallocate( pBuf )
+
+    return wszOut
+end function
+
 
 ' ========================================================================================
 ' Reload a Document based on filename.
@@ -404,261 +466,6 @@ end function
 
 
 ' ========================================================================================
-' Length-explicit codepage conversions. These are the ONLY conversion primitives the
-' encoding code should use: every call passes an explicit byte/char count (never -1), so
-' an embedded NUL is preserved rather than acting as a terminator, and the destination
-' byte count is computed by the API rather than guessed. AfxNova's DWSTRING conversion
-' properties all pass -1 and stop at the first NUL, which is why they are avoided here.
-' ========================================================================================
-
-' Decode an ANSI or UTF-8 byte buffer into a UTF-16LE buffer held in a FreeBASIC string
-' (2 bytes per code unit). nWideChars receives the number of UTF-16 code units.
-private function BytesToWide( byref sBuffer as string, byval nCodePage as long, byref nWideChars as long ) as string
-    nWideChars = 0
-    if len(sBuffer) = 0 then return ""
-    dim as long wlen = MultiByteToWideChar( nCodePage, 0, strptr(sBuffer), len(sBuffer), NULL, 0 )
-    if wlen <= 0 then return ""
-    dim as string sWide = string( wlen * 2, 0 )
-    MultiByteToWideChar( nCodePage, 0, strptr(sBuffer), len(sBuffer), cast(LPWSTR, strptr(sWide)), wlen )
-    nWideChars = wlen
-    return sWide
-end function
-
-' Encode a UTF-16LE buffer (nWideChars code units) to ANSI bytes. bLossy is set true when
-' any character had no representation in the active ANSI codepage (WC_NO_BEST_FIT_CHARS
-' disables approximate substitution so the flag is meaningful).
-private function WideToAnsi( byref sWide as string, byval nWideChars as long, byref bLossy as boolean ) as string
-    bLossy = false
-    if nWideChars = 0 then return ""
-    dim as long alen = WideCharToMultiByte( CP_ACP, WC_NO_BEST_FIT_CHARS, cast(LPCWSTR, strptr(sWide)), nWideChars, NULL, 0, NULL, NULL )
-    if alen <= 0 then return ""
-    dim as string sAnsi = string( alen, 0 )
-    dim as long usedDefault = 0
-    WideCharToMultiByte( CP_ACP, WC_NO_BEST_FIT_CHARS, cast(LPCWSTR, strptr(sWide)), nWideChars, strptr(sAnsi), alen, NULL, @usedDefault )
-    bLossy = (usedDefault <> 0)
-    return sAnsi
-end function
-
-' Encode a UTF-16LE buffer (nWideChars code units) to UTF-8 bytes.
-private function WideToUtf8( byref sWide as string, byval nWideChars as long ) as string
-    if nWideChars = 0 then return ""
-    dim as long u8len = WideCharToMultiByte( CP_UTF8, 0, cast(LPCWSTR, strptr(sWide)), nWideChars, NULL, 0, NULL, NULL )
-    if u8len <= 0 then return ""
-    dim as string sUtf8 = string( u8len, 0 )
-    WideCharToMultiByte( CP_UTF8, 0, cast(LPCWSTR, strptr(sWide)), nWideChars, strptr(sUtf8), u8len, NULL, NULL )
-    return sUtf8
-end function
-
-
-' ========================================================================================
-' The display name of a FILE_ENCODING_* value -- the SINGLE source for all four strings.
-'
-' There were two hardcoded copies of this list before (the statusbar panel in
-' frmMain_SetStatusbar and the statusbar popup in ShowFileEncodingContextMenu), and the
-' Options page's "encoding for new files" combo would have made a third. They are now all
-' driven from here, which is what makes the combo's ITEM ORDER and the FILE_ENCODING_*
-' VALUES provably the same thing: the combo is filled by walking ANSI..UTF16_BOM through
-' this function, so the selected index IS the encoding constant and there is no mapping
-' table anywhere to fall out of step.
-'
-' NOT localized, deliberately: these are the encodings' own names, and both call sites this
-' replaces spelled them in English under every language file. Changing that is a separate
-' decision from adding a setting, and would need all six .lang files either way.
-'
-' An unknown value answers "ANSI", matching the `case else` the statusbar has always had --
-' encoding 0 is the one a zeroed/garbage field lands on.
-' ========================================================================================
-function Doc_EncodingName( byval nEnc as long ) as DWSTRING
-    select case nEnc
-        case FILE_ENCODING_UTF8      : return "UTF-8"
-        case FILE_ENCODING_UTF8_BOM  : return "UTF-8 (BOM)"
-        case FILE_ENCODING_UTF16_BOM : return "UTF-16 (BOM)"
-        case else                    : return "ANSI"
-    end select
-end function
-
-
-' ========================================================================================
-' Produce the exact bytes to write to disk for a document, BOM included.
-'
-'   sBuffer       - the raw Scintilla bytes (from Scintilla_GetTextBytes)
-'   bSourceIsUtf8 - the CURRENT in-editor layout, read from SCI_GETCODEPAGE (NOT from
-'                   FileEncoding, which may already have been changed to the target)
-'   nTargetEnc    - one of FILE_ENCODING_*
-'   bLossy        - out: true if the target could not represent every character (ANSI only)
-'
-' Pure: string in, string out, no window and no globals. This is the single writer that
-' clsDocument.SaveFile / SaveTempFile and frmMainFile's duplicate-file path all share; it
-' is also what the Tier-A self-test drives directly.
-'
-' Note UTF-16 does NOT go through DWSTRING: the wide buffer BytesToWide produced already IS
-' the UTF-16LE payload, and its byte length is code-units * 2. The old code handed
-' DWSTRING.m_BufferLen (a COUNT OF UTF-16 CHARACTERS) to CFileStream.Write's BYTE-count
-' parameter, writing exactly half the file and truncating every UTF-16 save mid-character.
-' ========================================================================================
-function Doc_EncodeForDisk( _
-            byref sBuffer as string, _
-            byval bSourceIsUtf8 as boolean, _
-            byval nTargetEnc as long, _
-            byref bLossy as boolean _
-            ) as string
-
-    bLossy = false
-    dim as long nWide
-    dim as string sWide = BytesToWide( sBuffer, iif(bSourceIsUtf8, CP_UTF8, CP_ACP), nWide )
-
-    select case nTargetEnc
-        case FILE_ENCODING_ANSI
-            return WideToAnsi( sWide, nWide, bLossy )
-
-        case FILE_ENCODING_UTF8
-            return WideToUtf8( sWide, nWide )
-
-        case FILE_ENCODING_UTF8_BOM
-            return chr(&HEF, &HBB, &HBF) & WideToUtf8( sWide, nWide )
-
-        case FILE_ENCODING_UTF16_BOM
-            ' FF FE (little-endian BOM) + the wide payload, byte length = code-units * 2.
-            return chr(&HFF, &HFE) & left( sWide, nWide * 2 )
-
-        case else
-            return WideToUtf8( sWide, nWide )
-    end select
-
-end function
-
-
-' ========================================================================================
-' Convert the current in-editor text buffer to the byte layout the specified encoding
-' needs (ANSI codepage 0, or UTF-8 codepage 65001), and relabel the document.
-'
-' Returns TRUE whenever the document's encoding actually changed -- INCLUDING a pure relabel
-' (e.g. UTF-8 -> UTF-8 BOM), because a relabel still changes what is written to disk (a BOM
-' added/removed, UTF-8 vs UTF-16), so the caller must mark the document dirty and let it be
-' saved. Returns FALSE only when nothing changed: the document is already that encoding, or a
-' lossy ANSI conversion was cancelled by the user.
-'
-' Scintilla holds exactly two layouts, ANSI or UTF-8; UTF-16 is a DISK format only and its
-' in-memory representation is UTF-8. So UTF8 / UTF8_BOM / UTF16_BOM all share one in-editor
-' layout, and switching between them is a relabel, not a conversion.
-'
-' INVARIANT E1: on return, SCI_GETCODEPAGE = iif(FileEncoding = ANSI, 0, SC_CP_UTF8), and
-' this function is the ONLY code permitted to move either side of that on a populated
-' document (ApplyProperties establishes it on load; nothing else may touch the codepage).
-' ========================================================================================
-function ConvertTextBuffer( _
-            byval pDoc as clsDocument ptr, _
-            byval nNewEncoding as long _
-            ) as boolean
-
-    if pDoc = 0 then return false
-    dim as hwnd hEdit = pDoc->hWndActiveScintilla
-    if hEdit = 0 then return false
-
-    dim as boolean bHaveUtf8 = ( SciExec( hEdit, SCI_GETCODEPAGE, 0, 0 ) = SC_CP_UTF8 )
-    dim as boolean bWantUtf8 = ( nNewEncoding <> FILE_ENCODING_ANSI )
-
-    ' Pure relabel: the in-memory layout already matches the target (e.g. UTF-8 -> UTF-8 BOM,
-    ' or UTF-8 BOM -> UTF-16 BOM). No byte conversion, only the disk format changes -- but
-    ' that IS a change (the BOM must reach disk), so report it as one when the label moved.
-    if bHaveUtf8 = bWantUtf8 then
-        dim as boolean bChanged = ( pDoc->FileEncoding <> nNewEncoding )
-        pDoc->FileEncoding = nNewEncoding
-        return bChanged
-    end if
-
-    ' Save caret and first-visible line as LINE + COLUMN. Byte offsets shift when the
-    ' encoding changes (ANSI grows to UTF-8), so a saved byte position would land in the
-    ' wrong place, possibly mid-character.
-    dim as long nPos       = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0 )
-    dim as long nCaretLine = SciExec( hEdit, SCI_LINEFROMPOSITION, nPos, 0 )
-    dim as long nCaretCol  = SciExec( hEdit, SCI_GETCOLUMN, nPos, 0 )
-    dim as long nFirstLine = SciExec( hEdit, SCI_GETFIRSTVISIBLELINE, 0, 0 )
-
-    ' Decode the current buffer to UTF-16, then re-encode to the wanted layout.
-    dim as string sBuffer = Scintilla_GetTextBytes( hEdit )
-    dim as long nWide
-    dim as string sWide = BytesToWide( sBuffer, iif(bHaveUtf8, CP_UTF8, CP_ACP), nWide )
-
-    dim as string sNew
-    dim as long nNewCodePage
-    if bWantUtf8 then
-        sNew = WideToUtf8( sWide, nWide )
-        nNewCodePage = SC_CP_UTF8
-    else
-        dim as boolean bLossy
-        sNew = WideToAnsi( sWide, nWide, bLossy )
-        if bLossy then
-            ' Converting to ANSI will destroy characters outside the system ANSI codepage,
-            ' and SetText empties the undo buffer, so there is no going back. Confirm first.
-            dim as long nAnswer = MessageBoxW( HWND_FRMMAIN, _
-                    L(327,"This document contains characters that cannot be represented in ANSI. " & _
-                          "Converting will replace them and cannot be undone. Convert anyway?"), _
-                    L(328,"Convert to ANSI"), _
-                    MB_OKCANCEL or MB_ICONEXCLAMATION or MB_DEFBUTTON2 )
-            if nAnswer <> IDOK then return false
-        end if
-        nNewCodePage = 0
-    end if
-
-    ' Apply in the safe order: clear, THEN set the codepage on the empty buffer, THEN insert
-    ' the already-converted bytes. Setting the codepage first over the old bytes would make
-    ' Scintilla re-validate UTF-8 and fix up positions over the wrong layout.
-    SciExec( hEdit, SCI_CLEARALL, 0, 0 )
-    SciExec( hEdit, SCI_SETCODEPAGE, nNewCodePage, 0 )
-    pDoc->SetText( sNew )
-
-    ' Assign the label LAST, only after the bytes are in place, so a cancel above leaves the
-    ' document wholly untouched (INVARIANT E1 preserved on every exit path).
-    pDoc->FileEncoding = nNewEncoding
-
-    ' Restore caret and scroll by line + column.
-    dim as long nRestore = SciExec( hEdit, SCI_FINDCOLUMN, nCaretLine, nCaretCol )
-    SciExec( hEdit, SCI_SETSEL, nRestore, nRestore )
-    SciExec( hEdit, SCI_SETFIRSTVISIBLELINE, nFirstLine, 0 )
-
-    return true
-end function
-
-
-
-' ========================================================================================
-' NOTE: Utf8ToAnsi / AnsiToUtf8 / UnicodeToUtf8 were REMOVED here. They converted through
-' AfxNova DWSTRING, whose conversion properties pass -1 to Win32 and therefore stop at the
-' first embedded NUL, silently truncating. All encoding conversion now goes through the
-' length-explicit Doc_EncodeForDisk / BytesToWide / WideToAnsi / WideToUtf8 above.
-' ========================================================================================
-
-
-' ========================================================================================
-' Determine if a string is likely UTF-8 encoded.
-'
-' NOTE: pure ASCII passes UTF-8 validation, so an ASCII file is labelled FILE_ENCODING_UTF8
-' here, never ANSI. This is harmless (ASCII is byte-identical in both, and Doc_EncodeForDisk
-' writes the same bytes either way) and is deliberately left as-is: making ASCII report ANSI
-' would change the on-disk save format of every existing plain-text file in every project.
-' ========================================================================================
-function isUTF8encoded( byref s as string ) as boolean
-    if len(s) = 0 then return false
-
-    ' Optional: Detect UTF-8 BOM
-    if len(s) >= 3 then
-        if asc(s,1)=&hEF and asc(s,2)=&hBB and asc(s,3)=&hBF then return true
-    end if
-
-    dim as long wlen = MultiByteToWideChar( _
-        CP_UTF8, _
-        MB_ERR_INVALID_CHARS, _   ' strict validation
-        strptr(s), _
-        len(s), _
-        NULL, _
-        0)
-
-    return (wlen <> 0)
-end function
-
-
-' ========================================================================================
 ' Open a disk file and read it into a string (ANSI or UTF8)
 ' ========================================================================================
 function GetFileToString( _
@@ -829,35 +636,6 @@ end function
 
 
 ' ========================================================================================
-' Get the original case filename as stored by Windows (used when converting the GDB
-' returned filename from uppercase to original case).
-' ========================================================================================
-function AfxFilenameOriginalCase( byval filename as DWSTRING ) as DWSTRING
-    dim as long bufSize = 1024
-    dim as DWSTRING buffer = wspace(bufSize \ 2)
-
-    dim as HANDLE hfile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, _
-                                null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null)
-
-    if hfile = INVALID_HANDLE_VALUE then exit function
-
-    dim as DWORD result = GetFinalPathNameByHandleW( hfile, *buffer, bufSize, FILE_NAME_NORMALIZED )
-
-    if (result > 0) andalso (result < bufSize) then
-        ' Good data returned but still need to remove the mapping characters
-        if left(buffer, 4) = "\\?\" then buffer = mid(buffer, 5)
-    else
-        ' error: could not retrieve path. 
-    end if
-
-    ' clean up
-    CloseHandle(hfile)
-    
-    function = buffer
-end function
-
-
-' ========================================================================================
 ' Generic open document handler for when function ListBox item selected or Explorer Treeview
 ' ========================================================================================
 function OpenSelectedDocument( _
@@ -944,120 +722,6 @@ function OpenSelectedDocument( _
     end if
 
     function = pDoc
-end function
-
-
-' ========================================================================================
-' Get the original case filename as stored by Windows. The fbcParser scans intern
-' filenames UPPERCASED, so any scan-sourced name that reaches the UI (panel
-' captions, tab captions, TODO rows, search results) is normalized through here.
-' Returns the input unchanged when the file cannot be opened (deleted files,
-' the scanner's synthetic UNTITLED names) or the path cannot be resolved.
-' ========================================================================================
-function FilenameOriginalCase( byval wszFilename as DWSTRING ) as DWSTRING
-    dim as long bufSize = 1024
-    dim as DWSTRING buffer = wspace(bufSize \ 2)
-
-    dim as HANDLE hFile = CreateFileW( wszFilename, GENERIC_READ, FILE_SHARE_READ, _
-                                       null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null )
-    if hFile = INVALID_HANDLE_VALUE then return wszFilename
-
-    dim as DWORD result = GetFinalPathNameByHandleW( hFile, buffer.vptr, bufSize, FILE_NAME_NORMALIZED )
-    CloseHandle( hFile )
-
-    if (result > 0) andalso (result < bufSize) then
-        buffer = left( buffer, result )      ' drop the unwritten buffer tail
-        ' Good data returned but still need to remove the mapping characters
-        if left( buffer, 4 ) = "\\?\" then buffer = mid( buffer, 5 )
-        return buffer
-    end if
-
-    ' error: could not retrieve the path - display the incoming name as-is
-    return wszFilename
-end function
-
-
-' ========================================================================================
-' Process prefix {CURDRIVE} and convert to current drive letter.
-' ========================================================================================
-function ProcessToCurdriveApp( byval wszFilename as DWSTRING ) as DWSTRING
-    ' for each folder location determine if it resides on the same drive as
-    ' the editor. if it does then substitute the replaceable parameter
-    ' {CURDRIVE} for the drive letter. This allows you to easily run the editor
-    ' on different media (eg. thumb drive) that may be assigned a different
-    ' drive letter.
-    dim as DWSTRING wszText = AfxGetExePathName
-
-    dim wszCurDrive as DWSTRING = lcase(left(wszText, 3))  ' eg. D:\
-
-    ' if the incoming filename is a relative file name then the following test
-    ' will have no effect.
-    if lcase(left(wszFilename, 3)) = wszCurDrive then 
-        wszFilename = wstr("{CURDRIVE}") & mid(wszFilename, 2)
-    end if
-
-    return wszFilename
-end function
-
-
-' ========================================================================================
-' Process current drive to prefix {CURDRIVE} 
-' ========================================================================================
-function ProcessFromCurdriveApp( byval wszFilename as DWSTRING ) as DWSTRING
-    ' for each folder location determine if it resides on the same drive as
-    ' the editor. if it does then substitute the replaceable parameter
-    ' {CURDRIVE} for the drive letter. This allows you to easily run the editor
-    ' on different media (eg. thumb drive) that may be assigned a different
-    ' drive letter.
-    dim as DWSTRING wszText = AfxGetExePathName
-
-    if ucase(left(wszFilename, 10)) = wstr("{CURDRIVE}") then 
-        wszFilename = left(wszText, 1) & mid(wszFilename, 11)
-    end if
-
-    return wszFilename
-end function
-
-
-' ========================================================================================
-' Process prefix {CURDRIVE} and convert to current drive letter.
-' ========================================================================================
-function ProcessToCurdriveProject( byval wszFilename as DWSTRING ) as DWSTRING
-    ' for each folder location determine if it resides on the same drive as
-    ' the project file. if it does then substitute the replaceable parameter
-    ' {CURDRIVE} for the drive letter. This allows you to easily run the editor
-    ' on different media (eg. thumb drive) that may be assigned a different
-    ' drive letter.
-    dim wszText as DWSTRING = gApp.ProjectFilename
-
-    dim wszCurDrive as DWSTRING = lcase(left(wszText, 3))  ' eg. D:\
-
-    ' if the incoming filename is a relative file name then the following test
-    ' will have no effect.
-    if lcase(left(wszFilename, 3)) = wszCurDrive then 
-        wszFilename = wstr("{CURDRIVE}") & mid(wszFilename, 2)
-    end if
-
-    return wszFilename
-end function
-
-
-' ========================================================================================
-' Process current drive to prefix {CURDRIVE} 
-' ========================================================================================
-function ProcessFromCurdriveProject( byval wszFilename as DWSTRING ) as DWSTRING
-    ' for each folder location determine if it resides on the same drive as
-    ' the project file. if it does then substitute the replaceable parameter
-    ' {CURDRIVE} for the drive letter. This allows you to easily run the editor
-    ' on different media (eg. thumb drive) that may be assigned a different
-    ' drive letter.
-    dim wszText as DWSTRING = gApp.ProjectFilename
-    
-    if ucase(left(wszFilename, 10)) = wstr("{CURDRIVE}") then 
-        wszFilename = left(wszText, 1) & mid(wszFilename, 11)
-    end if
-
-    return wszFilename
 end function
 
 
@@ -1721,95 +1385,142 @@ function GetRunExecutableFilename() as DWSTRING
 end function
 
 
-' ========================================================================================
-' Convert Tiko version to whole number for comparison to file versions being loaded.
-' ========================================================================================
-function ConvertTikoVersion( byref wszVersion as wstring ) as long
-   dim as DWSTRING wszPart1, wszPart2, wszPart3
-   
-   wszPart1 = AfxStrLSet( AfxStrParse(wszVersion, 1, "."), 3, "0" )
-   wszPart2 = AfxStrLSet( AfxStrParse(wszVersion, 2, "."), 3, "0" )
-   wszPart3 = AfxStrRSet( AfxStrParse(wszVersion, 3, "."), 3, "0" )
-   
-   function = val(wszPart1 + wszPart2 + wszPart3) 
-end function
+' ########################################################################################
+' Env-gated: TIKO_COPYDATA_SELFTEST=1
+'
+' Asserts SafeCopyDataString stays inside cbData. The case that matters is the UNTERMINATED
+' buffer: that is what the old handler read past, and it is unreachable by inspection --
+' the only way to know a reader stops is to hand it something with no terminator and a hard
+' boundary after it.
+'
+' The buffer is deliberately allocated with a GUARD PATTERN after the declared length. If
+' the reader overruns, it consumes the guard and the assertion on the returned length fails,
+' rather than the test merely "not crashing" -- which proves nothing, since reading a few
+' bytes past a heap allocation usually succeeds.
+'
+' (Lives here because SafeCopyDataString does. When modRoutines is split -- it is a
+'  junk drawer and known to be -- both should move together.)
+' ########################################################################################
+sub CopyData_RunSelfTest()
 
+    if environ("TIKO_COPYDATA_SELFTEST") <> "1" then exit sub
 
-' ========================================================================================
-' Check PlanetSquires server for latest Tiko version.
-' ========================================================================================
-sub DoCheckForUpdates( byval param as any ptr ) 
-   
-    ''  Contact the PlanetSquires server and download the text file containing
-    ''  the latest Tiko version number. 
+    dim as long nPass = 0, nFail = 0
+    dim as string sMsg
 
-    dim as DWSTRING wszServerFile = "tiko_version.txt"
-    dim as DWSTRING wszFilename
-    dim as DWSTRING wszLatestVersion
-    dim as DWSTRING wszMsg
-    dim as string st
-    dim as boolean bFailedCheck = false
+    #macro CDASSERT( cond, msg )
+        if (cond) then
+            nPass += 1
+        else
+            nFail += 1
+            sMsg = "  FAIL: " & msg
+            ? sMsg
+        end if
+    #endmacro
 
-    if AfxWinHttpCheckPlatform() = false then
-        ' This platform does not support the Windows HTTP Services (WinHTTP)
-        ' print "Windows HTTP Services (WinHTTP) not supported on this platform"
-        exit sub
-    end if
-   
-    dim pWHttp as CWinHttpRequest
-   
-    wszFilename = AfxGetExePathName & wszServerFile
+    ? "--- TIKO_COPYDATA_SELFTEST ---"
 
-    ' Open an HTTP connection to an HTTP resource (synchronous mode)
-    if pWHttp.Open( "GET", "https://www.planetsquires.com/" & wszServerFile ) <> S_OK then
-        exit sub
-    end if
+    ' ---- malformed payloads are refused, not dereferenced -------------------------------
+    CDASSERT( len( SafeCopyDataString( 0, 100 ) ) = 0, "a NULL lpData was dereferenced" )
+    CDASSERT( len( SafeCopyDataString( 0, 0 ) ) = 0,   "NULL/0 was dereferenced" )
 
-    ' Send HTTP request and wait 5 seconds for response 
-    pWHttp.Send
+    scope
+        dim as wstring * 16 w = "hello"
+        CDASSERT( len( SafeCopyDataString( @w, 0 ) ) = 0, "cbData=0 still returned text" )
+        CDASSERT( len( SafeCopyDataString( @w, 1 ) ) = 0, _
+                  "cbData=1 (half a code unit) still returned text" )
 
-    if pWHttp.WaitForResponse(5) = 0 then
-        exit sub
-    end if
+        ' ---- the normal case: sender includes the terminator, as SpawnPreviousInstance does
+        CDASSERT( SafeCopyDataString( @w, (len(w) + 1) * 2 ) = "hello", _
+                  "a well-formed payload did not round-trip" )
 
-    ' Open a file stream and save the downloaded file
-    st = pWHttp.GetResponseBody
-    dim pFileStream as CFileStream
-    if pFileStream.Open(wszFilename, STGM_CREATE or STGM_WRITE) = S_OK then
-        pFileStream.WriteTextA(st)
-        pFileStream.Close
-    end if
+        ' ---- cbData SHORTER than the string: the declared length wins, not the terminator
+        CDASSERT( SafeCopyDataString( @w, 3 * 2 ) = "hel", _
+                  "read past a cbData that was shorter than the buffer" )
 
-    ' Open the downloaded file and check for the version number. It is possible that the socket
-    ' will open but fail and send request but security parameters of the system will prevent data
-    ' from being received resulting in a zero byte file. 
-    dim pStream as CTextStream 
-    if pStream.Open(wszFilename, IOMODE_FORREADING) = S_OK then 
-        do until pStream.EOS
-            st = pStream.ReadLine
-            if left( st, 15 ) = "latest_version=" then
-                wszLatestVersion = trim(mid( st, 16 ))
-                exit do
-           end if
-        loop
-        pStream.Close
-    end if
-    
-    AfxDeleteFile( wszFilename )
-      
-    if len(wszLatestVersion) = 0 then exit sub
-    
-    ' Check the installed vs. available version numbers   
-    dim as long latestVersion = ConvertTikoVersion(wszLatestVersion)
-    dim as long installedVersion = ConvertTikoVersion(APPVERSION)
+        ' ---- an odd trailing byte cannot form a code unit and must be dropped ------------
+        CDASSERT( SafeCopyDataString( @w, 3 * 2 + 1 ) = "hel", _
+                  "an odd cbData was rounded UP, reading half a code unit past the end" )
+    end scope
 
-'print "wszLatestVersion = "; wszLatestVersion
-'print "latestVersion: "; latestVersion, "installedVersion: "; installedVersion
+    ' ---- THE ONE THAT MATTERS: no terminator anywhere inside cbData ---------------------
+    scope
+        const N = 8
+        ' N code units of text, then a guard the reader must never reach.
+        dim as ushort ptr p = allocate( (N + 4) * 2 )
+        if p = 0 then
+            ? "  NOTE: allocation failed; the overrun assertions did NOT run."
+        else
+            for i as long = 0 to N - 1
+                p[i] = asc("A") + i
+            next
+            for i as long = N to N + 3
+                p[i] = asc("Z")            ' guard: NOT a terminator, so an overrun eats it
+            next
 
-    AfxDeleteFile( wszFilename ) 
+            dim as DWSTRING wszGot = SafeCopyDataString( p, N * 2 )
+            CDASSERT( len( wszGot ) = N, _
+                      "unterminated payload returned " & len(wszGot) & " chars, expected " & N & _
+                      " -- the reader ran past cbData" )
+            CDASSERT( wszGot = "ABCDEFGH", "unterminated payload returned [" & wszGot & "]" )
+            CDASSERT( instr( wszGot, "Z" ) = 0, _
+                      "the guard pattern was consumed: the reader overran the declared length" )
+            deallocate( p )
+        end if
+    end scope
 
-    if installedVersion < latestVersion then
-        gApp.IsUpdateAvailable = true
-    end if
-   
+    ' ---- an empty (terminator-first) payload is not text --------------------------------
+    scope
+        dim as ushort z(0 to 1) = { 0, 0 }
+        CDASSERT( len( SafeCopyDataString( @z(0), 4 ) ) = 0, _
+                  "a payload starting with a terminator returned text" )
+    end scope
+
+    ' ---- the update server's reply is a REMOTE input, so parse it defensively ----------
+    ' It used to be written to a predictable file in the program directory and read back,
+    ' and whatever came back was fed straight to ConvertTikoVersion -- including a captive
+    ' portal's HTML login page, which is what a laptop on hotel wifi actually receives.
+    CDASSERT( ParseLatestVersion( "latest_version=1.2.3" & chr(10) ) = "1.2.3", _
+              "the normal reply did not parse" )
+    CDASSERT( ParseLatestVersion( "junk" & chr(13,10) & "latest_version=2.0.1" & chr(13,10) ) = "2.0.1", _
+              "CRLF and a leading junk line broke the parse" )
+    CDASSERT( ParseLatestVersion( "latest_version=  3.4.5  " ) = "3.4.5", _
+              "surrounding blanks were not trimmed" )
+    CDASSERT( ParseLatestVersion( "LATEST_VERSION=9.9.9" ) = "9.9.9", _
+              "the key is case sensitive" )
+    CDASSERT( ParseLatestVersion( "latest_version=1.2.3" ) = "1.2.3", _
+              "a reply with no trailing newline was dropped" )
+
+    CDASSERT( ParseLatestVersion( "" ) = "", "an empty reply produced a version" )
+    CDASSERT( ParseLatestVersion( "<html><body>Sign in</body></html>" ) = "", _
+              "an HTML page produced a version -- this is the captive-portal case" )
+    CDASSERT( ParseLatestVersion( "other_key=1.2.3" ) = "", "the wrong key produced a version" )
+    CDASSERT( ParseLatestVersion( "latest_version=" ) = "", "an empty value produced a version" )
+    CDASSERT( ParseLatestVersion( "latest_version=<script>" ) = "", _
+              "a non-numeric value reached ConvertTikoVersion" )
+    CDASSERT( ParseLatestVersion( "latest_version=99999999999999999999" ) = "99999999999999999999", _
+              "a long numeric value was mangled rather than passed on for comparison" )
+
+    ' ---- FB integer vs floating division, which has cost this tree a real bug ----------
+    ' "/" is FLOATING POINT in FreeBASIC and assigning the result to an integer ROUNDS --
+    ' to even, at that -- where every one of these sites wants truncation. NumTabsFromSpaces
+    ' shipped that way and produced two tabs where one was meant. These assertions do not
+    ' guard any particular call site; they pin the LANGUAGE RULE, so that a future reader
+    ' who "tidies" a \ back to a / has something that fails.
+    scope
+        dim as long a1 = 3 / 2      ' 1.5 -> banker's rounding gives 2
+        dim as long a2 = 3 \ 2      ' truncates to 1
+        CDASSERT( a2 = 1, "3 \ 2 should truncate to 1, got " & a2 )
+        CDASSERT( a1 <> a2, "/ and \ agreed on 3/2 -- the rounding hazard this guards is gone, " & _
+                            "or the compiler changed (a1=" & a1 & ")" )
+        dim as long b1 = 5 / 2, b2 = 5 \ 2
+        CDASSERT( b2 = 2, "5 \ 2 should be 2, got " & b2 )
+        CDASSERT( b1 = 2, "5 / 2 rounded to " & b1 & ", expected 2 (round-half-to-even)" )
+        dim as long c1 = -3 / 2, c2 = -3 \ 2
+        CDASSERT( c2 = -1, "-3 \ 2 should truncate toward zero to -1, got " & c2 )
+        CDASSERT( c1 = -2, "-3 / 2 rounded to " & c1 & ", expected -2" )
+    end scope
+
+    sMsg = "TIKO_COPYDATA_SELFTEST: " & nPass & " passed, " & nFail & " failed."
+    ? sMsg
 end sub

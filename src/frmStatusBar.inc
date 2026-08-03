@@ -66,8 +66,9 @@ sub frmStatusBar_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
 
             dim as long txtWidth = getTextWidth( HWND_FRMMAIN_STATUSBAR, p->wszCaption, GUIFONT_9 ) 
             dim as RECT rcIcon = p->rc
-            dim as long halfWidth = (rcIcon.right-rcIcon.left) / 2
-            rcIcon.right = rcIcon.left + halfWidth - AfxScaleX((txtWidth / 2))
+            ' \ not /: both are integer pixel counts; / is floating point in FB.
+            dim as long halfWidth = (rcIcon.right-rcIcon.left) \ 2
+            rcIcon.right = rcIcon.left + halfWidth - AfxScaleX((txtWidth \ 2))
             rcIcon.left = rcIcon.right - AfxScaleX(16) 
             wszText = wszIconCompileResult    ' circle
             

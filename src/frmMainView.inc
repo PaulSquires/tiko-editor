@@ -114,8 +114,9 @@ function OnCommand_ViewSplit( _
                 frmMain_PositionWindows()
                 dim as RECT rc = AfxGetWindowRect(pDoc->hWindow(0))
                 MapWindowpoints( HWND_DESKTOP, HWND_FRMMAIN, cast(point ptr, @rc), 2 )
-                pDoc->SplitY = (rc.bottom - rc.top) / 2
-                dim as long nLines =  pDoc->LinesPerPage(0) / 2 - 3
+                ' \ not /: / is floating point in FB and assigning it to a long rounds.
+                pDoc->SplitY = (rc.bottom - rc.top) \ 2
+                dim as long nLines =  pDoc->LinesPerPage(0) \ 2 - 3
                 dim as long nCurLine =  pDoc->GetCurrentLineNumber()
                 SciExec( pDoc->hWindow(1), SCI_SETFIRSTVISIBLELINE, nCurLine - nLines, 0) 
                 dim as long currPos  = SciExec( pDoc->hWindow(0), SCI_GETCURRENTPOS, 0, 0)

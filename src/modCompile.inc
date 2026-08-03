@@ -37,13 +37,16 @@
 function code_Initialize() as COMPILE_TYPE ptr
     ' Indicate in the StatusBar that we have started to compile
     SetCompileStatusBarMessage( L(294, "Generating compiler files") & "...", 0 )
-    gApp.IsCompiling = true    
 
     dim pCompile as COMPILE_TYPE ptr = new COMPILE_TYPE
     if pCompile = null then return null
 
     ' Save the mouse cursor so that it can be restored after compiling.
     pCompile->hCurSave = GetCursor()
+    ' ...and the current directory, for the same reason: code_Compile chdir's away from it
+    ' and nothing used to bring it back. Saved HERE and restored in code_Cleanup so every
+    ' exit path is covered, exactly as hCurSave already was.
+    pCompile->wszCurDirSave = curdir
 
     return pCompile
 end function
@@ -53,16 +56,29 @@ end function
 ' Tear down, reset, and deallocate the compile process.
 ' ========================================================================================
 function code_Cleanup( byval pCompile as COMPILE_TYPE ptr ) as boolean
-    gApp.IsCompiling = false
-    
+    BuildService_End()
+
+    ' THE NULL CHECK HAS TO COME FIRST. It used to sit below, after hCurSave had already
+    ' been dereferenced -- and code_Compile calls this with a NULL pointer on exactly one
+    ' path, the "new COMPILE_TYPE returned null" case it was written to clean up after.
+    if pCompile = 0 then
+        ResetScintillaCursors()
+        return true
+    end if
+
     ' Restore the mouse cursors
     SetCursor( pCompile->hCurSave )
     ResetScintillaCursors()
 
-    if pCompile then 
-        delete( pCompile )
-        pCompile = null
-    end if
+    ' Put the process back where it was. code_Compile chdir's to the main file's folder
+    ' because fbc is handed relative paths it resolves against the directory it inherits;
+    ' nothing undid that, so the editor's own working directory silently became whichever
+    ' project was last built -- which then decided where relative paths resolved everywhere
+    ' else, and what a bare LoadLibrary would search.
+    if len( pCompile->wszCurDirSave ) then chdir pCompile->wszCurDirSave
+
+    delete( pCompile )
+    pCompile = null
 
     return true
 end function
@@ -143,7 +159,10 @@ function code_SetMainFile( byval pCompile as COMPILE_TYPE ptr ) as boolean
         pCompile->MainFilename = pCompile->MainFolder & QUICKRUNBAS
         pCompile->MainName     = AfxStrPathname("NAME", pCompile->MainFilename)
         
-        pDoc->SaveTempFile( pCompile->MainFilename )
+        ' TRUE = the temp file is NOT on disk (SaveTempFile has already told the user why).
+        ' Abandon the Quick Run rather than hand the compiler a stale file from a previous
+        ' run, which is what ignoring this used to do.
+        if pDoc->SaveTempFile( pCompile->MainFilename ) then return false
 
     else
         pCompile->MainFilename = pDoc->DiskFilename
@@ -410,7 +429,9 @@ function code_CompileModules( byval pCompile as COMPILE_TYPE ptr ) as boolean
                             " -v -o " + wDQ + pCompile->ObjectFilename + wDQ 
                             
                     dim as string sConsoleText
-                    RedirConsoleToFile( wszCommand, wszParams, sConsoleText )
+                    dim as long nExitCode
+                    RedirConsoleToFile( wszCommand, wszParams, sConsoleText, nExitCode )
+                    pCompile->nLastExitCode = nExitCode
                     
                     pCompile->wszFullCommandLine = wszCommand & " " & wszParams
                     pCompile->wszFullLogFile = sConsoleText
@@ -450,6 +471,21 @@ end function
 ' Main module that handles the entire compile process
 ' ========================================================================================
 function code_Compile( byval wID as long ) as boolean
+
+    ' ---- ONE BUILD AT A TIME -------------------------------------------------------------
+    ' This function pumps messages while it waits for the worker, so menu commands and
+    ' accelerators stay live throughout a build -- press F5 again and, without this guard,
+    ' a SECOND code_Compile ran on top of the first: two COMPILE_TYPE allocations, two
+    ' worker threads, both racing on chdir, on the object folder, and on the log fields.
+    '
+    ' gApp.IsCompiling already existed and looked like it guarded exactly this, but its only
+    ' reader was frmMain's WM_SETCURSOR -- it drove the busy CURSOR and nothing else. Build
+    ' state has an owner now (modBuildService), and Begin is a TEST-AND-SET so the check and
+    ' the claim cannot be separated by a later edit.
+    if BuildService_Begin() = false then
+        SetCompileStatusBarMessage( L(683, "A build is already running."), 0 )
+        return false
+    end if
 
     dim as DWSTRING wDQ = wchr(34) ' unicode double quotes
 
@@ -636,7 +672,28 @@ function code_Compile( byval wID as long ) as boolean
     ' - after compile option '-m', but without specified extension,
     ' - and also like any module to compile, but there with its specified extension.
     ' 2026-02-16: Do not forcibly add a -x flag because an embedded #cmdline could have been used.
-    dim as DWSTRING wszParams = "-m " + wDQ + pCompile->MainFilename + wDQ 
+    '
+    ' 2026-08-03: this line used to read
+    '
+    '     wszParams = "-m " + wDQ + pCompile->MainFilename + wDQ
+    '
+    ' which contradicts the four comment lines directly above it: MainFilename is the FULL
+    ' PATH WITH EXTENSION, and the main file appeared exactly ONCE, after -m, never as an
+    ' input. It worked only because -m was being eaten as argv[0] (see BuildChildCommandLine),
+    ' which demoted "<path>\main.bas" to an ordinary first input file -- accidentally
+    ' satisfying the second half of the rule while the -m half did nothing at all.
+    '
+    ' The moment argv[0] was supplied properly, -m started working and was handed a path
+    ' with an extension, which matches no module, so nothing was marked as the main module
+    ' AND the main source was no longer an input: "undefined reference to `WinMain'".
+    ' Measured on a real two-module project, all three forms built and linked:
+    '
+    '   -m "main.bas" helper.o                 -> undefined reference to `WinMain'
+    '   "main.bas" helper.o                    -> links (the old accident)
+    '   -m "main" "main.bas" helper.o          -> links (what the comment prescribes)
+    '
+    ' So: MainName after -m (no path, no extension), and MainFilename as a real input.
+    dim as DWSTRING wszParams = BuildMainModuleArgs( pCompile->MainName, pCompile->MainFilename )
 
     if len(pCompile->LinkModules)  then wszParams += " " + pCompile->LinkModules
     if len(pCompile->ResourceFile) then wszParams += " " + wDQ + pCompile->ResourceFile + wDQ
@@ -677,13 +734,63 @@ function code_Compile( byval wID as long ) as boolean
     ctp.wszCmdLine   = wszParams
     ctp.sConsoleText = ""
 
-    pCompile->bCompileThreadComplete = false
+    ' ---- wait for the worker WITHOUT spinning --------------------------------------------
+    ' This used to be
+    '
+    '     do until pCompile->bCompileThreadComplete = true
+    '         AfxDoEvents()
+    '     loop
+    '
+    ' which burned a whole core for the entire build, on a machine that is simultaneously
+    ' running the compiler. It also read a plain boolean written by another thread with no
+    ' barrier of any kind.
+    '
+    ' A plain WaitForSingleObject would fix the CPU burn and freeze the UI: the spinner is
+    ' the whole reason the compile was put on a thread. MsgWaitForMultipleObjects is the
+    ' primitive that does both -- it sleeps until EITHER the worker finishes OR a message
+    ' arrives, so the window still paints and the spinner still turns while the process
+    ' consumes nothing.
+    '
+    ' Pumping messages here still lets the user reach menu commands mid-build. That is not
+    ' fixed by this loop and cannot be -- it is fixed by the BuildService_Begin guard at the top of
+    ' this function, and by frmMain refusing WM_CLOSE while a build is running.
+    dim as HANDLE hDone = CreateEvent( 0, TRUE, FALSE, 0 )   ' manual-reset: no race
+    if hDone = 0 then
+        code_Cleanup( pCompile )
+        return false
+    end if
+    ctp.hDoneEvent = hDone
+
     dim as any ptr pThread = ThreadCreate( @compile_thread, @ctp )
-    
-    do until pCompile->bCompileThreadComplete = true
-        AfxDoEvents()
-    loop    
-    
+    if pThread = 0 then
+        ' Nothing will ever signal the event, so do not wait on it.
+        CloseHandle( hDone )
+        TikoMsgBox( HWND_FRMMAIN, L(682, "Could not start the compiler thread."), _
+                    L(164, "Error"), TMB_ICON_INFO, TMB_OK )
+        code_Cleanup( pCompile )
+        return false
+    end if
+
+    do
+        dim as DWORD dwWait = MsgWaitForMultipleObjects( 1, @hDone, FALSE, INFINITE, QS_ALLINPUT )
+        if dwWait = WAIT_OBJECT_0 then exit do          ' worker finished
+        if dwWait = WAIT_OBJECT_0 + 1 then
+            AfxDoEvents()                               ' keep the UI alive
+        else
+            ' WAIT_FAILED. Do not spin on it -- fall through and join the thread, which is
+            ' still the only thing that makes ctp safe to read.
+            exit do
+        end if
+    loop
+
+    ' ThreadWait, not just the event: the worker writes into ctp, which is a LOCAL of this
+    ' function, so it must be provably finished before we read those fields or return. It
+    ' also frees the thread handle -- ThreadCreate's result was simply dropped before, so
+    ' every compile leaked one.
+    ThreadWait( pThread )
+    CloseHandle( hDone )
+
+    pCompile->nLastExitCode      = ctp.nExitCode
     pCompile->wszFullCommandLine = pCompile->CompilerPath & " " & wszParams
     pCompile->wszFullLogFile = ctp.sConsoleText
     dim as string sConsoleText = ctp.sConsoleText

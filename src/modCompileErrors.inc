@@ -90,24 +90,35 @@ end function
 '' but does not PRINT on Windows 7. Also, dkl posted in FB forum that FB prints
 '' to STDOUT rather than STDERR. This is too bad.
 ''
+'' Returns 0 on success, non-zero if the child could not be started. Callers currently
+'' ignore it; it is honest anyway, because the old code returned 0 from BOTH the success
+'' path and its own bail-out, so a caller that started checking would have been misled.
 ''
 function RedirConsoleToFile( _
             byval wszExe as DWSTRING, _
             byval wszCmdLine as DWSTRING, _
-            byref sConsoleText as string _
+            byref sConsoleText as string, _
+            byref nExitCode as long _
             ) as long
 
-    ' From the MinGW "Getting Started" guide:
-    '    MinGW may have problems with paths containing spaces, and if not, usually 
-    '    other programs used with MinGW will experience problems with such paths. 
-    '    Thus, we strongly recommend that you do not install MinGW in any location 
-    '    with spaces in the path name reference; i.e. you should avoid installing 
-    '    into any subdirectory of "Program Files" or "My Documents", or the like.
-    if instr(wszExe, " ") then
-        AfxMsg( "Compile failed (CreateChildProcess)." & vbcrlf & _
-                "Please install editor into a folder without spaces." )
-        exit function
-    end if
+    ' Assume failure until the child says otherwise. If it never starts, or its exit code
+    ' cannot be read, "unknown" must not read as "succeeded" -- that conflation is the whole
+    ' defect this parameter exists to close.
+    nExitCode = -1
+
+    ' A SPACE IN THE COMPILER PATH IS FINE, and the check that used to sit here -- which
+    ' aborted the compile and told the user to reinstall tiko somewhere without spaces --
+    ' was working around a misdiagnosis. Its own comment said "once I wrap the string in
+    ' double quotes then the call to CreateProcessW fails", which is true and is the point:
+    ' lpApplicationName must be the UNQUOTED exact path, and spaces in it have never been a
+    ' problem. The quoting rule belongs to lpCommandLine's argv[0], which this function did
+    ' not supply at all until BuildChildCommandLine above. So the restriction that kept tiko
+    ' out of "C:\Program Files" existed to dodge a bug that was somewhere else entirely.
+    '
+    ' (The MinGW guidance about spaces that was quoted here is real, but it is about the
+    '  gcc backend's own tooling, not about starting a process, and the default backend is
+    '  gas64 now.)
+    dim as DWSTRING wszFullCmd = BuildChildCommandLine( wszExe, wszCmdLine )
 
     ' Create the child process and read from its standard output
     dim ProcessInfo as PROCESS_INFORMATION
@@ -115,8 +126,12 @@ function RedirConsoleToFile( _
 
     ' continue on with the newer CreateProcess compile approach.
     dim SecurityAttribute as SECURITY_ATTRIBUTES
-    dim hChildStdOutRead  as PHANDLE
-    dim hChildStdOutWrite as PHANDLE
+    ' HANDLE, not PHANDLE. These hold handles, not pointers to handles; the old declaration
+    ' worked only because both are pointer-width, and CreatePipe's parameters are
+    ' HANDLE ptr, which @hChildStdOutRead satisfies either way. Naming the real type is
+    ' what stops the next reader assuming an indirection that is not there.
+    dim hChildStdOutRead  as HANDLE
+    dim hChildStdOutWrite as HANDLE
     dim dwReadBytes       as long
     dim sBuffer as string * 4096
     
@@ -127,7 +142,8 @@ function RedirConsoleToFile( _
 
     ' Create a pipe for the child process's STDOUT.
     if CreatePipe( @hChildStdOutRead, @hChildStdOutWrite, @SecurityAttribute, byval 0 ) = false then
-        '? "error creating pipe"
+        ' Fell through to "function = 0" before, i.e. reported SUCCESS after doing nothing.
+        return 1
     else
         StartupInf.cb         = sizeof(STARTUPINFO)
         GetStartupInfo(@StartupInf )  
@@ -136,14 +152,13 @@ function RedirConsoleToFile( _
         StartupInf.dwFlags    = STARTF_USESTDHANDLES or STARTF_USESHOWWINDOW
         StartupInf.wShowWindow = SW_HIDE
         
-        ' This call to CreateProcessW will succeed in all cases except for the one
-        ' where there are spaces in wszFullExe because once I wrap the string in double
-        ' quotes then the call to CreateProcessW fails.
-
-        dim errCode as long 
+        ' lpApplicationName is the UNQUOTED exact path (quoting it is what fails);
+        ' lpCommandLine carries the QUOTED path back as argv[0] followed by the switches.
+        ' See BuildChildCommandLine above for why the switches cannot be passed alone.
+        dim errCode as long
         errCode = CreateProcessW( _
                     wszExe,  _          ' Create the child process.
-                    wszCmdLine, _       ' Command line
+                    wszFullCmd, _       ' Command line -- argv[0] + switches
                     byval 0,     _      ' Process security attributes
                     byval 0,     _      ' Primary thread security attributes
                     true,        _      ' Handles are inherited
@@ -167,15 +182,36 @@ function RedirConsoleToFile( _
             loop
             
         else
-            '? "CreateChildProcess failed"      
-            if instr( wszExe, " " ) then
-                AfxMsg( "CreateChildProcess failed. Install editor into folder without spaces." )
-            end if    
+            ' The old message here blamed spaces in the path, which was never the cause.
+            ' Report what the system actually said instead.
+            AfxMsg( "Could not start the compiler." & vbcrlf & vbcrlf & _
+                    wszExe & vbcrlf & vbcrlf & _
+                    Win32ErrorText( GetLastError() ) )
             if hChildStdOutRead  then CloseHandle( hChildStdOutRead )
             if hChildStdOutWrite then CloseHandle( hChildStdOutWrite )
-            exit function
+            return 1
         end if
             
+    end if
+
+    ' ---- the child's EXIT CODE, which nothing used to read --------------------------------
+    ' Build success was decided purely by scraping the compiler's stdout (ParseLogForError),
+    ' and its "good compile" flag is set merely by seeing the FreeBASIC banner -- i.e. by the
+    ' compiler having STARTED. A compiler that then failed without printing a line matching
+    ' the scraper's pattern was reported as a SUCCESSFUL build, and the stale output binary
+    ' was run or debugged. Measured: fbc returns 0 on success (warnings included) and 1 on
+    ' error, so the exit code is authoritative where the text is only a heuristic.
+    '
+    ' The wait is bounded rather than INFINITE. The read loop above ends when the pipe
+    ' breaks, which happens once every inherited write handle is closed -- normally because
+    ' the child and its descendants exited. A child that closed stdout and kept running
+    ' would previously just let tiko carry on; an INFINITE wait here would turn that into a
+    ' hang, so a timeout keeps the old behaviour and simply leaves the code unknown.
+    if ProcessInfo.hProcess then
+        if WaitForSingleObject( ProcessInfo.hProcess, 30000 ) = WAIT_OBJECT_0 then
+            dim as DWORD dwCode
+            if GetExitCodeProcess( ProcessInfo.hProcess, @dwCode ) then nExitCode = clng(dwCode)
+        end if
     end if
 
     ' Close handles to the child process and its primary thread.
@@ -194,10 +230,15 @@ sub compile_thread( byval userdata as any ptr )
     
     ' Create a compile process and redirect the output to a text file.
     dim as string sConsoleText = ctp->sConsoleText
-    RedirConsoleToFile( ctp->wszExe, ctp->wszCmdLine, sConsoleText )
+    dim as long nExitCode
+    RedirConsoleToFile( ctp->wszExe, ctp->wszCmdLine, sConsoleText, nExitCode )
     ctp->sConsoleText = sConsoleText
-            
-    ctp->pCompile->bCompileThreadComplete = true
+    ctp->nExitCode    = nExitCode
+
+    ' LAST act, and it must stay last: the waiter treats this as "every field above is
+    ' written". (It then also joins the thread before reading them, because ctp is one of
+    ' its own locals.)
+    if ctp->hDoneEvent then SetEvent( ctp->hDoneEvent )
 end sub
 
 
@@ -526,6 +567,27 @@ function ParseLogForError ( _
     ' to call the 64 bit compiler using a 32 bit operating system. Show the message to the user via
     ' the Output window (log file).
     if fGoodCompile = false then NumErrors += 1
+
+    ' ---- THE EXIT CODE IS THE AUTHORITY -------------------------------------------------
+    ' Everything above is a heuristic over the compiler's stdout, and fGoodCompile in
+    ' particular is set by seeing the FreeBASIC banner -- it means "the compiler ran", not
+    ' "the build worked". So a failure whose diagnostic does not match any pattern here
+    ' scored zero errors and the build was reported GOOD, after which the stale output was
+    ' run or handed to the debugger.
+    '
+    ' A non-zero exit with no error line found is exactly that case: report it, and send the
+    ' user to the log file, which is the only place the real reason exists. -1 means the code
+    ' could not be read at all (the child never started, or outlived the bounded wait).
+    if (pCompile->nLastExitCode <> 0) andalso (NumErrors = 0) then
+        NumErrors += 1
+        fSwitchToLogFile = true
+        dim as DWSTRING wszWhy = iif( pCompile->nLastExitCode = -1, _
+                L(678, "the compiler did not report an exit code"), _
+                L(679, "compiler exit code") & " " & str(pCompile->nLastExitCode) )
+        ListBox_AddTabbedRow( hLV, "" & chr(9) & "0" & chr(9) & "" & chr(9) & _
+                L(680, "Compile FAILED") & " (" & wszWhy & ") -- " & _
+                L(681, "see the Compiler Log File tab") )
+    end if
     
     if (fSwitchToLogFile = false) andalso (NumDirectives > 0) then
         fSwitchToLogFile = true
@@ -646,3 +708,204 @@ function ParseLogForError ( _
 end function
 
 
+
+
+' ########################################################################################
+' Env-gated: TIKO_COMPILECMD_SELFTEST=1
+'
+' Asserts the ONE rule that governs BuildChildCommandLine: the child discards the first
+' token of lpCommandLine, so token 0 must be the program name and never a switch.
+'
+' This exists because the bug it guards against was completely silent. tiko passed the bare
+' switches, the child ate "-m", and the only symptom was a compiler flag quietly not
+' applying -- no warning, no error, nothing for an assertion to catch, because there was no
+' assertion and no suite for this file at all.
+'
+' A self-test cannot launch a process, so what is asserted is the STRING. That is enough
+' precisely because the OS behaviour it encodes was verified separately with a harness that
+' does launch one (results quoted in BuildChildCommandLine's header).
+' ########################################################################################
+
+' Split a command line the way the child's startup code does: whitespace separated, double
+' quotes group. Independent of the composer, so a shared bug cannot hide behind both.
+private sub CompileCmd_Tokenize( byval wszCmd as DWSTRING, tokens() as DWSTRING, byref nCount as long )
+    nCount = 0
+    dim as string s = wszCmd
+    dim as long i = 1, n = len(s)
+    dim as boolean bInQuote
+    dim as string cur
+    dim as boolean bHave
+
+    while i <= n
+        dim as string c = mid(s, i, 1)
+        if c = chr(34) then
+            bInQuote = not bInQuote
+            bHave = true
+        elseif (c = " ") andalso (bInQuote = false) then
+            if bHave then
+                tokens(nCount) = cur : nCount += 1 : cur = "" : bHave = false
+            end if
+        else
+            cur &= c : bHave = true
+        end if
+        i += 1
+    wend
+    if bHave then tokens(nCount) = cur : nCount += 1
+end sub
+
+
+sub CompileCmd_RunSelfTest()
+
+    if environ("TIKO_COMPILECMD_SELFTEST") <> "1" then exit sub
+
+    dim as long nPass = 0, nFail = 0
+    dim as string sMsg
+
+    #macro CMDASSERT( cond, msg )
+        if (cond) then
+            nPass += 1
+        else
+            nFail += 1
+            sMsg = "  FAIL: " & msg
+            ? sMsg
+        end if
+    #endmacro
+
+    ? "--- TIKO_COMPILECMD_SELFTEST ---"
+
+    dim as DWSTRING tok(0 to 63)
+    dim as long nTok
+
+    ' ---- 1. the rule itself: token 0 is the exe, never a switch -------------------------
+    dim as DWSTRING wszExe = "C:\fb\fbc64.exe"
+    dim as DWSTRING wszCmd = BuildChildCommandLine( wszExe, "-m ""prog"" mod1.o -v -w all" )
+    CompileCmd_Tokenize( wszCmd, tok(), nTok )
+    CMDASSERT( nTok = 7, "expected 7 tokens, got " & nTok )
+    CMDASSERT( tok(0) = wszExe, "token 0 is not the exe: [" & tok(0) & "]" )
+    CMDASSERT( left(tok(0), 1) <> "-", "token 0 is a SWITCH -- the child will eat it" )
+    ' Everything the caller supplied must survive, in order, one slot later.
+    CMDASSERT( tok(1) = "-m",     "the -m flag was lost (this was the shipped bug)" )
+    CMDASSERT( tok(2) = "prog",   "main module name wrong: [" & tok(2) & "]" )
+    CMDASSERT( tok(3) = "mod1.o", "object file lost" )
+    CMDASSERT( tok(6) = "all",    "trailing argument lost" )
+
+    ' ---- 2. the module path, whose leading space used to be load-bearing ----------------
+    ' code_CompileModules space-pads CompileFlags. That accident is what kept its first
+    ' switch alive. It must no longer matter -- assert BOTH spellings behave identically.
+    dim as DWSTRING wszPadded   = "  -w all -O2  -c -b ""x.bas"" -v -o ""x.o"""
+    dim as DWSTRING wszTrimmed  = trim( wszPadded )
+    dim as DWSTRING tok2(0 to 63) : dim as long nTok2
+
+    CompileCmd_Tokenize( BuildChildCommandLine( wszExe, wszPadded ),  tok(),  nTok )
+    CompileCmd_Tokenize( BuildChildCommandLine( wszExe, wszTrimmed ), tok2(), nTok2 )
+    CMDASSERT( nTok = nTok2, "padded and trimmed flags give different token counts (" & _
+                             nTok & " vs " & nTok2 & ") -- the leading space is still load-bearing" )
+    dim as boolean bSame = (nTok = nTok2)
+    if bSame then
+        for i as long = 0 to nTok - 1
+            if tok(i) <> tok2(i) then bSame = false : exit for
+        next
+    end if
+    CMDASSERT( bSame, "trimming the flags changes the child's argv -- the old silent-flag-loss bug" )
+    CMDASSERT( tok(1) = "-w", "first user switch is not argv[1]: [" & tok(1) & "]" )
+
+    ' ---- 3. a space in the compiler path must NOT split ---------------------------------
+    ' This is what the deleted "install without spaces" check was really about: an unquoted
+    ' argv[0] would break into two tokens and swallow the first real switch instead.
+    dim as DWSTRING wszSpaced = "C:\Program Files\tiko\fbc64.exe"
+    CompileCmd_Tokenize( BuildChildCommandLine( wszSpaced, "-c -v" ), tok(), nTok )
+    CMDASSERT( nTok = 3, "a path with a space produced " & nTok & " tokens, expected 3" )
+    CMDASSERT( tok(0) = wszSpaced, "spaced exe path split: [" & tok(0) & "]" )
+    CMDASSERT( tok(1) = "-c", "first switch lost to a spaced exe path: [" & tok(1) & "]" )
+
+    ' ---- 4. the -m pair -----------------------------------------------------------------
+    ' These four assertions exist because of a REAL LINK FAILURE, not a hypothetical: once
+    ' argv[0] was supplied and -m started working, the call site was still handing it a full
+    ' path WITH extension and never passing the main source as an input. fbc marked no main
+    ' module and compiled no entry point -- "undefined reference to `WinMain'". Reproduced on
+    ' a real two-module project, and each form below was built and linked to confirm it.
+    dim as DWSTRING wszMainArgs = BuildMainModuleArgs( "mainprog", "C:\proj\mainprog.bas" )
+    CompileCmd_Tokenize( BuildChildCommandLine( wszExe, wszMainArgs & " obj\helper.o" ), tok(), nTok )
+    CMDASSERT( nTok = 5, "-m pair gave " & nTok & " tokens, expected 5" )
+    CMDASSERT( tok(1) = "-m", "-m is not the first switch" )
+    ' The -m ARGUMENT must be a bare module name. A path or an extension matches no module,
+    ' which is the exact shape that failed to link.
+    ' FB does not process escapes in an unprefixed literal, so "\" IS one backslash --
+    ' writing "\\" here would search for two and pass on every real path.
+    CMDASSERT( instr( tok(2), "\" ) = 0, "-m argument carries a PATH: [" & tok(2) & "]" )
+    CMDASSERT( instr( tok(2), "." ) = 0,  "-m argument carries an EXTENSION: [" & tok(2) & "]" )
+    ' ...and the main source must ALSO be present as an input, or nothing compiles the
+    ' entry point. -m only marks; it does not add.
+    CMDASSERT( tok(3) = "C:\proj\mainprog.bas", _
+               "main source is not an input file: [" & tok(3) & "]" )
+    CMDASSERT( right( tok(3), 4 ) = ".bas", "main input lost its extension" )
+
+    ' ---- 5. no parameters at all --------------------------------------------------------
+    CompileCmd_Tokenize( BuildChildCommandLine( wszExe, "" ), tok(), nTok )
+    CMDASSERT( nTok = 1, "empty params gave " & nTok & " tokens, expected 1" )
+    CMDASSERT( tok(0) = wszExe, "empty params lost the exe" )
+
+    ' ---- 6. THE EXIT CODE, against a REAL child process ---------------------------------
+    ' Build success used to be decided purely by scraping stdout, and the "good compile"
+    ' flag that drove it is set merely by seeing the FreeBASIC banner -- i.e. by the compiler
+    ' having STARTED. So these assertions are the ones that matter: they run an actual
+    ' process with a known exit status and check it is reported.
+    '
+    ' cmd.exe by FULL PATH, because RedirConsoleToFile passes lpApplicationName, which does
+    ' NOT search PATH -- a bare "cmd.exe" would fail to launch and prove nothing.
+    dim as DWSTRING wszCmdExe = environ("COMSPEC")
+    if len( wszCmdExe ) = 0 then wszCmdExe = "C:\Windows\System32\cmd.exe"
+
+    if AfxFileExists( wszCmdExe ) = false then
+        ? "  NOTE: no COMSPEC; the exit-code assertions did NOT run."
+    else
+        dim as string sOut
+        dim as long nRc, nExit
+
+        nRc = RedirConsoleToFile( wszCmdExe, "/c exit 0", sOut, nExit )
+        CMDASSERT( nRc = 0, "a child that started was reported as a launch failure" )
+        CMDASSERT( nExit = 0, "a successful child reported exit code " & nExit )
+
+        sOut = ""
+        nRc = RedirConsoleToFile( wszCmdExe, "/c exit 7", sOut, nExit )
+        CMDASSERT( nExit = 7, "a child that exited 7 reported " & nExit & _
+                              " -- a failing compiler would read as SUCCESS" )
+
+        ' stdout must still be captured; the wait was added after the read loop, and putting
+        ' it before would deadlock on a child that fills the pipe buffer.
+        sOut = ""
+        RedirConsoleToFile( wszCmdExe, "/c echo tiko_marker", sOut, nExit )
+        CMDASSERT( instr( sOut, "tiko_marker" ) > 0, _
+                   "stdout was lost: [" & left(sOut, 40) & "]" )
+        CMDASSERT( nExit = 0, "echo reported exit code " & nExit )
+    end if
+    ' NOT asserted here: the launch-failure path (nExitCode = -1). It raises a modal AfxMsg,
+    ' which would hang an unattended run. Its "unknown is not success" behaviour is instead
+    ' guaranteed structurally -- nExitCode is initialised to -1 before anything can fail.
+
+    ' ---- 7. one build at a time ---------------------------------------------------------
+    ' code_Compile pumps messages while it waits for its worker, so F5 is live throughout a
+    ' build. Without a guard a second code_Compile ran on top of the first -- two
+    ' COMPILE_TYPEs, two threads, racing on chdir and the object folder.
+    '
+    ' The second assertion is the sensitive one. code_Cleanup calls BuildService_End, so if
+    ' the guard were missing, code_Compile would fall through, reach cleanup on some later
+    ' failure, and leave the state IDLE. Finding it still RUNNING is what proves the function
+    ' returned at the guard rather than somewhere further in.
+    scope
+        dim as boolean bWasRunning = BuildService_IsRunning()
+        if bWasRunning = false then BuildService_Begin()
+        dim as boolean bRc = code_Compile( IDM_COMPILE )
+        CMDASSERT( bRc = false, "code_Compile started a second build while one was running" )
+        CMDASSERT( BuildService_IsRunning() = true, _
+                   "code_Compile ran past its guard (BuildService_End was reached by cleanup)" )
+        ' Begin is a test-and-set: claiming an already-claimed slot must fail.
+        CMDASSERT( BuildService_Begin() = false, _
+                   "BuildService_Begin handed out a second claim while a build was running" )
+        if bWasRunning = false then BuildService_End()
+        CMDASSERT( BuildService_IsRunning() = false, "BuildService_End did not release the slot" )
+    end scope
+
+    sMsg = "TIKO_COMPILECMD_SELFTEST: " & nPass & " passed, " & nFail & " failed."
+    ? sMsg
+end sub

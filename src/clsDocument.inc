@@ -392,8 +392,26 @@ function clsDocument.InsertFile() as boolean
 end function
 
 
-''
-''
+' ========================================================================================
+' Save the document to disk.
+'
+' RETURN VALUE IS INVERTED AND ALWAYS HAS BEEN: FALSE means the file is on disk, TRUE means
+' it is not. Callers read it as "did the user back out of this?" -- see OnCommand_FileSave
+' and FindProject's SaveAllDirty, which both abandon what they were doing on TRUE. That
+' convention is kept because four call sites depend on it, but it now also covers a FAILED
+' write, which it previously could not express at all.
+'
+' The three lines that used to sit here --
+'
+'     if AfxFileExists(wszFilename) then AfxDeleteFile(wszFilename)
+'     ... pStream.Write ...            (result discarded)
+'     this.UserModified = false        (unconditional)
+'
+' -- deleted the user's file before writing the replacement, ignored whether the write
+' worked, and then cleared the dirty flag regardless, so a failed save looked identical to
+' a good one and the file was gone. Doc_WriteToDisk now owns the write and REPORTS on it;
+' everything below the guard runs only when the bytes are actually on disk.
+' ========================================================================================
 function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
     dim sText        as string
     dim wszFilename  as wstring * MAX_PATH
@@ -434,18 +452,25 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
     ' why the buffer is read by SCI_GETLENGTH and why UTF-16 no longer routes through DWSTRING.
     dim as long sciCodePage = SciMsg(pSci, SCI_GETCODEPAGE, 0, 0)   ' 0 or SC_CP_UTF8
 
-    dim as DWSTRING wszSaveFilename
-    if AfxFileExists(wszFilename) then AfxDeleteFile(wszFilename)
-    wszSaveFilename = wszFilename
+    dim as boolean bLossy
+    dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(this.hWindow(0)), _
+                                            (sciCodePage = SC_CP_UTF8), this.FileEncoding, bLossy )
 
-    dim pStream as CFileStream
-    if pStream.Open(wszSaveFilename, STGM_CREATE or STGM_WRITE) = S_OK then
-        dim as boolean bLossy
-        dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(this.hWindow(0)), _
-                                                (sciCodePage = SC_CP_UTF8), this.FileEncoding, bLossy )
-        pStream.Write strptr(sOut), len(sOut)
+    ' bLossy was computed here and discarded for as long as this function has existed.
+    ' Asking BEFORE the write, so Cancel leaves the file on disk untouched and the document
+    ' dirty -- same contract as a failed write below.
+    if bLossy then
+        if Doc_ConfirmLossySave( @this, wszFilename, this.FileEncoding ) = false then return true
     end if
-    pStream.Close
+
+    dim as DWSTRING wszErr
+    if Doc_WriteToDisk( wszFilename, sOut, wszErr ) <> DOCWRITE_OK then
+        ' The file on disk is untouched. Say so, and leave the document DIRTY: the whole
+        ' point is that the close prompt must still fire and the tab must still show
+        ' modified, so the user does not walk away from unsaved work.
+        Doc_ReportWriteFailure( wszFilename, wszErr )
+        return true
+    end if
 
     this.DiskFilename = wszFilename
     this.DateFileTime = AfxGetFileLastWriteTime( wszFilename )
@@ -485,18 +510,24 @@ function clsDocument.SaveTempFile( byval wszFilename as DWSTRING ) as boolean
     ' Encode the full Scintilla buffer through the single shared writer (same path as SaveFile).
     dim as long sciCodePage = SciMsg(pSci, SCI_GETCODEPAGE, 0, 0)   ' 0 or SC_CP_UTF8
 
-    dim as DWSTRING wszSaveFilename
-    if AfxFileExists(wszFilename) then AfxDeleteFile(wszFilename)
-    wszSaveFilename = wszFilename
+    dim as boolean bLossy
+    dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(this.hWindow(0)), _
+                                            (sciCodePage = SC_CP_UTF8), this.FileEncoding, bLossy )
 
-    dim pStream as CFileStream
-    if pStream.Open(wszSaveFilename, STGM_CREATE or STGM_WRITE) = S_OK then
-        dim as boolean bLossy
-        dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(this.hWindow(0)), _
-                                                (sciCodePage = SC_CP_UTF8), this.FileEncoding, bLossy )
-        pStream.Write strptr(sOut), len(sOut)
+    ' Quick Run compiles this file, so a silent character replacement here does not merely
+    ' damage a saved document -- it compiles source the user never wrote.
+    if bLossy then
+        if Doc_ConfirmLossySave( @this, wszFilename, this.FileEncoding ) = false then return true
     end if
-    pStream.Close
+
+    ' Same inverted convention as SaveFile: FALSE = the bytes are on disk. This one feeds
+    ' Quick Run, so a failure that went unreported would compile whatever stale temp file
+    ' happened to be lying around and run THAT.
+    dim as DWSTRING wszErr
+    if Doc_WriteToDisk( wszFilename, sOut, wszErr ) <> DOCWRITE_OK then
+        Doc_ReportWriteFailure( wszFilename, wszErr )
+        return true
+    end if
 
     function = false
 end function
@@ -509,6 +540,14 @@ function clsDocument.GetTextRange( _
             byval cpMax as long _
             ) as string
     dim as any ptr pSci = this.GetActiveScintillaPtr()
+    if pSci = 0 then return ""
+
+    ' An empty or inverted range is not an error worth reporting, but it MUST NOT reach
+    ' Scintilla: space() of a non-positive length yields a zero-length FB string whose
+    ' STRPTR may be null, and SCI_GETTEXTRANGE would then write through it. No caller does
+    ' this today -- this is a guard, not a fix for an observed failure.
+    if cpMax <= cpMin then return ""
+
     dim p      as long
     dim buffer as string
     dim txtrg  as SCI_TEXTRANGE
@@ -750,7 +789,10 @@ function clsDocument.CenterCurrentLine() as long
     if gConfig.PositionMiddle = 0 then exit function
     dim as any ptr pSci = this.GetActiveScintillaPtr()
     dim as long numLinesOnScreen = SciMsg( pSci, SCI_LINESONSCREEN, 0, 0)
-    dim as long nMiddle = (this.GetCurrentLineNumber - (numLinesOnScreen / 2) + 1)
+    ' \ not /: FreeBASIC's / is floating point and assignment to a long ROUNDS (to even,
+    ' at that), so this was off by one for every odd line count. The same construct in
+    ' NumTabsFromSpaces was a real shipped bug -- see the auto-insert rewrite.
+    dim as long nMiddle = (this.GetCurrentLineNumber - (numLinesOnScreen \ 2) + 1)
     SciMsg( pSci, SCI_SETFIRSTVISIBLELINE, nMiddle, 0)
     function = 0
 end function

@@ -1251,6 +1251,18 @@ end Function
 ' ========================================================================================
 function frmMain_OnClose( byval hwnd as HWND ) as LRESULT
 
+    ' ---- REFUSE TO CLOSE WHILE A BUILD IS RUNNING ----------------------------------------
+    ' code_Compile pumps messages while it waits for its worker thread, so File > Exit and
+    ' Alt+F4 are both reachable from inside a build. Everything below then ran -- documents
+    ' closed, gScanMgr shut down, the window destroyed -- while code_Compile was still
+    ' holding its COMPILE_TYPE and a live thread writing into one of its stack locals.
+    ' Returning here leaves the editor exactly as it was; the user can exit once the build
+    ' finishes, which is seconds away.
+    if BuildService_IsRunning() then
+        SetCompileStatusBarMessage( L(683, "A build is already running."), 0 )
+        return true
+    end if
+
     ' if configuration option to confirm closing editor is active then ask now.
     if gConfig.AskExit then
         if TikoMsgBox( HWND_FRMMAIN, L(217,"Are you sure you want to exit?"), L(218,"Confirm"), _
@@ -1459,7 +1471,7 @@ function frmMain_WndProc( _
             ' are gone with their globals: every drag site is a reusable control now --
             ' PsSplitter, PsListTree, PsTabBar -- and each sets its own cursor from its own
             ' WM_SETCURSOR, so frmMain must not answer for them.
-            if (gApp.IsCompiling = true) or _
+            if BuildService_IsRunning() or _
                (gApp.IsProjectLoading = true) or _
                (gApp.IsFileLoading = true) then
                 SetCursor( LoadCursor(0, IDC_WAIT) )
@@ -1471,11 +1483,18 @@ function frmMain_WndProc( _
         '  owned and released by the controls that take it.)
 
         case WM_COPYDATA      ' used during processing of commandline
+            ' ANY process on this desktop can send this. The payload used to be dereferenced
+            ' as a NUL-terminated string with no null check, no use of cbData, and no
+            ' guarantee a terminator existed inside the mapped copy -- so an unterminated
+            ' payload read off the end of the mapping and took the editor down.
+            ' SafeCopyDataString stays inside cbData and returns "" for anything malformed.
             dim pDataToGet as COPYDATASTRUCT ptr = cast(COPYDATASTRUCT ptr, lParam)
             if pDataToGet then
                 if pDataToGet->dwData = IDM_COPYDATA_COMMANDLINE then  
-                    dim as DWSTRING wszCommandLine = *cast(wstring ptr, pDataToGet->lpData)
-                    
+                    dim as DWSTRING wszCommandLine = _
+                            SafeCopyDataString( pDataToGet->lpData, pDataToGet->cbData )
+                    if len( wszCommandLine ) = 0 then return 0
+
                     dim as integer numfiles = AfxStrParseCount(wszCommandLine, ";")
                     dim wszFiles(numfiles) as DWSTRING
 
@@ -1579,10 +1598,29 @@ function frmMain_WndProc( _
             next
 
         case MSG_USER_PROCESS_CHECKFORUPDATE
-            ' Check for any Tiko updated version (use a separate thread in case check hangs)
+            ' Check for a newer tiko on a separate thread, and DO NOT JOIN IT HERE.
+            '
+            ' This used to be ThreadCreate immediately followed by ThreadWait, which made
+            ' the thread pointless: the UI blocked for exactly as long as it would have
+            ' without one, and the comment saying it existed "in case check hangs" described
+            ' something that could not happen. WinHTTP's own resolve and connect timeouts
+            ' default to 60 s each and Send blocks in them, so a captive portal or a
+            ' blackholed network froze startup for a minute. (The worker now sets explicit
+            ' 5 s timeouts as well.)
+            '
+            ' The handle is kept and joined in MSG_USER_UPDATECHECK_COMPLETE -- fbc 1.10 has
+            ' no ThreadDetach, so a handle that is never waited on leaks the thread struct.
             if gConfig.CheckUpdates = false then exit function
-            dim as any ptr pThread = ThreadCreate( @DoCheckForUpdates )
-            ThreadWait( pThread )
+            if ghUpdateCheckThread = 0 then
+                ghUpdateCheckThread = ThreadCreate( @DoCheckForUpdates )
+            end if
+
+        case MSG_USER_UPDATECHECK_COMPLETE
+            ' The worker posts this as its last act, so the join below returns at once.
+            if ghUpdateCheckThread then
+                ThreadWait( ghUpdateCheckThread )
+                ghUpdateCheckThread = 0
+            end if
             frmMenuBar_PositionWindows()
 
         case MSG_USER_SHOWAUTOCOMPLETE
@@ -1756,6 +1794,19 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Env-gated (TIKO_ENCODING_SELFTEST=1). Pure byte-exact + disk round-trip; needs no
     ' document window, so it is safe to run here at startup.
     Encoding_RunSelfTest()
+    ' Env-gated (TIKO_SAVE_SELFTEST=1). Touches %TEMP% and takes a real exclusive lock;
+    ' needs no document window.
+    Save_RunSelfTest()
+    ' Env-gated (TIKO_COMPILECMD_SELFTEST=1). Pure: it asserts the lpCommandLine STRING,
+    ' because a suite cannot launch a process -- see the suite's own header.
+    CompileCmd_RunSelfTest()
+    ' Env-gated (TIKO_COPYDATA_SELFTEST=1). Pure: bounded reads over local buffers.
+    CopyData_RunSelfTest()
+    ' Env-gated (TIKO_PROJTRUST_SELFTEST=1). The prompt is modal and unassertable; what is
+    ' asserted is everything that decides whether it appears.
+    ProjectTrust_RunSelfTest()
+    ' Env-gated (TIKO_INIPARSE_SELFTEST=1). Pure.
+    Ini_RunSelfTest()
     ' Env-gated (TIKO_DEBUG_SELFTEST=1). Pure: layout arithmetic, the datatip expression
     ' walk and the localized strings. It launches nothing -- see the suite's own header
     ' for what that means it cannot reach.

@@ -13,6 +13,12 @@
 
 #pragma once
 
+' modRoutines was a junk drawer; three coherent groups were split out of it. These are
+' forwarded from here so the ~40 files that include modRoutines.bi did not have to change.
+#include once "modEncoding.bi"
+#include once "modPaths.bi"
+#include once "modUpdateCheck.bi"
+
 
 
 ' Size = 32 bytes
@@ -37,23 +43,18 @@ declare function RichEditCenterSingleLineText( byval hRichEdit as HWND ) as long
 declare function CompleteIncludeFilename( byval pDoc as clsDocument ptr, byval wszFilename as string ) as string
 declare function getTextWidth( byval hwnd as HWND, byref wszText as wstring, byval FontIndex as long ) as long
 declare function SpawnPreviousInstance() as boolean
+' Bounded read of a WM_COPYDATA payload -- see its header. Pure, so it is assertable
+' without a second process. Returns "" for anything malformed.
+declare function SafeCopyDataString( byval pData as any ptr, byval cbData as ulong ) as DWSTRING
+declare sub CopyData_RunSelfTest()
 declare function ReloadDocument( byref wszFilename as wstring ) as long
 declare function GetTemporaryFilename( byref wszFolder as wstring, byref wszExtension as wstring) as string
 declare function GetFontCharSetID(byref wzCharsetName as DWSTRING ) as long
-declare function isUTF8encoded(byref s as string) as boolean
 declare function Scintilla_GetTextBytes( byval hEdit as hwnd ) as string
 declare function Scintilla_StripTrailingWhitespace( byval hEdit as hwnd ) as long
-declare function Doc_EncodeForDisk( byref sBuffer as string, byval bSourceIsUtf8 as boolean, byval nTargetEnc as long, byref bLossy as boolean ) as string
-declare function Doc_EncodingName( byval nEnc as long ) as DWSTRING
-declare function ConvertTextBuffer( byval pDoc as clsDocument ptr, byval nNewEncoding as long ) as boolean
 declare function GetFileToString( byref wszFilename as const wstring, byref txtBuffer as string, byval pDoc as clsDocument ptr ) as boolean
 declare function IsCurrentLineIncludeFilename() as boolean
 declare function OpenSelectedDocument( byref wszFilename as wstring, byref wszFunctionName as wstring = "", byval nLineNumber as long = -1 ) as clsDocument ptr
-declare function FilenameOriginalCase( byval wszFilename as DWSTRING ) as DWSTRING
-declare function ProcessToCurdriveProject( byval wzFilename as DWSTRING ) as DWSTRING
-declare function ProcessFromCurdriveProject( byval wzFilename as DWSTRING ) as DWSTRING
-declare function ProcessToCurdriveApp( byval wzFilename as DWSTRING ) as DWSTRING
-declare function ProcessFromCurdriveApp( byval wzFilename as DWSTRING ) as DWSTRING
 declare function AfxIFileOpenDialogW( byval hwndOwner as HWND, byval idButton as long) as wstring Ptr
 declare function AfxIFileOpenDialogMultiple( byval hwndOwner as HWND, byval idButton as long) as IShellItemArray ptr
 declare function AfxIFileSaveDialog( byval hwndOwner as HWND, byval pwszFileName as wstring Ptr, byval pwszDefExt as wstring Ptr, byval id as long = 0, byval sigdnName as SIGDN = SIGDN_FILESYSPATH ) as wstring Ptr

@@ -128,7 +128,12 @@ type clsDocument
     ' it, and it is meaningless unless gConfig.DetectExternalFileChanges is on.
     WatchPendingTime      as FILETIME
     bHasFunctions         as boolean = false    ' FunctionList to determine if click will display the File
-    FileEncoding          as long = FILE_ENCODING_UTF8   ' new files always UTF8 encoded by default (no BOM)       
+    FileEncoding          as long = FILE_ENCODING_UTF8   ' new files always UTF8 encoded by default (no BOM)
+    ' The user has already been told, for THIS document, that saving it in its current
+    ' encoding replaces characters, and chose to go ahead. Suppresses the prompt on every
+    ' later Ctrl+S so it is a warning rather than nagging. Cleared by ConvertTextBuffer,
+    ' because a deliberate encoding change makes the previous answer meaningless.
+    bLossySaveAccepted    as boolean = false       
     wszMatchWord          as DWSTRING           ' for the incremental autocomplete search
     AutoCompletetype      as long               ' AUTOC_DIMAS, AUTOC_TYPE
     AutoCStartPos         as long

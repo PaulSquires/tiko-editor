@@ -224,6 +224,10 @@ type clsConfig
         RunViaCommandWindow       as long = false
         DisableCompileBeep        as long = false
         MRU(9)                    as DWSTRING
+        ' Projects whose build settings the user has answered for. See modProjectTrust.bi:
+        ' a .tiko decides how the project is BUILT, so one that arrives from elsewhere is
+        ' asked about once. Variable length -- unlike MRU, which is a fixed ten.
+        TrustedProjects(any)      as DWSTRING
         MRUProject(9)             as DWSTRING
 
         declare constructor()
@@ -232,8 +236,16 @@ type clsConfig
         declare function SaveKeywords() as long
         declare function WriteMRU() as long
         declare function WriteMRUProjects() as long
+        ' Wrapper + body, same as LoadConfigFile: the flag is owned by the wrapper so no
+        ' exit path in the body can strand it.
         declare function SaveConfigFile() as long
+        declare function SaveConfigFileBody() as long
+        ' LoadConfigFile is a THIN WRAPPER that sets gApp.PreventConfigLoad, runs the body,
+        ' and clears the flag on every path including an early error return. Do not move
+        ' the flag back into the body: it used to live there, and the one early return that
+        ' bypassed the clear left external config-change detection dead for the session.
         declare function LoadConfigFile( byval isHotReload as boolean = false ) as long
+        declare function LoadConfigFileBody( byval isHotReload as boolean ) as long
         declare function ProjectSaveToFile() as boolean
         declare function ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean    
         declare function LoadCodetipsFB() as boolean

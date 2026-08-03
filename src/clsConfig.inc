@@ -27,6 +27,13 @@
 #include once "frmOutput.bi"
 #include once "frmMainOnCommand.bi"
 
+' ReloadConfigFileTest has to rebuild the tool accelerators now that a hot reload can
+' actually change gConfig.Tools. Safe to include this early -- the header states its own
+' contract that nothing in it may name a Ps* type, for exactly this reason.
+#include once "frmUserTools.bi"
+' Workspace trust for .tiko files -- ProjectLoadFromFile and ProjectSaveToFile both use it.
+#include once "modProjectTrust.bi"
+
 ''
 ''  CONSTRUCTOR
 ''
@@ -214,8 +221,20 @@ end function
 ''
 ''  SAVE CONFIGURATION TO DISK FILE
 ''
+' Same shape as LoadConfigFile, and for the same reason: the body has an early "return
+' true" when the file cannot be created, which used to strand gApp.PreventConfigLoad -- an
+' unwritable settings.ini (read-only volume, a locked file, no disk space) killed external
+' config-change detection for the session just as surely as an unreadable one did.
 function clsConfig.SaveConfigFile() as long
     gApp.PreventConfigLoad = true
+    dim as long nResult = this.SaveConfigFileBody()
+    gApp.PreventConfigLoad = false
+    return nResult
+end function
+
+
+' The body. Non-zero on error, 0 on success.
+function clsConfig.SaveConfigFileBody() as long
 
     ' Determine the current editor positioning
     ' Do not save if editor is minimized
@@ -464,6 +483,12 @@ function clsConfig.SaveConfigFile() as long
         pStream.WriteLine "MRU_" & right("00" & str(i), 2) & "=" & this.MRU(i)
     next
 
+    ' Trusted project paths (modProjectTrust). Same shape as MRU_ but variable length.
+    for i as long = lbound(this.TrustedProjects) to ubound(this.TrustedProjects)
+        if len(this.TrustedProjects(i)) = 0 then continue for
+        pStream.WriteLine "TRUSTPROJ_" & right("00" & str(i), 2) & "=" & this.TrustedProjects(i)
+    next
+
     pStream.WriteLine ""
     pStream.WriteLine "[MRUPROJECTS]"
     for i as long = 0 To 9
@@ -482,8 +507,7 @@ function clsConfig.SaveConfigFile() as long
     ' in order to detect external changes to it.
     this.DateFileTime = AfxGetFileLastWriteTime( this.ConfigFilename )
 
-    gApp.PreventConfigLoad = false
-
+    ' (The wrapper clears gApp.PreventConfigLoad; it is deliberately not touched here.)
     function = 0
 end function
 
@@ -574,9 +598,24 @@ end function
 ' into memory -- so Project > Close followed by exit wrote that path out again and the
 ' project reopened on the next launch, exactly as if it had never been closed.
 ' The geometry fields are already exempted from a hot reload for the same class of reason.
+' The flag is set and cleared HERE, around a call, so no exit path inside the body can
+' leak it. It used to be set at the top of the body and cleared at the bottom, and the one
+' early "return true" between them -- an unopenable settings.ini -- left it latched. Its
+' only reader is ReloadConfigFileTest, which short-circuits on it, so a single transient
+' failure (an antivirus scan, a second instance mid-write, a network hiccup) permanently
+' disabled external config-change detection for the rest of the session, silently.
 function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as long
-    dim as DWSTRING wszLiveLastProject = this.wszLastActiveProject
     gApp.PreventConfigLoad = true
+    dim as long nResult = this.LoadConfigFileBody( isHotReload )
+    gApp.PreventConfigLoad = false
+    return nResult
+end function
+
+
+' The body. Returns non-zero on error, 0 on success -- an inverted convention it has always
+' had; no caller currently checks it.
+function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
+    dim as DWSTRING wszLiveLastProject = this.wszLastActiveProject
 
     dim as DWSTRING wst, wKey, wData
     dim nData          as long
@@ -584,15 +623,30 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
     dim bReadingNote   as boolean
     dim bNewConfigFile as boolean
 
-    ' Remove any existing Builds
-    ' We can not recreate the Categories each time the config reloads because the
-    ' structure contains references to existing nodes.
+    ' Builds AND Tools are rebuilt from the file on every load, including a hot reload.
+    '
+    ' Tools was NOT erased here before, and because its assignments were nested inside
+    ' "if i > ubound(this.Tools)", the second and every later load skipped every
+    ' USERTOOL_ line: user tools silently kept their pre-edit values while the file on
+    ' disk said otherwise. Erasing is what makes them mirror the file.
+    '
+    ' CATEGORIES ARE DELIBERATELY NOT ERASED, but not for the reason the old comment
+    ' here gave. It claimed "the structure contains references to existing nodes";
+    ' TYPE_CATEGORIES is two DWSTRINGs and holds no references at all -- that comment is
+    ' stale. The real reason is SetCategoryDefaults: it only fills the array when it is
+    ' EMPTY and runs once at startup, so erasing here would leave a settings.ini with no
+    ' CATEGORY_ lines with no categories at all and nothing to restore them. The values
+    ' are refreshed in place instead, which a hot reload could not do before.
     erase this.Builds
+    erase this.Tools
+    erase this.TrustedProjects
 
     if AfxFileExists(this.ConfigFilename) = 0 then
         bNewConfigFile = true
     else
         dim pStream as CTextStream   '(utf16)
+        ' The wrapper owns gApp.PreventConfigLoad, so this early return can no longer
+        ' strand it -- which is exactly what it used to do.
         if pStream.OpenUnicode(this.ConfigFilename) <> S_OK then return true   ' error
 
         gApp.NonProjectNotes = ""
@@ -600,37 +654,34 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
         do until pStream.EOS
             wst = pStream.ReadLine
 
-            if len(wst) = 0 then continue do
-            if left(wst, 1) = "'" then continue do
-            if left(wst, 1) = "[" then continue do
-
-            if left(wst, 11) = "NOTES-START" then
-                bReadingNote = true
-                continue do
-            end if
-            if left(wst, 9) = "NOTES-END" then
-                bReadingNote = false
-                continue do
-            end if
+            ' One shared decode (modIniParse). The three loops that used to carry their
+            ' own copy of this had already drifted -- see that file's header.
+            dim as long nKind = Ini_ClassifyLine( wst, wKey, wData )
+            if nKind = INI_LINE_SKIP then continue do
+            if nKind = INI_LINE_NOTES_START then bReadingNote = true  : continue do
+            if nKind = INI_LINE_NOTES_END   then bReadingNote = false : continue do
+            ' BEFORE the key=value test, deliberately: a note containing an "=" is text,
+            ' not configuration.
             if bReadingNote then
                 gApp.NonProjectNotes = gApp.NonProjectNotes + wst + vbcrlf
                 continue do
             end IF
+            if nKind <> INI_LINE_KEYVALUE then continue do
 
-            i = instr(wst, "=")
-            if i = 0 then continue do
-
-            wKey = "": wData = "": nData = 0
-
-            wKey  = left(wst, i-1)
-            wData = mid(wst, i+1)
             nData = val(wData)
 
 
+            ' SIZING AND ASSIGNMENT ARE SEPARATE, in all three indexed blocks below.
+            '
+            ' They used to be nested -- the assignments sat INSIDE "if i > ubound(...)",
+            ' so an entry was only stored when its index grew the array. Any index the
+            ' array already covered was silently dropped: a duplicate key, a
+            ' non-ascending index in a hand-edited file, and -- for Tools, which is now
+            ' erased above but was not -- EVERY entry on every reload after the first.
             if left(wKey, 9) = "CATEGORY_" then  ' is this a CATEGORY entry
             i = val(right(wKey,2))
-            if i > ubound(this.Cat) then
-                redim preserve this.Cat(i)
+            if i >= 0 then
+                if i > ubound(this.Cat) then redim preserve this.Cat(i)
                 ' trim() is not cosmetic. idFileType is compared against the FILETYPE_*
                 ' string digits to decide which Explorer header a document belongs under,
                 ' so one stray space in a hand-edited "CATEGORY_01= 1|-|Main" makes that
@@ -643,8 +694,8 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
 
             if left(wKey, 9) = "USERTOOL_" then  ' is this a User Tool entry
             i = val(right(wKey,2))
-                if i > ubound(this.Tools) then
-                    redim preserve this.Tools(i)
+                if i >= 0 then
+                    if i > ubound(this.Tools) then redim preserve this.Tools(i)
                     this.Tools(i).wszDescription   = AfxStrParse(wData, 1, "|-|")
                     this.Tools(i).wszCommand       = ProcessFromCurdriveApp( AfxStrParse(wData, 2, "|-|") )
                     this.Tools(i).wszParameters    = AfxStrParse(wData, 3, "|-|")
@@ -664,8 +715,8 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
 
             if left(wKey, 6) = "BUILD_" then  ' is this a BUILD entry
             i = val(right(wKey,2))
-                if i > ubound(this.Builds) then
-                    redim preserve this.Builds(i)
+                if i >= 0 then
+                    if i > ubound(this.Builds) then redim preserve this.Builds(i)
                     this.Builds(i).id             = AfxStrParse(wData, 1, "|-|")
                     this.Builds(i).wszDescription = AfxStrParse(wData, 2, "|-|")
                     this.Builds(i).wszOptions     = AfxStrParse(wData, 3, "|-|")
@@ -680,6 +731,15 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
                     continue do
                 end If
             end If
+
+            if left(wKey, 10) = "TRUSTPROJ_" then
+                i = val(right(wKey,2))
+                if i >= 0 then
+                    if i > ubound(this.TrustedProjects) then redim preserve this.TrustedProjects(i)
+                    this.TrustedProjects(i) = wData
+                    continue do
+                end if
+            end if
 
             if left(wKey, 4) = "MRU_" then  ' is this an MRU entry
             i = val(right(wKey,2))
@@ -1015,8 +1075,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
     ' in order to detect external changes to it.
     this.DateFileTime = AfxGetFileLastWriteTime( this.ConfigFilename )
 
-    gApp.PreventConfigLoad = false
-
+    ' (The wrapper clears gApp.PreventConfigLoad; it is deliberately not touched here.)
     function = 0
 end function
 
@@ -1173,6 +1232,12 @@ function clsConfig.ProjectSaveToFile() as boolean
         this.wszLastActiveProject = ""
     end if
 
+    ' A project THIS INSTALL just wrote is trusted, permanently and silently. This is what
+    ' keeps workspace trust invisible during ordinary work: everything the author creates or
+    ' edits passes through here, so the prompt is reserved for a .tiko that arrived from
+    ' somewhere else. A warning that fires on your own files is one you learn to dismiss.
+    ProjectTrust_Add( gApp.ProjectFilename )
+
     function = true   ' successful save
 end function
 
@@ -1203,6 +1268,31 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
 
     if AfxFileExists(wszFile) = 0 then exit function
 
+    ' OPEN AND VALIDATE BEFORE TOUCHING ANY GLOBAL STATE.
+    '
+    ' This used to sit twenty lines further down, AFTER ProjectFilename and ProjectName had
+    ' been overwritten, ProjectNotes blanked and ProjectFolders_Clear() run -- and its
+    ' "return false" then left all of that in place. A .tiko that exists but cannot be
+    ' opened (held by another process, on a share that just dropped, permissions) therefore
+    ' destroyed the folder tree of the workspace the user still had open, pointed the app at
+    ' a project it had failed to read, and returned with the WAIT cursor still up because
+    ' the restore at the end was never reached.
+    '
+    ' Nothing below this line can fail in a way that leaves the previous workspace half
+    ' dismantled, because nothing below it is reachable unless the file is readable.
+    ' ---- WORKSPACE TRUST, before anything is touched -----------------------------------
+    ' A .tiko decides how the project is BUILT and RUN, not merely which files to open --
+    ' ProjectOther32/64 go straight onto the fbc command line and ProjectCommandLine becomes
+    ' ShellExecuteEx's lpParameters. Ask about one that came from elsewhere. Silent for a
+    ' project this install saved, and for any project with nothing in it that can execute;
+    ' see modProjectTrust.bi. Checked HERE, before the state below is disturbed, because by
+    ' the time the parse has run the folder tree is cleared and documents are open.
+    dim as long nTrust = ProjectTrust_Check( wszFile )
+    if nTrust = PROJTRUST_CANCEL then return false
+
+    dim pStream as CTextStream  ' (utf16)
+    if pStream.OpenUnicode( wszFile ) <> S_OK then return false
+
     dim as HCURSOR hCurSave = GetCursor()
     SetCursor( LoadCursor(0, IDC_WAIT) )
 
@@ -1215,9 +1305,6 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     ' to its .tiko on the next save.
     ProjectFolders_Clear()
 
-    dim pStream as CTextStream  ' (utf16)
-    if pStream.OpenUnicode(gApp.ProjectFilename) <> S_OK then return false
-
     ' Variable length array to hold sequence of all project files
     dim docData(any) as PROJECT_FILELOAD_DATA
 
@@ -1226,28 +1313,17 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     do until pStream.EOS
         wst = pStream.ReadLine
 
-        if len(wst) = 0 then continue do
-        if left(wst, 1) = "'" then continue do
-        if left(wst, 1) = "[" then continue do
-
-        if left(wst, 11) = "NOTES-START" then
-            bReadingNote = true
-            continue do
-        end if
-        if left(wst, 9) = "NOTES-END" then
-            bReadingNote = false
-            continue do
-        end if
+        ' One shared decode (modIniParse), same as LoadConfigFileBody.
+        dim as long nKind = Ini_ClassifyLine( wst, wKey, wData )
+        if nKind = INI_LINE_SKIP then continue do
+        if nKind = INI_LINE_NOTES_START then bReadingNote = true  : continue do
+        if nKind = INI_LINE_NOTES_END   then bReadingNote = false : continue do
+        ' BEFORE the key=value test: a note containing an "=" is text, not a setting.
         if bReadingNote then
             gApp.ProjectNotes = gApp.ProjectNotes + wst + vbcrlf
             continue do
         end IF
-
-        i = instr(wst, "=")
-        if i = 0 then continue do
-
-        wKey  = left(wst, i-1)
-        wData = mid(wst, i+1)
+        if nKind <> INI_LINE_KEYVALUE then continue do
 
         select case ucase(wData)
             case "TRUE":   nData = true
@@ -1364,6 +1440,15 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     next
 
     gApp.IsProjectLoading = false
+
+    ' The user chose to open the files but not to adopt what the project would build or run
+    ' with. Blank them AFTER the parse rather than skipping the keys during it, so there is
+    ' one place this is decided and the parser stays a parser.
+    if nTrust = PROJTRUST_OPEN_SAFE then
+        gApp.ProjectOther32     = ""
+        gApp.ProjectOther64     = ""
+        gApp.ProjectCommandLine = ""
+    end if
     gApp.hIconPanel = 0
     gApp.wszLastOpenFolder = ""
 
@@ -1430,6 +1515,14 @@ function clsConfig.ReloadConfigFileTest() as boolean
             pDoc->ApplyProperties
             pDoc = pDoc->pDocnext
         loop
+
+        ' The accelerator tables read gConfig.Tools and gConfig.Builds, and BOTH arrays are
+        ' now rebuilt from the file by the load above. They were not before -- Tools was
+        ' never erased, so a hot reload could not change it and the tables stayed correct
+        ' by accident. Now they have to be rebuilt or the shortcuts describe the previous
+        ' contents of a file that has already changed.
+        frmUserTools_CreateAcceleratorTable()
+        frmBuildConfig_CreateAcceleratorTable()
     end if
 
     function = 0

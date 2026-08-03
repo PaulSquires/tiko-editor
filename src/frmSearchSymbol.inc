@@ -475,7 +475,8 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
     dim as long nWidth   = pWindow->ScaleX( 550 )
     dim as long nHeight  = pWindow->ScaleY( 400 )
     dim as long nTop     = rc.top
-    dim as long nLeft    = rc.left + ( (rc.right - rc.left - nWidth) / 2 )
+    ' \ not /: integer centring, truncated rather than rounded to even.
+    dim as long nLeft    = rc.left + ( (rc.right - rc.left - nWidth) \ 2 )
     
 
     ' Position the Fuzzy popup form into place
