@@ -350,6 +350,7 @@ sub Theme_ApplyHoverTips()
     next
     Theme_ApplyTooltip( PsButton_GetPsTooltipHandle( frmDebug_GetButton(IDC_FRMDEBUG_CMDADDWATCH) ) )
     Theme_ApplyTooltip( PsButton_GetPsTooltipHandle( frmDebug_GetButton(IDC_FRMDEBUG_CMDDELWATCH) ) )
+    Theme_ApplyTooltip( PsButton_GetPsTooltipHandle( frmDebug_GetButton(IDC_FRMDEBUG_CMDRESTORE) ) )
 end sub
 
 

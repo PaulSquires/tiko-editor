@@ -102,6 +102,9 @@
 #define IDC_FRMDEBUG_SPLITRIGHT    1017
 #define IDC_FRMDEBUG_CMDADDWATCH   1018
 #define IDC_FRMDEBUG_CMDDELWATCH   1019
+' Deliberately OUTSIDE CMDFIRST..CMDLAST: that range is walked as a block by the enable-state
+' pass and the tooltip pass, and this button is neither a debug command nor ever disabled.
+#define IDC_FRMDEBUG_CMDRESTORE    1020
 
 ' A UDT still expands eagerly one level at a time; this bounds the FIELD count, not an
 ' array's element count, which is grouped instead.
@@ -136,6 +139,28 @@ const as long FRMDEBUG_DEFPCTMAIN    = 6000    ' vertical bar, 60% across
 const as long FRMDEBUG_DEFPCTLEFT    = 3200    ' globals over locals
 const as long FRMDEBUG_DEFPCTRIGHT   = 8300    ' call stack over watch
 
+' ------------------------------------------------------------------------------------------
+' COLLAPSE, NOT MINIMIZE.  Same rule, and the same reason, as frmUnusedSymbols.
+'
+' The minimize button never reaches Windows: this is an OWNED popup, so an iconic debugger has
+' no taskbar button to come back from - and it is the one window you cannot afford to lose,
+' because the debuggee is still stopped and only these buttons can resume it.
+'
+' Collapsed, the window shrinks to a STRIP of the navigation commands as ICONS ONLY, parked in
+' the top-right of the editing area, with a restore icon at the end:
+'
+'   [>] [#] [->] [/>] [^] [>|] [restore]
+'
+' BREAK IS NOT IN THE STRIP. The strip is what you use while stepping - the debuggee is
+' stopped - and Break is the one command that is disabled in exactly that state. A permanently
+' greyed seventh icon in a seven-icon strip is noise.
+'
+' Sizes are unscaled; the caller applies the DPI factor.
+' ------------------------------------------------------------------------------------------
+const as long FRMDEBUG_STUBMARGIN = 12   ' inset from the editing area's edges
+const as long FRMDEBUG_STUBPAD    = 8    ' inset around the strip, inside the client
+const as long FRMDEBUG_STUBGAP    = 4    ' between two icons
+
 declare function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, byval cmdparams as DWSTRING ) as LRESULT
 declare sub      frmDebug_Command( byval id as long )
 declare sub      frmDebug_ApplyTheme()
@@ -146,6 +171,22 @@ declare sub      frmDebug_RunSelfTest()
 declare sub      frmDebug_CaptureState()
 declare sub      frmDebug_ArmButtonTooltips()
 declare function frmDebug_GetButton( byval id as long ) as HWND
+declare function frmDebug_IsCollapsed() as boolean
+declare sub      frmDebug_Collapse()
+
+' Pure: the collapsed strip's CLIENT size, from the summed ideal widths of the icons it holds.
+' Split out so the strip cannot be sized to something that clips its last icon - a clipped
+' restore icon is a window with no way back.
+declare sub frmDebug_ComputeStripSize( byval nSumW as long, byval nMaxH as long, byval nCount as long, _
+                                       byval nPad as long, byval nGap as long, _
+                                       byref cx as long, byref cy as long )
+
+' Pure: where the collapsed strip sits. Top-RIGHT of rcAnchor (the editing area, in screen
+' coords), inset by nMargin - the same placement frmUnusedSymbols uses, and pure for the same
+' reason: a sign error parks it off-screen, where the only symptom is a vanished debugger.
+declare sub frmDebug_ComputeStubRect( byref rcAnchor as RECT, _
+                                      byval cx as long, byval cy as long, _
+                                      byval nMargin as long, byref rcOut as RECT )
 
 ' The pane geometry, computed as a pure function of the client size and the three bar
 ' positions so it can be asserted without a window. LayoutPanes uses this and nothing else,

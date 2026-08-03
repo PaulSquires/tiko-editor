@@ -168,6 +168,15 @@ end function
 
 
 ' ========================================================================================
+' Suppress the list's tooltips. See the call site for why this exists rather than a mode.
+' ========================================================================================
+private function frmSearchSymbol_NoTooltip( byval hListControl as HWND, byval row as integer, _
+                                            byval col as integer ) as DWSTRING
+    return ""
+end function
+
+
+' ========================================================================================
 ' PsTextBox callbacks for the find textbox. The control owns the cue banner, colors,
 ' vertical centering, single-line enforcement and the Cut/Copy/Paste context menu that
 ' the old RichEdit subclass hand-rolled here.
@@ -440,6 +449,12 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
     dim as HWND hCtrlList = PsListTree_Create( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
     PsListTree_SetPaintCallback( hCtrlList, @frmSearchSymbol_PaintCallback )
     PsListTree_SetMessageCallback( hCtrlList, @frmSearchSymbol_MessageCallback )
+    ' NO TOOLTIPS. With no callback set, PsListTree defaults a row's tip to the row's own
+    ' TEXT -- so every row pops its own caption back at you, over a popup picker that is
+    ' already showing exactly that caption. There is no "off" mode on the control (only
+    ' SYSTEM vs PS), so the way to suppress a tip is a callback that resolves every row to
+    ' "", which is what the callback contract documents as "none".
+    PsListTree_SetTooltipCallback( hCtrlList, @frmSearchSymbol_NoTooltip )
     PsListTree_PreventDoubleClick( hCtrlList )
     PsListTree_SetBackColor( hCtrlList, theme.panel.text.backcolor )
     ' Unscaled units -- PsListTree_SetRowHeight DPI-scales what it is handed.

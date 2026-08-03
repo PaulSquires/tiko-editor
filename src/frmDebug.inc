@@ -66,6 +66,22 @@ dim shared as FRMDEBUG_SORT gDbgSortLocals
 dim shared as HWND gDbgBtnAddWatch
 dim shared as HWND gDbgBtnDelWatch
 
+' Collapsed ("minimized") state -- see frmDebug.bi. gDbgRestoreRect is the window rect to come
+' BACK to, in screen coords, captured at the moment of collapse: the strip's own rect is not it.
+dim shared as boolean gDbgCollapsed
+dim shared as RECT    gDbgRestoreRect
+dim shared as HWND    gDbgBtnRestore
+
+' The strip, in the order it is drawn. Break is absent by design (frmDebug.bi says why), and
+' the restore icon is appended by the layout rather than listed here -- it is not a debug
+' command and must never pick up the enable state of one.
+dim shared as long gDbgStripIds(0 to 5) => { _
+    IDC_FRMDEBUG_CMDCONTINUE, IDC_FRMDEBUG_CMDSTOP, IDC_FRMDEBUG_CMDSTEPINTO, _
+    IDC_FRMDEBUG_CMDSTEPOVER, IDC_FRMDEBUG_CMDSTEPOUT, IDC_FRMDEBUG_CMDRUNCURSOR }
+
+declare sub frmDebug_PositionWindows()
+declare sub frmDebug_SyncButtons()
+
 ' ==========================================================================================
 ' Status line
 ' ==========================================================================================
@@ -1117,6 +1133,228 @@ private sub frmDebug_LayoutPanes()
     AfxRedrawWindow( HWND_FRMDEBUG )
 end sub
 
+' ==========================================================================================
+' Collapse to the icon strip, and come back. The window is never made ICONIC -- see the .bi.
+' ==========================================================================================
+function frmDebug_IsCollapsed() as boolean
+    return gDbgCollapsed
+end function
+
+' ------------------------------------------------------------------------------------------
+' The strip's client size. PURE.
+' ------------------------------------------------------------------------------------------
+sub frmDebug_ComputeStripSize( byval nSumW as long, byval nMaxH as long, byval nCount as long, _
+                               byval nPad as long, byval nGap as long, _
+                               byref cx as long, byref cy as long )
+    dim as long nGaps = 0
+    if nCount > 1 then nGaps = (nCount - 1) * nGap
+    cx = nPad * 2 + nSumW + nGaps
+    cy = nPad * 2 + nMaxH
+end sub
+
+' ------------------------------------------------------------------------------------------
+' Where the strip sits. PURE. Top-RIGHT of the editing area, inset by the margin.
+' ------------------------------------------------------------------------------------------
+sub frmDebug_ComputeStubRect( byref rcAnchor as RECT, _
+                              byval cx as long, byval cy as long, _
+                              byval nMargin as long, byref rcOut as RECT )
+    dim as long x = rcAnchor.right - nMargin - cx
+    dim as long y = rcAnchor.top + nMargin
+
+    ' An editing area narrower than the strip would push it off the LEFT edge; clamp so it
+    ' stays reachable rather than sliding out of the anchor entirely.
+    if x < rcAnchor.left then x = rcAnchor.left
+    if y < rcAnchor.top then y = rcAnchor.top
+
+    SetRect( @rcOut, x, y, x + cx, y + cy )
+end sub
+
+' The editing area, in SCREEN coords: the active document's Scintilla, falling back to
+' frmMain's client area when there is no document, so the strip is always placed against
+' something real.
+private sub frmDebug_AnchorRect( byref rcOut as RECT )
+    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+    if pDoc then
+        if IsWindow( pDoc->hWndActiveScintilla ) then
+            GetWindowRect( pDoc->hWndActiveScintilla, @rcOut )
+            exit sub
+        end if
+    end if
+
+    GetClientRect( HWND_FRMMAIN, @rcOut )
+    dim as POINT pt = ( rcOut.left, rcOut.top )
+    ClientToScreen( HWND_FRMMAIN, @pt )
+    SetRect( @rcOut, pt.x, pt.y, pt.x + (rcOut.right - rcOut.left), _
+                     pt.y + (rcOut.bottom - rcOut.top) )
+end sub
+
+' The captions come off the toolbar buttons while collapsed and go back on when restored.
+' PsButton measures an empty caption as ICON ONLY -- no text cell and no gap either side --
+' so this is what turns the seven-word toolbar into a row of square icons, and the ideal
+' sizes read back afterwards are the icon-only ones.
+private sub frmDebug_SetButtonCaption( byval id as long, byval wszText as DWSTRING, byval bShow as boolean )
+    if IsWindow(gDbgBtn(id)) = 0 then exit sub
+    if bShow then
+        PsButton_SetText( gDbgBtn(id), wszText )
+    else
+        PsButton_SetText( gDbgBtn(id), "" )
+    end if
+end sub
+
+private sub frmDebug_SetToolbarCaptions( byval bShow as boolean )
+    ' The same strings the buttons were created with. Re-resolved through L() rather than
+    ' cached at creation, so a language switch while the debugger is open cannot restore the
+    ' previous language's captions.
+    frmDebug_SetButtonCaption( IDC_FRMDEBUG_CMDCONTINUE,  L(453, "Continue"),      bShow )
+    frmDebug_SetButtonCaption( IDC_FRMDEBUG_CMDBREAK,     L(433, "Break"),         bShow )
+    frmDebug_SetButtonCaption( IDC_FRMDEBUG_CMDSTOP,      L(454, "Stop"),          bShow )
+    frmDebug_SetButtonCaption( IDC_FRMDEBUG_CMDSTEPINTO,  L(243, "Step"),          bShow )
+    frmDebug_SetButtonCaption( IDC_FRMDEBUG_CMDSTEPOVER,  L(244, "Step Over"),     bShow )
+    frmDebug_SetButtonCaption( IDC_FRMDEBUG_CMDSTEPOUT,   L(251, "Step Out"),      bShow )
+    frmDebug_SetButtonCaption( IDC_FRMDEBUG_CMDRUNCURSOR, L(252, "Run to Cursor"), bShow )
+end sub
+
+' Everything that is NOT in the strip. Hidden rather than left behind the strip's paint: a
+' tree that is still there is still hit-testable, and a splitter still draggable, in a client
+' area far too small to hold either.
+private sub frmDebug_SetPanesVisible( byval bShow as boolean )
+    dim as long nCmd = iif( bShow, SW_SHOW, SW_HIDE )
+    #macro SHOWIF( h )
+        if IsWindow(h) then ShowWindow( h, nCmd )
+    #endmacro
+    SHOWIF( HWND_FRMDEBUG_LVGLOBALS )
+    SHOWIF( HWND_FRMDEBUG_LVLOCALS )
+    SHOWIF( HWND_FRMDEBUG_LVSTACK )
+    SHOWIF( HWND_FRMDEBUG_LVWATCH )
+    SHOWIF( HWND_FRMDEBUG_SPLITMAIN )
+    SHOWIF( HWND_FRMDEBUG_SPLITLEFT )
+    SHOWIF( HWND_FRMDEBUG_SPLITRIGHT )
+    SHOWIF( gDbgBtnAddWatch )
+    SHOWIF( gDbgBtnDelWatch )
+    SHOWIF( gDbgBtn(IDC_FRMDEBUG_CMDBREAK) )
+end sub
+
+' The strip's client size, measured from the controls themselves rather than from constants:
+' the icon cell, the padding and the focus-ring band are PsButton's, not this window's, and a
+' strip sized from a guess at them clips its last icon at some DPI.
+private sub frmDebug_StripMetrics( byref cx as long, byref cy as long )
+    cx = 0 : cy = 0
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMDEBUG)
+    if pWindow = 0 then exit sub
+
+    dim as long nSumW = 0, nMaxH = 0, nCount = 0
+    #macro MEASURE( h )
+        if IsWindow(h) then
+            dim as long bw, bh
+            PsButton_GetIdealSize( h, bw, bh )
+            nSumW += bw
+            if bh > nMaxH then nMaxH = bh
+            nCount += 1
+        end if
+    #endmacro
+    for i as long = lbound(gDbgStripIds) to ubound(gDbgStripIds)
+        MEASURE( gDbgBtn(gDbgStripIds(i)) )
+    next
+    MEASURE( gDbgBtnRestore )
+
+    frmDebug_ComputeStripSize( nSumW, nMaxH, nCount, _
+                               pWindow->ScaleX(FRMDEBUG_STUBPAD), _
+                               pWindow->ScaleX(FRMDEBUG_STUBGAP), cx, cy )
+end sub
+
+' Place the strip's icons. Left to right at their ideal sizes, vertically centred in whatever
+' client the window happens to have -- the frame is resizable, so this must not assume the
+' client is the size Collapse asked for.
+private sub frmDebug_LayoutStrip()
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMDEBUG)
+    if pWindow = 0 then exit sub
+
+    dim as RECT rc
+    GetClientRect( HWND_FRMDEBUG, @rc )
+    if (rc.right <= 0) orelse (rc.bottom <= 0) then exit sub
+
+    dim as long nPad = pWindow->ScaleX(FRMDEBUG_STUBPAD)
+    dim as long nGap = pWindow->ScaleX(FRMDEBUG_STUBGAP)
+    dim as long x    = nPad
+
+    #macro PLACE( h )
+        if IsWindow(h) then
+            dim as long bw, bh
+            PsButton_GetIdealSize( h, bw, bh )
+            dim as long y = (rc.bottom - bh) \ 2
+            if y < 0 then y = 0
+            SetWindowPos( h, 0, x, y, bw, bh, SWP_NOZORDER or SWP_NOACTIVATE )
+            x += bw + nGap
+        end if
+    #endmacro
+    for i as long = lbound(gDbgStripIds) to ubound(gDbgStripIds)
+        PLACE( gDbgBtn(gDbgStripIds(i)) )
+    next
+    PLACE( gDbgBtnRestore )
+end sub
+
+sub frmDebug_Collapse()
+    if IsWindow(HWND_FRMDEBUG) = 0 then exit sub
+    if gDbgCollapsed then exit sub
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMDEBUG)
+    if pWindow = 0 then exit sub
+
+    ' remember where to come back to BEFORE moving anything
+    GetWindowRect( HWND_FRMDEBUG, @gDbgRestoreRect )
+    gDbgCollapsed = true
+
+    frmDebug_SetPanesVisible( false )
+    frmDebug_SetToolbarCaptions( false )
+    if IsWindow(gDbgBtnRestore) then ShowWindow( gDbgBtnRestore, SW_SHOW )
+
+    dim as long cxClient, cyClient
+    frmDebug_StripMetrics( cxClient, cyClient )
+    if (cxClient <= 0) orelse (cyClient <= 0) then exit sub
+
+    ' The strip is sized by its CLIENT: this window has a caption and a sizing frame, so the
+    ' window rect is that client plus a non-client border which is the frame's business to
+    ' report, not ours to assume.
+    dim as RECT rcW
+    SetRect( @rcW, 0, 0, cxClient, cyClient )
+    AdjustWindowRectEx( @rcW, GetWindowLongPtr( HWND_FRMDEBUG, GWL_STYLE ), false, _
+                        GetWindowLongPtr( HWND_FRMDEBUG, GWL_EXSTYLE ) )
+
+    dim as RECT rcAnchor, rcStub
+    frmDebug_AnchorRect( rcAnchor )
+    frmDebug_ComputeStubRect( rcAnchor, rcW.right - rcW.left, rcW.bottom - rcW.top, _
+                              pWindow->ScaleX(FRMDEBUG_STUBMARGIN), rcStub )
+
+    SetWindowPos( HWND_FRMDEBUG, 0, rcStub.left, rcStub.top, _
+                  rcStub.right - rcStub.left, rcStub.bottom - rcStub.top, SWP_NOZORDER )
+    frmDebug_LayoutStrip()
+    AfxRedrawWindow( HWND_FRMDEBUG )
+end sub
+
+private sub frmDebug_RestoreFromStub()
+    if IsWindow(HWND_FRMDEBUG) = 0 then exit sub
+    if gDbgCollapsed = false then exit sub
+
+    gDbgCollapsed = false
+    if IsWindow(gDbgBtnRestore) then ShowWindow( gDbgBtnRestore, SW_HIDE )
+    frmDebug_SetToolbarCaptions( true )
+    frmDebug_SetPanesVisible( true )
+
+    SetWindowPos( HWND_FRMDEBUG, 0, gDbgRestoreRect.left, gDbgRestoreRect.top, _
+                  gDbgRestoreRect.right - gDbgRestoreRect.left, _
+                  gDbgRestoreRect.bottom - gDbgRestoreRect.top, SWP_NOZORDER )
+
+    ' the bands are sized from the client, which has just changed
+    frmDebug_PositionWindows()
+    ' Break comes back visible, and its enable state is a property of the session rather than
+    ' of the collapse -- so it is re-derived rather than assumed.
+    frmDebug_SyncButtons()
+    AfxRedrawWindow( HWND_FRMDEBUG )
+end sub
+
+private sub frmDebug_RestoreClick( byval hButton as HWND, byval id as long )
+    frmDebug_RestoreFromStub()
+end sub
+
 ' Env-gated geometry dump (TIKO_DEBUGWIN_TRACE=1). Every rect this window computes, read
 ' back from the CONTROLS rather than from the variables that placed them -- a layout bug
 ' that leaves a control at 0x0 is invisible to a trace of the intended numbers.
@@ -1488,19 +1726,26 @@ end sub
 sub frmDebug_ApplyTheme()
     if IsWindow(HWND_FRMDEBUG) = 0 then exit sub
 
+    #macro TOOLBTNTHEME( h )
+        if IsWindow(h) then
+            dim as PSBUTTON_COLORS bc
+            PsButton_GetColors( h, @bc )
+            bc.BackColor        = theme.output.texthot.backcolor
+            bc.BackColorHot     = theme.output.scrollbar.forecolor
+            bc.BackColorPressed = theme.output.scrollbar.forecolor
+            bc.ForeColor        = theme.output.texthot.forecolor
+            bc.ForeColorHot     = theme.output.texthot.forecolor
+            bc.BorderColor      = theme.output.divider
+            bc.BorderColorHot   = theme.output.divider
+            PsButton_SetColors( h, @bc )
+        end if
+    #endmacro
     for id as long = IDC_FRMDEBUG_CMDFIRST to IDC_FRMDEBUG_CMDLAST
-        if IsWindow(gDbgBtn(id)) = 0 then continue for
-        dim as PSBUTTON_COLORS bc
-        PsButton_GetColors( gDbgBtn(id), @bc )
-        bc.BackColor        = theme.output.texthot.backcolor
-        bc.BackColorHot     = theme.output.scrollbar.forecolor
-        bc.BackColorPressed = theme.output.scrollbar.forecolor
-        bc.ForeColor        = theme.output.texthot.forecolor
-        bc.ForeColorHot     = theme.output.texthot.forecolor
-        bc.BorderColor      = theme.output.divider
-        bc.BorderColorHot   = theme.output.divider
-        PsButton_SetColors( gDbgBtn(id), @bc )
+        TOOLBTNTHEME( gDbgBtn(id) )
     next
+    ' The restore icon is a toolbar button that happens to live in the strip, so it takes the
+    ' toolbar palette rather than the caption-band one.
+    TOOLBTNTHEME( gDbgBtnRestore )
 
     ' The caption band is BackColorHot, so these melt into it until hovered.
     #macro CAPBTNTHEME( h )
@@ -1548,6 +1793,7 @@ function frmDebug_GetButton( byval id as long ) as HWND
     select case id
         case IDC_FRMDEBUG_CMDADDWATCH : return gDbgBtnAddWatch
         case IDC_FRMDEBUG_CMDDELWATCH : return gDbgBtnDelWatch
+        case IDC_FRMDEBUG_CMDRESTORE  : return gDbgBtnRestore
         case IDC_FRMDEBUG_CMDFIRST to IDC_FRMDEBUG_CMDLAST : return gDbgBtn(id)
     end select
     return 0
@@ -1569,6 +1815,10 @@ end function
 sub frmDebug_CaptureState()
     if IsWindow(HWND_FRMDEBUG) = 0 then exit sub
     if IsIconic(HWND_FRMDEBUG) then exit sub
+    ' COLLAPSED: persist nothing. The live geometry is the strip's -- a corner of the editing
+    ' area, a few icons wide -- and both the window rect and the splitter percents computed
+    ' from that client are meaningless. Saving them would reopen the debugger as a sliver.
+    if gDbgCollapsed then exit sub
 
     dim as WINDOWPLACEMENT wp
     wp.length = sizeof(WINDOWPLACEMENT)
@@ -2000,7 +2250,26 @@ private function frmDebug_WndProc( byval hwnd as HWND, byval uMsg as UINT, _
             DestroyWindow( hwnd )
             return 0
 
+        case WM_SYSCOMMAND
+            ' The minimize button never reaches Windows: an owned window has no taskbar
+            ' button, so a real minimize would park the debugger somewhere unreachable with
+            ' the debuggee still stopped. Collapse to the icon strip instead. Covers the
+            ' caption button, Alt+Space > Minimize and anything else that raises SC_MINIMIZE.
+            ' The low four bits carry internal state and must be masked off before comparing.
+            if (wParam and &hFFF0) = SC_MINIMIZE then
+                frmDebug_Collapse()
+                return 0
+            end if
+
         case WM_SIZE
+            ' A minimize sends WM_SIZE with a 0x0 client; nothing here is worth laying out
+            ' against it.
+            if wParam = SIZE_MINIMIZED then return 0
+            if gDbgCollapsed then
+                frmDebug_LayoutStrip()
+                AfxRedrawWindow( hwnd )
+                return 0
+            end if
             frmDebug_PositionWindows()
             return 0
 
@@ -2013,6 +2282,15 @@ private function frmDebug_WndProc( byval hwnd as HWND, byval uMsg as UINT, _
             b.BeginDoubleBuffer(hwnd)
             b.SetBackColor( theme.output.texthot.backcolor )
             b.PaintClientRect()
+
+            ' COLLAPSED: the client is the icon strip and nothing else. The buttons paint
+            ' themselves, so the filled background above is the whole job -- and returning
+            ' here is what stops the status line and the four captions being drawn into a
+            ' client far too small to hold them.
+            if gDbgCollapsed then
+                b.EndDoubleBuffer()
+                return 0
+            end if
 
             if pWindow then
                 dim as RECT rc
@@ -2108,6 +2386,8 @@ private function frmDebug_WndProc( byval hwnd as HWND, byval uMsg as UINT, _
             HWND_FRMDEBUG_SPLITRIGHT = 0
             gDbgBtnAddWatch          = 0
             gDbgBtnDelWatch          = 0
+            gDbgBtnRestore           = 0
+            gDbgCollapsed            = false
             ' The descriptors hold a DBGP_NODE each; a long session that expanded a lot of
             ' arrays can be holding thousands, and the session they describe is over.
             frmDebug_RowsReset()
@@ -2152,6 +2432,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
 
     gDbgSessionEnding   = false
     gDbgSplitInit       = false
+    gDbgCollapsed       = false
     gDbgCurFrame        = 0
     gDbgFirstStop       = true
     gDbgHaveBreakpoints = false
@@ -2169,8 +2450,10 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
     dim pParent as CWindow ptr = AfxCWindowPtr(hWndParent)
     if pParent then pWindow->DPI = pParent->DPI
 
+    ' WS_MINIMIZEBOX is what puts the caption button there; SC_MINIMIZE is intercepted in the
+    ' window procedure and collapses to the icon strip instead of ever becoming iconic.
     HWND_FRMDEBUG = pWindow->Create( hWndParent, L(450, "Debugger"), @frmDebug_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_THICKFRAME or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
+        WS_POPUP or WS_THICKFRAME or WS_CAPTION or WS_SYSMENU or WS_MINIMIZEBOX or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_CONTROLPARENT or WS_EX_LEFT or WS_EX_COMPOSITED )
     ' UNSCALED. SetClientSize applies the DPI factor itself; passing a pre-scaled value
     ' squares it, which at 175% turned a 900px window into a 2756px one.
@@ -2202,6 +2485,18 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
     frmDebug_CreateButton( IDC_FRMDEBUG_CMDSTEPOVER,  L(244, "Step Over"),          wszIconStepOver )
     frmDebug_CreateButton( IDC_FRMDEBUG_CMDSTEPOUT,   L(251, "Step Out"),           wszIconStepOut )
     frmDebug_CreateButton( IDC_FRMDEBUG_CMDRUNCURSOR, L(252, "Run to Cursor"),      wszIconRunToCursor )
+
+    ' The restore icon. Created here with the toolbar it belongs to, but never shown until the
+    ' window collapses -- and it is the ONLY way back, so it is never disabled with the debug
+    ' commands: a strip whose last icon is greyed while the debuggee runs is a window with no
+    ' way out.
+    gDbgBtnRestore = PsButton_Create( HWND_FRMDEBUG, IDC_FRMDEBUG_CMDRESTORE )
+    PsButton_SetGlyphLeft( gDbgBtnRestore, wszIconDock )
+    PsButton_SetGlyphFont( gDbgBtnRestore, ghFont(SYMBOLFONT_9) )
+    PsButton_SetFont( gDbgBtnRestore, ghFont(GUIFONT_9) )
+    PsButton_SetTooltipMode( gDbgBtnRestore, PSTIP_MODE_PS )
+    PsButton_SetTooltipText( gDbgBtnRestore, L(521, "Restore Window") )
+    PsButton_SetClickCallback( gDbgBtnRestore, @frmDebug_RestoreClick )
 
     frmDebug_ArmButtonTooltips()
 
@@ -2475,6 +2770,41 @@ sub frmDebug_RunSelfTest()
         lo.rcStack.right >= lo.rcStack.left, _
         str(lo.rcStack.left) & ".." & str(lo.rcStack.right) )
 
+    ' ---- the collapsed icon strip -------------------------------------------------------
+    ' 7 icons of 36x36 at 100%, the size PsButton measures an icon-only button at.
+    dim as long stripCX, stripCY
+    frmDebug_ComputeStripSize( 7 * 36, 36, 7, 8, 4, stripCX, stripCY )
+    frmDebug_Check( "the strip is padding + icons + the gaps between them", _
+        stripCX = (8 + 7 * 36 + 6 * 4 + 8), str(stripCX) )
+    frmDebug_Check( "the strip is one icon tall plus its padding", _
+        stripCY = (8 + 36 + 8), str(stripCY) )
+    scope
+        dim as long cx1, cy1
+        frmDebug_ComputeStripSize( 36, 36, 1, 8, 4, cx1, cy1 )
+        frmDebug_Check( "one icon costs no gap", cx1 = (8 + 36 + 8), str(cx1) )
+    end scope
+
+    ' The strip is parked top-RIGHT of the editing area, and INSIDE it: getting the sign
+    ' wrong puts the only way back to the debugger off-screen.
+    scope
+        dim as RECT rcAnchor, rcStub
+        SetRect( @rcAnchor, 200, 100, 1400, 900 )
+        frmDebug_ComputeStubRect( rcAnchor, 300, 60, 12, rcStub )
+        frmDebug_Check( "the strip sits at the top-right of the editing area, inset", _
+            (rcStub.right = rcAnchor.right - 12) andalso (rcStub.top = rcAnchor.top + 12), _
+            str(rcStub.left) & "," & str(rcStub.top) )
+        frmDebug_Check( "the strip is the size it was asked for", _
+            ((rcStub.right - rcStub.left) = 300) andalso ((rcStub.bottom - rcStub.top) = 60) )
+        frmDebug_Check( "the strip stays inside the editing area", _
+            (rcStub.left >= rcAnchor.left) andalso (rcStub.right <= rcAnchor.right) )
+
+        ' An editing area narrower than the strip clamps rather than sliding off the left.
+        SetRect( @rcAnchor, 200, 100, 400, 900 )
+        frmDebug_ComputeStubRect( rcAnchor, 300, 60, 12, rcStub )
+        frmDebug_Check( "a narrow editing area clamps the strip instead of losing it", _
+            rcStub.left >= rcAnchor.left, str(rcStub.left) )
+    end scope
+
     ' ---- splitter percent round trip ----------------------------------------------------
     ' The stored form is a percent of the span, so restoring into a DIFFERENT span has to put
     ' the bar in the same relative place rather than at the same pixel.
@@ -2663,6 +2993,7 @@ sub frmDebug_RunSelfTest()
     for id as long = 243 to 244
         frmDebug_Check( "reused menu string " & id & " still resolves", len(LL(id)) > 0 )
     next
+    frmDebug_Check( "the restore-icon tooltip resolves", len(LL(521)) > 0 )
     frmDebug_Check( "reused menu string 255 still resolves", len(LL(251)) > 0 )
     frmDebug_Check( "reused menu string 256 still resolves", len(LL(252)) > 0 )
 
