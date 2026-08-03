@@ -85,66 +85,6 @@ function ResetScintillaCursors() as long
 end function
 
 
-' ========================================================================================
-' Compose the lpCommandLine for a child process.
-'
-' THE FIRST TOKEN OF lpCommandLine IS argv[0] AND IS DISCARDED BY THE CHILD, ALWAYS --
-' even when lpApplicationName is supplied separately, which is how this file calls
-' CreateProcessW. Windows hands the string through verbatim and the child's own startup
-' code strips the leading program name. tiko passed the SWITCHES here with no argv[0] at
-' all, so the child ate the first one.
-'
-' Measured, not reasoned about (harness: CreateProcessW into a program that dumps every
-' argv slot):
-'
-'     cmdline = [-m "prog" mod1.o -v -w all]     ->  argv[0]=[-m]   <-- FLAG GONE
-'                                                    argv[1]=[prog]
-'     cmdline = [  -w all -O2 -c -b "x.bas"]     ->  argv[0]=[]     <-- survived, by luck
-'                                                    argv[1]=[-w]
-'
-' So the project link lost its "-m" -- the flag two forum threads were consulted about,
-' cited at its call site in modCompile.inc -- on every single build. And the module path
-' was correct ONLY because code_CompileModules happens to space-pad CompileFlags: any tidy
-' that trim()s that string would have started silently deleting the user's first build
-' flag, with nothing in the build, the warnings or the assertions to say so.
-'
-' The exe is quoted because argv[0] is parsed by the ordinary quoting rules, and a path
-' with a space in it would otherwise split and swallow the real first switch instead --
-' i.e. reintroduce the bug in a form that only shows up on some machines.
-'
-' Pure: string in, string out. That is what lets TIKO_COMPILECMD_SELFTEST assert the rule
-' without launching a compiler.
-' ========================================================================================
-function BuildChildCommandLine( _
-            byval wszExe as DWSTRING, _
-            byval wszParams as DWSTRING _
-            ) as DWSTRING
-    dim as DWSTRING wszQ = wchr(34)
-    if len( wszParams ) = 0 then return wszQ & wszExe & wszQ
-    return wszQ & wszExe & wszQ & " " & wszParams
-end function
-
-
-' ========================================================================================
-' The "-m" pair for the main module: the module NAME after -m, and the SOURCE FILE as an
-' ordinary input. Both are required and they are not the same string.
-'
-' fbc's -m only MARKS which module holds the entry point; it does not add anything to the
-' compile. So the main source must also appear as an input, with its extension -- which is
-' exactly what the long-standing comment at the call site says, and exactly what the code
-' there did not do. Pure, so the rule is assertable without running a compiler; see
-' TIKO_COMPILECMD_SELFTEST, which exists because getting this wrong produced a link failure
-' no string assertion could have predicted.
-' ========================================================================================
-function BuildMainModuleArgs( _
-            byval wszMainName as DWSTRING, _
-            byval wszMainFilename as DWSTRING _
-            ) as DWSTRING
-    dim as DWSTRING wszQ = wchr(34)
-    return "-m " & wszQ & wszMainName & wszQ & " " & wszQ & wszMainFilename & wszQ
-end function
-
-
 '' July 2017, attempted to capture STDERR output from a running FB compiled
 '' program in order to capture runtime errors. This code works okay on Windows 10
 '' but does not PRINT on Windows 7. Also, dkl posted in FB forum that FB prints
@@ -948,18 +888,22 @@ sub CompileCmd_RunSelfTest()
     ' build. Without a guard a second code_Compile ran on top of the first -- two
     ' COMPILE_TYPEs, two threads, racing on chdir and the object folder.
     '
-    ' The second assertion is the sensitive one. code_Cleanup clears gApp.IsCompiling, so if
+    ' The second assertion is the sensitive one. code_Cleanup calls BuildService_End, so if
     ' the guard were missing, code_Compile would fall through, reach cleanup on some later
-    ' failure, and leave the flag FALSE. Finding it still TRUE is what proves the function
+    ' failure, and leave the state IDLE. Finding it still RUNNING is what proves the function
     ' returned at the guard rather than somewhere further in.
     scope
-        dim as boolean bSaved = gApp.IsCompiling
-        gApp.IsCompiling = true
+        dim as boolean bWasRunning = BuildService_IsRunning()
+        if bWasRunning = false then BuildService_Begin()
         dim as boolean bRc = code_Compile( IDM_COMPILE )
         CMDASSERT( bRc = false, "code_Compile started a second build while one was running" )
-        CMDASSERT( gApp.IsCompiling = true, _
-                   "code_Compile ran past its guard (IsCompiling was cleared by cleanup)" )
-        gApp.IsCompiling = bSaved
+        CMDASSERT( BuildService_IsRunning() = true, _
+                   "code_Compile ran past its guard (BuildService_End was reached by cleanup)" )
+        ' Begin is a test-and-set: claiming an already-claimed slot must fail.
+        CMDASSERT( BuildService_Begin() = false, _
+                   "BuildService_Begin handed out a second claim while a build was running" )
+        if bWasRunning = false then BuildService_End()
+        CMDASSERT( BuildService_IsRunning() = false, "BuildService_End did not release the slot" )
     end scope
 
     sMsg = "TIKO_COMPILECMD_SELFTEST: " & nPass & " passed, " & nFail & " failed."

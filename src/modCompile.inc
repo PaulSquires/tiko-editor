@@ -37,7 +37,6 @@
 function code_Initialize() as COMPILE_TYPE ptr
     ' Indicate in the StatusBar that we have started to compile
     SetCompileStatusBarMessage( L(294, "Generating compiler files") & "...", 0 )
-    gApp.IsCompiling = true    
 
     dim pCompile as COMPILE_TYPE ptr = new COMPILE_TYPE
     if pCompile = null then return null
@@ -57,7 +56,7 @@ end function
 ' Tear down, reset, and deallocate the compile process.
 ' ========================================================================================
 function code_Cleanup( byval pCompile as COMPILE_TYPE ptr ) as boolean
-    gApp.IsCompiling = false
+    BuildService_End()
 
     ' THE NULL CHECK HAS TO COME FIRST. It used to sit below, after hCurSave had already
     ' been dereferenced -- and code_Compile calls this with a NULL pointer on exactly one
@@ -480,8 +479,10 @@ function code_Compile( byval wID as long ) as boolean
     ' worker threads, both racing on chdir, on the object folder, and on the log fields.
     '
     ' gApp.IsCompiling already existed and looked like it guarded exactly this, but its only
-    ' reader was frmMain's WM_SETCURSOR -- it drove the busy CURSOR and nothing else.
-    if gApp.IsCompiling then
+    ' reader was frmMain's WM_SETCURSOR -- it drove the busy CURSOR and nothing else. Build
+    ' state has an owner now (modBuildService), and Begin is a TEST-AND-SET so the check and
+    ' the claim cannot be separated by a later edit.
+    if BuildService_Begin() = false then
         SetCompileStatusBarMessage( L(683, "A build is already running."), 0 )
         return false
     end if
@@ -751,7 +752,7 @@ function code_Compile( byval wID as long ) as boolean
     ' consumes nothing.
     '
     ' Pumping messages here still lets the user reach menu commands mid-build. That is not
-    ' fixed by this loop and cannot be -- it is fixed by the IsCompiling guard at the top of
+    ' fixed by this loop and cannot be -- it is fixed by the BuildService_Begin guard at the top of
     ' this function, and by frmMain refusing WM_CLOSE while a build is running.
     dim as HANDLE hDone = CreateEvent( 0, TRUE, FALSE, 0 )   ' manual-reset: no race
     if hDone = 0 then

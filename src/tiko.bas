@@ -175,6 +175,9 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modUnusedSymbols.inc"
 #include once "clsTopTabCtl.inc"
 #include once "modAutoInsert.inc"
+' Build state and the command-line composers. Ahead of modCompile.inc and
+' modCompileErrors.inc, both of which call into it.
+#include once "modBuildService.inc"
 #include once "modCompile.inc"
 #include once "modCompileErrors.inc"
 #include once "modMenus.inc"

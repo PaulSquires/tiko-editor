@@ -42,7 +42,9 @@ type clsApp
         IsNewProjectFlag           as boolean
         IsProjectLoading           as boolean           ' Project loading. Disable some screen updating.
         IsFileLoading              as boolean           ' File loading. Disable some screen updating.
-        IsCompiling                as boolean           ' File/Project currently being compiled (spinning mouse cursor).
+        ' IsCompiling is GONE. Build state belongs to modBuildService now -- it was one
+        ' boolean in this flag bag whose only reader was WM_SETCURSOR, so it drove the busy
+        ' cursor while looking like a guard against a second build.
         IsShutDown                 as boolean           ' App is currently closing
         wszLastOpenFolder          as DWSTRING             ' remembers the last opened folder for the Open Dialog
         wszQuickRunFilename        as DWSTRING

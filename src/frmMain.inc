@@ -1258,7 +1258,7 @@ function frmMain_OnClose( byval hwnd as HWND ) as LRESULT
     ' holding its COMPILE_TYPE and a live thread writing into one of its stack locals.
     ' Returning here leaves the editor exactly as it was; the user can exit once the build
     ' finishes, which is seconds away.
-    if gApp.IsCompiling then
+    if BuildService_IsRunning() then
         SetCompileStatusBarMessage( L(683, "A build is already running."), 0 )
         return true
     end if
@@ -1471,7 +1471,7 @@ function frmMain_WndProc( _
             ' are gone with their globals: every drag site is a reusable control now --
             ' PsSplitter, PsListTree, PsTabBar -- and each sets its own cursor from its own
             ' WM_SETCURSOR, so frmMain must not answer for them.
-            if (gApp.IsCompiling = true) or _
+            if BuildService_IsRunning() or _
                (gApp.IsProjectLoading = true) or _
                (gApp.IsFileLoading = true) then
                 SetCursor( LoadCursor(0, IDC_WAIT) )

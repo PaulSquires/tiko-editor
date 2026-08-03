@@ -5,6 +5,7 @@
 ' For code_Initialize/code_Cleanup: section 12 drives the real pair. Safe this early --
 ' modCompile.bi is types and declarations only and names no Ps* type.
 #include once "modCompile.bi"
+#include once "modBuildService.bi"
 
 ' Read a whole file back as raw bytes, through code that is NOT the writer under test.
 private function SaveSelfTest_ReadAll( byref wszPath as wstring ) as string
@@ -336,10 +337,10 @@ sub Save_RunSelfTest()
     '
     ' Driven through the REAL code_Initialize/code_Cleanup pair rather than a copy of them.
     scope
-        dim as boolean bSavedCompiling = gApp.IsCompiling
+        dim as boolean bSavedCompiling = BuildService_IsRunning()
         dim as string sBefore = curdir
 
-        gApp.IsCompiling = false
+        if bSavedCompiling then BuildService_End()
         dim pC as COMPILE_TYPE ptr = code_Initialize()
         if pC = 0 then
             ? "  NOTE: code_Initialize failed; the cwd assertions did NOT run."
@@ -360,7 +361,7 @@ sub Save_RunSelfTest()
         SAVEASSERT( true, "code_Cleanup(NULL) crashed" )
 
         chdir sBefore
-        gApp.IsCompiling = bSavedCompiling
+        if bSavedCompiling then BuildService_Begin()
     end scope
 
     ' ---- 13. the current directory is NOT on the DLL search path -----------------------
