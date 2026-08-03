@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpFont Class — Help Center</title>
+<meta name="description" content="CGpFont Class — 30 documented members. Graphics reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpfont-class.html">
+<meta property="og:title" content="CGpFont Class">
+<meta property="og:description" content="CGpFont Class — 30 documented members. Graphics reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpfont-class.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpfont-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>Graphics</div>
+<h1>CGpFont Class</h1>
+<h2>Members (30)</h2>
+<div class="memberlist"><a href="cgpfont/cgpfont-clone.html"><span class="m-n">Clone</span><span class="m-d">Copies the contents of the existing **Font** object into a new **Font** object.</span></a><a href="cgpfont/cgpfont-constructors.html"><span class="m-n">Constructors</span><span class="m-d">Creates a **Font** object.</span></a><a href="cgpfont/cgpfont-getfamily.html"><span class="m-n">GetFamily</span><span class="m-d">Gets the font family on which this font is based.</span></a><a href="cgpfont/cgpfont-getheight.html"><span class="m-n">GetHeight</span><span class="m-d">Gets the line spacing of this font in the current unit of a specified Graphics object.</span></a><a href="cgpfont/cgpfont-getheight.html"><span class="m-n">GetHeight</span><span class="m-d">Gets the line spacing of this font in the current unit of a specified Graphics object.</span></a><a href="cgpfont/cgpfont-getheight.html"><span class="m-n">GetHeight</span><span class="m-d">Gets the line spacing of this font in the current unit of a specified Graphics object.</span></a><a href="cgpfont/cgpfont-getlogfonta.html"><span class="m-n">GetLogFontA</span><span class="m-d">Uses a **LOGFONTA** structure to get the attributes of this **Font** object.</span></a><a href="cgpfont/cgpfont-getlogfontw.html"><span class="m-n">GetLogFontW</span><span class="m-d">Uses a **LOGFONTW** structure to get the attributes of this **Font** object.</span></a><a href="cgpfont/cgpfont-getsize.html"><span class="m-n">GetSize</span><span class="m-d">Returns the font size (commonly called the em size) of this **Font** object.</span></a><a href="cgpfont/cgpfont-getstyle.html"><span class="m-n">GetStyle</span><span class="m-d">Returns the font size (commonly called the em size) of this **Font** object.</span></a><a href="cgpfont/cgpfont-getunit.html"><span class="m-n">GetUnit</span><span class="m-d">Returns the unit of measure of this **Font** object.</span></a><a href="cgpfont/cgpfont-isavailable.html"><span class="m-n">IsAvailable</span><span class="m-d">Determines whether this **Font** object was created successfully.</span></a><a href="cgpfontcollection/cgpfontcollection-constructor.html"><span class="m-n">Constructor</span><span class="m-d">Creates a **FontCollection** object.</span></a><a href="cgpfontcollection/cgpfontcollection-getfamilies.html"><span class="m-n">GetFamilies</span><span class="m-d">Gets the font families contained in this font collection.</span></a><a href="cgpfontcollection/cgpfontcollection-getfamilycount.html"><span class="m-n">GetFamilyCount</span><span class="m-d">Gets the number of font families contained in this font collection.</span></a><a href="cgpfontfamily/cgpfontfamily-clone.html"><span class="m-n">Clone</span><span class="m-d">Copies the contents of the existing FontFamily object into a new FontFamily object.</span></a><a href="cgpfontfamily/cgpfontfamily-constructor.html"><span class="m-n">Constructor</span><span class="m-d">Creates a FontFamily object based on a specified font collection.</span></a><a href="cgpfontfamily/cgpfontfamily-genericmonospace.html"><span class="m-n">GenericMonospace</span><span class="m-d">Gets a FontFamily object that a specifies a generic monospace typeface.</span></a><a href="cgpfontfamily/cgpfontfamily-genericsansserif.html"><span class="m-n">GenericSansSerif</span><span class="m-d">Gets a FontFamily object that a specifies a generic sans serif typeface.</span></a><a href="cgpfontfamily/cgpfontfamily-genericsansserif.html"><span class="m-n">GenericSansSerif</span><span class="m-d">Gets a FontFamily object that a specifies a generic sans serif typeface.</span></a><a href="cgpfontfamily/cgpfontfamily-genericserif.html"><span class="m-n">GenericSerif</span><span class="m-d">Gets a FontFamily object that a specifies a generic serif typeface.</span></a><a href="cgpfontfamily/cgpfontfamily-getcellascent.html"><span class="m-n">GetCellAscent</span><span class="m-d">Gets the cell ascent, in design units, of this font family for the specified style or style combination.</span></a><a href="cgpfontfamily/cgpfontfamily-getcelldescent.html"><span class="m-n">GetCellDescent</span><span class="m-d">Gets the cell descent, in design units, of this font family for the specified style or style combination.</span></a><a href="cgpfontfamily/cgpfontfamily-getemheight.html"><span class="m-n">GetEmHeight</span><span class="m-d">Gets the size (commonly called em size or em height), in design units, of this font family.</span></a><a href="cgpfontfamily/cgpfontfamily-getfamilyname.html"><span class="m-n">GetFamilyName</span><span class="m-d">Gets the name of this font family.</span></a><a href="cgpfontfamily/cgpfontfamily-getlinespacing.html"><span class="m-n">GetLineSpacing</span><span class="m-d">Gets the line spacing, in design units, of this font family for the specified style or style combination.</span></a><a href="cgpfontfamily/cgpfontfamily-isavailable.html"><span class="m-n">IsAvailable</span><span class="m-d">Determines whether this Font object was created successfully.</span></a><a href="cgpfontfamily/cgpfontfamily-isstyleavailable.html"><span class="m-n">IsStyleAvailable</span><span class="m-d">Determines whether the specified style is available for this font family.</span></a><a href="cgpprivatefontcollection/cgpprivatefontcollection-addfontfile.html"><span class="m-n">AddFontFile</span><span class="m-d">Adds a font file to this private font collection.</span></a><a href="cgpprivatefontcollection/cgpprivatefontcollection-addmemoryfont.html"><span class="m-n">AddMemoryFont</span><span class="m-d">Adds a font that is contained in system memory to a Windows GDI+ font collection.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="cgpfont-class">CGpFont Class</h2>
+<p>The <code>CGpFont</code> class allows the creation of <strong>Font</strong> objects. The <strong>Font</strong> object encapsulates the characteristics, such as family, height, size, and style (or combination of styles), of a specific font. A <strong>Font</strong> object is used when drawing strings.</p>
+<p><strong>Inherits from</strong>: CGpBase.<br> <strong>Include file</strong>: CGpFont.inc.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cgpfont/cgpfont-constructors.html">Constructors</a></td><td>Creates a <strong>Font</strong> object.</td></tr><tr><td><a href="cgpfont/cgpfont-clone.html">Clone</a></td><td>Copies the contents of the existing <strong>Font</strong> object into a new <strong>Font</strong> object.</td></tr><tr><td><a href="cgpfont/cgpfont-getfamily.html">GetFamily</a></td><td>Gets the font family on which this font is based.</td></tr><tr><td><a href="cgpfont/cgpfont-getheight.html">GetHeight</a></td><td>Gets the line spacing of this font in the current unit of a specified Graphics object.</td></tr><tr><td><a href="#getheightdpi">GetHeight(DPI)</a></td><td>Gets the line spacing of this font in pixels.</td></tr><tr><td><a href="cgpfont/cgpfont-getlogfonta.html">GetLogFontA</a></td><td>Uses a <strong>LOGFONTA</strong> structure to get the attributes of this <strong>Font</strong> object.</td></tr><tr><td><a href="cgpfont/cgpfont-getlogfonta.html">GetLogFontW</a></td><td>Uses a <strong>LOGFONTW</strong> structure to get the attributes of this <strong>Font</strong> object.</td></tr><tr><td><a href="cgpfont/cgpfont-getsize.html">GetSize</a></td><td>Returns the font size (commonly called the em size) of this <strong>Font</strong> object.</td></tr><tr><td><a href="cgpfont/cgpfont-getstyle.html">GetStyle</a></td><td>Returns the font size (commonly called the em size) of this <strong>Font</strong> object.</td></tr><tr><td><a href="cgpfont/cgpfont-getunit.html">GetUnit</a></td><td>Returns the unit of measure of this <strong>Font</strong> object.</td></tr><tr><td><a href="cgpfont/cgpfont-isavailable.html">IsAvailable</a></td><td>Determines whether this <strong>Font</strong> object was created successfully.</td></tr></tbody></table></div>
+<hr>
+<h2 id="cgpfontcollection-class">CGpFontCollection Class</h2>
+<p>The <code>CGpFontCollection</code> class contains methods for enumerating the font families in a collection of fonts. Objects built from this class include the <strong>InstalledFontCollection</strong> and <strong>PrivateFontCollection</strong>.</p>
+<p><strong>Inherits from</strong>: CGpBase.<br> <strong>Include file</strong>: CGpFont.inc.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cgpfontcollection/cgpfontcollection-constructor.html">Constructor</a></td><td>Creates a <strong>FontCollection</strong> object.</td></tr><tr><td><a href="cgpfontcollection/cgpfontcollection-getfamilies.html">GetFamilies</a></td><td>Gets the font families contained in this font collection.</td></tr><tr><td><a href="cgpfontcollection/cgpfontcollection-getfamilycount.html">GetFamilyCount</a></td><td>Gets the number of font families contained in this font collection.</td></tr></tbody></table></div>
+<h2 id="cgpinstalledfontcollection-class">CGpInstalledFontCollection Class</h2>
+<p>Extends <code>CGpFontCollection</code>. Does not implement new additional methods.</p>
+<p>The <strong>InstalledFontCollection</strong> object represents the fonts installed on the system.</p>
+<p><strong>Inherits from</strong>: CGpFontCollection.<br> <strong>Include file</strong>: CGpFont.inc.</p>
+<h2 id="cgpprivatefontcollection-class">CGpPrivateFontCollection Class</h2>
+<p>Extends <code>CGpFontCollection</code>. The <strong>PrivateFontCollection</strong> object is a collection for fonts. This object keeps a collection of fonts specifically for an application. The fonts in the collection can include installed fonts as well as fonts that have not been installed on the system.</p>
+<p><strong>Inherits from</strong>: CGpFontCollection.<br> <strong>Include file</strong>: CGpFont.inc.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cgpprivatefontcollection/cgpprivatefontcollection-addfontfile.html">AddFontFile</a></td><td>Adds a font file to this private font collection.</td></tr><tr><td><a href="cgpprivatefontcollection/cgpprivatefontcollection-addmemoryfont.html">AddMemoryFont</a></td><td>Adds a font that is contained in system memory to a Windows GDI+ font collection.</td></tr></tbody></table></div>
+<h2 id="cgpfontfamily-class">CGpFontFamily Class</h2>
+<p>The <code>CGpFontFamily</code> class encapsulates a set of fonts that make up a font family. A font family is a group of fonts that have the same typeface but different styles.</p>
+<p><strong>Inherits from</strong>: CGpBase. <strong>Include file</strong>: CGpFont.inc.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cgpfontfamily/cgpfontfamily-constructor.html">Constructor</a></td><td>Creates a FontFamily object based on a specified font collection.</td></tr><tr><td><a href="cgpfont/cgpfont-clone.html">Clone</a></td><td>Copies the contents of the existing FontFamily object into a new FontFamily object.</td></tr><tr><td><a href="cgpfontfamily/cgpfontfamily-genericmonospace.html">GenericMonospace</a></td><td>Gets a FontFamily object that a specifies a generic monospace typeface.</td></tr><tr><td><a href="cgpfontfamily/cgpfontfamily-genericsansserif.html">GenericSansSerif</a></td><td>Gets a FontFamily object that a specifies a generic sans serif typeface.</td></tr><tr><td><a href="cgpfontfamily/cgpfontfamily-genericserif.html">GenericSerif</a></td><td>Gets a FontFamily object that a specifies a generic serif typeface.</td></tr><tr><td><a href="cgpfontfamily/cgpfontfamily-getcellascent.html">GetCellAscent</a></td><td>Gets the cell ascent, in design units, of this font family for the specified style or style combination.</td></tr><tr><td><a href="cgpfontfamily/cgpfontfamily-getcelldescent.html">GetCellDescent</a></td><td>Gets the cell descent, in design units, of this font family for the specified style or style combination.</td></tr><tr><td><a href="cgpfontfamily/cgpfontfamily-getemheight.html">GetEmHeight</a></td><td>Gets the size (commonly called em size or em height), in design units, of this font family.</td></tr><tr><td><a href="cgpfontfamily/cgpfontfamily-getfamilyname.html">GetFamilyName</a></td><td>Gets the name of this font family.</td></tr><tr><td><a href="cgpfontfamily/cgpfontfamily-getlinespacing.html">GetLineSpacing</a></td><td>Gets the line spacing, in design units, of this font family for the specified style or style combination.</td></tr><tr><td><a href="cgpfontfamily/cgpfontfamily-isavailable.html">IsAvailable</a></td><td>Determines whether this Font object was created successfully.</td></tr><tr><td><a href="cgpfontfamily/cgpfontfamily-isstyleavailable.html">IsStyleAvailable</a></td><td>Determines whether the specified style is available for this font family.</td></tr></tbody></table></div>
+<hr>
+<h3 id="constructorsfont">Constructors (CGpFont)</h3>
+<p>Creates a <strong>Font</strong> object.</p>
+<pre class="code"><code>CONSTRUCTOR CGpFont</code></pre>
+<p>Creates and initializes a <strong>Font</strong> object from another Font object.</p>
+<pre class="code"><code>CONSTRUCTOR CGpFont (BYVAL pFont AS CGpFont PTR)</code></pre>
+<p>Creates a <strong>Font</strong> object based on the Windows Graphics Device Interface (GDI) font object that is currently selected into a specified device context. This constructor is provided for compatibility with GDI.</p>
+<pre class="code"><code>CONSTRUCTOR CGpFont (BYVAL hdc AS HDC)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hdc</em></td><td>Handle to a Windows device context that has a font selected. A handle is a number that Windows uses internally to reference an object.</td></tr></tbody></table></div>
+<p>Creates a <strong>Font</strong> object indirectly from a Windows Graphics Device Interface (GDI) logical font by using a handle to a GDI <strong>LOGFONT</strong> structure.</p>
+<pre class="code"><code>CONSTRUCTOR CGpFont (BYVAL hdc AS HDC, BYVAL hFont AS HFONT)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hdc</em></td><td>Handle to a Windows device context. A handle is a number that Windows uses internally to reference an object.</td></tr><tr><td><em>hFont</em></td><td>Handle to a logical font.</td></tr></tbody></table></div>
+<p>Creates a <strong>Font</strong> object directly from a Windows Graphics Device Interface (GDI) logical font. This constructor is provided for compatibility with GDI.</p>
+<pre class="code"><code>CONSTRUCTOR CGpFont (BYVAL hdc AS HDC, BYVAL plogfont AS LOGFONTA PTR)
+CONSTRUCTOR CGpFont (BYVAL hdc AS HDC, BYVAL plogfont AS LOGFONTW PTR)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hdc</em></td><td>Handle to a Windows device context. A handle is a number that Windows uses internally to reference an object.</td></tr><tr><td><em>plogfont</em></td><td>Pointer to a <strong>LOGFONT</strong> structure variable that contains attributes of the font.</td></tr></tbody></table></div>
+<p>Creates a <strong>Font</strong> object based on a <strong>FontFamily</strong> object, a size, a font style, and a unit of measurement.</p>
+<pre class="code"><code>CONSTRUCTOR CGpFont (BYVAL pFamily AS CGpFontFamily PTR, BYVAL emSize AS SINGLE, _
+   BYVAL nStyle AS INT_ = 0, BYVAL nUnit AS GpUnit = 0)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pFamily</em></td><td>Pointer to a <strong>FontFamily</strong> object that specifies information such as the string that identifies the font family and the font family's text metrics measured in design units.</td></tr><tr><td><em>emSize</em></td><td>The <em>em</em> size of the font measured in the units specified in the unit parameter.</td></tr><tr><td><em>nStyle</em></td><td>Optional. Integer that specifies the style of the typeface. This value must be an element of the <strong>FontStyle</strong> enumeration or the result of a bitwise OR applied to two or more of these elements. For example, <em>FontStyleBold OR FontStyleUnderline OR FontStyleStrikeout</em> sets the style as a combination of the three styles. The default value is <em>FontStyleRegular</em>.</td></tr><tr><td><em>nUnit</em></td><td>Optional. Element of the <strong>Unit</strong> enumeration that specifies the unit of measurement for the font size. The default value is <em>UnitPoint</em>.</td></tr></tbody></table></div>
+<p>Creates a <strong>Font</strong> object based on a font family, a size, a font style, and a unit of measurement.</p>
+<pre class="code"><code>CONSTRUCTOR CGpFont (BYVAL pwszFamilyName AS WSTRING PTR, BYVAL emSize AS SINGLE, _
+   BYVAL nStyle AS INT_ = 0, BYVAL nUnit AS GpUnit = 0, BYVAL pFontCollection AS CGpFontCollection PTR = NULL)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszFamilyName</em></td><td>Name of the font family.</td></tr><tr><td><em>emSize</em></td><td>The <em>em</em> size of the font measured in the units specified in the unit parameter.</td></tr><tr><td><em>nStyle</em></td><td>Optional. Integer that specifies the style of the typeface. This value must be an element of the <strong>FontStyle</strong> enumeration or the result of a bitwise OR applied to two or more of these elements. For example, <em>FontStyleBold OR FontStyleUnderline OR FontStyleStrikeout</em> sets the style as a combination of the three styles. The default value is <em>FontStyleRegular</em>.</td></tr><tr><td><em>nUnit</em>  Optional.</td><td>Element of the <strong>Unit</strong> enumeration that specifies the unit of measurement for the font size. The default value is UnitPoint.</td></tr><tr><td><em>pFontCollection</em></td><td>Optional. Pointer to a <strong>FontCollection</strong> object that specifies a user-defined group of fonts. If the value of this parameter is NULL, the system font collection is used. The default value is NULL.</td></tr></tbody></table></div>
+<hr>
+<h3 id="clone">Clone (CGpFont)</h3>
+<p>Copies the contents of the existing <strong>Font</strong> object into a new <strong>Font</strong> object.</p>
+<pre class="code"><code>FUNCTION Clone (BYVAL pCloneFont AS CGpFont PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pCloneFont</em></td><td>Pointer to the <strong>Font</strong> object where to copy the contents of the existing object.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a Font object, clones it, and then uses the clone to draw text.
+' ========================================================================================
+SUB Example_CloneFont (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Font object.
+   DIM font AS CGpFont = CGpFont("Arial", AfxGdipPointsToPixels(16, TRUE))
+
+   ' // Create a clone of the Font object
+   DIM cloneFont AS CGpFont
+   font.Clone(@cloneFont)
+
+   ' // Draw Text with cloneFont.
+   DIM solidBrush AS CGpSolidBrush = ARGB_BLACK
+   DIM wszText AS WSTRING * 260 = "This is a cloned Font"
+   graphics.DrawString(@wszText, -1, @cloneFont, 0, 0, @solidbrush)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getfamily">GetFamily (CGpFont)</h3>
+<p>Gets the font family on which this font is based.</p>
+<pre class="code"><code>FUNCTION GetFamily (BYVAL pFamily AS CGpFontFamily PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pFamily</em></td><td>Pointer to a <strong>FontFamily</strong> object that receives the font family.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a Font object, retrieves the information about the font
+' family on which it is based, and then uses the FontFamily object to create a second Font
+' object. The example then uses the second Font object to draw text.
+' ========================================================================================
+SUB Example_GetFamily (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Font object.
+   DIM font AS CGpFont = CGpFont("Arial", AfxGdipPointsToPixels(16, TRUE))
+
+   ' // Get the FontFamily of myFont.
+   DIM fontFamily AS CGpFontFamily
+   font.GetFamily(@fontFamily)
+
+   ' // Create a new Font object from fontFamily.
+   DIM familyFont AS CGpFont = CGpFont(@fontFamily, AfxGdipPointsToPixels(16, TRUE))
+
+   ' // Draw Text with familyFont
+   DIM solidBrush AS CGpSolidBrush = ARGB_BLACK
+   DIM wszText AS WSTRING * 260 = "This is a Font created from a FontFamily"
+   graphics.DrawString(@wszText, -1, @familyFont, 0, 0, @solidbrush)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getheight">GetHeight (CGpFont)</h3>
+<p>Gets the line spacing of this font in the current unit of a specified <strong>Graphics</strong> object. The line spacing is the vertical distance between the base lines of two consecutive lines of text. Thus, the line spacing includes the blank space between lines along with the height of the character itself.</p>
+<pre class="code"><code>FUNCTION GetHeight (BYVAL pGraphics AS CGpGraphics PTR) AS SINGLE</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pGraphics</em></td><td>Pointer to a <strong>Graphics</strong> object whose unit and vertical resolution are used in the height calculation.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>This method returns the line spacing of this font.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If the font unit is set to anything other than <strong>UnitPixel</strong>, the height, in pixels, is calculated using the vertical resolution of the specified <strong>Graphics</strong> object. For example, suppose the font unit is inches and the font size is 0.3. Also suppose that for the corresponding font family, the em height is 2048 and the line spacing is 2355. If the unit of the <strong>Graphics</strong> object is <strong>UnitPixel</strong> and the vertical resolution of the <strong>Graphics</strong> object is 96 dots per inch, the height is calculated as follows:</p>
+<pre class="code"><code>2355*(0.3/2048)*96 = 33.1171875</code></pre>
+<p>Continuing with the same example, suppose the unit of the <strong>Graphics</strong> object is something other than <strong>UnitPixel</strong>, say <strong>UnitMillimeter</strong>. Then (using 1 inch = 25.4 millimeters) the height, in millimeters, is calculated as follows:</p>
+<pre class="code"><code>2355*(0.3/2048)25.4 = 8.762256</code></pre>
+<hr>
+<h3 id="getheightdpi">GetHeight (DPI) (CGpFont)</h3>
+<p>Gets the line spacing, in pixels, of this font. The line spacing is the vertical distance between the base lines of two consecutive lines of text. Thus, the line spacing includes the blank space between lines along with the height of the character itself.</p>
+<pre class="code"><code>FUNCTION GetHeight (BYVAL dpi AS SINGLE) AS SINGLE</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>dpi</em></td><td>Single precision number that specifies the vertical resolution, in dots per inch, of the device that displays the font.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>This method returns the line spacing of the font in pixels.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If the font unit is set to anything other than <strong>UnitPixel</strong>, the height, in pixels, is calculated using the specified vertical resolution. For example, suppose the font unit is inches and the font size is 0.3. Also suppose that for the corresponding font family, the em height is 2048 and the line spacing is 2355. If the specified vertical resolution is 96 dots per inch, the height is calculated as follows:</p>
+<pre class="code"><code>2355*(0.3/2048)*96 = 33.1171875</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a Font object, retrieves the height of the Font object, and
+' uses the height to position two lines of text, with the second line directly below the first.
+' ========================================================================================
+SUB Example_GetHeight (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Font object.
+   DIM font AS CGpFont = CGpFont("Arial", AfxGdipPointsToPixels(16, TRUE))
+
+   ' // Draw text with myFont.
+   DIM solidbrush_1 AS CGpSolidBrush = ARGB_BLACK
+   DIM wszText AS WSTRING * 260 = "The first line of text"
+   graphics.DrawString(@wszText, -1, @font, 0, 0, @solidbrush_1)
+
+   ' // Get the height of myFont.
+   DIM height AS SINGLE = font.GetHeight(@graphics)
+
+   ' // Draw text immediately below the first line of text
+   DIM solidbrush_2 AS CGpSolidBrush = ARGB_RED
+   DIM wszText2 AS WSTRING * 260 = "The second line of text"
+   graphics.DrawString(@wszText2, -1, @font, 0, height, @solidbrush_2)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getlogfont">GetLogFontA (CGpFont)</h3>
+<p>Uses a <strong>LOGFONT</strong> structure to get the attributes of this Font object.</p>
+<pre class="code"><code>FUNCTION GetLogFontA (BYVAL pGraphics AS CGpGraphics PTR, BYVAL pLogFont AS LOGFONTA PTR) AS GpStatus
+FUNCTION GetLogFontW (BYVAL pGraphics AS CGpGraphics PTR, BYVAL pLogFont AS LOGFONTW PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pGraphics</em></td><td>Pointer to a Graphics object that contains attributes of the display device.</td></tr><tr><td><em>pLogFont</em></td><td>Pointer to a <strong>LOGFONT</strong> structure variable that receives the font attributes.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a Font object, gets the font attributes from the Font object,
+' and uses these attributes (contained in the LOGFONTA structure) to create a second Font
+' object. The second Font object is then used to draw text.
+' ========================================================================================
+SUB Example_GetLogFontA (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Font object according to the DPI setting
+   DIM font AS CGpFont = CGpFont("Arial", AfxGdipPointsToPixels(16, TRUE))
+
+   ' // Get attributes of font
+   DIM logFont AS LOGFONTA
+   font.GetLogFontA(@graphics, @logFont)
+   ' // Adjust for DPI
+   logFont.lfHeight /= rxRatio
+
+   ' // Create a second Font object from logFont
+   DIM logfontFont AS CGpFont = CGpFont(hdc, @logFont)
+
+   ' // Draw text using logfontFont.
+   DIM solidbrush AS CGpSolidBrush = ARGB_BLACK
+   DIM wszText AS WSTRING * 260 = "Font from a LOGFONTA"
+   graphics.DrawString(@wszText, -1, @logfontFont, 0, 0, @solidbrush)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a Font object, gets the font attributes from the Font object,
+' and uses these attributes (contained in the LOGFONTW structure) to create a second Font
+' object. The second Font object is then used to draw text.
+' ========================================================================================
+SUB Example_GetLogFontW (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Font object according to the DPI setting
+   DIM font AS CGpFont = CGpFont("Arial", AfxGdipPointsToPixels(16, TRUE))
+
+   ' // Get attributes of font
+   DIM logFont AS LOGFONTW
+   font.GetLogFontW(@graphics, @logFont)
+   ' // Adjust for DPI
+   logFont.lfHeight /= rxRatio
+
+   ' // Create a second Font object from logFont
+   DIM logfontFont AS CGpFont = CGpFont(hdc, @logFont)
+
+   ' // Draw text using logfontFont.
+   DIM solidbrush AS CGpSolidBrush = ARGB_BLACK
+   DIM wszText AS WSTRING * 260 = "Font from a LOGFONTW"
+   graphics.DrawString(@wszText, -1, @logfontFont, 0, 0, @solidbrush)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getsize">GetSize (CGpFont)</h3>
+<p>Returns the font size (commonly called the em size) of this Font object. The size is in the units of this <strong>Font</strong> object.</p>
+<pre class="code"><code>FUNCTION GetSize () AS SINGLE</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The method returns the font size. The size is in the units of this <strong>Font</strong> object.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a Font object, gets the size of the font, and creates a second
+' Font object of the same size as the first. The second Font object is then used to draw text.
+' ========================================================================================
+SUB Example_GetSize (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Font object according to the DPI setting
+   DIM font AS CGpFont = CGpFont("Arial", AfxGdipPointsToPixels(16, TRUE))
+
+   ' // Get the size of font
+   DIM size AS SINGLE = font.GetSize
+
+   ' // Create a second Font object with the same emSize as myFont.
+   DIM sizeFont AS CGpFont = CGpFont("Arial", size)
+
+   ' // Draw text using sizeFont
+   DIM solidbrush AS CGpSolidBrush = ARGB_BLACK
+   DIM wszText AS WSTRING * 260 = "Font with an acquired size"
+   graphics.DrawString(@wszText, -1, @sizeFont, 0, 0, @solidbrush)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getstyle">GetStyle (CGpFont)</h3>
+<p>Returns the font size (commonly called the em size) of this <strong>Font</strong> object. The size is in the units of this <strong>Font</strong> object.</p>
+<pre class="code"><code>FUNCTION GetStyle () AS INT_</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The method returns the font size. The size is in the units of this <strong>Font</strong> object.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a Font object, gets the FontStyle associated with the font,
+' and creates a second Font object by using the same style. The second Font object is then
+' used to draw text.
+' ========================================================================================
+SUB Example_GetStyle (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Font object according to the DPI setting
+   DIM font AS CGpFont = CGpFont("Arial", AfxGdipPointsToPixels(16, TRUE)), FontStyleItalic)
+
+   ' // Get the style of font
+   DIM style AS SINGLE = font.GetStyle
+
+   ' // Create a second Font object with the same emSize as myFont.
+   DIM styleFont AS CGpFont = CGpFont("Arial", AfxGdipPointsToPixels(20, TRUE)), style)
+
+   ' // Draw text using sizeFont
+   DIM solidbrush AS CGpSolidBrush = ARGB_BLACK
+   DIM wszText AS WSTRING * 260 = "Font with an acquired style"
+   graphics.DrawString(@wszText, -1, @styleFont, 0, 0, @solidbrush)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getunit">GetUnit (CGpFont)</h3>
+<p>Returns the unit of measure of this <strong>Font</strong> object.</p>
+<pre class="code"><code>FUNCTION GetUnit () AS GpUnit</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>This method returns one of the elements of the <strong>Unit</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a Font object, gets the unit of measure of the font, and
+' then sets the page units of the Graphics object to the returned unit. It then uses the
+' Font object to draw text.
+' ========================================================================================
+SUB Example_GetUnit (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Font object according to the DPI setting
+   DIM font AS CGpFont = CGpFont("Arial", AfxGdipPointsToPixels(12, TRUE))
+
+   ' // Get the unit of measure for font
+   DIM unit AS GpUnit = font.GetUnit
+   ' // Set the Graphics units of graphics to the retrieved unit value.
+   graphics.SetPageUnit(unit)
+
+   ' // Draw text using font
+   DIM solidbrush AS CGpSolidBrush = ARGB_BLACK
+   DIM wszText AS WSTRING * 260 = "Here is some text"
+   graphics.DrawString(@wszText, -1, @font, 0, 0, @solidbrush)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="isavailable">IsAvailable (CGpFont)</h3>
+<p>Determines whether this <strong>Font</strong> object was created successfully.</p>
+<pre class="code"><code>FUNCTION IsAvailable () AS BOOLEAN</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>If the font was constructed successfully, this method returns TRUE; otherwise, it returns FALSE.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a Font object and then tests whether the Font object is
+' available. If the Font object is available, it is used to draw text.
+' ========================================================================================
+SUB Example_IsAvailable (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Font object according to the DPI setting
+   DIM font AS CGpFont = CGpFont("Arial", AfxGdipPointsToPixels(18, TRUE))
+
+   ' // Check whether font is available
+   DIM available AS BOOLEAN = font.IsAvailable
+
+   ' // Draw text using font, if it is availiable
+   IF available THEN
+      DIM solidbrush AS CGpSolidBrush = ARGB_BLACK
+      DIM wszText AS WSTRING * 260 = "Here is some text"
+      graphics.DrawString(@wszText, -1, @font, 0, 0, @solidbrush)
+   END IF
+   
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="constructorfontcollection">Constructor (CGpFontCollection)</h3>
+<p>Creates a <strong>FontCollection</strong> object.</p>
+<pre class="code"><code>CONSTRUCTOR CGpFontCollection</code></pre>
+<h2 id="GetFamilies">GetFamilies (CGpFontCollection)</h2>
+<p>Gets the font families contained in this font collection.</p>
+<pre class="code"><code>FUNCTION GetFamilies (BYVAL numSought AS INT_, BYVAL gpfamilies AS CGpFontFamily PTR, _
+   BYVAL numFound AS INT_ PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>numSought</em></td><td>Integer that specifies the number of font families in this font collection.</td></tr><tr><td><em>gpfamilies</em></td><td>Out. Pointer to an array that receives the <strong>FontFamily</strong> objects.</td></tr><tr><td><em>numFound</em></td><td>Out. Pointer to an LONG that receives the number of font families found in this collection. This number should be the same as the <em>numSought</em> value.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="remarks">Remarks</h5>
+<p>A font family consists of a single font type with related styles. An example of a single font type is Arial Regular. An example of a font family is a set of fonts containing Arial Regular, Arial Italic, and Arial Bold style fonts.</p>
+<hr>
+<h3 id="getfamilycount">GetFamilyCount (CGpFontCollection)</h3>
+<p>Gets the number of font families contained in this font collection.</p>
+<pre class="code"><code>FUNCTION GetFamilyCount () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>This method returns the number of font families contained in this font collection.</p>
+<h5 id="remarks">Remarks</h5>
+<p>A font family consists of a single font type with related styles. An example of a single font type is Arial Regular. An example of a font family is a set of fonts containing Arial Regular, Arial Italic, and Arial Bold style fonts.</p>
+<hr>
+<h3 id="addfontfile">AddFontFile (CGpPrivateFontCollection)</h3>
+<p>Adds a font file to this private font collection.</p>
+<pre class="code"><code>FUNCTION AddFontFile (BYVAL pwszFileName AS WSTRING PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszFileName</em></td><td>Pointer to a wide-character string that specifies the name of a font file.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="remarks">Remarks</h5>
+<p>When you use the GDI+ API, you must never allow your application to download arbitrary fonts from untrusted sources. The operating system requires elevated privileges to assure that all installed fonts are trusted.</p>
+<hr>
+<h3 id="addmemoryfont">AddMemoryFont (CGpPrivateFontCollection)</h3>
+<p>Adds a font that is contained in system memory to a Windows GDI+ font collection.</p>
+<pre class="code"><code>FUNCTION AddMemoryFont (BYVAL pMemory AS ANY PTR, BYVAL length AS INT_) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pMemory</em></td><td>Pointer to a font that is contained in memory.</td></tr><tr><td><em>length</em></td><td>Integer that specifies the number of bytes of data in the font.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="remarks">Remarks</h5>
+<p>When you use the GDI+ API, you must never allow your application to download arbitrary fonts from untrusted sources. The operating system requires elevated privileges to assure that all installed fonts are trusted.</p>
+<hr>
+<h3 id="constructorfontfamily">Constructor (CGpFontFamily)</h3>
+<p>Creates a <strong>FontFamily</strong> object based on a specified font collection.</p>
+<pre class="code"><code>CONSTRUCTOR CGpFontFamily
+CONSTRUCTOR CGpFontFamily (BYVAL pFontFamily AS CGpFontFamily PTR)
+CONSTRUCTOR CGpFontFamily (BYVAL pwszName AS WSTRING PTR, pFontCollection AS CGpFontCollection PTR = NULL)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszName</em></td><td>Name of the font family. For example, Arial.ttf is the name of the Arial font family.</td></tr><tr><td><em>pFontCollection</em></td><td>Optional. Pointer to a <strong>FontCollection</strong> object that specifies the collection that the font family belongs to. If <strong>FontCollection</strong> is NULL, this font family is not part of a collection. The default value is NULL.</td></tr></tbody></table></div>
+<hr>
+<h3 id="clone">Clone (CGpFontFamily)</h3>
+<p>Copies the contents of the existing <strong>FontFamily</strong> object into a new <strong>FontFamily</strong> object.</p>
+<pre class="code"><code>FUNCTION Clone (BYVAL pFontFamily AS CGpBrush PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pFontFamily</em></td><td>Pointer to a variable that will receive a pointer to the cloned <strong>FontFamily</strong> object.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a FontFamily object, clones that object, and then creates
+' a Font object from the clone. It then uses the Font object to draw text.
+' ========================================================================================
+SUB Example_CloneFontFamily (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a FontFamily object
+   DIM arialFontFamily AS CGpFontFamily = "arial"
+
+   ' // Clone the FontFamily object and use it to create a Font object
+   DIM cloneFontFamily AS CGpFontFamily
+   arialFontFamily.Clone(@cloneFontFamily)
+   DIM arialFont AS CGpFont = CGpFont(@cloneFontFamily, AfxGdipPointsToPixels(16, TRUE))
+
+   ' // Draw text using the new font
+   DIM solidBrush AS CGpSolidBrush = ARGB_BLACK
+   graphics.DrawString("This is an Arial font", -1, @arialFont, 0, 0, @solidbrush)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="genericmonospace">GenericMonospace (CGpFontFamily)</h3>
+<p>Gets a <strong>FontFamily</strong> object that a specifies a generic monospace typeface.</p>
+<pre class="code"><code>FUNCTION GenericMonospace (BYVAL pFontFamily AS CGpFontFamily PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pFontFamily</em></td><td>Pointer to a variable that will receive a pointer to the <strong>FontFamily</strong> object.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a Font object by using a generic monospace FontFamily
+' object and then uses that Font object to draw text.
+' ========================================================================================
+SUB Example_GenericMonospace (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Use a generic monospace FontFamily object to create a Font object.
+   DIM fontFamily AS CGpFontFamily
+   fontFamily.GenericMonospace(@fontFamily)
+   DIM genericMonoFont AS CGpFont = CGpFont(@fontFamily, AfxGdipPointsToPixels(16, TRUE))
+
+   ' // Draw text using the new font
+   DIM solidBrush AS CGpSolidBrush = ARGB_BLACK
+   graphics.DrawString("This is a generic monospace font", -1, @genericMonoFont, 0, 0, @solidbrush)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="genericsansserif">GenericSansSerif (CGpFontFamily)</h3>
+<p>Gets a <strong>FontFamily</strong> object that a specifies a generic sans serif typeface.</p>
+<pre class="code"><code>FUNCTION GenericSansSerif (BYVAL pFontFamily AS CGpFontFamily PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pFontFamily</em></td><td>Pointer to a variable that will receive a pointer to the <strong>FontFamily</strong> object.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a Font object by using a generic sans serif FontFamily
+' object and then uses that Font object to draw text.
+' ========================================================================================
+SUB Example_GenericSansSerif (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Use a generic sans serif FontFamily object to create a Font object.
+   DIM fontFamily AS CGpFontFamily
+   fontFamily.GenericSansSerif(@fontFamily)
+   DIM genericSansSerifFont AS CGpFont = CGpFont(@fontFamily, AfxGdipPointsToPixels(16, TRUE))
+
+   ' // Draw text using the new font
+   DIM solidBrush AS CGpSolidBrush = ARGB_BLACK
+   graphics.DrawString("This is a generic sans serif font", -1, @genericSansSerifFont, 0, 0, @solidbrush)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="genericserif">GenericSerif (CGpFontFamily)</h3>
+<p>Gets a <strong>FontFamily</strong> object that a specifies a generic serif typeface.</p>
+<pre class="code"><code>FUNCTION GenericSansSerif (BYVAL pFontFamily AS CGpFontFamily PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pFontFamily</em></td><td>Pointer to a variable that will receive a pointer to the <strong>FontFamily</strong> object.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a Font object by using a generic serif FontFamily
+' object and then uses that Font object to draw text.
+' ========================================================================================
+SUB Example_GenericSerif (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Use a generic serif FontFamily object to create a Font object.
+   DIM fontFamily AS CGpFontFamily
+   fontFamily.GenericSerif(@fontFamily)
+   DIM genericSerifFont AS CGpFont = CGpFont(@fontFamily, AfxGdipPointsToPixels(16, TRUE))
+
+   ' // Draw text using the new font
+   DIM solidBrush AS CGpSolidBrush = ARGB_BLACK
+   graphics.DrawString("This is a generic serif font", -1, @genericSerifFont, 0, 0, @solidbrush)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getcellascent">GetCellAscent (CGpFontFamily)</h3>
+<p>Gets the cell ascent, in design units, of this font family for the specified style or style combination.</p>
+<pre class="code"><code>FUNCTION GetCellAscent (BYVAL nStyle AS INT_) AS UINT16</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nStyle</em></td><td>Integer that specifies the style of the typeface. This value must be an element of the <strong>FontStyle</strong> enumeration or the result of a bitwise OR applied to two or more of these elements. For example, <em>FontStyleBold OR FontStyleUnderline OR FontStyleStrikeout</em> specifies a combination of the three styles.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>This method returns the cell ascent, in design units, of this font family for the specified style or style combination.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a FontFamily object, gets the cell ascent in design units,
+' and outputs the value as text.
+' ========================================================================================
+SUB Example_GetCellAscent (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a FontFamily object
+   DIM ascentFontFamily AS CGpFontFamily = "arial"
+
+   ' // Get the cell ascent of the font family in design units
+   DIM cellAscent AS LONG = ascentFontFamily.GetCellAscent(FontStyleRegular)
+
+   ' // Copy the cell ascent into a string and draw the string
+   DIM solidBrush AS CGpSolidBrush = ARGB_BLACK
+   DIM font AS CGpFont = CGpFont(@ascentFontFamily, AfxGdipPointsToPixels(16, TRUE))
+   DIM wszText AS WSTRING * 260
+   wszText = "ascentFontFamily.GetCellAscent() returns " &amp; STR(cellAscent)
+   graphics.DrawString(@wszText, -1, @font, 0, 0, @solidbrush)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getcelldescent">GetCellDescent (CGpFontFamily)</h3>
+<p>Gets the cell descent, in design units, of this font family for the specified style or style combination.</p>
+<pre class="code"><code>FUNCTION GetCellDescent (BYVAL nStyle AS INT_) AS UINT16</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nStyle</em></td><td>Integer that specifies the style of the typeface. This value must be an element of the <strong>FontStyle</strong> enumeration or the result of a bitwise OR applied to two or more of these elements. For example, <em>FontStyleBold OR FontStyleUnderline OR FontStyleStrikeout</em> specifies a combination of the three styles.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>This method returns the cell ascent, in design units, of this font family for the specified style or style combination.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a FontFamily object, gets the cell descent in design units,
+' and outputs the value as text.
+' ========================================================================================
+SUB Example_GetCellDescent (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a FontFamily object
+   DIM descentFontFamily AS CGpFontFamily = "arial"
+
+   ' // Get the cell ascent of the font family in design units
+   DIM cellDescent AS LONG = descentFontFamily.GetCellDescent(FontStyleRegular)
+
+   ' // Copy the cell descent into a string and draw the string
+   DIM solidBrush AS CGpSolidBrush = ARGB_BLACK
+   DIM font AS CGpFont = CGpFont(@descentFontFamily, AfxGdipPointsToPixels(16, TRUE))
+   DIM wszText AS WSTRING * 260
+   wszText = "ascentFontFamily.GetCellAscent() returns " &amp; STR(cellDescent)
+   graphics.DrawString(@wszText, -1, @font, 0, 0, @solidbrush)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getemheight">GetEmHeight (CGpFontFamily)</h3>
+<p>Gets the size (commonly called em size or em height), in design units, of this font family.</p>
+<pre class="code"><code>FUNCTION GetEmHeight (BYVAL nStyle AS INT_) AS UINT16</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nStyle</em></td><td>Integer that specifies the style of the typeface. This value must be an element of the <strong>FontStyle</strong> enumeration or the result of a bitwise OR applied to two or more of these elements. For example, <em>FontStyleBold OR FontStyleUnderline OR FontStyleStrikeout</em> specifies a combination of the three styles.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>This method returns the size, in design units, of this font family.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a FontFamily object, gets the em height in design units,
+' and outputs the value as text.
+' ========================================================================================
+SUB Example_GetEmHeight (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a FontFamily object
+   DIM emHeightFontFamily AS CGpFontFamily = "arial"
+
+   ' // Get the cell ascent of the font family in design units.
+   DIM emHeight AS LONG = emHeightFontFamily.GetEmHeight(FontStyleRegular)
+
+   ' // Copy the height into a string and draw the string.
+   DIM solidBrush AS CGpSolidBrush = ARGB_BLACK
+   DIM font AS CGpFont = CGpFont(@emHeightFontFamily, AfxGdipPointsToPixels(16, TRUE))
+   DIM wszText AS WSTRING * 260
+   wszText = "emHeightFontFamily.GetEmHeight() returns " &amp; STR(emHeight)
+   graphics.DrawString(@wszText, -1, @font, 0, 0, @solidbrush)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getfamilyname">GetFamilyName (CGpFontFamily)</h3>
+<p>Gets the name of this font family.</p>
+<pre class="code"><code>FUNCTION GetFamilyName (BYVAL pwszName AS WSTRING PTR, BYVAL language AS LANGID = LANG_NEUTRAL) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszName</em></td><td>Out. Name of this font family.</td></tr><tr><td><em>language</em></td><td>In, optional. Sixteen-bit value that specifies the language to use. The default value is LANG_NEUTRAL, which is the user's default language.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a FontFamily object, gets the family name, and outputs the
+' name as text.
+' ========================================================================================
+SUB Example_GetFamilyName (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a FontFamily object
+   DIM nameFontFamily AS CGpFontFamily = "arial"
+
+   ' // Get the cell ascent of the font family in design units.
+   DIM familyName AS WSTRING * LF_FACESIZE
+   nameFontFamily.GetFamilyName(@familyName)
+
+   ' // Draw the family name
+   DIM solidBrush AS CGpSolidBrush = ARGB_BLACK
+   DIM font AS CGpFont = CGpFont(@nameFontFamily, AfxGdipPointsToPixels(16, TRUE))
+   graphics.DrawString(@familyName, -1, @font, 0, 0, @solidbrush)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getlinespacing">GetLineSpacing (CGpFontFamily)</h3>
+<p>Gets the line spacing, in design units, of this font family for the specified style or style combination. The line spacing is the vertical distance between the base lines of two consecutive lines of text.</p>
+<pre class="code"><code>FUNCTION GetLineSpacing (BYVAL nStyle AS INT_) AS UINT16</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nStyle</em></td><td>Integer that specifies the style of the typeface. This value must be an element of the <strong>FontStyle</strong> enumeration or the result of a bitwise OR applied to two or more of these elements. For example, <em>FontStyleBold OR FontStyleUnderline OR FontStyleStrikeout</em> specifies a combination of the three styles.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>This method returns the line spacing of this font family.</p>
+<h6 id="example">Example</h6>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a FontFamily object, gets the line spacing in design units,
+' and outputs the value as text.
+' ========================================================================================
+SUB Example_GetLineSpacing (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a FontFamily object
+   DIM lineSpacingFontFamily AS CGpFontFamily = "arial"
+
+   ' // Get the cell ascent of the font family in design units.
+   DIM lineSpacing AS LONG = lineSpacingFontFamily.GetLineSpacing(FontStyleRegular)
+
+   ' // Copy the line spacing into a string and draw the string.
+   DIM solidBrush AS CGpSolidBrush = ARGB_BLACK
+   DIM font AS CGpFont = CGpFont(@lineSpacingFontFamily, AfxGdipPointsToPixels(16, TRUE))
+   DIM wszText AS WSTRING * 260 = "lineSpacingFontFamily.GetLineSpacing() returns " &amp; STR(lineSpacing)
+   graphics.DrawString(@wszText, -1, @font, 0, 0, @solidbrush)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="isavailablefontfamily">IsAvailable (CGpFontFamily)</h3>
+<p>Determines whether this <strong>Font</strong> object was created successfully.</p>
+<pre class="code"><code>FUNCTION IsAvailable () AS BOOLEAN</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>If the font was constructed successfully, this method returns TRUE; otherwise, it returns FALSE.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a FontFamily object. If the FontFamily object is created
+' successfully, the example draws text.
+' ========================================================================================
+SUB Example_IsAvailable (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a FontFamily object
+   DIM myFontFamily AS CGpFontFamily = "arial"
+
+   ' // Check to see if myFontFamily is available.
+   DIM isAvailable AS BOOLEAN = myFontFamily.IsAvailable
+
+   ' // If myFontFamily is available, draw text.
+   IF isAvailable THEN
+      DIM solidBrush AS CGpSolidBrush = ARGB_BLACK
+      DIM font AS CGpFont = CGpFont(@myFontFamily, AfxGdipPointsToPixels(16, TRUE))
+      DIM wszText AS WSTRING * 260 = "myFontFamily is available"
+      graphics.DrawString(@wszText, -1, @font, 0, 0, @solidbrush)
+   END IF
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="isstyleavailable">IsStyleAvailable (CGpFontFamily)</h3>
+<p>Determines whether the specified style is available for this font family.</p>
+<pre class="code"><code>FUNCTION IsStyleAvailable (BYVAL nStyle AS INT_) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nStyle</em></td><td>Integer that specifies the style of the typeface. This value must be an element of the <strong>FontStyle</strong> enumeration or the result of a bitwise OR applied to two or more of these elements. For example, <em>FontStyleBold OR FontStyleUnderline OR FontStyleStrikeout</em> specifies a combination of the three styles.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the style or combination of styles is available, this method returns TRUE; otherwise, it returns FALSE.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This method returns a misleading result on some third-party fonts. For example, <em>IsStyleAvailable(FontStyleUnderline)</em> may return FALSE because it is really testing for a regular style font that also is an underlined font: <em>FontStyleRegular OR FontStyleUnderline</em>. If the font does not have a regular style, the <strong>IsStyleAvailable</strong> method returns FALSE.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a FontFamily object. If the font family has a regular style
+' available, the example draws text.
+' ========================================================================================
+SUB Example_IsStyleAvailable (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a FontFamily object
+   DIM myFontFamily AS CGpFontFamily = "arial"
+
+   ' // Check to see if the regular style is available.
+   DIM isStyleAvailable AS BOOLEAN = myFontFamily.IsStyleAvailable(FontStyleRegular)
+   
+   ' // If regular style is available, draw text.
+   IF isStyleAvailable THEN
+      DIM solidBrush AS CGpSolidBrush = ARGB_BLACK
+      DIM font AS CGpFont = CGpFont(@myFontFamily, AfxGdipPointsToPixels(16, TRUE))
+      DIM wszText AS WSTRING * 260 = "myFontFamily is available in regular style"
+      graphics.DrawString(@wszText, -1, @font, 0, 0, @solidbrush)
+   END IF
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Using (Namespaces) — Help Center</title>
+<meta name="description" content="Brings namespace symbols into the current scope">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/modularizing/procedures/using-namespaces.html">
+<meta property="og:title" content="Using (Namespaces)">
+<meta property="og:description" content="Brings namespace symbols into the current scope">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/modularizing/procedures/using-namespaces.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/modularizing/procedures/using-namespaces.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Using (Namespaces)<span class="h1kind">keyword</span></h1>
+<p class="lede">Brings namespace symbols into the current scope</p>
+<div class="badges"><a class="badge" href="../index.html">Modularizing</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Using identifier [, identifier [, ...] ]</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>identifier</code></td><td></td><td>: The name of the <code><a href="namespace.html">Namespace</a></code> that you want to use.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+The <code><b>Using</b></code> command allows all symbols from a given namespace to be accessed without the namespace's name prefix. Unlike C++ but like C#, the <code><a href="namespace.html">Namespace</a></code> keyword is not needed after <code><b>Using</b></code>, because individual symbols cannot be inherited from a namespace.<br>
+<br>
+<code><b>Using</b></code> is allowed in namespaces and procedures only (not in type or union or enum declarations).<br>
+<br>
+Inheriting a whole namespace can save typing, but sometimes some meaning of the code can be lost, and conflicts with other symbols could be created.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Version</h3><br>
+<ul><li> Before fbc 1.09.0, if there is duplicated symbol in the global namespace (unnamed namespace), access to local symbol is captured by duplicated global symbol (in that case, full prefixing is required to access local symbol).<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> QB had the <code><b>Using</b></code> keyword, but for other purposes. Namespaces did not exist in QB.<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../console-functions/procedures/print-using.html">Print Using</a></code><br>
+<li> <code><a href="../../console-functions/procedures/print-using.html">? Using</a></code><br>
+<li> <code><a href="../../2d-drawing-functions/procedures/palette.html">Palette Using</a></code><br>
+<li> <code><a href="namespace.html">Namespace</a></code><br>
+<br>
+</li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Namespace</span> <span>Sample</span>
+
+    <span class="tok-kw">Type</span> <span>T</span>
+
+        <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-cm">'' Just using the name T would not find the symbol,</span>
+
+<span class="tok-cm">'' because it is inside a namespace.</span>
+
+<span class="tok-kw">Dim</span> <span>SomeVariable</span> <span class="tok-kw">As</span> <span>Sample.T</span>
+
+
+
+<span class="tok-cm">'' Now the whole namespace has been inherited into</span>
+
+<span class="tok-cm">'' the global namespace.</span>
+
+<span class="tok-kw">Using</span> <span>Sample</span>
+
+
+
+<span class="tok-cm">'' This statement is valid now, since T exists</span>
+
+<span class="tok-cm">'' without the &quot;Sample.&quot; prefix.</span>
+
+<span class="tok-kw">Dim</span> <span>OtherVariable</span> <span class="tok-kw">As</span> <span>T</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgUsing.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

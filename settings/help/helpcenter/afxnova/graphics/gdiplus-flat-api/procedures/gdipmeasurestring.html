@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipMeasureString — Help Center</title>
+<meta name="description" content="Measures the extent of the string in the specified font, format, and layout rectangle.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipmeasurestring.html">
+<meta property="og:title" content="GdipMeasureString">
+<meta property="og:description" content="Measures the extent of the string in the specified font, format, and layout rectangle.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipmeasurestring.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipmeasurestring.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../graphics-functions.html">Graphics Functions</a></div>
+<h1>GdipMeasureString<span class="h1kind">function</span></h1>
+<p class="lede">Measures the extent of the string in the specified font, format, and layout rectangle.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipMeasureString (BYVAL graphics AS GpGraphics PTR, BYVAL string AS CONST WSTRING PTR, BYVAL length AS INT_, BYVAL font AS CONST GpFont PTR, BYVAL layoutRect AS CONST GpRectF PTR, BYVAL stringFormat AS CONST GpStringFormat PTR, BYVAL boundingBox AS GpRectF PTR, BYVAL codepointsFitted AS INT_ PTR, BYVAL linesFilled AS INT_ PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>graphics</code></td><td></td><td>[in] Pointer to the <strong>Graphics</strong> object.</td></tr><tr><td><code>string</code></td><td></td><td>[in] Pointer to a wide-character string to be measured.</td></tr><tr><td><code>length</code></td><td></td><td>[in] Integer that specifies the number of characters in the string array. The length parameter can be set to 1 if the string is null terminated.</td></tr><tr><td><code>font</code></td><td></td><td>[in] Pointer to a <strong>Font</strong> object that specifies the family name, size, and style of the font to be applied to the string.</td></tr><tr><td><code>layoutRect</code></td><td></td><td>[in] Reference to the rectangle that bounds the string.</td></tr><tr><td><code>stringFormat</code></td><td></td><td>[in] Pointer to a <strong>StringFormat</strong> object that specifies the layout information, such as alignment, trimming, tab stops, and so forth.</td></tr><tr><td><code>boundingBox</code></td><td></td><td>[out] Pointer to a <strong>GpRectF</strong> structure that receives the rectangle that bounds the string.</td></tr><tr><td><code>codepointsFitted</code></td><td></td><td>[out] Pointer to a variable that receives the number of characters that actually fit into the layout rectangle. The default value is a NULL pointer.</td></tr><tr><td><code>linesFilled</code></td><td></td><td>[out] Pointer to an variable that receives the number of lines that fit into the layout rectangle. The default value is a NULL pointer.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Measures the extent of the string in the specified font, format, and layout rectangle.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example measures the extent of the string in the specified font, format, ' and layout rectangle. ' ======================================================================================== SUB Example_MeasureString (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create font (Arial, 16pt) DIM fontFamily AS GpFontFamily PTR, font AS GpFont PTR hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily) hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(16, TRUE), FontStyleRegular, UnitPixel, @font) IF fontFamily THEN GdipDeleteFontFamily(fontFamily)</p>
+<p>' // Create string format (default) DIM stringFormat AS GpStringFormat Ptr hStatus = GdipStringFormatGetGenericDefault(@stringFormat)</p>
+<p>' // Measure string DIM boundRect AS GpRectF DIM layoutRect AS GpRectF = (0.0, 0.0, 100.0, 50.0) DIM text As WString * 64 = "Measure Text" hStatus = GdipMeasureString(graphics, @text, -1, font, @layoutRect, stringFormat, @boundRect, NULL, NULL)</p>
+<p>' // Draw bounding rectangle DIM pen AS GpPen PTR hStatus = GdipCreatePen1(ARGB_BLACK, 2.0, UnitPixel, @pen) hStatus = GdipScalePenTransform(pen, rxRatio, ryRatio, MatrixOrderPrepend) hStatus = GdipDrawRectangle(graphics, pen, boundRect.X, boundRect.Y, boundRect.Width, boundRect.Height)</p>
+<p>' // Cleanup IF pen THEN GdipDeletePen(pen) IF font THEN GdipDeleteFont(font) IF stringFormat THEN GdipDeleteStringFormat(stringFormat) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2422</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusGraphics.md</span></li><li>Topic: <a href="../graphics-functions.html">Graphics Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

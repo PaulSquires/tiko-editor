@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRichEditCtx.GetClientRect — Help Center</title>
+<meta name="description" content="Retrieves the client rectangle of the rich edit control.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditctx/cricheditctx-getclientrect.html">
+<meta property="og:title" content="CRichEditCtx.GetClientRect">
+<meta property="og:description" content="Retrieves the client rectangle of the rich edit control.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditctx/cricheditctx-getclientrect.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/cricheditctx/cricheditctx-getclientrect.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cricheditctx-class.html">CRichEditCtx Class</a></div>
+<h1>CRichEditCtx.GetClientRect<span class="h1kind">method</span></h1>
+<p class="lede">Retrieves the client rectangle of the rich edit control.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GetClientRect (BYVAL nType AS LONG, BYREF Left AS LONG, BYREF Top AS LONG, BYREF Right AS LONG, BYREF Bottom AS LONG) AS HRESULT</code></pre>
+<pre class="code sig"><code>FUNCTION GetClientRect (BYVAL nType AS LONG) AS .RECT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>nType</code></td><td></td><td>The client rectangle retrieval options. It can be a combination of the following values:<br><strong>tomClientCoord</strong>: Retrieve the rectangle in client coordinates. If this value isn't specified, the function retrieves screen coordinates.<br><strong>tomIncludeInset</strong>:Add left and top insets to the left and top coordinates of the client rectangle, and subtract right and bottom insets from the right and bottom coordinates.<br><strong>tomTransform</strong>: Use a world transform (XFORM) provided by the host application to transform the retrieved rectangle coordinates.</td></tr><tr><td><code>Left</code></td><td></td><td>The x-coordinate of the upper-left corner of the rectangle.</td></tr><tr><td><code>Top</code></td><td></td><td>The y-coordinate of the upper-left corner of the rectangle.</td></tr><tr><td><code>Right</code></td><td></td><td>The x-coordinate of the lower-right corner of the rectangle.</td></tr><tr><td><code>Bottom</code></td><td></td><td>The y-coordinate of the lower-right corner of the rectangle.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<p>The second overlapped structure returns a <strong>RECT</strong> structure.</p>
+<h2>Description</h2>
+<p>Retrieves the client rectangle of the rich edit control.</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/CRichEditCtx.inc:4686</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/RichEdit/CRichEditCtx Class.md</span></li><li>Topic: <a href="../cricheditctx-class.html">CRichEditCtx Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

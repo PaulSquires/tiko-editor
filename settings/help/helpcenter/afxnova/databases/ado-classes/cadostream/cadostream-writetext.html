@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoStream.WriteText — Help Center</title>
+<meta name="description" content="Writes a string to a `Stream` object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadostream/cadostream-writetext.html">
+<meta property="og:title" content="CAdoStream.WriteText">
+<meta property="og:description" content="Writes a string to a `Stream` object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadostream/cadostream-writetext.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadostream/cadostream-writetext.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadostream-class.html">CAdoStream Class</a></div>
+<h1>CAdoStream.WriteText<span class="h1kind">method</span></h1>
+<p class="lede">Writes a string to a `Stream` object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CAdoStream.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION WriteText (BYREF wszData AS WsTRING, BYVAL Options AS StreamWriteEnum = adWriteChar) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszData</code></td><td></td><td>An string value that contains the text in characters to be written.</td></tr><tr><td><code>Options</code></td><td></td><td>Optional. A <strong>StreamWriteEnum</strong> value that specifies whether a line separator character must be written at the end of the specified string.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>Specified strings are written to the <code>Stream</code> object without any intervening spaces or characters between each string.</p>
+<p>The current <strong>Position</strong> is set to the character following the written data. The <strong>WriteText</strong> method does not truncate the rest of the data in a stream. If you want to truncate these characters, call <strong>SetEOS</strong>.</p>
+<p>If you write past the current <strong>EOS</strong> position, the <strong>Size</strong> of the <code>Stream</code> will be increased to contain any new characters, and <strong>EOS</strong> will move to the new last byte in the <code>Stream</code>.</p>
+<p><strong>Note</strong>: The <strong>WriteText</strong> method is used with text streams (<strong>Type_</strong> is <strong>adTypeText</strong>). For binary streams (<strong>Type_</strong> is <strong>adTypeBinary</strong>), use <strong>Write</strong>.</p>
+<h2>Description</h2>
+<p>Writes a string to a <code>Stream</code> object.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CAdoStream.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoStream.inc:400</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoStream Class.md</span></li><li>Topic: <a href="../cadostream-class.html">CAdoStream Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

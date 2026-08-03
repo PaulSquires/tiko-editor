@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pset (Statement) — Help Center</title>
+<meta name="description" content="Plots a single pixel">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/2d-drawing-functions/procedures/pset-statement.html">
+<meta property="og:title" content="Pset (Statement)">
+<meta property="og:description" content="Plots a single pixel">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/2d-drawing-functions/procedures/pset-statement.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/2d-drawing-functions/procedures/pset-statement.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Pset (Statement)<span class="h1kind">statement</span></h1>
+<p class="lede">Plots a single pixel</p>
+<div class="badges"><a class="badge" href="../index.html">2D Drawing Functions</a><span class="badge">statement</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PSet [target ,] [STEP] (x, y) [,color]</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>target</code></td><td></td><td>specifies buffer to draw on.  <br>
+<code>STEP</code><br>
+indicates that coordinates are relative<br>
+<code>(<i>x, y</i>)</code><br>
+coordinates of the pixel.</td></tr><tr><td><code>color</code></td><td></td><td>the color attribute.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+<code><i>target</i></code> specifies buffer to draw on.  <code><i>target</i></code> may be an image created with <code><a href="imagecreate.html">ImageCreate</a></code> or <code><a href="get-graphics.html">Get (Graphics)</a></code>.  If omitted, <code><i>target</i></code> defaults to the screen's current work page.<br>
+<br>
+<code>(<i>x, y</i>)</code> are the coordinates of the pixel.  <code>STEP</code> if present, indicates that <code>(<i>x, y</i>)</code> coordinates are relative to the graphics cursor position.  If omitted, <code>(<i>x, y</i>)</code> are relative to the upper left-hand corner of <code><i>target</i></code>.  The x and y coordinates are affected by the last call to the <code><a href="../../screen-functions/procedures/view-graphics.html">View (Graphics)</a></code> and <code><a href="../../screen-functions/procedures/window.html">Window</a></code> statements, and respect the current clipping region as set by the <code><a href="../../screen-functions/procedures/view-graphics.html">View (Graphics)</a></code> statement.<br>
+<br>
+<code><i>color</i></code> specifies the color attribute, as an 8-bit palette index in 8 bpp indexed modes, a 24-bit RGB value in 16 bpp modes (upper 8 bits of the integer unused, limited precision of R,G,B), and a 32-bit RGB or RGBA value in 32 bpp modes (upper 8 bits unused or holding Alpha). Note that it does NOT accept a 16-bit value (5 bits R + 6 bits G + 5 bits B).  If omitted, <code><i>color</i></code> defaults to the current foreground color.<br>
+<br>
+Speed note: while <code><b>PSet</b></code> provides valid results, it is quite slow to call repeatedly due to the overhead of additional calculations and checks. Much better performance can be achieved by using direct memory access using the results obtained from <code><a href="imageinfo.html">ImageInfo</a></code> and <code><a href="../../screen-functions/procedures/screeninfo.html">ScreenInfo</a></code>/<code><a href="../../screen-functions/procedures/screenptr.html">ScreenPtr</a></code>.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Differences from QB</h3><br>
+<ul><li> <code><i>target</i></code> is new to FreeBASIC<br>
+<li> In 16 bpp and 32 bpp modes, a 32-bit value is required instead of an 8-bit palette index<br>
+<br>
+</li></li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="point.html">Point</a></code> - read out pixels<br>
+<li> <code><a href="preset.html">PReset</a></code><br>
+<li> <code><a href="../../screen-functions/procedures/view-graphics.html">View (Graphics)</a></code><br>
+<li> <code><a href="../../screen-functions/procedures/window.html">Window</a></code><br>
+<li> <code><a href="../../tutorials/programmer-s-guide/internal-graphics-formats.html">Internal pixel formats</a></code><br>
+<br>
+</li></li></li></li></li></ul><br>
+
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">' Set an appropriate screen mode - 320 x 240 x 8bpp indexed color</span>
+
+<span class="tok-kw">ScreenRes</span> <span class="tok-nu">320</span><span>,</span> <span class="tok-nu">240</span><span>,</span> <span class="tok-nu">8</span>
+
+
+
+<span class="tok-cm">' Plot a pixel at the coordinates 100, 100, Color 15. (white)</span>
+
+<span class="tok-kw">PSet</span> <span>(</span><span class="tok-nu">100</span><span>,</span> <span class="tok-nu">100</span><span>),</span> <span class="tok-nu">15</span>
+
+<span class="tok-cm">' Confirm the operation.</span>
+
+<span class="tok-kw">Locate</span> <span class="tok-nu">1</span><span>:</span> <span class="tok-kw">Print</span> <span>&quot;Pixel plotted at 100, 100&quot;</span>
+
+<span class="tok-cm">' Wait for a keypress.</span>
+
+<span class="tok-kw">Sleep</span>
+
+ 
+
+<span class="tok-cm">' Plot another pixel at the coordinates 150, 150, Color 4. (red) </span>
+
+<span class="tok-kw">PSet</span> <span>(</span><span class="tok-nu">150</span><span>,</span> <span class="tok-nu">150</span><span>),</span> <span class="tok-nu">4</span>
+
+<span class="tok-cm">' Confirm the operation.</span>
+
+<span class="tok-kw">Locate</span> <span class="tok-nu">1</span><span>:</span> <span class="tok-kw">Print</span> <span>&quot;Pixel plotted at 150, 150&quot;</span>
+
+<span class="tok-cm">' Wait for a keypress.</span>
+
+<span class="tok-kw">Sleep</span>
+
+ 
+
+<span class="tok-cm">' Plot a third pixel relative to the second, Color 15. (white)</span>
+
+<span class="tok-cm">' This pixel is given the coordinates 60, 60. It will be placed</span>
+
+<span class="tok-cm">' at 60, 60 plus the previous coordinates (150, 150), thus plotting at 210, 210.</span>
+
+<span class="tok-kw">PSet</span> <span class="tok-kw">Step</span> <span>(</span><span class="tok-nu">60</span><span>,</span> <span class="tok-nu">60</span><span>),</span> <span class="tok-nu">15</span>
+
+<span class="tok-cm">' Confirm the operation.</span>
+
+<span class="tok-kw">Locate</span> <span class="tok-nu">1</span><span>:</span> <span class="tok-kw">Print</span> <span>&quot;Pixel plotted at 150 + 60, 150 + 60&quot;</span>
+
+<span class="tok-cm">' Wait for a keypress</span>
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-cm">' Explicit end of program</span>
+
+<span class="tok-kw">End</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgPset.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -25,19 +25,22 @@ REFACTOR_PLAN*.md
 # (WebView2Loader.dll IS committed; it is a shipped binary, like bin\Scintilla64.dll.)
 /settings/webview2/
 
-# The generated Help Center site: ~31,700 files / ~147 MB, and every helpgen regeneration
-# rewrites all of them (the page shell carries cache-busting ?v= hashes), so tracking it
-# would add ~31k blobs to history per regen -- permanently, since removing them later means
-# a filter-repo force-push that breaks every clone. Staged from C:\dev\HelpCenter\site by
-# _copy_helpcenter.bat instead. WITHOUT IT THE HELP CENTER REPORTS ITS FILES AS MISSING,
-# so a fresh clone needs that script run once.
-/settings/help/helpcenter/
+# settings/help/helpcenter IS TRACKED, deliberately. It used to be ignored, on the grounds
+# that the generated site is ~31,770 files / ~147 MB and every helpgen regeneration rewrites
+# all of them (the page shell carries cache-busting ?v= hashes) -- so each regen adds ~31k
+# blobs to history, permanently, since removing them later means a filter-repo force-push
+# that breaks every clone. That cost is accepted: it is what makes a fresh clone have a
+# working Help Center instead of one that reports its files as missing until
+# _copy_helpcenter.bat is run by hand, and that script is no longer in the repo to run.
+#
+# Consequence to keep in mind: DO NOT commit a regeneration that only changed the ?v=
+# hashes. Commit one when the DOCS changed.
 
-# That claim was FALSE for the whole life of the rule above: an ignore entry does nothing
-# to files that are ALREADY TRACKED, and settings\helpcenter had been committed before it
-# was written -- ~31,770 blobs, which is why moving the tree surfaced as a mass deletion
-# rather than as nothing at all. Same trap as REFACTOR_PLAN.md. It only bites once, but
-# check with `git ls-files --error-unmatch <path>` before trusting a rule like this one.
+# A note the removed rule earned: an ignore entry does nothing to files that are ALREADY
+# TRACKED, and settings\helpcenter had been committed before that rule was written -- which
+# is why moving the tree surfaced as a mass deletion rather than as nothing at all. Same
+# trap as REFACTOR_PLAN.md. It only bites once, but check with
+# `git ls-files --error-unmatch <path>` before trusting a rule like it.
 
 # Bytecode beside settings\help\tikohelp\tools\build.py. The generator's SOURCE is tracked
 # -- it is what regenerates that help site -- but its .pyc are per-interpreter and would
@@ -56,7 +59,7 @@ __pycache__/
 # snapshots of a tree that has moved on. Kept on disk, out of the public repo.
 #
 # NOTE: these rules do nothing on their own -- all six were ALREADY TRACKED, so they had to
-# be `git rm --cached`d first. Same trap as the helpcenter rule above.
+# be `git rm --cached`d first. Same trap as REFACTOR_PLAN.md, noted above.
 /_copy*.*
 /THEMES.md
 /CODE_REVIEW.md

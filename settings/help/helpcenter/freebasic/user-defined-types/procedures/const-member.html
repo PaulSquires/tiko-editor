@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Const (Member) — Help Center</title>
+<meta name="description" content="Specifies that a member procedure is read only.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/user-defined-types/procedures/const-member.html">
+<meta property="og:title" content="Const (Member)">
+<meta property="og:description" content="Specifies that a member procedure is read only.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/user-defined-types/procedures/const-member.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/user-defined-types/procedures/const-member.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Const (Member)<span class="h1kind">member</span></h1>
+<p class="lede">Specifies that a member procedure is read only.</p>
+<div class="badges"><a class="badge" href="../index.html">User Defined Types</a><span class="badge">member</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Type typename</code></pre>
+<pre class="code sig"><code>Declare Const Sub|Function|Property|Operator ...</code></pre>
+<pre class="code sig"><code>End Type</code></pre>
+<pre class="code sig"><code>[Const] Sub|Function|... typename ...</code></pre>
+<pre class="code sig"><code>...</code></pre>
+<pre class="code sig"><code>End Sub|Function|...</code></pre>
+<h2>Description</h2>
+<br>
+Specifies that a method does not change the object it is called on. The hidden <code><a href="this.html">This</a></code> parameter will be considered read-only. The declaration can be read as 'invoking a const method promises not to change the object', and the compiler will error if the member procedure tries to change any of the data fields, or calls a non-const member procedure. <br>
+<br>
+Read-only (<code><b>Const</b></code>) declarations are a measure of type safety that can be read as 'promises not to change.'  The compiler uses the const declarations to check operations on variables and parameters and generate an error at compile time if their data could potentially change.  There is no runtime overhead for using <code><b>Const</b></code> qualifiers since all of the checks are made at compile time.<br>
+<br>
+Constructors and destructors cannot be <code><b>Const</b></code> (not useful).<br>
+Member procedures can not be both <code><b>Const</b></code> and <code><a href="static-member.html">Static</a></code> since static member procedures do not have a hidden <code><a href="this.html">This</a></code> parameter.<br>
+<br>
+For methods with <code><b>Const</b></code> in their declaration, <code><b>Const</b></code> can also be specified on the corresponding method bodies, for improved code readability.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../variable-declarations/procedures/const.html">Const</a></code><br>
+<li> <code><a href="../../standard-data-types/procedures/const-qualifier.html">Const (Qualifier)</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code><br>
+<li> <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code><br>
+<br>
+</li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Const Member Procedures</span>
+
+
+
+<span class="tok-kw">Type</span> <span>foo</span>
+
+  <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span>c</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Const</span> <span class="tok-kw">Sub</span> <span>Inspect1</span><span>()</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Const</span> <span class="tok-kw">Sub</span> <span>Inspect2</span><span>()</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>Mutate1</span><span>()</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>Mutate2</span><span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-cm">''</span>
+
+<span class="tok-kw">Sub</span> <span>foo.Mutate1</span><span>()</span>
+
+  <span class="tok-cm">'' we can change non-const data fields</span>
+
+  <span>x</span> <span>=</span> <span class="tok-nu">1</span>
+
+
+
+  <span class="tok-cm">'' but we still can't change const data</span>
+
+  <span class="tok-cm">'' fields, they are promised not to change</span>
+
+  <span class="tok-cm">'' c = 1 '' Compile error</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">''</span>
+
+<span class="tok-kw">Sub</span> <span>foo.Mutate2</span><span>()</span>
+
+  <span class="tok-cm">'' we can call const members</span>
+
+  <span>Inspect1</span><span>()</span>
+
+
+
+  <span class="tok-cm">'' and non-const members</span>
+
+  <span>Mutate1</span><span>()</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">''</span>
+
+<span class="tok-kw">Sub</span> <span>foo.Inspect1</span><span>()</span>
+
+  <span class="tok-cm">'' can use data members</span>
+
+  <span class="tok-kw">Dim</span> <span>y</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span>y</span> <span>=</span> <span>c</span> <span>+</span> <span>x</span>
+
+
+
+  <span class="tok-cm">'' but not change them because Inspect1()</span>
+
+  <span class="tok-cm">'' is const and promises not to change foo</span>
+
+  <span class="tok-cm">'' x = 10 '' Compile error</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">''</span>
+
+<span class="tok-kw">Sub</span> <span>foo.Inspect2</span><span>()</span>
+
+  <span class="tok-cm">'' we can call const members</span>
+
+  <span>Inspect1</span><span>()</span>
+
+
+
+  <span class="tok-cm">'' but not non-const members</span>
+
+  <span class="tok-cm">'' Mutate1() '' Compile error</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgConstMember.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

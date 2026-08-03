@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pointers to Procedures — Help Center</title>
+<meta name="description" content="Pointers to Procedures — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/pointers-to-procedures.html">
+<meta property="og:title" content="Pointers to Procedures">
+<meta property="og:description" content="Pointers to Procedures — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/pointers-to-procedures.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/pointers-to-procedures.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Pointers to Procedures</h1>
+<h2>Documentation</h2>
+
+	Pointers that point to procedures<br>
+<br>
+Just as pointers can be made to point to an <code><a href="../../standard-data-types/procedures/integer.html">Integer</a></code> or <code><a href="../../standard-data-types/procedures/single.html">Single</a></code> type, pointers can also point to procedures, that is, they can store the address of a procedure.<br>
+<br>
+<div>Declaration</div><div><br>
+To declare a pointer to procedure, use the <code><a href="../../procedures/procedures/sub.html">Sub</a></code> or <code><a href="../../procedures/procedures/function.html">Function</a></code> keywords, followed by any parameters and return value type:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">' declares a pointer to sub procedure that takes no arguments</span>
+
+<span class="tok-kw">Dim</span> <span>pointerToProcedure</span> <span class="tok-kw">As</span> <span class="tok-kw">Sub</span></pre></code><br>
+<br>
+</div>Procedure pointers store procedure addresses, which are retrieved using <code><a href="../../operators/pointer-operators/procedures/operator-address-of.html">Operator @</a></code> (Address of) or the <code><a href="../../operators/pointer-operators/procedures/operator-procptr-procedure-pointer-and-vtable-index.html">Procptr Operator</a></code>:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">'' pfunc.bi</span>
+
+
+
+<span class="tok-kw">Function</span> <span class="tok-kw">Add</span> <span>(</span><span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>b</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Return</span> <span>a</span> <span>+</span> <span>b</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>pFunc</span> <span class="tok-kw">As</span> <span class="tok-kw">Function</span> <span>(</span><span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span>@</span><span class="tok-kw">Add</span></pre></code><br>
+</div></div><div>Calling a procedure pointer</div><div><br>
+The interesting thing about procedure pointers is that they can be called just like a procedure:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">'' .. Add and pFunc as before ..</span>
+
+<span>#include Once &quot;pfunc.bi&quot;
+
+</span>
+
+<span class="tok-kw">Print</span> <span>&quot;3 + 4 = &quot;</span> <span>&amp;</span> <span>pFunc</span><span>(</span><span class="tok-nu">3</span><span>,</span> <span class="tok-nu">4</span><span>)</span></pre></code><br>
+<br>
+</div>For a calling example of subroutine pointer, see the <code><a href="../../operators/pointer-operators/procedures/operator-address-of.html">Operator @ (Address Of)</a></code> page.<br>
+<br>
+<b>Note:</b> When calling a procedure through a procedure pointer, parentheses surrounding the argument list (even empty) are mandatory to resolve ambiguity with a simple access to the pointer value.<br>
+<br>
+</div><div>Passing procedure pointers to procedures</div><div><br>
+Passing procedure pointers to other procedures is similar as well:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">'' .. Add and pFunc as before ..</span>
+
+<span>#include Once &quot;pfunc.bi&quot;
+
+</span>
+
+<span class="tok-kw">Function</span> <span>DoOperation</span> <span>(</span><span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>b</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>operation</span> <span class="tok-kw">As</span> <span class="tok-kw">Function</span> <span>(</span><span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Return</span> <span>operation</span><span>(</span><span>a</span><span>,</span> <span>b</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;3 + 4 = &quot;</span> <span>&amp;</span> <span>DoOperation</span><span>(</span><span class="tok-nu">3</span><span>,</span> <span class="tok-nu">4</span><span>,</span> <span>@</span><span class="tok-kw">Add</span><span>)</span></pre></code><br>
+<br>
+</div>Because procedure pointer declarations can be lengthy, it often helps to create a type alias for the procedure pointer, in an effort to make clearer code:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">'' .. Add and pFunc as before ..</span>
+
+<span>#include Once &quot;pfunc.bi&quot;
+
+</span>
+
+<span class="tok-kw">Type</span> <span>operation</span> <span class="tok-kw">As</span> <span class="tok-kw">Function</span> <span>(</span><span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-kw">Function</span> <span>DoOperation</span> <span>(</span><span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>b</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>op</span> <span class="tok-kw">As</span> <span>operation</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Return</span> <span>op</span><span>(</span><span>a</span><span>,</span> <span>b</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;3 + 4 = &quot;</span> <span>&amp;</span> <span>DoOperation</span><span>(</span><span class="tok-nu">3</span><span>,</span> <span class="tok-nu">4</span><span>,</span> <span>@</span><span class="tok-kw">Add</span><span>)</span></pre></code><br>
+</div></div><div>Pointers to procedure pointers</div><div><br>
+Because the syntax of a procedure pointer does not allow declaration of a pointer to procedure pointer when the procedure is a function (because ptr applies on return type and not on procedure), a type alias is used. Notice how it is necessary to surround a dereferenced pointer to procedure pointer by parenthesis when calling the procedure. This is because the function-call operator '()' has higher precedence than <code><a href="../../operators/pointer-operators/procedures/operator-value-of.html">Operator *</a></code> (Value of):<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Function</span> <span>Halve</span> <span>(</span><span class="tok-kw">ByVal</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Return</span> <span>i</span> <span>/</span> <span class="tok-nu">2</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Function</span> <span>Triple</span> <span>(</span><span class="tok-kw">ByVal</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Return</span> <span>i</span> <span>*</span> <span class="tok-nu">3</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Type</span> <span>operation</span> <span class="tok-kw">As</span> <span class="tok-kw">Function</span> <span>(</span><span class="tok-kw">ByVal</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-cm">' an array of procedure pointers, NULL indicates the</span>
+
+<span class="tok-cm">' end of the array</span>
+
+<span class="tok-kw">Dim</span> <span>operations</span><span>(</span><span class="tok-nu">20</span><span>)</span> <span class="tok-kw">As</span> <span>operation</span> <span>=</span> <span>_</span>
+
+<span>{</span> <span>@</span><span>Halve</span><span>,</span> <span>@</span><span>Triple</span><span>,</span> <span class="tok-nu">0</span> <span>}</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">280</span>
+
+
+
+<span class="tok-cm">' apply all of the operations to a variable by iterating through the array</span>
+
+<span class="tok-cm">' with a pointer to procedure pointer</span>
+
+<span class="tok-kw">Dim</span> <span>op</span> <span class="tok-kw">As</span> <span>operation</span> <span class="tok-kw">Ptr</span> <span>=</span> <span>@</span><span>operations</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+<span class="tok-kw">While</span> <span>(*</span><span>op</span> <span>&lt;&gt;</span> <span class="tok-nu">0</span><span>)</span>
+
+    <span class="tok-cm">' call the procedure that is pointed to, note the extra parenthesis</span>
+
+    <span>i</span> <span>=</span> <span>(*</span><span>op</span><span>)(</span><span>i</span><span>)</span>
+
+    <span>op</span> <span>+=</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Wend</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Value of 'i' after all operations performed: &quot;</span> <span>&amp;</span> <span>i</span></pre></code><br>
+</div></div><div>Pointers to member procedures</div><div><br>
+Before fbc 1.10.0, method pointers are not implemented yet, but it is possible to work-around that by using a static wrapper:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">/''</span>
+
+<span class="tok-cm"> ' This example shows, before fbc 1.10.0, how you can simulate getting a class method pointer, </span>
+
+<span class="tok-cm"> ' until support is properly implemented in the compiler.</span>
+
+<span class="tok-cm"> '</span>
+
+<span class="tok-cm"> ' When this is supported (since fbc 1.10.0), you will only need to remove the static wrapper</span>
+
+<span class="tok-cm"> ' function presented here, to maintain compatibility. </span>
+
+<span class="tok-cm"> '/</span>
+
+
+
+<span class="tok-kw">Type</span> <span>T</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>test</span><span>(</span><span class="tok-kw">ByVal</span> <span>number</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>test</span><span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">This</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByVal</span> <span>number</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>i</span> <span>=</span> <span class="tok-nu">420</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Function</span> <span>T.test</span><span>(</span><span class="tok-kw">ByVal</span> <span>number</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Return</span> <span>i</span> <span>+</span> <span>number</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Function</span> <span>T.test</span><span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">This</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByVal</span> <span>number</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Return</span> <span>this.test</span><span>(</span><span>number</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>p</span> <span class="tok-kw">As</span> <span class="tok-kw">Function</span><span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByVal</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span>p</span> <span>=</span> <span>@</span><span>T.test</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>T</span> <span>obj</span>
+
+
+
+<span class="tok-kw">Print</span> <span>p</span><span>(</span><span>obj</span><span>,</span> <span class="tok-nu">69</span><span>)</span> <span class="tok-cm">'' prints 489</span></pre></code><br>
+</div>Since fbc 1.10.0, method pointers are implemented via updating the 'Procptr' operator:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">/''</span>
+
+<span class="tok-cm"> ' This example shows, since fbc 1.10.0, how to directly obtain a class method pointer,</span>
+
+<span class="tok-cm"> '/</span>
+
+
+
+<span class="tok-kw">Type</span> <span>T</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>test</span><span>(</span><span class="tok-kw">ByVal</span> <span>number</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>i</span> <span>=</span> <span class="tok-nu">420</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Function</span> <span>T.test</span><span>(</span><span class="tok-kw">ByVal</span> <span>number</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Return</span> <span>i</span> <span>+</span> <span>number</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>p</span> <span class="tok-kw">As</span> <span class="tok-kw">Function</span><span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByVal</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span>p</span> <span>=</span> <span class="tok-kw">ProcPtr</span><span>(</span><span>T.test</span><span>)</span>  <span class="tok-cm">'' or 'p = @T.test'</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>T</span> <span>obj</span>
+
+
+
+<span class="tok-kw">Print</span> <span>p</span><span>(</span><span>obj</span><span>,</span> <span class="tok-nu">69</span><span>)</span> <span class="tok-cm">'' prints 489</span></pre></code><br>
+</div></div><div>Typing rule for procedure pointer declaration</div><div><br>
+The procedure pointer declaration allows to assign to the pointer:<br>
+<ul><ul><li> not only a procedure with the same parameters types, and if any, the same result type,<br>
+<li> but also a procedure with contravariant parameters (by reference or by pointer) or/and a covariant result (by reference or by pointer).<br>
+<br>
+</li></li></ul></ul>Assigning to a function pointer a fonction with a contravariant parameter and a covariant result, both by pointer:		<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">'Example of assigning to a function pointer a function with:</span>
+
+<span class="tok-cm">'   - a contravariant parameter by pointer,</span>
+
+<span class="tok-cm">'   - and a covariant result by pointer.</span>
+
+
+
+<span class="tok-kw">Type</span> <span>A</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span> <span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-kw">Constructor</span> <span>A</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    A instance constructed&quot;</span><span>,</span> <span>@</span><span class="tok-kw">This</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+<span class="tok-kw">Destructor</span> <span>A</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    A instance destroyed&quot;</span><span>,</span> <span>@</span><span class="tok-kw">This</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+<span class="tok-kw">Type</span> <span>B</span> <span class="tok-kw">Extends</span> <span>A</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>J</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>a0</span> <span class="tok-kw">As</span> <span>A</span><span>)</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span> <span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-kw">Constructor</span> <span>B</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    B instance constructed&quot;</span><span>,</span> <span>@</span><span class="tok-kw">This</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+<span class="tok-kw">Constructor</span> <span>B</span> <span>(</span><span class="tok-kw">ByRef</span> <span>a0</span> <span class="tok-kw">As</span> <span>A</span><span>)</span>
+
+    <span class="tok-kw">Cast</span><span>(</span><span>A</span><span>,</span> <span class="tok-kw">This</span><span>)</span> <span>=</span> <span>a0</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    B instance constructed&quot;</span><span>,</span> <span>@</span><span class="tok-kw">This</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+<span class="tok-kw">Destructor</span> <span>B</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    B instance destroyed&quot;</span><span>,</span> <span>@</span><span class="tok-kw">This</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+<span class="tok-kw">Function</span> <span>f</span> <span>(</span><span class="tok-kw">ByVal</span> <span>pa0</span> <span class="tok-kw">As</span> <span>A</span> <span class="tok-kw">Ptr</span><span>)</span> <span class="tok-kw">As</span> <span>B</span> <span class="tok-kw">Ptr</span>
+
+    <span class="tok-kw">Return</span> <span class="tok-kw">New</span> <span>B</span><span>(*</span><span>pa0</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Scope</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Function</span> <span>(</span><span class="tok-kw">ByVal</span> <span class="tok-kw">As</span> <span>B</span> <span class="tok-kw">Ptr</span><span>)</span> <span class="tok-kw">As</span> <span>A</span> <span class="tok-kw">Ptr</span> <span>pf</span> <span>=</span> <span>@</span><span>f</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'Scope : Dim As B b0':&quot;</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>B</span> <span>b0</span>
+
+    <span class="tok-kw">Print</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'Dim As A Ptr pab = pf(@b0)':&quot;</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>A</span> <span class="tok-kw">Ptr</span> <span>pab</span> <span>=</span> <span>pf</span><span>(@</span><span>b0</span><span>)</span>
+
+    <span class="tok-kw">Print</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'Delete CPtr(B Ptr, pab)':&quot;</span>
+
+    <span class="tok-kw">Delete</span> <span class="tok-kw">CPtr</span><span>(</span><span>B</span> <span class="tok-kw">Ptr</span><span>,</span> <span>pab</span><span>)</span>
+
+    <span class="tok-kw">Print</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'End Scope':&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Scope</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+</div>Assigning to a function pointer a function with a contravariant parameter and a covariant result, both by reference:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">'Example of assigning to a function pointer a function with:</span>
+
+<span class="tok-cm">'   - a contravariant parameter by reference,</span>
+
+<span class="tok-cm">'   - and a covariant result by reference.</span>
+
+
+
+<span class="tok-kw">Type</span> <span>A</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Destructor</span> <span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-kw">Constructor</span> <span>A</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    A instance constructed&quot;</span><span>,</span> <span>@</span><span class="tok-kw">This</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+<span class="tok-kw">Destructor</span> <span>A</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    A instance destroyed&quot;</span><span>,</span> <span>@</span><span class="tok-kw">This</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+<span class="tok-kw">Type</span> <span>B</span> <span class="tok-kw">Extends</span> <span>A</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>J</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>a0</span> <span class="tok-kw">As</span> <span>A</span><span>)</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Destructor</span> <span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-kw">Constructor</span> <span>B</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    B instance constructed&quot;</span><span>,</span> <span>@</span><span class="tok-kw">This</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+<span class="tok-kw">Constructor</span> <span>B</span> <span>(</span><span class="tok-kw">ByRef</span> <span>a0</span> <span class="tok-kw">As</span> <span>A</span><span>)</span>
+
+    <span class="tok-kw">Cast</span><span>(</span><span>A</span><span>,</span> <span class="tok-kw">This</span><span>)</span> <span>=</span> <span>a0</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    B instance constructed&quot;</span><span>,</span> <span>@</span><span class="tok-kw">This</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+<span class="tok-kw">Destructor</span> <span>B</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    B instance destroyed&quot;</span><span>,</span> <span>@</span><span class="tok-kw">This</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+<span class="tok-kw">Function</span> <span>f</span> <span>(</span><span class="tok-kw">ByRef</span> <span>a0</span> <span class="tok-kw">As</span> <span>A</span><span>)</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>B</span>
+
+    <span class="tok-kw">Return</span> <span>*</span><span class="tok-kw">New</span> <span>B</span><span>(</span><span>a0</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Scope</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Function</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>B</span><span>)</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>A</span> <span>pf</span> <span>=</span> <span>@</span><span>f</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'Scope : Dim As B b0':&quot;</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>B</span> <span>b0</span>
+
+    <span class="tok-kw">Print</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'Dim Byref As A rab = pf(b0)':&quot;</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>A</span> <span>rab</span> <span>=</span> <span>pf</span><span>(</span><span>b0</span><span>)</span>
+
+    <span class="tok-kw">Print</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'Delete @rab':&quot;</span>
+
+    <span class="tok-kw">Delete</span> <span>@</span><span>rab</span>
+
+    <span class="tok-kw">Print</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'End Scope':&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Scope</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+</div></div><div>See also</div><div><br>
+<ul><li> <code><a href="../../procedures/procedures/sub.html">Sub</a></code><br>
+<li> <code><a href="../../procedures/procedures/function.html">Function</a></code><br>
+<li> <code><a href="../../standard-data-types/procedures/pointer-ptr.html">Pointer</a></code><br>
+<li> <code><a href="../../operators/pointer-operators/procedures/operator-address-of.html">Operator @ (Address Of)</a></code><br>
+<li> <code><a href="../../operators/pointer-operators/procedures/operator-procptr-procedure-pointer-and-vtable-index.html">Procptr Operator</a></code><br>
+<br>
+</li></li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

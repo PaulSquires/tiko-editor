@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operator [] (Pointer Index) — Help Center</title>
+<meta name="description" content="Returns a reference to memory offset from an address">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/operators/indexing-operators/procedures/operator-pointer-index.html">
+<meta property="og:title" content="Operator [] (Pointer Index)">
+<meta property="og:description" content="Returns a reference to memory offset from an address">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/operators/indexing-operators/procedures/operator-pointer-index.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/operators/indexing-operators/procedures/operator-pointer-index.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Operator [] (Pointer Index)<span class="h1kind">operator</span></h1>
+<p class="lede">Returns a reference to memory offset from an address</p>
+<div class="badges"><a class="badge" href="../../index.html">Operators</a><span class="badge">operator</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Operator [] ( ByRef lhs As T Pointer, ByRef rhs As Integer ) ByRef As T</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>lhs</code></td><td></td><td>The base address.</td></tr><tr><td><code>rhs</code></td><td></td><td>A signed offset from</td></tr><tr><td><code>lhs</code></td><td></td><td>.</td></tr><tr><td><code>T</code></td><td></td><td>Any data type.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+This operator returns a reference to a value some distance in memory from a base address. It is essentially shorthand for "<code><a href="../../pointer-operators/procedures/operator-value-of.html">*</a>(<i>lhs</i> <a href="../../operators/procedures/operator-addition.html">+</a> <i>rhs</i>)</code>" because the reference can be thought of as a pointer having as value the memory location "<code>(<i>lhs</i> <a href="../../operators/procedures/operator-addition.html">+</a> <i>rhs</i>)</code>", and which is implicitly dereferenced; both do exactly the same thing.<br>
+Like pointer arithmetic, any type of <code><a href="../../../standard-data-types/procedures/pointer-ptr.html">Pointer</a></code> can be indexed except for an <code><a href="../../../procedures/procedures/any.html">Any</a></code> <code><a href="../../../standard-data-types/procedures/pointer-ptr.html">Pointer</a></code>. Also, like pointer arithmetic, it is up to the user to make sure meaningful data is being accessed.<br>
+<br>
+When indexing a '2-dimensional' pointer (i.e. a <code><i>T</i> Ptr Ptr</code>), the first (leftmost) index is applied before the second: For example, <code><i>Pt</i>[<i>I1</i>][<i>I2</i>]</code> = <code>*(<i>Pt</i>[<i>I1</i>] + <i>I2</i>)</code> = <code>*(*(<i>Pt</i> + <i>I1</i>) + <i>I2</i>)</code><br>
+In general, when using an '<i>n</i>-dimensional' pointer: <code><i>Pt</i>[<i>I1</i>][<i>I2</i>].....[<i>In</i>]</code>, the index order (from left to right) corresponds to the dereferencing order.<br>
+<br>
+This operator must not be used in case of null pointer because reference is undefined (inducing runtime error).<br>
+Otherwise, the user must ensure that the offset value (<code><i>rhs</i></code>) is in a range that allows an access to valid memory. Outside this range, results are undefined.<br>
+<br>
+This operator can be overloaded for user-defined types as a member <code><a href="../../../user-defined-types/procedures/operator.html">Operator</a></code> using the appropriate syntax.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<div class="indent"><i>result</i> = <i>lhs</i> <b>[</b> <i>rhs</i> <b>]</b><br>
+</div>or<br>
+<div class="indent"><i>lhs</i> <b>[</b> <i>rhs</i> <b>]</b> = <i>value</i><br>
+</div></code><br>
+
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <a href="../../../tutorials/programmer-s-guide/pointer-arithmetic.html">Pointer Arithmetic</a><br>
+<li> <code><a href="../../pointer-operators/procedures/operator-value-of.html">Operator * (Value Of)</a></code><br>
+<li> <code><a href="operator-string-index.html">Operator [] (String Index)</a></code><br>
+<li> <code><a href="operator-array-index.html">Operator () (Array Index)</a></code><br>
+<li> <code><a href="../../operators/procedures/operator-addition.html">Operator + (Add)</a></code><br>
+<li> <code><a href="../../arithmetic-operators/procedures/operator-subtract.html">Operator - (Subtract)</a></code><br>
+<li> <a href="../../pointer-operators/pointer-operators.html">Pointer Operators</a><br>
+<br>
+</li></li></li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' initialize a 5-element array</span>
+
+<span class="tok-kw">Dim</span> <span>array</span><span>(</span><span class="tok-nu">4</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span>{</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span><span>,</span> <span class="tok-nu">3</span><span>,</span> <span class="tok-nu">4</span> <span>}</span>
+
+
+
+<span class="tok-cm">'' point to the first element</span>
+
+<span class="tok-kw">Dim</span> <span>p</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span> <span>=</span> <span>@</span><span>array</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+
+
+<span class="tok-cm">'' use pointer indexing to output array elements</span>
+
+<span class="tok-kw">For</span> <span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">4</span>
+
+    <span class="tok-kw">Print</span> <span>p</span><span>[</span><span>index</span><span>];</span>
+
+<span class="tok-kw">Next</span>
+
+<span class="tok-kw">Print</span></pre></code><br>
+<br>
+Will give the output,<br>
+<br>
+<pre class="code"> 0 1 2 3 4
+</pre><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgOpPtrIndex.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

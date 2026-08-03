@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpPathGradientBrush.SetSurroundColors — Help Center</title>
+<meta name="description" content="Sets the surround colors of this brush.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgppathgradientbrush/cgppathgradientbrush-setsurroundcolors.html">
+<meta property="og:title" content="CGpPathGradientBrush.SetSurroundColors">
+<meta property="og:description" content="Sets the surround colors of this brush.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgppathgradientbrush/cgppathgradientbrush-setsurroundcolors.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgppathgradientbrush/cgppathgradientbrush-setsurroundcolors.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpbrush-class.html">CGpBrush Class</a></div>
+<h1>CGpPathGradientBrush.SetSurroundColors<span class="h1kind">method</span></h1>
+<p class="lede">Sets the surround colors of this brush.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpBrush.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION SetSurroundColors (BYVAL colors AS ARGB PTR, BYVAL count AS INT_ PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>colors</code></td><td></td><td>Pointer to an array of colors that specify the surround colors.</td></tr><tr><td><code>count</code></td><td></td><td>Out. Pointer to an integer that, on input, specifies the number of colors in the colors array. If the method succeeds, this parameter, on output, receives the number of surround colors set. If the method fails, this parameter does not receive a value.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h2>Description</h2>
+<p>Sets the surround colors of this path gradient brush. The surround colors are colors specified for discrete points on the brush's boundary path.</p>
+<h2>Remarks</h2>
+<p>A path gradient brush has a boundary path and a center point. The center point is set to a single color, but you can specify different colors for several points on the boundary. For example, suppose you specify red for the center color, and you specify blue, green, and yellow for distinct points on the boundary. Then as you move along the boundary, the color will change gradually from blue to green to yellow and back to blue. As you move along a straight line from any point on the boundary to the center point, the color will change from that boundary point's color to red.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates a PathGradientBrush object based on an array of three points ' that defines a triangular path. The code also initializes an array of three Color objects. ' The call to the PathGradientBrush::SetSurroundColors method associates each color in the ' color array with the corresponding (same index) point in the point array. After the surround ' colors of the path gradient brush have been set, the Graphics.FillRectangle method uses ' the path gradient brush to paint a rectangle that includes the triangular path. ' One edge of the rendered triangle changes gradually from red to green. The next edge ' changes gradually from green to black, and the third edge changes gradually from black ' to red. The code does not set the center color, so the center color has the default value ' of black. As you move along a straight line from any point on the boundary path (triangle) ' to the center point, the color changes gradually from that boundary point's color to black. ' ======================================================================================== SUB Example_SetSurroundColors (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scale transform graphics.ScaleTransformForDpi</p>
+<p>DIM points(0 TO 2) AS GpPoint = {(20, 20), (100, 20), (100, 100)} DIM pthGrBrush AS CGpPathGradientBrush = CGpPathGradientBrush(@points(0), 3)</p>
+<p>DIM nCount AS LONG = 3 DIM colors(0 TO 2) AS ARGB = {ARGB_RED, ARGB_BLUE, ARGB_AQUA} pthGrBrush.SetSurroundColors(@colors(0), @nCount)</p>
+<p>graphics.FillRectangle(@pthGrBrush, 0, 0, 200, 200)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpBrush.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpBrush.inc:630</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpBrush Classes.md</span></li><li>Topic: <a href="../cgpbrush-class.html">CGpBrush Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

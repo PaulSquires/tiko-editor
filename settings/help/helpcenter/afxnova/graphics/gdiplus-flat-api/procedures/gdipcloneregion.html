@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipCloneRegion — Help Center</title>
+<meta name="description" content="Makes a copy of this **Region** object and returns the address of the new **Region** object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipcloneregion.html">
+<meta property="og:title" content="GdipCloneRegion">
+<meta property="og:description" content="Makes a copy of this **Region** object and returns the address of the new **Region** object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipcloneregion.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipcloneregion.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../gdiplusregion.html">GdiPlusRegion</a></div>
+<h1>GdipCloneRegion<span class="h1kind">function</span></h1>
+<p class="lede">Makes a copy of this **Region** object and returns the address of the new **Region** object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipCloneRegion (BYVAL region AS GpRegion PTR, BYVAL cloneRegion AS GpRegion PTR PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>region</code></td><td></td><td>[in] Pointer to the <strong>Region</strong> object.</td></tr><tr><td><code>cloneRegion</code></td><td></td><td>[ou] Pointer to a variable that receives a pointer to the new <strong>Region</strong> object.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Makes a copy of a <strong>Region</strong> object and returns the address of the new <strong>Region</strong> object.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates two regions, one from a rectangle and the other from a path. ' Next, the code clones the region that was created from a path and uses a solid brush to ' fill the cloned region. Then, it forms the union of the two regions and fills it. ' ======================================================================================== SUB Example_CloneRegion (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create a Path DIM path AS GpPath PTR hStatus = GdipCreatePath(FillModeAlternate, @path)</p>
+<p>' // Add a closed curve to the Path DIM pts(5) AS GpPointF pts(0).x = 110 : pts(0).y = 20 pts(1).x = 120 : pts(1).y = 30 pts(2).x = 100 : pts(2).y = 60 pts(3).x = 120 : pts(3).y = 70 pts(4).x = 150 : pts(4).y = 60 pts(5).x = 140 : pts(5).y = 10 hStatus = GdipAddPathClosedCurve(path, @pts(0), 6)</p>
+<p>' // Create a Region object from a rectangle. DIM rcf AS GpRectF = (65, 15, 70, 45) DIM rectRegion AS GpRegion PTR hStatus = GdipCreateRegionRect(@rcf, @rectRegion)</p>
+<p>' // Create a region from a curved path. Dim pathRegion AS GpRegion PTR hStatus = GdipCreateRegionPath(path, @pathRegion)</p>
+<p>' // Make a copy (clone) of the curved region. DIM clonedRegion AS GpRegion PTR hStatus = GdipCloneRegion(pathRegion, @clonedRegion)</p>
+<p>' // Fill the cloned region with a red brush. DIM solidBrush AS GpSolidFill PTR hStatus = GdipCreateSolidFill(ARGB_RED, @solidBrush) hStatus = GdipFillRegion(graphics, solidBrush, clonedRegion)</p>
+<p>' // Form the union of the cloned region and the rectangular region. hStatus = GdipCombineRegionRect(clonedRegion, @rcf, CombineModeUnion)</p>
+<p>' // Fill the union of the two regions with a semitransparent blue brush. ' // Create brushes DIM alphaBrush AS GpSolidFill PTR hStatus = GdipCreateSolidFill(GDIP_ARGB(128, 0, 0, 255), @alphaBrush) hStatus = GdipFillRegion(graphics, alphaBrush, clonedRegion)</p>
+<p>' // Cleanup IF rectRegion THEN GdipDeleteRegion(rectRegion) IF pathRegion THEN GdipDeleteRegion(pathRegion) IF solidBrush THEN GdipDeleteBrush(solidBrush) IF alphaBrush THEN GdipDeleteBrush(alphaBrush) IF path THEN GdipDeletePath(path) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2356</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusRegion.md</span></li><li>Topic: <a href="../gdiplusregion.html">GdiPlusRegion</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

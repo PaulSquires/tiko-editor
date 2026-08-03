@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoRecord.MoveRecord — Help Center</title>
+<meta name="description" content="Moves an entity represented by a `Record` to another location.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecord/cadorecord-moverecord.html">
+<meta property="og:title" content="CAdoRecord.MoveRecord">
+<meta property="og:description" content="Moves an entity represented by a `Record` to another location.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecord/cadorecord-moverecord.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadorecord/cadorecord-moverecord.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadorecord-class.html">CAdoRecord Class</a></div>
+<h1>CAdoRecord.MoveRecord<span class="h1kind">method</span></h1>
+<p class="lede">Moves an entity represented by a `Record` to another location.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CADORecord.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION MoveRecord (BYREF wszSource AS WSTRING = &quot;&quot;, BYREF wszDestination AS WSTRING = &quot;&quot;, BYREF wszUserName AS WSTRING = &quot;&quot;, BYREF wszPassword AS WSTRING = &quot;&quot;, BYVAL Options AS MoveRecordOptionsEnum = adMoveUnspecified, BYVAL Async AS BOOLEAN = FALSE) AS DWSTRING</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszSource</code></td><td></td><td>Optional. A string value that contains a URL identifying the <code>Record</code> to be moved. If <em>Source</em> is omitted or specifies an empty string, the object represented by this <code>Record</code> is moved. For example, if the <code>Record</code> represents a file, the contents of the file are moved to the location specified by <em>Destination</em>.</td></tr><tr><td><code>wszDestination</code></td><td></td><td>Optional. A string value that contains a URL specifying the location where <em>Source</em> will be moved.</td></tr><tr><td><code>wszUserName</code></td><td></td><td>Optional. A string value that contains the user ID that, if needed, authorizes access to <em>Destination</em>.</td></tr><tr><td><code>wszPassword</code></td><td></td><td>Optional. A string value that contains the password that, if needed, verifies <em>UserName</em>.</td></tr><tr><td><code>Options</code></td><td></td><td>Optional. A <strong>MoveRecordOptionsEnum</strong> value whose default value is <strong>adMoveUnspecified</strong>. Specifies the behavior of this method.</td></tr><tr><td><code>Async</code></td><td></td><td>Optional. A Boolean value that, when True, specifies that this operation should be asynchronous.</td></tr><tr><td><code>adMoveUnspecified</code></td><td></td><td>Default. Performs the default move operation: The operation fails if the destination file or directory already exists, and the operation updates hypertext links.</td></tr><tr><td><code>adMoveOverWrite</code></td><td></td><td>Overwrites the destination file or directory, even if it already exists.</td></tr><tr><td><code>adMoveDontUpdateLinks</code></td><td></td><td>Modifies the default behavior of <strong>MoveRecord</strong> method by not updating the hypertext links of the source Record. The default behavior depends on the capabilities of the provider. Move operation updates links if the provider is capable. If the provider cannot fix links or if this value is not specified, then the move succeeds even when links have not been fixed.</td></tr><tr><td><code>adMoveAllowEmulation</code></td><td></td><td>Requests that the provider attempt to simulate the move (using download, upload, and delete operations). If the attempt to move the Record fails because the destination URL is on a different server or serviced by a different provider than the source, this may cause increased latency or data loss, due to different provider capabilities when moving resources between providers.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Moves a entity represented by a <code>Record</code> to another location.</p>
+<h2>Remarks</h2>
+<p>The values of <em>Source</em> and <em>Destination</em> must not be identical; otherwise, a run-time error occurs. At least one of the server, path, or resource names must differ.</p>
+<p>For files moved using the Internet Publishing Provider, this method updates all hypertext links in files being moved unless otherwise specified by Options. This method fails if <em>Destination</em> identifies an existing object (for example, a file or directory), unless <strong>adMoveOverWrite</strong> is specified.</p>
+<p><strong>Note</strong>: Use the <strong>adMoveOverWrite</strong> option judiciously. For example, specifying this option when moving a file to a directory will delete the directory and replace it with the file.</p>
+<p>Certain attributes of the <code>Record</code> object, such as the <strong>ParentURL</strong> property, will not be updated after this operation completes. <strong>Refresh</strong> the <code>Record</code> object's properties by closing the <code>Record</code>, then re-opening it with the URL of the location where the file or directory was moved.</p>
+<p>If this <code>Record</code> was obtained from a <code>Recordset</code>, the new location of the moved file or directory will not be reflected immediately in the <code>Recordset</code>. <strong>Refresh</strong> the <code>Recordset</code> by closing and re-opening it.</p>
+<p><strong>Note</strong>: URLs using the http scheme will automatically invoke the Microsoft OLE DB Provider for Internet Publishing.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CADORecord.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoRecord.inc:350</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoRecord Class.md</span></li><li>Topic: <a href="../cadorecord-class.html">CAdoRecord Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

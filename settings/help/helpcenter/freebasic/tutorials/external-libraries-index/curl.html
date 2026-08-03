@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>curl — Help Center</title>
+<meta name="description" content="curl — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/external-libraries-index/curl.html">
+<meta property="og:title" content="curl">
+<meta property="og:description" content="curl — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/external-libraries-index/curl.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/external-libraries-index/curl.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>curl</h1>
+<h2>Documentation</h2>
+
+	Free and easy-to-use client-side URL transfer library supporting almost every protocol.<br>
+<br>
+Website: https://curl.haxx.se/libcurl/<br>
+Platforms supported: Win32, Linux, DOS<br>
+Headers to include: curl.bi<br>
+Header version: 7.44.0<br>
+Examples: in examples/network/curl/<br>
+<br>
+<div>Example</div><div><br>
+<code><pre class="code"><span class="tok-cm">'' Curl HTTP Get example</span>
+
+
+
+<span>#include Once &quot;curl.bi&quot;
+
+#include Once &quot;crt/string.bi&quot;
+
+</span>
+
+<span class="tok-cm">'' this callback will be called when any data is received</span>
+
+<span class="tok-kw">Private</span> <span class="tok-kw">Function</span> <span>write_callback</span> <span class="tok-kw">cdecl</span> <span>_</span>
+
+    <span>(</span> <span>_</span>
+
+        <span class="tok-kw">ByVal</span> <span>buffer</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span> <span class="tok-kw">Ptr</span><span>,</span> <span>_</span>
+
+        <span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>_</span>
+
+        <span class="tok-kw">ByVal</span> <span>nitems</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>_</span>
+
+        <span class="tok-kw">ByVal</span> <span>outstream</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>_</span>
+
+    <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+    <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span> <span>zstr</span> <span>=</span> <span class="tok-nu">0</span>
+
+    <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>maxbytes</span> <span>=</span> <span class="tok-nu">0</span>
+
+
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>bytes</span> <span>=</span> <span>size</span> <span>*</span> <span>nitems</span>
+
+
+
+    <span class="tok-cm">'' current zstring buffer too small?</span>
+
+    <span class="tok-kw">If</span><span>(</span> <span>maxbytes</span> <span>&lt;</span> <span>bytes</span> <span>)</span> <span class="tok-kw">Then</span>
+
+        <span>zstr</span> <span>=</span> <span class="tok-kw">Reallocate</span><span>(</span> <span>zstr</span><span>,</span> <span>bytes</span> <span>+</span> <span class="tok-nu">1</span> <span>)</span>
+
+        <span>maxbytes</span> <span>=</span> <span>bytes</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+    <span class="tok-cm">'' &quot;buffer&quot; is not null-terminated, so we must dup it and add the null-term</span>
+
+    <span>memcpy</span><span>(</span> <span>zstr</span><span>,</span> <span>buffer</span><span>,</span> <span>bytes</span> <span>)</span>
+
+    <span>zstr</span><span>[</span><span>bytes</span><span>]</span> <span>=</span> <span class="tok-nu">0</span>
+
+
+
+    <span class="tok-cm">'' just print it..</span>
+
+    <span class="tok-kw">Print</span> <span>*</span><span>zstr</span>
+
+
+
+    <span class="tok-kw">Return</span> <span>bytes</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+    <span class="tok-cm">'' init</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>CURL</span> <span class="tok-kw">Ptr</span> <span>curl</span> <span>=</span> <span>curl_easy_init</span><span>(</span> <span>)</span>
+
+    <span class="tok-kw">If</span><span>(</span> <span>curl</span> <span>=</span> <span class="tok-nu">0</span> <span>)</span> <span class="tok-kw">Then</span>
+
+        <span class="tok-kw">End</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+    <span class="tok-cm">'' set url and callback</span>
+
+    <span>curl_easy_setopt</span><span>(</span> <span>curl</span><span>,</span> <span>CURLOPT_URL</span><span>,</span> <span>&quot;freebasic.net&quot;</span> <span>)</span>
+
+    <span>curl_easy_setopt</span><span>(</span> <span>curl</span><span>,</span> <span>CURLOPT_WRITEFUNCTION</span><span>,</span> <span>@</span><span>write_callback</span> <span>)</span>
+
+
+
+    <span class="tok-cm">'' execute..</span>
+
+    <span>curl_easy_perform</span><span>(</span> <span>curl</span> <span>)</span>
+
+
+
+    <span class="tok-cm">'' shutdown</span>
+
+    <span>curl_easy_cleanup</span><span>(</span> <span>curl</span> <span>)</span></pre></code><br>
+<br>
+</div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

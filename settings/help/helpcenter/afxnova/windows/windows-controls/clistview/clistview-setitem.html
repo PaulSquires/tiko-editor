@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CListView.SetItem — Help Center</title>
+<meta name="description" content="Sets some or all of a list-view item&#x27;s attributes.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/clistview/clistview-setitem.html">
+<meta property="og:title" content="CListView.SetItem">
+<meta property="og:description" content="Sets some or all of a list-view item&#x27;s attributes.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/clistview/clistview-setitem.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/clistview/clistview-setitem.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../clistview-class.html">CListView Class</a></div>
+<h1>CListView.SetItem<span class="h1kind">method</span></h1>
+<p class="lede">Sets some or all of a list-view item&#x27;s attributes.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge">CListView.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION SetItem (BYVAL hListView AS HWND, BYVAL pitem AS LVITEMW PTR) AS BOOLEAN</code></pre>
+<pre class="code sig"><code>FUNCTION SetItem (BYVAL hListView AS HWND, BYREF item AS LVITEMW) AS BOOLEAN</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hListView</code></td><td></td><td>Handle to the ListView control.</td></tr><tr><td><code>pitem</code></td><td></td><td>A pointer to an <strong>LVITEMW</strong> structure that contains the new item attributes. The <strong>iItem</strong> and <strong>iSubItem</strong> members identify the item or subitem, and the mask member specifies which attributes to set. If the mask member specifies the <strong>LVIF_TEXT</strong> value, the <strong>pszText</strong> member is the address of a null-terminated string and the <strong>cchTextMax</strong> member is ignored. If the mask member specifies the LVIF_STATE value, the <strong>stateMask</strong> member specifies which item states to change, and the state member contains the values for those states.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>Returns TRUE if successful, or FALSE otherwise.</p>
+<h2>Description</h2>
+<p>Sets some or all of a list-view item's attributes.</p>
+<h2>Remarks</h2>
+<p>To set the attributes of a list-view item, set the iItem member of the <strong>LVITEM"</strong> structure to the index of the item, and set the <strong>iSubItem</strong> member to zero. For an item, you can use the state, <strong>pszText</strong>, <strong>iImage</strong>, and <strong>lParam</strong> members of the <strong>LVITEMW</strong> structure to modify these item parameters.</p>
+<p>To set the text of a subitem, set the <strong>iItem</strong> and <strong>iSubItem</strong> members to indicate the specific subitem, and use the <strong>pszText</strong> member to specify the text. Alternatively, you can use the <strong>SetItemText</strong> method to set the text of a subitem. You cannot set the <strong>state</strong> or <strong>lParam</strong> members for subitems because subitems do not have these attributes. In version 4.70 and later, you can set the <strong>iImage</strong> member for subitems. The subitem image will be displayed if the list-view control has the <strong>LVS_EX_SUBITEMIMAGES</strong> extended style. Previous versions will ignore the subitem image.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CListView.inc</code></li><li>Defined in <span class="srcref">AfxNova/CListView.inc:1641</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/CListView Class.md</span></li><li>Topic: <a href="../clistview-class.html">CListView Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

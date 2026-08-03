@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CXpButton.SetTextFormat — Help Center</title>
+<meta name="description" content="CXpButton.SetTextFormat — AfxNova method reference.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/uncategorised/cxpbutton/cxpbutton-settextformat.html">
+<meta property="og:title" content="CXpButton.SetTextFormat">
+<meta property="og:description" content="CXpButton.SetTextFormat — AfxNova method reference.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/uncategorised/cxpbutton/cxpbutton-settextformat.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/uncategorised/cxpbutton/cxpbutton-settextformat.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova</div>
+<h1>CXpButton.SetTextFormat<span class="h1kind">method</span></h1>
+<div class="badges"><a class="badge" href="../index.html">Uncategorised</a><span class="badge">method</span><span class="badge">CXpButton.inc</span><span class="badge badge--warn">undocumented</span></div>
+<div class="note note--warn"><strong>Not documented upstream.</strong> This symbol was found in the AfxNova source but appears in no documentation topic. The signature below is read directly from the code; any description comes from the source comments.</div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PRIVATE SUB CXpButton.SetTextFormat (BYVAL dwTextFlags AS DWORD, BYVAL fRedraw AS LONG = FALSE)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>dwTextFlags</code></td><td></td><td>= Format values (default DT_CENTER OR DT_VCENTER OR DT_SINGLELINE)</td></tr><tr><td><code>DT_BOTTOM</code></td><td></td><td>= Renders the text string at the bottom of the display rectangle. This value is used only with the DT_SINGLELINE value.</td></tr><tr><td><code>DT_CALCRECT</code></td><td></td><td>= Determines the width and height of the display rectangle.</td></tr><tr><td><code>DT_CENTER</code></td><td></td><td>= Centers text horizontally in the display rectangle.</td></tr><tr><td><code>DT_EDITCONTRO</code></td><td></td><td>= Duplicates the text-displaying characteristics of a multiline edit control. Specifically, the average character width is calculated in the same manner as for an edit control, and the function does not display a partially visible last line.</td></tr><tr><td><code>DT_END_ELLIPSIS</code></td><td></td><td>= Truncates a text string that is wider than the display rectangle and adds an ellipsis to indicate the truncation. The string is not modified unless the DT_MODIFYSTRING flag is specified.</td></tr><tr><td><code>DT_EXPANDTABS</code></td><td></td><td>= Expands tab characters. The default number of characters per tab is eight. The DT_WORD_ELLIPSIS, DT_PATH_ELLIPSIS, and DT_END_ELLIPSIS values cannot be used with the DT_EXPANDTABS value.</td></tr><tr><td><code>DT_EXTERNALLEADING</code></td><td></td><td>= Includes the external leading of a font in the line height. Normally, external leading is not included in the height of a line of text.</td></tr><tr><td><code>DT_HIDEPREFIX</code></td><td></td><td>= Ignores the prefix character &amp; in the text. The letter that follows is not underlined, but other prefix characters are still processed. For example: input string: "A&amp;bc&amp;&amp;d" normal: "Abc&amp;d" DT_HIDEPREFIX: "Abc&amp;d"</td></tr><tr><td><code>DT_LEFT</code></td><td></td><td>= Aligns text to the left.</td></tr><tr><td><code>DT_MODIFYSTRING</code></td><td></td><td>= Modifies a string to match the displayed text. This value has no effect unless DT_END_ELLIPSIS or DT_PATH_ELLIPSIS is specified.</td></tr><tr><td><code>DT_NOCLIP</code></td><td></td><td>= Draws the text string without clipping the display rectangle.</td></tr><tr><td><code>DT_NOFULLWIDTHCHARBREAK</code></td><td></td><td>= Prevents a line break at a double-byte character set (DBCS), so that the line-breaking rule is equivalent to single-byte character set (SBCS). This can be used, for example, to make icon labels written in Korean text more readable. This value has no effect unless DT_WORDBREAK is specified.</td></tr><tr><td><code>DT_NOPREFIX</code></td><td></td><td>= Turns off processing of prefix characters. Normally, DrawThemeText interprets the prefix character &amp; as a directive to underscore the character that follows, and the prefix characters &amp;&amp; as a directive to print a single &amp;. By specifying DT_NOPREFIX, this processing is turned off. For example: input string: "A&amp;bc&amp;&amp;d" normal: "Abc&amp;d" DT_NOPREFIX: "A&amp;bc&amp;&amp;d"</td></tr><tr><td><code>DT_PATH_ELLIPSIS</code></td><td></td><td>= Replaces characters in the middle of text with an ellipsis so that the result fits in the display rectangle. If the string contains backslash (\) characters, DT_PATH_ELLIPSIS preserves as much as possible of the text after the last backslash. The string is not modified unless the DT_MODIFYSTRING flag is specified.</td></tr><tr><td><code>DT_PREFIXONLY</code></td><td></td><td>= Draws only an underline at the position of the character following the prefix character &amp;. Normally DrawThemeText interprets the &amp; as a directive to underline the character that follows and the prefix characters &amp;&amp; as a directive to print a single &amp;. By specifying DT_PREFIXONLY, no characters are drawn, only an underline. White spaces are placed in the positions where characters would normally appear. For example: input string: "A&amp;bc&amp;&amp;d" normal: "Abc&amp;d" DT_PREFIXONLY: " _   "</td></tr><tr><td><code>DT_RIGHT</code></td><td></td><td>= Aligns text to the right.</td></tr><tr><td><code>DT_RTLREADING</code></td><td></td><td>= Lays out text in right-to-left order for bidirectional text, for example, text in a Hebrew or Arabic font. The default direction for text is left-to-right.</td></tr><tr><td><code>DT_SINGLELINE</code></td><td></td><td>= Displays text on a single line. Carriage returns and line feeds do not break the line.</td></tr><tr><td><code>DT_TABSTOPS</code></td><td></td><td>= Sets tab stops.</td></tr><tr><td><code>DT_TOP</code></td><td></td><td>= Renders the text at the top of the display rectangle.</td></tr><tr><td><code>DT_VCENTER</code></td><td></td><td>= Centers text vertically. This value is used only with the DT_SINGLELINE value.</td></tr><tr><td><code>DT_WORDBREAK</code></td><td></td><td>= Breaks lines between words if a word would extend past the edge of the display rectangle. A carriage return/line feed (CR/LF) sequence also breaks the line.</td></tr><tr><td><code>DT_WORD_ELLIPSIS</code></td><td></td><td>= Truncates any word that does not fit in the display rectangle and adds an ellipsis.</td></tr><tr><td><code>fRedraw</code></td><td></td><td>= TRUE or FALSE (redraws the button to reflect the changes)</td></tr></tbody></table></div>
+<h2>Reference</h2>
+<ul><li>Include file <code>CXpButton.inc</code></li><li>Defined in <span class="srcref">AfxNova/CXpButton.inc:702</span></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

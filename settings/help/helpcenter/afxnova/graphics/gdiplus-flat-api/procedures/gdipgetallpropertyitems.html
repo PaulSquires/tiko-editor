@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipGetAllPropertyItems — Help Center</title>
+<meta name="description" content="Gets all the property items (metadata) stored in the specified **Image** object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipgetallpropertyitems.html">
+<meta property="og:title" content="GdipGetAllPropertyItems">
+<meta property="og:description" content="Gets all the property items (metadata) stored in the specified **Image** object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipgetallpropertyitems.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipgetallpropertyitems.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../image-functions.html">Image Functions</a></div>
+<h1>GdipGetAllPropertyItems<span class="h1kind">function</span></h1>
+<p class="lede">Gets all the property items (metadata) stored in the specified **Image** object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipGetAllPropertyItems (BYVAL image AS GpImage PTR, BYVAL totalBufferSize AS UINT, BYVAL numProperties AS UINT, BYVAL allItems AS PropertyItem PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>image</code></td><td></td><td>[in] Pointer to the <strong>Image</strong> object.</td></tr><tr><td><code>totalBufferSize</code></td><td></td><td>[in] Long integer value that specifies the size, in bytes, of the <em>allItems</em> buffer. Call the <strong>GdipGetPropertySize</strong> function to obtain the required size.</td></tr><tr><td><code>numProperties</code></td><td></td><td>[in] Long integer value that specifies the number of properties in the image. Call the <strong>GdipGetPropertySize</strong> function to obtain this number.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Gets all the property items (metadata) stored in the specified the image.</p>
+<h2>Examples</h2>
+<p>'#CONSOLE ON #define _WIN32_WINNT &amp;h0602 #INCLUDE ONCE "AfxNova/AfxGdiPlus.inc"</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Initialize GDI+ DIM token AS ULONG_PTR = AfxGdipInit</p>
+<p>' // Load the original image from file DIM image AS GpImage PTR hStatus = GdipLoadImageFromFile("climber.jpg", @image)</p>
+<p>' // Get total buffer size and number of properties DIM totalSize AS UINT, numProps AS UINT, buffer AS UBYTE PTR hStatus = GdipGetPropertySize(image, @totalSize, @numProps) IF hStatus = 0 THEN ' // Allocate buffer and retrieve all property items buffer = Allocate(totalSize) hStatus = GdipGetAllPropertyItems(image, totalSize, numProps, cast(PropertyItem PTR, buffer)) IF hStatus = 0 THEN</p>
+<pre class="code"><code>DIM propItem AS PropertyItem PTR
+  FOR i AS LONG = 0 TO numProps - 1
+     propItem = cast(PropertyItem PTR, buffer + i * SIZEOF(PropertyItem))
+     PRINT "Property ID: &amp;h"; HEX(propItem-&gt;id)
+     PRINT "Type: "; propItem-&gt;type; " Length: "; propItem-&gt;length
+     SELECT CASE propItem-&gt;type
+        CASE PropertyTagTypeASCII
+           PRINT "Value: "; *cast(ZSTRING PTR, propItem-&gt;value)
+        CASE PropertyTagTypeByte
+           DIM b AS UBYTE PTR = Cast(UBYTE PTR, propItem-&gt;value)
+           FOR j AS LONG = 0 TO propItem-&gt;length - 1
+              PRINT b[j]; " ";
+           NEXT
+           PRINT
+        CASE PropertyTagTypeShort
+           DIM s AS USHORT PTR = cast(USHORT PTR, propItem-&gt;value)
+              FOR j AS LONG = 0 TO propItem-&gt;length \ 2 - 1
+                 PRINT s[j]; " ";
+              NEXT
+              PRINT
+        CASE PropertyTagTypeLong
+           DIM l AS ULONG PTR = cast(ULONG PTR, propItem-&gt;value)
+           FOR j AS LONG = 0 TO propItem-&gt;length \ 4 - 1
+              PRINT l[j]; " ";
+           NEXT
+           PRINT
+        CASE ELSE
+           PRINT "Unsupported type"
+     END SELECT
+     PRINT "---------------------------"
+  NEXT</code></pre>
+<p>ELSE</p>
+<pre class="code"><code>PRINT "Failed to retrieve property items"</code></pre>
+<p>END IF END IF</p>
+<p>' // Cleanup IF buffer THEN Deallocate(buffer) IF image THEN GdipDisposeImage(image)</p>
+<p>' // Shutdown GDI+ AfxGdipShutdown token</p>
+<p>PRINT PRINT "Press any key" SLEEP</p>
+<p>The following example creates an Image object based on a JPEG file. The code calls the GetAllPropertyItems method of that Image object to obtain its property items (metadata).</p>
+<p>The following example creates an Image object based on a JPEG file. The code calls the GetAllPropertyItems method of that Image object to obtain its property items (metadata).</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2115</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusImage.md</span></li><li>Topic: <a href="../image-functions.html">Image Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

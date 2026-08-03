@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdiPlusTextureBrush — Help Center</title>
+<meta name="description" content="GpTextureBrush">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdiplustexturebrush.html">
+<meta property="og:title" content="GdiPlusTextureBrush">
+<meta property="og:description" content="GpTextureBrush">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdiplustexturebrush.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdiplustexturebrush.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../gdiplus-objects.html">GdiPlus Objects</a></div>
+<h1>GdiPlusTextureBrush<span class="h1kind">operator</span></h1>
+<p class="lede">GpTextureBrush</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">operator</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PRIVATE OPERATOR GdiPlusTextureBrush.@ () AS GpTextureBrush PTR PTR</code></pre>
+<h2>Description</h2>
+<p>The TextureBrush object is a Brush object that contains an Image object that is used for the fill. The fill image can be transformed by using the local Matrix object contained in the Brush object.</p>
+<h2>Examples</h2>
+<p>' ======================================================================================== TYPE GdiPlusTextureBrush Public: m_Texture AS GpTextureBrush PTR DECLARE CONSTRUCTOR (BYVAL image AS GpImage PTR, BYVAL nWrapMode AS WrapMode = WrapModeTile) DECLARE CONSTRUCTOR (BYVAL image AS GpImage PTR, BYVAL dstRect AS GpRectF PTR, BYVAL imageAttributes AS GpImageAttributes PTR = NULL) DECLARE CONSTRUCTOR (BYVAL image AS GpImage PTR, BYVAL dstRect AS GpRect PTR, BYVAL imageAttributes AS GpImageAttributes PTR = NULL) DECLARE CONSTRUCTOR (BYVAL image AS GpImage PTR, BYVAL dstX AS SINGLE, BYVAL dstY AS SINGLE, BYVAL dstWidth AS SINGLE, BYVAL dstHeight AS SINGLE, BYVAL imageAttributes AS GpImageAttributes PTR = NULL) DECLARE CONSTRUCTOR (BYVAL image AS GpImage PTR, BYVAL dstX AS INT_, BYVAL dstY AS INT_, BYVAL dstWidth AS INT_, BYVAL dstHeight AS INT_, BYVAL imageAttributes AS GpImageAttributes PTR = NULL) DECLARE CONSTRUCTOR (BYVAL image AS GpImage PTR, BYVAL nWrapMode AS WrapMode, BYVAL dstRect AS GpRect PTR) DECLARE CONSTRUCTOR (BYVAL image AS GpImage PTR, BYVAL nWrapMode AS WrapMode, BYVAL dstRect AS GpRectF PTR) DECLARE CONSTRUCTOR (BYVAL image AS GpImage PTR, BYVAL nWrapMode AS WrapMode, BYVAL dstX AS SINGLE, BYVAL dstY AS SINGLE, BYVAL dstWidth AS SINGLE, BYVAL dstHeight AS SINGLE) DECLARE CONSTRUCTOR (BYVAL image AS GpImage PTR, BYVAL nWrapMode AS WrapMode, BYVAL dstX AS INT_, BYVAL dstY AS INT_, BYVAL dstWidth AS INT_, BYVAL dstHeight AS INT_) DECLARE DESTRUCTOR DECLARE OPERATOR @ () AS GpTextureBrush PTR PTR DECLARE OPERATOR CAST () AS GpTextureBrush PTR END TYPE ' ========================================================================================</p>
+<p>' ===================================================================================== ' Creates a TextureBrush object based on an image and a wrap mode. The size of the brush ' defaults to the size of the image, so the entire image is used by the brush. ' ===================================================================================== PRIVATE CONSTRUCTOR GdiPlusTextureBrush (BYVAL image AS GpImage PTR, BYVAL nWrapMode AS WrapMode = WrapModeTile) SetLastError(GdipCreateTexture(image, nWrapmode, @m_Texture)) END CONSTRUCTOR ' ===================================================================================== ' ===================================================================================== ' Creates a TextureBrush object based on an image, a defining set of coordinates, and ' a set of image properties. ' ===================================================================================== PRIVATE CONSTRUCTOR GdiPlusTextureBrush (BYVAL image AS GpImage PTR, BYVAL dstRect AS GpRectF PTR, BYVAL imageAttributes AS GpImageAttributes PTR = NULL) SetLastError(GdipCreateTextureIA(image, imageAttributes, dstRect-&gt;x, dstRect-&gt;y, dstRect-&gt;Width, dstRect-&gt;Height, @m_Texture)) END CONSTRUCTOR ' ===================================================================================== ' ===================================================================================== PRIVATE CONSTRUCTOR GdiPlusTextureBrush (BYVAL image AS GpImage PTR, BYVAL dstRect AS GpRect PTR, BYVAL imageAttributes AS GpImageAttributes PTR = NULL) SetLastError(GdipCreateTextureIAI(image, imageAttributes, dstRect-&gt;x, dstRect-&gt;y, dstRect-&gt;Width, dstRect-&gt;Height, @m_Texture)) END CONSTRUCTOR ' ===================================================================================== ' ===================================================================================== PRIVATE CONSTRUCTOR GdiPlusTextureBrush (BYVAL image AS GpImage PTR, BYVAL dstX AS SINGLE, BYVAL dstY AS SINGLE, BYVAL dstWidth AS SINGLE, BYVAL dstHeight AS SINGLE, BYVAL imageAttributes AS GpImageAttributes PTR = NULL) SetLastError(GdipCreateTextureIA(image, imageAttributes, dstX, dstY, dstWidth, dstHeight, @m_Texture)) END CONSTRUCTOR ' ===================================================================================== ' ===================================================================================== PRIVATE CONSTRUCTOR GdiPlusTextureBrush (BYVAL image AS GpImage PTR, BYVAL dstX AS INT_, BYVAL dstY AS INT_, BYVAL dstWidth AS INT_, BYVAL dstHeight AS INT_, BYVAL imageAttributes AS GpImageAttributes PTR = NULL) SetLastError(GdipCreateTextureIA(image, imageAttributes, dstX, dstY, dstWidth, dstHeight, @m_Texture)) END CONSTRUCTOR ' ===================================================================================== ' ===================================================================================== ' Creates a TextureBrush object based on an image, a wrap mode, and a defining set of coordinates. ' ===================================================================================== PRIVATE CONSTRUCTOR GdiPlusTextureBrush (BYVAL image AS GpImage PTR, BYVAL nWrapMode AS WrapMode, BYVAL dstRect AS GpRect PTR) SetLastError(GdipCreateTexture2I(image, nWrapMode, dstRect-&gt;x, dstRect-&gt;y, dstRect-&gt;Width, dstRect-&gt;Height, @m_Texture)) END CONSTRUCTOR ' ===================================================================================== ' ===================================================================================== PRIVATE CONSTRUCTOR GdiPlusTextureBrush (BYVAL image AS GpImage PTR, BYVAL nWrapMode AS WrapMode, BYVAL dstRect AS GpRectF PTR) SetLastError(GdipCreateTexture2(image, nWrapMode, dstRect-&gt;x, dstRect-&gt;y, dstRect-&gt;Width, dstRect-&gt;Height, @m_Texture)) END CONSTRUCTOR ' ===================================================================================== ' ===================================================================================== PRIVATE CONSTRUCTOR GdiPlusTextureBrush (BYVAL image AS GpImage PTR, BYVAL nWrapMode AS WrapMode, BYVAL dstX AS SINGLE, BYVAL dstY AS SINGLE, BYVAL dstWidth AS SINGLE, BYVAL dstHeight AS SINGLE) SetLastError(GdipCreateTexture2(image, nWrapMode, dstX, dstY, dstWidth, dstHeight, @m_Texture)) END CONSTRUCTOR ' ===================================================================================== ' ===================================================================================== PRIVATE CONSTRUCTOR GdiPlusTextureBrush (BYVAL image AS GpImage PTR, BYVAL nWrapMode AS WrapMode, BYVAL dstX AS INT_, BYVAL dstY AS INT_, BYVAL dstWidth AS INT_, BYVAL dstHeight AS INT_) SetLastError(GdipCreateTexture2I(image, nWrapMode, dstX, dstY, dstWidth, dstHeight, @m_Texture)) END CONSTRUCTOR ' ===================================================================================== ' ======================================================================================== ' Cleanup ' ======================================================================================== PRIVATE DESTRUCTOR GdiPlusTextureBrush IF m_Texture THEN GdipDeleteBrush(m_Texture) END DESTRUCTOR ' ======================================================================================== ' ======================================================================================== ' Returns a pointer to the GpTextureBrush object ' ======================================================================================== PRIVATE OPERATOR * (BYREF texture AS GdiPlusTextureBrush) AS GpTextureBrush PTR RETURN texture.m_Texture END OPERATOR ' ======================================================================================== ' ======================================================================================== ' Returns the address of a pointer to the GpTextureBrush object ' ======================================================================================== PRIVATE OPERATOR GdiPlusTextureBrush.@ () AS GpTextureBrush PTR PTR RETURN @m_Texture END OPERATOR ' ======================================================================================== ' ======================================================================================== PRIVATE OPERATOR GdiPlusTextureBrush.CAST () AS GpTextureBrush PTR RETURN m_Texture END OPERATOR ' ========================================================================================</p>
+<p>' ======================================================================================== ' The following example creates a texture brush and fills a rectangle. ' ======================================================================================== SUB Example_CreateTexture (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GdiPlusGraphics = hdc ' // Set the scale transform graphics.ScaleTransform</p>
+<p>' // Load the image and set the dpi resolution DIM image AS GdiPlusImage = "HouseAndTree.gif" image.SetResolution(graphics)</p>
+<p>' // Create a texture brush, and set its wrap mode. DIM textureBrush AS GdiPlusTextureBrush = *image ' // Fill a rectangle with the texture brush GdipFillRectangle(graphics, textureBrush, 20, 20, 360, 210)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdipObjects.inc:675</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlus Objects.md</span></li><li>Topic: <a href="../gdiplus-objects.html">GdiPlus Objects</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

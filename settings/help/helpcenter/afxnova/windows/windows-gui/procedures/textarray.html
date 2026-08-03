@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TextArray — Help Center</title>
+<meta name="description" content="Returns or sets the text content of an arbitrary cell.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/procedures/textarray.html">
+<meta property="og:title" content="TextArray">
+<meta property="og:description" content="Returns or sets the text content of an arbitrary cell.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/procedures/textarray.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-gui/procedures/textarray.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../microsoft-hierarchical-grid.html">Microsoft Hierarchical Grid</a></div>
+<h1>TextArray<span class="h1kind">property</span></h1>
+<p class="lede">Returns or sets the text content of an arbitrary cell.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">property</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PROPERTY TextArray (BYVAL Index AS LONG) AS DWSTRING</code></pre>
+<pre class="code sig"><code>PROPERTY TextArray (BYVAL Index AS LONG, BYREF wszText AS WSTRING)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>Index</code></td><td></td><td>An integer value that specifies which cell to read or write.</td></tr><tr><td><code>wszText</code></td><td></td><td>The text to set.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Returns or sets the text contents of an arbitrary cell.</p>
+<p>This property allows you to set or retrieve the contents of a cell without changing the <strong>Row</strong> and <strong>Col</strong> properties.</p>
+<p>The <em>Index</em> argument determines which cell to use. It is calculated by multiplying the preferred row by the <strong>Cols</strong> property and adding the preferred column.</p>
+<h2>Remarks</h2>
+<p>While most developers use <code>TextMatrix(Row, Col)</code> for two-dimensional access, <strong>TextArray</strong> maps the entire grid (across all bands) into a single linear sequence.</p>
+<p><strong>Formula</strong>: To find the <strong>TextArray</strong> index for a specific cell, use: <strong>Constraint</strong>: You cannot change the active cell's position using this property; it only modifies the content.</p>
+<h2>Examples</h2>
+<p>Index = (Row * Cols) + Col.</p>
+<p>' Using TextMatrix (Preferred) grid.TextMatrix(1, 1) = "Data"</p>
+<p>' Using TextArray (One-dimensional index) ' Index = (1 * 5) + 1 = 6 grid.TextArray(6) = "Data"</p>
+<p>FixedRows = 1 FixedCols = 1 Cols = 5</p>
+<p>Cell (0,0) → Index = (0 * 5) + 0 = 0 Cell (0,3) → Index = (0 * 5) + 3 = 3 Cell (1,0) → Index = (1 * 5) + 0 = 5</p>
+<p>In a grid with: The mapping is:</p>
+<p>While <strong>TextMatrix</strong> and <strong>Text</strong> treat fixed cells specially (e.g., they don’t move the active cell), <strong>TextArray</strong> treats fixed cells exactly like any other cell in the linear sequence.</p>
+<p>This is useful when:</p>
+<ul><li>iterating through the entire grid as a flat list</li><li>exporting data</li><li>performing bulk operations without changing the active cell</li><li>implementing custom copy/paste logic</li></ul>
+<p>But it also means that developers must account for fixed rows and columns when calculating indices manually.</p>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">Windows/Windows GUI/MSHFlexGrid Class.md</span></li><li>Topic: <a href="../microsoft-hierarchical-grid.html">Microsoft Hierarchical Grid</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

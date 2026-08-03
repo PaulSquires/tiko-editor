@@ -1,0 +1,936 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpCustomLineCap Class — Help Center</title>
+<meta name="description" content="CGpCustomLineCap Class — 22 documented members. Graphics reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpcustomlinecap-class.html">
+<meta property="og:title" content="CGpCustomLineCap Class">
+<meta property="og:description" content="CGpCustomLineCap Class — 22 documented members. Graphics reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpcustomlinecap-class.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpcustomlinecap-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>Graphics</div>
+<h1>CGpCustomLineCap Class</h1>
+<h2>Members (22)</h2>
+<div class="memberlist"><a href="cgpadjustablearrowcap/cgpadjustablearrowcap-constructors.html"><span class="m-n">Constructors</span><span class="m-d">Creates an adjustable arrow line cap with the specified height and width.</span></a><a href="cgpadjustablearrowcap/cgpadjustablearrowcap-getheight.html"><span class="m-n">GetHeight</span><span class="m-d">Gets the height of the arrow cap.</span></a><a href="cgpadjustablearrowcap/cgpadjustablearrowcap-getmiddleinset.html"><span class="m-n">GetMiddleInset</span><span class="m-d">Gets the value of the inset.</span></a><a href="cgpadjustablearrowcap/cgpadjustablearrowcap-getwidth.html"><span class="m-n">GetWidth</span><span class="m-d">Gets the width of the arrow cap.</span></a><a href="cgpadjustablearrowcap/cgpadjustablearrowcap-isfilled.html"><span class="m-n">IsFilled</span><span class="m-d">Determines whether the arrow cap is filled.</span></a><a href="cgpadjustablearrowcap/cgpadjustablearrowcap-setfillstate.html"><span class="m-n">SetFillState</span><span class="m-d">Sets the fill state of the arrow cap.</span></a><a href="cgpadjustablearrowcap/cgpadjustablearrowcap-setheight.html"><span class="m-n">SetHeight</span><span class="m-d">Sets the height of the arrow cap.</span></a><a href="cgpadjustablearrowcap/cgpadjustablearrowcap-setmiddleinset.html"><span class="m-n">SetMiddleInset</span><span class="m-d">Sets the number of units that the midpoint of the base shifts towards the vertex.</span></a><a href="cgpadjustablearrowcap/cgpadjustablearrowcap-setwidth.html"><span class="m-n">SetWidth</span><span class="m-d">Sets the width of the arrow cap.</span></a><a href="cgpcustomlinecap/cgpcustomlinecap-clone.html"><span class="m-n">Clone</span><span class="m-d">Copies the contents of the existing **CustomLineCap** object into a new **CustomLineCap** object.</span></a><a href="cgpcustomlinecap/cgpcustomlinecap-constructors.html"><span class="m-n">Constructors</span><span class="m-d">Creates a **CustomLineCap** object.</span></a><a href="cgpcustomlinecap/cgpcustomlinecap-getbasecap.html"><span class="m-n">GetBaseCap</span><span class="m-d">Gets the style of the base cap.</span></a><a href="cgpcustomlinecap/cgpcustomlinecap-getbaseinset.html"><span class="m-n">GetBaseInset</span><span class="m-d">Gets the distance between the base cap to the start of the line.</span></a><a href="cgpcustomlinecap/cgpcustomlinecap-getstrokecaps.html"><span class="m-n">GetStrokeCaps</span><span class="m-d">Gets the end cap styles for both the start line cap and the end line cap.</span></a><a href="cgpcustomlinecap/cgpcustomlinecap-getstrokejoin.html"><span class="m-n">GetStrokeJoin</span><span class="m-d">Returns the style of **LineJoin** used to join multiple lines in the same **GraphicsPath** object.</span></a><a href="cgpcustomlinecap/cgpcustomlinecap-getwidthscale.html"><span class="m-n">GetWidthScale</span><span class="m-d">Gets the value of the scale width.</span></a><a href="cgpcustomlinecap/cgpcustomlinecap-setbasecap.html"><span class="m-n">SetBaseCap</span><span class="m-d">Sets the **LineCap** that appears as part of this **CustomLineCap** at the end of a line.</span></a><a href="cgpcustomlinecap/cgpcustomlinecap-setbaseinset.html"><span class="m-n">SetBaseInset</span><span class="m-d">Sets the base inset value of this custom line cap.</span></a><a href="cgpcustomlinecap/cgpcustomlinecap-setstrokecap.html"><span class="m-n">SetStrokeCap</span><span class="m-d">Sets the **LineCap** object used to start and end lines within the **GraphicsPath** object that defines this CustomLineCap object.</span></a><a href="cgpcustomlinecap/cgpcustomlinecap-setstrokecaps.html"><span class="m-n">SetStrokeCaps</span><span class="m-d">Sets the **LineCap** objects used to start and end lines within the **GraphicsPath** object that defines this **CustomLineCap** object.</span></a><a href="cgpcustomlinecap/cgpcustomlinecap-setstrokejoin.html"><span class="m-n">SetStrokeJoin</span><span class="m-d">Sets the style of line join for the stroke.</span></a><a href="cgpcustomlinecap/cgpcustomlinecap-setwidthscale.html"><span class="m-n">SetWidthScale</span><span class="m-d">Sets the value of the scale width.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="cgpcustomlinecap-class">CGpCustomLineCap Class</h2>
+<p>The <code>CGpCustomLineCap</code> class encapsulates a custom line cap. A line cap defines the style of graphic used to draw the ends of a line. It can be various shapes, such as a square, circle, or diamond. A custom line cap is defined by the path that draws it. The path is drawn by using a <strong>Pen</strong> object to draw the outline of a shape or by using a <strong>Brush</strong> object to fill the interior. The cap can be used on either or both ends of the line. Spacing can be adjusted between the end caps and the line.</p>
+<p><strong>Inherits from</strong>: CGpBase. <strong>Include file</strong>: CGpLineCaps.inc.</p>
+<hr>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cgpcustomlinecap/cgpcustomlinecap-constructors.html">Constructors</a></td><td>Creates a <strong>CustomLineCap</strong> object.</td></tr><tr><td><a href="cgpcustomlinecap/cgpcustomlinecap-clone.html">Clone</a></td><td>Copies the contents of the existing <strong>CustomLineCap</strong> object into a new <strong>CustomLineCap</strong> object.</td></tr><tr><td><a href="cgpcustomlinecap/cgpcustomlinecap-getbasecap.html">GetBaseCap</a></td><td>Gets the style of the base cap.</td></tr><tr><td><a href="cgpcustomlinecap/cgpcustomlinecap-getbaseinset.html">GetBaseInset</a></td><td>Gets the distance between the base cap to the start of the line.</td></tr><tr><td><a href="cgpcustomlinecap/cgpcustomlinecap-getstrokecaps.html">GetStrokeCaps</a></td><td>Gets the end cap styles for both the start line cap and the end line cap.</td></tr><tr><td><a href="cgpcustomlinecap/cgpcustomlinecap-getstrokejoin.html">GetStrokeJoin</a></td><td>Returns the style of <strong>LineJoin</strong> used to join multiple lines in the same <strong>GraphicsPath</strong> object.</td></tr><tr><td><a href="cgpcustomlinecap/cgpcustomlinecap-getwidthscale.html">GetWidthScale</a></td><td>Gets the value of the scale width.</td></tr><tr><td><a href="cgpcustomlinecap/cgpcustomlinecap-setbasecap.html">SetBaseCap</a></td><td>Sets the <strong>LineCap</strong> that appears as part of this <strong>CustomLineCap</strong> at the end of a line.</td></tr><tr><td><a href="cgpcustomlinecap/cgpcustomlinecap-setbaseinset.html">SetBaseInset</a></td><td>Sets the base inset value of this custom line cap.</td></tr><tr><td><a href="cgpcustomlinecap/cgpcustomlinecap-setstrokecap.html">SetStrokeCap</a></td><td>Sets the <strong>LineCap</strong> object used to start and end lines within the <strong>GraphicsPath</strong> object that defines this CustomLineCap object.</td></tr><tr><td><a href="cgpcustomlinecap/cgpcustomlinecap-setstrokecaps.html">SetStrokeCaps</a></td><td>Sets the <strong>LineCap</strong> objects used to start and end lines within the <strong>GraphicsPath</strong> object that defines this <strong>CustomLineCap</strong> object.</td></tr><tr><td><a href="cgpcustomlinecap/cgpcustomlinecap-setstrokejoin.html">SetStrokeJoin</a></td><td>Sets the style of line join for the stroke.</td></tr><tr><td><a href="cgpcustomlinecap/cgpcustomlinecap-setwidthscale.html">SetWidthScale</a></td><td>Sets the value of the scale width.</td></tr></tbody></table></div>
+<hr>
+<h2 id="cgpadjustablearrowcap-class">CGpAdjustableArrowCap Class</h2>
+<p>The <code>CGpAdjustableArrowCap</code> object extends <code>CGpCustomLineCap</code>. This object builds a line cap that looks like an arrow.</p>
+<p><strong>Inherits from</strong>: CGpCustomLineCap. <strong>Include file</strong>: CGpLineCaps.inc.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cgpadjustablearrowcap/cgpadjustablearrowcap-constructors.html">Constructors</a></td><td>Creates an adjustable arrow line cap with the specified height and width.</td></tr><tr><td><a href="cgpadjustablearrowcap/cgpadjustablearrowcap-getheight.html">GetHeight</a></td><td>Gets the height of the arrow cap.</td></tr><tr><td><a href="cgpadjustablearrowcap/cgpadjustablearrowcap-getmiddleinset.html">GetMiddleInset</a></td><td>Gets the value of the inset.</td></tr><tr><td><a href="cgpadjustablearrowcap/cgpadjustablearrowcap-getwidth.html">GetWidth</a></td><td>Gets the width of the arrow cap.</td></tr><tr><td><a href="cgpadjustablearrowcap/cgpadjustablearrowcap-isfilled.html">IsFilled</a></td><td>Determines whether the arrow cap is filled.</td></tr><tr><td><a href="cgpadjustablearrowcap/cgpadjustablearrowcap-setfillstate.html">SetFillState</a></td><td>Sets the fill state of the arrow cap.</td></tr><tr><td><a href="cgpadjustablearrowcap/cgpadjustablearrowcap-setheight.html">SetHeight</a></td><td>Sets the height of the arrow cap.</td></tr><tr><td><a href="cgpadjustablearrowcap/cgpadjustablearrowcap-setmiddleinset.html">SetMiddleInset</a></td><td>Sets the number of units that the midpoint of the base shifts towards the vertex.</td></tr><tr><td><a href="cgpadjustablearrowcap/cgpadjustablearrowcap-setwidth.html">SetWidth</a></td><td>Sets the width of the arrow cap.</td></tr></tbody></table></div>
+<hr>
+<h2 id="constructorcustomlinecap">Constructors (CGpCustomLineCap)</h2>
+<p>Creates a <code>CustomLineCap</code> object.</p>
+<pre class="code"><code>CONSTRUCTOR CGpCustomLineCap
+CONSTRUCTOR CGpCustomLineCap (BYVAL pCustomLineCap AS CGpCustomLineCap PTR)
+CONSTRUCTOR CGpCustomLineCap (BYVAL pFillPath AS CGpGraphicsPath PTR, _
+   BYVAL pStrokePath AS CGpGraphicsPath PTR, BYVAL baseCap AS LineCap = LinecapFLat, _
+   BYVAL baseInset AS SINGLE = 0.0)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pFillPath</em></td><td>Pointer to a path.</td></tr><tr><td><em>pStrokePath</em></td><td>Pointer to a path.</td></tr><tr><td><em>baseCap</em></td><td>Optional. Element of the <strong>LineCap</strong> enumeration that specifies the line cap that will be used. The default value is <strong>LineCapFlat</strong>.</td></tr><tr><td><em>baseInset</em></td><td>Optional. The default value is 0.0.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>The <em>pFillPath</em> and <em>pStrokePath</em> parameters cannot be used at the same time. You should pass NULL to one of those two parameters. If you pass nonnull values to both parameters, then <em>pFillPath</em> is ignored.</p>
+<p>The <code>CustomLineCap</code> class uses the winding fill mode regardless of the fill mode that is set for the <code>GraphicsPath</code> object passed to the <code>CustomLineCap</code> constructor.</p>
+<h3 id="clone">Clone (CGpCustomLineCap)</h3>
+<p>Copies the contents of the existing <code>CustomLineCap</code> object into a new <code>CustomLineCap</code> object.</p>
+<pre class="code"><code>FUNCTION Clone (BYVAL pCustomLineCap AS CGpCustomLineCap PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pCustomLineCap</em></td><td>Pointer to the <code>CustomLineCap</code> object where to copy the contents of the existing object.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a CustomLineCap object with a stroke path, creates a second
+' CustomLineCap object by cloning the first, and then assigns the cloned cap to a Pen object.
+' It then draws a line by using the Pen object.
+' ========================================================================================
+SUB Example_Clone (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Path object, and add two lines to it
+   DIM pts(0 TO 2) AS GpPoint = {(-15, -15), (0, 0), (15, -15)}
+   DIM capPath AS CGpGraphicsPath = FillModeAlternate
+   capPath.AddLines(@pts(0), 3)
+
+   ' // Create a CustomLineCap object
+   DIM firstCap AS CGpCustomLineCap = CGpCustomLineCap(NULL, @capPath)
+
+  ' // Create a copy of firstCap
+   DIM secondCap AS CGpCustomLineCap
+   firstCap.Clone(@secondCap)
+
+  ' // Create a Pen object, assign second cap as the custom end cap, and draw a line
+   DIM pen AS CGpPen = CGpPen(ARGB_Violet, 1)
+   pen.SetCustomEndCap(@secondCap)
+   graphics.DrawLine(@pen, 0, 0, 100, 100)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getbasecap">GetBaseCap (CGpCustomLineCap)</h3>
+<p>Gets the style of the base cap. The base cap is used as a cap at the end of a line along with this <code>CustomLineCap</code> object.</p>
+<pre class="code"><code>FUNCTION GetBaseCap () AS LineCap</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>This method returns the value of the line cap used at the base of the line.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a CustomLineCap object, sets its base cap, and then gets
+' the base cap and assigns it to a Pen object. It then uses the Pen object to draw a line.
+' ========================================================================================
+SUB Example_GetBaseCap (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' //Create a Path object
+   DIM capPath AS CGpGraphicsPath
+
+   ' // Create a CustomLineCap object, and set its base cap to LineCapRound
+   DIM custCap AS CGpCustomLineCap = CGpCustomLineCap(NULL, @capPath)
+   custCap.SetBaseCap(LineCapRound)
+
+   ' // Get the base cap of custCap
+   DIM baseCap AS LineCap = custCap.GetBaseCap
+
+   ' // Create a Pen object, assign baseCap as the end cap, and draw a line
+   DIM pen AS CGpPen = CGpPen(ARGB_LIGHTGREEN, 10)
+   pen.SetEndCap(baseCap)
+   graphics.DrawLine(@pen, 0, 0, 100, 100)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getbaseinset">GetBaseInset (CGpCustomLineCap)</h3>
+<p>Gets the distance between the base cap to the start of the line.</p>
+<pre class="code"><code>FUNCTION GetBaseInset () AS SINGLE</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The base inset is used to separate the base cap from the start of the line. A value of 0 makes the base cap and the line touch. A value greater than 0 inserts a space (in units) between the line cap and the start of the line.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a CustomLineCap object, gets the base inset of the cap,
+' and then creates a second CustomLineCap object that uses the same base inset.
+' ========================================================================================
+SUB Example_GetBaseInset (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Path object, and add two lines to it
+   DIM pts(0 TO 2) AS GpPoint = {(-15, -15), (0, 0), (15, -15)}
+   DIM capPath AS CGpGraphicsPath = FillModeAlternate
+   capPath.AddLines(@pts(0), 3)
+
+   ' // Create a CustomLineCap object, and set its base cap to LineCapRound
+   DIM custCap AS CGpCustomLineCap = CGpCustomLineCap(NULL, @capPath, LineCapRound, 5)
+
+  ' // Get the base inset of custCap
+   DIM baseInset AS SINGLE = custCap.GetBaseInset
+
+  ' // Create a second CustomLineCap object with the same base inset as the first.
+   DIM insetCap AS CGpCustomLineCap = CGpCustomLineCap(NULL, @capPath, LineCapRound, baseInset)
+
+  ' // Create a Pen object and assign insetCap as the custom end cap. Then draw a line.
+   DIM pen AS CGpPen = CGpPen(ARGB_BLUE, 5)
+   pen.SetCustomEndCap(@insetCap)
+   graphics.DrawLine(@pen, 10, 10, 200, 200)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getstrokecaps">GetStrokeCaps (CGpCustomLineCap)</h3>
+<p>Gets the end cap styles for both the start line cap and the end line cap. Line caps are objects that end the individual lines within a path.</p>
+<pre class="code"><code>FUNCTION GetStrokeCaps (BYVAL startCap AS LineCap PTR, BYVAL endCap AS LineCap PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>startCap</em></td><td>Out. Pointer to a variable that receives an element of the LineCap enumeration that indicates the line cap used at the start of the line to be drawn.</td></tr><tr><td><em>endCap</em></td><td>Out. Pointer to a variable that receives an element of the LineCap enumeration that indicates the line cap used at the end of the line to be drawn.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a CustomLineCap object and sets its start and end line caps.
+' It then gets the line caps and assigns them as the start and end caps of a Pen object
+' that it then uses to draw a line.
+' ========================================================================================
+SUB Example_GetStrokeCaps (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Path object, and add two lines to it
+   DIM pts(0 TO 2) AS GpPoint = {(-15, -15), (0, 0), (15, -15)}
+   DIM capPath AS CGpGraphicsPath = FillModeAlternate
+   capPath.AddLines(@pts(0), 3)
+
+   ' // Create a CustomLineCap object, and set its base cap to LineCapRound
+   DIM custCap AS CGpCustomLineCap = CGpCustomLineCap(NULL, @capPath)
+
+  ' // Set the start and end caps for custCap.
+   custCap.SetStrokeCaps(LineCapTriangle, LineCapRound)
+
+  ' // Get the start and end caps from custCap.
+   DIM AS LineCap startStrokeCap, endStrokeCap
+   custCap.GetStrokeCaps(@startStrokeCap, @endStrokeCap)
+
+  ' // Create a Pen object, assign startStrokeCap and endStrokeCap as the
+  ' // start and end caps, and draw a line.
+   DIM strokeCapPen AS CGpPen = CGpPen(ARGB_BLACK, 15.2)
+   strokeCapPen.SetLineCap(startStrokeCap, endStrokeCap, DashCapFlat)
+   graphics.DrawLine(@strokeCapPen, 100, 100, 300, 100)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getstrokejoin">GetStrokeJoin (CGpCustomLineCap)</h3>
+<p>Returns the style of <strong>LineJoin</strong> used to join multiple lines in the same <code>GraphicsPath</code> object.</p>
+<pre class="code"><code>FUNCTION GetStrokeJoin () AS LineJoin</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The <code>CustomLineCap</code> object uses a path and a stroke to define the end cap. The stroke is contained in a <code>GraphicsPath</code> object, which can contain more than one figure. If there is more than one figure in the <code>GraphicsPath</code> object, the stroke join determines how their joint is graphically displayed.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a CustomLineCap object with a stroke join. It then gets the
+' stroke join and assigns it as the line join of a Pen object that it then uses to draw a line.
+' ========================================================================================
+SUB Example_GetStrokeJoin (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Path object, and add two lines to it
+   DIM pts(0 TO 2) AS GpPoint = {(-15, -15), (0, 0), (15, -15)}
+   DIM capPath AS CGpGraphicsPath = FillModeAlternate
+   capPath.AddLines(@pts(0), 3)
+
+   ' // Create a CustomLineCap object, and set its base cap to LineCapRound
+   DIM custCap AS CGpCustomLineCap = CGpCustomLineCap(NULL, @capPath)
+
+  ' // Set the start and end caps for custCap
+   custCap.SetStrokeJoin(LineJoinBevel)
+
+   ' // Get the stroke join from custCap
+   DIM strokeJoin AS LineJoin = custCap.GetStrokeJoin
+
+  ' // Create a Pen object, assign strokeJoin as the line join,
+  ' // and draw two joined lines in a path.
+   DIM strokeJoinPen AS CGpPen = CGpPen(ARGB_RED, 15.1)
+   strokeJoinPen.SetLineJoin(strokeJoin)
+   DIM joinPath AS CGpGraphicsPath
+   joinPath.AddLine(10, 10, 10, 200)
+   joinPath.AddLine(10, 200, 200, 200)
+   graphics.DrawPath(@strokeJoinPen, @joinPath)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getwidthscale">GetWidthScale (CGpCustomLineCap)</h3>
+<p>Gets the value of the scale width. This is the amount to scale the custom line cap relative to the width of the <strong>Pen</strong> object used to draw a line. The default value of 1.0 does not scale the line cap.</p>
+<pre class="code"><code>FUNCTION GetWidthScale () AS SINGLE</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>This method returns the value of the width-scaling factor.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a CustomLineCap object and sets the width scale. It then
+' gets the width scale, assigns the custom cap to a Pen object, and draws a line.
+' ========================================================================================
+SUB Example_GetWidthScale (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Path object, and add two lines to it
+   DIM pts(0 TO 2) AS GpPoint = {(-15, -15), (0, 0), (15, -15)}
+   DIM capPath AS CGpGraphicsPath = FillModeAlternate
+   capPath.AddLines(@pts(0), 3)
+
+   ' // Create a CustomLineCap object, and set its base cap to LineCapRound
+   DIM custCap AS CGpCustomLineCap = CGpCustomLineCap(NULL, @capPath)
+
+   ' // Set the width scale for custCap.
+   custCap.SetWidthScale(3)
+
+   ' // Get the width scale from custCap.
+   DIM widthScale AS SINGLE = custCap.GetWidthScale
+
+   ' // If the width scale is 3, assign custCap as the end cap of a Pen object and draw a line.
+   IF widthScale = 3 THEN
+      DIM widthScalePen AS CGpPen = CGpPen(ARGB_LIGHTGREEN, 1.0)
+      widthScalePen.SetCustomEndCap(@custCap)
+      graphics.DrawLine(@widthScalePen, 0, 0, 200, 200)
+   END IF
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="setbasecap">SetBaseCap (CGpCustomLineCap)</h3>
+<p>Sets the <strong>LineCap</strong> that appears as part of this <code>CustomLineCap</code> at the end of a line.</p>
+<pre class="code"><code>FUNCTION SetBaseCap (BYVAL baseCap AS LineCap) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>baseCap</em></td><td>Element of the <strong>LineCap</strong> enumeration that specifies the line cap used on the ends of the line to be drawn.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a CustomLineCap object and sets its base cap. It then
+' assigns the custom cap as the end cap of a Pen object and draws a line.
+' ========================================================================================
+SUB Example_SetBaseCap (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Path object, and add two lines to it
+   DIM pts(0 TO 2) AS GpPoint = {(-15, -15), (0, 0), (15, -15)}
+   DIM capPath AS CGpGraphicsPath = FillModeAlternate
+   capPath.AddLines(@pts(0), 3)
+
+   ' // Create a CustomLineCap object, and set its base cap to LineCapRound
+   DIM custCap AS CGpCustomLineCap = CGpCustomLineCap(NULL, @capPath)
+   custCap.SetBaseCap(LineCapRound)
+
+   ' // Create a Pen object, assign baseCap as the end cap, and draw a line
+   DIM pen AS CGpPen = CGpPen(ARGB_BLUE, 5.3)
+   pen.SetCustomEndCap(@custCap)
+   graphics.DrawLine(@pen, 10, 10, 200, 200)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="setbaseinset">SetBaseInset (CGpCustomLineCap)</h3>
+<p>Sets the base inset value of this custom line cap. This is the distance between the end of a line and the base cap.</p>
+<pre class="code"><code>FUNCTION SetBaseInset (BYVAL baseinset AS SINGLE) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>baseinset</em></td><td>Single precision number that specifies the distance, in units, from the base cap to the start of the line. If this value is greater than the length of the line, the behavior of this method is undefined.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a CustomLineCap object and sets the base inset of the cap.
+' It then assigns the custom cap to a Pen object and draws a line.
+' ========================================================================================
+SUB Example_SetBaseInset (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Path object, and add two lines to it
+   DIM pts(0 TO 2) AS GpPoint = {(-15, -15), (0, 0), (15, -15)}
+   DIM capPath AS CGpGraphicsPath = FillModeAlternate
+   capPath.AddLines(@pts(0), 3)
+
+   ' // Create a CustomLineCap object, and set its base cap to LineCapRound
+   DIM custCap AS CGpCustomLineCap = CGpCustomLineCap(NULL, @capPath, LineCapRound)
+   ' // Set the base inset
+   custCap.SetBaseInset(5)
+
+  ' // Create a Pen object, assign custCap as the custom end cap, and then draw a line.
+   DIM pen AS CGpPen = CGpPen(ARGB_BLACK, 5.1)
+   pen.SetCustomEndCap(@custCap)
+   graphics.DrawLine(@pen, 10, 10, 200, 200)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="setstrokecap">SetStrokeCap (CGpCustomLineCap)</h3>
+<p>Sets the <strong>LineCap</strong> object used to start and end lines within the <strong>GraphicsPath</strong> object that defines this <code>CustomLineCap</code> object.</p>
+<pre class="code"><code>FUNCTION SetStrokeCap (BYVAL strokeCap AS LineCap) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>strokeCap</em></td><td>Element of the <strong>LineCap</strong> enumeration that specifies the line cap that will be used on the ends of the line to be drawn.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a CustomLineCap object and sets its start and end stroke caps.
+' It then assigns the custom cap to a Pen object and draws a line.
+' ========================================================================================
+SUB Example_SetStrokeCap (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Path object, and add two lines to it
+   DIM pts(0 TO 2) AS GpPoint = {(-15, -15), (0, 0), (15, -15)}
+   DIM capPath AS CGpGraphicsPath = FillModeAlternate
+   capPath.AddLines(@pts(0), 3)
+
+   ' // Create a CustomLineCap object, and set its base cap to LineCapRound
+   DIM custCap AS CGpCustomLineCap = CGpCustomLineCap(NULL, @capPath)
+
+   ' // Set the start and end caps for custCap to LineCapTriangle
+   custCap.SetStrokeCap(LineCapTriangle)
+
+   ' // Create a Pen object, assign startStrokeCap and endStrokeCap as the
+   ' // start and end caps, and draw a line.
+   DIM strokeCapPen AS CGpPen = CGpPen(ARGB_RED, 4.8)
+   strokeCapPen.SetCustomEndCap(@custCap)
+   graphics.DrawLine(@strokeCapPen, 100, 100, 300, 100)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="setstrokecaps">SetStrokeCaps (CGpCustomLineCap)</h3>
+<p>Sets the <strong>LineCap</strong> objects used to start and end lines within the <strong>GraphicsPath</strong> object that defines this <code>CustomLineCap</code> object.</p>
+<pre class="code"><code>FUNCTION SetStrokeCaps (BYVAL startCap AS LineCap, BYVAL endCap AS LineCap) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>startCap</em></td><td>Element of the <strong>LineCap</strong> enumeration that specifies the line cap that will be used for the start of the line to be drawn.</td></tr><tr><td><em>endCap</em></td><td>Element of the <strong>LineCap</strong> enumeration that specifies the line cap that will be used for the end of the line to be drawn.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a CustomLineCap object and sets its start and end stroke caps.
+' It then assigns the custom cap to a Pen object and draws a line.
+' ========================================================================================
+SUB Example_SetStrokeCaps (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Path object, and add two lines to it
+   DIM pts(0 TO 2) AS GpPoint = {(-15, -15), (0, 0), (15, -15)}
+   DIM capPath AS CGpGraphicsPath = FillModeAlternate
+   capPath.AddLines(@pts(0), 3)
+
+   ' // Create a CustomLineCap object, and set its base cap to LineCapRound
+   DIM custCap AS CGpCustomLineCap = CGpCustomLineCap(NULL, @capPath)
+
+   ' // Set the start and end caps for custCap.
+   custCap.SetStrokeCaps(LineCapTriangle, LineCapRound)
+
+   ' // Create a Pen object, assign startStrokeCap and endStrokeCap as the
+   ' // start and end caps, and draw a line.
+   DIM strokeCapPen AS CGpPen = CGpPen(ARGB_Violet, 5.0!)
+   strokeCapPen.SetCustomEndCap(@custCap)
+   graphics.DrawLine(@strokeCapPen, 100, 100, 300, 100)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="setstrokejoin">SetStrokeJoin (CGpCustomLineCap)</h3>
+<p>Sets the style of line join for the stroke. The line join specifies how two lines that intersect within the <strong>GraphicsPath</strong> object that makes up the custom line cap are joined.</p>
+<pre class="code"><code>FUNCTION SetStrokeJoin (BYVAL nLineJoin AS LineJoin) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>strokeJoin</em></td><td>Element of the LineJoin enumeration that specifies the line join that will be used for two lines that are drawn by the same pen and that have overlapping ends.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a CustomLineCap object with a stroke join. It then gets the
+' stroke join and assigns it as the line join of a Pen object that it then uses to draw a line.
+' ========================================================================================
+SUB Example_SetStrokeJoin (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Path object, and add two lines to it
+   DIM pts(0 TO 2) AS GpPoint = {(-15, -15), (0, 0), (15, -15)}
+   DIM capPath AS CGpGraphicsPath = FillModeAlternate
+   capPath.AddLines(@pts(0), 3)
+
+   ' // Create a CustomLineCap object, and set its base cap to LineCapRound
+   DIM custCap AS CGpCustomLineCap = CGpCustomLineCap(NULL, @capPath)
+
+  ' // Set the start and end caps for custCap
+   custCap.SetStrokeJoin(LineJoinBevel)
+
+  ' // Create a Pen object, assign strokeJoin as the line join,
+  ' // and draw two joined lines in a path.
+   DIM strokeJoinPen AS CGpPen = CGpPen(ARGB_RED, 15.1)
+   strokeJoinPen.SetCustomEndCap(@custCap)
+   graphics.DrawLine(@strokeJoinPen, 0, 0, 200, 200)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a CustomLineCap object with a stroke join. It then gets the
+' stroke join and assigns it as the line join of a Pen object that it then uses to draw a line.
+' ========================================================================================
+SUB Example_SetStrokeJoin2 (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Path object, and add two lines to it
+   DIM pts(0 TO 2) AS GpPoint = {(-15, -15), (0, 0), (15, -15)}
+   DIM capPath AS CGpGraphicsPath = FillModeAlternate
+   capPath.AddLines(@pts(0), 3)
+
+   ' // Create a CustomLineCap object, and set its base cap to LineCapRound
+   DIM custCap AS CGpCustomLineCap = CGpCustomLineCap(NULL, @capPath)
+
+  ' // Set the start and end caps for custCap
+   custCap.SetStrokeJoin(LineJoinBevel)
+
+  ' // Create a Pen object, assign strokeJoin as the line join,
+  ' // and draw two joined lines in a path.
+   DIM strokeJoinPen AS CGpPen = CGpPen(GDIP_ARGB(255, 200, 150, 0), 5.0)
+   strokeJoinPen.SetCustomEndCap(@custCap)
+   graphics.DrawLine(@strokeJoinPen, 0, 0, 200, 200)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="setwidthscale">SetWidthScale (CGpCustomLineCap)</h3>
+<p>Sets the value of the scale width. This is the amount to scale the custom line cap relative to the width of the <strong>Pen</strong> used to draw lines. The default value of 1.0 does not scale the line cap.</p>
+<pre class="code"><code>FUNCTION SetWidthScale (BYVAL widthScale AS SINGLE) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>widthScale</em></td><td>Single precision number that specifies the scaling factor that will be used to scale the line width.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a CustomLineCap object and sets the width scale. It then
+' gets the width scale, assigns the custom cap to a Pen object, and draws a line.
+' ========================================================================================
+SUB Example_SetWidthScale (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create a Path object, and add two lines to it
+   DIM pts(0 TO 2) AS GpPoint = {(-15, -15), (0, 0), (15, -15)}
+   DIM capPath AS CGpGraphicsPath = FillModeAlternate
+   capPath.AddLines(@pts(0), 3)
+
+   ' // Create a CustomLineCap object, and set its base cap to LineCapRound
+   DIM custCap AS CGpCustomLineCap = CGpCustomLineCap(NULL, @capPath)
+
+   ' // Set the width scale for custCap.
+   custCap.SetWidthScale(3)
+
+   ' // Assign custCap to a Pen object and draw a line.
+   DIM widthScalePen AS CGpPen = CGpPen(GDIP_ARGB(255, 180, 0, 180), 1.7)
+   widthScalePen.SetCustomEndCap(@custCap)
+   graphics.DrawLine(@widthScalePen, 0, 0, 200, 200)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="constructorarrowcap">Constructors (CGpAdjustableArrowCap)</h3>
+<p>Creates an adjustable arrow line cap with the specified height and width. The arrow line cap can be filled or nonfilled. The middle inset defaults to zero.</p>
+<pre class="code"><code>CONSTRUCTOR CGpAdjustableArrowCap (BYVAL pAdjustableArrowCap AS CGpAdjustableArrowCap PTR)
+CONSTRUCTOR CGpAdjustableArrowCap (BYVAL nHeight AS SINGLE, BYVAL nWidth AS SINGLE, _
+   BYVAL bIsFilled AS BOOL = CTRUE)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nHeight</em></td><td>The length, in units, of the arrow from its base to its point.</td></tr><tr><td><em>nWidth</em></td><td>The distance, in units, between the corners of the base of the arrow.</td></tr><tr><td><em>bIsFilled</em></td><td>Optional. Boolean value that specifies whether the arrow is filled. The default value is TRUE.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>The middle inset is the number of units that the midpoint of the base shifts towards the vertex. A middle inset of zero results in no shift — the base is a straight line, giving the arrow a triangular shape. A positive (greater than zero) middle inset results in a shift the specified number of units toward the vertex — the base is an arrow shape that points toward the vertex, giving the arrow cap a V-shape. A negative (less than zero) middle inset results in a shift the specified number of units away from the vertex — the base becomes an arrow shape that points away from the vertex, giving the arrow either a diamond shape (if the absolute value of the middle inset is equal to the height) or distorted diamond shape. If the middle inset is equal to or greater than the height of the arrow cap, the cap does not appear at all. The value of the middle inset affects the arrow cap only if the arrow cap is filled. The middle inset defaults to zero when an <strong>AdjustableArrowCap</strong> object is constructed.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates two AdjustableArrowCap objects, arrowCapStart and
+' arrowCapEnd, and sets the fill mode to TRUE. The code then creates a Pen object and
+' assigns arrowCapStart as the starting line cap for this Pen object and arrowCapEnd as
+' the ending line cap. Next, draws a line.
+' ========================================================================================
+SUB Example_CreateAdjustableArrowCap (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create an AdjustableArrowCap that is filled
+   DIM arrowCapStart AS CGpAdjustableArrowCap = CGpAdjustableArrowCap(10, 10, CTRUE)
+   ' // Adjust to DPI by setting the scale width
+   arrowCapStart.SetWidthScale(rxRatio)
+
+   ' // Create an AdjustableArrowCap that is not filled
+   DIM arrowCapEnd AS CGpAdjustableArrowCap = CGpAdjustableArrowCap(15, 15, FALSE)
+   ' // Adjust to DPI by setting the scale width
+   arrowCapEnd.SetWidthScale(rxRatio)
+
+   ' // Create a Pen
+   DIM arrowPen AS CGpPen = ARGB_Violet
+
+   ' // Assign arrowStart as the start cap
+   arrowPen.SetCustomStartCap(@arrowCapStart)
+
+   ' // Assign arrowEnd as the end cap
+   arrowPen.SetCustomEndCap(@arrowCapEnd)
+
+   ' // Draw a line using arrowPen
+   graphics.DrawLine(@arrowPen, 0, 0, 100, 100)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getheight">GetHeight (CGpAdjustableArrowCap)</h3>
+<p>Gets the height of the arrow cap. The height is the distance from the base of the arrow to its vertex.</p>
+<pre class="code"><code>FUNCTION GetHeight () AS SINGLE</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates an AdjustableArrowCap, myArrow, and sets the height of the
+' cap. The code then creates a Pen, assigns myArrow as the ending line cap for the Pen,
+' and draws a capped line. Next, the code gets the height of the arrow cap, creates a new
+' arrow cap with height equal to the height of myArrow, assigns the new arrow cap as the
+' ending line cap for the Pen, and draws another capped line.
+' ========================================================================================
+SUB Example_GetHeight (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create an AdjustableArrowCap with a height of 10 pixels
+   DIM myArrow AS CGpAdjustableArrowCap = CGpAdjustableArrowCap(10, 10, TRUE)
+   ' // Adjust to DPI by setting the scale width
+   myArrow.SetWidthScale(rxRatio)
+
+   ' // Create a Pen, and assign myArrow as the end cap
+   DIM arrowPen AS CGpPen = ARGB_Violet
+   arrowPen.SetCustomEndCap(@myArrow)
+
+   ' // Draw a line using arrowPen
+   graphics.DrawLine(@arrowPen, 0, 20, 100, 20)
+
+   ' // Create a second arrow cap using the height of the first one
+   DIM AS CGpAdjustableArrowCap otherArrow = CGpAdjustableArrowCap(myArrow.GetHeight, 20, TRUE)
+   otherArrow.SetWidthScale(rxRatio)
+
+   ' // Assign the new arrow cap as the end cap for arrowPen
+   arrowPen.SetCustomEndCap(@otherArrow)
+
+   ' // Draw a line using arrowPen
+   graphics.DrawLine(@arrowPen, 0, 55, 100, 55)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getmiddleinset">GetMiddleInset (CGpAdjustableArrowCap)</h3>
+<p>Gets the value of the inset. The middle inset is the number of units that the midpoint of the base shifts towards the vertex.</p>
+<pre class="code"><code>FUNCTION GetMiddleInset () AS SINGLE</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>The middle inset is the number of units that the midpoint of the base shifts towards the vertex. A middle inset of zero results in no shift — the base is a straight line, giving the arrow a triangular shape. A positive (greater than zero) middle inset results in a shift the specified number of units toward the vertex — the base is an arrow shape that points toward the vertex, giving the arrow cap a V-shape. A negative (less than zero) middle inset results in a shift the specified number of units away from the vertex — the base becomes an arrow shape that points away from the vertex, giving the arrow either a diamond shape (if the absolute value of the middle inset is equal to the height) or distorted diamond shape. If the middle inset is equal to or greater than the height of the arrow cap, the cap does not appear at all. The value of the middle inset affects the arrow cap only if the arrow cap is filled. The middle inset defaults to zero when an <strong>AdjustableArrowCap</strong> object is constructed.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates an AdjustableArrowCap object, myArrow, with middle
+' inset set to zero (default value). The code then creates a Pen object, assigns
+' myArrow as the ending line cap for this Pen object, and draws a capped line. Next,
+' the code gets the middle inset, increments it, and draws another capped line.
+' ========================================================================================
+SUB Example_GetMiddleInset (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create an AdjustableArrowCap with a height of 10 pixels
+   DIM myArrow AS CGpAdjustableArrowCap = CGpAdjustableArrowCap(10, 10, CTRUE)
+   ' // Adjust to DPI by setting the scale width
+   myArrow.SetWidthScale(rxRatio)
+
+   ' // Create a Pen, and assign myArrow as the end cap
+   DIM arrowPen AS CGpPen = ARGB_Violet
+   arrowPen.SetCustomEndCap(@myArrow)
+
+   ' // Draw a line using arrowPen
+   graphics.DrawLine(@arrowPen, 0, 20, 100, 20)
+
+   ' // Get the inset of the arrow
+   DIM inset AS SINGLE = myArrow.GetMiddleInset
+
+   ' // Increase inset by 5 pixels and draw another line
+   myArrow.SetMiddleInset(inset + 5)
+   arrowPen.SetCustomEndCap(@myArrow)
+   graphics.DrawLine(@arrowPen, 0, 50, 100, 50)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getwidth">GetWidth (CGpAdjustableArrowCap)</h3>
+<p>Gets the width of the arrow cap. The width is the distance between the endpoints of the base of the arrow.</p>
+<pre class="code"><code>FUNCTION GetWidth () AS SINGLE</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates an AdjustableArrowCap object, myArrow, and sets the width
+' of the cap to 5 pixels. Next, the code creates a Pen object, assigns myArrow as the
+' ending line cap for this Pen object, and draws a capped line. The code obtains the width
+' using GdipGetAdjustableArrowCapWidth and sets the height equal to the width. The code then
+' draws another capped line with the new cap.
+' ========================================================================================
+SUB Example_GetWidth (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create an AdjustableArrowCap with a height of 10 pixels
+   DIM myArrow AS CGpAdjustableArrowCap = CGpAdjustableArrowCap(10, 5, TRUE)
+   ' // Adjust to DPI by setting the scale width
+   myArrow.SetWidthScale(rxRatio)
+
+   ' // Create a Pen, and assign myArrow as the end cap
+   DIM arrowPen AS CGpPen = ARGB_Violet
+   arrowPen.SetCustomEndCap(@myArrow)
+
+   ' // Draw a line using arrowPen
+   graphics.DrawLine(@arrowPen, 0, 0, 100, 100)
+
+   ' // Get the width of the arrow.
+   DIM nWidth AS SINGLE = myArrow.GetWidth
+
+   ' // Set height equal to width and draw another line.
+   myArrow.SetHeight(nWidth)
+   arrowPen.SetCustomEndCap(@myArrow)
+   graphics.DrawLine(@arrowPen, 0, 40, 100, 140)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="isfilled">IsFilled (CGpAdjustableArrowCap)</h3>
+<p>Determines whether the arrow cap is filled.</p>
+<pre class="code"><code>FUNCTION IsFilled () AS BOOLEAN</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>If the arrow cap is filled, this method returns TRUE; otherwise, it returns FALSE.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates an AdjustableArrowCap object, myArrow, and sets the fill
+' mode to TRUE. The code then creates a Pen object and assigns myArrow as the ending line
+' cap for this Pen object. Next, the code tests whether myArrow is filled and, if it is,
+' draws a line.
+' ========================================================================================
+SUB Example_IsFilled (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create an AdjustableArrowCap with a height of 10 pixels
+   DIM myArrow AS CGpAdjustableArrowCap = CGpAdjustableArrowCap(10, 10, CTRUE)
+   ' // Adjust to DPI by setting the scale width
+   myArrow.SetWidthScale(rxRatio)
+
+   ' // Create a Pen, and assign myArrow as the end cap
+   DIM arrowPen AS CGpPen = ARGB_Violet
+   arrowPen.SetCustomEndCap(@myArrow)
+
+   ' // If the cap is filled, draw a line using arrowPen
+   IF myArrow.IsFilled THEN graphics.DrawLine(@arrowPen, 0, 0, 100, 100)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="setfillstate">SetFillState (CGpAdjustableArrowCap)</h3>
+<p>Sets the fill state of the arrow cap. If the arrow cap is not filled, only the outline is drawn.</p>
+<pre class="code"><code>FUNCTION SetFillState (BYVAL bIsFilled AS BOOL) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>bIsFilled</em></td><td>Boolean value that specifies whether the arrow cap is filled.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates an AdjustableArrowCap object, myArrow, and sets the fill
+' mode to FALSE. The code then creates a Pen object and assigns myArrow as the ending
+' line cap for this Pen object. Next, the code draws a line.
+' ========================================================================================
+SUB Example_SetFillState (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create an AdjustableArrowCap with a height of 10 pixels
+   ' // Fill state defaults to TRUE when arrow cap is constructed
+   DIM myArrow AS CGpAdjustableArrowCap = CGpAdjustableArrowCap(10, 10)
+   ' // Adjust to DPI by setting the scale width
+   myArrow.SetWidthScale(rxRatio)
+
+   ' // Set fill state to FALSE
+   myArrow.SetFillState(FALSE)
+
+   ' // Create a Pen, and assign myArrow as the end cap
+   DIM arrowPen AS CGpPen = ARGB_Violet
+   arrowPen.SetCustomEndCap(@myArrow)
+
+   ' // Draw a line using arrowPen
+   graphics.DrawLine(@arrowPen, 0, 0, 100, 100)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="setheight">SetHeight (CGpAdjustableArrowCap)</h3>
+<p>Sets the height of the arrow cap. This is the distance from the base of the arrow to its vertex.</p>
+<pre class="code"><code>FUNCTION SetHeight (BYVAL nHeight AS SINGLE) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nHeight</em></td><td>The height, in units, for the arrow cap.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates an AdjustableArrowCap, pMyArrowCap, and sets the height of the
+' cap to 15 pixels. The code then creates a Pen and assigns pMyArrowCap as the ending line cap
+' for this Pen. Next, the code draws a capped line.
+' ========================================================================================
+SUB Example_SetHeight (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create an AdjustableArrowCap with a height of 10 pixels
+   DIM myArrow AS CGpAdjustableArrowCap = CGpAdjustableArrowCap(10, 5, CTRUE)
+   ' // Adjust to DPI by setting the scale width
+   myArrow.SetWidthScale(rxRatio)
+
+   ' // Create a Pen, and assign myArrow as the end cap
+   DIM arrowPen AS CGpPen = ARGB_Violet
+   arrowPen.SetCustomEndCap(@myArrow)
+
+   ' // Get the width of the arrow
+   DIM nWidth AS SINGLE = myArrow.GetWidth
+
+   ' // Draw a line using arrowPen
+   graphics.DrawLine(@arrowPen, 0, 0, 100, 100)
+
+   ' // Set height equal to width and draw another line
+   myArrow.SetHeight(nWidth)
+   arrowPen.SetCustomEndCap(@myArrow)
+   graphics.DrawLine(@arrowPen, 0, 40, 100, 140)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="setmiddleinset">SetMiddleInset (CGpAdjustableArrowCap)</h3>
+<p>Sets the number of units that the midpoint of the base shifts towards the vertex.</p>
+<pre class="code"><code>FUNCTION SetMiddleInset (BYVAL middleInset AS SINGLE) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>middleInset</em></td><td>The number of units that the midpoint of the base shifts towards the vertex.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates an AdjustableArrowCap object, myArrow, and sets the middle
+' inset of the cap to 5 pixels. The code then creates a Pen object and assigns myArrow as
+' the ending line cap for this Pen object. Next, the code draws a capped line.
+' ========================================================================================
+SUB Example_SetMiddleInset (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create an AdjustableArrowCap with a height of 10 pixels
+   DIM myArrow AS CGpAdjustableArrowCap = CGpAdjustableArrowCap(10, 10, CTRUE)
+   ' // Adjust to DPI by setting the scale width
+   myArrow.SetWidthScale(rxRatio)
+   ' // Set the middle inset to 5
+   myArrow.SetMiddleInset(5)
+
+   ' // Create a Pen, and assign myArrow as the end cap
+   DIM arrowPen AS CGpPen = ARGB_Violet
+   arrowPen.SetCustomEndCap(@myArrow)
+
+   ' // Draw a line using arrowPen
+   graphics.DrawLine(@arrowPen, 0, 0, 100, 100)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="setwidth">SetWidth (CGpAdjustableArrowCap)</h3>
+<p>Sets the width of the arrow cap. The width is the distance between the endpoints of the base of the arrow.</p>
+<pre class="code"><code>FUNCTION SetWidth (BYVAL nWidth AS SINGLE) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nWidth</em></td><td>The width, in units, for the arrow cap.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates an AdjustableArrowCap, myArrow, and sets the width of
+' the cap to 10 pixels. The code then creates a Pen, assigns myArrow as the ending
+' line cap for this Pen, and draws a capped line. Next, the code sets the width to 15
+' pixels, reassigns the arrow cap to the pen, and draws a new capped line.
+' ========================================================================================
+SUB Example_SetWidth (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Set the scale transform
+   graphics.ScaleTransformForDpi
+
+   ' // Create an AdjustableArrowCap with a height of 10 pixels
+   DIM myArrow AS CGpAdjustableArrowCap = CGpAdjustableArrowCap(10, 10, CTRUE)
+   ' // Adjust to DPI by setting the scale width
+   myArrow.SetWidthScale(rxRatio)
+
+   ' // Create a Pen, and assign myArrow as the end cap
+   DIM arrowPen AS CGpPen = ARGB_Violet
+   arrowPen.SetCustomEndCap(@myArrow)
+
+   ' // Draw a line using arrowPen
+   graphics.DrawLine(@arrowPen, 0, 0, 100, 100)
+
+   ' // Set the cap to the new width, and reassign the arrow cap to the pen object.
+   myArrow.SetWidth(15.7)
+   arrowPen.SetCustomEndCap(@myArrow)
+
+   ' // Draw a line with new cap
+   graphics.DrawLine(@arrowPen, 0, 40, 100, 140)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

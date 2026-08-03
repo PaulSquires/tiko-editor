@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PsStatusBar — Help Center</title>
+<meta name="description" content="An owner-drawn status bar for FreeBASIC Win32 applications: a horizontal strip of panels along the bottom of a window, each holding a short piece of text, one of them able to stretch so the rest sit flush against the right edge.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/pscontrols/psstatusbar.html">
+<meta property="og:title" content="PsStatusBar">
+<meta property="og:description" content="An owner-drawn status bar for FreeBASIC Win32 applications: a horizontal strip of panels along the bottom of a window, each holding a short piece of text, one of them able to stretch so the rest sit flush against the right edge.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/pscontrols/psstatusbar.html">
+<link rel="stylesheet" href="../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="pscontrols/psstatusbar.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../index.html">Help Center</a><span>›</span><a href="../index.html">PlanetSquires Controls</a></div>
+<h2 id="psstatusbar">PsStatusBar</h2>
+<p>An owner-drawn status bar for FreeBASIC Win32 applications: a horizontal strip of panels along the bottom of a window, each holding a short piece of text, one of them able to stretch so the rest sit flush against the right edge.</p>
+<p>It draws itself entirely — there is no system <code>msctls_statusbar32</code> underneath, and nothing about its appearance depends on the visual style the user happens to be running. It has no child windows either: the control window <em>is</em> the bar, and a panel is a rectangle the control computed, not a window you can get a handle to.</p>
+<p>The control owns the bar's background, the panel geometry, hover tracking and the tooltip. It does <strong>not</strong> own a single pixel inside a panel. Everything you see in a panel comes from your paint callback, so a control with no paint callback installed renders as a bare coloured strip.</p>
+<hr>
+<h3 id="what-it-looks-like">What it looks like</h3>
+<p><img src="PsStatusBar.png" alt="The PsStatusBar demo"></p>
+<p>Two independent status bars: a blue-themed one with right-aligned panels, and a dark one with <code>Ready</code> on the left and Ln/Col, CRLF and UTF-8 on the right. Panels auto-size to their text and one panel may spring to absorb the slack. Cropped to the bars — the demo's client area above them is empty filler, not part of the control.</p>
+<hr>
+<h3 id="requirements">Requirements</h3>
+<p><strong>Files to copy into your project:</strong></p>
+<div class="table-wrap"><table><thead><tr><th>File</th><th>Purpose</th></tr></thead><tbody><tr><td><code>PsStatusBar.bi</code></td><td>Declarations — types, callbacks, constants, function prototypes</td></tr><tr><td><code>PsStatusBar.inc</code></td><td>Implementation</td></tr><tr><td><code>PsBufferPaint.bi</code></td><td>The flicker-free drawing surface the control paints through</td></tr><tr><td><code>PsBufferPaint.inc</code></td><td>Its implementation</td></tr><tr><td><code>PsTipHost.bi</code> / <code>PsTipHost.inc</code></td><td>The tooltip backend switch — see <em>Tooltips: two backends</em></td></tr><tr><td><code>PsTooltip.bi</code> / <code>PsTooltip.inc</code></td><td>The owner-drawn tooltip. Required even if you never switch to it: <code>PsTipHost.inc</code> includes it.</td></tr></tbody></table></div>
+<p><strong>AfxNova is required.</strong> The control is built on <code>CWindow</code>, uses <code>DWSTRING</code> for panel text, and <code>CBufferPaint</code> draws through <code>AfxNova\CGdiPlus.inc</code>. Sources include AfxNova relative to the workspace root (<code>#include once "AfxNova\CWindow.inc"</code>), so builds need the workspace root on the include path:</p>
+<pre class="code" data-lang="bash"><code>fbc64.exe -i "C:\dev" main.bas</code></pre>
+<p><strong>Include order.</strong> <code>PsStatusBar.bi</code> pulls in <code>PsBufferPaint.bi</code> and <code>PsTipHost.bi</code>; <code>PsStatusBar.inc</code> pulls in <code>PsTipHost.inc</code>, which in turn pulls in <code>PsTooltip.inc</code>. So the four tooltip files need no include line of your own. The <strong>implementation</strong> of <code>PsBufferPaint</code> is the one thing not pulled in for you, so include it yourself, first, after the AfxNova headers and after <code>using AfxNova</code>:</p>
+<pre class="code" data-lang="freebasic"><code>#include once "windows.bi"
+#include once "AfxNova\CWindow.inc"
+#include once "AfxNova\AfxStr.inc"
+#include once "AfxNova\AfxGdiplus.inc"
+
+using AfxNova
+
+#include once "PsBufferPaint.inc"
+#include once "PsStatusBar.inc"</code></pre>
+<p><strong>GDI+ must be running before the first repaint and must outlive the last one.</strong> The control renders through <code>PsBufferPaint</code>, which draws geometry with GDI+, so bracket your message loop:</p>
+<pre class="code" data-lang="freebasic"><code>dim as ULONG_PTR gdipToken = AfxGdipInit()
+' ... create windows, run the message loop ...
+AfxGdipShutdown( gdipToken )</code></pre>
+<p><code>AfxGdipShutdown</code> must come after every window is destroyed, because each repaint builds and tears down a <code>PsBufferPaint</code>. If you also call <code>CoInitialize</code> / <code>CoUninitialize</code>, put the shutdown before <code>CoUninitialize</code> — GDI+ leans on COM.</p>
+<p><strong>Never name an identifier <code>ok</code>.</strong> GDI+ defines <code>Ok = 0</code> as a <code>Status</code> enum value in namespace <code>AfxNova</code>, and hosts customarily say <code>using AfxNova</code>. An existing variable, parameter or function called <code>ok</code> becomes a duplicate definition the moment you adopt these files. Use <code>bOK</code> instead.</p>
+<p><strong>There is no pump obligation.</strong> The control installs no message filter and needs none — the header declares no filter function for you to call. It never takes focus and is not a tabstop, so <code>IsDialogMessage</code> is irrelevant to it. An ordinary <code>GetMessage</code> / <code>TranslateMessage</code> / <code>DispatchMessage</code> loop is all it asks for.</p>
+<p><strong>You supply and own the font.</strong> The control never creates one and never destroys one — it stores the <code>HFONT</code> you hand <code>PsStatusBar_SetFont</code> and selects it into a DC to measure with. Keep it alive for as long as the control lives, and delete it yourself afterwards. With no font set, the control measures with the stock <code>DEFAULT_GUI_FONT</code>, which it correctly never deletes.</p>
+<hr>
+<h3 id="quick-start">Quick start</h3>
+<pre class="code" data-lang="freebasic"><code>' Create it. The control is created zero-sized and hidden.
+dim as HWND hBar = PsStatusBar_Create( hWndParent, IDC_MYFORM_STATUSBAR )
+
+' Install the renderer FIRST -- nothing is drawn inside a panel without it.
+PsStatusBar_SetPaintCallback( hBar, @MyStatusBar_Paint )
+PsStatusBar_SetMessageCallback( hBar, @MyStatusBar_Message )
+PsStatusBar_SetTooltipCallback( hBar, @MyStatusBar_Tooltip )
+
+' The font is a LAYOUT input: it is what panel widths are measured with.
+PsStatusBar_SetBackColor( hBar, BGR(33,37,43) )
+PsStatusBar_SetFont( hBar, ghFont )
+
+' A representative bar: a message on the left, readouts on the right,
+' and an empty spring panel between them doing the pushing.
+PsStatusBar_AddPanel( hBar, "Ready",       1001 )
+PsStatusBar_AddPanel( hBar, "",            1002 )   ' the spring
+PsStatusBar_AddPanel( hBar, "Ln 1, Col 1", 1003 )
+PsStatusBar_AddPanel( hBar, "CRLF",        1004 )
+PsStatusBar_AddPanel( hBar, "UTF-8",       1005 )
+
+PsStatusBar_SetExpandPanel( hBar, 1 )                          ' panel 1 eats the slack
+PsStatusBar_SetPanelMinWidth( hBar, 2, pWindow-&gt;ScaleX(110) )  ' stop the readout jittering
+
+ShowWindow( hBar, SW_SHOW )</code></pre>
+<p>Place it yourself, from the host's <code>WM_SIZE</code>. The control has no opinion about where it goes:</p>
+<pre class="code" data-lang="freebasic"><code>sub MyForm_PositionStatusBar( byval hwnd as HWND )
+    dim as RECT rc: GetClientRect( hwnd, @rc )
+    dim as long nHeight = 24
+    dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
+    if pWindow then nHeight = pWindow-&gt;ScaleY(24)
+    SetWindowPos( hBar, 0, _
+        rc.left, rc.bottom - nHeight, rc.right - rc.left, nHeight, SWP_NOZORDER )
+end sub</code></pre>
+<p>And the renderer, which draws one panel per call:</p>
+<pre class="code" data-lang="freebasic"><code>sub MyStatusBar_Paint( byval p as PSSTATUSBAR_PAINTINFO ptr )
+    dim as COLORREF backclr, foreclr
+    if p-&gt;isHot then                  ' the only panel state there is: hot &gt; normal
+        backclr = theme.BackColorHot : foreclr = theme.ForeColorHot
+    else
+        backclr = theme.BackColor    : foreclr = theme.ForeColor
+    end if
+    p-&gt;b-&gt;SetForeColor( foreclr )
+    p-&gt;b-&gt;SetBackColor( backclr )
+    p-&gt;b-&gt;PaintRect( @p-&gt;rc )
+
+    ' Inset by the control's own padding, not a hardcoded guess: that padding is what
+    ' the panel's width was measured with. Same for the font.
+    dim as RECT rcText = p-&gt;rc
+    rcText.left += PsStatusBar_GetPadding( p-&gt;hStatusBar )
+    p-&gt;b-&gt;SetFont( ghFont )
+    p-&gt;b-&gt;PaintText( p-&gt;wszCaption, @rcText, DT_LEFT )
+end sub</code></pre>
+<p>Later, from anywhere:</p>
+<pre class="code" data-lang="freebasic"><code>PsStatusBar_SetText( hBar, 2, "Ln 42, Col 7" )   ' re-measures and repaints</code></pre>
+<p>That is the whole minimum. Everything below is refinement.</p>
+<hr>
+<h3 id="concepts">Concepts</h3>
+<h4 id="the-handle-is-a-real-hwnd">The handle is a real HWND</h4>
+<p><code>PsStatusBar_Create</code> returns an ordinary window handle, and every <code>PsStatusBar_*</code> function takes it. It is not an opaque type, so you can treat the control as the window it is — <code>SetWindowPos</code> to place and size it, <code>ShowWindow</code> to show it, <code>GetDlgItem</code> to find it by the <code>CtrlID</code> you passed at creation.</p>
+<h4 id="it-is-created-zero-sized-and-hidden">It is created zero-sized and hidden</h4>
+<p><code>PsStatusBar_Create</code> gives the control the styles <code>WS_CHILD</code>, <code>WS_CLIPSIBLINGS</code> and <code>WS_CLIPCHILDREN</code>. <code>WS_VISIBLE</code> is deliberately absent, so a newly created control shows nothing until you size it and call <code>ShowWindow</code>. That lets you build and configure the whole bar before it is ever seen. <code>CS_DBLCLKS</code> is added to the window class after creation, so <code>WM_LBUTTONDBLCLK</code> is delivered.</p>
+<h4 id="a-panel-is-a-rectangle-not-a-window">A panel is a rectangle, not a window</h4>
+<p>Panels live in an internal array. They are identified by their <strong>model index</strong>, <code>0</code> to <code>PsStatusBar_GetCount() - 1</code>, and every function that names a panel takes that index. Panels can be added, inserted and deleted at any time, and the whole set can be cleared — this control is not static.</p>
+<p>Each panel carries three pieces of host-visible state: its <code>Text</code>, an <code>itemData</code> integer of your choosing (a command id, typically, since a click hands you back the index and you look the id up), and <code>nMinWidth</code>. Its rect is derived by the control and is read-only to you.</p>
+<p><strong>Indices move.</strong> Insert or delete a panel and every later panel's index shifts, so an index you stashed earlier can now name a different panel. The control keeps its <em>own</em> stored indices straight for you — see the spring rules below — but yours are your problem.</p>
+<h4 id="how-wide-a-panel-is">How wide a panel is</h4>
+<p>This is the core of the control. Every panel is measured, and the formula is:</p>
+<pre class="code"><code>  panelWidth(i) = max( textWidth(i) + 2*padding, nMinWidth(i) )</code></pre>
+<p><code>textWidth</code> is <code>GetTextExtentPoint32W</code> of the panel's text, measured with the font you set (or the stock GUI font if you set none). <code>padding</code> is one value for the whole bar, charged on <strong>both</strong> sides. <code>nMinWidth</code> is per panel and defaults to 0, so panels auto-size to their text.</p>
+<p><code>nMinWidth</code> is a <strong>floor, not a fixed width</strong>. A panel whose text is wider than its minimum grows past it; a panel is never drawn narrower than its own text.</p>
+<p>Then the spring absorbs the slack:</p>
+<pre class="code"><code>  totalW   = sum of every panelWidth(i)
+  leftover = clientWidth - totalW
+
+  if leftover &gt; 0 and a valid spring panel is set:
+      panelWidth(spring) += leftover</code></pre>
+<p>And the panels are laid left to right, each spanning the <strong>full client height</strong>:</p>
+<pre class="code"><code>  x = 0
+  for each panel i:
+      rc(i) = ( x, clientTop, x + panelWidth(i), clientBottom )
+      x += panelWidth(i)</code></pre>
+<h5 id="worked-example">Worked example</h5>
+<p>An 800-pixel-wide bar, padding 8, with the five panels from the quick start. Text widths are whatever the font measures — the numbers below are illustrative:</p>
+<div class="table-wrap"><table><thead><tr><th>i</th><th>Text</th><th>text</th><th>+2×8</th><th>nMinWidth</th><th>width</th></tr></thead><tbody><tr><td>0</td><td><code>Ready</code></td><td>40</td><td>56</td><td>0</td><td><strong>56</strong></td></tr><tr><td>1</td><td><em>(empty — the spring)</em></td><td>0</td><td>16</td><td>0</td><td><strong>16</strong></td></tr><tr><td>2</td><td><code>Ln 1, Col 1</code></td><td>70</td><td>86</td><td>110</td><td><strong>110</strong></td></tr><tr><td>3</td><td><code>CRLF</code></td><td>32</td><td>48</td><td>0</td><td><strong>48</strong></td></tr><tr><td>4</td><td><code>UTF-8</code></td><td>38</td><td>54</td><td>0</td><td><strong>54</strong></td></tr><tr><td></td><td></td><td></td><td></td><td></td><td><em>total 284</em></td></tr></tbody></table></div>
+<p><code>leftover = 800 − 284 = 516</code>, so panel 1 becomes <code>16 + 516 = 532</code>, and the rects come out:</p>
+<pre class="code"><code>  0:  0 .. 56       "Ready"
+  1:  56 .. 588     the spring, empty
+  2:  588 .. 698    "Ln 1, Col 1"
+  3:  698 .. 746    "CRLF"
+  4:  746 .. 800    "UTF-8"</code></pre>
+<p>Panels 2, 3 and 4 are flush against the right edge, and stay there through every resize, because the spring is what changes size. <strong>That is the entire alignment story</strong> — there is no right-align flag, no per-panel alignment API. You get a trailing right-aligned group by putting the spring in front of it.</p>
+<h5 id="on-overflow-nothing-shrinks">On overflow, nothing shrinks</h5>
+<p>When <code>leftover &lt;= 0</code> the spring does not grow — it is already at its natural width — and no panel is squeezed. The panels simply run past the right edge and the ones on the right are clipped. Rects are computed honestly rather than compressed, which keeps hit-testing correct for free: the cursor cannot reach past the edge anyway.</p>
+<h4 id="panels-are-measured-so-the-font-re-lays-out">Panels are measured, so the font re-lays-out</h4>
+<p>Layout takes a device context. <code>PsStatusBar_SetFont</code> therefore does more than repaint — it invalidates the layout and every panel is re-measured on the next paint. So does <code>PsStatusBar_SetPadding</code>, and so does every change to a panel's text.</p>
+<p>Two obligations follow for your paint callback, and breaking either makes the widths lie:</p>
+<ul><li><strong>Draw with the same font you handed <code>PsStatusBar_SetFont</code>.</strong> The widths were measured with it.</li><li><strong>Inset your text by <code>PsStatusBar_GetPadding()</code>.</strong> That padding was added to the measured text width, so it is exactly the space the width already accounts for. This is why <code>PSSTATUSBAR_PAINTINFO</code> carries <code>hStatusBar</code> — so the callback can ask.</li></ul>
+<h4 id="layout-is-lazy">Layout is lazy</h4>
+<p>Mutators mark the layout stale and request a repaint; the next paint — or a <code>PsStatusBar_GetPanelRect</code> query — performs one measuring pass. There is no begin-update / end-update pair to remember, and a burst of <code>PsStatusBar_SetText</code> calls costs one layout, not N.</p>
+<p>A layout attempted while the control has no client area yet (created zero-sized, or not sized by the host), or one that cannot obtain a DC, leaves the layout marked stale and retries on the next paint.</p>
+<h4 id="the-spring-is-one-panel-and-the-control-keeps-its-index-honest">The spring is one panel, and the control keeps its index honest</h4>
+<p><code>PsStatusBar_SetExpandPanel</code> nominates the single spring. Setting one clears any previous one; <code>-1</code> clears it entirely; an index that is neither valid nor <code>-1</code> is refused and the current spring is left alone.</p>
+<p>Because the spring is stored as an index, the control fixes it up when panels move:</p>
+<div class="table-wrap"><table><thead><tr><th>You do</th><th>The stored spring index</th></tr></thead><tbody><tr><td>Insert at or before the spring</td><td>Shifts up by one, so it still names the same panel</td></tr><tr><td>Insert after the spring</td><td>Unchanged</td></tr><tr><td>Delete the spring itself</td><td>Cleared to <code>-1</code> — there is no spring any more</td></tr><tr><td>Delete a panel before the spring</td><td>Shifts down by one</td></tr><tr><td><code>PsStatusBar_Clear</code></td><td>Cleared to <code>-1</code></td></tr></tbody></table></div>
+<h4 id="hover-and-the-safety-net-behind-it">Hover, and the safety net behind it</h4>
+<p>One panel at a time is hot — the one under the cursor. It is passed to your paint callback as <code>isHot</code>, and it is the only per-panel visual state the control tracks. There is no selection and no pressed state.</p>
+<p><code>WM_MOUSEMOVE</code> recomputes the hot panel and invalidates only the two panels whose state changed, not the whole bar. <code>WM_MOUSELEAVE</code> clears it. Because <code>WM_MOUSELEAVE</code> is not reliably delivered when the cursor exits quickly or onto another control — which would strand a panel painted hot — a 100 ms timer runs while the cursor is over the control and polls the cursor position as a fallback. The timer is killed on <code>WM_DESTROY</code>, so it cannot outlive the window.</p>
+<h4 id="tooltips">Tooltips</h4>
+<p>The control creates one tooltip window covering the <strong>whole bar</strong> — not one tool per panel, because panels are painted rects rather than windows. The tip text is pulled on demand (<code>LPSTR_TEXTCALLBACK</code> / <code>TTN_GETDISPINFOW</code>) for whichever panel is currently hot, so nothing is duplicated and nothing goes stale. Moving between panels pops the current tip so the next hover re-queries.</p>
+<p>With no tooltip callback installed, the tip shows the hot panel's own <code>Text</code>. Install one to supply something different, and return <code>""</code> to suppress the tip for that panel entirely.</p>
+<p>The control owns that tooltip window and destroys it in <code>WM_NCDESTROY</code>. <code>PsStatusBar_GetTooltipHandle</code> hands you the <code>HWND</code> if you want to send it <code>TTM_*</code> messages.</p>
+<p>There are two tooltip <strong>backends</strong> — the comctl32 one described above, which is the default, and the owner-drawn <code>PsTooltip</code>. <code>PsStatusBar_SetTooltipMode</code> chooses per instance. The choice changes how a tip is drawn and driven, never what it says: both backends resolve the text through the rule in the paragraphs above. See <em>Tooltips: two backends</em> under the API reference.</p>
+<h4 id="pixels-and-who-scales-them">Pixels, and who scales them</h4>
+<p>Only the creation-time padding default is DPI-scaled for you: <code>PSSTATUSBAR_DEFAULT_PADDING</code> (8) is passed through <code>CWindow::ScaleX</code> at create. <code>PsStatusBar_SetPadding</code> and <code>PsStatusBar_SetPanelMinWidth</code> take <strong>raw pixels</strong> afterwards and expect you to scale — typically <code>pWindow-&gt;ScaleX(...)</code>. The control's height is entirely yours: it spans whatever you give it, and every panel spans the full client height.</p>
+<h4 id="instances-share-nothing">Instances share nothing</h4>
+<p>Every scrap of state — panels, spring, padding, font, colours, callbacks, hot index, tooltip — lives in a per-instance structure hung off the control window. Two bars on the same form can have different callbacks, different padding and independent hover state, and hovering one never lights up the other.</p>
+<h4 id="lifetime">Lifetime</h4>
+<p>The control frees itself when its window is destroyed, and destroys its own tooltip window with it. Fonts you pass in stay yours. Destroy the parent and the only thing left to clean up is your <code>HFONT</code>.</p>
+<hr>
+<h3 id="behaviour-and-limits">Behaviour and limits</h3>
+<p>Firm properties of the control, not settings:</p>
+<ul><li><strong>Nothing renders inside a panel without a paint callback.</strong> The control paints its own background and stops. That is not a degraded mode with a fallback — there is no built-in panel painter to fall back to.</li><li><strong>No mouse capture is taken, ever.</strong> Capture's only product is a guaranteed <code>WM_LBUTTONDOWN</code> → <code>WM_LBUTTONUP</code> pairing, and nothing here consumes that: there is no press state to strand. Two consequences follow by design. A <code>WM_LBUTTONDOWN</code> is <strong>not</strong> guaranteed a matching <code>WM_LBUTTONUP</code> — press inside, release outside, and no up arrives, which is exactly right for a host that acts on <code>WM_LBUTTONUP</code> with <code>idx &gt;= 0</code>. And pressing on panel 3, dragging to panel 5 and releasing fires <strong>panel 5</strong>. If you need true button semantics, put a button there.</li><li><strong><code>CS_DBLCLKS</code> is on.</strong> <code>WM_LBUTTONDBLCLK</code> is delivered to your message callback. The control does nothing with it itself.</li><li><strong>The control never takes focus.</strong> There is no <code>SetFocus</code> anywhere in it, including on <code>WM_LBUTTONDOWN</code> — a status bar must not steal focus from the host's editor. It is not a tabstop and has no keyboard handling of any kind.</li><li><strong>No panel width setter.</strong> You give a panel text and optionally a <em>minimum</em> width; the control measures and positions. A panel narrower than its own text is not something this control will draw.</li><li><strong>No vertical layout.</strong> Every panel spans the full client height. There is no row concept, no vertical padding, no per-panel height.</li><li><strong>No panel alignment API.</strong> Your callback owns every pixel inside a panel, so alignment is a <code>DT_*</code> flag in your own <code>PaintText</code> call. Bar-level alignment is the spring.</li><li><strong>Only one spring.</strong> Setting a second one clears the first.</li><li><strong>No separators or sizing grip.</strong> Draw them yourself in the paint callback if you want them.</li><li><strong>No <code>WM_COMMAND</code> to the parent.</strong> A click reaches you through the message callback and nowhere else.</li><li><strong>The right mouse button is reported, never acted on.</strong> <code>WM_RBUTTONDOWN</code> reaches the message callback; a context menu is your business. <code>WM_RBUTTONUP</code> is not reported.</li><li><strong><code>PsStatusBar_SetBackColor</code> does not repaint.</strong> It stores the colour and returns the previous one. Follow it with <code>PsStatusBar_Refresh</code> if the control is already visible.</li><li><strong><code>PsStatusBar_GetItemRect</code> does not force a pending layout; <code>PsStatusBar_GetPanelRect</code> does.</strong> The two otherwise return the same rectangle. Prefer <code>GetPanelRect</code> unless you specifically want the last computed value.</li><li><strong><code>PsStatusBar_SetHoverTime</code> does double duty.</strong> It is both the tooltip's initial delay (<code>TTDT_INITIAL</code>, honoured by either backend) and <code>TrackMouseEvent</code>'s <code>dwHoverTime</code>, which is what schedules the <code>WM_MOUSEHOVER</code> handed to your message callback. One value drives both; you cannot set them apart. Its parameter is declared <code>as integer</code> where <code>PsStatusBar_SetAutoPopTime</code> and <code>PsStatusBar_SetReshowTime</code> take <code>as long</code>.</li><li><strong>On overflow nothing shrinks</strong> — panels run past the right edge and are clipped.</li></ul>
+<blockquote><p><strong>A paint callback that fills a rectangle covering the whole control will erase everything under it, including every panel already drawn.</strong> Fill <code>p-&gt;rc</code>, the panel rect you were handed — never the client rect. The control has already filled the background before the first panel callback runs.</p></blockquote>
+<hr>
+<h3 id="api-reference">API reference</h3>
+<h4 id="creation">Creation</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsStatusBar_Create( hWndParent, CtrlID ) as HWND</code></td><td>Creates the control as a child of <code>hWndParent</code> and returns its window handle. <code>CtrlID</code> becomes the window's <code>GWLP_ID</code>, so <code>GetDlgItem</code> finds it. Created zero-sized and hidden — place it with <code>SetWindowPos</code>, then <code>ShowWindow</code>. Also creates the control's tooltip window.</td></tr></tbody></table></div>
+<h4 id="panels">Panels</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsStatusBar_AddPanel( hStatusBar, Text, itemData = 0 ) as integer</code></td><td>Appends a panel and returns its model index, or <code>-1</code> on failure. Marks the layout stale and repaints.</td></tr><tr><td><code>PsStatusBar_InsertPanel( hStatusBar, idx, Text, itemData = 0 ) as integer</code></td><td>Inserts a panel at <code>idx</code>, shifting that panel and every later one to a higher index. <code>idx</code> is <strong>clamped</strong> to <code>[0, count]</code>, so an out-of-range value inserts at the near end rather than failing. Returns the index actually used, or <code>-1</code> on failure. If the spring is at or after <code>idx</code>, its stored index is shifted up so it still names the same panel.</td></tr><tr><td><code>PsStatusBar_DeletePanel( hStatusBar, idx ) as boolean</code></td><td>Deletes the panel at <code>idx</code> and shifts later panels down. Returns FALSE for an invalid index. Deleting the spring clears the spring; deleting a panel before it shifts it down. A hot index left past the end is cleared.</td></tr><tr><td><code>PsStatusBar_Clear( hStatusBar )</code></td><td>Removes every panel, and clears both the spring and the hot panel. Marks the layout stale and repaints.</td></tr><tr><td><code>PsStatusBar_GetCount( hStatusBar ) as integer</code></td><td>Number of panels. Valid indices are <code>0</code> to <code>count - 1</code>.</td></tr></tbody></table></div>
+<h4 id="panel-state">Panel state</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsStatusBar_GetText( hStatusBar, idx ) as DWSTRING</code></td><td>The panel's text; <code>""</code> for an invalid index.</td></tr><tr><td><code>PsStatusBar_SetText( hStatusBar, idx, Text ) as boolean</code></td><td>Sets the text. Because text drives the panel's width this <strong>re-lays-out</strong>, not merely repaints. Returns FALSE for an invalid index.</td></tr><tr><td><code>PsStatusBar_GetItemData( hStatusBar, idx ) as integer</code></td><td>The panel's <code>itemData</code>; <code>0</code> for an invalid index — indistinguishable from a panel whose data really is 0.</td></tr><tr><td><code>PsStatusBar_SetItemData( hStatusBar, idx, itemData ) as boolean</code></td><td>Sets the <code>itemData</code>. Affects neither layout nor appearance, so it does <strong>not</strong> repaint. Returns FALSE for an invalid index.</td></tr></tbody></table></div>
+<h4 id="geometry--layout">Geometry &amp; layout</h4>
+<p>All pixel values are <strong>raw</strong>; you do the DPI scaling.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsStatusBar_GetPanelMinWidth( hStatusBar, idx ) as integer</code></td><td>The panel's minimum width in pixels; <code>0</code> means auto-size to text. Returns <code>0</code> for an invalid index.</td></tr><tr><td><code>PsStatusBar_SetPanelMinWidth( hStatusBar, idx, nMinWidth ) as boolean</code></td><td>Sets the floor, clamped to a minimum of 0. A <strong>floor, not a fixed width</strong> — the panel still grows past it for longer text. Set one on any panel whose text changes length, or it resizes and shoves its neighbours on every update. Re-lays-out. Returns FALSE for an invalid index.</td></tr><tr><td><code>PsStatusBar_GetExpandPanel( hStatusBar ) as integer</code></td><td>The spring panel's index, or <code>-1</code> if there is none.</td></tr><tr><td><code>PsStatusBar_SetExpandPanel( hStatusBar, idx ) as boolean</code></td><td>Nominates the single spring panel that absorbs all unused bar width. Setting one clears any previous spring; <code>-1</code> clears it entirely. Returns FALSE — <strong>leaving the current spring untouched</strong> — for an index that is neither valid nor <code>-1</code>. Re-lays-out.</td></tr><tr><td><code>PsStatusBar_GetPadding( hStatusBar ) as integer</code></td><td>The horizontal padding added to <strong>each</strong> side of a panel's text when measuring. Call this from your paint callback to inset text by the same amount the width assumed.</td></tr><tr><td><code>PsStatusBar_SetPadding( hStatusBar, nPadding )</code></td><td>Sets that padding, clamped to a minimum of 0. One value for the whole bar. This is a <strong>layout</strong> input, not cosmetics — it re-lays-out. Raw pixels: DPI-scale it yourself.</td></tr><tr><td><code>PsStatusBar_GetPanelRect( hStatusBar, idx, byref rc ) as boolean</code></td><td>The panel's rectangle in client coordinates. <strong>Forces a pending layout first</strong>, so the result is always current. Returns FALSE and leaves <code>rc</code> empty for an invalid index.</td></tr><tr><td><code>PsStatusBar_GetItemRect( hStatusBar, idx ) as RECT</code></td><td>The panel's last <strong>computed</strong> rectangle, returned by value. Does <strong>not</strong> force a pending layout, so it can be stale after a mutator and before the next paint. Returns an empty RECT for an invalid index.</td></tr><tr><td><code>PsStatusBar_Refresh( hStatusBar )</code></td><td>Marks the layout stale and invalidates the whole control <strong>with</strong> background erase, so a region vacated by a shrinking panel is cleared. Every mutator does this for you; call it after <code>PsStatusBar_SetBackColor</code>, which does not.</td></tr></tbody></table></div>
+<h4 id="appearance">Appearance</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsStatusBar_GetBackColor( hStatusBar ) as COLORREF</code></td><td>The bar's background colour.</td></tr><tr><td><code>PsStatusBar_SetBackColor( hStatusBar, clr ) as COLORREF</code></td><td>Sets it and returns the <strong>previous</strong> colour. Does <strong>not</strong> repaint — follow with <code>PsStatusBar_Refresh</code> on a visible control.</td></tr><tr><td><code>PsStatusBar_GetFont( hStatusBar ) as HFONT</code></td><td>The font handle you set, or <code>0</code> if none.</td></tr><tr><td><code>PsStatusBar_SetFont( hStatusBar, hFont ) as boolean</code></td><td>Stores the font used to <strong>measure</strong> panel widths. The control borrows the handle and never destroys it — keep it alive, delete it yourself. With none set, measurement uses the stock <code>DEFAULT_GUI_FONT</code>. Because the font is what widths are measured with, this <strong>re-lays-out</strong>. Returns FALSE only when the handle is not a PsStatusBar.</td></tr></tbody></table></div>
+<h4 id="tooltips">Tooltips</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsStatusBar_GetTooltipHandle( hStatusBar ) as HWND</code></td><td>The <strong>comctl32</strong> tooltip window, for any <code>TTM_*</code> message you want to send it yourself, such as <code>TTM_SETMAXTIPWIDTH</code>. The control owns it and destroys it — do not destroy it yourself. Returns <strong>0</strong> while this control is on the PsTooltip backend — the honest answer, since a <code>TTM_*</code> sent to a PsTooltip window is silently ignored.</td></tr><tr><td><code>PsStatusBar_GetPsTooltipHandle( hStatusBar ) as HWND</code></td><td>The <strong>PsTooltip</strong> window, or 0 while on the system backend. The door to <code>PsTooltip_SetColors</code> / <code>SetFonts</code> / <code>SetStyle</code> / <code>SetMaxWidth</code> / <code>SetTitle</code> / <code>SetGlyph</code> — none of which is mirrored here.</td></tr><tr><td><code>PsStatusBar_SetTooltipMode( hStatusBar, nMode ) as boolean</code></td><td><code>PSTIP_MODE_SYSTEM</code> (default) or <code>PSTIP_MODE_PS</code>. Destroys the outgoing tip, builds the incoming one and re-applies the stored delays. A no-op when the mode asked for is already live. Returns TRUE if that mode is live on return. See below.</td></tr><tr><td><code>PsStatusBar_GetTooltipMode( hStatusBar ) as long</code></td><td>Which backend is live.</td></tr><tr><td><code>PsStatusBar_SetHoverTime( hStatusBar, milliseconds )</code></td><td>The initial delay (<code>TTDT_INITIAL</code>) — how long the cursor must rest before a tip shows. Honoured by <strong>both</strong> backends. It is <strong>also</strong> <code>TrackMouseEvent</code>'s <code>dwHoverTime</code>, so it sets the <code>WM_MOUSEHOVER</code> delay handed to your message callback (default 250 ms) at the same time; that half takes effect on the next <code>WM_MOUSEMOVE</code>. Its parameter is <code>as integer</code>, unlike the two below.</td></tr><tr><td><code>PsStatusBar_SetAutoPopTime( hStatusBar, milliseconds as long )</code></td><td>How long a tip stays up (<code>TTDT_AUTOPOP</code>). Honoured by both backends.</td></tr><tr><td><code>PsStatusBar_SetReshowTime( hStatusBar, milliseconds as long )</code></td><td>The shorter delay used when a tip was recently dismissed (<code>TTDT_RESHOW</code>). Honoured by both backends.</td></tr></tbody></table></div>
+<h5 id="tooltips-two-backends">Tooltips: two backends</h5>
+<p>The control ships on the <strong>system</strong> (comctl32) tooltip it has always used. <code>PSTIP_MODE_PS</code> switches this instance to <strong>PsTooltip</strong>: owner-drawn, themeable, word-wrapping without a hand-sent <code>TTM_SETMAXTIPWIDTH</code>, and — the one that matters structurally — <strong>not a subclass of the control it serves</strong>, so it still works when the window under the cursor is a descendant rather than the control itself. Either way the control adds <strong>no pump obligation</strong>: PsTooltip has no <code>FilterMessage</code>.</p>
+<p>The default is deliberate, not caution. PsTooltip's colour defaults are <strong>dark</strong>, so a control that switched itself would put a dark tip on a light form. Theme every tip in the process at once — <code>PsTooltip_SetDefaultColors</code>, <code>PsTooltip_SetDefaultFonts</code>, <code>PsTooltip_SetDefaultStyle</code>, <code>PsTooltip_SetDefaultMaxWidth</code>, <code>PsTooltip_SetDefaultDelays</code>, called once at startup — then opt in per instance.</p>
+<p><strong>The mode changes how a tip is drawn, never what it says.</strong> Both backends resolve text through the same rule — this control's <code>TooltipCallback</code> if one is installed, otherwise the panel's own <code>Text</code>.</p>
+<p>A delay you set is <strong>stored as well as pushed</strong>, so one set before a mode switch is still in force after it. A delay you never set keeps the backend's own derivation from the system double-click time, which is what makes a tip appear on the same beat as every other tip on the machine.</p>
+<pre class="code" data-lang="freebasic"><code>PsTooltip_SetDefaultColors( @myTipColors )     ' once, at startup, for every tip in the process
+PsTooltip_SetDefaultFonts( ghFontUI )
+
+PsStatusBar_SetTooltipMode( hBar, PSTIP_MODE_PS )
+PsStatusBar_SetHoverTime( hBar, 400 )
+dim as HWND hTip = PsStatusBar_GetPsTooltipHandle( hBar )
+if hTip then PsTooltip_SetTitle( hTip, "Cursor position" )   ' not reachable on the system backend</code></pre>
+<h4 id="callback-registration">Callback registration</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsStatusBar_SetPaintCallback( hStatusBar, usersub )</code></td><td>Installs the renderer called once per visible panel. Required — nothing inside a panel is drawn without it. Does not itself repaint; call <code>PsStatusBar_Refresh</code> if the control is already visible.</td></tr><tr><td><code>PsStatusBar_SetMessageCallback( hStatusBar, userfunc )</code></td><td>Installs an observer for mouse messages.</td></tr><tr><td><code>PsStatusBar_SetTooltipCallback( hStatusBar, userfunc )</code></td><td>Installs the on-demand tooltip text supplier. Without it, the tip shows the panel's own text.</td></tr></tbody></table></div>
+<p>All three are optional and independent — though the bar shows nothing but its background without the first.</p>
+<hr>
+<h3 id="colors">Colors</h3>
+<p><strong>There is no colour struct.</strong> The control paints exactly one thing — its own background — and so it has exactly one colour, reached through <code>PsStatusBar_GetBackColor</code> / <code>PsStatusBar_SetBackColor</code>. Everything else on screen is drawn by your paint callback out of colours you keep yourself, which is why panel colours are not part of this API.</p>
+<div class="table-wrap"><table><thead><tr><th>Colour</th><th>Paints</th></tr></thead><tbody><tr><td><code>BackColor</code></td><td>The whole client area, filled once at the start of every repaint — including any gap on the right that no panel covers</td></tr></tbody></table></div>
+<p><code>BackColor</code> has no default worth relying on: an unset one is 0, which is black. Set it before the control is first shown.</p>
+<h4 id="the-one-state-the-control-tracks">The one state the control tracks</h4>
+<p>Panel visual state is <code>isHot</code> and nothing else. There is no selection, no pressed state and no disabled state, so the precedence your callback implements is the whole table:</p>
+<pre class="code"><code>  hot   &gt;   normal</code></pre>
+<p>At most one panel is hot at a time. When the cursor is over bar area no panel covers, no panel is hot.</p>
+<h4 id="the-paint-sequence">The paint sequence</h4>
+<div class="table-wrap"><table><thead><tr><th>Step</th><th>What happens</th></tr></thead><tbody><tr><td>1</td><td>Any pending layout is consumed — one measuring pass, however many mutators ran</td></tr><tr><td>2</td><td>The update rectangle is captured (before <code>BeginPaint</code> clears it)</td></tr><tr><td>3</td><td>A <code>PsBufferPaint</code> is created and the <strong>whole client</strong> is filled with <code>BackColor</code></td></tr><tr><td>4</td><td>Your paint callback is invoked once per panel that intersects the update rectangle</td></tr><tr><td>5</td><td>The buffer is blitted to the screen</td></tr></tbody></table></div>
+<p>Step 4's skip is an optimisation only, and correctness never depends on it: the update rectangle is the update <em>region's</em> bounding box, so when hover moves between two far-apart panels their union spans the bar and nothing is skipped. The buffer fills the whole client either way. <code>WM_ERASEBKGND</code> returns TRUE and never erases — step 3 is the erase.</p>
+<hr>
+<h3 id="callbacks">Callbacks</h3>
+<h4 id="paint">Paint</h4>
+<pre class="code" data-lang="freebasic"><code>type SB_PaintCallbackSub as sub( byval p as PSSTATUSBAR_PAINTINFO ptr )</code></pre>
+<p>Draws <strong>one panel</strong>. Called once for each panel touched by the repaint, so keep it cheap. Paint through <code>p-&gt;b</code>, the control's double buffer for this repaint — do not touch the screen DC, and do not keep the pointer past the call.</p>
+<p>Nothing at all is drawn inside panels if no paint callback is set.</p>
+<p><code>PSSTATUSBAR_PAINTINFO</code>:</p>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>hStatusBar</code></td><td>The control, so the callback can query it — chiefly for <code>PsStatusBar_GetPadding</code></td></tr><tr><td><code>itemID</code></td><td>The panel's model index</td></tr><tr><td><code>b</code></td><td>The control's <code>PsBufferPaint</code> for this repaint (borrowed, not owned)</td></tr><tr><td><code>rc</code></td><td>This panel's rect, in client coordinates — the only rect you may fill</td></tr><tr><td><code>isHot</code></td><td>The mouse is over this panel</td></tr><tr><td><code>wszCaption</code></td><td>The panel's <code>Text</code>, copied for you so you need not call <code>GetText</code></td></tr></tbody></table></div>
+<p>Two contracts, and breaking either makes the layout disagree with what you drew:</p>
+<ul><li><strong>Draw with the same font you handed <code>PsStatusBar_SetFont</code>.</strong> The widths were measured with it.</li><li><strong>Inset your text by <code>PsStatusBar_GetPadding( p-&gt;hStatusBar )</code>.</strong> That padding is already part of the width.</li></ul>
+<blockquote><p><strong>Fill <code>p-&gt;rc</code>, never the client rect.</strong> A callback that fills a rectangle covering the whole control erases every panel drawn before it.</p></blockquote>
+<h4 id="message">Message</h4>
+<pre class="code" data-lang="freebasic"><code>type SB_MessageCallbackFunc as function( byval m as PSSTATUSBAR_MESSAGEINFO ptr ) as boolean</code></pre>
+<p>Observes mouse messages as they arrive. Return TRUE to suppress the control's own handling of that message, FALSE to let it proceed.</p>
+<p><strong>The result is honoured uniformly, for every message.</strong> The control takes no mouse capture, so there is no invariant a callback can strand by suppressing something — unlike controls that must see their own button-up.</p>
+<p>The callback is offered exactly these messages:</p>
+<div class="table-wrap"><table><thead><tr><th>Message</th><th>Notes</th></tr></thead><tbody><tr><td><code>WM_MOUSEMOVE</code></td><td>Called <strong>after</strong> the hot panel is updated, so <code>m-&gt;idx</code> and the control agree</td></tr><tr><td><code>WM_MOUSEHOVER</code></td><td>Scheduled by <code>PsStatusBar_SetHoverTime</code>, default 250 ms</td></tr><tr><td><code>WM_MOUSELEAVE</code></td><td><code>m-&gt;idx</code> is always <code>-1</code> — the mouse is gone. Hot tracking is already cleared</td></tr><tr><td><code>WM_LBUTTONDOWN</code></td><td></td></tr><tr><td><code>WM_LBUTTONUP</code></td><td>Only ever arrives while the cursor is still over the control; see the capture note</td></tr><tr><td><code>WM_LBUTTONDBLCLK</code></td><td>Delivered because the class carries <code>CS_DBLCLKS</code></td></tr><tr><td><code>WM_RBUTTONDOWN</code></td><td>Reported, never acted on. <code>WM_RBUTTONUP</code> is <strong>not</strong> reported</td></tr></tbody></table></div>
+<p><code>PSSTATUSBAR_MESSAGEINFO</code>:</p>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>hStatusBar</code></td><td>The control — use it to tell instances apart when they share one callback</td></tr><tr><td><code>uMsg</code></td><td>The message</td></tr><tr><td><code>wParam</code></td><td>Its <code>wParam</code></td></tr><tr><td><code>lParam</code></td><td>Its <code>lParam</code></td></tr><tr><td><code>idx</code></td><td>Panel index under the mouse, or <code>-1</code> for none (empty bar area, or the mouse has left)</td></tr></tbody></table></div>
+<p>A click handler is normally <code>WM_LBUTTONUP</code> with <code>idx &lt;&gt; -1</code>:</p>
+<pre class="code" data-lang="freebasic"><code>function MyStatusBar_Message( byval m as PSSTATUSBAR_MESSAGEINFO ptr ) as boolean
+    if m-&gt;uMsg = WM_LBUTTONUP then
+        if m-&gt;idx &lt;&gt; -1 then
+            DoCommand( PsStatusBar_GetItemData( m-&gt;hStatusBar, m-&gt;idx ) )
+        end if
+    end if
+    return false     ' let the control carry on
+end function</code></pre>
+<h4 id="tooltip">Tooltip</h4>
+<pre class="code" data-lang="freebasic"><code>type SB_TooltipCallbackFunc as function( byval hStatusBar as HWND, byval idx as integer ) as DWSTRING</code></pre>
+<p>Supplies the tooltip text for a panel, on demand — called only when a tip is about to show, for whichever panel is currently hot. Return <code>""</code> for no tooltip on that panel, which is how you suppress the tip over an empty spring.</p>
+<p>If no tooltip callback is installed, the tip shows the panel's own <code>Text</code>.</p>
+<pre class="code" data-lang="freebasic"><code>function MyStatusBar_Tooltip( byval hCtl as HWND, byval idx as integer ) as DWSTRING
+    dim as DWSTRING wszText = PsStatusBar_GetText( hCtl, idx )
+    if len(wszText) = 0 then return ""            ' the spring gets no tip
+    return "Panel " &amp; idx &amp; " -&gt; " &amp; wszText
+end function</code></pre>
+<hr>
+<h3 id="constants">Constants</h3>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><code>PSSTATUSBAR_DEFAULT_PADDING</code></td><td>8</td><td>Default horizontal padding per side, DPI-scaled at create. <code>PsStatusBar_SetPadding</code> takes raw pixels thereafter</td></tr><tr><td><code>IDT_CSTATUSBAR_HOTTRACK</code></td><td><code>&amp;hCB01</code></td><td>Timer id for the hover safety net. Per-window, so every instance can share it — but do not reuse this id on the control's own window</td></tr><tr><td><code>PSSTATUSBAR_HOTTRACK_MS</code></td><td>100</td><td>How often that timer polls the cursor while it is over the control</td></tr><tr><td><code>PSTIP_MODE_SYSTEM</code></td><td>0</td><td>The comctl32 tooltip backend — the default</td></tr><tr><td><code>PSTIP_MODE_PS</code></td><td>1</td><td>The owner-drawn <code>PsTooltip</code> backend</td></tr></tbody></table></div>
+<p>Two more defaults are not <code>#define</code>s but structure-field initialisers worth knowing:</p>
+<div class="table-wrap"><table><thead><tr><th>Default</th><th>Value</th></tr></thead><tbody><tr><td>Hover time, changeable with <code>PsStatusBar_SetHoverTime</code></td><td>250 ms</td></tr><tr><td>Spring panel index — no spring</td><td>−1</td></tr></tbody></table></div>
+    <footer class="foot">
+      <p>PlanetSquires owner-drawn controls for FreeBASIC / AfxNova. Copyright © Paul Squires, distributed under the MIT License. Documentation generated from each control&#x27;s own README. <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../index.html">Home</a> ·
+         <a href="../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../nav.js?v=70a6b70236"></script>
+<script src="../search-index.js"></script>
+<script src="../assets/app.js?v=456d079659"></script>
+<script src="../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

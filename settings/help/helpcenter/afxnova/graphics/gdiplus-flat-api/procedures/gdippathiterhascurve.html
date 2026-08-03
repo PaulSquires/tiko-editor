@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipPathIterHasCurve — Help Center</title>
+<meta name="description" content="Determines whether the path has any curves.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdippathiterhascurve.html">
+<meta property="og:title" content="GdipPathIterHasCurve">
+<meta property="og:description" content="Determines whether the path has any curves.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdippathiterhascurve.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdippathiterhascurve.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../gdipluspathiterator.html">GdiPlusPathIterator</a></div>
+<h1>GdipPathIterHasCurve<span class="h1kind">function</span></h1>
+<p class="lede">Determines whether the path has any curves.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipPathIterHasCurve (BYVAL iterator AS GpPathIterator PTR, BYVAL hasCurve AS BOOL PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>iterator</code></td><td></td><td>[in] Pointer to the <strong>GraphicsPathIterator</strong> object.</td></tr><tr><td><code>hasCurve</code></td><td></td><td>[out] Pointer to a variable that receives the number of data points in the path.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Determines whether the path has any curves.</p>
+<h2>Remarks</h2>
+<p>All curves in a path are stored as sequences of Bézier splines. For example, when you add an ellipse to a path, you specify the upper-left corner, the width, and the height of the ellipse's bounding rectangle. Those numbers (upper-left corner, width, and height) are not stored in the path; instead; the ellipse is converted to a sequence of four Bzier splines. The path stores the endpoints and control points of those Bézier splines.</p>
+<p>A path stores an array of data points, each of which belongs to a line or a Bézier spline. If some of the points in the array belong to Bézier splines, then <strong>GdipPathHasCurve returns</strong> TRUE. If all points in the array belong to lines, then  <strong>GdipPathHasCurve</strong> returns FALSE.</p>
+<p>Certain methods flatten a path, which means that all the curves in the path are converted to sequences of lines. After a path has been flattened, <strong>GdipPathHasCurve</strong> will always return FALSE. Flattening happens when you call the <strong>GdipFlattenPath</strong>, <strong>GdipWidenPath</strong>, or <strong>GdipWarpPath</strong> functions.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' Example: Using GdipPathIterHasCurve to Detect Bézier Segments. ' Paths with curves are stored as Bézier splines. ' Some operations (like flattening or widening) convert curves to straight lines. ' This check helps you decide whether to preserve or simplify the path. ' ======================================================================================== SUB Example_PathIterHasCurve (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' Create a GraphicsPath DIM path AS GpPath PTR hStatus = GdipCreatePath(FillModeAlternate, @path)</p>
+<p>' Add a line segment hStatus = GdipAddPathLine(path, 20, 20, 120, 20)</p>
+<p>' Add a Bézier curve hStatus = GdipAddPathBezier(path, 130, 30, 160, 10, 190, 50, 220, 30)</p>
+<p>' Create PathIterator DIM iterator AS GpPathIterator PTR hStatus = GdipCreatePathIter(@iterator, path)</p>
+<p>' Check for curves DIM hasCurve AS BOOL hStatus = GdipPathIterHasCurve(iterator, @hasCurve)</p>
+<p>' Display result in window DIM fontFamily AS GpFontFamily PTR DIM font AS GpFont PTR DIM brush AS GpSolidFill PTR hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily) hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(12, TRUE), FontStyleRegular, UnitPixel, @font) hStatus = GdipCreateSolidFill(ARGB_BLACK, @brush)</p>
+<p>DIM info AS STRING = "Path contains curves: " &amp; IIF(hasCurve, "True", "False") DIM layout AS GpRectF = (10.0, 10.0, 300.0, 20.0) hStatus = GdipDrawString(graphics, info, -1, font, @layout, NULL, brush)</p>
+<p>' Cleanup IF brush THEN GdipDeleteBrush(brush) IF font THEN GdipDeleteFont(font) IF fontFamily THEN GdipDeleteFontFamily(fontFamily) IF iterator THEN GdipDeletePathIter(iterator) IF path THEN GdipDeletePath(path) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2291</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusPathIterator.md</span></li><li>Topic: <a href="../gdipluspathiterator.html">GdiPlusPathIterator</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

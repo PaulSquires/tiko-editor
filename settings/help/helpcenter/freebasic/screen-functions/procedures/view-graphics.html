@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>View (Graphics) — Help Center</title>
+<meta name="description" content="Sets new physical coordinate mapping and clipping region for graphics keywords">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/screen-functions/procedures/view-graphics.html">
+<meta property="og:title" content="View (Graphics)">
+<meta property="og:description" content="Sets new physical coordinate mapping and clipping region for graphics keywords">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/screen-functions/procedures/view-graphics.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/screen-functions/procedures/view-graphics.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>View (Graphics)<span class="h1kind">keyword</span></h1>
+<p class="lede">Sets new physical coordinate mapping and clipping region for graphics keywords</p>
+<div class="badges"><a class="badge" href="../index.html">Screen Functions</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>View</code></pre>
+<pre class="code sig"><code>View ( x1, y1 )-( x2, y2 ) [ [, fill_color ] [, border_color ] ]</code></pre>
+<pre class="code sig"><code>View Screen ( x1, y1 )-( x2, y2 ) [ [, fill_color ] [, border_color ] ]</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>x1</code></td><td></td><td><code><a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../standard-data-types/procedures/integer.html">Integer</a></code>,</td></tr><tr><td><code>y1</code></td><td></td><td><code><a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../standard-data-types/procedures/integer.html">Integer</a></code><br>
+The horizontal and vertical offsets, in pixels, of one corner of the viewport relative to the top-left corner of the screen.</td></tr><tr><td><code>x2</code></td><td></td><td><code><a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../standard-data-types/procedures/integer.html">Integer</a></code>,</td></tr><tr><td><code>y2</code></td><td></td><td><code><a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../standard-data-types/procedures/integer.html">Integer</a></code><br>
+The horizontal and vertical offsets, in pixels, of the opposite corner of the viewport relative to the top-left corner of the screen.</td></tr><tr><td><code>fill_color</code></td><td></td><td><code><a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../standard-data-types/procedures/ulong.html">ULong</a></code><br>
+The color to fill the new viewport.</td></tr><tr><td><code>border_color</code></td><td></td><td><code><a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../standard-data-types/procedures/ulong.html">ULong</a></code><br>
+The color of the border to draw around the new viewport.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+The <i>viewport</i>, or clipping region, is a rectangular area of the graphics screen, outside of which no graphics drawing will be done. That is, only graphics drawing done within this area will be shown. A graphics screen must be created with <code><a href="screen-graphics.html">Screen (Graphics)</a></code> or <code><a href="screenres.html">ScreenRes</a></code> before calling <code><b>View</b></code> or <code><b>View Screen</b></code>.<br>
+<br>
+The first statement (<code><b>View</b></code>) sets the viewport to encompass the entire screen, which is the default viewport for a new graphics screen.<br>
+<br>
+The second and third statements (<code><b>View</b></code> <code><i>parameters</i></code> and <code><b>View</b> Screen</code> <code><i>parameters</i></code>) both allow a new viewport to be defined. The indicated effects for each parameter only occur if that parameter is specified:<br>
+<ul><ul><li> The corners of the viewport are specified by the <code><i>x1</i></code>, <code><i>y1</i></code>, <code><i>x2</i></code> and <code><i>y2</i></code> parameters.<br>
+<li> <code><i>fill_color</i></code> and <code><i>border_color</i></code> are both in the format accepted by <code><a href="../../console-functions/procedures/color.html">Color</a></code>.<br>
+<li> The second statement (<code><b>View</b></code> <code><i>parameters</i></code>) modifies the coordinate mapping of the graphics screen such that coordinates specified for graphics drawing statements and procedures are relative to the top-left corner of the viewport.<br>
+<li> The third statement (<code><b>View</b> Screen</code> <code><i>parameters</i></code>) modifies the coordinate mapping of the graphics screen such that coordinates specified for graphics drawing statements and procedures are relative to the top-left corner of the screen.<br>
+<li> In both cases no new scale factor is applied (see <code><a href="window.html">Window</a></code> for that).<br>
+<br>
+</li></li></li></li></li></ul></ul>
+<h2>Remarks</h2>
+<h3>Differences from QB</h3><br>
+<ul><li> QBASIC preserves the <code>WINDOW</code> coordinate mapping after subsequent calls to <code>VIEW</code>.<br>
+<li> FreeBASIC's current behavior is to preserve the <code>WINDOW</code> coordinates after calls to <code>VIEW</code>, or when working on images, meaning that the coordinate mapping may undergo scaling/translations if the viewport changes. (If a <code>WINDOW</code> hasn't been set, there is no coordinate mapping, and so it doesn't change after calls to <code>VIEW</code>.)  The behavior may change in future, but consistent behavior can be assured over inconstent viewport coordinates by re-calling <code>WINDOW</code> whenever you change the <code>VIEW</code>.<br>
+<br>
+</li></li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../console-functions/procedures/view-print.html">View Print</a></code><br>
+<li> <code><a href="screen-graphics.html">Screen (Graphics)</a></code><br>
+<li> <code><a href="window.html">Window</a></code><br>
+<li> <code><a href="pmap.html">PMap</a></code><br>
+<br>
+</li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Screen</span> <span class="tok-nu">12</span>
+
+<span class="tok-kw">Dim</span> <span>ip</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>x</span><span>,</span> <span>y</span>
+
+
+
+<span class="tok-cm">'simple sprite</span>
+
+<span>ip</span> <span>=</span> <span class="tok-kw">ImageCreate</span><span>(</span><span class="tok-nu">64</span><span>,</span><span class="tok-nu">64</span><span>)</span>
+
+<span class="tok-kw">For</span> <span>y</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">63</span>
+
+  <span class="tok-kw">For</span> <span>x</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">63</span>
+
+    <span class="tok-kw">PSet</span> <span>ip</span><span>,</span> <span>(</span><span>x</span><span>,</span> <span>y</span><span>),</span> <span>(</span><span>x</span><span>\</span><span class="tok-nu">4</span><span>)</span> <span class="tok-kw">Xor</span> <span>(</span><span>y</span><span>\</span><span class="tok-nu">4</span><span>)</span>
+
+  <span class="tok-kw">Next</span> <span>x</span>
+
+<span class="tok-kw">Next</span> <span>y</span>
+
+
+
+<span class="tok-cm">'viewport with blue border</span>
+
+<span class="tok-kw">Line</span> <span>(</span><span class="tok-nu">215</span><span>,</span><span class="tok-nu">135</span><span>)-(</span><span class="tok-nu">425</span><span>,</span><span class="tok-nu">345</span><span>),</span> <span class="tok-nu">1</span><span>,</span> <span>bf</span>
+
+<span class="tok-kw">View</span> <span>(</span><span class="tok-nu">220</span><span>,</span><span class="tok-nu">140</span><span>)-(</span><span class="tok-nu">420</span><span>,</span><span class="tok-nu">340</span><span>)</span>
+
+
+
+<span class="tok-cm">'move sprite around the viewport</span>
+
+<span class="tok-kw">Do</span>
+
+
+
+  <span>x</span> <span>=</span> <span class="tok-nu">100</span><span>*</span><span class="tok-kw">Sin</span><span>(</span><span class="tok-kw">Timer</span><span>*</span><span class="tok-nu">2.0</span><span>)+</span><span class="tok-nu">50</span>
+
+  <span>y</span> <span>=</span> <span class="tok-nu">100</span><span>*</span><span class="tok-kw">Sin</span><span>(</span><span class="tok-kw">Timer</span><span>*</span><span class="tok-nu">2.7</span><span>)+</span><span class="tok-nu">50</span>
+
+  
+
+  <span class="tok-kw">ScreenSync</span>
+
+  <span class="tok-kw">ScreenLock</span>
+
+  
+
+  <span class="tok-cm">'clear viewport and put image</span>
+
+  <span class="tok-kw">Cls</span> <span class="tok-nu">1</span>
+
+  <span class="tok-kw">Put</span> <span>(</span><span>x</span><span>,</span> <span>y</span><span>),</span> <span>ip</span><span>,</span> <span class="tok-kw">PSet</span>
+
+    
+
+  <span class="tok-kw">ScreenUnlock</span>
+
+
+
+<span class="tok-kw">Loop</span> <span class="tok-kw">While</span> <span class="tok-kw">Inkey</span> <span>=</span> <span>&quot;&quot;</span>
+
+
+
+<span class="tok-kw">ImageDestroy</span><span>(</span><span>ip</span><span>)</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgViewgraphics.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

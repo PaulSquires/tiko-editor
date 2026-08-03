@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CWinHttpRequest Class — Help Center</title>
+<meta name="description" content="CWinHttpRequest Class — 32 documented members. COM reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/com/cwinhttprequest-class.html">
+<meta property="og:title" content="CWinHttpRequest Class">
+<meta property="og:description" content="CWinHttpRequest Class — 32 documented members. COM reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/com/cwinhttprequest-class.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/com/cwinhttprequest-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>COM</div>
+<h1>CWinHttpRequest Class</h1>
+<h2>Members (32)</h2>
+<div class="memberlist"><a href="cwinhttprequest/cwinhttprequest-abort.html"><span class="m-n">Abort</span><span class="m-d">Aborts a WinHTTP **Send** method.</span></a><a href="cwinhttprequest/cwinhttprequest-getallresponseheaders.html"><span class="m-n">GetAllResponseHeaders</span><span class="m-d">Gets all HTTP response headers.</span></a><a href="cwinhttprequest/cwinhttprequest-geterrorinfo.html"><span class="m-n">GetErrorInfo</span><span class="m-d">Returns the description of the most recent error.</span></a><a href="cwinhttprequest/cwinhttprequest-getlastresult.html"><span class="m-n">GetLastResult</span><span class="m-d">Returns the last result code.</span></a><a href="cwinhttprequest/cwinhttprequest-getoption.html"><span class="m-n">GetOption</span><span class="m-d">Retrieves a Microsoft Windows HTTP Services (WinHTTP) option value.</span></a><a href="cwinhttprequest/cwinhttprequest-getresponsebody.html"><span class="m-n">GetResponseBody</span><span class="m-d">Retrieves the response entity body as an array of unsigned bytes.</span></a><a href="cwinhttprequest/cwinhttprequest-getresponseheader.html"><span class="m-n">GetResponseHeader</span><span class="m-d">Gets the specified HTTP response header.</span></a><a href="cwinhttprequest/cwinhttprequest-getresponsestream.html"><span class="m-n">GetResponseStream</span><span class="m-d">Retrieves the response entity body as a stream.</span></a><a href="cwinhttprequest/cwinhttprequest-getresponsetext.html"><span class="m-n">GetResponseText</span><span class="m-d">Retrieves the response entity body as a string.</span></a><a href="cwinhttprequest/cwinhttprequest-getstatus.html"><span class="m-n">GetStatus</span><span class="m-d">Retrieves the HTTP status code from the last response.</span></a><a href="cwinhttprequest/cwinhttprequest-getstatustext.html"><span class="m-n">GetStatusText</span><span class="m-d">Retrieves the HTTP status text.</span></a><a href="cwinhttprequest/cwinhttprequest-http-status-codes.html"><span class="m-n">HTTP Status Codes</span><span class="m-d">These constants and corresponding values indicate HTTP status codes returned by servers on the Internet.</span></a><a href="cwinhttprequest/cwinhttprequest-onerror.html"><span class="m-n">OnError</span><span class="m-d">Occurs when there is a run-time error in the application.</span></a><a href="cwinhttprequest/cwinhttprequest-onresponsedataavailable.html"><span class="m-n">OnResponseDataAvailable</span><span class="m-d">Occurs when data is available from the response.</span></a><a href="cwinhttprequest/cwinhttprequest-onresponsefinished.html"><span class="m-n">OnResponseFinished</span><span class="m-d">Occurs when the response data is complete.</span></a><a href="cwinhttprequest/cwinhttprequest-onresponsestart.html"><span class="m-n">OnResponseStart</span><span class="m-d">Occurs when the response data starts to be received.</span></a><a href="cwinhttprequest/cwinhttprequest-open.html"><span class="m-n">Open</span><span class="m-d">Opens an HTTP connection to an HTTP resource.</span></a><a href="cwinhttprequest/cwinhttprequest-send.html"><span class="m-n">Send</span><span class="m-d">Sends an HTTP request to an HTTP server.</span></a><a href="cwinhttprequest/cwinhttprequest-setautologonpolicy.html"><span class="m-n">SetAutoLogonPolicy</span><span class="m-d">Sets the current Automatic Logon Policy.</span></a><a href="cwinhttprequest/cwinhttprequest-setclientcertificate.html"><span class="m-n">SetClientCertificate</span><span class="m-d">Selects a client certificate to send to a Secure Hypertext Transfer Protocol (HTTPS) server.</span></a><a href="cwinhttprequest/cwinhttprequest-setcredentials.html"><span class="m-n">SetCredentials</span><span class="m-d">Sets credentials to be used with an HTTP server, whether it is a proxy server or an originating server.</span></a><a href="cwinhttprequest/cwinhttprequest-setevents.html"><span class="m-n">SetEvents</span><span class="m-d">Sets the events sink.</span></a><a href="cwinhttprequest/cwinhttprequest-setoption.html"><span class="m-n">SetOption</span><span class="m-d">Sets a Microsoft Windows HTTP Services (WinHTTP) option value.</span></a><a href="cwinhttprequest/cwinhttprequest-setproxy.html"><span class="m-n">SetProxy</span><span class="m-d">Sets proxy server information.</span></a><a href="cwinhttprequest/cwinhttprequest-setrequestheader.html"><span class="m-n">SetRequestHeader</span><span class="m-d">Adds, changes, or deletes an HTTP request header.</span></a><a href="cwinhttprequest/cwinhttprequest-setresult.html"><span class="m-n">SetResult</span><span class="m-d"></span></a><a href="cwinhttprequest/cwinhttprequest-settimeouts.html"><span class="m-n">SetTimeouts</span><span class="m-d">Specifies the individual time-out components of a send/receive operation, in milliseconds.</span></a><a href="cwinhttprequest/cwinhttprequest-waitforresponse.html"><span class="m-n">WaitForResponse</span><span class="m-d">Waits for an asynchronous Send method to complete, with optional time-out value, in seconds.</span></a><a href="cwinhttprequest/cwinhttprequest-winhttprequestautologonpolicy.html"><span class="m-n">WinHttpRequestAutoLogonPolicy</span><span class="m-d">Includes possible settings for the Automatic Logon Policy.</span></a><a href="cwinhttprequest/cwinhttprequest-winhttprequestoption.html"><span class="m-n">WinHttpRequestOption</span><span class="m-d">Includes options that can be set or retrieved for the current Microsoft Windows HTTP Services (WinHTTP) session.</span></a><a href="cwinhttprequest/cwinhttprequest-winhttprequestsecureprotocols.html"><span class="m-n">WinHttpRequestSecureProtocols</span><span class="m-d">Type of secure protocol.</span></a><a href="cwinhttprequest/cwinhttprequest-winhttprequestsslerrorflags.html"><span class="m-n">WinHttpRequestSslErrorFlags</span><span class="m-d">SSL certificate errors.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="cwinhttprequest-class">CWinHttpRequest Class</h2>
+<p>Wrapper class for Microsoft WinHTTP Services, version 5.1</p>
+<hr>
+<h3 id="methods">Methods</h3>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cwinhttprequest/cwinhttprequest-abort.html">Abort</a></td><td>Aborts a WinHTTP <strong>Send</strong> method.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-getallresponseheaders.html">GetAllResponseHeaders</a></td><td>Gets all HTTP response headers.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-geterrorinfo.html">GetErrorInfo</a></td><td>Returns the description of the most recent error.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-getlastresult.html">GetLastResult</a></td><td>Returns the last result code.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-getoption.html">GetOption</a></td><td>Retrieves a Microsoft Windows HTTP Services (WinHTTP) option value.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-getresponsebody.html">GetResponseBody</a></td><td>Retrieves the response entity body as an array of unsigned bytes.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-getresponseheader.html">GetResponseHeader</a></td><td>Gets the specified HTTP response header.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-getresponsestream.html">GetResponseStream</a></td><td>Retrieves the response entity body as a stream.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-getresponsetext.html">GetResponseText</a></td><td>Retrieves the response entity body as a string.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-getstatus.html">GetStatus</a></td><td>Retrieves the HTTP status code from the last response.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-getstatustext.html">GetStatusText</a></td><td>Retrieves the HTTP status text.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-open.html">Open</a></td><td>Opens an HTTP connection to an HTTP resource.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-send.html">Send</a></td><td>Sends an HTTP request to an HTTP server.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-setautologonpolicy.html">SetAutoLogonPolicy</a></td><td>Sets the current Automatic Logon Policy.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-setclientcertificate.html">SetClientCertificate</a></td><td>Selects a client certificate to send to a Secure Hypertext Transfer Protocol (HTTPS) server.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-setcredentials.html">SetCredentials</a></td><td>Sets credentials to be used with an HTTP server, whether it is a proxy server or an originating server.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-setevents.html">SetEvents</a></td><td>Sets the events sink.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-setoption.html">SetOption</a></td><td>Sets a Microsoft Windows HTTP Services (WinHTTP) option value.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-setproxy.html">SetProxy</a></td><td>Sets proxy server information.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-setrequestheader.html">SetRequestHeader</a></td><td>Adds, changes, or deletes an HTTP request header.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-settimeouts.html">SetTimeouts</a></td><td>Specifies the individual time-out components of a send/receive operation, in milliseconds.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-waitforresponse.html">WaitForResponse</a></td><td>Waits for an asynchronous Send method to complete, with optional time-out value, in seconds.</td></tr></tbody></table></div>
+<hr>
+<h3 id="events">Events</h3>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cwinhttprequest/cwinhttprequest-onerror.html">OnError</a></td><td>Occurs when there is a run-time error in the application.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-onresponsedataavailable.html">OnResponseDataAvailable</a></td><td>Occurs when data is available from the response.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-onresponsefinished.html">OnResponseFinished</a></td><td>Occurs when the response data is complete.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-onresponsestart.html">OnResponseStart</a></td><td>Occurs when the response data starts to be received.</td></tr></tbody></table></div>
+<hr>
+<h3 id="enumerations">Enumerations</h3>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cwinhttprequest/cwinhttprequest-winhttprequestautologonpolicy.html">WinHttpRequestAutoLogonPolicy</a></td><td>Includes possible settings for the Automatic Logon Policy.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-winhttprequestoption.html">WinHttpRequestOption</a></td><td>Includes options that can be set or retrieved for the current Microsoft Windows HTTP Services (WinHTTP) session.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-winhttprequestsecureprotocols.html">WinHttpRequestSecureProtocols</a></td><td>Type of secure protocol.</td></tr><tr><td><a href="cwinhttprequest/cwinhttprequest-winhttprequestsslerrorflags.html">WinHttpRequestSslErrorFlags</a></td><td>SSL certificate errors.</td></tr></tbody></table></div>
+<hr>
+<h3 id="http-status-codes">HTTP Status Codes</h3>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cwinhttprequest/cwinhttprequest-http-status-codes.html">HTTP Status Codes</a></td><td>These constants and corresponding values indicate HTTP status codes returned by servers on the Internet.</td></tr></tbody></table></div>
+<hr>
+<h4 id="getlastresult">GetLastResult</h4>
+<p>Returns the last result code.</p>
+<pre class="code"><code>FUNCTION GetLastResult () AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The result code returned by the last executed method. The <strong>WinHttpRequest</strong> object uses the <strong>IErrorInfo</strong> interface to provide error data. A description of the error can be obtained calling the <strong>GetOleErrorInfo</strong> method.</p>
+<hr>
+<h4 id="setresult">SetResult</h4>
+<p>Sets the last result code.</p>
+<pre class="code"><code>FUNCTION SetResult (BYVAL Result AS HRESULT) AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The result code returned by the last executed method.</p>
+<hr>
+<h4 id="geterrorinfo">GetErrorInfo</h4>
+<p>Returns the description of the most recent OLE error in the current logical thread and clears the error state for the thread. It should be called as soon as possible after calling a method of this class. The numerical error code can obtained calling the <strong>GetLastResult</strong> method.</p>
+<pre class="code"><code>FUNCTION GetErrorInfo() AS DWSTRING</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>A localized description of the error.</p>
+<hr>
+<h4 id="abort">Abort</h4>
+<p>Aborts a WinHTTP <strong>Send</strong> method.</p>
+<pre class="code"><code>FUNCTION Abort () AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The return value is S_OK (0) on success or an error value otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>You can abort both asynchronous and synchronous <strong>Send</strong> methods. To abort a synchronous <strong>Send</strong> method, you must call <strong>Abort</strong> from within an <strong>IWinHttpRequestEvents</strong> event.</p>
+<hr>
+<h4 id="getallresponseheaders">GetAllResponseHeaders</h4>
+<p>Gets all HTTP response headers.</p>
+<pre class="code"><code>FUNCTION GetAllResponseHeaders () AS DWSTRING</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The resulting header information.</p>
+<h5 id="getlastresult">GetLastResult</h5>
+<p>Returns S_OK (0) if successful or an error value otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This method returns all of the headers contained in the most recent server response. The individual headers are delimited by a carriage return and line feed combination (ASCII 13 and 10). The last entry is followed by two delimiters (13, 10, 13, 10). Invoke this method only after the <strong>Send</strong> method has been called.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#cmdline "-s console"
+#include once "AfxNova/CWinHttpRequest.inc"
+using AfxNova
+
+' // Create an instance of the CWinHttp class
+DIM pWHttp AS CWinHttpRequest
+
+' // Open an HTTP connection to an HTTP resource
+pWHttp.Open "GET", "http://microsoft.com"
+
+' // Send an HTTP request to the HTTP server
+pWHttp.Send
+
+' // Wait for response with a timeout of 5 seconds
+DIM iSucceeded AS LONG = pWHttp.WaitForResponse(5)
+
+' // Get the response headers
+DIM dwsResponseHeaders AS DWSTRING = pWHttp.GetAllResponseHeaders
+PRINT dwsResponseHeaders</code></pre>
+<hr>
+<h4 id="getoption">GetOption</h4>
+<p>Retrieves a Microsoft Windows HTTP Services (WinHTTP) option value.</p>
+<pre class="code"><code>FUNCTION GetOption (BYVAL nOption AS WinHttpRequestOption) AS DVARIANT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nOption</em></td><td>Value of type <strong>WinHttpRequestOption</strong> that specifies the option to retrieve.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Variant that contains the option value.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#cmdline "-s console"
+#include once "AfxNova/CWinHttpRequest.inc"
+using AfxNova
+
+' // Create an instance of the CWinHttp class
+DIM pWHttp AS CWinHttpRequest
+
+' // Open an HTTP connection to an HTTP resource
+pWHttp.Open "GET", "http://microsoft.com"
+
+' // Specify the user agent
+pWHttp.SetOption(WinHttpRequestOption_UserAgentString, "A WinHttpRequest Example Program")
+
+' // Send an HTTP request to the HTTP server
+pWHttp.Send
+
+IF pWHttp.GetLastResult = S_OK THEN
+   ' // Get user agent string.
+   PRINT pWHttp.GetOption(WinHttpRequestOption_UserAgentString)
+   ' // Get URL
+   PRINT pWHttp.GetOption(WinHttpRequestOption_URL)
+   ' // Get URL Code Page.
+   PRINT pWHttp.GetOption(WinHttpRequestOption_URLCodePage)
+   ' // Convert percent symbols to escape sequences.
+   PRINT pWHttp.GetOption(WinHttpRequestOption_EscapePercentInURL)
+END IF</code></pre>
+<h5 id="getlastresult">GetLastResult</h5>
+<p>Returns S_OK (0) if successful or an error value otherwise.</p>
+<hr>
+<h4 id="getresponsebody">GetResponseBody</h4>
+<p>Retrieves the response entity body as an array of unsigned bytes.</p>
+<pre class="code"><code>FUNCTION GetResponseBody () AS STRING</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>An string containing the response entity body as an array of unsigned bytes. This array contains the raw data as received directly from the server.</p>
+<h5 id="getlastresult">GetLastResult</h5>
+<p>Returns S_OK (0) if successful or an error value otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This method returns the response data in an array of unsigned bytes. If the response does not have a response body, an empty variant is returned. This method can only be invoked after the <strong>Send</strong> method has been called.</p>
+<h5 id="examples">Examples</h5>
+<pre class="code"><code>#cmdline "-s console"
+#include once "AfxNova/CWinHttpRequest.inc"
+using AfxNova
+
+' // Create an instance of the CWinHttp class
+DIM pWHttp AS CWinHttpRequest
+
+' // Open an HTTP connection to an HTTP resource
+pWHttp.Open "GET", "http://microsoft.com"
+
+' // Send an HTTP request to the HTTP server
+pWHttp.Send
+
+' // Wait for response with a timeout of 5 seconds
+DIM iSucceeded AS LONG = pWHttp.WaitForResponse(5)
+
+' // Get the response body
+DIM strResponseBody AS STRING = pWHttp.GetResponseBody
+PRINT strResponseBody</code></pre>
+<pre class="code"><code>#cmdline "-s console"
+#include once "AfxNova/CWinHttpRequest.inc"
+#include once "Afx/CStream.inc"
+using AfxNova
+
+' // Create an instance of the CWinHttp class
+DIM pWHttp AS CWinHttpRequest
+
+' // Open an HTTP connection to an HTTP resource
+pWHttp.Open "GET", "https://learn.microsoft.com/en-us/archive/msdn-magazine/2012/october/images/jj658963.banner.png"
+
+' // Send an HTTP request to the HTTP server
+pWHttp.Send
+
+' // Wait for response with a timeout of 5 seconds
+DIM iSucceeded AS LONG = pWHttp.WaitForResponse(5)
+
+' // Get the response body as an array of unsigned bytes.
+DIM strResponseBody AS STRING = pWHttp.GetResponseBody
+
+' // Open a file stream
+DIM pFileStream AS CFileStream
+IF pFileStream.Open("image.png", STGM_CREATE OR STGM_WRITE) = S_OK then
+   pFileStream.WriteTextA(strResponseBody)
+END IF</code></pre>
+<hr>
+<h4 id="getresponseheader">GetResponseHeader</h4>
+<p>Gets the specified HTTP response header.</p>
+<pre class="code"><code>FUNCTION GetResponseHeader (BYREF wszHeader AS WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszHeader</em></td><td>The case-insensitive header name.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The resulting header information.</p>
+<h5 id="getlastresult">GetLastResult</h5>
+<p>Returns S_OK (0) if successful or an error value otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Invoke this method only after the <strong>Send</strong> method has been called.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#cmdline "-s console"
+#include once "AfxNova/CWinHttpRequest.inc"
+using AfxNova
+
+' // Create an instance of the CWinHttp class
+DIM pWHttp AS CWinHttpRequest
+
+' // Open an HTTP connection to an HTTP resource
+pWHttp.Open "GET", "http://microsoft.com"
+
+' // Send an HTTP request to the HTTP server
+pWHttp.Send
+
+' // Wait for response with a timeout of 5 seconds
+DIM iSucceeded AS LONG = pWHttp.WaitForResponse(5)
+
+' // Get the response headers
+DIM dwsResponseHeader AS DWSTRING = pWHttp.GetResponseHeader("Date")
+PRINT dwsResponseHeader</code></pre>
+<hr>
+<h4 id="getresponsestream">GetResponseStream</h4>
+<p>Retrieves the response entity body as a stream.</p>
+<pre class="code"><code>FUNCTION GetResponseStream () AS IStream PTR</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>Returns a pointer to an <strong>IStream</strong> interface if successful or NULL otherwise.</p>
+<h5 id="getlastresult">GetLastResult</h5>
+<p>Returns S_OK (0) if successful or an error value otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This method can only be invoked after the <strong>Send</strong> method has been called.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#cmdline "-s console"
+#include once "AfxNova/CWinHttpRequest.inc"
+#include once "Afx/CStream.inc"
+using AfxNova
+
+' // Create an instance of the CWinHttp class
+DIM pWHttp AS CWinHttpRequest
+
+' // Open an HTTP connection to an HTTP resource
+pWHttp.Open "GET", "http://microsoft.com"
+' // Send an HTTP request to the HTTP server
+pWHttp.Send
+
+' // Wait for response with a timeout of 5 seconds
+DIM iSucceeded AS LONG = pWHttp.WaitForResponse(5)
+
+' // Open a file stream
+DIM pFileStream AS CFileStream = pWHttp.GetResponseStream
+DIM cbSize AS LONG = pFileStream.GetSize
+DIM buffer(cbSize) AS BYTE
+DIM cbRead AS ULONG = pFileStream.Read(@buffer(0), cbSize)
+DIM fn AS LONG = FREEFILE
+OPEN "response.txt" FOR BINARY AS #fn
+PUT #fn, 1, buffer()
+CLOSE #fn
+PRINT "File saved"</code></pre>
+<hr>
+<h4 id="getresponsetext">GetResponseText</h4>
+<p>Retrieves the response entity body.</p>
+<pre class="code"><code>FUNCTION GetResponseText () AS DWSTRING</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>A DWSTRING containing the entity body of the response as text.</p>
+<h5 id="getlastresult">GetLastResult</h5>
+<p>Returns S_OK (0) if successful or an error value otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This method can only be invoked after the <strong>Send</strong> method has been called.</p>
+<p>When using this property in synchronous mode, the limit to the number of characters it returns is approximately 2,169,895.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#cmdline "-s console"
+#include once "AfxNova/CWinHttpRequest.inc"
+#include once "AfxNova/DWStrProcs.inc"
+using AfxNova
+
+' // Create an instance of the CWinHttp class
+DIM pWHttp AS CWinHttpRequest
+
+' // Open an HTTP connection to an HTTP resource
+pWHttp.Open "GET", "http://forum.qbasic.at/viewtopic.php?t=8996"
+
+' // Send an HTTP request to the HTTP server
+pWHttp.Send
+
+' // Wait for response with a timeout of 5 seconds
+DIM iSucceeded AS LONG = pWHttp.WaitForResponse(5)
+
+IF iSucceeded THEN
+   ' // Get the response headers
+   DIM dwsResponseText AS DWSTRING = pWHttp.GetResponseText
+   ' // Extract the version number from the Color Constants title
+   DIM dws AS DWSTRING = DWstrExtract(1, dwsResponseText, "Color Constants v", " [")
+   print "Online Color Constants version is v" &amp; dws
+END IF</code></pre>
+<hr>
+<h4 id="getstatus">GetStatus</h4>
+<p>Retrieves the HTTP status code from the last response.</p>
+<pre class="code"><code>FUNCTION GetStatus () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>Value of type LONG that receives the returned status code.</p>
+<h5 id="getlastresult">GetLastResult</h5>
+<p>Returns S_OK (0) if successful or an error value otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The results of this method are valid only after the <strong>Send</strong> method has successfully completed. For a list of status codes see HTTP Status Codes.</p>
+<hr>
+<h4 id="getstatustext">GetStatusText</h4>
+<p>Retrieves the HTTP status code from the last response.</p>
+<pre class="code"><code>FUNCTION GetStatusText () AS DWSTRING</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>A DWSTRING containing the HTTP status text.</p>
+<h5 id="getlastresult">GetLastResult</h5>
+<p>Returns S_OK (0) if successful or an error value otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Retrieves the text portion of the server response line, making available the "user-friendly" equivalent to the numeric HTTP status code. The results of this property are valid only after the Send method has successfully completed.</p>
+<hr>
+<h4 id="open">Open</h4>
+<p>Opens an HTTP connection to an HTTP resource.</p>
+<pre class="code"><code>FUNCTION Open (BYREF wszMethod AS WSTRING, BYREF dwsUrl AS WSTRING, BYVAL bAsync AS BOOLEAN = FALSE) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszMethod</em></td><td>A unicode strring that specifies the HTTP verb used for the Open method, such as "GET" or "PUT". Always use uppercase as some servers ignore lowercase HTTP verbs.</td></tr><tr><td><em>wszUrl</em></td><td>A unicode string that contains the name of the resource. This must be an absolute URL.</td></tr><tr><td><em>bAsync</em></td><td>Optional. A value of type Boolean that specifies whether to open in asynchronous mode.<br><strong>TRUE</strong>: Opens the HTTP connection in asynchronous mode.<br><strong>FALSE</strong>: Opens the HTTP connection in synchronous mode. A call to Send does not return until WinHTTP has completely received the response.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is S_OK (0) on success or an error value otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This method opens a connection to the resource identified in <em>cbsUrl</em> using the HTTP verb given in <em>cbsMethod</em>.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include once "AfxNova/CWinHttpRequest.inc"
+USING AfxNova
+
+' // Create an instance of the CWinHttpRequest class
+DIM pWHttp AS CWinHttpRequest
+' // Open an HTTP connection to an HTTP resource
+pWHttp.Open "GET", "http://microsoft.com"
+' // Send an HTTP request to the HTTP server
+pWHttp.Send
+' // Wait for response with a timeout of 5 seconds
+DIM iSucceeded AS LONG = pWHttp.WaitForResponse(5)</code></pre>
+<hr>
+<h4 id="send">Send</h4>
+<p>Sends an HTTP request to an HTTP server.</p>
+<pre class="code"><code>FUNCTION Send (BYREF dvBody AS DVARIANT = "") AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>dvBody</em></td><td>Optional. Data to be sent to the server.</td></tr></tbody></table></div>
+<h5 id="return--value">Return  value</h5>
+<p>Returns S_OK (0) if successful or an error value otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The request to be sent was defined in a prior call to the <strong>Open</strong> method. The calling application can provide data to be sent to the server through the <em>cvBody</em> parameter. If the HTTP verb of the object's Open is "GET", this method sends the request without <em>dvBody</em>, even if it is provided by the calling application.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include once "AfxNova/CWinHttpRequest.inc"
+USING AfxNova
+
+' // Create an instance of the CWinHttpRequest class
+DIM pWHttp AS CWinHttpRequest
+' // Open an HTTP connection to an HTTP resource
+pWHttp.Open "GET", "http://microsoft.com"
+' // Send an HTTP request to the HTTP server
+pWHttp.Send
+' // Wait for response with a timeout of 5 seconds
+DIM iSucceeded AS LONG = pWHttp.WaitForResponse(5)</code></pre>
+<hr>
+<h4 id="setautologonpolicy">SetAutoLogonPolicy</h4>
+<p>Sets the current Automatic Logon Policy.</p>
+<pre class="code"><code>FUNCTION SetAutoLogonPolicy (BYVAL AutoLogonPolicy AS WinHttpRequestAutoLogonPolicy) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>AutoLogonPolicy</em></td><td>A value of type <strong>WinHttpRequestAutoLogonPolicy</strong> that specifies the current automatic logon policy.</td></tr></tbody></table></div>
+<h5 id="return--value">Return  value</h5>
+<p>Returns S_OK (0) if successful or an error value otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The default policy is <strong>AutoLogonPolicy_OnlyIfBypassProxy</strong>.</p>
+<p>Call <strong>SetAutoLogonPolicy</strong> to set the automatic logon policy before calling <strong>Send</strong> to send the request.</p>
+<hr>
+<h4 id="setclientcertificate">SetClientCertificate</h4>
+<p>Selects a client certificate to send to a Secure Hypertext Transfer Protocol (HTTPS) server.</p>
+<pre class="code"><code>FUNCTION SetClientCertificate (BYREF wszClientCertificate AS WSTRING) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszClientCertificate</em></td><td>An string that specifies the location, certificate store, and subject of a client certificate.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns S_OK (0) if successful or an error value otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The string specified in the <em>wszClientCertificate</em> parameter consists of the certificate location, certificate store, and subject name delimited by backslashes. For more information about the components of the certificate string, see <a href="https://docs.microsoft.com/en-us/windows/desktop/winhttp/ssl-in-winhttp" target="_blank" rel="noopener">Client Certificates</a>.</p>
+<p>The certificate store name and location are optional. However, if you specify a certificate store, you must also specify the location of that certificate store. The default location is CURRENT_USER and the default certificate store is "MY". A blank subject indicates that the first certificate in the certificate store should be used.</p>
+<p>Call <strong>SetClientCertificate</strong> to select a certificate before calling <strong>Send</strong> to send the request.</p>
+<p>Microsoft Windows HTTP Services (WinHTTP) does not provide client certificates to proxy servers that request certificates for authentication.</p>
+<hr>
+<h4 id="setcredentials">SetCredentials</h4>
+<p>Sets credentials to be used with an HTTP server, whether it is a proxy server or an originating server.</p>
+<pre class="code"><code>FUNCTION SetCredentials (BYREF wszUserName AS WSTRING, BYREF wszPassword AS WSTRING, _
+   BYVAL Flags AS HTTPREQUEST_SETCREDENTIALS_FLAGS) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUserName</em></td><td>A string that specifies the user name for authentication.</td></tr><tr><td><em>wszPassword</em></td><td>A string specifies the password for authentication. This parameter is ignored if <em>cbsUserName</em> is NULL or missing.</td></tr><tr><td><em>Flags</em></td><td>A value that specifies when <strong>CWinHttpRequest</strong> uses credentials. Can be one of the below values.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Flag</th><th>Meaning</th></tr></thead><tbody><tr><td>HTTPREQUEST_SETCREDENTIALS_FOR_SERVER</td><td>Credentials are passed to a server.</td></tr><tr><td>HTTPREQUEST_SETCREDENTIALS_FOR_PROXY</td><td>Credentials are passed to a proxy.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns S_OK (0) if successful or an error value otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This method returns an error value if a call to <strong>Open</strong> has not completed successfully. It is assumed that some measure of interaction with a proxy server or origin server must occur before users can set credentials for the session. Moreover, until users know which authentication scheme(s) are supported, they cannot format the credentials.</p>
+<p>To authenticate with both the server and the proxy, the application must call <strong>SetCredentials</strong> twice; first with the <em>Flags</em> parameter set to HTTPREQUEST_SETCREDENTIALS_FOR_SERVER, and second, with the <em>Flags</em> parameter set to HTTPREQUEST_SETCREDENTIALS_FOR_PROXY.</p>
+<hr>
+<h4 id="setevents">SetEvents</h4>
+<p>Sets the events sink.</p>
+<pre class="code"><code>FUNCTION SetEvents (BYVAL pEvtSink AS ANY PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pEvtSink</em></td><td>A pointer to the implemented events sink class.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns S_OK (0) if successful or an error value otherwise.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include once "AfxNova/AfxCOM.inc"
+#include once "AfxNova/CWinHttpRequest.inc"
+#include once "AfxNova/CWinHttpRequestEvents.inc"
+USING AfxNova
+
+' ########################################################################################
+' CWinHttpRequestEventsImpl class
+' Implementation of the IWinHttpRequestEvents callback interface
+' ########################################################################################
+
+TYPE CWinHttpRequestEventsImpl EXTENDS CWinHttpRequestEvents
+
+   DECLARE VIRTUAL SUB OnResponseStart (BYVAL Status AS LONG, BYVAL ContentType AS AFX_BSTR)
+   DECLARE VIRTUAL SUB OnResponseDataAvailable (BYVAL Data AS SAFEARRAY PTR)
+   DECLARE VIRTUAL SUB OnResponseFinished ()
+   DECLARE VIRTUAL SUB OnError (BYVAL ErrorNumber AS LONG, BYVAL ErrorDescription AS AFX_BSTR)
+
+END TYPE
+' ########################################################################################
+
+SUB CWinHttpRequestEventsImpl.OnResponseStart (BYVAL Status AS LONG, BYVAL ContentType AS AFX_BSTR)
+   OutputDebugStringW("CWinHttpRequestEventsImpl.OnResponseStart")
+END SUB
+SUB CWinHttpRequestEventsImpl.OnResponseDataAvailable (BYVAL pData AS SAFEARRAY PTR)
+   OutputDebugStringW("CWinHttpRequestEventsImpl.OnResponseDataAvailable")
+END SUB
+SUB CWinHttpRequestEventsImpl.OnResponseFinished
+   OutputDebugStringW("CWinHttpRequestEventsImpl.OnResponseFinished")
+END SUB
+SUB CWinHttpRequestEventsImpl.OnError (BYVAL ErrorNumber AS LONG, BYVAL ErrorDescription AS AFX_BSTR)
+   OutputDebugStringW("CWinHttpRequestEventsImpl.OnError")
+END SUB
+
+' ########################################################################################
+
+' // Create an instance of the CWinHttpRequest class
+DIM pWHttp AS CWinHttpRequest
+' // Set the events sink
+DIM pEvtSink AS ANY PTR = NEW CWinHttpRequestEventsImpl
+pWHttp.SetEvents(pEvtSink)
+
+' // Open an HTTP connection to an HTTP resource
+pWHttp.Open "GET", "http://microsoft.com"
+' // Send an HTTP request to the HTTP server
+pWHttp.Send
+' // Wait for response with a timeout of 5 seconds
+DIM iSucceeded AS LONG = pWHttp.WaitForResponse(5)
+' // Get the response headers
+DIM dwsResponseHeaders AS DWSTRING = pWHttp.GetAllResponseHeaders
+PRINT dwsResponseHeaders</code></pre>
+<hr>
+<h4 id="setoption">SetOption</h4>
+<p>Sets a Microsoft Windows HTTP Services (WinHTTP) option value.</p>
+<pre class="code"><code>FUNCTION SetOption (BYVAL nOption AS WinHttpRequestOption, BYREF dvValue AS DVARIANT) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nOption</em></td><td>Value of type <strong>WinHttpRequestOption</strong> that specifies the option to set.</td></tr><tr><td><em>dvValue</em></td><td>DVARIANT. Value to set.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns S_OK (0) if successful or an error value otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>You can set the SecureProtocols option to SecureProtocol_TLS1_2 to enable TLS 1.2 explicitly, ie. pWinHttp.SetOption(WinHttpRequestOption_SecureProtocols, 2048).</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include once "AfxNova/CWinHttpRequest.inc"
+USING AfxNova
+
+' // Create an instance of the CWinHttp class
+DIM pWHttp AS CWinHttpRequest
+' // Open an HTTP connection to an HTTP resource
+pWHttp.Open "GET", "http://microsoft.com"
+' // Specify the user agent
+pWHttp.SetOption(WinHttpRequestOption_UserAgentString, "A WinHttpRequest Example Program")
+' // Send an HTTP request to the HTTP server
+pWHttp.Send
+IF pWHttp.GetLastResult = S_OK THEN
+   ' // Get user agent string.
+   PRINT pWHttp.GetOption(WinHttpRequestOption_UserAgentString)
+   ' // Get URL
+   PRINT pWHttp.GetOption(WinHttpRequestOption_URL)
+   ' // Get URL Code Page.
+   PRINT pWHttp.GetOption(WinHttpRequestOption_URLCodePage)
+   ' // Convert percent symbols to escape sequences.
+   PRINT pWHttp.GetOption(WinHttpRequestOption_EscapePercentInURL)
+END IF</code></pre>
+<hr>
+<h4 id="setproxy">SetProxy</h4>
+<p>Sets proxy server information.</p>
+<pre class="code"><code>FUNCTION SetProxy (BYVAL ProxySetting AS HTTPREQUEST_PROXY_SETTING, BYREF dvProxyServer AS DVARIANT = "", _
+   BYVAL dvBypassList AS DVARIANT = "") AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>ProxySetting</em></td><td>A value of type LONG that receives the flags that control this method. Can be one of the values in the table below.</td></tr><tr><td><em>dvProxyServer</em></td><td>Optional. A value of type Variant that is set to a proxy server string when <em>ProxySetting</em> equals HTTPREQUEST_PROXYSETTING_PROXY.</td></tr><tr><td><em>dvBypassList</em></td><td>Optional. A value of type Variant that is set to a domain bypass list string when <em>ProxySetting</em> equals HTTPREQUEST_PROXYSETTING_PROXY.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Flag</th><th>Description</th></tr></thead><tbody><tr><td>HTTPREQUEST_PROXYSETTING_DEFAULT</td><td>Default proxy setting. Equivalent to HTTPREQUEST_PROXYSETTING_PRECONFIG.</td></tr><tr><td>HTTPREQUEST_PROXYSETTING_PRECONFIG</td><td>Indicates that the proxy settings should be obtained from the registry. This assumes that Proxycfg.exe has been run. If Proxycfg.exe has not been run and HTTPREQUEST_PROXYSETTING_PRECONFIG is specified, then the behavior is equivalent to HTTPREQUEST_PROXYSETTING_DIRECT.</td></tr><tr><td>HTTPREQUEST_PROXYSETTING_DIRECT</td><td>Indicates that all HTTP and HTTPS servers should be accessed directly. Use this command if there is no proxy server.</td></tr><tr><td>HTTPREQUEST_PROXYSETTING_PROXY</td><td>When HTTPREQUEST_PROXYSETTING_PROXY is specified, <em>cvProxyServer</em> should be set to a proxy server string and <em>cvBypassList</em> should be set to a domain bypass list string. This proxy configuration applies only to the current instance of the WinHttpRequest object.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns S_OK (0) if successful or an error value otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Enables the calling application to specify use of default proxy information (configured by the proxy configuration tool) or to override Proxycfg.exe. This method must be called before calling the Send method. If this method is called after the <strong>Send</strong> method, it has no effect.</p>
+<p><strong>CWinHttpRequest</strong> passes these parameters to Microsoft Windows HTTP Services (WinHTTP).</p>
+<hr>
+<h4 id="setrequestheader">SetRequestHeader</h4>
+<p>Adds, changes, or deletes an HTTP request header.</p>
+<pre class="code"><code>FUNCTION SetRequestHeader (BYREF wszHeader AS WSTRING, BYREF wszValue AS WSTRING) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszHeader</em></td><td>A value of type CBSTR that specifies the name of the header to be set, for example, "depth". This parameter should not contain a colon and must be the actual text of the HTTP header.</td></tr><tr><td><em>wszValue</em></td><td>An string that specifies the value of the header, for example, "infinity".</td></tr></tbody></table></div>
+<p>Return value</p>
+<p>Returns S_OK if successful or an error value otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Headers are transferred across redirects. This can create a security vulnerability. To avoid having headers transferred if a redirect occurs, use the WINHTTP_STATUS_CALLBACK callback to correct the specific headers when a redirect occurs.</p>
+<p>The <strong>SetRequestHeader</strong> method enables the calling application to add or delete an HTTP request header prior to sending the request. The header name is given in <em>wszHeader</em>, and the header token or value is given in <em>wszValue</em>. To add a header, supply a header name and value. If another header already exists with this name, it is replaced. To delete a header, set <em>cbsHeader</em> to the name of the header to delete and set <em>cbsValue</em> to NULL.</p>
+<p>The name and value of request headers added with this method are validated. Headers must be well formed. For more information about valid HTTP headers, see RFC 2616. If an invalid header is used, an error occurs and the header is not added.</p>
+<hr>
+<h4 id="settimeouts">SetTimeouts</h4>
+<p>Specifies the individual time-out components of a send/receive operation, in milliseconds.</p>
+<pre class="code"><code>FUNCTION SetTimeouts (BYVAL ResolveTimeout AS LONG, BYVAL ConnectTimeout AS LONG, _
+   BYVAL SendTimeout AS LONG, BYVAL ReceiveTimeout AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>ResolveTimeout</em></td><td>Time-out value applied when resolving a host name (such as www.microsoft.com) to an IP address (such as 192.168.131.199), in milliseconds. The default value is zero, meaning no time-out (infinite). If DNS timeout is specified using NAME_RESOLUTION_TIMEOUT, there is an overhead of one thread per request.</td></tr><tr><td><em>ConnectTimeout</em></td><td>Time-out value applied when establishing a communication socket with the target server, in milliseconds. The default value is 60,000 (60 seconds).</td></tr><tr><td><em>SendTimeout</em></td><td>Time-out value applied when sending an individual packet of request data on the communication socket to the target server, in milliseconds. A large request sent to an HTTP server are normally be broken up into multiple packets; the send time-out applies to sending each packet individually. The default value is 30,000 (30 seconds).</td></tr><tr><td><em>ReceiveTimeout</em></td><td>Time-out value applied when receiving a packet of response data from the target server, in milliseconds. Large responses are be broken up into multiple packets; the receive time-out applies to fetching each packet of data off the socket. The default value is 30,000 (30 seconds).</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns S_OK (0) if successful or an error value otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>All parameters are required. A value of 0 or -1 sets a time-out to wait infinitely. A value greater than 0 sets the time-out value in milliseconds. For example, 30,000 would set the time-out to 30 seconds. All negative values other than -1 cause this method to fail.</p>
+<p>Time-out values are applied at the Winsock layer.</p>
+<hr>
+<h4 id="waitforresponse">WaitForResponse</h4>
+<p>Waits for an asynchronous <strong>Send</strong> method to complete, with optional time-out value, in seconds.</p>
+<pre class="code"><code>FUNCTION WaitForResponse (BYVAL nTimeout AS LONG = 0) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nTimeout</em></td><td>Optional. Time-out value, in seconds. Default time-out is infinite. To explicitly set time-out to infinite, use the value -1.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>TRUE or FALSE.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This method suspends execution while waiting for a response to an asynchronous request. This method should be called after a <strong>Send</strong>. Calling applications can specify an optional Timeout value, in seconds. If this method times out, the request is not aborted. This way, the calling application can continue to wait for the request, if desired, in a subsequent call to this method.</p>
+<p>Calling this property after a synchronous <strong>Send</strong> method returns immediately and has no effect.</p>
+<hr>
+<h4 id="winhttprequestautologonpolicy">WinHttpRequestAutoLogonPolicy Enumeration</h4>
+<p>The <strong>WinHttpRequestAutoLogonPolicy</strong> enumeration includes possible settings for the Automatic Logon Policy.</p>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Description</th></tr></thead><tbody><tr><td><strong>AutoLogonPolicy_Always</strong></td><td>An authenticated log on, using the default credentials, is performed for all requests.</td></tr><tr><td><strong>AutoLogonPolicy_OnlyIfBypassProxy</strong></td><td>An authenticated log on, using the default credentials, is performed only for requests on the local intranet. The local intranet is considered to be any server on the proxy bypass list in the current proxy configuration.</td></tr><tr><td><strong>AutoLogonPolicy_Never</strong></td><td>Authentication is not used automatically.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>To set the automatic logon policy, call the <strong>SetAutoLogonPolicy</strong> method and specify one of the preceding constants.</p>
+<hr>
+<h4 id="winhttprequestoption">WinHttpRequestOption Enumeration</h4>
+<p>The <strong>WinHttpRequestOption</strong> enumeration includes options that can be set or retrieved for the current Microsoft Windows HTTP Services (WinHTTP) session.</p>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Description</th></tr></thead><tbody><tr><td><strong>WinHttpRequestOption_UserAgentString</strong></td><td>Sets or retrieves a VARIANT that contains the user agent string.</td></tr><tr><td><strong>WinHttpRequestOption_URL</strong></td><td>Retrieves a VARIANT that contains the URL of the resource. This value is read-only; you cannot set the URL using this property. The URL cannot be read until the <strong>Open</strong> method is called. This option is useful for checking the URL after the <strong>Send</strong> method is finished to verify that any redirection occurred.</td></tr><tr><td><strong>WinHttpRequestOption_URLCodePage</strong></td><td>Sets or retrieves a VARIANT that identifies the code page for the URL string. The default value is the UTF-8 code page. The code page is used to convert the Unicode URL string, passed in the <strong>Open</strong> method, to a single-byte string representation.</td></tr><tr><td><strong>WinHttpRequestOption_EscapePercentInURL</strong></td><td>Sets or retrieves a VARIANT that indicates whether percent characters in the URL string are converted to an escape sequence. The default value of this option is VARIANT_TRUE which specifies all unsafe American National Standards Institute (ANSI) characters except the percent symbol are converted to an escape sequence.</td></tr><tr><td><strong>WinHttpRequestOption_SslErrorIgnoreFlags</strong></td><td>Sets or retrieves a VARIANT that indicates which server certificate errors should be ignored. This can be a combination of one or more of the following flags.<br><strong>&amp;H0100</strong>: Unknown certification authority (CA) or untrusted root.<br><strong>&amp;H0200</strong>: Wrong usage.<br><strong>&amp;H1000</strong>: Invalid common name (CN)<br><strong>&amp;H2000</strong>: Invalid date or certificate expired.<br>The default value of this option in Version 5.1 of WinHTTP is zero, which results in no errors being ignored. In earlier versions of WinHTTP, the default setting was 0x3300, which resulted in all server certificate errors being ignored by default.</td></tr><tr><td><strong>WinHttpRequestOption_SelectCertificate</strong></td><td>Sets a VARIANT that specifies the client certificate that is sent to a server for authentication. This option indicates the location, certificate store, and subject of a client certificate delimited with backslashes. For more information about selecting a client certificate, see <a href="https://docs.microsoft.com/en-us/windows/desktop/winhttp/ssl-in-winhttp" target="_blank" rel="noopener">SSL in WinHTTP</a>.</td></tr><tr><td><strong>WinHttpRequestOption_EnableRedirects</strong></td><td>Sets or retrieves a VARIANT that indicates whether requests are automatically redirected when the server specifies a new location for the resource. The default value of this option is VARIANT_TRUE to indicate that requests are automatically redirected.</td></tr><tr><td><strong>WinHttpRequestOption_UrlEscapeDisable</strong></td><td>Sets or retrieves a VARIANT that indicates whether unsafe characters in the path and query components of a URL are converted to escape sequences. The default value of this option is VARIANT_TRUE, which specifies that characters in the path and query are converted.</td></tr><tr><td><strong>WinHttpRequestOption_UrlEscapeDisableQuery</strong></td><td>Sets or retrieves a VARIANT that indicates whether unsafe characters in the query component of the URL are converted to escape sequences. The default value of this option is VARIANT_TRUE, which specifies that characters in the query are converted.</td></tr><tr><td><strong>WinHttpRequestOption_SecureProtocols</strong></td><td>Sets or retrieves a VARIANT that indicates which secure protocols can be used. This option selects the protocols acceptable to the client. The protocol is negotiated during the Secure Sockets Layer (SSL) handshake. This can be a combination of one or more of the following flags:<br><strong>&amp;H0008</strong>: SSL 2.0.<br><strong>&amp;H0020</strong>: SSL 3.0.<br><strong>&amp;H0080</strong>:Transport Layer Security (TLS) 1.0.<br>The default value of this option is 0x0028, which indicates that SSL 2.0 or SSL 3.0 can be used. If this option is set to zero, the client and server are not able to determine an acceptable security protocol and the next <strong>Send</strong> results in an error.</td></tr><tr><td><strong>WinHttpRequestOption_EnableTracing</strong></td><td>Sets or retrieves a VARIANT that indicates whether tracing is currently enabled. For more information about the trace facility in Microsoft Windows HTTP Services (WinHTTP), see <a href="https://docs.microsoft.com/en-us/windows/desktop/winhttp/winhttptracecfg-exe--a-trace-configuration-tool" target="_blank" rel="noopener">WinHTTP Trace Facility</a>.</td></tr><tr><td><strong>WinHttpRequestOption_RevertImpersonationOverSsl</strong></td><td>Controls whether the WinHttpRequest object temporarily reverts client impersonation for the duration of the SSL certificate authentication operations. The default setting for the WinHttpRequest object is TRUE. Set this option to FALSE to keep impersonation while performing certificate authentication operations.</td></tr><tr><td><strong>WinHttpRequestOption_EnableHttpsToHttpRedirects</strong></td><td>Controls whether or not WinHTTP allows redirects. By default, all redirects are automatically followed, except those that transfer from a secure (https) URL to an non-secure (http) URL. Set this option to TRUE to enable HTTPS to HTTP redirects.</td></tr><tr><td><strong>WinHttpRequestOption_EnablePassportAuthentication</strong></td><td>Enables or disables support for Passport authentication. By default, automatic support for Passport authentication is disabled; set this option to TRUE to enable Passport authentication support.</td></tr><tr><td><strong>WinHttpRequestOption_MaxAutomaticRedirects</strong></td><td>Sets or retrieves the maximum number of redirects that WinHTTP follows; the default is 10. This limit prevents unauthorized sites from making the WinHTTP client stall following a large number of redirects.</td></tr><tr><td><strong>WinHttpRequestOption_MaxResponseHeaderSize</strong></td><td>Sets or retrieves a bound set on the maximum size of the header portion of the server’s response. This bound protects the client from a malicious server attempting to stall the client by sending a response with an infinite amount of header data. The default value is 64 KB.</td></tr><tr><td><strong>WinHttpRequestOption_MaxResponseDrainSize</strong></td><td>Sets or retrieves a bound on the amount of data that will be drained from responses in order to reuse a connection. The default is 1 MB.</td></tr><tr><td><strong>WinHttpRequestOption_EnableHttp1_1</strong></td><td>Sets or retrieves a boolean value that indicates whether HTTP/1.1 or HTTP/1.0 should be used. The default is TRUE, so that HTTP/1.1 is used by default.</td></tr><tr><td><strong>WinHttpRequestOption_EnableCertificateRevocationCheck</strong></td><td>Enables server certificate revocation checking during SSL negotiation. When the server presents a certificate, a check is performed to determine whether the certificate has been revoked by its issuer. If the certificate is indeed revoked, or the revocation check fails because the Certificate Revocation List (CRL) cannot be downloaded, the request fails; such revocation errors cannot be suppressed.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>Set an option by specifying one of the preceding constants as the parameter of the <strong>Option</strong> property.</p>
+<hr>
+<h4 id="winhttprequestsecureprotocols">WinHttpRequestSecureProtocols Enumeration</h4>
+<p>Types of secure protocols.</p>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Description</th></tr></thead><tbody><tr><td><strong>SecureProtocol_SSL2</strong></td><td>SSL 2.0</td></tr><tr><td><strong>SecureProtocol_SSL3</strong></td><td>SSL 3.0</td></tr><tr><td><strong>SecureProtocol_TLS1</strong></td><td>Transport Layer Security (TLS) 1.0.</td></tr><tr><td><strong>SecureProtocol_ALL</strong></td><td>All the protocols.</td></tr></tbody></table></div>
+<hr>
+<h4 id="winhttprequestsslerrorflags">WinHttpRequestSslErrorFlags Enumeration</h4>
+<p>SSL certificate errors.</p>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Description</th></tr></thead><tbody><tr><td><strong>SslErrorFlag_UnknownCA</strong></td><td>Unknown certification authority (CA) or untrusted root.</td></tr><tr><td><strong>SslErrorFlag_CertWrongUsage</strong></td><td>Wrong usage.</td></tr><tr><td><strong>SslErrorFlag_CertCNInvalid</strong></td><td>Invalid common name (CN).</td></tr><tr><td><strong>SslErrorFlag_CertDateInvalid</strong></td><td>Invalid date or certificate expired.</td></tr><tr><td><strong>SslErrorFlag_Ignore_All</strong></td><td>Ignore all.</td></tr></tbody></table></div>
+<h3 id="httpstatuscodes">HTTP Status Codes</h3>
+<p>These constants and corresponding values indicate HTTP status codes returned by servers on the Internet.</p>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Value</th><th>Description</th></tr></thead><tbody><tr><td>HTTP_STATUS_CONTINUE</td><td>100</td><td>The request can be continued.</td></tr><tr><td>HTTP_STATUS_SWITCH_PROTOCOLS</td><td>101</td><td>The server has switched protocols in an upgrade header.</td></tr><tr><td>HTTP_STATUS_OK</td><td>200</td><td>The request completed successfully.</td></tr><tr><td>HTTP_STATUS_CREATED</td><td>201</td><td>The request has been fulfilled and resulted in the creation of a new resource.</td></tr><tr><td>HTTP_STATUS_ACCEPTED</td><td>202</td><td>The request has been accepted for processing, but the processing has not been completed.</td></tr><tr><td>HTTP_STATUS_PARTIAL</td><td>203</td><td>The returned meta information in the entity-header is not the definitive set available from the originating server.</td></tr><tr><td>HTTP_STATUS_NO_CONTENT</td><td>204</td><td>The server has fulfilled the request, but there is no new information to send back.</td></tr><tr><td>HTTP_STATUS_RESET_CONTENT</td><td>205</td><td>The request has been completed, and the client program should reset the document view that caused the request to be sent to allow the user to easily initiate another input action.</td></tr><tr><td>HTTP_STATUS_PARTIAL_CONTENT</td><td>206</td><td>The server has fulfilled the partial GET request for the resource.</td></tr><tr><td>HTTP_STATUS_WEBDAV_MULTI_STATUS</td><td>207</td><td>During a World Wide Web Distributed Authoring and Versioning (WebDAV) operation, this indicates multiple status codes for a single response. The response body contains Extensible Markup Language (XML) that describes the status codes..</td></tr><tr><td>HTTP_STATUS_AMBIGUOUS</td><td>300</td><td>The requested resource is available at one or more locations.</td></tr><tr><td>HTTP_STATUS_MOVED</td><td>301</td><td>The requested resource has been assigned to a new permanent Uniform Resource Identifier (URI), and any future references to this resource should be done using one of the returned URIs.</td></tr><tr><td>HTTP_STATUS_REDIRECT</td><td>302</td><td>The requested resource resides temporarily under a different URI.</td></tr><tr><td>HTTP_STATUS_REDIRECT_METHOD</td><td>303</td><td>The response to the request can be found under a different URI and should be retrieved using a GET HTTP verb on that resource.</td></tr><tr><td>HTTP_STATUS_NOT_MODIFIED</td><td>304</td><td>The requested resource has not been modified.</td></tr><tr><td>HTTP_STATUS_USE_PROXY</td><td>305</td><td>The requested resource must be accessed through the proxy given by the location field.</td></tr><tr><td>HTTP_STATUS_REDIRECT_KEEP_VERB</td><td>306</td><td>The redirected request keeps the same HTTP verb. HTTP/1.1 behavior.</td></tr><tr><td>HTTP_STATUS_BAD_REQUEST</td><td>400</td><td>The request could not be processed by the server due to invalid syntax.</td></tr><tr><td>HTTP_STATUS_DENIED</td><td>401</td><td>The requested resource requires user authentication.</td></tr><tr><td>HTTP_STATUS_PAYMENT_REQ</td><td>402</td><td>Not implemented in the HTTP protocol.</td></tr><tr><td>HTTP_STATUS_FORBIDDEN</td><td>403</td><td>The server understood the request, but cannot fulfill it.</td></tr><tr><td>HTTP_STATUS_NOT_FOUND</td><td>404</td><td>The server has not found anything that matches the requested URI.</td></tr><tr><td>HTTP_STATUS_BAD_METHOD</td><td>405</td><td>The HTTP verb used is not allowed.</td></tr><tr><td>HTTP_STATUS_NONE_ACCEPTABLE</td><td>406</td><td>No responses acceptable to the client were found.</td></tr><tr><td>HTTP_STATUS_PROXY_AUTH_REQ</td><td>407</td><td>Proxy authentication required.</td></tr><tr><td>HTTP_STATUS_REQUEST_TIMEOUT</td><td>408</td><td>The server timed out waiting for the request.</td></tr><tr><td>HTTP_STATUS_CONFLICT</td><td>409</td><td>The request could not be completed due to a conflict with the current state of the resource. The user should resubmit with more information.</td></tr><tr><td>HTTP_STATUS_GONE</td><td>410</td><td>The requested resource is no longer available at the server, and no forwarding address is known.</td></tr><tr><td>HTTP_STATUS_LENGTH_REQUIRED</td><td>411</td><td>The server cannot accept the request without a defined content length.</td></tr><tr><td>HTTP_STATUS_PRECOND_FAILED</td><td>412</td><td>The precondition given in one or more of the request header fields evaluated to false when it was tested on the server.</td></tr><tr><td>HTTP_STATUS_REQUEST_TOO_LARGE</td><td>413</td><td>The server cannot process the request because the request entity is larger than the server is able to process.</td></tr><tr><td>HTTP_STATUS_URI_TOO_LONG</td><td>414</td><td>The server cannot service the request because the request URI is longer than the server can interpret.</td></tr><tr><td>HTTP_STATUS_UNSUPPORTED_MEDIA</td><td>415</td><td>The server cannot service the request because the entity of the request is in a format not supported by the requested resource for the requested method.</td></tr><tr><td>HTTP_STATUS_RETRY_WITH</td><td>449</td><td>The request should be retried after doing the appropriate action.</td></tr><tr><td>HTTP_STATUS_SERVER_ERROR</td><td>500</td><td>The server encountered an unexpected condition that prevented it from fulfilling the request.</td></tr><tr><td>HTTP_STATUS_NOT_SUPPORTED</td><td>501</td><td>The server does not support the functionality required to fulfill the request.</td></tr><tr><td>HTTP_STATUS_BAD_GATEWAY</td><td>502</td><td>The server, while acting as a gateway or proxy, received an invalid response from the upstream server it accessed in attempting to fulfill the request.</td></tr><tr><td>HTTP_STATUS_SERVICE_UNAVAIL</td><td>503</td><td>The service is temporarily overloaded.</td></tr><tr><td>HTTP_STATUS_GATEWAY_TIMEOUT</td><td>504</td><td>The request was timed out waiting for a gateway.</td></tr><tr><td>HTTP_STATUS_VERSION_NOT_SUP</td><td>505</td><td>The server does not support the HTTP protocol version that was used in the request message.</td></tr></tbody></table></div>
+<hr>
+<h4 id="onerror">OnError Event</h4>
+<p>Occurs when there is a run-time error in the application.</p>
+<pre class="code"><code>SUB OnError (BYVAL ErrorNumber AS LONG, BYVAL ErrorDescription AS BSTR)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>ErrorNumber</em></td><td>Value of type long that receives the numerical value of the error.</td></tr><tr><td><em>ErrorDescription</em></td><td>Value of type BSTR that specifies a short description of the error which occurred.</td></tr></tbody></table></div>
+<hr>
+<h4 id="onresponsedataavailable">OnResponseDataAvailable Event</h4>
+<p>Occurs when data is available from the response.</p>
+<pre class="code"><code>SUB OnResponseDataAvailable (BYVAL pData AS SAFEARRAY PTR)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pData</em></td><td>A zero-based array of bytes that receives the response data received by Microsoft Windows HTTP Services (WinHTTP) up to the point that this event occurs. This is a safe array of type VT_UI1.</td></tr></tbody></table></div>
+<hr>
+<h4 id="onresponsefinished">OnResponseFinished Event</h4>
+<p>Occurs when the response data is complete.</p>
+<pre class="code"><code>SUB OnResponseFinished</code></pre>
+<hr>
+<h4 id="onresponsestart">OnResponseStart Event</h4>
+<p>Occurs when the response data starts to be received.</p>
+<pre class="code"><code>SUB OnResponseStart (BYVAL Status AS LONG, BYVAL ContentType AS BSTR)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Status</em></td><td>Receives the standard status code returned with the response data. Status codes are defined in RFC 2616.</td></tr><tr><td><em>ContentType</em></td><td>Specifies the type of content received, such as "text/html" or "image/gif".</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>For this event to occur, use <strong>Open</strong> to send an HTTP connection in asynchronous mode and use <strong>Send</strong> to send a data request to an Internet server. This is the first WinHTTP event to occur after the <strong>Send</strong>.</p>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

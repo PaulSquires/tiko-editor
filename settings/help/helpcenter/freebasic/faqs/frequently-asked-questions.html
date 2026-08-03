@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frequently Asked Questions — Help Center</title>
+<meta name="description" content="Frequently Asked Questions — 0 documented members. FAQs reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/faqs/frequently-asked-questions.html">
+<meta property="og:title" content="Frequently Asked Questions">
+<meta property="og:description" content="Frequently Asked Questions — 0 documented members. FAQs reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/faqs/frequently-asked-questions.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/faqs/frequently-asked-questions.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>FAQs</div>
+<h1>Frequently Asked Questions</h1>
+<h2>Documentation</h2>
+
+	<a></a><br>
+<br>
+<b>FreeBASIC questions:</b><br>
+<br>
+<div class="indent"><b>- <a href="#item1">What is FreeBASIC?</a></b><br>
+<b>- <a href="#item2">Who is responsible for FreeBASIC?</a></b><br>
+<b>- <a href="#item3">Why should I use FreeBASIC rather than QBasic?</a></b><br>
+<b>- <a href="#item4">Why should I use FreeBASIC rather than some other newer BASIC ?</a></b><br>
+<b>- <a href="#item5">How fast is FreeBASIC?</a></b><br>
+<b>- <a href="#item6">How compatible is FreeBASIC with QuickBASIC?</a></b><br>
+<b>- <a href="#item7">How compatible is FreeBASIC with Windows? DOS? Linux?</a></b><br>
+<b>- <a href="#item8">Does FreeBASIC support Object Oriented Programming?</a></b><br>
+<b>- <a href="#item9">What are the future plans with FB / ToDo list ?</a></b><br>
+<b>- <a href="#item10">Can I program GUI applications in FB ?</a></b><br>
+<b>- <a href="#item11">Is FB suitable for complex / big applications?</a></b><br>
+<b>- <a href="#item12">Can I use a non-latin charset in my FreeBASIC applications?</a></b><br>
+<b>- <a href="#item13">Can I use Serial/COM and Hardware/CPU ports in FB?</a></b><br>
+<br>
+</div><b>Getting Started with FreeBASIC questions</b><br>
+<div class="indent"><b>- <a href="#item20">Where can I find more information about FreeBASIC?</a></b><br>
+<b>- <a href="#item21">Why doesn't the QB GUI open when I start FreeBASIC?</a></b><br>
+<b>- <a href="#item22">Can I have an offline version of the documentation?</a></b><br>
+<b>- <a href="#item23">What's the idea behind the FB dialects?</a></b><br>
+<b>- <a href="#item24">Why does my program crash when I define an array larger than xx?</a></b><br>
+<b>- <a href="#item25">Why does my program fail to compile with the message 'cannot find -llibname'?</a></b><br>
+<br>
+</div><b>Advanced FreeBASIC</b><br>
+<br>
+<div class="indent"><b>- <a href="#item31">How do I link to C libraries?</a></b><br>
+<b>- <a href="#item32">Can I use a debugger?</a></b><br>
+<b>- <a href="#item33">What's the goal of the AR.EXE, AS.EXE and LD.EXE files included with FB ?</a></b><br>
+<b>- <a href="#item34">Is there a limit on how big my source files can be?</a></b><br>
+<b>- <a href="#item35">Can I write an OS in FreeBASIC ?</a></b><br>
+<b>- <a href="#item36">I'm developing an OS, can FreeBASIC be ported to my OS ?</a></b><br>
+<b>- <a href="#item37">Does FreeBASIC support returning reference from Functions, like in C++?</a></b><br>
+<br>
+</div><a href="#item999">See also</a><br>
+<br>
+<br>
+<br>
+<br>
+<div><b>FreeBASIC questions</b></div><br>
+<br>
+<a></a><b>What is FreeBASIC?</b><br>
+<div class="indent">FreeBASIC is a free, BASIC compiler for Windows (32-bit and 64-bit), 32 bit protected-mode DOS (COFF executables, like DJGPP), and Linux (x86, x86_64, and ARM). It began as an attempt to create a code-compatible, free alternative to Microsoft QuickBASIC, but has quickly grown into a powerful development tool, already including support for libraries such as Allegro, SDL, OpenGL, and many others with its default installation.<br>
+<br>
+Aside from having a syntax mostly compatible with QuickBASIC, FreeBASIC introduces several new features to the aged language, including pointers to variables and functions, and unsigned data types.<br>
+<br>
+FreeBASIC compiler is self-hosting - written in FreeBASIC, the libraries however are written in C.<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>Who is responsible for FreeBASIC?</b><br>
+<div class="indent">The first versions of FreeBASIC were developed exclusively by V1ctor. Later versions gained contributions from many people, including Lillo, who developed the Linux port and the graphics library, and DrV, who developed the DOS port. <br>
+<br>
+See the <a href="../compiler/credits-in-alphabetical-order.html">FreeBASIC Credits</a> page.<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>Why should I use FreeBASIC rather than QBasic?</b><br>
+<div class="indent">FreeBASIC has innumerable advantages over QBasic, QuickBASIC, PDS, and Visual Basic for DOS. <br>
+</div><ul><ul><li> It supports 32-bit and 64-bit processors, where QBasic is designed for 16-bit CPU's.<br>
+<li> It supports modern OSes. It has ports to Windows, Linux, and 32-bit DOS.<br>
+<li> It supports modern APIs such as SDL, Direct2D or DirectX, Win32, and OpenGL.<br>
+<li> It is distributed under the GPL, meaning it's free and legal to use, unlike most copies of QuickBASIC / other BASICs.<br>
+<li> The library is distributed under the LGPL with additional exception, meaning you may do whatever you want with your compiled programs, including selling them.<br>
+<li> FreeBASIC is many times faster than QuickBASIC / other BASICs.<br>
+<li> FreeBASIC supports many features, such as pointers and inline Assembly, which are not available in QuickBASIC / other BASICs.<br>
+<li> QuickBASIC only supports DOS. Windows support for DOS emulation (and thus QuickBASIC) is becoming thinner with every new version. Vista does not support graphics or fullscreen text for DOS applications.<br>
+<br>
+</li></li></li></li></li></li></li></li></ul></ul><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>Why should I use FreeBASIC rather than some other newer BASIC ?</b><br>
+<div class="indent">FreeBASIC has many traits which make it more desirable than most other BASIC language implementations:<br>
+</div><ul><ul><li> FreeBASIC adheres closely to the standard BASIC syntax, making it easier to use.<br>
+<li> FreeBASIC is compiled to actual programs (executables), not bytecode.<br>
+<li> FreeBASIC has a large, dedicated community which has actively participated in the development of FreeBASIC.<br>
+<li> FreeBASIC utilizes standard methods of accessing common C libraries. SDL, for example, is standard C SDL, not a new set of intrinsic commands.<br>
+<li> FreeBASIC has ports to Windows, Linux, and 32-bit DOS. It retains consistent syntax between the three ports.<br>
+<br>
+</li></li></li></li></li></ul></ul><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>How fast is FreeBASIC?</b><br>
+<div class="indent">Most tests run by the community have shown FreeBASIC is significantly faster than QuickBASIC, faster than most other GPL or commercial BASICs, and often approaching GCC in terms of speed.<br>
+The <a href="http://shootout.alioth.debian.org/gp4/benchmark.php?test=all&amp;lang=all">Computer Languages Benchmark Game</a>, an independent test team, give FreeBASIC for Linux a speed 1.8 times slower than  GNU g++. Tests are about calculation, memory and disk access speed in console programs, no graphics capabilities were tested. This is not a bad result considering FreeBASIC is not yet an optimizing compiler.<br>
+One area where there is a notable speed deficiency is in 32-bit console modes. While FreeBASIC is consistently on-par with other 32-bit console mode applications, 32-bit console mode operations are significantly slower than 16-bit console operations, as seen in QuickBASIC. In DOS version, some I/O operations can slow down after porting from a 16-bit BASIC to FB - optimizing the code brings the speed back.<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>How compatible is FreeBASIC with QuickBASIC?</b><br>
+<div class="indent">The FreeBASIC built in graphics library emulates the most used QB graphics modes (modes 7,12,13) and implements all the drawing primitives featured in QB. <br>
+Most compatibility problems arise from the use of 8086-DOS-hardware specific low-level techniques in the old QB programs. VGA port programming, DOS interrupts, memory segment switching, poking to the screen memory or music playing using the PC speaker are not directly supported, even if they can be supported/emulated by external libraries. <br>
+Other issues in porting old QB programs, like variable name clashes with new FB keywords, variables with the name of a QB keyword plus a type suffix, default integer size being 32 bits in FB, are addressed by running FreeBASIC with the commandline switch <code>-lang qb</code> .<br>
+<br>
+See <a href="../freebasic-dialects-and-qbasic/differences-from-qb.html">Differences between FreeBASIC and QuickBASIC</a>.<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>How compatible is FreeBASIC with Windows? DOS? Linux? </b><br>
+<div class="indent">FreeBASIC is fully compatible with Windows, MS-DOS, FreeDOS and Linux. When planning to create a program for all three platforms, however, keep API availability in mind -- code utilizing OpenGL will work in Windows and Linux, for example, but won't in DOS, because OpenGL is not available for DOS.<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>Does FreeBASIC support Object Oriented Programming?</b><br>
+<div class="indent">FreeBASIC supports classes (user-defined types) with member functions (methods), static methods, static member variables, constructors, destructors, properties, operator overloading, single inheritance, virtual and abstract methods (polymorphism) and Run-Time Type Information (RTTI). Future plans regarding OOP functionality include adding support for multiple inheritance and/or interfaces. For more information see: <a href="../tutorials/beginners-guide-to-types-as-objects-part-1.html">A Beginners Guide to Types as Objects</a>.<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>What are the future plans with FB / ToDo list ?</b><br>
+<br>
+<div class="indent">You can find out what's planned for the future releases by directly looking at <a href="http://sourceforge.net/p/fbc/code/ci/master/tree/todo.txt">fbc's todo.txt</a>.<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>Can I program GUI applications in FB ?</b><br>
+<div class="indent">Yes, you can. Headers allowing you to call the  GUI API of Windows and Linux are supplied with the respective versions, but the programs made this way are not portable.<br>
+There are some API wrappers and experimental RAD applications that create non-portable GUI code for Windows.<br>
+For portable programming a multiplatform GUI wrapper  library  as GTK or wx-Widgets may be used. GTK headers are provided with FB, but the OOP functionality currently available in FB prevents the use of wx-Widgets. The programs created with these libraries may require the user to install the wrapper libraries in their systems.<br>
+For games and small graphics applications there are some FB-specific libraries that draw and manage  simple controls as buttons and edit boxes inside the graphics screen, programs made with those libs are entirely portable. <br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>Is FB suitable for complex / big applications?</b><br>
+<div class="indent">The FB compiler is self-hosting, it is programmed itself in FB. That means more than 120 000 lines of code at the moment, a fairly complex application.<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>Can I use a non-latin charset in my FreeBASIC applications?</b><br>
+<br>
+<div class="indent">FreeBASIC has the Unicode support provided by the C runtime library for the given platform. This means FB DOS won't help you with Unicode. On other platforms you can use <a href="../standard-data-types/procedures/wstring.html">Wstrings</a> to support any charset you need. The File OPEN keyword  has an additional <a href="../file-i-o-functions/procedures/encoding.html">Encoding</a> parameter allowing for different encodings. As FreeBASIC is coded itself in FB, this means you can code your source in an Unicode editor so the comments and string literals can be in any character set (keywords, labels and names for variables and procedures must be kept inside the  ASCII set..).<br>
+For the output to screen the support is different from console to graphics. In console mode wstring printing in non latin charsets is supported if the console font supports them. Graphics mode uses an  internal CP437 charset (the old DOS charset) font so non-latin output requires a custom made raster font and the use of the <a href="../2d-drawing-functions/procedures/draw-string.html">Draw String</a> keyword. Third party tools exist to grab an external font and convert it to the  DRAW STRING format.<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>Can I use Serial/COM and Hardware/CPU ports in FB?</b><br>
+<div class="indent"> Yes, FB has built in functions to access the serial/COM port and hardware/CPU ports with no need of external libraries. See the <a href="#item999">OS specific FAQ's</a> for details for your OS, and <a href="../file-i-o-functions/procedures/open-com.html">Open Com</a>, <a href="../miscellaneous-keywords/procedures/inp.html">Inp</a> and <a href="../miscellaneous-keywords/procedures/out.html">Out</a> .<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<div><b>Getting Started with FreeBASIC questions</b></div><br>
+<br>
+<a></a><b>Where can I find more information about FreeBASIC?</b><br>
+<div class="indent">The FreeBASIC Wiki is the most up-to-date manual for using FreeBASIC, available <a href="http://www.freebasic.net/wiki/">here</a>.<br>
+<br>
+Active FreeBASIC related forums, besides the <a href="http://www.freebasic.net/forum">official one</a>, can be found at <a href="http://www.qbasicnews.com/">qbasicnews</a>, <a href="http://www.petesqbsite.com/phpBB3/">Pete's QB Site</a> , <a href="http://games.freebasic.net/forum/index.php">the FB Games directory</a>  or  <a href="http://www.freebasic-portal.de">freebasic-portal.de (in German)</a>.<br>
+<br>
+Active magazines which regularly have FreeBASIC related articles are <a href="http://www.petesqbsite.com/sections/express/express.shtml">QB Express</a> and <a href="http://www.qbxl.net/">QBXL Magazine</a>. These magazines are always looking for new articles, so if you think you've got a good idea for an article about FreeBASIC, submit it!<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>Why doesn't the QB GUI open when I start FreeBASIC?</b><br>
+<div class="indent">QB had an Integrated Development Environment (IDE).  FreeBASIC does not.<br>
+FreeBASIC is only a compiler, not a complete QuickBASIC clone. It is a console mode application. It will accept a BAS file on the command line, and spit out an EXE file.<br>
+You can create the BAS file with the simplest plain text editor in your OS (Notepad, EDIT, nano,...), then run the compiler. <br>
+If you can't live without  syntax coloring, error highlighting, multiple file managing, integrated debugger, context help or other features, you need an IDE. See the <a href="#item999">OS specific FAQ's</a> for the IDE's and editors available.<br>
+</div> <br>
+<a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>Can I have an offline version of the documentation?</b><br>
+<div class="indent">This online Wiki is the official documentation for FB. Usually it is up-to-date with the latest improvements found in the development version of FB.<br>
+Offline versions of this wiki (in CHM, HTML and other formats) are available from the <a href="http://sourceforge.net/projects/fbc/files/Documentation/">Documentation directory at fbc's downloads site on SourceForge</a>.<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>What's the idea behind the FB dialects?</b><br>
+<div class="indent">The idea is to allow improvements in the language while maintaining backwards compatibility with QB code. The quirks of the QB syntax are not compatible with the more rigid style required by OOP. The new FB keywords often clashed with variable names in old QB programs. QB allowed to use freely dots in variable names and procedures not being UDT's.<br>
+The three dialects  (-lang fb, -lang qb, -lang fblite) allow to combine the best of two worlds. <br>
+</div><ul><li><code>lang fb</code> provides the framework required for OOP programming . Other dialects don't give access to OOP.<br>
+<li><code>lang qb</code> will allow the developers to keep increasing the compatibility with qb programs. Newer keywords in FB can be used by preceding them with two underscores.  For example, <code>Getmouse</code> can be called by using <code>_</code><code>_Getmouse</code><br>
+<li><code>lang fblite</code> offers FreeBASIC language compatibility, with a more QBASIC-compatible coding style.<br>
+</li></li></li></ul><div class="indent">See <a href="../freebasic-dialects-and-qbasic/freebasic-dialects.html">Compiler Dialects</a> for details.<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>Why does my program crash when I define an array larger than xx ?</b><br>
+<br>
+<div class="indent">This generally happens because you made an <i><a href="../tutorials/programmer-s-guide/storage-classes.html">automatic</a></i> fixed-length array too large, and it is corrupting the program stack. You have a couple of options:<br>
+<br>
+</div><ul><li> if possible, reduce the size of the <i>automatic</i> array<br>
+<li> create a variable-length array, by<br>
+<ul><li> defining the array with an empty subscript list (using <code><a href="../variable-declarations/procedures/dim.html">Dim</a></code>), or<br>
+<li> defining the array with variable subscripts instead of numeric literals, <a href="../variable-declarations/procedures/const.html">Constants</a> or <a href="../user-defined-types/procedures/enum.html">Enums</a> (using <code><a href="../variable-declarations/procedures/dim.html">Dim</a></code>), or<br>
+<li> defining the array with <code><a href="../array-functions/procedures/redim.html">ReDim</a></code><br>
+</li></li></li></ul><li> reserve more memory for the program stack by using the <code>-t</code> <a href="../using-the-freebasic-compiler/fbc-command-line.html">command-line option</a> when compiling. The default is <code>-t 1024</code> (kilobytes) or <code>-t 2048</code> (kilobytes). Note: it's a bad idea to use very large values here.<br>
+<li> create a <i>static</i> array by defining the array with <code><a href="../variable-declarations/procedures/static.html">Static</a></code> rather than <code><a href="../variable-declarations/procedures/dim.html">Dim</a></code> (only locally visible, but globally preserved)<br>
+<li> define the array with <code><a href="../variable-declarations/procedures/shared.html">Shared</a></code> access using <code><a href="../variable-declarations/procedures/dim.html">Dim</a></code> (this makes the array fully global)<br>
+<li> use <a href="../tutorials/programmer-s-guide/pointers.html">Pointers</a> and <a href="../memory-functions/memory-functions.html">Memory Functions</a> like <code><a href="../memory-functions/procedures/allocate.html">Allocate</a></code> and <code><a href="../memory-functions/procedures/deallocate.html">Deallocate</a></code> to manage memory yourself - this is the preferred way for storing big buffers, but not for beginners.<br>
+</li></li></li></li></li></li></ul><div class="indent"><i>Static</i> and <i>variable-length</i> arrays don't use the program stack for their element data, so do not have the problem associated with <i>automatic</i> fixed-length arrays. See <a href="../tutorials/programmer-s-guide/storage-classes.html">Storage Classes</a> for more information. Note that storing huge buffers as <i>static</i> or increasing the stack size far above the default is not a very good idea, since it increases the fixed amount of memory needed to load and start you program, even if most of it is not used later, and can result in performance degrade, or even refusing your program to load at all.    <br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>Why does my program fail to compile with the message 'cannot find -llibname'"?</b><br>
+<div class="indent">This is an error raised by the linker.  The program is supposed to link to an external library, designated in the program code with <code><a href="../preprocessor/procedures/inclib.html">#inclib</a></code> or on the compiler command line with <code><a href="../using-the-freebasic-compiler/command-line-options/compiler-option-l.html">-l</a></code>.  However, the linker has been unable to find a matching file in any of the library paths.  Check the homepage of the library you want to compile with to find out how to download it, or check ExtLibTOC to see if information about the library can be found there. For general information on libraries and how to use them see <a href="../tutorials/programmer-s-guide/using-prebuilt-libraries.html">Using Prebuilt Libraries</a> and the related pages listed there.<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<br>
+<div><b>Advanced FreeBASIC</b></div><br>
+<br>
+<a></a><b>How do I link to C libraries?</b><br>
+<div class="indent">C libraries are set up in much the same way in FreeBASIC as they are in C. Every library included with FreeBASIC has a basic include file named "<i>library name</i>.bi" which uses the <a href="../preprocessor/procedures/inclib.html">#inclib</a> metacommand to include the library, and the <a href="../procedures/procedures/declare.html">Declare Statement</a> to declare the functions within the library. FreeBASIC includes hundreds of BI files, see full list of library headers <a href="../tutorials/external-libraries-index.html">here</a>.<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>Can I use a debugger?</b><br>
+<div class="indent">FreeBASIC can use preferably a debugger compatible with GNU GDB. <br>
+</div><ul><ul><li> Win32: Insight is an user friendly wrapper for GDB, see <a href="windows-related-faq.html">Win32 related FAQ</a>. <br>
+<li> DOS: Be warned that DOS also has product named "Insight", but it's a real mode debugger not usable with FreeBASIC, use GDB or some DPMI32 debugger at least.<br>
+<li> Linux: use GDB.<br>
+</li></li></li></ul></ul><div class="indent">See the <a href="#item999">OS specific FAQ's</a> for details for your OS.<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>What's the goal of the AR.EXE, AS.EXE and LD.EXE files included with FB ?</b><br>
+<div class="indent">AS.EXE is GAS, the "GNU assembler". It is always involved in compilation. LD.EXE is the "GNU linker", involved in creation of executables. AR.EXE is the "GNU archiver", in fact a librarian, creating <code>.A</code> libraries. <br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>Is there a limit on how big my source files can be?</b><br>
+<div class="indent">Yes, since FreeBASIC is a fully 32-bit compiler it may operate on source files up to theoretically 4GB or 4294967296 bytes, however your RAM capacity should be significantly above the size of your source, otherwise the compilation won't finish or will be very slow at least. <br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>Can I write an OS in FreeBASIC ?</b><br>
+<br>
+<div class="indent">YES and NO. If you really insist to write an OS and involve FB, the answer is YES. If the question is, whether it is a good idea that you, even more if a beginner, should start coding an OS using FB now, the answer is NO. Several pitfalls apply:<br>
+</div><ul><ul><li> OS development is hard, see http://www.osdev.org/wiki/Getting_Started .<br>
+<li> FB won't help you to bypass the need to deal with assembly, also C might be almost impossible to avoid.<br>
+<li> You won't be able to use most of the trusted FB features, like graphics, file I/O, threads, memory management, even console I/O ... just control flow, math and logic. If you need those library functions, you will have to <b>reimplement</b> them.<br>
+</li></li></li></ul></ul><div class="indent">FreeBASIC relies on GCC, and available informations about developing an OS in C apply to FreeBASIC as well. FB will help you neither more nor less than GCC.<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>I'm developing an OS, can FreeBASIC be ported to my OS ?</b><br>
+<br>
+Depends. If your OS at least egalizes the functionality of DOS with DPMI32 (console I/O (seeking, multiple files open, ...), file I/O, memory management) <b>and</b> has a port of GCC, then the answer is YES. If you have at least an other somewhat compliant C compiler <b>with</b> libraries, it might be possible. You can't reasonably port FB for example to an OS allowing to load or save a file in one block only, or a 16-bit OS.   <br>
+<br>
+<a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>Does FreeBASIC support returning references from Functions, like in C++?</b><br>
+<br>
+Yes, this functionality exists. Procedures can now return references using <code><a href="../procedures/procedures/byref-function-results.html">ByRef</a> as <i>datatype</i></code> for the return type.<br>
+<br>
+<a href="#item0">Back to top</a><br>
+<br>
+<a></a><div>See also</div><div><br>
+<ul><li> <a href="windows-related-faq.html">Win32 related FAQ</a><br>
+<li> <a href="dos-related-faq.html">DOS related FAQ</a><br>
+<li> <a href="linux-related-faq.html">Linux related FAQ</a><br>
+</li></li></li></ul>and<br>
+<ul><li> <a href="frequently-asked-fb-runtime-library-questions.html">FB Runtime Library FAQ</a><br>
+<li> <a href="frequently-asked-freebasic-graphics-library-questions.html">Frequently Asked FreeBASIC Graphics Library Questions</a><br>
+<br>
+</li></li></ul><br>
+</div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

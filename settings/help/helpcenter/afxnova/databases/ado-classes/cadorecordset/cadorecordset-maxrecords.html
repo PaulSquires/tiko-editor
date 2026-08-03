@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CADORecordset.MaxRecords — Help Center</title>
+<meta name="description" content="Sets or returns a Long value that indicates the maximum number of records to return. Default is zero (no limit).">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecordset/cadorecordset-maxrecords.html">
+<meta property="og:title" content="CADORecordset.MaxRecords">
+<meta property="og:description" content="Sets or returns a Long value that indicates the maximum number of records to return. Default is zero (no limit).">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecordset/cadorecordset-maxrecords.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadorecordset/cadorecordset-maxrecords.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadorecordset-class.html">CADORecordset Class</a></div>
+<h1>CADORecordset.MaxRecords<span class="h1kind">property</span></h1>
+<p class="lede">Sets or returns a Long value that indicates the maximum number of records to return. Default is zero (no limit).</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">property</span><span class="badge">CADORecordset.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PROPERTY MaxRecords () AS LONG</code></pre>
+<pre class="code sig"><code>PROPERTY MaxRecords (BYVAL lMaxRecords AS LONG)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>lMaxRecords</code></td><td></td><td>A value that indicates the maximum number of records to return. Default is zero (no limit).</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>The maximum number of records.</p>
+<h2>Description</h2>
+<p>Indicates the maximum number of records to return to a <code>Recordset</code> from a query.</p>
+<p>Sets or returns a Long value that indicates the maximum number of records to return. Default is zero (no limit).</p>
+<h2>Remarks</h2>
+<p>Use the <strong>MaxRecords</strong> property to limit the number of records that the provider returns from the data source. The default setting of this property is zero, which means the provider returns all requested records.</p>
+<p>The <strong>MaxRecords</strong> property is read/write when the <code>Recordset</code> is closed and read-only when it is open.</p>
+<h2>Examples</h2>
+<p>SELECT TOP 2 EmployeeID, LastName, FirstName FROM Employees ORDER BY LastName, FirstName;</p>
+<p>SELECT TOP 20 PERCENT EmployeeID, LastName, FirstName FROM Employees ORDER BY LastName, FirstName;</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CADORecordset.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoRecordset.inc:567</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoRecordset Class.md</span></li><li>Topic: <a href="../cadorecordset-class.html">CADORecordset Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

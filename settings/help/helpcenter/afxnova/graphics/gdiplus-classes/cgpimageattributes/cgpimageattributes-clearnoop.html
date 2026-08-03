@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpImageAttributes.ClearNoOp — Help Center</title>
+<meta name="description" content="Clears the **NoOp** setting for a specified category.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpimageattributes/cgpimageattributes-clearnoop.html">
+<meta property="og:title" content="CGpImageAttributes.ClearNoOp">
+<meta property="og:description" content="Clears the **NoOp** setting for a specified category.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpimageattributes/cgpimageattributes-clearnoop.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpimageattributes/cgpimageattributes-clearnoop.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpimage-class.html">CGpImage Class</a></div>
+<h1>CGpImageAttributes.ClearNoOp<span class="h1kind">method</span></h1>
+<p class="lede">Clears the **NoOp** setting for a specified category.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpImageAttributes.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION ClearNoOp (BYVAL nType AS ColorAdjustType = ColorAdjustTypeDefault) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>nType</code></td><td></td><td>Optional. Element of the <strong>ColorAdjustType</strong> enumeration that specifies the category for which the color key is cleared. The default value is <strong>ColorAdjustTypeDefault</strong>.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>StatusOk</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h2>Description</h2>
+<p>Clears the <strong>NoOp</strong> setting for a specified category.</p>
+<h2>Remarks</h2>
+<p>You can disable color adjustment for a certain object type by calling the <strong>SetNoOp</strong> method. Later, you can reinstate color adjustment for that object type by calling the <strong>ClearNoOp</strong> method. For example, the following statement disables color adjustment for brushes:</p>
+<p>The following statement reinstates the brush color adjustment that was in place before the call to <strong>SetNoOp</strong>:</p>
+<p>Flat API function: <strong>GdipSetImageAttributesNoOp</strong>.</p>
+<h2>Examples</h2>
+<p>myImageAttributes.SetNoOp(ColorAdjustTypeBrush)</p>
+<p>myImageAttributes.ClearNoOp(ColorAdjustTypeBrush)</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpImageAttributes.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpImageAttributes.inc:143</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpImage Classes.md</span></li><li>Topic: <a href="../cgpimage-class.html">CGpImage Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

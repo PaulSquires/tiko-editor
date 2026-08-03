@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoRecord.Fields — Help Center</title>
+<meta name="description" content="Gets a reference to the Fields collection of a `Record` object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecord/cadorecord-fields.html">
+<meta property="og:title" content="CAdoRecord.Fields">
+<meta property="og:description" content="Gets a reference to the Fields collection of a `Record` object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecord/cadorecord-fields.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadorecord/cadorecord-fields.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadorecord-class.html">CAdoRecord Class</a></div>
+<h1>CAdoRecord.Fields<span class="h1kind">property</span></h1>
+<p class="lede">Gets a reference to the Fields collection of a `Record` object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">property</span><span class="badge">CADORecord.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PRIVATE PROPERTY CAdoRecord.Fields () AS Afx_ADOFields PTR</code></pre>
+<h2>Description</h2>
+<p>A <code>Record</code> object has two special fields that can be indexed with FieldEnum constants. One constant accesses a field containing the default stream for the <code>Record</code>, and the other accesses a field containing the absolute URL string for the <code>Record</code>.</p>
+<p>Certain providers (for example, the Microsoft OLE DB Provider for Internet Publishing) may populate the <code>Fields</code> collection with a subset of available fields for the <code>Record</code> or <code>Recordset</code>. Other fields will not be added to the collection until they are first referenced by name or indexed by your code.</p>
+<p>Each <code>Field</code> object corresponds to a column in the <code>Recordset</code>. You use the <strong>Value</strong> property of <code>Field</code> objects to set or return data for the current record. Depending on the functionality the provider exposes, some collections, methods, or properties of a <code>Field</code> object may not be available.</p>
+<p>With the collections, methods, and properties of a Field object, you can do the following:</p>
+<ul><li>Return the name of a field with the <strong>Name</strong> property.</li><li>View or change the data in the field with the <strong>Value</strong> property. <strong>Value</strong> is the default property of the <code>Field</code> object.</li><li>Return the basic characteristics of a field with the <strong>Type_</strong>, <strong>Precision</strong>, and <strong>NumericScale</strong> properties.</li><li>Return the declared size of a field with the <strong>DefinedSize</strong> property.</li><li>Return the actual size of the data in a given field with the <strong>ActualSize</strong> property.</li><li>Determine what types of functionality are supported for a given field with the <strong>Attributes</strong> property and <strong>Properties</strong> collection.</li><li>Manipulate the values of fields containing long binary or long character data with the <strong>AppendChunk</strong> and <strong>GetChunk</strong> methods.</li><li>If the provider supports batch updates, resolve discrepancies in field values during batch updating with the <strong>OriginalValue</strong> and <strong>UnderlyingValue</strong> properties.</li></ul>
+<p>All of the metadata properties (<strong>Name</strong>, <strong>Type_</strong>, <strong>DefinedSize</strong>, <strong>Precision</strong>, and <strong>NumericScale</strong>) are available before opening the <code>Field</code> object's <code>Recordset</code>. Setting them at that time is useful for dynamically constructing forms.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CADORecord.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoRecord.inc:176</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoRecord Class.md</span></li><li>Topic: <a href="../cadorecord-class.html">CAdoRecord Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

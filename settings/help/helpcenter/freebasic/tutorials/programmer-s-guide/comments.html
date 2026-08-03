@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comments — Help Center</title>
+<meta name="description" content="Comments — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/comments.html">
+<meta property="og:title" content="Comments">
+<meta property="og:description" content="Comments — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/comments.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/comments.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Comments</h1>
+<h2>Documentation</h2>
+
+	Comments are regions of text that the compiler will ignore but may contain information that is useful to the programmer.  One exception are metacommands which may appear in certain types of comments.<br>
+<br>
+<div>Single Line comments</div><div><br>
+The single quote character (<code><b>'</b></code>) may be used to indicate a comment and may appear after other keywords on a source line.  The rest of the statement will be treated as a comment.<br>
+<code><pre class="code"><span class="tok-cm">' comment text</span></pre></code><br>
+<br>
+</div><div>The comment statement: Rem</div><div><br>
+A source code statement beginning with <code><a href="../../miscellaneous-keywords/procedures/rem.html">Rem</a></code> indicates that the line is comment and will not be compiled.  In FreeBASIC, <code><a href="../../miscellaneous-keywords/procedures/rem.html">Rem</a></code> may also appear after other keywords on a source line and the behavior is the same as above (only the rest of the statement will be treated as a comment).<br>
+<code><pre class="code"><span class="tok-kw">Rem</span> <span>comment</span></pre></code><br>
+<br>
+</div><div>Multi-line comments</div><div><br>
+Multi-line comments are marked with the tokens <code><b>/'</b></code> and <code><b>'/</b></code>.  All text between the two markers is considered comment text and is not compiled.<br>
+<br>
+Multi-line comments can span several lines, and can also be used in the middle of statements.  After the end of the comment, the statement will continue to be parsed as normal (even if the comment crosses line breaks).<br>
+<code><pre class="code"><span class="tok-cm">/' Multi-line</span>
+
+<span class="tok-cm">   comment '/</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Hello&quot;</span> <span class="tok-cm">/' embedded comment'/</span> <span>&quot; world&quot;</span></pre></code><br>
+Note: If FreeBASIC encounters a close-comment marker while it's not in a multi-line comment, it will treat it as a normal single-line comment due to the single quote.<br>
+<br>
+</div><div>Nested Comments</div><div><br>
+A multi-line comment can contain other multi-line comments inside it.  Each inner comment has its own open- and close-comment markers.<br>
+<br>
+<code><pre class="code"><span class="tok-cm">/'</span>
+
+<span class="tok-cm"> This is a comment.</span>
+
+<span class="tok-cm"> /'</span>
+
+<span class="tok-cm">  This is a comment inside a comment</span>
+
+<span class="tok-cm"> '/</span>
+
+    <span class="tok-kw">This</span> <span class="tok-kw">Is</span> <span>a</span> <span>comment.</span>
+
+<span class="tok-cm">'/</span></pre></code><br>
+A multi-line comment can contain unlimited levels of nested comments.  FreeBASIC will continue to parse the multi-line comment for more markers until the number of close-comment markers reaches the number of open-comment markers, i.e. when it has closed all the comments it has opened.<br>
+<br>
+</div><div>Comments after line continuation</div><div><br>
+A single-line comment may appear after the line continuation character ( <code><b>_</b></code> ) in a multi-line statement.  FreeBASIC does not parse the text after the line continuation character, though, so you can't open multi-line comments after them.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Print</span> <span>_</span> <span class="tok-cm">' line</span>
+
+    <span>&quot;This is part of the previous line's statement&quot;</span></pre></code><br>
+<br>
+</div><div>Metacommands</div><div><br>
+Metacommands, such as <code><a href="../../array-functions/procedures/static.html">$Static</a></code> and <code><a href="../../compiler-switches/procedures/include.html">$Include</a></code>, can be placed in single-line comments.  The <code><b>$</b></code> sign and the keyword must be the first two things in the statement, not including white space.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Rem</span> <span>compile</span> <span class="tok-kw">With</span> <span>-</span><span>lang</span> <span>fblite</span> <span class="tok-kw">Or</span> <span>qb</span>
+
+
+
+<span>#lang &quot;fblite&quot;
+
+</span>
+
+<span class="tok-kw">Rem</span> <span>$</span><span class="tok-kw">Static</span>
+
+<span class="tok-cm">' $include: 'vbcompat.bi'</span></pre></code><br>
+<br>
+</div><div>Single-line comment parsing</div><div><br>
+When you make a single-line comment, FreeBASIC will parse the comment, to check for a metacommand.  If it finds a multi-line comment, it will treat it as usual, and continue parsing the single-line comment after the close-comment marker.<br>
+<br>
+If you want to prevent FreeBASIC parsing the single-line comment, put another single quote (<code><b>'</b></code>), at the start of the comment.  FreeBASIC will treat the rest of the line, including multi-line comment markers and metacommands, as ordinary text, and will ignore it.  Other words encountered in a comment will also stop the parsing.<br>
+<ul><ul><li><i>Note: As of version 0.21.0, this will not longer apply in the </i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a><i> dialect, and multi-line comment markers will be completely ignored inside single-line comments</i><br>
+<br>
+</li></ul></ul><code><pre class="code"><span class="tok-cm">'' $static &lt;-- will not get parsed</span>
+
+<span class="tok-cm">'' this multiline comment marker (&quot;/'&quot;) will be ignored</span>
+
+<span class="tok-kw">Print</span> <span>&quot;This line is not a comment.&quot;</span></pre></code><br>
+<br>
+</div><div>Example</div><div><br>
+<code><pre class="code"><span class="tok-cm">/' this is a multi line </span>
+
+<span class="tok-cm">comment as a header of</span>
+
+<span class="tok-cm">this example '/</span>
+
+
+
+<span class="tok-kw">Rem</span> <span class="tok-kw">This</span> <span class="tok-kw">Is</span> <span>a</span> <span class="tok-kw">Single</span> <span class="tok-kw">Line</span> <span>comment</span>
+
+
+
+<span class="tok-cm">'this is a single line comment</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>   <span class="tok-cm">'comment following a statement</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>b</span> <span class="tok-kw">As</span> <span class="tok-cm">/' can comment in here also '/</span>    <span class="tok-kw">Integer</span>
+
+
+
+
+
+<span>#if 0
+
+</span>    <span>before</span> <span>version</span> <span class="tok-nu">0.16</span><span>,</span> <span class="tok-kw">This</span> <span>was</span> <span>the</span>
+
+    <span>only</span> <span>way</span> <span>of</span> <span>commenting</span> <span class="tok-kw">Out</span> <span>sections</span>
+
+    <span class="tok-kw">With</span> <span>multiple</span> <span>lines</span> <span>of</span> <span>code.</span>
+
+<span>#endif
+
+</span></pre></code><br>
+<br>
+</div><div>See also</div><div><br>
+<ul><li> <code><a href="../../miscellaneous-keywords/procedures/rem.html">Rem</a></code><br>
+<br>
+</li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

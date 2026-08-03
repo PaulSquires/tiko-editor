@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Select Case — Help Center</title>
+<meta name="description" content="Conditional statement block">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/control-flow-statements/procedures/select-case.html">
+<meta property="og:title" content="Select Case">
+<meta property="og:description" content="Conditional statement block">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/control-flow-statements/procedures/select-case.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/control-flow-statements/procedures/select-case.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Select Case<span class="h1kind">keyword</span></h1>
+<p class="lede">Conditional statement block</p>
+<div class="badges"><a class="badge" href="../index.html">Control Flow Statements</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Select Case expression</code></pre>
+<pre class="code sig"><code>[ Case expressionlist]</code></pre>
+<pre class="code sig"><code>[statements]</code></pre>
+<pre class="code sig"><code>[ Case Else ]</code></pre>
+<pre class="code sig"><code>[statements]</code></pre>
+<pre class="code sig"><code>End Select</code></pre>
+<pre class="code sig"><code>Select Case As Const integer_expression</code></pre>
+<pre class="code sig"><code>[ Case constant | enumeration ]</code></pre>
+<h2>Description</h2>
+<br>
+<code><b>Select Case</b></code> executes specific code depending on the value of an expression. The expression is evaluated once, and compared against each <code><b>Case</b></code>, in order, until a matching expression is found. The code inside the matching Case branch is executed, and the program skips down to the end of the <code><b>Select Case</b></code> block. <code><b>Case Else</b></code> matches any case not already matched, so if there is a <code><b>Case Else</b></code>, at least one <code><b>Case</b></code> is guaranteed to be executed. If no <code><b>Case</b></code>s match, the whole <code><b>Select Case</b></code> block will be skipped.<br>
+<code><b>End Select</b></code> is used to close the <code><b>Select Case...End Select</b></code> block.<br>
+<br>
+<code><b>Exit Select</b></code> can be used to escape the <code><b>Select Case</b></code> block, preventing further code in the <code><b>Case</b></code> block from being executed.<br>
+<br>
+Note for C users: In FreeBASIC, <code><b>Select Case</b></code> works like a <code>switch</code> block where all cases have a <code>break</code> at the end. As there is no fall-through, multiple options must be put in an expression list in a single <code><b>Case</b></code>.<br>
+<br>
+Besides integer types, floating point and string expressions are also supported with the first syntax.  <br>
+<br>
+Syntax of an expression list:<br>
+<code>{ <i>expression</i> | <i>expression</i> <b>To</b> <i>expression</i> | <b>Is</b> <i>relational operator</i> <i>expression</i> }[, ...]</code><br>
+<br>
+<ul><li> <code><i>expr</i></code>: evaluates <code><i>expr</i></code>, and compares for equality with the original expression.  If they are equal, then a match has been found.  This could be considered as a shorthand for "<code><b>Is</b> = <i>expr</i></code>" (see below).<br>
+<li> <code><i>expr1</i> <b>To</b> <i>expr2</i></code>: evaluates <code><i>expr1</i></code> and checks to see if it is less than or equal to the original expression.  If so, it evaluates <code><i>expr2</i></code>, and checks to see if it is greater than or equal to the original expression.  If so, then a match has been found.<br>
+<li> <code><b>Is</b> <i>relational_operator</i> <i>expr</i></code>: evaluates <code><i>expr</i></code>, and compares the original operation against it, using the supplied <code><i>relational_operator</i></code> (<code>=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>&lt;&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code>).  If the comparison is true, then a match has been found.<br>
+<br>
+</li></li></li></ul>Multiple checks can be made in each <code><b>Case</b></code>, by separating them by a comma (<code>,</code>).  Once a match is found, the program finishes its checks, and goes on to execute the code statements for that <code><b>Case</b></code> block.  No further expressions are evaluated or checked.<br>
+<br>
+example of expression lists:<br>
+<div><table><tr><td>Case 1 </td><td>constant</td></tr><tr><td>Case 5.4 To 10.1</td><td>range</td></tr><tr><td>Case Is &gt; 3</td><td>bigger than-smaller than</td></tr><tr><td>Case 1, 3, 5, 7 to 9</td><td>match against a set of values</td></tr><tr><td>Case x </td><td>value of a variable</td></tr></table></div><br>
+<br>
+If <code><b>As Const</b></code> is used, only integer constants (all numeric constants excluding the two floating-point constants: single and double) can be evaluated and the expression list supports simple constants and enumerations only. "<code><b>To</b></code>" ranges are supported, but "<code><b>Is</b></code>" relational operators are not.<br>
+<br>
+With <code><b>As Const</b></code>, a jump table is created to contain the full range of integer <code><b>Case</b></code>s handled.  This allows <code><b>Select Case As Const</b></code> to be faster than <code><b>Select Case</b></code>.<br>
+However, the size of the range of values is limited, and after converting the values to the uinteger type, the largest value in the range may be no higher than the smallest value + 8191 (current implementation).<br>
+<br>
+<b>Note:</b> No statement can be placed between the <code><b>Select Case</b></code> statement and the first <code><b>Case</b></code> statement.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Differences from QB</h3><br>
+<ul><li> <code><b>Select Case As Const</b></code> did not exist in QB.<br>
+<li> in an "<code><i>expr1</i> TO <i>expr2</i></code>" case, QB would always evaluate both expressions, even if <code><i>expr1</i></code> was higher than the original expression.<br>
+<li> In the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> and <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fblite</a></i> dialects, variables declared inside a <code><b>Select</b></code>..<code><b>End Select</b></code> block have a function-wide <a href="../../tutorials/programmer-s-guide/variable-scope.html">scope</a> as in QB.<br>
+<li> In the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i> and <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang deprecated</a></i> dialects, variables declared inside a <code><b>Select</b></code>..<code><b>End Select</b></code> block are visible only inside the block, and can't be accessed outside it. To access duplicated symbols defined as global outside this block, add one or preferably two dot(s) as prefix: <code>.SomeSymbol</code> or preferably <code>..SomeSymbol</code> (or only <code>..SomeSymbol</code> if inside a <a href="../../user-defined-types/procedures/with.html">With..End With</a> block).<br>
+<br>
+</li></li></li></li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="if-then.html">If...Then</a></code><br>
+<br>
+</li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>choice</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-kw">Input</span> <span>&quot;Choose a number between 1 and 10: &quot;</span><span>;</span> <span>choice</span>
+
+
+
+<span class="tok-kw">Select</span> <span class="tok-kw">Case</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span>choice</span>
+
+<span class="tok-kw">Case</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;number is 1&quot;</span>
+
+<span class="tok-kw">Case</span> <span class="tok-nu">2</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;number is 2&quot;</span>
+
+<span class="tok-kw">Case</span> <span class="tok-nu">3</span><span>,</span> <span class="tok-nu">4</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;number is 3 or 4&quot;</span>
+
+<span class="tok-kw">Case</span> <span class="tok-nu">5</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;number is in the range of 5 to 10&quot;</span>
+
+<span class="tok-kw">Case</span> <span class="tok-kw">Else</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;number is outside the 1-10 range&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Select</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' SELECT CASE vs. SELECT CASE AS CONST speed test</span>
+
+
+
+<span class="tok-kw">Const</span> <span>N</span> <span>=</span> <span class="tok-nu">50000000</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>dummy</span> <span>=</span> <span class="tok-nu">0</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span>t</span> <span>=</span> <span class="tok-kw">Timer</span><span>()</span>
+
+
+
+<span class="tok-kw">For</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span>N</span>
+
+    <span class="tok-kw">Select</span> <span class="tok-kw">Case</span> <span>i</span>
+
+    <span class="tok-kw">Case</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-nu">3</span><span>,</span> <span class="tok-nu">5</span><span>,</span> <span class="tok-nu">7</span><span>,</span> <span class="tok-nu">9</span>
+
+        <span>dummy</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Case</span> <span class="tok-nu">2</span><span>,</span> <span class="tok-nu">4</span><span>,</span> <span class="tok-nu">6</span><span>,</span> <span class="tok-nu">8</span><span>,</span> <span class="tok-nu">10</span>
+
+        <span>dummy</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Case</span> <span class="tok-nu">11</span> <span class="tok-kw">To</span> <span class="tok-nu">20</span>
+
+        <span>dummy</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Case</span> <span class="tok-nu">21</span> <span class="tok-kw">To</span> <span class="tok-nu">30</span>
+
+        <span>dummy</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Case</span> <span class="tok-nu">31</span>
+
+        <span>dummy</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Case</span> <span class="tok-nu">32</span>
+
+        <span>dummy</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Case</span> <span class="tok-nu">33</span>
+
+        <span>dummy</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Case</span> <span class="tok-kw">Is</span> <span>&gt;=</span> <span class="tok-nu">34</span>
+
+        <span>dummy</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Case</span> <span class="tok-kw">Else</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;can't happen&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Select</span>
+
+<span class="tok-kw">Next</span>
+
+
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;SELECT CASE: ##.### seconds&quot;</span><span>;</span> <span class="tok-kw">Timer</span><span>()</span> <span>-</span> <span>t</span>
+
+<span>t</span> <span>=</span> <span class="tok-kw">Timer</span><span>()</span>
+
+
+
+<span class="tok-kw">For</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span>N</span>
+
+    <span class="tok-kw">Select</span> <span class="tok-kw">Case</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span>i</span>
+
+    <span class="tok-kw">Case</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-nu">3</span><span>,</span> <span class="tok-nu">5</span><span>,</span> <span class="tok-nu">7</span><span>,</span> <span class="tok-nu">9</span>
+
+        <span>dummy</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Case</span> <span class="tok-nu">2</span><span>,</span> <span class="tok-nu">4</span><span>,</span> <span class="tok-nu">6</span><span>,</span> <span class="tok-nu">8</span><span>,</span> <span class="tok-nu">10</span>
+
+        <span>dummy</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Case</span> <span class="tok-nu">11</span> <span class="tok-kw">To</span> <span class="tok-nu">20</span>
+
+        <span>dummy</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Case</span> <span class="tok-nu">21</span> <span class="tok-kw">To</span> <span class="tok-nu">30</span>
+
+        <span>dummy</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Case</span> <span class="tok-nu">31</span>
+
+        <span>dummy</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Case</span> <span class="tok-nu">32</span>
+
+        <span>dummy</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Case</span> <span class="tok-nu">33</span>
+
+        <span>dummy</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Case</span> <span class="tok-kw">Else</span>
+
+        <span class="tok-kw">If</span><span>(</span> <span>i</span> <span>&gt;=</span> <span class="tok-nu">34</span> <span>)</span> <span class="tok-kw">Then</span>
+
+            <span>dummy</span> <span>+=</span> <span class="tok-nu">1</span>
+
+        <span class="tok-kw">Else</span>
+
+            <span class="tok-kw">Print</span> <span>&quot;can't happen&quot;</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Select</span>
+
+<span class="tok-kw">Next</span>
+
+
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;SELECT CASE AS CONST: ##.### seconds&quot;</span><span>;</span> <span class="tok-kw">Timer</span><span>()</span> <span>-</span> <span>t</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgSelectcase.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

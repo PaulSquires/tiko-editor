@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intrinsic Defines — Help Center</title>
+<meta name="description" content="Intrinsic Defines — 0 documented members. Intrinsic Defines reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/intrinsic-defines/intrinsic-defines.html">
+<meta property="og:title" content="Intrinsic Defines">
+<meta property="og:description" content="Intrinsic Defines — 0 documented members. Intrinsic Defines reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/intrinsic-defines/intrinsic-defines.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/intrinsic-defines/intrinsic-defines.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Intrinsic Defines</div>
+<h1>Intrinsic Defines</h1>
+<h2>Documentation</h2>
+
+	Preprocessor symbols defined by the compiler.<br>
+<br>
+<div>Description</div><div><br>
+<div class="indent">Intrinsic defines are set by the compiler and may be used as any other defined symbol.  Intrinsic defines often convey information about the state of the compiler, either in general or at a specific point in the compilation process.  Most intrinsic defines are associated with a value.<br>
+<br>
+</div><b><a href="#PLATFORM">Platform Information</a></b><br>
+<div class="indent">Defines that provide information on the system.<br>
+</div><b><a href="#VERSION">Version Information</a></b><br>
+<div class="indent">Defines that provide information on the <code><b>fbc</b></code> compiler version being used.<br>
+</div><b><a href="#CMDLINE">Command-line switches</a></b><br>
+<div class="indent">Defines that provide information with the command-line switches used with <code><b>fbc</b></code>.<br>
+</div><b><a href="#ENVIRONMENT">Environment Information</a></b><br>
+<div class="indent">Defines that provide information about the operating system environment.<br>
+</div><b><a href="#CONTEXT">Context-specific Information</a></b><br>
+<div class="indent">Defines that provide context information about the compilation process.<br>
+</div><b><a href="#BASICMACROS">Basic-macros</a></b><br>
+<div class="indent">Built-in basic-macros.<br>
+</div><b><a href="#CONSTANTS">Constants</a></b><br>
+<div class="indent">Built-in constants.<br>
+<br>
+</div><table><tr><td><a></a><b><u>Platform Information</u></b><br>
+<div class="indent"><b><a href="procedures/fb-win32.html">__FB_WIN32__</a></b><br>
+<div class="indent">Defined if compiling for Windows.<br>
+</div><b><a href="procedures/fb-linux.html">__FB_LINUX__</a></b><br>
+<div class="indent">Defined if compiling for Linux.<br>
+</div><b><a href="procedures/fb-dos.html">__FB_DOS__</a></b><br>
+<div class="indent">Defined if compiling for DOS.<br>
+</div><b><a href="procedures/fb-cygwin.html">__FB_CYGWIN__</a></b><br>
+<div class="indent">Defined if compiling for Cygwin.<br>
+</div><b><a href="procedures/fb-freebsd.html">__FB_FREEBSD__</a></b><br>
+<div class="indent">Defined if compiling for FreeBSD.<br>
+</div><b><a href="procedures/fb-netbsd.html">__FB_NETBSD__</a></b><br>
+<div class="indent">Defined if compiling for NetBSD.<br>
+</div><b><a href="procedures/fb-openbsd.html">__FB_OPENBSD__</a></b><br>
+<div class="indent">Defined if compiling for OpenBSD.<br>
+</div><b><a href="procedures/fb-darwin.html">__FB_DARWIN__</a></b><br>
+<div class="indent">Defined if compiling for Darwin.<br>
+</div><b><a href="procedures/fb-xbox.html">__FB_XBOX__</a></b><br>
+<div class="indent">Defined if compiling for Xbox.<br>
+</div><b><a href="procedures/fb-bigendian.html">__FB_BIGENDIAN__</a></b><br>
+<div class="indent">Defined if compiling on a system using big-endian byte-order.<br>
+</div><b><a href="procedures/fb-pcos.html">__FB_PCOS__</a></b><br>
+<div class="indent">Defined if compiling for a common PC OS (e.g. DOS, Windows, OS/2).<br>
+</div><b><a href="procedures/fb-unix.html">__FB_UNIX__</a></b><br>
+<div class="indent">Defined if compiling for a Unix-like OS.<br>
+</div><b><a href="procedures/fb-64bit.html">__FB_64BIT__</a></b><br>
+<div class="indent">Defined if compiling for a 64bit target.<br>
+</div><b><a href="procedures/fb-arm.html">__FB_ARM__</a></b><br>
+<div class="indent">Defined if compiling for the ARM architecture.<br>
+</div><b><a href="procedures/fb-ppc.html">__FB_PPC__</a></b><br>
+<div class="indent">Defined if compiling for the PowerPC architecture.<br>
+</div><b><a href="procedures/fb-x86.html">__FB_X86__</a></b><br>
+<div class="indent">Defined if compiling for the X86 / X86_64 architecture.<br>
+</div><b><a href="procedures/fb-js.html">__FB_JS__</a></b><br>
+<div class="indent">Defined if compiling for emscripten target.<br>
+</div><b><a href="procedures/fb-android.html">__FB_ANDROID__</a></b><br>
+<div class="indent">Defined if compiling for android target.<br>
+<br>
+</div></div><a></a><b><u>Version Information</u></b><br>
+<div class="indent"><b><a href="procedures/fb-version.html">__FB_VERSION__</a></b><br>
+<div class="indent">Defined as a string literal of the compiler version.<br>
+</div><b><a href="procedures/fb-ver-major.html">__FB_VER_MAJOR__</a></b><br>
+<div class="indent">Defined as an integral literal of the compiler major version number.<br>
+</div><b><a href="procedures/fb-ver-minor.html">__FB_VER_MINOR__</a></b><br>
+<div class="indent">Defined as an integral literal of the compiler minor version number.<br>
+</div><b><a href="procedures/fb-ver-patch.html">__FB_VER_PATCH__</a></b><br>
+<div class="indent">Defined as an integral literal of the compiler patch number.<br>
+</div><b><a href="procedures/fb-min-version.html">__FB_MIN_VERSION__</a></b><br>
+<div class="indent">Macro to check for a minimum compiler version.<br>
+</div><b><a href="procedures/fb-build-date.html">__FB_BUILD_DATE__</a></b><br>
+<div class="indent">Defined as a string literal of the compiler build date in "mm-dd-yyyy" format.<br>
+</div><b><a href="procedures/fb-build-date-iso.html">__FB_BUILD_DATE_ISO__</a></b><br>
+<div class="indent">Defined as a string literal of the compiler build date in "yyyy-mm-dd" format.<br>
+</div><b><a href="procedures/fb-signature.html">__FB_SIGNATURE__</a></b> <br>
+<div class="indent">Defined as a string literal of the compiler signature.<br>
+</div><b><a href="procedures/fb-build-sha1.html">__FB_BUILD_SHA1__</a></b> <br>
+<div class="indent">Defined as a string literal of the compiler's source revision sha-1.<br>
+</div><b><a href="procedures/fb-build-fork-id.html">__FB_BUILD_FORK_ID__</a></b> <br>
+<div class="indent">Defined as a string literal of the custom defined project fork identifier name.<br>
+<br>
+</div></div><a></a><b><u>Command-line switches</u></b><br>
+<div class="indent"><b><a href="procedures/fb-asm.html">__FB_ASM__</a></b><br>
+<div class="indent">Defined to either <code>"intel"</code> or <code>"att"</code> depending on <a href="../using-the-freebasic-compiler/command-line-options/compiler-option-asm.html">-asm</a>.<br>
+</div><b><a href="procedures/fb-backend.html">__FB_BACKEND__</a></b><br>
+<div class="indent">Defined to either <code>"gas"</code> or <code>"gcc"</code> depending on <a href="../using-the-freebasic-compiler/command-line-options/compiler-option-gen.html">-gen</a>.<br>
+</div><b><a href="procedures/fb-gcc.html">__FB_GCC__</a></b><br>
+<div class="indent">True (<code>-1</code>) if -gen gcc is used, false (<code>0</code>) otherwise.<br>
+</div><b><a href="procedures/fb-optimize.html">__FB_OPTIMIZE__</a></b><br>
+<div class="indent">Defined to the optimization level depending on <a href="../using-the-freebasic-compiler/command-line-options/compiler-option-o-2.html">-O</a>.<br>
+</div><b><a href="procedures/fb-gui.html">__FB_GUI__</a></b><br>
+<div class="indent">True (<code>-1</code>) if the <code>"-s gui"</code> switch was used, false (<code>0</code>) otherwise.<br>
+</div><b><a href="procedures/fb-main.html">__FB_MAIN__</a></b><br>
+<div class="indent">Defined if compiling a module with an entry point.<br>
+</div><b><a href="../compiler-options/procedures/fb-debug.html">__FB_DEBUG__</a></b><br>
+<div class="indent">True (<code>-1</code>) if the <code>"-g"</code> switch was used, false (<code>0</code>) otherwise.<br>
+</div><b><a href="procedures/fb-err.html">__FB_ERR__</a></b><br>
+<div class="indent">Zero (<code>0</code>) if neither the <code>"-e"</code>, <code>"-ex"</code> or <code>"-exx"</code> switches were used.<br>
+</div><b><a href="procedures/fb-fpmode.html">__FB_FPMODE__</a></b><br>
+<div class="indent">Defined as <code>"fast"</code> if compiling for fast SSE math, <code>"precise"</code> otherwise.<br>
+</div><b><a href="procedures/fb-fpu.html">__FB_FPU__</a></b><br>
+<div class="indent">Defined as <code>"sse"</code> if compiling for SSE floating point unit, or <code>"x87"</code> for normal x87 floating-point unit.<br>
+</div><b><a href="procedures/fb-lang.html">__FB_LANG__</a></b><br>
+<div class="indent">Defined to a string literal of the <code>"-lang"</code> dialect used.<br>
+</div><b><a href="procedures/fb-mt.html">__FB_MT__</a></b><br>
+<div class="indent">True (<code>-1</code>) if the <code>"-mt"</code> switch was used, false (<code>0</code>) otherwise.<br>
+</div><b><a href="procedures/fb-out-dll.html">__FB_OUT_DLL__</a></b><br>
+<div class="indent">True (<code>-1</code>) in a module being compiled and linked into a shared library, false (<code>0</code>) otherwise.<br>
+</div><b><a href="procedures/fb-out-exe.html">__FB_OUT_EXE__</a></b><br>
+<div class="indent">True (<code>-1</code>) in a module being compiled and linked into an executable, false (<code>0</code>) otherwise.<br>
+</div><b><a href="procedures/fb-out-lib.html">__FB_OUT_LIB__</a></b><br>
+<div class="indent">True (<code>-1</code>) in a module being compiled and linked into a static library, zero (<code>0</code>) otherwise.<br>
+</div><b><a href="procedures/fb-out-obj.html">__FB_OUT_OBJ__</a></b><br>
+<div class="indent">True (<code>-1</code>) in a module being compiled only, zero (<code>0</code>) otherwise.<br>
+</div><b><a href="procedures/fb-profile.html">__FB_PROFILE__</a></b><br>
+<div class="indent">Set to an integer to indicate the profiling method.<br>
+</div><b><a href="procedures/fb-sse.html">__FB_SSE__</a></b><br>
+<div class="indent">Defined if compiling for SSE floating point unit.<br>
+</div><b><a href="procedures/fb-vectorize.html">__FB_VECTORIZE__</a></b><br>
+<div class="indent">Defined as the level of automatic vectorization (<code>0</code> to <code>2</code>)<br>
+</div></div></td><td><a></a><b><u>Environment Information</u></b><br>
+<div class="indent"><b><a href="procedures/fb-argc.html">__FB_ARGC__</a></b><br>
+<div class="indent">Defined as an integer literal of the number of command-line arguments passed to the program.<br>
+</div><b><a href="procedures/fb-argv.html">__FB_ARGV__</a></b><br>
+<div class="indent">Defined as a <code><a href="../standard-data-types/procedures/zstring.html">ZString</a> <a href="../standard-data-types/procedures/pointer-ptr.html">Ptr</a> <a href="../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> to the command line arguments passed to the program.<br>
+</div><b><a href="procedures/date-iso.html">__DATE__</a></b><br>
+<div class="indent">Defined as a string literal of the compilation date in "mm-dd-yyyy" format.<br>
+</div><b><a href="procedures/date.html">__DATE_ISO__</a></b><br>
+<div class="indent">Defined as a string literal of the compilation date in "yyyy-mm-dd" format.<br>
+</div><b><a href="procedures/time.html">__TIME__</a></b><br>
+<div class="indent">Defined as a string literal of the compilation time.<br>
+</div><b><a href="procedures/path.html">__PATH__</a></b><br>
+<div class="indent">Defined as a string literal of the absolute path of the module.<br>
+<br>
+</div></div><a></a><b><u>Context-specific Information</u></b><br>
+<div class="indent"><b><a href="procedures/file.html">__FILE__</a> and <a href="procedures/file-nq.html">__FILE_NQ__</a></b><br>
+<div class="indent">Defined as the name of the module.<br>
+</div><b><a href="procedures/function.html">__FUNCTION__</a> and <a href="procedures/function-nq.html">__FUNCTION_NQ__</a></b><br>
+<div class="indent">Defined as the name of the procedure where it's used.<br>
+</div><b><a href="procedures/line.html">__LINE__</a></b><br>
+<div class="indent">Defined as an integer literal of the line of the module where it's used.<br>
+</div><b><a href="procedures/fb-option-byval.html">__FB_OPTION_BYVAL__</a></b><br>
+<div class="indent">True (<code>-1</code>) if parameters are declared by value by default, zero (<code>0</code>) otherwise.<br>
+</div><b><a href="procedures/fb-option-dynamic.html">__FB_OPTION_DYNAMIC__</a></b><br>
+<div class="indent">True (<code>-1</code>) if all arrays are variable-length, zero (<code>0</code>) otherwise.<br>
+</div><b><a href="procedures/fb-option-escape.html">__FB_OPTION_ESCAPE__</a></b><br>
+<div class="indent">True (<code>-1</code>) if string literals are processed for escape sequences, zero (<code>0</code>) otherwise.<br>
+</div><b><a href="procedures/fb-option-gosub.html">__FB_OPTION_GOSUB__</a></b><br>
+<div class="indent">True (<code>-1</code>) if gosub support is enabled, zero (<code>0</code>) otherwise.<br>
+</div><b><a href="procedures/fb-option-explicit.html">__FB_OPTION_EXPLICIT__</a></b><br>
+<div class="indent">True (<code>-1</code>) if variables and objects need to be explicitly declared, zero (<code>0</code>) otherwise.<br>
+</div><b><a href="procedures/fb-option-private.html">__FB_OPTION_PRIVATE__</a></b><br>
+<div class="indent">True (<code>-1</code>) if all procedures are private by default, zero (<code>0</code>) otherwise.<br>
+</div><b><a href="procedures/fb-option-profile.html">__FB_OPTION_PROFILE__</a></b><br>
+<div class="indent">True (<code>-1</code>) if profiling code is generated, zero (<code>0</code>) otherwise.<br>
+<br>
+</div></div><a></a><b><u>Basic-macros</u></b><br>
+<div class="indent"><b><a href="procedures/fb-arg-count.html">__FB_ARG_COUNT__</a></b><br>
+<div class="indent">Counts the number of arguments in an argument list.<br>
+</div><b><a href="procedures/fb-arg-extract.html">__FB_ARG_EXTRACT__</a></b><br>
+<div class="indent">Returns nth argument from an argument list.<br>
+</div><b><a href="procedures/fb-arg-leftof.html">__FB_ARG_LEFTOF__</a></b><br>
+<div class="indent">Returns left token based on separator.<br>
+</div><b><a href="procedures/fb-arg-listexpand.html">__Fb_Arg_Listexpand__</a></b><br>
+<div class="indent">Expands a macro one or more time on an argument list<br>
+</div><b><a href="procedures/fb-arg-rightof.html">__FB_ARG_RIGHTOF__</a></b><br>
+<div class="indent">Returns right token based on separator.<br>
+</div><b><a href="procedures/fb-eval.html">__FB_EVAL__</a></b><br>
+<div class="indent">Evaluates an argument (expression) at compile time.<br>
+</div><b><a href="procedures/fb-iif.html">__FB_IIF__</a></b><br>
+<div class="indent">Returns an expression depending on the result of a comparison expression evaluated at compile time.<br>
+</div><b><a href="procedures/fb-join.html">__FB_JOIN__</a></b><br>
+<div class="indent">Joins two token arguments together as one.<br>
+</div><b><a href="procedures/fb-query-symbol.html">__Fb_Query_Symbol__</a></b><br>
+<div class="indent">Queries a <code><b>fbc</b></code>'s symbol internals.<br>
+</div><b><a href="procedures/fb-quote.html">__FB_QUOTE__</a></b><br>
+<div class="indent">Converts the argument to a string.<br>
+</div><b><a href="procedures/fb-uniqueid.html">__FB_UNIQUEID__</a></b><br>
+<div class="indent">Gets the identifier at the top of a stack.<br>
+</div><b><a href="procedures/fb-uniqueid-pop.html">__FB_UNIQUEID_POP__</a></b><br>
+<div class="indent">Pops an identifier off of a stack.<br>
+</div><b><a href="procedures/fb-uniqueid-push.html">__FB_UNIQUEID_PUSH__</a></b><br>
+<div class="indent">Pushes a new unique identifier on to a stack.<br>
+</div><b><a href="procedures/fb-unquote.html">__FB_UNQUOTE__</a></b><br>
+<div class="indent">Takes a literal string and converts it back to tokens.<br>
+<br>
+</div></div><a></a><b><u>Constants</u></b><br>
+<div class="indent"><b><a href="procedures/false.html">False</a> and <a href="procedures/true.html">True</a></b><br>
+<div class="indent">Intrinsic constants for the Boolean data type.<br>
+</div></div></td></tr></table><div>&nbsp;</div><br>
+</div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

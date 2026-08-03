@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#Macro...#Endmacro — Help Center</title>
+<meta name="description" content="Preprocessor directive to define a multiline macro">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/preprocessor/procedures/macro-endmacro.html">
+<meta property="og:title" content="#Macro...#Endmacro">
+<meta property="og:description" content="Preprocessor directive to define a multiline macro">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/preprocessor/procedures/macro-endmacro.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/preprocessor/procedures/macro-endmacro.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>#Macro...#Endmacro<span class="h1kind">keyword</span></h1>
+<p class="lede">Preprocessor directive to define a multiline macro</p>
+<div class="badges"><a class="badge" href="../index.html">Preprocessor</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>#macro identifier [?] ( [ parameters ] )</code></pre>
+<pre class="code sig"><code>body</code></pre>
+<pre class="code sig"><code>#endmacro</code></pre>
+<pre class="code sig"><code>#macro identifier [?] ( [ parameters, ] Variadic_Parameter... )</code></pre>
+<pre class="code sig"><code>body</code></pre>
+<pre class="code sig"><code>#endmacro</code></pre>
+<h2>Description</h2>
+<br>
+<code><b>#macro</b></code> is the multi-line version of <code><a href="define.html">#define</a></code>.<br>
+<br>
+If using the optional question mark (?) after the <code><i>identifier</i></code> in the definition syntax, macros with parameters can be invoked without using parentheses around the arguments.<br>
+<b>Note:</b> Beware of the possibility of triggering so a conflict with expressions containing the name of the macro as one of their terms.<br>
+<br>
+Note: Unlike the function-like <code><a href="define.html">#define</a></code> declaration, spaces can be put between the macro name and the opening parenthesis for any declaration syntax of macro.<br>
+<br>
+WARNING: In the macro body, it may be mandatory to have to surround by parentheses any used parameter if it is inside an expression with one operator at least, in order to not undergo an unwanted precedence change of operators (if passing as argument an expression with also operators).<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Version</h3><br>
+<ul><li> Before fbc 1.08.0, the optional question mark (?) was not available.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="define.html">#define</a></code><br>
+<li> <code><a href="ifdef.html">#ifdef</a></code><br>
+<li> <code><a href="undef.html">#undef</a></code><br>
+<br>
+</li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">' macro as an expression value</span>
+
+
+
+<span>#macro Print1( a, b )
+
+</span>    <span>a</span> <span>+</span> <span>b</span>
+
+<span>#endmacro
+
+</span>
+
+<span class="tok-kw">Print</span> <span>Print1</span><span>(</span> <span>&quot;Hello &quot;</span><span>,</span> <span>&quot;World!&quot;</span> <span>)</span>
+
+
+
+<span class="tok-cm">/' Output :</span>
+
+<span class="tok-cm">Hello World!</span>
+
+<span class="tok-cm">'/</span></pre></code><br>
+<code><pre class="code"><span class="tok-cm">' macro as multiple statements</span>
+
+
+
+<span>#macro Print2( a, b )
+
+</span>    <span class="tok-kw">Print</span> <span>a</span><span>;</span>
+
+    <span class="tok-kw">Print</span> <span>&quot; &quot;</span><span>;</span>
+
+    <span class="tok-kw">Print</span> <span>b</span><span>;</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;!&quot;</span>
+
+<span>#endmacro
+
+</span>
+
+<span>Print2</span><span>(</span> <span>&quot;Hello&quot;</span><span>,</span> <span>&quot;World&quot;</span> <span>)</span>
+
+
+
+<span class="tok-cm">/' Output :</span>
+
+<span class="tok-cm">Hello World!</span>
+
+<span class="tok-cm">'/</span></pre></code><br>
+<code><pre class="code"><span class="tok-cm">' macro with a variadic parameter</span>
+
+
+
+<span>#macro test1( arg1, arg2... )
+
+</span>    <span class="tok-kw">Print</span> <span>arg1</span>
+
+    <span>#if #arg2 = &quot;&quot;
+
+</span>        <span class="tok-kw">Print</span> <span>&quot;2nd argument not passed&quot;</span>
+
+    <span>#else
+
+</span>        <span class="tok-kw">Print</span> <span>arg2</span>
+
+    <span>#endif
+
+#endmacro
+
+</span>
+
+<span>test1</span><span>(</span> <span>&quot;1&quot;</span><span>,</span> <span>&quot;2&quot;</span> <span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;-----------------------&quot;</span>
+
+<span>test1</span><span>(</span> <span>&quot;3&quot;</span> <span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;-----------------------&quot;</span>
+
+<span>test1</span><span>(</span> <span class="tok-nu">5</span><span>,</span> <span class="tok-nu">6</span> <span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;-----------------------&quot;</span>
+
+<span>test1</span><span>(</span> <span class="tok-nu">7</span> <span>)</span>
+
+
+
+<span class="tok-cm">/' Output :</span>
+
+<span class="tok-cm">1</span>
+
+<span class="tok-cm">2</span>
+
+<span class="tok-cm">-----------------------</span>
+
+<span class="tok-cm">3</span>
+
+<span class="tok-cm">2nd argument not passed</span>
+
+<span class="tok-cm">-----------------------</span>
+
+<span class="tok-cm"> 5</span>
+
+<span class="tok-cm"> 6</span>
+
+<span class="tok-cm">-----------------------</span>
+
+<span class="tok-cm"> 7</span>
+
+<span class="tok-cm">2nd argument not passed</span>
+
+<span class="tok-cm">'/</span></pre></code><br>
+<code><pre class="code"><span class="tok-cm">' macro with a variadic parameter which can contain several sub-parameters:</span>
+
+<span class="tok-cm">'   To distinguish between the different arguments passed by variadic_parameter,</span>
+
+<span class="tok-cm">'   you can first convert variadic_parameter to a string using the Operator # (Preprocessor Stringize),</span>
+
+<span class="tok-cm">'   then differentiate in this string (#variadic_parameter) each passed argument by locating the separators (usually a comma).</span>
+
+
+
+<span>#macro test2( arg1, arg2... )
+
+</span>    <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span class="tok-kw">Trim</span><span>(#</span><span>arg1</span><span>)</span> <span>&amp;</span> <span>&quot;'&quot;</span>
+
+    <span class="tok-kw">Scope</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>s</span> <span>=</span> <span class="tok-kw">Trim</span><span>(#</span><span>arg2</span><span>)</span>
+
+        <span class="tok-kw">If</span> <span>s</span> <span>&lt;&gt;</span> <span>&quot;&quot;</span> <span class="tok-kw">Then</span>
+
+            <span class="tok-kw">Do</span>
+
+                <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>k</span> <span>=</span> <span class="tok-kw">InStr</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span>s</span><span>,</span> <span>&quot;,&quot;</span><span>)</span>
+
+                <span class="tok-kw">If</span> <span>k</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+                    <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>s</span> <span>&amp;</span> <span>&quot;'&quot;</span>
+
+                    <span class="tok-kw">Exit</span> <span class="tok-kw">Do</span>
+
+                <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+                <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span class="tok-kw">Left</span><span>(</span><span>s</span><span>,</span> <span>k</span> <span>-</span> <span class="tok-nu">1</span><span>)</span> <span>&amp;</span> <span>&quot;'&quot;</span>
+
+                <span>s</span> <span>=</span> <span class="tok-kw">Trim</span><span>(</span><span class="tok-kw">Mid</span><span>(</span><span>s</span><span>,</span> <span>k</span><span>+</span><span class="tok-nu">1</span><span>))</span>
+
+            <span class="tok-kw">Loop</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Scope</span>
+
+<span>#endmacro
+
+</span>
+
+<span>test2</span><span>(</span> <span class="tok-nu">5</span> <span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;----&quot;</span>
+
+<span>test2</span><span>(</span> <span class="tok-nu">5</span><span>,</span><span class="tok-nu">6</span><span>,</span> <span class="tok-nu">7</span><span>,</span> <span>,</span> <span class="tok-nu">9</span><span>,</span> <span class="tok-nu">10</span><span>,</span> <span>,,</span><span class="tok-nu">13</span><span>,</span> <span class="tok-nu">14</span> <span>)</span>
+
+
+
+<span class="tok-cm">/' Output :</span>
+
+<span class="tok-cm">'5'</span>
+
+<span class="tok-cm">----</span>
+
+<span class="tok-cm">'5'</span>
+
+<span class="tok-cm">'6'</span>
+
+<span class="tok-cm">'7'</span>
+
+<span class="tok-cm">''</span>
+
+<span class="tok-cm">'9'</span>
+
+<span class="tok-cm">'10'</span>
+
+<span class="tok-cm">''</span>
+
+<span class="tok-cm">''</span>
+
+<span class="tok-cm">'13'</span>
+
+<span class="tok-cm">'14'</span>
+
+<span class="tok-cm">'/</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgPpmacro.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

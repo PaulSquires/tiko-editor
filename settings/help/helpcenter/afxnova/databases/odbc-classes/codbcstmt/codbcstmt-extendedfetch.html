@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CODBCStmt.ExtendedFetch — Help Center</title>
+<meta name="description" content="Fetches the specified rowset of data from the result set and returns data for all bound columns.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbcstmt/codbcstmt-extendedfetch.html">
+<meta property="og:title" content="CODBCStmt.ExtendedFetch">
+<meta property="og:description" content="Fetches the specified rowset of data from the result set and returns data for all bound columns.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbcstmt/codbcstmt-extendedfetch.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/odbc-classes/codbcstmt/codbcstmt-extendedfetch.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../codbcstmt-class.html">CODBCStmt Class</a></div>
+<h1>CODBCStmt.ExtendedFetch<span class="h1kind">method</span></h1>
+<p class="lede">Fetches the specified rowset of data from the result set and returns data for all bound columns.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CODBCStmt.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION ExtendedFetch (BYVAL FetchOrientation AS SQLUSMALLINT, BYVAL FetchOffset AS SQLLEN, BYVAL RowCountPtr AS ANY PTR, BYVAL RowStatusArray AS SQLUSMALLINT PTR) AS SQLRETURN</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>FetchOrientation</code></td><td></td><td>Type of fetch. This is the same as <em>FetchOrientation</em> in <strong>FetchScroll</strong>.</td></tr><tr><td><code>FetchOffset</code></td><td></td><td>Number of the row to fetch. This is the same as <em>FetchOffset</em> in <strong>FetchScroll</strong>, with one exception. When <em>FetchOrientation</em> is SQL_FETCH_BOOKMARK, <em>FetchOffset</em> is a fixed-length bookmark, not an offset from a bookmark. In other words, <strong>ExtendedFetch</strong> retrieves the bookmark from this argument, not the SQL_ATTR_FETCH_BOOKMARK_PTR statement attribute. It does not support variable-length bookmarks and does not support fetching a rowset at an offset (other than 0) from a bookmark.</td></tr><tr><td><code>RowCountPtr</code></td><td></td><td>Pointer to a buffer in which to return the number of rows actually fetched. This buffer is used in the same manner as the buffer specified by the SQL_ATTR_ROWS_FETCHED_PTR statement attribute. This buffer is used only by ExtendedFetch. It is not used by <strong>Fetch</strong> or <strong>FetchScroll</strong>.</td></tr><tr><td><code>RowStatusArray</code></td><td></td><td>Pointer to an array in which to return the status of each row. This array is used in the same manner as the array specified by the SQL_ATTR_ROW_STATUS_PTR statement attribute.<br>However, the address of this array is not stored in the SQL_DESC_STATUS_ARRAY_PTR field in the IRD. Furthermore, this array is used only by <strong>ExtendedFetch</strong> and by <strong>BulkOperations</strong> with an <em>Operation</em> of SQL_ADD or <strong>SetPos</strong> when it is called after <strong>ExtendedFetch</strong>. It is not used by <strong>Fetch</strong> or <strong>FetchScroll</strong>, and it is not used by <strong>BulkOperations</strong> or <strong>SetPos</strong> when they are called after <strong>Fetch</strong> or <strong>FetchScroll</strong>. It is also not used when <strong>BulkOperations</strong> with an <em>Operation</em> of SQL_ADD is called before any fetch function is called. In other words, it is used only in statement state S7. It is not used in statement states S5 or S6.<br>Applications should provide a valid pointer in the <strong>RowStatusArray* argument; if not, the behavior of **ExtendedFetch</strong> and the behavior of calls to <strong>BulkOperations</strong> or <strong>SetPos</strong> after a cursor has been positioned by <strong>ExtendedFetch</strong> are undefined.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>SQL_SUCCESS, SQL_SUCCESS_WITH_INFO, SQL_NO_DATA, SQL_STILL_EXECUTING, SQL_ERROR, or SQL_INVALID_HANDLE.</p>
+<h2>Description</h2>
+<p>Fetches the specified rowset of data from the result set and returns data for all bound columns. Rowsets can be specified at an absolute or relative position or by bookmark.</p>
+<p><strong>Note</strong>: In ODBC 3.x, <strong>ExtendedFetch</strong> has been replaced by FetchScroll. ODBC 3.x applications should not call <strong>ExtendedFetch</strong>; instead they should call <strong>FetchScroll</strong>. The Driver Manager maps <strong>FetchScroll</strong> to <strong>ExtendedFetch</strong> when working with an ODBC 2.x driver.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CODBCStmt.inc</code></li><li>Defined in <span class="srcref">AfxNova/COdbcStmt.inc:625</span></li><li>Documented in <span class="srcref">Databases/ODBC Classes/CODBCStmt Class.md</span></li><li>Topic: <a href="../codbcstmt-class.html">CODBCStmt Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

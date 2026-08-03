@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpImage.SaveAdd — Help Center</title>
+<meta name="description" content="Adds a frame to a file or stream specified in a previous call to the Save method.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpimage/cgpimage-saveadd.html">
+<meta property="og:title" content="CGpImage.SaveAdd">
+<meta property="og:description" content="Adds a frame to a file or stream specified in a previous call to the Save method.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpimage/cgpimage-saveadd.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpimage/cgpimage-saveadd.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpimage-class.html">CGpImage Class</a></div>
+<h1>CGpImage.SaveAdd<span class="h1kind">method</span></h1>
+<p class="lede">Adds a frame to a file or stream specified in a previous call to the Save method.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpBitmap.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION SaveAdd (BYVAL encoderParams AS EncoderParameters PTR) AS GpStatus</code></pre>
+<pre class="code sig"><code>FUNCTION SaveAdd (BYVAL pNewImage AS CGpImage PTR, BYVAL encoderParams AS EncoderParameters PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>encoderParams</code></td><td></td><td>Pointer to an <strong>Image</strong> object that holds the frame to be added.</td></tr><tr><td><code>pNewImage</code></td><td></td><td>Pointer to an <strong>EncoderParameters</strong> structure that holds parameters required by the image encoder used by the save-add operation.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>StatusOk</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h2>Description</h2>
+<p>Adds a frame to a file or stream specified in a previous call to the <strong>Save</strong> method.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' Creating and Saving a Multiple-Frame Image ' ' With certain file formats, you can save multiple images (frames) to a single file. For ' example, you can save several pages to a single TIFF file. To save the first page, call ' the the Save method. To save subsequent pages, call the SaveAdd method. ' The following console application creates a TIFF file with three pages. The images that ' become the pages of the TIFF file come from three disk files. The code first constructs ' three Image objects: multi, page2 and page3. As the individual pages are added to the ' multiImage object, they are also added to the disk file Multiframe.tiff. ' Note that the code calls the Save method (not SaveAdd) to save the first page. ' ========================================================================================</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create three image objects. DIM multi AS CGpImage = "Shapes.bmp" DIM page2 AS CGpImage = "Iron.jpg" DIM page3 AS CGpImage = "House.png"</p>
+<p>' // Get TIFF encoder CLSID DIM clsid As CLSID = AfxGdipGetEncoderClsid("image/tiff")</p>
+<p>' // Prepare EncoderParameters DIM encoderParams As EncoderParameters DIM paramValue As ULONG encoderParams.Count = 1 encoderParams.Parameter(0).Guid = EncoderSaveFlag encoderParams.Parameter(0).Type = EncoderParameterValueTypeLong encoderParams.Parameter(0).NumberOfValues = 1 encoderParams.Parameter(0).Value = @paramValue</p>
+<p>' // Save first frame paramValue = EncoderValueMultiFrame multi.Save("multiframe.tiff", @clsid, @encoderParams)</p>
+<p>' // Add second frame paramValue = EncoderValueFrameDimensionPage multi.SaveAdd(@page2, @encoderParams)</p>
+<p>' // Add third frame paramValue = EncoderValueFrameDimensionPage multi.SaveAdd(@page3, @encoderParams)</p>
+<p>' // Finalize file paramValue = EncoderValueFlush hStatus = multi.SaveAdd(@encoderParams)</p>
+<p>IF hStatus = StatusOk THEN PRINT "File saved" ELSE PRINT "Saving failed"</p>
+<p>PRINT PRINT "Press any key" SLEEP</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpBitmap.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpBitmap.inc:114</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpImage Classes.md</span></li><li>Topic: <a href="../cgpimage-class.html">CGpImage Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

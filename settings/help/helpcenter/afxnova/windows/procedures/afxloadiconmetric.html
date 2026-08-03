@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AfxLoadIconMetric — Help Center</title>
+<meta name="description" content="Loads a specified icon resource with a client-specified system metric.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/procedures/afxloadiconmetric.html">
+<meta property="og:title" content="AfxLoadIconMetric">
+<meta property="og:description" content="Loads a specified icon resource with a client-specified system metric.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/procedures/afxloadiconmetric.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/procedures/afxloadiconmetric.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../windows-procedures.html">Windows Procedures</a></div>
+<h1>AfxLoadIconMetric<span class="h1kind">function</span></h1>
+<p class="lede">Loads a specified icon resource with a client-specified system metric.</p>
+<div class="badges"><a class="badge" href="../index.html">Windows</a><span class="badge">function</span><span class="badge">AfxWin.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION AfxLoadIconMetric (BYVAL hinst AS HINSTANCE, BYVAL pwszName AS WSTRING PTR, BYVAL lims AS LONG, BYVAL phico AS HICON PTR) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hinst</code></td><td></td><td>A handle to the module of either a DLL or executable (.exe) file that contains the icon to be loaded. For more information, see <strong>GetModuleHandle</strong>. To load a predefined icon or a standalone icon file, set this parameter to NULL.</td></tr><tr><td><code>pwszName</code></td><td></td><td>A pointer to a null-terminated, Unicode buffer that contains location information about the icon to load. It is interpreted as follows: If <em>hinst</em> is NULL, <em>pwszName</em> can specify one of two things.<br>1) The identifier of a predefined icon to load. These identifiers are recognized: IDI_APPLICATION, IDI_INFORMATION, IDI_ERROR, IDI_WARNING, IDI_SHIELD, IDI_QUESTION.<br>To pass these constants to the <strong>AfxLoadIconMetric</strong> function, use the MAKEINTRESOURCE macro. For example, to load the IDI_ERROR icon, pass MAKEINTRESOURCE(IDI_ERROR) as the <em>pwszName</em> parameter and NULL as the <em>hinst</em> parameter.<br>2) The name of a standalone icon (.ico) file.<br>If hinst is non-null, <em>pwszName</em> can specify one of two things.<br>1) The name of the icon resource, if the icon resource is to be loaded by name from the module.<br>2) The icon ordinal, if the icon resource is to be loaded by ordinal from the module. This ordinal must be packaged by using the MAKEINTRESOURCE macro.</td></tr><tr><td><code>lims</code></td><td></td><td>The desired metric. One of the following values:<br><strong>LIM_SMALL</strong> : Corresponds to SM_CXSMICON, the recommended pixel width of a small icon.<br><strong>LIM_LARGE</strong> : Corresponds to SM_CXICON, the default pixel width of an icon.</td></tr><tr><td><code>phico</code></td><td></td><td>When this function returns, contains a pointer to the handle of the loaded icon.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>Returns S_OK if successful, otherwise an error, including the following value: <em>E_INVALIDARG</em> : The contents of the buffer pointed to by pszName do not fit any of the expected interpretations.</p>
+<h2>Description</h2>
+<p>Loads a specified icon resource with a client-specified system metric.</p>
+<h2>Remarks</h2>
+<p><strong>LoadIconMetric</strong> is similar to <strong>LoadIcon</strong>, but with the capability to specify the icon metric. It is used in place of <strong>LoadIcon</strong> when the calling application wants to ensure a high quality icon. This is particularly useful in high dots per inch (dpi) situations.</p>
+<p>Icons are extracted or created as follows.</p>
+<ol><li>If an exact size match is found in the resource, that icon is used.<br></li><li>If an exact size match cannot be found and a larger icon is available, a new icon is created by scaling the larger version down to the desired size.<br></li><li>If an exact size match cannot be found and no larger icon is available, a new icon is created by scaling a smaller icon up to the desired size.</li></ol>
+<h2>Reference</h2>
+<ul><li>Include file <code>AfxWin.inc</code></li><li>Defined in <span class="srcref">AfxNova/AfxWin.inc:1797</span></li><li>Documented in <span class="srcref">Windows/Windows Procedures.md</span></li><li>Topic: <a href="../windows-procedures.html">Windows Procedures</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

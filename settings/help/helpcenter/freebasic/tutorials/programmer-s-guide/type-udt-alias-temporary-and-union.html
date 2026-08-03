@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Type (UDT/Alias/Temporary) and Union — Help Center</title>
+<meta name="description" content="Type (UDT/Alias/Temporary) and Union — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/type-udt-alias-temporary-and-union.html">
+<meta property="og:title" content="Type (UDT/Alias/Temporary) and Union">
+<meta property="og:description" content="Type (UDT/Alias/Temporary) and Union — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/type-udt-alias-temporary-and-union.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/type-udt-alias-temporary-and-union.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Type (UDT/Alias/Temporary) and Union</h1>
+<h2>Documentation</h2>
+
+	The different keywords <b>Type (UDT)</b>, <b>Type (Alias)</b>, <b>Type (Temporary)</b>, and <b>Union</b>.<br>
+<br>
+<div>Definition</div><div><br>
+There may be confusion in the user mind between the different keywords <b>Type</b> and <b>Union</b> (despite the documentation that distinguishes them from each other through some different pages):<br>
+<ul><ul><li> <code><a href="../../operators/operators/procedures/type-udt.html">Type (Udt)</a></code>:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent">Declares/Defines a user structure of non overlapping data with possibly member procedures:<br>
+<div class="indent"><b>- Named Type</b>: Type that has a name that can be referenced to declare the data type.<br>
+<b>- Anonymous Type</b>: Type that does not have a name and so cannot be referenced by a name.<br>
+</div></div></div></div><ul><ul><li> <code><a href="../../user-defined-types/procedures/type-alias.html">Type(Alias)</a></code>:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent">Declares a user defined type name from other user defined or standard data types.<br>
+</div></div></div><ul><ul><li> <code><a href="../../programmer-s-guide/procedures/type-temporary.html">Type (Temporary)</a></code>:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent">Creates a temporary instance of a user defined type.<br>
+</div></div></div><ul><ul><li> <code><a href="../../user-defined-types/procedures/union.html">Union</a></code>:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent">Declares/Defines a user structure of overlapping data with possibly member procedures but no object fields (or bases) with constructors or destructors (directly on indirectly):<br>
+<div class="indent"><b>- Named Union</b>: Union that has a name that can be referenced to declare the data type.<br>
+<b>- Anonymous Union</b>: Union that does not have a name and so cannot be referenced by a name.<br>
+<br>
+</div></div></div></div>Complexity level for a Type/Union structure:<br>
+<div class="indent"><b>- Trivial structure</b>: Named or Anonymous structure that has no member procedures (directly on indirectly).<br>
+<b>- Complex structure</b>: Named Structure that has member procedure(s) (directly or indirectly).<br>
+<b>- Extended structure</b>: Named structure that inherits from another named structure.<br>
+<br>
+</div>Type/Union structure can be also nested inside another Type/Union structure:<br>
+<div class="indent"><b>- Nested Named Type</b>: Named Type that is nested inside another Named Type/Union structure.<br>
+<b>- Nested Anonymous Type</b>: Anonymous Type that is nested inside another Named or Anonymous Union structure.<br>
+<b>- Nested Named Union</b>: Named Union that is nested inside another Named Type/Union structure.<br>
+<b>- Nested Anonymous Union</b>: Anonymous Union that is nested inside another Named or Anonymous Type structure.<br>
+<br>
+</div>Type (Alias) declaration can be also nested inside a Type/Union structure:<br>
+<div class="indent"><b>-</b> Nested Type (Alias) declaration allows declaration of an inner alias inside a Type/Union and according to the access right of the place.<br>
+<br>
+</div></div><div>Description</div><div><br>
+The main purpose of Nested Named Types/Unions is:<br>
+<div class="indent"><b>-</b> To allow relationships between Types and Unions to be expressed in an understandable way.<br>
+<b>-</b> Such a Type or Union has its own namespace in which to organize related symbols - and provide visibility access (<code><a href="../../modularizing/procedures/public.html">Public</a></code>/<code><a href="../../user-defined-types/procedures/protected-access-control.html">Protected</a></code>/<code><a href="../../modularizing/procedures/private.html">Private</a></code>) for Types only - to give finer-grained control over access to members.<br>
+<b>-</b> When there are circular dependencies between Types/Unions, Nested Named Type/Union usage can avoid using Type (Alias) and forward referencing.<br>
+</div>Without Nested Named Types/Unions:<br>
+<div class="indent"><b>-</b> Relationships can still be expressed between Types/Unions but have the disadvantage that all Types/Unions must be publicly accessible.<br>
+<b>-</b> <code><a href="../../modularizing/procedures/namespace.html">Namespace</a></code> use can help organize scope of visibility but the problem remains that *all* Types/Unions must be visible.<br>
+<b>-</b> In some situations this allows a user (or the author himself) to inadvertently use a Type/Union in a way that it was never intended, potentially creating valid but error-prone code.<br>
+<b>-</b> This problem can be reduced by hiding Types/Unions through of forward declarations (via Type (Alias)) and putting private symbols in a separate module, but creates new problems by fragmenting the code.<br>
+<br>
+</div>Anonymous Type (or Union):<br>
+<div class="indent"><b>-</b> Does not have a name and cannot be referenced by name.<br>
+<b>-</b> May only appear nested within a Named Union (or Type) or another Anonymous Union (or Type) .<br>
+<b>-</b> Declares fields within the structure that nests it, either at separate memory locations (Nested Type) or overlapping memory locations (Nested Union).<br>
+<b>-</b> Fields can be referenced.<br>
+<b>-</b> Cannot contain any static members or procedures declarations (directly or indirectly) =&gt; Trivial structure.<br>
+<br>
+</div>Named Type (or Union):<br>
+<div class="indent"><b>-</b> Has a name that can be referenced to declare the data type for fields, variables, parameters, arrays, etc.<br>
+<b>-</b> Can appear on its own or nested inside another Named Type (or Union).<br>
+<b>-</b> Declaration of the Type (or Union) only.<br>
+<b>-</b> Does not declare any fields within the structure that nests it, so it does not add any size to it.<br>
+<b>-</b> Can contain static member(s) or procedure declaration(s) (directly or indirectly) =&gt; Trivial/Complex structure.<br>
+<br>
+</div>Complexity level for Type/Union structure versus scope location:<br>
+<div class="indent"><b>-</b> Trivial structure: Named or Anonymous Type/Union that can be declared at global / namespace / nested scopes or inside local scopes (like Scope or Sub).<br>
+<b>-</b> Complex structure: Named Type/Union that must be declared at the global / namespace / nested scope with definitions at the global / namespace scope.<br>
+<b>-</b> Extended structure: Named Type/Union declared in a scope that has visibility to its Base's scope (currently in same scope than its Base).	<br>
+<br>
+</div>The main structure (Type/Union) must be always Named, the other (Nested) structures can be Anonymous or Named.<br>
+Mostly everything it can be done in a Named Type/Union can also be done in a Nested Named Type/Union, including the inheritance capability (as base or as derived).<br>
+Nested Anonymous Type/Union can not have procedure members or static data members (same restriction than for a Named Type/Union inside a local scope).<br>
+<br>
+</div><div>Example</div><div><br>
+Example: 'Named Type' &lt;- 'Nested Anonymous Union' &lt;- 'Nested Anonymous Type':<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>T</span>  <span class="tok-cm">'' named</span>
+
+    <span class="tok-kw">Union</span>  <span class="tok-cm">'' anonymous</span>
+
+        <span class="tok-kw">Dim</span> <span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Short</span>
+
+        <span class="tok-kw">Type</span>  <span class="tok-cm">'' anonymous</span>
+
+            <span class="tok-kw">Dim</span> <span>b1</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span>
+
+            <span class="tok-kw">Dim</span> <span>b2</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Union</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>proc</span><span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>T.proc</span><span>()</span>
+
+    <span>b1</span> <span>=</span> <span class="tok-nu">1</span>
+
+    <span>b2</span> <span>=</span> <span class="tok-nu">2</span>
+
+    <span class="tok-kw">Print</span> <span>b1</span><span>,</span> <span>b2</span><span>,</span> <span>a</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>x</span> <span class="tok-kw">As</span> <span>T</span>
+
+<span>x.proc</span><span>()</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+</div>Example of circular dependencies between two main types solved by Nested Named Type usage (to avoid using type aliases and forward referencing):<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">'' example of two dependent types, with a type alias and a forward referencing:</span>
+
+<span class="tok-cm">'</span>
+
+<span class="tok-cm">'Type list As list_</span>
+
+<span class="tok-cm">'</span>
+
+<span class="tok-cm">'Type listnode</span>
+
+<span class="tok-cm">'    text As String</span>
+
+<span class="tok-cm">'    parent As list Ptr</span>
+
+<span class="tok-cm">'End Type</span>
+
+<span class="tok-cm">'</span>
+
+<span class="tok-cm">'Type list_</span>
+
+<span class="tok-cm">'    first As listnode Ptr</span>
+
+<span class="tok-cm">'    count As Integer</span>
+
+<span class="tok-cm">'End Type</span>
+
+
+
+
+
+
+
+<span class="tok-cm">'' same example of two dependent types, but with simply one of them a Nested Named Type: </span>
+
+
+
+<span class="tok-kw">Type</span> <span>list</span>
+
+    <span>count</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Type</span> <span>listnode</span>
+
+        <span>text</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+        <span>parent</span> <span class="tok-kw">As</span> <span>list</span> <span class="tok-kw">Ptr</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span>first</span> <span class="tok-kw">As</span> <span>listnode</span> <span class="tok-kw">Ptr</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span></pre></code><br>
+</div>Example to check access syntaxes and access rights:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>UDT1</span>
+
+    <span class="tok-kw">Private</span><span>:</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I1</span> <span>=</span> <span class="tok-nu">123</span>
+
+        <span class="tok-kw">Type</span> <span>UDT2</span>
+
+            <span class="tok-kw">Private</span><span>:</span>
+
+                <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I2</span> <span>=</span> <span class="tok-nu">456</span>
+
+            <span class="tok-kw">Public</span><span>:</span>
+
+                <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>returnI2</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Public</span><span>:</span>
+
+        <span class="tok-kw">Type</span> <span>UDT3</span>
+
+            <span class="tok-kw">Private</span><span>:</span>
+
+                <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I3</span> <span>=</span> <span class="tok-nu">789</span>
+
+            <span class="tok-kw">Public</span><span>:</span>
+
+                <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>returnI3</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>returnI1</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT2</span> <span>t2</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT3</span> <span>t3</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Function</span> <span>UDT1.returnI1</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Return</span> <span>This.I1</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Function</span> <span>UDT1.UDT2.returnI2</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Return</span> <span>This.I2</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Function</span> <span>UDT1.UDT3.returnI3</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Return</span> <span>This.I3</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT1</span> <span>t11</span>
+
+
+
+<span class="tok-cm">'Print t11.I1            '' error 202: Illegal member access</span>
+
+                         <span class="tok-cm">''    I1 is in the private section of UDT1</span>
+
+
+
+<span class="tok-kw">Print</span> <span>t11.returnI1</span><span>()</span>     <span class="tok-cm">'' OK, returnI1() is in the public section of UDT1</span>
+
+
+
+<span class="tok-cm">'Print t11.t2.I2         '' error 202: Illegal member access</span>
+
+                         <span class="tok-cm">''    t2 is in the public section of UDT1, but I2 is in the private section of UDT2</span>
+
+
+
+<span class="tok-kw">Print</span> <span>t11.t2.returnI2</span><span>()</span>  <span class="tok-cm">'' OK, t2 is in the public section of UDT1, and returnI2() is in the public section of UDT2</span>
+
+
+
+<span class="tok-cm">'Print t11.t3.I3         '' error 202: Illegal member access</span>
+
+                         <span class="tok-cm">''    t3 is in the public section of UDT1, but I3 is in the private section of UDT3</span>
+
+
+
+<span class="tok-kw">Print</span> <span>t11.t3.returnI3</span><span>()</span>  <span class="tok-cm">'' OK, t3 is in the public section of UDT1, and returnI3() is in the public section of UDT3</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-cm">'Dim As UDT1.UDT2 t21    '' error 202: Illegal member access</span>
+
+                         <span class="tok-cm">''    UDT2 is in the private section of UDT1</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT1.UDT3</span> <span>t31</span>     <span class="tok-cm">'' OK, UDT3 is in the public section of UDT1</span>
+
+
+
+<span class="tok-cm">'Print t31.I3            '' error 202: Illegal member access</span>
+
+                         <span class="tok-cm">''    I3 is in the private section of UDT3</span>
+
+
+
+<span class="tok-kw">Print</span> <span>t31.returnI3</span><span>()</span>     <span class="tok-cm">'' OK, returnI3() is in the public section of UDT3</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+</div>Example of what we can do with nested named types.<br>
+This is just the declaration part, but gives a few things worth pointing out:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>MemoryTable</span>
+
+    <span class="tok-kw">Private</span><span>:</span>
+
+        <span class="tok-cm">'' private members visible within MemoryTable only</span>
+
+        <span class="tok-kw">Const</span> <span>default_alignment</span> <span>=</span> <span class="tok-nu">16</span>
+
+        <span>m_bytes_per_node</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>=</span> <span class="tok-nu">0</span>
+
+        <span>m_nodes_per_chunk</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>=</span> <span class="tok-nu">0</span>
+
+        <span class="tok-kw">Type</span> <span>Chunk</span>
+
+            <span>m_owner</span> <span class="tok-kw">As</span> <span>MemoryTable</span> <span class="tok-kw">Ptr</span>
+
+            <span>m_nodes</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span>
+
+            <span>m_prevChunk</span> <span class="tok-kw">As</span> <span>Chunk</span> <span class="tok-kw">Ptr</span>
+
+            <span>m_data</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>allocChunk</span><span>()</span>
+
+        <span>m_headChunk</span> <span class="tok-kw">As</span> <span>Chunk</span> <span class="tok-kw">Ptr</span> <span>=</span> <span class="tok-nu">0</span>
+
+    <span class="tok-kw">Protected</span><span>:</span>
+
+        <span class="tok-cm">'' protected members visible within MemoryTable and derived types</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>()</span>
+
+        <span class="tok-kw">Type</span> <span>Iterator</span>
+
+            <span class="tok-kw">Private</span><span>:</span>
+
+                <span>m_chunk</span> <span class="tok-kw">As</span> <span>Chunk</span> <span class="tok-kw">Ptr</span>
+
+                <span>m_index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+            <span class="tok-kw">Protected</span><span>:</span>
+
+                <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>()</span>
+
+                <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>(</span><span class="tok-kw">ByVal</span> <span>table</span> <span class="tok-kw">As</span> <span>MemoryTable</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+                <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>item</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+            <span class="tok-kw">Public</span><span>:</span>
+
+                <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>hasItem</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Boolean</span>
+
+                <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>nextItem</span><span>()</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>newNode</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+    <span class="tok-kw">Public</span><span>:</span>
+
+        <span class="tok-cm">'' public member visible from outside the type</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>(</span><span class="tok-kw">ByVal</span> <span>bytes</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span><span>,</span> <span>nodes</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span><span>)</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span><span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span></pre></code><br>
+	<br>
+</div></div><div>See also</div><div><br>
+<ul><li> <a href="user-defined-types.html">Overview (User Defined Types)</a><br>
+<li> <a href="type-aliases.html">Type Aliases</a><br>
+<li> <a href="../../programmer-s-guide/procedures/type-temporary.html">Temporary Types</a><br>
+<li> <a href="constructors-and-destructors-basics.html">Constructors and Destructors (basics)</a><br>
+<li> <a href="member-access-rights-and-encapsulation.html">Member Access Rights and Encapsulation</a><br>
+<br>
+</li></li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

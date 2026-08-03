@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CODBCStmt.GetData — Help Center</title>
+<meta name="description" content="Retrieves data for a single column in the result set. It can be called multiple times to retrieve variable-length data in parts.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbcstmt/codbcstmt-getdata.html">
+<meta property="og:title" content="CODBCStmt.GetData">
+<meta property="og:description" content="Retrieves data for a single column in the result set. It can be called multiple times to retrieve variable-length data in parts.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbcstmt/codbcstmt-getdata.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/odbc-classes/codbcstmt/codbcstmt-getdata.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../codbcstmt-class.html">CODBCStmt Class</a></div>
+<h1>CODBCStmt.GetData<span class="h1kind">method</span></h1>
+<p class="lede">Retrieves data for a single column in the result set. It can be called multiple times to retrieve variable-length data in parts.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CODBCStmt.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GetData (BYVAL ColumnNumber AS SQLUSMALLINT, BYVAL TargetType AS SQLSMALLINT, BYVAL TargetValue AS SQLPOINTER, BYVAL BufferLength AS SQLLEN, BYVAL StrLen_or_Ind AS SQLLEN PTR) AS SQLRETURN</code></pre>
+<pre class="code sig"><code>FUNCTION GetData (BYREF ColumnName AS WSTRING, BYVAL TargetType AS SQLSMALLINT, BYVAL TargetValue AS SQLPOINTER, BYVAL BufferLength AS SQLLEN, BYVAL StrLen_or_Ind AS SQLLEN PTR) AS SQLRETURN</code></pre>
+<pre class="code sig"><code>FUNCTION GetData (BYVAL ColumnNumber AS SQLUSMALLINT, BYVAL maxChars AS LONG = 256 * 2) AS DWSTRING</code></pre>
+<pre class="code sig"><code>FUNCTION GetData (BYREF ColumnName AS WSTRING, BYVAL maxChars AS LONG = 256 * 2) AS DWSTRING</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>ColumnNumber</code></td><td></td><td>Number or name of the column for which to return data. Result set columns are numbered in increasing column order starting at 1. The bookmark column is column number 0; this can be specified only if bookmarks are enabled.</td></tr><tr><td><code>TargetType</code></td><td></td><td>The type identifier of the C data type of the <em>TargetValuePtr</em> buffer. If <em>TargetType</em> is SQL_ARD_TYPE, the driver uses the type identifier specified in the SQL_DESC_CONCISE_TYPE field of the ARD. If it is SQL_C_DEFAULT, the driver selects the default C data type based on the SQL data type of the source.</td></tr><tr><td><code>TargetValue</code></td><td></td><td>Pointer to the buffer in which to return the data.</td></tr><tr><td><code>BufferLength</code></td><td></td><td>Length of the <em>TargetValue</em> buffer in bytes.<br>The driver uses <em>BufferLength</em> to avoid writing past the end of the TargetValue buffer when returning variable-length data, such as character or binary data. Note that the driver counts the null-termination character when returning character data to <em>TargetValue</em>. <em>TargetValue</em> must therefore contain space for the null-termination character, or the driver will truncate the data.<br>When the driver returns fixed-length data, such as an integer or a date structure, the driver ignores <em>BufferLength</em> and assumes the buffer is large enough to hold the data. It is therefore important for the application to allocate a large enough buffer for fixed-length data or the driver will write past the end of the buffer.<br><strong>GetData</strong> returns SQLSTATE HY090 (Invalid string or buffer length) when <em>BufferLength</em> is less than 0 but not when <em>BufferLength</em> is 0.<br>If <em>TargetValue</em> is set to a null pointer,<em>BufferLength</em> is ignored by the driver.</td></tr><tr><td><code>StrLen_or_Ind</code></td><td></td><td>Pointer to the buffer in which to return the length or indicator value. If this is a null pointer, no length or indicator value is returned. This returns an error when the data being fetched is NULL.<br><strong>GetData</strong> can return the following values in the length/indicator buffer:<br>The length of the data available to return: SQL_NO_TOTAL, SQL_NULL_DATA.</td></tr><tr><td><code>ColumnNumber</code></td><td></td><td>Number or name of the column for which to return data. Result set columns are numbered in increasing column order starting at 1. The bookmark column is column number 0; this can be specified only if bookmarks are enabled.</td></tr><tr><td><code>BufferLength</code></td><td></td><td>Length of the <em>TargetValue</em> buffer in bytes.<br>The driver uses <em>BufferLength</em> to avoid writing past the end of the <em>TargetValue</em> buffer when returning variable-length data, such as character or binary data. Note that the driver counts the null-termination character when returning character data to <em>TargetValue</em>. <em>TargetValue</em> must therefore contain space for the null-termination character, or the driver will truncate the data.<br>When the driver returns fixed-length data, such as an integer or a date structure, the driver ignores <em>BufferLength</em> and assumes the buffer is large enough to hold the data. It is therefore important for the application to allocate a large enough buffer for fixed-length data or the driver will write past the end of the buffer.<br><strong>GetData</strong> returns SQLSTATE HY090 (Invalid string or buffer length) when <em>BufferLength</em> is less than 0 but not when <em>BufferLength</em> is 0. If <em>TargetValue</em> is set to a null pointer, <em>BufferLength</em> is ignored by the driver.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>SQL_SUCCESS, SQL_SUCCESS_WITH_INFO, SQL_NO_DATA, SQL_STILL_EXECUTING, SQL_ERROR, or SQL_INVALID_HANDLE.</p>
+<p>SQL_SUCCESS, SQL_SUCCESS_WITH_INFO, SQL_NO_DATA, SQL_STILL_EXECUTING, SQL_ERROR, or SQL_INVALID_HANDLE.</p>
+<h2>Description</h2>
+<p>Retrieves data for a single column in the result set. It can be called multiple times to retrieve variable-length data in parts.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CODBCStmt.inc</code></li><li>Defined in <span class="srcref">AfxNova/COdbcStmt.inc:191</span></li><li>Documented in <span class="srcref">Databases/ODBC Classes/CODBCStmt Class.md</span></li><li>Topic: <a href="../codbcstmt-class.html">CODBCStmt Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

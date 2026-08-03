@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beginners Guide to Types as Objects (Part 2) — Help Center</title>
+<meta name="description" content="Beginners Guide to Types as Objects (Part 2) — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/beginners-guide-to-types-as-objects-part-2.html">
+<meta property="og:title" content="Beginners Guide to Types as Objects (Part 2)">
+<meta property="og:description" content="Beginners Guide to Types as Objects (Part 2) — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/beginners-guide-to-types-as-objects-part-2.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/beginners-guide-to-types-as-objects-part-2.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Beginners Guide to Types as Objects (Part 2)</h1>
+<h2>Documentation</h2>
+
+	<br>
+<b>Introduction.</b><br>
+<br>
+Welcome to the second part of the tutorial, In this part I assume that you have read through Part 1, tried the examples, and experimented with some tests of your own.  I'll now cover some topics that I didn't include in Part 1.<br>
+<br>
+<b>Indexed property.</b><br>
+<br>
+An indexed property is a property that behaves like an array, except that like in the case of a regular property, a function gets called when you access it.  I'll start with a very short example just to show the syntax.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>foo</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>bar</span><span>(</span><span class="tok-kw">ByVal</span> <span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>value</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>bar</span><span>(</span><span class="tok-kw">ByVal</span> <span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span>dummy</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span> 
+
+
+
+<span class="tok-kw">Property</span> <span>foo.bar</span><span>(</span><span class="tok-kw">ByVal</span> <span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>value</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;Property set, index=&quot;</span> <span>&amp;</span> <span>index</span> <span>&amp;</span> <span>&quot;, value=&quot;</span> <span>&amp;</span> <span>value</span> 
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Property</span> <span>foo.bar</span><span>(</span><span class="tok-kw">ByVal</span> <span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;Property get, index=&quot;</span> <span>&amp;</span> <span>index</span>
+
+  <span class="tok-kw">Property</span> <span>=</span> <span class="tok-nu">0</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>baz</span> <span class="tok-kw">As</span> <span>foo</span>
+
+
+
+<span>baz.bar</span><span>(</span><span class="tok-nu">0</span><span>)</span> <span>=</span> <span class="tok-nu">42</span>
+
+<span class="tok-kw">Print</span> <span>baz.bar</span><span>(</span><span class="tok-nu">0</span><span>)</span></pre></code><br>
+<br>
+As you can see, the declaration for our indexed property is very similar to a regular one, except this time we add an argument for the index.  I include a dummy integer member, because a type must have at least one data member.  As you can see, the property is then used with (0), to denote we want to get/set the zeroth index, just the same as we would for an ordinary array.  Now I'll show you a slightly more useful example, and I will describe it:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>foo</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>(</span><span class="tok-kw">ByVal</span> <span>num_elements</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span><span>()</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>bar</span><span>(</span><span class="tok-kw">ByVal</span> <span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>value</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>bar</span><span>(</span><span class="tok-kw">ByVal</span> <span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">Private</span><span>:</span>
+
+  <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span>
+
+  <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span> 
+
+
+
+<span class="tok-kw">Constructor</span> <span>foo</span><span>(</span><span class="tok-kw">ByVal</span> <span>num_elements</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span>x</span> <span>=</span> <span class="tok-kw">CAllocate</span><span>(</span><span>num_elements</span> <span>*</span> <span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">Integer</span><span>))</span>
+
+  <span>size</span> <span>=</span> <span>num_elements</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Destructor</span> <span>foo</span><span>()</span>
+
+  <span class="tok-kw">Deallocate</span><span>(</span><span>x</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+<span class="tok-kw">Property</span> <span>foo.bar</span><span>(</span><span class="tok-kw">ByVal</span> <span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>value</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span class="tok-kw">If</span> <span>(</span><span>index</span> <span>&gt;=</span> <span class="tok-nu">0</span><span>)</span> <span class="tok-kw">And</span> <span>(</span><span>index</span> <span>&lt;</span> <span>size</span><span>)</span> <span class="tok-kw">Then</span>
+
+    <span>x</span><span>[</span><span>index</span><span>]</span> <span>=</span> <span>value</span>
+
+  <span class="tok-kw">Else</span>
+
+    <span class="tok-kw">Error</span> <span class="tok-nu">6</span>
+
+  <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Property</span> <span>foo.bar</span><span>(</span><span class="tok-kw">ByVal</span> <span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span class="tok-kw">If</span> <span>(</span><span>index</span> <span>&gt;=</span> <span class="tok-nu">0</span><span>)</span> <span class="tok-kw">And</span> <span>(</span><span>index</span> <span>&lt;</span> <span>size</span><span>)</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-kw">Property</span> <span>=</span> <span>x</span><span>[</span><span>index</span><span>]</span>
+
+  <span class="tok-kw">Else</span>
+
+    <span class="tok-kw">Error</span> <span class="tok-nu">6</span>
+
+  <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>baz</span> <span class="tok-kw">As</span> <span>foo</span> <span>=</span> <span>foo</span><span>(</span><span class="tok-nu">10</span><span>)</span>
+
+
+
+<span>baz.bar</span><span>(</span><span class="tok-nu">1</span><span>)</span> <span>=</span> <span class="tok-nu">42</span>
+
+<span class="tok-kw">Print</span> <span>baz.bar</span><span>(</span><span class="tok-nu">1</span><span>)</span></pre></code><br>
+<br>
+This time, I've added a constructor and destructor, which will allocate and deallocate a dynamic memory array, x, with the number of elements specified in the constructor.  Then when the property functions are invoked, I check if the index is within the bounds of the array, if it is then I perform the requested get or set.  If the index specified is out of bounds, then 'Error 6' occurs, which is a way to abort the program with FB's 'out of bounds error', you could replace this with your own error handling routines.  Try this out, by changing the code 'baz.bar(1) = 42' to 'baz.bar(10) = 42', and you'll see it in action, as we specified only 10 elements (index 0-9)<br>
+<br>
+<b>Copy constructor.</b><br>
+<br>
+A copy constructor is a special type of constructor, that is used to make a copy from an existing object.  When you write code like this:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>foo</span>
+
+<span>...</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>foo</span> <span>a</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>foo</span> <span>b</span> <span>=</span> <span>a</span></pre></code><br>
+<br>
+What happens is FreeBASIC automatically generates hidden code to construct b, by making a copy of a, this is the default copy constructor, and simply copies the data fields (members) across.  We can define our own copy constructor, here's just a brief snippet to show how we declare it.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>foo</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>(</span><span class="tok-kw">ByRef</span> <span>obj</span> <span class="tok-kw">As</span> <span>foo</span><span>)</span>
+
+  <span>...</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span></pre></code><br>
+<br>
+This will come in very useful for a reason I will now explain.<br>
+<br>
+<b>Deep/Shallow copy.</b><br>
+<br>
+In that previous example, where we did the code 'Dim As foo b = a', that was what is known a shallow copy, it just simply copied the data fields across, however sometimes this is not desirable, imagine that one of the members is a pointer, what will happen is that the address that pointer points to will be copied across, so both objects will point to the same memory.  An example of this follows:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>foo</span>
+
+  <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>foo</span> <span>a</span>
+
+
+
+<span>a.x</span> <span>=</span> <span class="tok-kw">Allocate</span><span>(</span><span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">Integer</span><span>))</span>
+
+<span>*</span><span>a.x</span> <span>=</span> <span class="tok-nu">42</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>foo</span> <span>b</span> <span>=</span> <span>a</span>
+
+
+
+<span class="tok-kw">Print</span> <span>*</span><span>a.x</span><span>,</span> <span>*</span><span>b.x</span>
+
+
+
+<span>*</span><span>a.x</span> <span>=</span> <span class="tok-nu">420</span>
+
+
+
+<span class="tok-kw">Print</span> <span>*</span><span>a.x</span><span>,</span> <span>*</span><span>b.x</span>
+
+
+
+<span class="tok-kw">Deallocate</span><span>(</span><span>a.x</span><span>)</span></pre></code><br>
+<br>
+As you see, because they both point to the same memory, changing one affects the other.  As explained in the previous section on the copy constructor, FreeBASIC creates the code to do shallow copies by default.  This is also true if we do an assignment like:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>foo</span> <span>a</span><span>,</span> <span>b</span>
+
+
+
+<span>b</span> <span>=</span> <span>a</span></pre></code><br>
+<br>
+In this case also, FreeBASIC creates a default assignment operator (Let) to perform a shallow copy.  In order to do deep copies, we need to define a copy constructor, and an assignment operator, that is overloaded to accept our type.  Here's an example using them.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>foo</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>()</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>(</span><span class="tok-kw">ByRef</span> <span>obj</span> <span class="tok-kw">As</span> <span>foo</span><span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span><span>()</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Let</span><span>(</span><span class="tok-kw">ByRef</span> <span>obj</span> <span class="tok-kw">As</span> <span>foo</span><span>)</span>
+
+  <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>foo</span><span>()</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;Default ctor&quot;</span>
+
+  <span>x</span> <span>=</span> <span class="tok-kw">CAllocate</span><span>(</span><span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">Integer</span><span>))</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>foo</span><span>(</span><span class="tok-kw">ByRef</span> <span>obj</span> <span class="tok-kw">As</span> <span>foo</span><span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;Copy ctor&quot;</span>
+
+  <span>x</span> <span>=</span> <span class="tok-kw">CAllocate</span><span>(</span><span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">Integer</span><span>))</span>
+
+  <span>*</span><span>x</span> <span>=</span> <span>*</span><span>obj.x</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Destructor</span> <span>foo</span><span>()</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;dtor&quot;</span>
+
+  <span class="tok-kw">Deallocate</span><span>(</span><span>x</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>foo.Let</span><span>(</span><span class="tok-kw">ByRef</span> <span>obj</span> <span class="tok-kw">As</span> <span>foo</span><span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;Let&quot;</span>
+
+  <span>*</span><span>x</span> <span>=</span> <span>*</span><span>obj.x</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>foo</span> <span>a</span>
+
+
+
+<span>*</span><span>a.x</span> <span>=</span> <span class="tok-nu">42</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>foo</span> <span>b</span> <span>=</span> <span>a</span> <span class="tok-cm">'Uses the copy constructor</span>
+
+
+
+<span class="tok-kw">Print</span> <span>*</span><span>a.x</span><span>,</span> <span>*</span><span>b.x</span>
+
+
+
+<span>*</span><span>a.x</span> <span>=</span> <span class="tok-nu">420</span>
+
+
+
+<span class="tok-kw">Print</span> <span>*</span><span>a.x</span><span>,</span> <span>*</span><span>b.x</span></pre></code><br>
+<br>
+As you can see, the copy constructor gets called on the line 'Dim As foo b = a' and this time, we allocate some memory, and copy the data in the new copy constructor, so that we can adjust x in one object without it affecting the other.  If we change the main code as follows:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>foo</span> <span>a</span><span>,</span> <span>b</span>
+
+
+
+<span>*</span><span>a.x</span> <span>=</span> <span class="tok-nu">42</span>
+
+<span>b</span> <span>=</span> <span>a</span>    <span class="tok-cm">'The assignment operator (Let) gets used this time.</span>
+
+
+
+<span class="tok-kw">Print</span> <span>*</span><span>a.x</span><span>,</span> <span>*</span><span>b.x</span>
+
+
+
+<span>*</span><span>a.x</span> <span>=</span> <span class="tok-nu">420</span>
+
+
+
+<span class="tok-kw">Print</span> <span>*</span><span>a.x</span><span>,</span> <span>*</span><span>b.x</span></pre></code><br>
+<br>
+Then this time the assignment operator is used. Note that in the assignment operator code, we don't need to allocate any memory because it has already been allocated in the default constructor, we just need to copy the data across.  The line '*x = *obj.x' performs this copy.  If we had something more advanced, like a dynamic memory array, then we would need to reallocate the memory to be the correct size to fit the data being copied.  Here's a more advanced version just to show that.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>foo</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>(</span><span class="tok-kw">ByVal</span> <span>num_elements</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>(</span><span class="tok-kw">ByRef</span> <span>obj</span> <span class="tok-kw">As</span> <span>foo</span><span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span><span>()</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Let</span><span>(</span><span class="tok-kw">ByRef</span> <span>obj</span> <span class="tok-kw">As</span> <span>foo</span><span>)</span>
+
+  <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span>
+
+  <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>foo</span><span>(</span><span class="tok-kw">ByVal</span> <span>num_elements</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;Default ctor&quot;</span>
+
+  <span>x</span> <span>=</span> <span class="tok-kw">CAllocate</span><span>(</span><span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">Integer</span><span>)</span> <span>*</span> <span>num_elements</span><span>)</span>
+
+  <span>size</span> <span>=</span> <span>num_elements</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>foo</span><span>(</span><span class="tok-kw">ByRef</span> <span>obj</span> <span class="tok-kw">As</span> <span>foo</span><span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;Copy ctor&quot;</span>
+
+  <span>x</span> <span>=</span> <span class="tok-kw">CAllocate</span><span>(</span><span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">Integer</span><span>)</span> <span>*</span> <span>obj.size</span><span>)</span>
+
+  <span>size</span> <span>=</span> <span>obj.size</span>
+
+  <span class="tok-kw">For</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span>size</span> <span>-</span> <span class="tok-nu">1</span>
+
+    <span>x</span><span>[</span><span>i</span><span>]</span> <span>=</span> <span>obj.x</span><span>[</span><span>i</span><span>]</span>
+
+  <span class="tok-kw">Next</span> <span>i</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Destructor</span> <span>foo</span><span>()</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;dtor&quot;</span>
+
+  <span class="tok-kw">Deallocate</span><span>(</span><span>x</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>foo.Let</span><span>(</span><span class="tok-kw">ByRef</span> <span>obj</span> <span class="tok-kw">As</span> <span>foo</span><span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;Let&quot;</span>
+
+  <span>x</span> <span>=</span> <span class="tok-kw">Reallocate</span><span>(</span><span>x</span><span>,</span> <span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">Integer</span><span>)</span> <span>*</span> <span>obj.size</span><span>)</span>
+
+  <span>size</span> <span>=</span> <span>obj.size</span>
+
+  <span class="tok-kw">For</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span>size</span> <span>-</span> <span class="tok-nu">1</span>
+
+    <span>x</span><span>[</span><span>i</span><span>]</span> <span>=</span> <span>obj.x</span><span>[</span><span>i</span><span>]</span>
+
+  <span class="tok-kw">Next</span> <span>i</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>foo</span> <span>a</span> <span>=</span> <span>foo</span><span>(</span><span class="tok-nu">5</span><span>)</span>
+
+
+
+<span>a.x</span><span>[</span><span class="tok-nu">0</span><span>]</span> <span>=</span> <span class="tok-nu">42</span>
+
+<span>a.x</span><span>[</span><span class="tok-nu">1</span><span>]</span> <span>=</span> <span class="tok-nu">420</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>foo</span> <span>b</span> <span>=</span> <span>a</span> <span class="tok-cm">'Uses the copy constructor</span>
+
+
+
+<span class="tok-kw">Print</span> <span>a.x</span><span>[</span><span class="tok-nu">0</span><span>],</span> <span>a.x</span><span>[</span><span class="tok-nu">1</span><span>],</span> <span>b.x</span><span>[</span><span class="tok-nu">0</span><span>],</span> <span>b.x</span><span>[</span><span class="tok-nu">1</span><span>]</span>
+
+
+
+<span>b.x</span><span>[</span><span class="tok-nu">0</span><span>]</span> <span>=</span> <span class="tok-nu">10</span>
+
+<span>b.x</span><span>[</span><span class="tok-nu">1</span><span>]</span> <span>=</span> <span class="tok-nu">20</span>
+
+
+
+<span class="tok-kw">Print</span> <span>a.x</span><span>[</span><span class="tok-nu">0</span><span>],</span> <span>a.x</span><span>[</span><span class="tok-nu">1</span><span>],</span> <span>b.x</span><span>[</span><span class="tok-nu">0</span><span>],</span> <span>b.x</span><span>[</span><span class="tok-nu">1</span><span>]</span>
+
+
+
+<span>b</span> <span>=</span> <span>a</span> <span class="tok-cm">' Now using the assignment operator</span>
+
+
+
+<span class="tok-kw">Print</span> <span>a.x</span><span>[</span><span class="tok-nu">0</span><span>],</span> <span>a.x</span><span>[</span><span class="tok-nu">1</span><span>],</span> <span>b.x</span><span>[</span><span class="tok-nu">0</span><span>],</span> <span>b.x</span><span>[</span><span class="tok-nu">1</span><span>]</span></pre></code><br>
+<br>
+This may seem quite complex at first, it's worth just reading through it again, and experimenting with the examples, it's not too tricky once you're used to it.<br>
+<br>
+<b>Passing objects to functions ByVal</b><br>
+<br>
+The idea of deep and shallow copies also applies to passing an object to a function by value.  When you pass a reference to an object (ByRef), you can modify the object, and these modifications will persist, however you can also pass by value, which will mean you can modify it without the changes persisting outside of the function.  When an object is passed by value to a function, a new copy is created, and if that object has a copy constructor, then this is invoked, if it doesn't, then the hidden shallow copy is performed.  Once the function ends, the objects destructor is called.<br>
+<br>
+<b>New/Delete</b><br>
+<br>
+New and delete are special operators for dynamically allocating memory, then destroying it.  Because it is used with dynamic memory, it is used with pointers.  In all the examples up until now, we just used Dim to create our objects, this will create them on the stack, but by using new we can create them dynamically, which can allow more flexibility, just like using Allocate/DeAllocate with normal memory.  Another important thing about new, is that you don't need to check if the pointer is NULL after new, like you would if you did allocate.  If new fails, it causes an exception, which will end the program.  In later versions of FreeBASIC, it is likely that some kind of try..catch mechanism will be created to allow better exception handling, but as of the time of writing, this is not yet implemented.  <br>
+<br>
+There are two different varieties of the new/delete.  The first type, creates just a single element or object, for example:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span> <span>foo</span> <span>=</span> <span class="tok-kw">New</span> <span class="tok-kw">Integer</span>
+
+
+
+<span>*</span><span>foo</span> <span>=</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Print</span> <span>*</span><span>foo</span>
+
+
+
+<span class="tok-kw">Delete</span> <span>foo</span></pre></code><br>
+<br>
+This will create a new Integer, then destroy it when we call delete.  Remember I used ptr, because it is dynamic memory.  For simple data types you can also specify a default value, by placing it in parenthesis after the data type, ie:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span> <span>foo</span> <span>=</span> <span class="tok-kw">New</span> <span class="tok-kw">Integer</span><span>(</span><span class="tok-nu">42</span><span>)</span>
+
+
+
+<span class="tok-kw">Print</span> <span>*</span><span>foo</span>
+
+
+
+<span class="tok-kw">Delete</span> <span>foo</span></pre></code><br>
+<br>
+This also works for UDT's with just simple data fields:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>foo</span>
+
+  <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span>y</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>foo</span> <span class="tok-kw">Ptr</span> <span>bar</span> <span>=</span> <span class="tok-kw">New</span> <span>foo</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span><span>)</span>
+
+  
+
+<span class="tok-kw">Print</span> <span>bar</span><span>-&gt;</span><span>x</span><span>,</span> <span>bar</span><span>-&gt;</span><span>y</span>
+
+
+
+<span class="tok-kw">Delete</span> <span>bar</span></pre></code><br>
+<br>
+This initialization won't work for more complex types involving constructors/destructors etc., however a useful feature is that when using new/delete with objects, it also calls the constructor and destructor, try the following example:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>foo</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>()</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span><span>()</span>
+
+  <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span>y</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>foo</span><span>()</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;ctor&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Destructor</span> <span>foo</span><span>()</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;dtor&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>foo</span> <span class="tok-kw">Ptr</span> <span>bar</span> <span>=</span> <span class="tok-kw">New</span> <span>foo</span>
+
+
+
+<span class="tok-kw">Delete</span> <span>bar</span></pre></code><br>
+<br>
+You will see that the constructor and destructor for the object are called.<br>
+<br>
+The second type of new/delete is for creating arrays, this time the number of elements is placed after the dataype in square brackets '[]'.  When using the array version, you must also use 'delete[]' instead of 'delete', so that FreeBASIC knows you are deleting an array, here is a simple example using the Integer type:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span> <span>foo</span> <span>=</span> <span class="tok-kw">New</span> <span class="tok-kw">Integer</span><span>[</span><span class="tok-nu">20</span><span>]</span>
+
+
+
+<span>foo</span><span>[</span><span class="tok-nu">1</span><span>]</span> <span>=</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Print</span> <span>foo</span><span>[</span><span class="tok-nu">1</span><span>]</span>
+
+
+
+<span class="tok-kw">Delete</span><span>[]</span> <span>foo</span></pre></code><br>
+<br>
+This will create a dynamic array, with 20 Integer elements.  It should be noted this is different from Allocate, which takes the number of bytes as its argument; using new, you should specify the number of elements.  The array method works just the same for objects:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>foo</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>()</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span><span>()</span>
+
+  <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span>y</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>foo</span><span>()</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;ctor&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Destructor</span> <span>foo</span><span>()</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;dtor&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>foo</span> <span class="tok-kw">Ptr</span> <span>bar</span> <span>=</span> <span class="tok-kw">New</span> <span>foo</span><span>[</span><span class="tok-nu">3</span><span>]</span>
+
+
+
+<span class="tok-kw">Delete</span><span>[]</span> <span>bar</span></pre></code><br>
+<br>
+When you run this code, you will see that three constructor/destructor pairs are called, because we created an array of three instances of foo.<br>
+<br>
+You must remember to call Delete, or Delete[] for any memory allocated with New, or you will cause a memory leak, just like the way you must rememeber to call DeAllocate for any memory you allocate with the Allocate function.<br>
+<br>
+<b>Name Mangling</b><br>
+<br>
+Name mangling, also known as name decoration, is something that happens behind the scenes, at a lower level, and as such is not essential to know about.  The reason for name mangling is to resolve problems that are involved with more than one function sharing the same name, which happens when functions are overloaded, or are part of a type.  Take for example the overloaded subs shown below:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Sub</span> <span>foo</span> <span class="tok-kw">Overload</span> <span>()</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>foo</span><span>(</span><span class="tok-kw">ByVal</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+<br>
+If we didn't have name mangling, then both might be known at a lower level as FOO, which would cause a name clash, so they have to be decorated in order to know which one should be called when they are used.  For the first sub, the compiler actually creates a sub called _Z3FOOv, and for the second it creates a sub called _Z3FOOi.  The compiler then remembers these, and chooses the appropriate sub to call, depending on how you call it, for example 'foo()' will actually call _Z3FOOv, and 'foo(1)' will actually call _Z3FOOi.  We can spot something from this, that the 'v' stands for void (no argument), and 'i' stands for integer.  The full details of name mangling are quite complex, and vary between compilers, the Microsoft compilers use a different name mangling scheme to GNU compilers, and other compilers may use different schemes as well.  The main thing we need to know, is that FreeBASIC follows the GCC 3.x ABI (Application binary interface), meaning that any overloaded functions, or complex types will only be compatible with other compilers using the same scheme.  This is an unfortunate limitation, but it is not really a FreeBASIC problem, it is common of all the compilers that use advanced features, and even if all the compiler authors agreed on a common name mangling scheme, there are still other issues that would cause incompatability.<br>
+<br>
+<b>Implicit this</b><br>
+<br>
+This again is not necessary to know about mostly, its something that happens behind the scenes at a lower level.  When you call a member function of an object, what actually happens is a hidden first parameter is passed, so that the function knows which instance of the object is being refered to.  This is also true for the property/constructor/destructor/operator members.  If we look at a very simple example:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>foo</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>bar</span><span>(</span><span class="tok-kw">ByVal</span> <span>n</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>foo.bar</span><span>(</span><span class="tok-kw">ByVal</span> <span>n</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span>x</span> <span>=</span> <span>n</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>baz</span> <span class="tok-kw">As</span> <span>foo</span>
+
+<span>baz.bar</span><span>(</span><span class="tok-nu">5</span><span>)</span></pre></code><br>
+<br>
+What actually happens behind the scenes is something essentially equivalent to this:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>foo</span>
+
+  <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>foo_bar</span><span>(</span><span class="tok-kw">ByRef</span> <span>_this</span> <span class="tok-kw">As</span> <span>foo</span><span>,</span> <span class="tok-kw">ByVal</span> <span>n</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span>_this.x</span> <span>=</span> <span>n</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>baz</span> <span class="tok-kw">As</span> <span>foo</span>
+
+<span>foo_bar</span><span>(</span><span>baz</span><span>,</span> <span class="tok-nu">5</span><span>)</span></pre></code><br>
+<br>
+This method using an explicit 'this' is often used in languages that do not have facilities to make it easier.  OOP is really just a set of concepts, that can be mostly coded in almost any language, some things are more difficult to implement, such as constructors, you would have to explicitly call a 'create', or 'init' function.  For some things such as private/public distinction, it is even more difficult or impossible because the compiler does not know to enforce them.  The reason for adding OOP features to a language is to hide a lot of this, and add syntactic sugar to make it simpler to do, or more transparent in use, such as the way we can use properties as if they were ordinary data members, rather than functions, which is what they really are.<br>
+<br>
+<b>Hints for debugging/profiling</b><br>
+<br>
+When using GDB or other debuggers, and the gprof profiling tool, the information shown is in the C++ syntax, and all your variable names and other symbols are shown in upper case, here is just a very short overview to help you understand how these are shown:<br>
+<br>
+Here's an example type:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>bar</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>()</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>(</span><span class="tok-kw">ByRef</span> <span>obj</span> <span class="tok-kw">As</span> <span>bar</span><span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>(</span><span class="tok-kw">ByVal</span> <span>n</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span><span>()</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Cast</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Let</span><span>(</span><span class="tok-kw">ByVal</span> <span>n</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>foo</span><span>(</span><span class="tok-kw">ByVal</span> <span>n</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>foo</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span>member</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span></pre></code><br>
+<br>
+When using GDB, these will be shown as follows (note in C++ they use :: where we would use . (dot), '::' is known as the scope resolution operator):<br>
+<br>
+  BAR::BAR()            - The default constructor<br>
+  BAR::BAR(BAR&)        - The copy constructor (& in C++ means a reference, like byref)<br>
+  BAR::BAR(int)         - The constructor taking an integer argument (note there is no special symbol to denote ByVal, as this is the default passing method in C/C++)<br>
+  BAR::~BAR()           - The destructor<br>
+  BAR::operator void*() - A cast to Any ptr (void is similar to Any, * means pointer)<br>
+  BAR::operator=(int)   - The assignment operator (Let), dentoted by '=', in C/C++ '=' is assignment, '==' is equality testing.<br>
+  BAR::FOO(int)         - Property foo setter, taking an integer argument<br>
+  BAR::FOO()            - Property foo getter<br>
+<br>
+Member sub/functions are shown in the same way as properties, indexed properties are shown the same also, just with the extra argument for the index.<br>
+<br>
+Here is how the FB data types will be shown:<br>
+<br>
+Any ptr     - void *<br>
+ZString ptr - char *<br>
+String      - FBSTRING<br>
+byte        - signed char<br>
+ubyte       - bool<br>
+short       - short<br>
+ushort      - unsigned short<br>
+integer     - int<br>
+uinteger    - unsigned int<br>
+longint     - long long<br>
+ulongint    - unsigned long long<br>
+<br>
+I hope that helps you get started with understanding how things are displayed in GDB/gprof, a little experimentation will always help.<br>
+<br>
+<b>More reading</b><br>
+<br>
+http://www.freebasic.net/wiki/wikka.php?wakka=KeyPgOpNew<br>
+http://www.freebasic.net/wiki/wikka.php?wakka=KeyPgOpDelete<br>
+http://en.wikipedia.org/wiki/Copy_constructor<br>
+http://en.wikipedia.org/wiki/Object_copy<br>
+http://en.wikipedia.org/wiki/Name_mangling<br>
+<br>
+<i>Last Reviewed by Sancho3 on February 06, 2018</i>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

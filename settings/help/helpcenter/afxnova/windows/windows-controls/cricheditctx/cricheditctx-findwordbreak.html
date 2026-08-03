@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRichEditCtx.FindWordBreak — Help Center</title>
+<meta name="description" content="Finds the next word break before or after the specified character position or retrieves information about the character at that position.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditctx/cricheditctx-findwordbreak.html">
+<meta property="og:title" content="CRichEditCtx.FindWordBreak">
+<meta property="og:description" content="Finds the next word break before or after the specified character position or retrieves information about the character at that position.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditctx/cricheditctx-findwordbreak.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/cricheditctx/cricheditctx-findwordbreak.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cricheditctx-class.html">CRichEditCtx Class</a></div>
+<h1>CRichEditCtx.FindWordBreak<span class="h1kind">method</span></h1>
+<p class="lede">Finds the next word break before or after the specified character position or retrieves information about the character at that position.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION FindWordBreak (BYVAL fOperation AS DWORD, BYVAL dwStartPos AS DWORD) AS DWORD</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>fOperation</code></td><td></td><td>Specifies the find operation. This parameter can be one of the following values.<br><strong>WB_CLASSIFY</strong>. Returns the character class and word-break flags of the character at the specified position.<br><strong>WB_ISDELIMITER</strong>. Returns <strong>TRUE</strong> if the character at the specified position is a delimiter, or <strong>FALSE</strong> otherwise.<br><strong>WB_LEFT</strong>. Finds the nearest character before the specified position that begins a word.<br><strong>WB_LEFTBREAK</strong>. Finds the next word end before the specified position. This value is the same as WB_PREVBREAK.<br><strong>WB_MOVEWORDLEFT</strong>. Finds the next character that begins a word before the specified position. This value is used during CTRL+LEFT ARROW key processing. This value is the similar to WB_MOVEWORDPREV. See Remarks for more information.<br><strong>WB_MOVEWORDRIGHT</strong>. Finds the next character that begins a word after the specified position. This value is used during CTRL+right key processing. This value is similar to WB_MOVEWORDNEXT. See Remarks for more information.<br><strong>WB_RIGHT</strong>. Finds the next character that begins a word after the specified position.<br><strong>WB_RIGHTBREAK</strong>. Finds the next end-of-word delimiter after the specified position. This value is the same as WB_NEXTBREAK.</td></tr><tr><td><code>dwStartPos</code></td><td></td><td>Zero-based character starting position.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>The method returns a value based on the <em>fOperation</em> parameter.</p>
+<h2>Description</h2>
+<p>Finds the next word break before or after the specified character position or retrieves information about the character at that position.</p>
+<h2>Remarks</h2>
+<p>If <em>fOperation</em> is <strong>WB_LEFT</strong> and <strong>WB_RIGHT</strong>, the word-break procedure finds word breaks only after delimiters. This matches the functionality of an edit control. If <em>fOperation</em> is <strong>WB_MOVEWORDLEFT</strong> or <strong>WB_MOVEWORDRIGHT</strong>, the word-break procedure also compares character classes and word-break flags.</p>
+<p>For information about character classes and word-break flags, see <a href="https://learn.microsoft.com/en-us/windows/win32/controls/use-word-and-line-break-information" target="_blank" rel="noopener">Word and Line Breaks</a>.</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/CRichEditCtx.inc:2078</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/RichEdit/CRichEditCtx Class.md</span></li><li>Topic: <a href="../cricheditctx-class.html">CRichEditCtx Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

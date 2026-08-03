@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoEvents.EndOfRecordset — Help Center</title>
+<meta name="description" content="Called when there is an attempt to move to a row past the end of the **Recordset**.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadoevents/cadoevents-endofrecordset.html">
+<meta property="og:title" content="CAdoEvents.EndOfRecordset">
+<meta property="og:description" content="Called when there is an attempt to move to a row past the end of the **Recordset**.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadoevents/cadoevents-endofrecordset.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadoevents/cadoevents-endofrecordset.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadoevents-class.html">CAdoEvents Class</a></div>
+<h1>CAdoEvents.EndOfRecordset<span class="h1kind">method</span></h1>
+<p class="lede">Called when there is an attempt to move to a row past the end of the **Recordset**.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION EndOfRecordset (BYVAL fMoreData AS VARIANT_BOOL PTR, BYVAL adStatus AS EventStatusEnum PTR, BYVAL pRecordset AS Afx_ADORecordset PTR) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>fMoreData</code></td><td></td><td>A VARIANT_BOOL value that, if set to VARIANT_TRUE, indicates more rows have been added to the <strong>Recordset</strong>.</td></tr><tr><td><code>adStatus</code></td><td></td><td><em>EventStatusEnum</em>. When <strong>EndOfRecordset</strong> is called, this parameter is set to <em>adStatusOK</em> if the operation that caused the event was successful. It is set to <em>adStatusCantDeny</em> if this event cannot request cancellation of the operation that caused this event. Before <strong>EndOfRecordset</strong> returns, set this parameter to <em>adStatusUnwantedEvent</em> to prevent subsequent notifications.</td></tr><tr><td><code>pRecordset</code></td><td></td><td>A <strong>Recordset</strong> object. The <strong>Recordset</strong> for which this event occurred.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Called when there is an attempt to move to a row past the end of the <strong>Recordset</strong>.</p>
+<h2>Remarks</h2>
+<p>An <strong>EndOfRecordset</strong> event may occur if the <strong>MoveNext</strong> operation fails.</p>
+<p>This event handler is called when an attempt is made to move past the end of the <strong>Recordset</strong> object, perhaps as a result of calling <strong>MoveNext</strong>. However, while in this event, you could retrieve more records from a database and append them to the end of the <strong>Recordset</strong>. In that case, set <em>fMoreData</em> to VARIANT_TRUE, and return from <strong>EndOfRecordset</strong>. Then call <strong>MoveNext</strong> again to access the newly retrieved records.</p>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoEvents Class.md</span></li><li>Topic: <a href="../cadoevents-class.html">CAdoEvents Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

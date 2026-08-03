@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compiler Option: -nolib — Help Center</title>
+<meta name="description" content="Compiler Option: -nolib — 0 documented members. Using the FreeBASIC compiler reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/using-the-freebasic-compiler/command-line-options/compiler-option-nolib.html">
+<meta property="og:title" content="Compiler Option: -nolib">
+<meta property="og:description" content="Compiler Option: -nolib — 0 documented members. Using the FreeBASIC compiler reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/using-the-freebasic-compiler/command-line-options/compiler-option-nolib.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/using-the-freebasic-compiler/command-line-options/compiler-option-nolib.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Using the FreeBASIC compiler</div>
+<h1>Compiler Option: -nolib</h1>
+<h2>Documentation</h2>
+
+	Do not include specific library(s).<br>
+<br>
+<div>Syntax</div><div><code><br>
+<div class="indent"><div class="indent"><b>-nolib</b> &lt; <i>libname1</i> [, <i>libname2</i> [, ... ] ] &gt;<br>
+</div></div></code><br>
+</div><div>Parameters</div><div><br>
+<div class="indent"><code><i>libname1</i></code>, <code><i>libname2</i></code>, ...<br>
+<div class="indent">Name (without name's extension) of each library to exclude.<br>
+</div><code><i>fbrt0.o</i></code><br>
+<code><i>fbrt0pic.o</i></code><br>
+<div class="indent">Exclude the fb runtime library start-up code module<br>
+<br>
+</div></div></div><div>Description</div><div><br>
+<div class="indent">The <code>-nolib</code> compiler option allows excluding specific libraries when linking, no matter where it came from (default lib, #inclib, -l, objinfo...).<br>
+(more fine-grained control than <code><a href="compiler-option-nodeflibs.html">-nodeflibs</a></code>, and not only for default libraries)<br>
+<br>
+This allows selectively blacklisting libraries and can be used to:<br>
+<div class="indent"><b>-</b> remove unused dependencies when linking against shared libraries (when linking against static libraries via -l, the linker automatically skips unused libs, but not for shared libraries),<br>
+<b>-</b> override unwanted #inclibs (although arguably this is not the ideal solution for that, but just a last resort),<br>
+<b>-</b> disable only some default libs, instead of all as done by <code><a href="compiler-option-nodeflibs.html">-nodeflibs</a></code>:<br>
+<div class="indent">For example, this could be used to specifically omit <code>libtinfo</code>.<br>
+Using <code><a href="compiler-option-nodeflibs.html">-nodeflibs</a></code> would omit a lot more (including <code>fbrt0.o</code>) which would have to be re-added manually again.<br>
+</div><b>-</b> remove only the fb runtime library start-up code module allowing replacement with a custom start-up module without affect any other libraries named in the link<br>
+<br>
+</div></div></div><div>Version</div><div><br>
+<ul><li> Since fbc 1.20.0: <code>-nolib <i>fbrt0.o</i></code>, <code>-nolib <i>fbrt0pic.o</i></code><br>
+<li> Since fbc 1.10.0.<br>
+<br>
+</li></li></ul></div><div>See also</div><div><br>
+<ul><li> <a href="compiler-option-nodeflibs.html">Compiler Option: -nodeflibs</a><br>
+<li> <a href="../fbc-command-line.html">Using the Command Line</a><br>
+<br>
+</li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

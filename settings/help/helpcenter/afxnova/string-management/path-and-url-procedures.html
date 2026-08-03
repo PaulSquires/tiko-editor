@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Path and Url procedures — Help Center</title>
+<meta name="description" content="Path and Url procedures — 84 documented members. String Management reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/string-management/path-and-url-procedures.html">
+<meta property="og:title" content="Path and Url procedures">
+<meta property="og:description" content="Path and Url procedures — 84 documented members. String Management reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/string-management/path-and-url-procedures.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/string-management/path-and-url-procedures.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>String Management</div>
+<h1>Path and Url procedures</h1>
+<h2>Members (84)</h2>
+<div class="memberlist"><a href="procedures/afxisvalidurl.html"><span class="m-n">AfxIsValidUrl</span><span class="m-d">Determines if a specified string is a valid URL.</span></a><a href="procedures/afxpathaddbackslash.html"><span class="m-n">AfxPathAddBackSlash</span><span class="m-d">Adds a backslash to the end of a string to create the correct syntax for a path. If the source path already has a trailing backslash, no backslash will be added.</span></a><a href="procedures/afxpathaddextension.html"><span class="m-n">AfxPathAddExtension</span><span class="m-d">Adds a file name extension to a path string.</span></a><a href="procedures/afxpathalloccanonicalize.html"><span class="m-n">AfxPathAllocCanonicalize</span><span class="m-d">Converts a path string into a canonical form.</span></a><a href="procedures/afxpathalloccombine.html"><span class="m-n">AfxPathAllocCombine</span><span class="m-d">Converts a path string into a canonical form.</span></a><a href="procedures/afxpathappend.html"><span class="m-n">AfxPathAppend</span><span class="m-d">Appends one path to the end of another.</span></a><a href="procedures/afxpathbuildroot.html"><span class="m-n">AfxPathBuildRoot</span><span class="m-d">Creates a root path from a given drive number.</span></a><a href="procedures/afxpathcanonicalize.html"><span class="m-n">AfxPathCanonicalize</span><span class="m-d">Removes elements of a file path according to special strings inserted into that path.</span></a><a href="procedures/afxpathcombine.html"><span class="m-n">AfxPathCombine</span><span class="m-d">Concatenates two strings that represent properly formed paths into one path; also concatenates any relative path elements.</span></a><a href="procedures/afxpathcommonprefix.html"><span class="m-n">AfxPathCommonPrefix</span><span class="m-d">Compares two paths to determine if they share a common prefix. A prefix is one of these types: &quot;C:\\&quot;, &quot;.&quot;, &quot;..&quot;, &quot;..\\&quot;.</span></a><a href="procedures/afxpathcompactpath.html"><span class="m-n">AfxPathCompactPath</span><span class="m-d">Truncates a file path to fit within a given pixel width by replacing path components with ellipses.</span></a><a href="procedures/afxpathcompactpathex.html"><span class="m-n">AfxPathCompactPathEx</span><span class="m-d">Truncates a path to fit within a certain number of characters by replacing path components with ellipses.</span></a><a href="procedures/afxpathcreatefromurl.html"><span class="m-n">AfxPathCreateFromUrl</span><span class="m-d">Converts a file URL to a Microsoft MS-DOS path.</span></a><a href="procedures/afxpathfileexists.html"><span class="m-n">AfxPathFileExists</span><span class="m-d">Determines whether a path to a file system object such as a file or directory is valid.</span></a><a href="procedures/afxpathfindextension.html"><span class="m-n">AfxPathFindExtension</span><span class="m-d">Searches a path for an extension.</span></a><a href="procedures/afxpathfindfilename.html"><span class="m-n">AfxPathFindFileName</span><span class="m-d">Searches a path for a file name.</span></a><a href="procedures/afxpathfindnextcomponent.html"><span class="m-n">AfxPathFindNextComponent</span><span class="m-d">Parses a path and returns the portion of that path that follows the first backslash.</span></a><a href="procedures/afxpathfindonpath.html"><span class="m-n">AfxPathFindOnPath</span><span class="m-d">Searches for a file.</span></a><a href="procedures/afxpathfindsuffixarray.html"><span class="m-n">AfxPathFindSuffixArray</span><span class="m-d">Determines whether a given file name has one of a list of suffixes.</span></a><a href="procedures/afxpathgetargs.html"><span class="m-n">AfxPathGetArgs</span><span class="m-d">Finds the command line arguments within a given path.</span></a><a href="procedures/afxpathgetchartype.html"><span class="m-n">AfxPathGetCharType</span><span class="m-d">Determines the type of character in relation to a path.</span></a><a href="procedures/afxpathgetdrivenumber.html"><span class="m-n">AfxPathGetDriveNumber</span><span class="m-d">Searches a path for a drive letter within the range of &#x27;A&#x27; to &#x27;Z&#x27; and returns the corresponding drive number.</span></a><a href="procedures/afxpathiscontenttype.html"><span class="m-n">AfxPathIsContentType</span><span class="m-d">Determines if a file&#x27;s registered content type matches the specified content type.</span></a><a href="procedures/afxpathisdirectory.html"><span class="m-n">AfxPathIsDirectory</span><span class="m-d">Verifies that a path is a valid directory.</span></a><a href="procedures/afxpathisdirectoryempty.html"><span class="m-n">AfxPathIsDirectoryEmpty</span><span class="m-d">Determines whether a specified path is an empty directory.</span></a><a href="procedures/afxpathisfilespec.html"><span class="m-n">AfxPathIsFileSpec</span><span class="m-d">Searches a path for any path-delimiting characters (for example, &#x27;:&#x27; or &#x27;\&#x27; ). If there are no path-delimiting characters present, the path is considered to be a File Spec path.</span></a><a href="procedures/afxpathishtmlfile.html"><span class="m-n">AfxPathIsHTMLFile</span><span class="m-d">Determines if a file is an HTML file. The determination is made based on the content type that is registered for the file&#x27;s extension.</span></a><a href="procedures/afxpathislfnfilespec.html"><span class="m-n">AfxPathIsLFNFileSpec</span><span class="m-d">Determines whether a file name is in long format.</span></a><a href="procedures/afxpathisnetworkpath.html"><span class="m-n">AfxPathIsNetworkPath</span><span class="m-d">Determines whether a path string represents a network resource.</span></a><a href="procedures/afxpathisprefix.html"><span class="m-n">AfxPathIsPrefix</span><span class="m-d">Searches a path to determine if it contains a valid prefix of the type passed by wszPrefix. A prefix is one of these types: &quot;C:\\&quot;, &quot;.&quot;, &quot;..&quot;, &quot;..\\&quot;.</span></a><a href="procedures/afxpathisrelative.html"><span class="m-n">AfxPathIsRelative</span><span class="m-d">Searches a path and determines if it is relative.</span></a><a href="procedures/afxpathisroot.html"><span class="m-n">AfxPathIsRoot</span><span class="m-d">Parses a path to determine if it is a directory root.</span></a><a href="procedures/afxpathissameroot.html"><span class="m-n">AfxPathIsSameRoot</span><span class="m-d">Compares two paths to determine if they have a common root component.</span></a><a href="procedures/afxpathissystemfolder.html"><span class="m-n">AfxPathIsSystemFolder</span><span class="m-d">Determines if an existing folder contains the attributes that make it a system folder. Alternately, this function indicates if certain attributes qualify a folder to be a system folder.</span></a><a href="procedures/afxpathisunc.html"><span class="m-n">AfxPathIsUNC</span><span class="m-d">Determines if the string is a valid Universal Naming Convention (UNC) for a server and share path.</span></a><a href="procedures/afxpathisuncserver.html"><span class="m-n">AfxPathIsUNCServer</span><span class="m-d">Determines if a string is a valid Universal Naming Convention (UNC) for a server path only.</span></a><a href="procedures/afxpathisuncservershare.html"><span class="m-n">AfxPathIsUNCServerShare</span><span class="m-d">Determines if a string is a valid Universal Naming Convention (UNC) share path, \\\\*server*\\*share*.</span></a><a href="procedures/afxpathisurl.html"><span class="m-n">AfxPathIsURL</span><span class="m-d">Tests a given string to determine if it conforms to a valid URL format.</span></a><a href="procedures/afxpathmakepretty.html"><span class="m-n">AfxPathMakePretty</span><span class="m-d">Converts a path to all lowercase characters to give the path a consistent appearance.</span></a><a href="procedures/afxpathmakesystemfolder.html"><span class="m-n">AfxPathMakeSystemFolder</span><span class="m-d">Gives an existing folder the proper attributes to become a system folder.</span></a><a href="procedures/afxpathmatchspec.html"><span class="m-n">AfxPathMatchSpec</span><span class="m-d">Searches a string using a Microsoft MS-DOS wild card match type.</span></a><a href="procedures/afxpathmatchspecex.html"><span class="m-n">AfxPathMatchSpecEx</span><span class="m-d">Searches a path to determine whether it contains a file of a specified file type extension.</span></a><a href="procedures/afxpathparseiconlocation.html"><span class="m-n">AfxPathParseIconLocation</span><span class="m-d">Parses a file location string that contains a file location and icon index, and returns separate values.</span></a><a href="procedures/afxpathquotespaces.html"><span class="m-n">AfxPathQuoteSpaces</span><span class="m-d">Searches a path for spaces. If spaces are found, the entire path is enclosed in quotation marks.</span></a><a href="procedures/afxpathrelativepathto.html"><span class="m-n">AfxPathRelativePathTo</span><span class="m-d">Creates a relative path from one file or folder to another.</span></a><a href="procedures/afxpathremoveargs.html"><span class="m-n">AfxPathRemoveArgs</span><span class="m-d">Removes any arguments from a given path.</span></a><a href="procedures/afxpathremovebackslash.html"><span class="m-n">AfxPathRemoveBackslash</span><span class="m-d">Removes the trailing backslash from a given path.</span></a><a href="procedures/afxpathremovebackslashex.html"><span class="m-n">AfxPathRemoveBackslashEx</span><span class="m-d">Removes the trailing backslash from a given path.</span></a><a href="procedures/afxpathremoveblanks.html"><span class="m-n">AfxPathRemoveBlanks</span><span class="m-d">Removes all leading and trailing spaces from a string.</span></a><a href="procedures/afxpathremoveextension.html"><span class="m-n">AfxPathRemoveExtension</span><span class="m-d">Removes the file name extension from a path, if one is present.</span></a><a href="procedures/afxpathremovefilespec.html"><span class="m-n">AfxPathRemoveFileSpec</span><span class="m-d">Removes the trailing file name and backslash from a path, if they are present.</span></a><a href="procedures/afxpathrenameextension.html"><span class="m-n">AfxPathRenameExtension</span><span class="m-d">Replaces the extension of a file name with a new extension. If the file name does not contain an extension, the extension will be attached to the end of the string.</span></a><a href="procedures/afxpathsearchandqualify.html"><span class="m-n">AfxPathSearchAndQualify</span><span class="m-d">Determines if a given path is correctly formatted and fully qualified.</span></a><a href="procedures/afxpathsetdlgitempath.html"><span class="m-n">AfxPathSetDlgItemPath</span><span class="m-d">Sets the text of a child control in a window or dialog box, using **AfxCompactPath** to ensure the path fits in the control.</span></a><a href="procedures/afxpathskiproot.html"><span class="m-n">AfxPathSkipRoot</span><span class="m-d">Parses a path, ignoring the drive letter or Universal Naming Convention (UNC) server/share path elements.</span></a><a href="procedures/afxpathstrippath.html"><span class="m-n">AfxPathStripPath</span><span class="m-d">Removes the path portion of a fully qualified path and file.</span></a><a href="procedures/afxpathstriptoroot.html"><span class="m-n">AfxPathStripToRoot</span><span class="m-d">Removes all parts of the path except for the root information.</span></a><a href="procedures/afxpathundecorate.html"><span class="m-n">AfxPathUndecorate</span><span class="m-d">Removes the decoration from a path string.</span></a><a href="procedures/afxpathunexpandenvstrings.html"><span class="m-n">AfxPathUnExpandEnvStrings</span><span class="m-d">Replaces certain folder names in a fully-qualified path with their associated environment string.</span></a><a href="procedures/afxpathunmakesystemfolder.html"><span class="m-n">AfxPathUnmakeSystemFolder</span><span class="m-d">Removes the attributes from a folder that make it a system folder. This folder must actually exist in the file system.</span></a><a href="procedures/afxpathunquotespaces.html"><span class="m-n">AfxPathUnquoteSpaces</span><span class="m-d">Removes quotes from the beginning and end of a path.</span></a><a href="procedures/afxurlapplyscheme.html"><span class="m-n">AfxUrlApplyScheme</span><span class="m-d">Determines a scheme for a specified URL string, and returns a string with an appropriate prefix.</span></a><a href="procedures/afxurlcanonicalize.html"><span class="m-n">AfxUrlCanonicalize</span><span class="m-d">Converts a URL string into canonical form.</span></a><a href="procedures/afxurlcombine.html"><span class="m-n">AfxUrlCombine</span><span class="m-d">When provided with a relative URL and its base, returns a URL in canonical form.</span></a><a href="procedures/afxurlcompare.html"><span class="m-n">AfxUrlCompare</span><span class="m-d">Makes a case-sensitive comparison of two URL strings.</span></a><a href="procedures/afxurlcreatefrompath.html"><span class="m-n">AfxUrlCreateFromPath</span><span class="m-d">Converts a Microsoft MS-DOS path to a canonicalized URL.</span></a><a href="procedures/afxurlescape.html"><span class="m-n">AfxUrlEscape</span><span class="m-d">Converts characters in a URL that might be altered during transport across the Internet (&quot;unsafe&quot; characters) into their corresponding escape sequences.</span></a><a href="procedures/afxurlescapespaces.html"><span class="m-n">AfxUrlEscapeSpaces</span><span class="m-d">Converts space characters into their corresponding escape sequence.</span></a><a href="procedures/afxurlfixup.html"><span class="m-n">AfxUrlFixup</span><span class="m-d">Attempts to correct a URL whose protocol identifier is incorrect. For example, htttp will be changed to http.</span></a><a href="procedures/afxurlgethostname.html"><span class="m-n">AfxUrlGetHostName</span><span class="m-d">Accepts a URL string and returns the host name.</span></a><a href="procedures/afxurlgetlocation.html"><span class="m-n">AfxUrlGetLocation</span><span class="m-d">Retrieves the location from a URL.</span></a><a href="procedures/afxurlgetpart.html"><span class="m-n">AfxUrlGetPart</span><span class="m-d">Accepts a URL string and returns a specified part of that URL.</span></a><a href="procedures/afxurlgetpassword.html"><span class="m-n">AfxUrlGetPassword</span><span class="m-d">Accepts a URL string and returns the password.</span></a><a href="procedures/afxurlgetport.html"><span class="m-n">AfxUrlGetPort</span><span class="m-d">Accepts a URL string and returns the port number.</span></a><a href="procedures/afxurlgetquery.html"><span class="m-n">AfxUrlGetQuery</span><span class="m-d">Accepts a URL string and returns the query portion.</span></a><a href="procedures/afxurlgetscheme.html"><span class="m-n">AfxUrlGetScheme</span><span class="m-d"></span></a><a href="procedures/afxurlgetusername.html"><span class="m-n">AfxUrlGetUserName</span><span class="m-d">Accepts a URL string and returns the user name.</span></a><a href="procedures/afxurlhash.html"><span class="m-n">AfxUrlHash</span><span class="m-d">Hashes a URL string.</span></a><a href="procedures/afxurlis.html"><span class="m-n">AfxUrlIs</span><span class="m-d">Tests whether or not a URL is a specified type.</span></a><a href="procedures/afxurlisfileurl.html"><span class="m-n">AfxUrlIsFileUrl</span><span class="m-d">Tests a URL to determine if it is a file URL.</span></a><a href="procedures/afxurlisnohistory.html"><span class="m-n">AfxUrlIsNoHistory</span><span class="m-d">Returns whether a URL is a URL that browsers typically do not include in navigation history.</span></a><a href="procedures/afxurlisopaque.html"><span class="m-n">AfxUrlIsOpaque</span><span class="m-d">Returns whether a URL is opaque.</span></a><a href="procedures/afxurlunescape.html"><span class="m-n">AfxUrlUnescape</span><span class="m-d">Converts escape sequences back into ordinary characters.</span></a><a href="procedures/afxurlunescapeinplace.html"><span class="m-n">AfxUrlUnescapeInPlace</span><span class="m-d">Converts escape sequences back into ordinary characters and overwrites the original string.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="path-and-url-procedures">Path and Url procedures</h2>
+<p>Assorted path and url procedures.</p>
+<p><strong>Include file</strong>: AfxPath.inc</p>
+<hr>
+<h3 id="path-procedures">Path procedures</h3>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="procedures/afxpathaddbackslash.html">AfxPathAddBackSlash</a></td><td>Adds a backslash to the end of a string to create the correct syntax for a path. If the source path already has a trailing backslash, no backslash will be added.</td></tr><tr><td><a href="procedures/afxpathaddextension.html">AfxPathAddExtension</a></td><td>Adds a file name extension to a path string.</td></tr><tr><td><a href="procedures/afxpathalloccanonicalize.html">AfxPathAllocCanonicalize</a></td><td>Converts a path string into a canonical form.</td></tr><tr><td><a href="procedures/afxpathalloccombine.html">AfxPathAllocCombine</a></td><td>Converts a path string into a canonical form.</td></tr><tr><td><a href="procedures/afxpathappend.html">AfxPathAppend</a></td><td>Appends one path to the end of another.</td></tr><tr><td><a href="procedures/afxpathbuildroot.html">AfxPathBuildRoot</a></td><td>Creates a root path from a given drive number.</td></tr><tr><td><a href="procedures/afxpathcanonicalize.html">AfxPathCanonicalize</a></td><td>Removes elements of a file path according to special strings inserted into that path.</td></tr><tr><td><a href="procedures/afxpathcombine.html">AfxPathCombine</a></td><td>Concatenates two strings that represent properly formed paths into one path; also concatenates any relative path elements.</td></tr><tr><td><a href="procedures/afxpathcommonprefix.html">AfxPathCommonPrefix</a></td><td>Compares two paths to determine if they share a common prefix. A prefix is one of these types: "C:\\", ".", "..", "..\\".</td></tr><tr><td><a href="procedures/afxpathcompactpath.html">AfxPathCompactPath</a></td><td>Truncates a file path to fit within a given pixel width by replacing path components with ellipses.</td></tr><tr><td><a href="procedures/afxpathcompactpathex.html">AfxPathCompactPathEx</a></td><td>Truncates a path to fit within a certain number of characters by replacing path components with ellipses.</td></tr><tr><td><a href="procedures/afxpathcreatefromurl.html">AfxPathCreateFromUrl</a></td><td>Converts a file URL to a Microsoft MS-DOS path.</td></tr><tr><td><a href="procedures/afxpathfileexists.html">AfxPathFileExists</a></td><td>Determines whether a path to a file system object such as a file or directory is valid.</td></tr><tr><td><a href="procedures/afxpathfindextension.html">AfxPathFindExtension</a></td><td>Searches a path for an extension.</td></tr><tr><td><a href="procedures/afxpathfindfilename.html">AfxPathFindFileName</a></td><td>Searches a path for a file name.</td></tr><tr><td><a href="procedures/afxpathfindnextcomponent.html">AfxPathFindNextComponent</a></td><td>Parses a path and returns the portion of that path that follows the first backslash.</td></tr><tr><td><a href="procedures/afxpathfindonpath.html">AfxPathFindOnPath</a></td><td>Searches for a file.</td></tr><tr><td><a href="procedures/afxpathfindsuffixarray.html">AfxPathFindSuffixArray</a></td><td>Determines whether a given file name has one of a list of suffixes.</td></tr><tr><td><a href="procedures/afxpathgetargs.html">AfxPathGetArgs</a></td><td>Finds the command line arguments within a given path.</td></tr><tr><td><a href="procedures/afxpathgetchartype.html">AfxPathGetCharType</a></td><td>Determines the type of character in relation to a path.</td></tr><tr><td><a href="procedures/afxpathgetdrivenumber.html">AfxPathGetDriveNumber</a></td><td>Searches a path for a drive letter within the range of 'A' to 'Z' and returns the corresponding drive number.</td></tr><tr><td><a href="procedures/afxpathiscontenttype.html">AfxPathIsContentType</a></td><td>Determines if a file's registered content type matches the specified content type.</td></tr><tr><td><a href="procedures/afxpathisdirectory.html">AfxPathIsDirectory</a></td><td>Verifies that a path is a valid directory.</td></tr><tr><td><a href="procedures/afxpathisdirectoryempty.html">AfxPathIsDirectoryEmpty</a></td><td>Determines whether a specified path is an empty directory.</td></tr><tr><td><a href="procedures/afxpathisfilespec.html">AfxPathIsFileSpec</a></td><td>Searches a path for any path-delimiting characters (for example, ':' or '\' ). If there are no path-delimiting characters present, the path is considered to be a File Spec path.</td></tr><tr><td><a href="procedures/afxpathishtmlfile.html">AfxPathIsHTMLFile</a></td><td>Determines if a file is an HTML file. The determination is made based on the content type that is registered for the file's extension.</td></tr><tr><td><a href="procedures/afxpathislfnfilespec.html">AfxPathIsLFNFileSpec</a></td><td>Determines whether a file name is in long format.</td></tr><tr><td><a href="procedures/afxpathisnetworkpath.html">AfxPathIsNetworkPath</a></td><td>Determines whether a path string represents a network resource.</td></tr><tr><td><a href="procedures/afxpathisprefix.html">AfxPathIsPrefix</a></td><td>Searches a path to determine if it contains a valid prefix of the type passed by wszPrefix. A prefix is one of these types: "C:\\", ".", "..", "..\\".</td></tr><tr><td><a href="procedures/afxpathisrelative.html">AfxPathIsRelative</a></td><td>Searches a path and determines if it is relative.</td></tr><tr><td><a href="procedures/afxpathisroot.html">AfxPathIsRoot</a></td><td>Parses a path to determine if it is a directory root.</td></tr><tr><td><a href="procedures/afxpathissameroot.html">AfxPathIsSameRoot</a></td><td>Compares two paths to determine if they have a common root component.</td></tr><tr><td><a href="procedures/afxpathissystemfolder.html">AfxPathIsSystemFolder</a></td><td>Determines if an existing folder contains the attributes that make it a system folder. Alternately, this function indicates if certain attributes qualify a folder to be a system folder.</td></tr><tr><td><a href="procedures/afxpathisunc.html">AfxPathIsUNC</a></td><td>Determines if the string is a valid Universal Naming Convention (UNC) for a server and share path.</td></tr><tr><td><a href="procedures/afxpathisuncserver.html">AfxPathIsUNCServer</a></td><td>Determines if a string is a valid Universal Naming Convention (UNC) for a server path only.</td></tr><tr><td><a href="procedures/afxpathisuncservershare.html">AfxPathIsUNCServerShare</a></td><td>Determines if a string is a valid Universal Naming Convention (UNC) share path, \\\\<em>server</em>\\<em>share</em>.</td></tr><tr><td><a href="procedures/afxpathisurl.html">AfxPathIsURL</a></td><td>Tests a given string to determine if it conforms to a valid URL format.</td></tr><tr><td><a href="procedures/afxpathmakepretty.html">AfxPathMakePretty</a></td><td>Converts a path to all lowercase characters to give the path a consistent appearance.</td></tr><tr><td><a href="procedures/afxpathmakesystemfolder.html">AfxPathMakeSystemFolder</a></td><td>Gives an existing folder the proper attributes to become a system folder.</td></tr><tr><td><a href="procedures/afxpathmatchspec.html">AfxPathMatchSpec</a></td><td>Searches a string using a Microsoft MS-DOS wild card match type.</td></tr><tr><td><a href="procedures/afxpathmatchspecex.html">AfxPathMatchSpecEx</a></td><td>Searches a path to determine whether it contains a file of a specified file type extension.</td></tr><tr><td><a href="procedures/afxpathparseiconlocation.html">AfxPathParseIconLocation</a></td><td>Parses a file location string that contains a file location and icon index, and returns separate values.</td></tr><tr><td><a href="procedures/afxpathquotespaces.html">AfxPathQuoteSpaces</a></td><td>Searches a path for spaces. If spaces are found, the entire path is enclosed in quotation marks.</td></tr><tr><td><a href="procedures/afxpathrelativepathto.html">AfxPathRelativePathTo</a></td><td>Creates a relative path from one file or folder to another.</td></tr><tr><td><a href="procedures/afxpathremoveargs.html">AfxPathRemoveArgs</a></td><td>Removes any arguments from a given path.</td></tr><tr><td><a href="procedures/afxpathremovebackslash.html">AfxPathRemoveBackslash</a></td><td>Removes the trailing backslash from a given path.</td></tr><tr><td><a href="procedures/afxpathremovebackslashex.html">AfxPathRemoveBackslashEx</a></td><td>Removes the trailing backslash from a given path.</td></tr><tr><td><a href="procedures/afxpathremoveblanks.html">AfxPathRemoveBlanks</a></td><td>Removes all leading and trailing spaces from a string.</td></tr><tr><td><a href="procedures/afxpathremoveextension.html">AfxPathRemoveExtension</a></td><td>Removes the file name extension from a path, if one is present.</td></tr><tr><td><a href="procedures/afxpathremovefilespec.html">AfxPathRemoveFileSpec</a></td><td>Removes the trailing file name and backslash from a path, if they are present.</td></tr><tr><td><a href="procedures/afxpathrenameextension.html">AfxPathRenameExtension</a></td><td>Replaces the extension of a file name with a new extension. If the file name does not contain an extension, the extension will be attached to the end of the string.</td></tr><tr><td><a href="procedures/afxpathsearchandqualify.html">AfxPathSearchAndQualify</a></td><td>Determines if a given path is correctly formatted and fully qualified.</td></tr><tr><td><a href="procedures/afxpathsetdlgitempath.html">AfxPathSetDlgItemPath</a></td><td>Sets the text of a child control in a window or dialog box, using <strong>AfxCompactPath</strong> to ensure the path fits in the control.</td></tr><tr><td><a href="procedures/afxpathskiproot.html">AfxPathSkipRoot</a></td><td>Parses a path, ignoring the drive letter or Universal Naming Convention (UNC) server/share path elements.</td></tr><tr><td><a href="procedures/afxpathstrippath.html">AfxPathStripPath</a></td><td>Removes the path portion of a fully qualified path and file.</td></tr><tr><td><a href="procedures/afxpathstriptoroot.html">AfxPathStripToRoot</a></td><td>Removes all parts of the path except for the root information.</td></tr><tr><td><a href="procedures/afxpathundecorate.html">AfxPathUndecorate</a></td><td>Removes the decoration from a path string.</td></tr><tr><td><a href="procedures/afxpathunexpandenvstrings.html">AfxPathUnExpandEnvStrings</a></td><td>Replaces certain folder names in a fully-qualified path with their associated environment string.</td></tr><tr><td><a href="procedures/afxpathunmakesystemfolder.html">AfxPathUnmakeSystemFolder</a></td><td>Removes the attributes from a folder that make it a system folder. This folder must actually exist in the file system.</td></tr><tr><td><a href="procedures/afxpathunquotespaces.html">AfxPathUnquoteSpaces</a></td><td>Removes quotes from the beginning and end of a path.</td></tr></tbody></table></div>
+<hr>
+<h3 id="url-procedures">Url procedures</h3>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="procedures/afxisvalidurl.html">AfxIsValidUrl</a></td><td>Determines if a specified string is a valid URL.</td></tr><tr><td><a href="procedures/afxurlapplyscheme.html">AfxUrlApplyScheme</a></td><td>Determines a scheme for a specified URL string, and returns a string with an appropriate prefix.</td></tr><tr><td><a href="procedures/afxurlcanonicalize.html">AfxUrlCanonicalize</a></td><td>Converts a URL string into canonical form.</td></tr><tr><td><a href="procedures/afxurlcombine.html">AfxUrlCombine</a></td><td>When provided with a relative URL and its base, returns a URL in canonical form.</td></tr><tr><td><a href="procedures/afxurlcompare.html">AfxUrlCompare</a></td><td>Makes a case-sensitive comparison of two URL strings.</td></tr><tr><td><a href="procedures/afxurlcreatefrompath.html">AfxUrlCreateFromPath</a></td><td>Converts a Microsoft MS-DOS path to a canonicalized URL.</td></tr><tr><td><a href="procedures/afxurlescape.html">AfxUrlEscape</a></td><td>Converts characters in a URL that might be altered during transport across the Internet ("unsafe" characters) into their corresponding escape sequences.</td></tr><tr><td><a href="procedures/afxurlescapespaces.html">AfxUrlEscapeSpaces</a></td><td>Converts space characters into their corresponding escape sequence.</td></tr><tr><td><a href="procedures/afxurlfixup.html">AfxUrlFixup</a></td><td>Attempts to correct a URL whose protocol identifier is incorrect. For example, htttp will be changed to http.</td></tr><tr><td><a href="procedures/afxurlgethostname.html">AfxUrlGetHostName</a></td><td>Accepts a URL string and returns the host name.</td></tr><tr><td><a href="procedures/afxurlgetlocation.html">AfxUrlGetLocation</a></td><td>Retrieves the location from a URL.</td></tr><tr><td><a href="#afxurlgetoart">AfxUrlGetPart</a></td><td>Accepts a URL string and returns a specified part of that URL.</td></tr><tr><td><a href="procedures/afxurlgetpassword.html">AfxUrlGetPassword</a></td><td>Accepts a URL string and returns the password.</td></tr><tr><td><a href="procedures/afxurlgetport.html">AfxUrlGetPort</a></td><td>Accepts a URL string and returns the port number.</td></tr><tr><td><a href="procedures/afxurlgetquery.html">AfxUrlGetQuery</a></td><td>Accepts a URL string and returns the query portion.</td></tr><tr><td><a href="procedures/afxurlgetscheme.html">AfxUrlGetScheme</a></td><td>Accepts a URL string and returns the scheme.</td></tr><tr><td><a href="procedures/afxurlgetusername.html">AfxUrlGetUserName</a></td><td>Accepts a URL string and returns the user name.</td></tr><tr><td><a href="procedures/afxurlhash.html">AfxUrlHash</a></td><td>Hashes a URL string.</td></tr><tr><td><a href="procedures/afxurlis.html">AfxUrlIs</a></td><td>Tests whether or not a URL is a specified type.</td></tr><tr><td><a href="procedures/afxurlisfileurl.html">AfxUrlIsFileUrl</a></td><td>Tests a URL to determine if it is a file URL.</td></tr><tr><td><a href="procedures/afxurlisnohistory.html">AfxUrlIsNoHistory</a></td><td>Returns whether a URL is a URL that browsers typically do not include in navigation history.</td></tr><tr><td><a href="#afxurlissopaque">AfxUrlIsOpaque</a></td><td>Returns whether a URL is opaque.</td></tr><tr><td><a href="procedures/afxurlunescape.html">AfxUrlUnescape</a></td><td>Converts escape sequences back into ordinary characters.</td></tr><tr><td><a href="procedures/afxurlunescapeinplace.html">AfxUrlUnescapeInPlace</a></td><td>Converts escape sequences back into ordinary characters and overwrites the original string.</td></tr></tbody></table></div>
+<hr>
+<h3 id="afxpathaddbackslash">AfxPathAddBackSlash</h3>
+<p>Adds a backslash to the end of a string to create the correct syntax for a path. If the source path already has a trailing backslash, no backslash will be added.</p>
+<pre class="code"><code>FUNCTION AfxPathAddBackSlash (BYREF wszPath AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that represents a path.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The changed path.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dws AS DWSTRING = AfxPathAddBackSlash("C:\dir_name\dir_name\file_name")</code></pre>
+<hr>
+<h3 id="afxpathaddextension">AfxPathAddExtension</h3>
+<p>Adds a file name extension to a path string.</p>
+<pre class="code"><code>FUNCTION AfxPathAddExtension (BYREF wszPath AS CONST WSTRING, BYVAL pwszExt AS WSTRING PTR = NULL) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that represents a path.</td></tr><tr><td><em>pwszExt</em></td><td>A string that contains the file name extension.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The changed path.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If there is already a file name extension present, no extension will be added. If the <em>wszPath</em> is an empty string, the result will be the file name extension only. If <em>wszExtension</em> is an empty string, an ".exe" extension will be added.</p>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM dws AS DWSTRING = AfxPathAddExtension("file") ' output: file.exe
+DIM dws AS DWSTRING = AfxPathAddExtension("file.doc") ' output: file.doc
+DIM dws AS DWSTRING = AfxPathAddExtension("file", ".txt") ' output: file.txt
+DIM dws AS DWSTRING = AfxPathAddExtension("", ".txt") ' output: .txt</code></pre>
+<hr>
+<h4 id="afxpathalloccanonicalize">AfxPathAllocCanonicalize</h4>
+<p>Converts a path string into a canonical form. This function differs from <strong>AfxPathCanonicalize</strong> in that it accepts paths with "\\", "\\?" and "\\?\\UNC" prefixes, as well as one or more flags.</p>
+<pre class="code"><code>FUNCTION AfxPathAllocCanonicalize (BYVAL pwszPathIn AS PCWSTR, BYVAL dwFlags AS ULONG) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszPathIn</em></td><td>A string that represents a path.</td></tr><tr><td><em>dwFlags</em></td><td>One or more of the flags listed below.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><em>PATHCCH_NONE</em></td><td>Do not allow for the construction of \\\?\\ paths (ie, long paths) longer than MAX_PATH.</td></tr><tr><td><em>PATHCCH_ALLOW_LONG_PATHS</em></td><td>Allow the building of \\\?\\ paths longer than MAX_PATH.</td></tr><tr><td><em>PATHCCH_FORCE_ENABLE_LONG_NAME_PROCESS</em></td><td>Forces the API to treat the caller as long path enabled, independent of the process's long name enabled state. This option can be used only when <em>PATHCCH_ALLOW_LONG_PATHS</em> is specified, and cannot be used with <em>PATHCCH_FORCE_DISABLE_LONG_NAME_PROCESS</em>. Note: This value is available starting in Windows 10, version 1703.</td></tr><tr><td><em>PATHCCH_FORCE_DISABLE_LONG_NAME_PROCESS</em></td><td>Forces the API to treat the caller as long path disabled, independent of the process's long name enabled state. This option can be used only when <em>PATHCCH_ALLOW_LONG_PATHS</em> is specified, and cannot be used with <em>PATHCCH_FORCE_ENABLE_LONG_NAME_PROCESS</em>. Note: This value is available starting in Windows 10, version 1703.</td></tr><tr><td><em>PATHCCH_DO_NOT_NORMALIZE_SEGMENTS</em></td><td>Disables the normalization of path segments that includes removing trailing dots and spaces. This enables access to paths that win32 path normalization will block. Note: This value is available starting in Windows 10, version 1703.</td></tr><tr><td><em>PATHCCH_ENSURE_IS_EXTENDED_LENGTH_PATH</em></td><td>Converts the input path into the extended length DOS device path form (with the \\\?\\ prefix) if not already in that form. This enables access to paths that are otherwise not addressable due to Win32 normalization rules (that can strip trailing dots and spaces) and path length limitations. This option implies the same behavior of <em>PATHCCH_DO_NOT_NORMALIZE_SEGMENTS</em>. Note: This value is available starting in Windows 10, version 1703.</td></tr><tr><td><em>PATHCCH_ENSURE_TRAILING_SLASH</em></td><td>When combining or normalizing a path, ensure there is a trailing backslash. Note This value is available starting in Windows 10, version 1703.</td></tr><tr><td><em>PATHCCH_CANONICALIZE_SLASHES</em></td><td>Convert forward slashes to back slashes and collapse multiple slashes. Note: This value is available starting in Windows 11 (SDK version 10.0.22000.194).</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>AfxPathAllocCanonicalize(ExePath, PATHCCH_ENSURE_TRAILING_SLASH)</code></pre>
+<hr>
+<h4 id="afxpathalloccombine">AfxPathAllocCombine</h4>
+<p>Converts a path string into a canonical form. Concatenates two path fragments into a single path. This function also canonicalizes any relative path elements, replacing path elements such as "." and "..". This function differs from PathCombine in that it accepts paths with "\\", "\\?" and "\\?\\UNC" prefixes.</p>
+<pre class="code"><code>FUNCTION AfxPathAllocCombine (BYVAL pwszPathIn AS PCWSTR, BYVAL pwszMore AS PCWSTR, _
+   BYVAL dwFlags AS ULONG) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszPathIn</em></td><td>A string that represents a path.</td></tr><tr><td><em>pwszMore</em></td><td>A pointer to the second path string. If this path begins with a single backslash, it is combined with only the root of the path pointed to by pszPathIn. If this path is fully qualified, it is copied directly to the output buffer without being combined with the other path.</td></tr><tr><td><em>dwFlags</em></td><td>One or more of the flags listed below.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><em>PATHCCH_NONE</em></td><td>Do not allow for the construction of \\\?\\ paths (ie, long paths) longer than MAX_PATH.</td></tr><tr><td><em>PATHCCH_ALLOW_LONG_PATHS</em></td><td>Allow the building of \\\?\\ paths longer than MAX_PATH.</td></tr><tr><td><em>PATHCCH_FORCE_ENABLE_LONG_NAME_PROCESS</em></td><td>Forces the API to treat the caller as long path enabled, independent of the process's long name enabled state. This option can be used only when <em>PATHCCH_ALLOW_LONG_PATHS</em> is specified, and cannot be used with <em>PATHCCH_FORCE_DISABLE_LONG_NAME_PROCESS</em>. Note: This value is available starting in Windows 10, version 1703.</td></tr><tr><td><em>PATHCCH_FORCE_DISABLE_LONG_NAME_PROCESS</em></td><td>Forces the API to treat the caller as long path disabled, independent of the process's long name enabled state. This option can be used only when <em>PATHCCH_ALLOW_LONG_PATHS</em> is specified, and cannot be used with <em>PATHCCH_FORCE_ENABLE_LONG_NAME_PROCESS</em>. Note: This value is available starting in Windows 10, version 1703.</td></tr><tr><td><em>PATHCCH_DO_NOT_NORMALIZE_SEGMENTS</em></td><td>Disables the normalization of path segments that includes removing trailing dots and spaces. This enables access to paths that win32 path normalization will block. Note: This value is available starting in Windows 10, version 1703.</td></tr><tr><td><em>PATHCCH_ENSURE_IS_EXTENDED_LENGTH_PATH</em></td><td>Converts the input path into the extended length DOS device path form (with the \\\?\\ prefix) if not already in that form. This enables access to paths that are otherwise not addressable due to Win32 normalization rules (that can strip trailing dots and spaces) and path length limitations. This option implies the same behavior of <em>PATHCCH_DO_NOT_NORMALIZE_SEGMENTS</em>. Note: This value is available starting in Windows 10, version 1703.</td></tr><tr><td><em>PATHCCH_ENSURE_TRAILING_SLASH</em></td><td>When combining or normalizing a path, ensure there is a trailing backslash. Note This value is available starting in Windows 10, version 1703.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>AfxPathAllocCombine(ExePath, "Test", PATHCCH_ENSURE_TRAILING_SLASH)</code></pre>
+<hr>
+<h3 id="afxpathappend">AfxPathAppend</h3>
+<p>Appends one path to the end of another.</p>
+<pre class="code"><code>FUNCTION AfxPathAppend (BYREF wszPath AS CONST WSTRING, BYREF wszMore AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that represents a path.</td></tr><tr><td><em>wszMore</em></td><td>A string that contains the path to be appended.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The changed path.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This function automatically inserts a backslash between the two strings, if one is not already present.</p>
+<p>The path supplied in <em>wszPath</em> cannot begin with "..\\" or ".\\" to produce a relative path string. If present, those periods are stripped from the output string. For example, appending "path3" to "..\\path1\\path2" results in an output of "\\path1\\path2\\path3" rather than "..\\path1\\path2\\path3".</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dws AS DWSTRING = AfxPathAppend("name_1\name_2", "name_3")</code></pre>
+<hr>
+<h3 id="afxpathbuildroot">AfxPathBuildRoot</h3>
+<p>Creates a root path from a given drive number.</p>
+<pre class="code"><code>FUNCTION AfxPathBuildRoot (BYVAL nDrive AS LONG) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nDrive</em></td><td>A variable of type LONG that indicates the desired drive number. It should be between 0 and 25.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The root path. If the call fails for any reason (for example, an invalid drive number), an empty string is returned.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dws AS DWSTRING = AfxPathBuildRoot(2) ' output: C:\</code></pre>
+<hr>
+<h3 id="afxpathcanonicalize">AfxPathCanonicalize</h3>
+<p>Removes elements of a file path according to special strings inserted into that path.</p>
+<pre class="code"><code>FUNCTION AfxPathCanonicalize (BYREF wszPath AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path to be canonicalized.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The canonicalized path.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This function allows the user to specify what to remove from a path by inserting special character sequences into the path. The ".." sequence indicates to remove a path segment from the current position to the previous path segment. The "." sequence indicates to skip over the next path segment to the following path segment. The root segment of the path cannot be removed.</p>
+<p>If there are more ".." sequences than there are path segments, the contents of the returned string contains just the root, "\\".</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dws AS DWSTRING = AfxPathCanonicalize("A:\name_1\.\name_2\..\sname_3") ' output: A:\name_1\name_3
+DIM dws AS DWSTRING = AfxPathCanonicalize("A:\name_1\..\name_2\.\name_3") ' output: A:\name_2\name_3
+DIM dws AS DWSTRING = AfxPathCanonicalize("A:\name_1\name_2\.\name_3\..\name_4") ' output: A:\name_1\name_2\name_4
+DIM dws AS DWSTRING = AfxPathCanonicalize("A:\name_1\.\name_2\.\name_3\..\name_4\..") ' output: A:\name_1\name_2
+DIM dws AS DWSTRING = AfxPathCanonicalize("C:\..") ' output: C:\</code></pre>
+<hr>
+<h3 id="afxpathcombine">AfxPathCombine</h3>
+<p>Concatenates two strings that represent properly formed paths into one path; also concatenates any relative path elements.</p>
+<pre class="code"><code>FUNCTION AfxPathCombine (BYREF wszDir AS CONST WSTRING, BYREF wszFile AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszDir</em></td><td>A string that contains the directory path. This value can be "".</td></tr><tr><td><em>wszFile</em></td><td>A string that contains the file path. This value can be "".</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The concatenated path if successful, or an empty string otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The directory path should be in the form of A:,B:, ..., Z:. The file path should be in a correct form that represents the file part of the path. The file path must not be null, and if it ends with a backslash, the backslash will be maintained.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dws AS DWSTRING = AfxPathCombine("C:", "One\Two\Three") ' output: C:\One\Two\Three</code></pre>
+<hr>
+<h3 id="afxpathcommonprefix">AfxPathCommonPrefix</h3>
+<p>Compares two paths to determine if they share a common prefix. A prefix is one of these types: "C:\\", ".", "..", "..\\".</p>
+<pre class="code"><code>FUNCTION AfxPathCommonPrefix (BYREF wszFile1 AS CONST WSTRING, BYREF wszFile2 AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFile1</em></td><td>A string that contains the first path name.</td></tr><tr><td><em>wszFile2</em></td><td>A string that contains the second path name.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The common prefix.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dws AS DWSTRING = AfxPathCommonPrefix("C:\win\desktop\temp.txt", "c:\win\tray\sample.txt")</code></pre>
+<hr>
+<h3 id="afxpathcompactpath">AfxPathCompactPath</h3>
+<p>Truncates a file path to fit within a given pixel width by replacing path components with ellipses.</p>
+<pre class="code"><code>FUNCTION AfxPathCompactPath (BYVAL hDC AS HDC, BYREF wszPath AS CONST WSTRING, BYVAL dx AS DWORD) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hDC</em></td><td>A handle to the device context used for font metrics. This value can be NULL.</td></tr><tr><td><em>wszPath</em></td><td>A string that contains the path to be modified.</td></tr><tr><td><em>dx</em></td><td>The width, in pixels, in which the string must fit.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The compacted path.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This function uses the font currently selected in <em>hDC</em> to calculate the width of the text. This function will not compact the path beyond the base file name preceded by ellipses.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dws AS DWSTRING = AfxPathCompactPath(NULL, "C:\path1\path2\sample.txt", 180)</code></pre>
+<hr>
+<h3 id="afxpathcompactpathex">AfxPathCompactPathEx</h3>
+<p>Truncates a path to fit within a certain number of characters by replacing path components with ellipses.</p>
+<pre class="code"><code>FUNCTION AfxPathCompactPathEx (BYREF wszPath AS CONST WSTRING, BYVAL cchMax AS DWORD) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path to be altered.</td></tr><tr><td><em>cchMax</em></td><td>The maximum number of characters to be contained in the new string, including the terminating null character. For example, if <em>cchMax</em> = 8, the resulting string can contain a maximum of 7 characters plus the terminating null character.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The compacted path.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The '/' separator will be used instead of '\\' if the original string used it. If <em>wszPath</em> points to a file name that is too long, instead of a path, the file name will be truncated to <em>cchMax</em> characters, including the ellipsis and the terminating NULL character. For example, if the input file name is "My Filename" and <em>cchMax</em> is 10, <em>AfxPathCompactPathEx</em> will return "My Fil...".</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dws AS DWSTRING = AfxPathCompactPathEx("c:\test\My Filename", 18)</code></pre>
+<hr>
+<h3 id="afxpathcreatefromurl">AfxPathCreateFromUrl</h3>
+<p>Converts a file URL to a Microsoft MS-DOS path.</p>
+<pre class="code"><code>FUNCTION AfxPathCreateFromUrl (BYREF wszUrl AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>A string that contains the URL.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The MS-DOS path.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dws AS DWSTRING = AfxPathCreateFromUrl("file:///C:/Documents%20and%20Settings/URIS.txt")</code></pre>
+<hr>
+<h3 id="afxpathfileexists">AfxPathFileExists</h3>
+<p>Determines whether a path to a file system object such as a file or directory is valid.</p>
+<pre class="code"><code>FUNCTION AfxPathFileExists (BYREF wszPath AS WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the full path of the object to verify.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns TRUE if the file exists, or FALSE otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This function tests the validity of the path.</p>
+<p>A path specified by Universal Naming Convention (UNC) is limited to a file only; that is, \\\\server\\share\file is permitted. A UNC path to a server or server share is not permitted; that is, \\\\server or \\\\server\\share. This function returns FALSE if a mounted remote drive is out of service.</p>
+<hr>
+<h3 id="afxpathfindextension">AfxPathFindExtension</h3>
+<p>Searches a path for an extension.</p>
+<pre class="code"><code>FUNCTION AfxPathFindExtension (BYREF wszPath AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path to search, including the extension being searched for.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The file name extension.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Note that a valid file name extension cannot contain a space.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dws AS DWSTRING = AfxPathFindExtension("C:\TEST\filetxt")</code></pre>
+<hr>
+<h3 id="afxpathfindfilename">AfxPathFindFileName</h3>
+<p>Searches a path for a file name.</p>
+<pre class="code"><code>FUNCTION AfxPathFindFileName (BYREF wszPath AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path to search.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The file name.</p>
+<hr>
+<h3 id="afxpathfindnextcomponent">AfxPathFindNextComponent</h3>
+<p>Searches a path for a file name.</p>
+<pre class="code"><code>FUNCTION AfxPathFindNextComponent (BYREF wszPath AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path to parse. This string must not be longer than MAX_PATH characters, plus the terminating null character. Path components are delimited by backslashes. For instance, the path "c:\\path1\\path2\\file.txt" has four components: c:, path1, path2, and file.txt.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The truncated path.</p>
+<h5 id="remarks">Remarks</h5>
+<p><strong>AfxPathFindNextComponent</strong> walks a path string until it encounters a backslash ("\\"), ignores everything up to that point including the backslash, and returns the rest of the path. Therefore, if a path begins with a backslash (such as \\path1\\path2), the function simply removes the initial backslash and returns the rest (path1\\path2).</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dws AS DWSTRING = AfxPathFindNextComponent("C:\TEST\file.txt")</code></pre>
+<hr>
+<h3 id="afxpathfindonpath">AfxPathFindOnPath</h3>
+<p>Searches for a file.</p>
+<pre class="code"><code>FUNCTION AfxPathFindOnPath (BYREF wszFile AS CONST WSTRING, _
+   BYVAL ppwszOtherDirs AS WSTRING PTR PTR = NULL) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFile</em></td><td>A string that contains the file name for which to search. If the search is successful, this parameter is used to return the fully-qualified path name.</td></tr><tr><td><em>ppwszOtherDirs</em></td><td>An optional, null-terminated array of directories to be searched first. This value can be NULL.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The fully-qualified path name on success or an empty string on failure.</p>
+<h5 id="remarks">Remarks</h5>
+<p><strong>AfxPathFindOnPath</strong> searches for the file specified by <em>wszFile</em>. If no directories are specified in <em>ppwszOtherDirs</em>, it attempts to find the file by searching standard directories such as System32 and the directories specified in the PATH environment variable. To expedite the process or enable <strong>AfxPathFindOnPath</strong> to search a wider range of directories, use the <em>ppwszOtherDirs</em> parameter to specify one or more directories to be searched first. If more than one file has the name specified by <em>wszFile</em>, <strong>AfxPathFindOnPath</strong> returns the first instance it finds.</p>
+<hr>
+<h3 id="afxpathfindsuffixarray">AfxPathFindSuffixArray</h3>
+<p>Determines whether a given file name has one of a list of suffixes.</p>
+<pre class="code"><code>FUNCTION AfxPathFindSuffixArray (BYREF wszPath AS WSTRING, BYVAL apwszSuffix AS WSTRING PTR PTR, _
+   BYVAL iArraySize AS LONG) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the file name to be tested. A full path can be used.</td></tr><tr><td><em>apwszSuffix</em></td><td>An array of <em>iArraySize</em> string pointers. Each string pointed to is null-terminated and contains one suffix. The strings can be of variable lengths.</td></tr><tr><td><em>iArraySize</em></td><td>The number of elements in the array pointed to by <em>apwszSuffix</em>.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The matching suffix if successful, or an empty string if bstrPath does not end with one of the specified suffixes.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This function uses a case-sensitive comparison. The suffix must match exactly.</p>
+<hr>
+<h3 id="afxpathgetargs">AfxPathGetArgs</h3>
+<p>Finds the command line arguments within a given path.</p>
+<pre class="code"><code>FUNCTION AfxPathGetArgs (BYREF wszPath AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path to be searched.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>A string that contains the arguments portion of the path if successful or an empty string if there are no arguments in the path.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This function should not be used on generic command path templates (from users or the registry), but rather should be used only on templates that the application knows to be well formed.</p>
+<hr>
+<h3 id="afxpathgetchartype">AfxPathGetCharType</h3>
+<p>Determines the type of character in relation to a path.</p>
+<pre class="code"><code>FUNCTION AfxPathGetCharType (BYREF wszCh AS CONST WSTRING) AS UINT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszCh</em></td><td>The character for which to determine the type.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns one or more of the following values that define the type of character.</p>
+<div class="table-wrap"><table><thead><tr><th>Retrn code</th><th>Description</th></tr></thead><tbody><tr><td>GCT_INVALID</td><td>The character is not valid in a path.</td></tr><tr><td>GCT_LFNCHAR</td><td>The character is valid in a long file name.</td></tr><tr><td>GCT_SEPARATOR</td><td>The character is a path separator.</td></tr><tr><td>GCT_SHORTCHAR</td><td>The character is valid in a short (8.3) file name.</td></tr><tr><td>GCT_WILD</td><td>The character is a wildcard character.</td></tr></tbody></table></div>
+<hr>
+<h3 id="afxpathgetdrivenumber">AfxPathGetDriveNumber</h3>
+<p>Searches a path for a drive letter within the range of 'A' to 'Z' and returns the corresponding drive number.</p>
+<pre class="code"><code>FUNCTION AfxPathGetDriveNumber (BYREF wszPath AS CONST WSTRING) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path to be searched.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns 0 through 25 (corresponding to 'A' through 'Z') if the path has a drive letter, or -1 otherwise.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM n AS LONG = AfxPathGetDriveNumber("C:\TEST\bar.txt") ' output: 2</code></pre>
+<hr>
+<h3 id="afxpathiscontenttype">AfxPathIsContentType</h3>
+<p>Determines if a file's registered content type matches the specified content type. This function obtains the content type for the specified file type and compares that string with the <em>wszContentType</em>. The comparison is not case-sensitive.</p>
+<pre class="code"><code>FUNCTION AfxPathIsContentType (BYREF wszPath AS CONST WSTRING, _
+   BYREF wszContentType AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the file whose content type will be compared.</td></tr><tr><td><em>wszContentType</em></td><td>A string that contains the content type string to which the file's registered content type will be compared.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns nonzero if the file's registered content type matches <em>wszContentType</em>, or zero otherwise.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM b AS BOOLEAN = AfxPathIsContentType("C:\TEST\bar.txt", "text/plain") ' output: true
+DIM b AS BOOLEAN = AfxPathIsContentType("C:\TEST\bar.txt", "image/gif") ' output: false</code></pre>
+<hr>
+<h3 id="afxpathisdirectory">AfxPathIsDirectory</h3>
+<p>Verifies that a path is a valid directory.</p>
+<pre class="code"><code>FUNCTION AfxPathIsDirectory (BYREF wszPath AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path to verify.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns TRUE if the path is a valid directory (FILE_ATTRIBUTE_DIRECTORY is set), or FALSE otherwise.</p>
+<hr>
+<h3 id="afxpathisdirectoryempty">AfxPathIsDirectoryEmpty</h3>
+<p>Determines whether a specified path is an empty directory.</p>
+<pre class="code"><code>FUNCTION AfxPathIsDirectoryEmpty (BYREF wszPath AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path to be tested.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns TRUE if wszPath is an empty directory. Returns FALSE if <em>wszPath</em> is not a directory, or if it contains at least one file other than "." or "..".</p>
+<h5 id="remarks">Remarks</h5>
+<p>"C:\" is considered a directory.</p>
+<hr>
+<h3 id="afxpathisfilespec">AfxPathIsFileSpec</h3>
+<p>Searches a path for any path-delimiting characters (for example, ':' or '\\' ). If there are no path-delimiting characters present, the path is considered to be a File Spec path.</p>
+<pre class="code"><code>FUNCTION AfxPathIsFileSpec (BYREF wszPath AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path to be searched.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns TRUE if there are no path-delimiting characters within the path, or FALSE if there are path-delimiting characters.</p>
+<hr>
+<h3 id="afxpathishtmlfile">AfxPathIsHTMLFile</h3>
+<p>Determines if a file is an HTML file. The determination is made based on the content type that is registered for the file's extension.</p>
+<pre class="code"><code>FUNCTION AfxPathIsHTMLFile (BYREF wszFile AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFile</em></td><td>A string that contains the path and name of the file.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns True if the file is an HTML file, or False otherwise.</p>
+<hr>
+<h3 id="afxpathislfnfilespec">AfxPathIsLFNFileSpec</h3>
+<p>Determines whether a file name is in long format.</p>
+<pre class="code"><code>FUNCTION AfxPathIsLFNFileSpec (BYREF wszName AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszName</em></td><td>A string that contains the file name to be tested.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns True if wszName exceeds the number of characters allowed by the 8.3 format, or False otherwise.</p>
+<hr>
+<h3 id="afxpathisnetworkpath">AfxPathIsNetworkPath</h3>
+<p>Determines whether a path string represents a network resource.</p>
+<pre class="code"><code>FUNCTION AfxPathIsNetworkPath (BYREF wszPath AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains contains the path.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns True if the string represents a network resource, or False otherwise.</p>
+<hr>
+<h3 id="afxpathisprefix">AfxPathIsPrefix</h3>
+<p>Searches a path to determine if it contains a valid prefix of the type passed by wszPrefix. A prefix is one of these types: "C:\\", ".", "..", "..\\".</p>
+<pre class="code"><code>FUNCTION AfxPathIsPrefix (BYREF wszPrefix AS CONST WSTRING, BYREF wszPath AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPrefix</em></td><td>A string that contains the prefix for which to search.</td></tr><tr><td><em>wszPath</em></td><td>A string that contains contains the path to be searched.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns True if the compared path is the full prefix for the path, or False otherwise.</p>
+<hr>
+<h3 id="afxpathisrelative">AfxPathIsRelative</h3>
+<p>Searches a path and determines if it is relative.</p>
+<pre class="code"><code>FUNCTION AfxPathIsRelative (BYREF wszPath AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains contains the path to search.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns True if the path is relative, or False if it is absolute.</p>
+<hr>
+<h3 id="afxpathisroot">AfxPathIsRoot</h3>
+<p>Parses a path to determine if it is a directory root.</p>
+<pre class="code"><code>FUNCTION AfxPathIsRoot (BYREF wszPath AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains contains the path to be validated.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns True if the specified path is a root, or False otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Returns True for paths such as "\\", "X:\\" or "\\\\server\\share". Paths such as "..\\path2" or "\\\\server\\" return FALSE.</p>
+<hr>
+<h3 id="afxpathissameroot">AfxPathIsSameRoot</h3>
+<p>Compares two paths to determine if they have a common root component.</p>
+<pre class="code"><code>FUNCTION AfxPathIsSameRoot (BYREF wszPath1 AS CONST WSTRING, BYREF wszPath2 AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath1</em></td><td>A string that contains contains the path to be compared.</td></tr><tr><td><em>wszPath2</em></td><td>A string that contains contains the second path to be compared.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns True if both strings have the same root component, or False otherwise. If <em>wszPath1</em> contains only the server and share, this function also returns False.</p>
+<hr>
+<h3 id="afxpathissystemfolder">AfxPathIsSystemFolder</h3>
+<p>Determines if an existing folder contains the attributes that make it a system folder. Alternately, this function indicates if certain attributes qualify a folder to be a system folder.</p>
+<pre class="code"><code>FUNCTION AfxPathIsSystemFolder (BYREF wszPath AS CONST WSTRING, BYVAL dwAttrb AS DWORD) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the name of an existing folder. The attributes for this folder will be retrieved and compared with those that define a system folder. If this folder contains the attributes to make it a system folder, the function returns nonzero. If this value is NULL, this function determines if the attributes passed in dwAttrb qualify it to be a system folder.</td></tr><tr><td><em>dwAttrb</em></td><td>The file attributes to be compared. Used only if <em>wszPath</em> is NULL. In that case, the attributes passed in this value are compared with those that qualify a folder as a system folder. If the attributes are sufficient to make this a system folder, this function returns nonzero. These attributes are the attributes that are returned from <strong>GetFileAttributes</strong>.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns True if the <em>wszPath</em> or <em>dwAttrb</em> represent a system folder, or False otherwise.</p>
+<hr>
+<h3 id="afxpathisunc">AfxPathIsUNC</h3>
+<p>Determines if the string is a valid Universal Naming Convention (UNC) for a server and share path.</p>
+<pre class="code"><code>FUNCTION AfxPathIsUNC (BYREF wszPath AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains contains the path to validate.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns True if the string is a valid UNC path, or False otherwise.</p>
+<hr>
+<h3 id="afxpathisuncserver">AfxPathIsUNCServer</h3>
+<p>Determines if a string is a valid Universal Naming Convention (UNC) for a server path only.</p>
+<pre class="code"><code>FUNCTION AfxPathIsUNCServer (BYREF wszPath AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains contains the path to validate.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns True if the string is a valid UNC path for a server only (no share name), or False otherwise.</p>
+<hr>
+<h3 id="afxpathisuncservershare">AfxPathIsUNCServerShare</h3>
+<p>Determines if a string is a valid Universal Naming Convention (UNC) share path, \\\\server\\share.</p>
+<pre class="code"><code>FUNCTION AfxPathIsUNCServerShare (BYREF wszPath AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains contains the path to be validated.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns True if the string is in the form \\\\server\\share, or False otherwise.</p>
+<hr>
+<h3 id="afxpathisurl">AfxPathIsURL</h3>
+<p>Tests a given string to determine if it conforms to a valid URL format.</p>
+<pre class="code"><code>FUNCTION AfxPathIsURL (BYREF wszPath AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the URL path to validate.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns True if <em>wszPath</em> has a valid URL format, or Fañse otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This function does not verify that the path points to an existing site—only that it has a valid URL format.</p>
+<hr>
+<h3 id="afxpathmakepretty">AfxPathMakePretty</h3>
+<p>Converts a path to all lowercase characters to give the path a consistent appearance.</p>
+<pre class="code"><code>FUNCTION AfxPathMakePretty (BYREF wszPath AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path to be converted.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The changed path.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This function only operates on paths that are entirely uppercase. For example: C:\WINDOWS will be converted to c:\windows, but c:\Windows will not be changed.</p>
+<hr>
+<h3 id="afxpathmakesystemfolder">AfxPathMakeSystemFolder</h3>
+<p>Gives an existing folder the proper attributes to become a system folder.</p>
+<pre class="code"><code>FUNCTION AfxPathMakeSystemFolder (BYREF wszPath AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the name of an existing folder that will be made into a system folder.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns True if successful, or False otherwise.</p>
+<hr>
+<h3 id="afxpathmatchspec">AfxPathMatchSpec</h3>
+<p>Searches a string using a Microsoft MS-DOS wild card match type.</p>
+<pre class="code"><code>FUNCTION AfxPathMatchSpec (BYREF wszFile AS CONST WSTRING, BYREF wszSpec AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFile</em></td><td>A string that contains the path to be searched.</td></tr><tr><td><em>wszSpec</em></td><td>A string that contains the file type for which to search. For example, to test whether <em>wszFile</em> is a .doc file, <em>wszSpec</em> should be set to "\*.doc".</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns True if the string matches, or False otherwise.</p>
+<hr>
+<h3 id="afxpathmatchspecex">AfxPathMatchSpecEx</h3>
+<p>Searches a path to determine whether it contains a file of a specified file type extension.</p>
+<pre class="code"><code>FUNCTION AfxPathMatchSpecEx (BYREF wszFile AS CONST WSTRING, _
+   BYREF wszSpec AS CONST WSTRING, BYVAL dwFlags AS DWORD) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFile</em></td><td>A string that contains the path to be searched.</td></tr><tr><td><em>wszSpec</em></td><td>A string that contains the file type extension or extensions for which to search. If exactly one extension is specified, set the PMSF_NORMAL flag in <em>dwFlags</em>. If more than one extension is specified, separate them with semicolons and set the PMSF_MULTIPLE flag.</td></tr><tr><td><em>dwFlags</em></td><td>Modifies the search condition. The following are valid flags:<br><em>PMSF_NORMAL</em> (&amp;h00000000): The <em>wszSpec</em> parameter points to a single file type extension to be matched.<br><em>PMSF_MULTIPLE</em> (&amp;h00000001): The <em>wszSpec</em> parameter points to a semicolon-delimited list of file type extensions to be matched.<br><em>PMSF_DONT_STRIP_SPACES</em> (&amp;h00010000): If PMSF_NORMAL is used, ignore leading spaces in the string pointed to by <em>wszSpec</em>. If PMSF_MULTIPLE is used, ignore leading spaces in each file type contained in the string pointed to by <em>wszSpec</em>. This flag can be combined with PMSF_NORMAL and PMSF_MULTIPLE.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns one of the following values:</p>
+<div class="table-wrap"><table><thead><tr><th>Return code</th><th>Description</th></tr></thead><tbody><tr><td>TRUE</td><td>A file type extension specified in <em>wszSpec</em> was found in the path pointed to by <em>wszFile</em>.</td></tr><tr><td>FALSE</td><td>The path pointed to by <em>wszFile</em> does not contain any file type extension specified in <em>wszSpec</em>.</td></tr></tbody></table></div>
+<hr>
+<h3 id="afxpathparseiconlocation">AfxPathParseIconLocation</h3>
+<p>Parses a file location string that contains a file location and icon index, and returns separate values.</p>
+<pre class="code"><code>FUNCTION AfxPathParseIconLocation (BYREF wszIconFile AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszIconFile</em></td><td>A string that contains a file location string. It should be in the form "<em>path,iconindex</em>".</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns the valid icon index value.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This function is useful for taking a DefaultIcon value retrieved from the registry by <strong>SHGetValue</strong> and separating the icon index from the path.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dwsIconLocation AS DWSTRING = AfxPathParseIconLocation("C:\TEST\sample.txt,3")</code></pre>
+<hr>
+<h3 id="afxpathquotespaces">AfxPathQuoteSpaces</h3>
+<p>Searches a path for spaces. If spaces are found, the entire path is enclosed in quotation marks.</p>
+<pre class="code"><code>FUNCTION AfxPathQuoteSpaces (BYREF wszPath AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path to be searched.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>True if spaces were found; otherwise, False.</p>
+<hr>
+<h3 id="afxpathrelativepathto">AfxPathRelativePathTo</h3>
+<p>Creates a relative path from one file or folder to another.</p>
+<pre class="code"><code>FUNCTION AfxPathRelativePathTo (BYREF wszFrom AS CONST WSTRING, BYVAL dwAttrFrom AS DWORD, _
+   BYREF wszTo AS CONST WSTRING, BYVAL dwAttrTo AS DWORD) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFrom</em></td><td>A string that contains the path that defines the start of the relative path.</td></tr><tr><td><em>dwAttrFrom</em></td><td>The file attributes of <em>wszFrom</em>. If this value contains FILE_ATTRIBUTE_DIRECTORY, <em>wszFrom</em> is assumed to be a directory; otherwise, <em>wszFrom</em> is assumed to be a file.</td></tr><tr><td><em>wszTo</em></td><td>A string that contains the path that defines the endpoint of the relative path.</td></tr><tr><td><em>dwAttrTo</em></td><td>The file attributes of wszTo. If this value contains FILE_ATTRIBUTE_DIRECTORY, wszTo is assumed to be directory; otherwise, <em>wszTo</em> is assumed to be a file.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns True if successful, or False otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This function takes a pair of paths and generates a relative path from one to the other. The paths do not have to be fully-qualified, but they must have a common prefix, or the function will fail and return False.</p>
+<p>For example, let the starting point, <em>wszFrom</em>, be "c:\\FolderA\FolderB\\FolderC", and the ending point, <em>wszTo</em>, be "c:\\FolderA\\FolderD\\FolderE". <strong>AfxPathRelativePathTo</strong> will return the relative path from <em>wszFrom</em> to <em>wszTo</em> as: "..\\..\\FolderD\\FolderE". You will get the same result if you set <em>wszFrom</em> to "\\FolderA\\FolderB\\FolderC" and <em>wszTo</em> to "\\FolderA\\FolderD\\FolderE". On the other hand, "c:\\FolderA\\FolderB" and "a:\\FolderA\\FolderD do not share a common prefix, and the function will fail. Note that "\\\\" is not considered a prefix and is ignored. If you set <em>wszFrom</em> to "\\\\FolderA\\FolderB", and <em>wszTo</em> to "\\\\FolderC\\FolderD", the function will fail.</p>
+<hr>
+<h3 id="afxpathremoveargs">AfxPathRemoveArgs</h3>
+<p>Removes any arguments from a given path.</p>
+<pre class="code"><code>FUNCTION AfxPathRemoveArgs (BYREF wszPath AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path from which to remove arguments.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The changed path.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This function should not be used on generic command path templates (from users or the registry), but rather it should be used only on templates that the application knows to be well formed.</p>
+<hr>
+<h3 id="afxpathremovebackslash">AfxPathRemoveBackslash</h3>
+<p>Removes the trailing backslash from a given path.</p>
+<pre class="code"><code>FUNCTION AfxPathRemoveBackslash (BYREF wszPath AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path from which to remove the backslash.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The changed path. If no trailing backslash was found, the string is unchanged.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dws AS DWSTRING = AfxPathRemoveBackslash("c:\a\b\File\")</code></pre>
+<hr>
+<h3 id="afxpathremovebackslashex">AfxPathRemoveBackslashEx</h3>
+<p>Removes the trailing backslash from a given path. This function differs from PathRemoveBackslash in that it accepts paths with "\\", "\\?" and "\\?\\UNC" prefixes.</p>
+<pre class="code"><code>FUNCTION AfxPathRemoveBackslashEx (BYREF wszPath AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path from which to remove the backslash.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The changed path. If no trailing backslash was found, the string is unchanged.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dws AS DWSTRING = AfxPathRemoveBackslashEx("c:\a\b\File\")</code></pre>
+<hr>
+<h3 id="afxpathremoveblanks">AfxPathRemoveBlanks</h3>
+<p>Removes all leading and trailing spaces from a string.</p>
+<pre class="code"><code>FUNCTION AfxPathRemoveBlanks (BYREF wszPath AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path from which to strip all leading and trailing spaces.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The changed path.</p>
+<hr>
+<h3 id="afxpathremoveextension">AfxPathRemoveExtension</h3>
+<p>Removes the file name extension from a path, if one is present.</p>
+<pre class="code"><code>FUNCTION AfxPathRemoveExtension (BYREF wszPath AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path from which to remove the extension.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The changed path.</p>
+<hr>
+<h3 id="afxpathremovefilespec">AfxPathRemoveFileSpec</h3>
+<p>Removes the trailing file name and backslash from a path, if they are present.</p>
+<pre class="code"><code>FUNCTION AfxPathRemoveFileSpec (BYREF wszPath AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path from which to remove the file name.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The changed path.</p>
+<hr>
+<h3 id="afxpathrenameextension">AfxPathRenameExtension</h3>
+<p>Replaces the extension of a file name with a new extension. If the file name does not contain an extension, the extension will be attached to the end of the string.</p>
+<pre class="code"><code>FUNCTION AfxPathRenameExtension (BYREF wszPath AS CONST WSTRING, BYREF wszExt AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path in which to replace the extension.</td></tr><tr><td><em>wszExt</em></td><td>A string that contains a '.' character followed by the new extension.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The new path. If the new path and extension would exceed MAX_PATH characters, the path won't be changed.</p>
+<hr>
+<h3 id="afxpathsearchandqualify">AfxPathSearchAndQualify</h3>
+<p>Determines if a given path is correctly formatted and fully qualified.</p>
+<pre class="code"><code>FUNCTION AfxPathSearchAndQualify (BYREF wszPath AS CONST WSTRING, BYREF wszFullyQualifiedPath AS CONST WSTRING, _
+   BYVAL cchFullyQualifiedPath AS DWORD) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path to search.</td></tr><tr><td><em>wszFullyQualifiedPath</em></td><td>A string of length MAX_PATH that contains the path to be referenced.</td></tr><tr><td><em>cchFullyQualifiedPath</em></td><td>The size of the buffer pointed to by <em>wszFullyQualifiedPath</em>, in characters.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns True if the path is qualified, or False otherwise.</p>
+<hr>
+<h3 id="afxpathsetdlgitempath">AfxPathSetDlgItemPath</h3>
+<p>Sets the text of a child control in a window or dialog box, using <strong>AfxCompactPath</strong> to ensure the path fits in the control.</p>
+<pre class="code"><code>SUB AfxPathSetDlgItemPath (BYVAL hDlg AS HWND, BYVAL cID AS LONG, BYREF wszPath AS WSTRING)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hDlg</em></td><td>A handle to the dialog box or window.</td></tr><tr><td><em>cID</em></td><td>The identifier of the control.</td></tr><tr><td><em>wszPath</em></td><td>A string that contains the path to set in the control.</td></tr></tbody></table></div>
+<hr>
+<h3 id="afxpathskiproot">AfxPathSkipRoot</h3>
+<p>Parses a path, ignoring the drive letter or Universal Naming Convention (UNC) server/share path elements.</p>
+<pre class="code"><code>FUNCTION AfxPathSkipRoot (BYREF wszPath AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path to parse.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The changed path.</p>
+<hr>
+<h3 id="afxpathstrippath">AfxPathStripPath</h3>
+<p>Removes the path portion of a fully qualified path and file.</p>
+<pre class="code"><code>FUNCTION AfxPathStripPath (BYREF wszPath AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path and file name. When this method returns successfully, the string contains only the file name, with the path removed.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The changed path.</p>
+<hr>
+<h3 id="afxpathstriptoroot">AfxPathStripToRoot</h3>
+<p>Removes all parts of the path except for the root information.</p>
+<pre class="code"><code>FUNCTION AfxPathStripToRoot (BYREF wszRoot AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszRoot</em></td><td>A string of length MAX_PATH that contains the path to be converted.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns a string that contains only the root information taken from that path.</p>
+<hr>
+<h3 id="afxpathundecorate">AfxPathUndecorate</h3>
+<p>Removes the decoration from a path string.</p>
+<pre class="code"><code>FUNCTION AfxPathUndecorate (BYREF wszPath AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The undecorated string.</p>
+<h5 id="remarks">Remarks</h5>
+<p>A decoration consists of a pair of square brackets with one or more digits in between, inserted immediately after the base name and before the file name extension.</p>
+<h5 id="example">Example</h5>
+<p>The following table illustrates how strings are modified by <strong>AfxPathUndecorate</strong>.</p>
+<div class="table-wrap"><table><thead><tr><th>Initial String</th><th>Undecorated String</th></tr></thead><tbody><tr><td>C:\\Path\\File\[5].txt</td><td>C:\\Path\\File.txt</td></tr><tr><td>C:\\Path\\File\[12]</td><td>C:\\Path\\File</td></tr><tr><td>C:\\Path\\File.txt</td><td>C:\\Path\\File.txt</td></tr><tr><td>C:\\Path\\\[3].txt</td><td>C:\\Path\\\[3].txt</td></tr></tbody></table></div>
+<hr>
+<h3 id="afxpathunexpandenvstrings">AfxPathUnExpandEnvStrings</h3>
+<p>Replaces certain folder names in a fully-qualified path with their associated environment string.</p>
+<pre class="code"><code>FUNCTION AfxPathUnExpandEnvStrings (BYREF wszPath AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path to be unexpanded.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The unexpanded string.</p>
+<hr>
+<h3 id="afxpathunmakesystemfolder">AfxPathUnmakeSystemFolder</h3>
+<p>Removes the attributes from a folder that make it a system folder. This folder must actually exist in the file system.</p>
+<pre class="code"><code>FUNCTION AfxPathUnmakeSystemFolder (BYREF wszPath AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the name of an existing folder that will have the system folder attributes removed.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns nonzero if successful, or zero otherwise.</p>
+<hr>
+<h3 id="afxpathunquotespaces">AfxPathUnquoteSpaces</h3>
+<p>Removes quotes from the beginning and end of a path.</p>
+<pre class="code"><code>FUNCTION AfxPathUnquoteSpaces (BYREF wszPath AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the path.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The unquoted path.</p>
+<hr>
+<h3 id="afxisvalidurl">AfxIsValidUrl</h3>
+<p>Determines if a specified string is a valid URL.</p>
+<pre class="code"><code>FUNCTION AfxIsValidUrl (BYREF wszUrl AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>A string that contains the full URL to check.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>Return True if the URL is valid; FALSE, otherwise.</p>
+<hr>
+<h3 id="afxurlapplyscheme">AfxUrlApplyScheme</h3>
+<p>Determines a scheme for a specified URL string, and returns a string with an appropriate prefix.</p>
+<pre class="code"><code>FUNCTION AfxUrlApplyScheme (BYREF wszUrl AS WSTRING, BYVAL dwFlags AS DWORD) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>A string that contains a URL.</td></tr><tr><td><em>dwFlags</em></td><td>The flags that specify how to determine the scheme. The flags can be combined.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Flag</th><th>Description</th></tr></thead><tbody><tr><td>URL_APPLY_DEFAULT</td><td>Apply the default scheme if <strong>AfxUrlApplyScheme</strong> can't determine one. The default prefix is stored in the registry but is typically "http".</td></tr><tr><td>URL_APPLY_GUESSSCHEME</td><td>Attempt to determine the scheme by examining <em>wszUrl</em>.</td></tr><tr><td>URL_APPLY_GUESSFILE</td><td>Attempt to determine a file URL from <em>wszUrl</em>.</td></tr><tr><td>URL_APPLY_FORCEAPPLY</td><td>Force <strong>AfxUrlApplyScheme</strong> to determine a scheme for <em>wszUrl</em>.</td></tr><tr><td>URL_APPLY_FORCEAPPLY</td><td>Force <strong>AfxUrlApplyScheme</strong> to determine a scheme for <em>wszUrl</em>.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The changed url.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If the URL has a valid scheme, the string will not be modified. However, almost any combination of two or more characters followed by a colon will be parsed as a scheme. Valid characters include some common punctuation marks, such as ".". If your input string fits this description, <strong>AfxUrlApplyScheme</strong> may treat it as valid and not apply a scheme. To force the function to apply a scheme to a URL, set the URL_APPLY_FORCEAPPLY and URL_APPLY_DEFAULT flags in <em>dwFlags</em>. This combination of flags forces the function to apply a scheme to the URL. Typically, the function will not be able to determine a valid scheme. The second flag guarantees that, if no valid scheme can be determined, the function will apply the default scheme to the URL.</p>
+<hr>
+<h3 id="afxurlcanonicalize">AfxUrlCanonicalize</h3>
+<p>Converts a URL string into canonical form.</p>
+<pre class="code"><code>FUNCTION AfxUrlCanonicalize (BYREF wszUrl AS WSTRING, BYVAL dwFlags AS DWORD) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>A string that contains a URL. If the string does not refer to a file, it must include a valid scheme such as "http://".</td></tr><tr><td><em>dwFlags</em></td><td>The flags that specify how the URL is converted to canonical form. The flags can be combined.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Flag</th><th>Description</th><th></th></tr></thead><tbody><tr><td>URL_UNESCAPE</td><td>Un-escape any escape sequences that the URLs contain, with two exceptions. The escape sequences for "?" and "#" are not un-escaped. If one of the URL_ESCAPE_XXX flags is also set, the two URLs are first un-escaped, then combined, then escaped.</td><td></td></tr><tr><td>URL_ESCAPE_UNSAFE</td><td>Replace unsafe characters with their escape sequences. Unsafe characters are those characters that may be altered during transport across the Internet, and include the (&lt;, &gt;, ", #, {, }, \</td><td>, \\, ^, \[, ], and ') characters. This flag applies to all URLs, including opaque URLs.</td></tr><tr><td>URL_PLUGGABLE_PROTOCOL</td><td>Combine URLs with client-defined pluggable protocols, according to the W3C specification. This flag does not apply to standard protocols such as ftp, http, gopher, and so on. If this flag is set, <strong>AfxUrlCombine</strong> does not simplify URLs, so there is no need to also set URL_DONT_SIMPLIFY.</td><td></td></tr><tr><td>URL_ESCAPE_SPACES_ONLY</td><td>Replace only spaces with escape sequences. This flag takes precedence over URL_ESCAPE_UNSAFE, but does not apply to opaque URLs.</td><td></td></tr><tr><td>URL_DONT_SIMPLIFY</td><td>Treat "/./" and "/../" in a URL string as literal characters, not as shorthand for navigation. See Remarks for further discussion.</td><td></td></tr><tr><td>URL_NO_META</td><td>Defined to be the same as URL_DONT_SIMPLIFY.</td><td></td></tr><tr><td>URL_ESCAPE_PERCENT</td><td>Convert any occurrence of "%" to its escape sequence.</td><td></td></tr><tr><td>URL_ESCAPE_AS_UTF8</td><td>Windows 7 and later. Percent-encode all non-ASCII characters as their UTF-8 equivalents.</td><td></td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The canonicalized url.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This function performs such tasks as replacing unsafe characters with their escape sequences and collapsing sequences like "..\\...".</p>
+<p>If a URL string contains "/../" or "/./", <strong>AfxUrlCanonicalize</strong> normally treats the characters as indicating navigation in the URL hierarchy. The function simplifies the URLs before combining them. For instance "/hello/cruel/../world" is simplified to "/hello/world". If the URL_DONT_SIMPLIFY flag is set in <em>dwFlags</em>, the function does not simplify URLs. In this case, "/hello/cruel/../world" is left as it is.</p>
+<hr>
+<h3 id="afxurlcombine">AfxUrlCombine</h3>
+<p>When provided with a relative URL and its base, returns a URL in canonical form.</p>
+<pre class="code"><code>FUNCTION AfxUrlCombine (BYREF wszBase AS WSTRING, BYREF wszRelative AS WSTRING, BYVAL dwFlags AS DWORD) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszBase</em></td><td>A string that contains the base url.</td></tr><tr><td><em>wszRelative</em></td><td>A string that contains the relative url.</td></tr><tr><td><em>dwFlags</em></td><td>Flags that specify how the URL is converted to canonical form. The flags can be combined.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Flag</th><th>Description</th><th></th></tr></thead><tbody><tr><td>URL_DONT_SIMPLIFY</td><td>Treat "/./" and "/../" in a URL string as literal characters, not as shorthand for navigation. See Remarks for further discussion.</td><td></td></tr><tr><td>URL_ESCAPE_PERCENT</td><td>Convert any occurrence of "%" to its escape sequence.</td><td></td></tr><tr><td>URL_ESCAPE_SPACES_ONLY</td><td>Replace only spaces with escape sequences. This flag takes precedence over URL_ESCAPE_UNSAFE, but does not apply to opaque URLs.</td><td></td></tr><tr><td>URL_ESCAPE_UNSAFE</td><td>Replace unsafe characters with their escape sequences. Unsafe characters are those characters that may be altered during transport across the Internet, and include the (&lt;, &gt;, ", #, {, }, \</td><td>, \\, ^, \[, ], and ') characters. This flag applies to all URLs, including opaque URLs.</td></tr><tr><td>URL_NO_META</td><td>Defined to be the same as URL_DONT_SIMPLIFY.</td><td></td></tr><tr><td>URL_PLUGGABLE_PROTOCOL</td><td>Combine URLs with client-defined pluggable protocols, according to the W3C specification. This flag does not apply to standard protocols such as ftp, http, gopher, and so on. If this flag is set, <strong>AfxUrlCombine</strong> does not simplify URLs, so there is no need to also set URL_DONT_SIMPLIFY.</td><td></td></tr><tr><td>URL_UNESCAPE</td><td>Un-escape any escape sequences that the URLs contain, with two exceptions. The escape sequences for "?" and "#" are not un-escaped. If one of the URL_ESCAPE_XXX flags is also set, the two URLs are first un-escaped, then combined, then escaped.</td><td></td></tr><tr><td>URL_ESCAPE_AS_UTF8</td><td>Windows 7 and later. Percent-encode all non-ASCII characters as their UTF-8 equivalents.</td><td></td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The canonicalized url.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Items between slashes are treated as hierarchical identifiers; the last item specifies the document itself. You must enter a slash (/) after the document name to append more items; otherwise, <strong>AfxUrlCombine</strong> changes one document for another.</p>
+<p>If a URL string contains '/../' or '/./', <strong>AfxUrlCombine</strong> usually treats the characters as if they indicated navigation in the URL hierarchy. The function simplifies the URLs before combining them. For instance, "/hello/cruel/../world" is simplified to "/hello/world". If the URL_DONT_SIMPLIFY flag is set in dwFlags, the function does not simplify URLs. In this case, "/hello/cruel/../world" is left as it is.</p>
+<hr>
+<h3 id="afxurlcompare">AfxUrlCompare</h3>
+<p>Makes a case-sensitive comparison of two URL strings.</p>
+<pre class="code"><code>FUNCTION AfxUrlCompare (BYREF wszUrl1 AS CONST WSTRING, BYREF wszUrl2 AS CONST WSTRING, _
+   BYVAL fIgnoreSlash AS LONG) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl1</em></td><td>A string that contains the first URL.</td></tr><tr><td><em>wszUrl2</em></td><td>A string that contains the second URL.</td></tr><tr><td><em>fIgnoreSlash</em></td><td>A value that is set to TRUE to have <strong>AfxUrlCompare</strong> ignore a trailing '/' character on either or both URLs.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns zero if the two strings are equal. The function will also return zero if <em>fIgnoreSlash</em> is set to TRUE and one of the strings has a trailing '\\' character. The function returns a negative integer if the string pointed to by <em>wszUrl1</em> is less than the string pointed to by <em>wszUrl2</em>. Otherwise, it returns a positive integer.</p>
+<h5 id="remarks">Remarks</h5>
+<p>For best results, you should first canonicalize the URLs with <strong>AfxUrlCanonicalize</strong>. Then, compare the canonicalized URLs with <strong>AfxUrlCompare</strong>.</p>
+<hr>
+<h3 id="afxurlcreatefrompath">AfxUrlCreateFromPath</h3>
+<p>Converts a Microsoft MS-DOS path to a canonicalized URL.</p>
+<pre class="code"><code>FUNCTION AfxUrlCreateFromPath (BYREF wszPath AS WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszPath</em></td><td>A string that contains the MS-DOS path.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The canonicalized URL.</p>
+<hr>
+<h3 id="afxurlescape">AfxUrlEscape</h3>
+<p>Converts characters in a URL that might be altered during transport across the Internet ("unsafe" characters) into their corresponding escape sequences.</p>
+<pre class="code"><code>FUNCTION AfxUrlEscape (BYREF wszUrl AS WSTRING, BYVAL dwFlags AS DWORD) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>A string that contains the MS-DOS path.</td></tr><tr><td><em>dwFlags</em></td><td>The flags that indicate which portion of the URL is being provided in <em>wszURL</em> and which characters in that string should be converted to their escape sequences.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Flag</th><th>Description</th></tr></thead><tbody><tr><td>URL_DONT_ESCAPE_EXTRA_INFO</td><td>Used only in conjunction with URL_ESCAPE_SPACES_ONLY to prevent the conversion of characters in the query (the portion of the URL following the first # or ? character encountered in the string). This flag should not be used alone, nor combined with URL_ESCAPE_SEGMENT_ONLY.</td></tr><tr><td>URL_BROWSER_MODE</td><td>Defined to be the same as URL_DONT_ESCAPE_EXTRA_INFO.</td></tr><tr><td>URL_ESCAPE_SPACES_ONLY</td><td>Convert only space characters to their escape sequences, including those space characters in the query portion of the URL. Other unsafe characters are not converted to their escape sequences. This flag assumes that <em>wszURL</em> does not contain a full URL. It expects only the portions following the server specification.<br>Combine this flag with URL_DONT_ESCAPE_EXTRA_INFO to prevent the conversion of space characters in the query portion of the URL.<br>This flag cannot be combined with URL_ESCAPE_PERCENT or URL_ESCAPE_SEGMENT_ONLY.</td></tr><tr><td>URL_ESCAPE_PERCENT</td><td>Convert any % character found in the segment section of the URL (that section falling between the server specification and the first # or ? character). By default, the % character is not converted to its escape sequence. Other unsafe characters in the segment are also converted normally.<br>Combining this flag with URL_ESCAPE_SEGMENT_ONLY includes those % characters in the query portion of the URL. However, as the URL_ESCAPE_SEGMENT_ONLY flag causes the entire string to be considered the segment, any # or ? characters are also converted.<br>This flag cannot be combined with URL_ESCAPE_SPACES_ONLY.</td></tr><tr><td>URL_ESCAPE_SEGMENT_ONLY</td><td>Indicates that <em>wszURL</em> contains only that section of the URL following the server component but preceding the query. All unsafe characters in the string are converted. If a full URL is provided when this flag is set, all unsafe characters in the entire string are converted, including # and ? characters.<br>Combine this flag with URL_ESCAPE_PERCENT to include that character in the conversion.<br>This flag cannot be combined with URL_ESCAPE_SPACES_ONLY or URL_DONT_ESCAPE_EXTRA_INFO.</td></tr><tr><td>URL_ESCAPE_AS_UTF8</td><td>Windows 7 and later. Percent-encode all non-ASCII characters as their UTF-8 equivalents.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The converted URL.</p>
+<h5 id="remarks">Remarks</h5>
+<p>For the purposes of this document, a typical URL is divided into three sections: the server, the segment, and the query. For example:</p>
+<p><a href="http://microsoft.com/test.asp?url=/example/abc.asp?frame=true#fragment" target="_blank" rel="noopener">http://microsoft.com/test.asp?url=/example/abc.asp?frame=true#fragment</a></p>
+<p>The server portion is "http://microsoft.com/". The trailing forward slash is considered part of the server portion.</p>
+<p>The segment portion is any part of the path found following the server portion, but before the first # or ? character, in this case simply "test.asp".</p>
+<p>The query portion is the remainder of the path from the first # or ? character (inclusive) to the end. In the example, it is "?url=/example/abc.asp?frame=true#fragment".</p>
+<p>Unsafe characters are those characters that might be altered during transport across the Internet. This function converts unsafe characters into their equivalent "%xy" escape sequences. The following table shows unsafe characters and their escape sequences.</p>
+<div class="table-wrap"><table><thead><tr><th>Character</th><th>Escape Sequence</th><th></th></tr></thead><tbody><tr><td>^</td><td>%5E5E</td><td></td></tr><tr><td>&amp;</td><td>%26</td><td></td></tr><tr><td>`</td><td>%60</td><td></td></tr><tr><td>{</td><td>%7B</td><td></td></tr><tr><td>}</td><td>%7D</td><td></td></tr><tr><td>\</td><td></td><td>%7C</td></tr><tr><td>]</td><td>%5D</td><td></td></tr><tr><td>\[</td><td>%5B</td><td></td></tr><tr><td>"</td><td>%22</td><td></td></tr><tr><td>&lt;</td><td>%3C</td><td></td></tr><tr><td>&gt;</td><td>%3E</td><td></td></tr><tr><td>\</td><td>%5C</td><td></td></tr></tbody></table></div>
+<p>Use of the URL_ESCAPE_SEGMENT_ONLY flag also causes the conversion of the # (%23), ? (%3F), and / (%2F) characters.</p>
+<p>By default, AfxUrlEscape ignores any text following a # or ? character. The URL_ESCAPE_SEGMENT_ONLY flag overrides this behavior by regarding the entire string as the segment. The URL_ESCAPE_SPACES_ONLY flag overrides this behavior, but only for space characters.</p>
+<p>Security Warning: This function should be called from client applications only.</p>
+<hr>
+<h3 id="afxurlescapespaces">AfxUrlEscapeSpaces</h3>
+<p>Converts space characters into their corresponding escape sequence.</p>
+<pre class="code"><code>FUNCTION AfxUrlEscapeSpaces (BYREF wszUrl AS WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>A string that contains the URL to be corrected. This string must not exceed INTERNET_MAX_PATH_LENGTH characters in length, including the terminating NULL character.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The converted URL.</p>
+<hr>
+<h3 id="afxurlfixup">AfxUrlFixup</h3>
+<p>Attempts to correct a URL whose protocol identifier is incorrect. For example, htttp will be changed to http.</p>
+<pre class="code"><code>FUNCTION AfxUrlFixup (BYREF wszUrl AS WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>A string that contains the URL to be corrected. This string must not exceed INTERNET_MAX_PATH_LENGTH characters in length, including the terminating NULL character.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The converted URL.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The <strong>AfxUrlFixup</strong> function recognizes the schemes specified by the URL_SCHEME enumeration.</p>
+<p>Priority is given to the first character in the protocol identifier section so htp will be converted to http instead of ftp.</p>
+<p><strong>Notes</strong></p>
+<p>Do not use this function for deterministic data transformation. The heuristics used by <strong>AfxUrlFixup</strong> can change from one release to the next. The function should only be used to correct possibly invalid user input.</p>
+<p>This function is available through Windows 7 and Windows Server 2008. It might be altered or unavailable in subsequent versions of Windows.</p>
+<hr>
+<h3 id="afxurlgethostname">AfxUrlGetHostName</h3>
+<p>Accepts a URL string and returns the host name.</p>
+<pre class="code"><code>FUNCTION AfxUrlGetHostName (BYREF wszUrl AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>The URL string.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns the host name; if it fails, it returns an empty string.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>print AfxUrlGetHostName("https://user@example.com:8080/path/to/resource?id=123&amp;lang=es")</code></pre>
+<hr>
+<h3 id="afxurlgetlocation">AfxUrlGetLocation</h3>
+<p>Retrieves the location from a URL.</p>
+<pre class="code"><code>FUNCTION AfxUrlGetLocation (BYREF wszUrl AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>A string that contains the location. This string must not exceed INTERNET_MAX_PATH_LENGTH characters in length, including the terminating NULL character.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>A string with the location or an empty string.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The location is the segment of the URL starting with a ? or # character. If a file URL has a query string, the returned string includes the query string.</p>
+<hr>
+<h3 id="afxurlgetpart">AfxUrlGetPart</h3>
+<p>Accepts a URL string and returns a specified part of that URL.</p>
+<pre class="code"><code>FUNCTION AfxUrlGetPart (BYREF wszUrl AS WSTRING, _
+   BYVAL dwPart AS DWORD, BYVAL dwFlags AS DWORD) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>A string that contains the URL. This string must not exceed INTERNET_MAX_PATH_LENGTH characters in length, including the terminating NULL character.</td></tr><tr><td><em>dwPart</em></td><td>The flags that specify which part of the URL to retrieve. It can have one of the following values.<br><em>URL_PART_HOSTNAME</em>: The host name.<br><em>URL_PART_PASSWORD</em>: The password.<br><em>URL_PART_PORT</em>: The port number.<br><em>URL_PART_QUERY</em>: The query portion of the URL.<br><em>URL_PART_SCHEME</em>: The URL scheme.<br><em>URL_PART_USERNAME</em>: The username.</td></tr><tr><td><em>dwFlags</em></td><td>A flag that can be set to keep the URL scheme, in addition to the part that is specified by <em>dwPart</em>.<br><em>URL_PARTFLAG_KEEPSCHEME</em>: Keep the URL scheme.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>A string with the specified part of that URL.</p>
+<hr>
+<h3 id="afxurlgetpassword">AfxUrlGetPassword</h3>
+<p>Accepts a URL string and returns the password.</p>
+<pre class="code"><code>FUNCTION AfxUrlGetPassword (BYREF wszUrl AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>The URL string.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns the password; if it fails, it returns an empty string.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>print AfxUrlGetPassword("https://user:secret@example.com:8080/path/to/resource?id=123&amp;lang=es")</code></pre>
+<hr>
+<h3 id="afxurlgetport">AfxUrlGetPort</h3>
+<p>Accepts a URL string and returns the port number.</p>
+<pre class="code"><code>FUNCTION AfxUrlGetPort (BYREF wszUrl AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>The URL string.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns the port number; if it fails, it returns an empty string.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>print AfxUrlGetPassword("https://user:secret@example.com:8080/path/to/resource?id=123&amp;lang=es")</code></pre>
+<hr>
+<h3 id="afxurlgetquery">AfxUrlGetQuery</h3>
+<p>Accepts a URL string and returns the query portion.</p>
+<pre class="code"><code>FUNCTION AfxUrlGetQuery (BYREF wszUrl AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>The URL string.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns the query portion; if it fails, it returns an empty string.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>print AfxUrlGetQuery("https://user@example.com:8080/path/to/resource?id=123&amp;lang=es")</code></pre>
+<hr>
+<h3 id="afxurlgetschema">AfxUrlGetSchema</h3>
+<p>Accepts a URL string and returns the scheme.</p>
+<pre class="code"><code>FUNCTION AfxUrlGetScheme (BYREF wszUrl AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>The URL string.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns the scheme; if it fails, it returns an empty string.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>print AfxUrlGetScheme("https://user@example.com:8080/path/to/resource?id=123&amp;lang=es")</code></pre>
+<hr>
+<h3 id="afxurlgetusername">AfxUrlGetUserName</h3>
+<p>Accepts a URL string and returns the user name.</p>
+<pre class="code"><code>FUNCTION AfxUrlGetUserName (BYREF wszUrl AS CONST WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>The URL string.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns the user name; if it fails, it returns an empty string.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>FUNCTION AfxUrlGetUserName (BYREF wszUrl AS CONST WSTRING) AS DWSTRING</code></pre>
+<hr>
+<h3 id="afxurlhash">AfxUrlHash</h3>
+<p>Hashes a URL string.</p>
+<pre class="code"><code>FUNCTION AfxUrlHash (BYREF wszUrl AS WSTRING, BYVAL pbHash AS BYTE PTR, _
+   BYVAL cbHash AS DWORD) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>A string that contains the URL. This string must not exceed INTERNET_MAX_PATH_LENGTH characters in length, including the terminating NULL character.</td></tr><tr><td><em>pbHash</em></td><td>A pointer to a buffer that, When this method returns successfully, receives the hashed array.</td></tr><tr><td><em>cbHash</em></td><td>The number of elements in the array at <em>pbHash</em>. It should be no larger than 256.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns S_OK (0). Otherwise, it returns an HRESULT error code.</p>
+<h5 id="remarks">Remarks</h5>
+<p>To hash a URL into a single byte, set cbHash = SIZEOF(BYTE) and pbHash = VARPTR(bHashedValue), where bHashedValue is a one-byte buffer.</p>
+<p>To hash a URL into a DWORD, set cbHash = SIZEOF(DWORD) and pbHash = VARPTR(dwHashedValue), where dwHashedValue is a DWORD buffer.</p>
+<hr>
+<h3 id="afxurlis">AfxUrlIs</h3>
+<p>Tests whether or not a URL is a specified type.</p>
+<pre class="code"><code>FUNCTION AfxUrlIs (BYREF wszUrl AS WSTRING, BYVAL nUrlIs AS URLIS) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>A string that contains the URL. This string must not exceed INTERNET_MAX_PATH_LENGTH characters in length, including the terminating NULL character.</td></tr><tr><td><em>nUrlIs</em></td><td>The type of URL to be tested for. This parameter can take one of the following values:<br><em>URLIS_APPLIABLE</em>: Attempt to determine a valid scheme for the URL.<br><em>URLIS_DIRECTORY</em>: Does the URL string end with a directory?<br><em>URLIS_FILEURL</em>: Is the URL a file URL?<br><em>URLIS_HASQUERY</em>: Does the URL have an appended query string?<br><em>URLIS_NOHISTORY</em>: Is the URL a URL that is not typically tracked in navigation history?<br><em>URLIS_OPAQUE</em>: Is the URL opaque?<br><em>URLIS_URL</em>: Is the URL valid?</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>For all but one of the URL types, <strong>AfxUrlIs</strong> returns True if the URL is the specified type, or False if not.</p>
+<p>If <strong>AfxUrlIs</strong> is set to URLIS_APPLIABLE, <strong>AfxUrlIs</strong> will attempt to determine the URL scheme. If the function is able to determine a scheme, it returns True, or False otherwise.</p>
+<hr>
+<h3 id="afxurlisfileurl">AfxUrlIsFileUrl</h3>
+<p>Tests a URL to determine if it is a file URL.</p>
+<pre class="code"><code>FUNCTION AfxUrlIsFileUrl (BYREF wszUrl AS WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>A string that contains the URL to be corrected. This string must not exceed INTERNET_MAX_PATH_LENGTH characters in length, including the terminating NULL character.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns True if the URL is a file URL, or False otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>A file URL has the form "File:// xxx".</p>
+<hr>
+<h3 id="afxurlisnohistory">AfxUrlIsNoHistory</h3>
+<p>Returns whether a URL is a URL that browsers typically do not include in navigation history.</p>
+<pre class="code"><code>FUNCTION AfxUrlIsNoHistory (BYREF wszUrl AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>A string that contains the URL to be corrected. This string must not exceed INTERNET_MAX_PATH_LENGTH characters in length, including the terminating NULL character.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns a True value if the URL is a URL that is not included in navigation history, or False otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This function is equivalent to the following: AfxUrlIs(wszURL, URLIS_NOHISTORY)</p>
+<hr>
+<h3 id="afxurlisopaque">AfxUrlIsOpaque</h3>
+<p>Returns whether a URL is opaque.</p>
+<pre class="code"><code>FUNCTION AfxUrlIsOpaque (BYVAL wszUrl AS CONST WSTRING) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>A string that contains the URL to be corrected. This string must not exceed INTERNET_MAX_PATH_LENGTH characters in length, including the terminating NULL character.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns True if the URL is opaque, or False otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>A URL that has a scheme that is not followed by two slashes (//) is opaque. For example, mailto:xyz@litwareinc.com is an opaque URL. Opaque URLs cannot be separated into the standard URL hierarchy. <strong>AfxUrlIsOpaque</strong> is equivalent to the following: AfxUrlIs(wszURL, URLIS_OPAQUE)</p>
+<hr>
+<h3 id="afxurlunescape">AfxUrlUnescape</h3>
+<p>Converts escape sequences back into ordinary characters.</p>
+<pre class="code"><code>FUNCTION AfxUrlUnescape (BYREF wszUrl AS WSTRING, BYVAL dwFlags AS DWORD) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>A string that contains the URL. This string must not exceed INTERNET_MAX_PATH_LENGTH characters in length, including the terminating NULL character.</td></tr><tr><td><em>dwFlags</em></td><td>Flags that control which characters are unescaped. It can be the following flag:<br><em>URL_DONT_UNESCAPE_EXTRA_INFO</em>: Do not convert the # or ? character, or any characters following them in the string.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns S_OK (0) if successful or an HRESULT otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>An escape sequence has the form "%xy".</p>
+<p>Input strings cannot be longer than INTERNET_MAX_URL_LENGTH.</p>
+<hr>
+<h3 id="afxurlunescapeinplace">AfxUrlUnescapeInPlace</h3>
+<p>Converts escape sequences back into ordinary characters and overwrites the original string.</p>
+<pre class="code"><code>FUNCTION AfxUrlUnescapeInPlace (BYREF wszUrl AS WSTRING, BYVAL dwFlags AS DWORD) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszUrl</em></td><td>A string that contains the URL. This string must not exceed INTERNET_MAX_PATH_LENGTH characters in length, including the terminating NULL character. The converted string is returned through this parameter.</td></tr><tr><td><em>dwFlags</em></td><td>Flags that control which characters are unescaped. It can be the following flag:<br><em>URL_DONT_UNESCAPE_EXTRA_INFO</em>: Do not convert the # or ? character, or any characters following them in the string.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns S_OK (0) if successful or an HRESULT otherwise.</p>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

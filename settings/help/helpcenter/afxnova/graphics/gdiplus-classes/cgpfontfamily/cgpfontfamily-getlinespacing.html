@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpFontFamily.GetLineSpacing — Help Center</title>
+<meta name="description" content="Gets the line spacing, in design units, of this font family for the specified style or style combination.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpfontfamily/cgpfontfamily-getlinespacing.html">
+<meta property="og:title" content="CGpFontFamily.GetLineSpacing">
+<meta property="og:description" content="Gets the line spacing, in design units, of this font family for the specified style or style combination.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpfontfamily/cgpfontfamily-getlinespacing.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpfontfamily/cgpfontfamily-getlinespacing.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpfont-class.html">CGpFont Class</a></div>
+<h1>CGpFontFamily.GetLineSpacing<span class="h1kind">method</span></h1>
+<p class="lede">Gets the line spacing, in design units, of this font family for the specified style or style combination.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpFont.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GetLineSpacing (BYVAL nStyle AS INT_) AS UINT16</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>nStyle</code></td><td></td><td>Integer that specifies the style of the typeface. This value must be an element of the <strong>FontStyle</strong> enumeration or the result of a bitwise OR applied to two or more of these elements. For example, <em>FontStyleBold OR FontStyleUnderline OR FontStyleStrikeout</em> specifies a combination of the three styles.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>This method returns the line spacing of this font family.</p>
+<h2>Description</h2>
+<p>Gets the line spacing, in design units, of this font family for the specified style or style combination. The line spacing is the vertical distance between the base lines of two consecutive lines of text.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates a FontFamily object, gets the line spacing in design units, ' and outputs the value as text. ' ======================================================================================== SUB Example_GetLineSpacing (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scale transform graphics.ScaleTransformForDpi</p>
+<p>' // Create a FontFamily object DIM lineSpacingFontFamily AS CGpFontFamily = "arial"</p>
+<p>' // Get the cell ascent of the font family in design units. DIM lineSpacing AS LONG = lineSpacingFontFamily.GetLineSpacing(FontStyleRegular)</p>
+<p>' // Copy the line spacing into a string and draw the string. DIM solidBrush AS CGpSolidBrush = ARGB_BLACK DIM font AS CGpFont = CGpFont(@lineSpacingFontFamily, AfxGdipPointsToPixels(16, TRUE)) DIM wszText AS WSTRING * 260 = "lineSpacingFontFamily.GetLineSpacing() returns " &amp; STR(lineSpacing) graphics.DrawString(@wszText, -1, @font, 0, 0, @solidbrush)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpFont.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpFont.inc:341</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpFont Classes.md</span></li><li>Topic: <a href="../cgpfont-class.html">CGpFont Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

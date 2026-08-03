@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Variadic Arguments — Help Center</title>
+<meta name="description" content="Variadic Arguments — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/variadic-arguments.html">
+<meta property="og:title" content="Variadic Arguments">
+<meta property="og:description" content="Variadic Arguments — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/variadic-arguments.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/variadic-arguments.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Variadic Arguments</h1>
+<h2>Documentation</h2>
+
+	Allows a procedure to accept a <b>variable</b> number of <b>arguments</b>.<br>
+<a></a><br>
+<b>Preamble:</b><br>
+<br>
+Normal procedures take a fixed number of arguments. When such a procedure is defined, the data-type of each argument is specified.<br>
+Every call to this procedure should supply the expected number of arguments, with types that can be converted to the specified ones.<br>
+<br>
+Variadic arguments allow to define procedures which accept a variable number of arguments.<br>
+Support for variadic procedures differs widely among programming languages.<br>
+<br>
+Variadic procedures can expose type-safety problems because the language support for variadic procedures is not type-safe:<br>
+<div class="indent">- it allows to extract any number of arguments from the stack or elsewhere,<br>
+- and this while defining their types from entered user parameters.<br>
+</div>If the variable arguments are all of same type or compatible with the same type, a sized array can be passed instead, but this requires slightly more work at the caller level.<br>
+<br>
+<u>Table of Contents</u><br>
+<div class="indent"><b><a href="#ProPgVariadicArguments1">1. Syntax for using variadic procedures</a></b><br>
+<b><a href="#ProPgVariadicArguments2">2. ' FB's va_* ' support's keywords family</a></b> (<b>deprecated</b> <code>va_*</code> support but kept for backwards compatibility on some targets)<br>
+<b><a href="#ProPgVariadicArguments3">3. ' C's va_* ' support's keywords family</a></b> (<b>recommended</b> <code>va_*</code> support for all new coding)<br>
+<br>
+</div><a></a><br>
+<div>1. Syntax for using variadic procedures</div><div><br>
+The ellipsis <code>"..."</code> (three dots), as last parameter, is used in procedure declarations (and definitions) to indicate a variable length argument list:<br>
+<div class="indent"><b>-</b> A first fixed parameter (at least) must always be specified:<br>
+<div class="indent"><div class="indent">The fixed parameters(s) can provide information about how many variadic arguments there are, by any mechanism not imposed on the user.<br>
+Otherwise a terminal argument can be added in the variable length argument list, but this reserves a special argument value forbidden to the useful variadic arguments.<br>
+<div class="indent">(if one choose to pass the variable arguments all by pointer, in this case an obvious terminal argument is the null pointer)<br>
+</div></div></div><b>-</b> The procedure must be called with the C calling convention <code><a href="../../procedures/procedures/cdecl.html">cdecl</a></code>.<br>
+<b>-</b> Two <code>va_*</code> support's keywords families exist to retrieve the variable arguments in the variadic procedure body.<br>
+<b>-</b> A variadic procedure can never be overloaded:<br>
+<div class="indent"><div class="indent">so this also excludes its use in UDT for constructors and properties,<br>
+but otherwise it can be declared abstract or virtual or even overriding.<br>
+</div></div><b>-</b> For variadic procedure members, the implicit passed <a href="../../user-defined-types/procedures/this.html">This</a> parameter is not taken into account as first fixed parameter (at least one explicit fixed parameter must always be specified).<br>
+<br>
+</div><u>Declaration syntax</u><br>
+<div class="indent"><a href="../../procedures/procedures/declare.html">Declare</a> { <a href="../../procedures/procedures/sub.html">Sub</a> | <a href="../../procedures/procedures/function.html">Function</a> } <i>proc_name</i> <a href="../../procedures/procedures/cdecl.html">cdecl</a> ( <i>param_list</i>, <b>...</b> )  { | [ <a href="../../procedures/procedures/byref-function-results.html">ByRef</a> ] <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <i>return_type</i> }<br>
+<div class="indent"><code><i>param_list</i></code><br>
+<div class="indent">Parenthesized comma-separated list of fixed parameters.<br>
+</div><code><i>return_type</i></code><br>
+<div class="indent">The return type of a <code><a href="../../procedures/procedures/function.html">Function</a></code>.<br>
+</div><code><i>proc_name</i></code><br>
+<div class="indent">The name or symbol of the procedure.<br>
+<br>
+</div></div></div><u>Calling syntax</u><br>
+<div class="indent">There is nothing special to do for calling a variadic procedure.<br>
+The procedure is simply called by writing the arguments for the fixed parameters, followed by the additional variable arguments, as usual.<br>
+<br>
+Only numeric types and pointers are supported as variable arguments:<br>
+<div class="indent"><b>-</b> All bytes and shorts passed on variable arguments are implicitly converted to integers.<br>
+<b>-</b> All singles passed on variable arguments are implicitly converted to doubles.<br>
+<b>-</b> <code><a href="../../operators/preprocessor-operators/procedures/string.html">String</a></code>s <code>(or <a href="../../standard-data-types/procedures/wstring.html">WString</a></code>s<code>)</code> can be directly passed by user, in which case a <code><a href="../../standard-data-types/procedures/zstring.html">ZString</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> <code>(or a <a href="../../standard-data-types/procedures/wstring.html">WString</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a>)</code> to the string (or the wstring) data is taken into account as internal passed argument.<br>
+<br>
+</div></div><u>Retrieving variable arguments</u><br>
+<div class="indent">Variable arguments may use the stack, or registers, as per the normal conventions for the compiler:<br>
+<div class="indent"><b>-</b> For some compilers in the past, while registers were used for normal procedures, stack was (always) used for variadic procedures.<br>
+<b>-</b> The gcc compiler family all seem to agree that the call signatures for variadic procedures are exactly the same as properly specified procedures. This means that some of the variable arguments may be in registers and some may be on the stack if there are too many.<br>
+<br>
+</div>The <code>va_*</code> support's keywords create an interface to retrieve these variable arguments in procedure body:<br>
+<div class="indent"><b>-</b> The first FreeBASIC <code>va_*</code> support's keywords family developed have been the FB's <code>va_*</code> support's keywords family:<br>
+<div class="indent"><div class="indent">These FB's <code>va_*</code> support's keywords are very x86-specific and only work with the gas for x86 GAS assembly backend, because using a pointer to the argument stack.<br>
+These FB's <code>va_*</code> support's keywords don't work on all targets (like 64-bit) because arguments can be passed to procedures in cpu registers.<br>
+These FB's <code>va_*</code> support's keywords are now deprecated but kept for backwards compatibility on some targets.<br>
+</div></div><b>-</b> More recently, a FreeBASIC update added a new support's keywords family for variadic procedure argument lists:<br>
+<div class="indent"><div class="indent">This is the C's <code>va_*</code> support's keywords family compatible for all target platforms.<br>
+These C's <code>va_*</code> support's keywords are now recommended for all new coding.<br>
+<br>
+</div></div></div></div><div><a href="#ProPgVariadicArgumentsTop">Back to top</a></div><br>
+<a></a><br>
+</div><div>2. ' FB's va_* ' support's keywords family</div><div><br>
+<b>Deprecated</b> <code>va_*</code> support but kept for backwards compatibility on some targets.<br>
+<br>
+There are 3 FB's <code>va_*</code> support's keywords (<code><b>va_first</b></code>, <code><b>va_arg</b></code>, <code><b>va_next</b></code>):<br>
+<div class="indent"><code><i>pointer_variable</i> = <b>va_first</b>( )</code><br>
+<div class="indent"><code><b>va_first</b></code> provides an untyped <a href="pointers.html">pointer</a> value that points to the first variable argument passed to a procedure.<br>
+<br>
+</div><code><i>variable</i> = <b>va_arg</b>( <i>argument_list</i>, <a href="../../reference/data-types.html">datatype</a> )</code><br>
+<div class="indent"><code><b>va_arg</b></code> returns the current argument in the list, <code><i>argument_list</i></code>, with an expected data type of <code><i>datatype</i></code>.<br>
+(before first <code><b>va_arg</b></code> use, <code><i>argument_list</i></code> must be initialized with the command <code><b>va_first</b></code>)<br>
+<br>
+</div><code><i>argument_pointer</i> = <b>va_next</b>( <i>argument_list</i>, <a href="../../reference/data-types.html">datatype</a> )</code><br>
+<div class="indent"><code><b>va_next</b></code> provides a <code><i>datatype</i></code> pointer value that points to the next argument within the list <code><i>argument_list</i></code>, <code><i>datatype</i></code> being the type of the current argument being stepped over.<br>
+<br>
+</div></div>Note:<br>
+<div class="indent"><code><i>pointer_variable</i> = <b>va_first</b>( )</code><br>
+computes the address in the stack following the address of the last passed fixed parameter.<br>
+<br>
+<code><i>variable</i> = <b>va_arg</b>( <i>argument_list</i>, <a href="../../reference/data-types.html">datatype</a> )</code><br>
+is equivalent to:<br>
+<code><i>variable</i> = <a href="../../operators/pointer-operators/procedures/operator-value-of.html">*</a><a href="../../converting-data-types/procedures/cptr.html">CPtr</a>( <a href="../../reference/data-types.html">datatype</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a>, <a href="../../converting-data-types/procedures/cptr.html">CPtr</a>( <a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a>, <i>argument_list</i> ) )</code><br>
+<br>
+<code><i>argument_pointer</i> = <b>va_next</b>( <i>argument_list</i>, <a href="../../reference/data-types.html">datatype</a> )</code><br>
+is equivalent to:<br>
+<code><i>argument_pointer</i> = <a href="../../converting-data-types/procedures/cptr.html">CPtr</a>( <a href="../../reference/data-types.html">datatype</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a>, <a href="../../converting-data-types/procedures/cptr.html">CPtr</a>( <a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a>, <i>argument_list</i> ) ) + 1</code><br>
+<br>
+</div>Examples:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">' Variadic function:</span>
+
+<span class="tok-cm">'    The first(fixed) parameter provides the number of elements.</span>
+
+<span class="tok-cm">'    The variable arguments are all strings except the last one which must be a float.</span>
+
+<span class="tok-cm">'    The user's string arguments are in fact passed under the hood through zstring pointers.</span>
+
+
+
+<span class="tok-kw">Function</span> <span>concatenation</span> <span class="tok-kw">cdecl</span> <span>(</span><span class="tok-kw">ByVal</span> <span>count</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>...)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Dim</span> <span>arg</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+    <span class="tok-kw">Dim</span> <span>s</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+   
+
+    <span>arg</span> <span>=</span> <span class="tok-kw">va_first</span><span>()</span>
+
+
+
+    <span class="tok-kw">For</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span>count</span>
+
+        <span class="tok-kw">If</span> <span>i</span> <span>&lt;</span> <span>count</span> <span class="tok-kw">Then</span>
+
+            <span>s</span> <span>&amp;=</span> <span>*</span><span class="tok-kw">va_arg</span><span>(</span><span>arg</span><span>,</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+            <span>arg</span> <span>=</span> <span class="tok-kw">va_next</span><span>(</span><span>arg</span><span>,</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+        <span class="tok-kw">Else</span>
+
+            <span>s</span> <span>&amp;=</span> <span class="tok-kw">va_arg</span><span>(</span><span>arg</span><span>,</span> <span class="tok-kw">Double</span><span>)</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+    <span class="tok-kw">Next</span>
+
+   
+
+    <span class="tok-kw">Return</span> <span>s</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Print</span> <span>concatenation</span><span>(</span><span class="tok-nu">6</span><span>,</span> <span>&quot;Free&quot;</span><span>,</span> <span>&quot;BASIC&quot;</span><span>,</span> <span>&quot; &quot;</span><span>,</span> <span>&quot;version&quot;</span><span>,</span> <span>&quot; &quot;</span><span>,</span> <span class="tok-nu">0.13</span><span>)</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-cm">' Output: FreeBASIC version 0.13</span></pre></code><br>
+<code><pre class="code"><span class="tok-cm">' Variadic sub:</span>
+
+<span class="tok-cm">'    The first(fixed) parameter provides the number of elements.</span>
+
+<span class="tok-cm">'    The variable arguments are all UDT Ptr.</span>
+
+
+
+<span class="tok-kw">Type</span> <span>UDT</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>s</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span> <span>d</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>printUDT</span> <span class="tok-kw">cdecl</span> <span>(</span><span class="tok-kw">ByVal</span> <span>count</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>...)</span>
+
+    <span class="tok-kw">Dim</span> <span>arg</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+    <span class="tok-kw">Dim</span> <span>pu</span> <span class="tok-kw">As</span> <span>UDT</span> <span class="tok-kw">Ptr</span>
+
+   
+
+    <span>arg</span> <span>=</span> <span class="tok-kw">va_first</span><span>()</span>
+
+
+
+    <span class="tok-kw">For</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span>count</span>
+
+        <span>pu</span> <span>=</span> <span class="tok-kw">va_arg</span><span>(</span><span>arg</span><span>,</span> <span>UDT</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+        <span class="tok-kw">Print</span> <span>pu</span><span>-&gt;</span><span>s</span><span>,</span> <span>pu</span><span>-&gt;</span><span>d</span>
+
+        <span>arg</span> <span>=</span> <span class="tok-kw">va_next</span><span>(</span><span>arg</span><span>,</span> <span>UDT</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+    <span class="tok-kw">Next</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>u1</span><span>,</span> <span>u2</span><span>,</span> <span>u3</span>
+
+<span>u1.s</span> <span>=</span> <span>&quot;4*Atn(1)&quot;</span> <span>:</span> <span>u1.d</span> <span>=</span> <span class="tok-nu">4</span> <span>*</span> <span class="tok-kw">Atn</span><span>(</span><span class="tok-nu">1</span><span>)</span>
+
+<span>u2.s</span> <span>=</span> <span>&quot;Sqr(2)&quot;</span>   <span>:</span> <span>u2.d</span> <span>=</span> <span class="tok-kw">Sqr</span><span>(</span><span class="tok-nu">2</span><span>)</span>
+
+<span>u3.s</span> <span>=</span> <span>&quot;Log(10)&quot;</span>  <span>:</span> <span>u3.d</span> <span>=</span> <span class="tok-kw">Log</span><span>(</span><span class="tok-nu">10</span><span>)</span>
+
+
+
+<span>printUDT</span><span>(</span><span class="tok-nu">3</span><span>,</span> <span>@</span><span>u1</span><span>,</span> <span>@</span><span>u2</span><span>,</span> <span>@</span><span>u3</span><span>)</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-cm">' Output:</span>
+
+<span class="tok-cm">' 4*Atn(1)       3.141593</span>
+
+<span class="tok-cm">' Sqr(2)         1.414214</span>
+
+<span class="tok-cm">' Log(10)        2.302585</span></pre></code><br>
+<code><pre class="code"><span class="tok-cm">' Variadic sub:</span>
+
+<span class="tok-cm">'    The first (fixed) parameter is the type of the variable arguments (Integer Ptr or Double Ptr).</span>
+
+<span class="tok-cm">'    One terminal argument (added after the useful arguments) must be the null pointer.</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>printNumericList</span> <span class="tok-kw">cdecl</span> <span>(</span><span class="tok-kw">ByRef</span> <span>argtype</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span>...)</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>datatype</span> <span>=</span> <span class="tok-nu">0</span>
+
+    <span class="tok-kw">If</span> <span class="tok-kw">UCase</span><span>(</span><span>argtype</span><span>)</span> <span>=</span> <span>&quot;INTEGER PTR&quot;</span> <span class="tok-kw">Then</span>
+
+        <span>datatype</span> <span>=</span> <span class="tok-nu">1</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;List of integers : &quot;</span><span>;</span>
+
+    <span class="tok-kw">ElseIf</span> <span class="tok-kw">UCase</span><span>(</span><span>argtype</span><span>)</span> <span>=</span> <span>&quot;DOUBLE PTR&quot;</span> <span class="tok-kw">Then</span>
+
+        <span>datatype</span> <span>=</span> <span class="tok-nu">2</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;List of doubles : &quot;</span><span>;</span>
+
+    <span class="tok-kw">Else</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;Invalid argument type&quot;</span>
+
+        <span class="tok-kw">Exit</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+   
+
+    <span class="tok-kw">Dim</span> <span>arg</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+    <span class="tok-kw">Dim</span> <span>pn</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+   
+
+    <span>arg</span> <span>=</span> <span class="tok-kw">va_first</span><span>()</span>
+
+
+
+    <span class="tok-kw">Do</span>
+
+        <span>pn</span> <span>=</span> <span class="tok-kw">va_arg</span><span>(</span><span>arg</span><span>,</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+        <span class="tok-kw">If</span> <span>pn</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span class="tok-kw">Exit</span> <span class="tok-kw">Do</span>
+
+        <span class="tok-kw">Print</span> <span>,</span>
+
+        <span class="tok-kw">Select</span> <span class="tok-kw">Case</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span>datatype</span>
+
+        <span class="tok-kw">Case</span> <span class="tok-nu">1</span>
+
+            <span class="tok-kw">Print</span> <span>*</span><span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span><span>,</span> <span>pn</span><span>);</span>
+
+        <span class="tok-kw">Case</span> <span class="tok-nu">2</span>
+
+            <span class="tok-kw">Print</span> <span>*</span><span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Double</span> <span class="tok-kw">Ptr</span><span>,</span> <span>pn</span><span>);</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Select</span>    
+
+        <span>arg</span> <span>=</span> <span class="tok-kw">va_next</span><span>(</span><span>arg</span><span>,</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+    <span class="tok-kw">Loop</span>
+
+   
+
+    <span class="tok-kw">Print</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span>printNumericList</span><span>(</span><span>&quot;Integer Ptr&quot;</span><span>,</span> <span>@</span><span class="tok-kw">Type</span><span>&lt;</span><span class="tok-kw">Integer</span><span>&gt;(</span><span class="tok-nu">123</span><span>),</span> <span>@</span><span class="tok-kw">Type</span><span>&lt;</span><span class="tok-kw">Integer</span><span>&gt;(</span><span class="tok-nu">456</span><span>),</span> <span>@</span><span class="tok-kw">Type</span><span>&lt;</span><span class="tok-kw">Integer</span><span>&gt;(</span><span class="tok-nu">789</span><span>),</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span><span>,</span> <span class="tok-nu">0</span><span>))</span>
+
+<span>printNumericList</span><span>(</span><span>&quot;Double Ptr&quot;</span><span>,</span> <span>@</span><span class="tok-kw">Type</span><span>&lt;</span><span class="tok-kw">Double</span><span>&gt;(</span><span class="tok-nu">1.2</span><span>),</span> <span>@</span><span class="tok-kw">Type</span><span>&lt;</span><span class="tok-kw">Double</span><span>&gt;(</span><span class="tok-nu">3.4</span><span>),</span> <span>@</span><span class="tok-kw">Type</span><span>&lt;</span><span class="tok-kw">Double</span><span>&gt;(</span><span class="tok-nu">5.6</span><span>),</span> <span>@</span><span class="tok-kw">Type</span><span>&lt;</span><span class="tok-kw">Double</span><span>&gt;(</span><span class="tok-nu">7.8</span><span>),</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Double</span> <span class="tok-kw">Ptr</span><span>,</span> <span class="tok-nu">0</span><span>))</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-cm">' Output:</span>
+
+<span class="tok-cm">' List of integers :           123           456           789</span>
+
+<span class="tok-cm">' List of doubles :            1.2           3.4           5.6           7.8</span></pre></code><br>
+</div><div><a href="#ProPgVariadicArgumentsTop">Back to top</a></div><br>
+<a></a><br>
+</div><div>3. ' C's va_* ' support's keywords family</div><div><br>
+<b>Recommended</b> <code>va_*</code> support for all new coding.<br>
+<br>
+There are 5 C's <code>va_*</code> support's keywords (<code><b>Cva_List</b></code>, <code><b>Cva_Start</b></code>, <code><b>Cva_Copy</b></code>, <code><b>Cva_Arg</b></code>, <code><b>Cva_End</b></code>):<br>
+<div class="indent"><code><a href="../../variable-declarations/procedures/dim.html">Dim</a> <i>variable</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <b>Cva_List</b></code><br>
+<div class="indent"><code><b>Cva_List</b></code> is a built in data type for working with the variable length argument list in a variadic procedure.<br>
+<br>
+</div><code><b>Cva_Start</b>( <i>argument_list</i>, <i>last_param</i> )</code><br>
+<div class="indent"><code><b>Cva_Start</b></code> "constructs" the <code><i>argument_list</i></code> object declared of <code><b>Cva_List</b></code> data-type, settling on the <code><i>last_param</i></code> declared in the procedures parameter list before the <a href="../../procedures/procedures/ellipsis.html">Ellipsis</a> <code><a href="../../procedures/procedures/ellipsis.html">&quot;...&quot;</a></code>.<br>
+<br>
+</div><code><b>Cva_Copy</b>( <i>dst_list</i>, <i>src_list</i> )</code><br>
+<div class="indent"><code><b>Cva_Copy</b></code> "copy-constructs" the <code><i>dst_list</i></code> object declared of <code><b>Cva_List</b></code> data-type, from an already constructed <code><i>src_list</i></code> object.<br>
+<br>
+</div><code><i>variable</i> = <b>Cva_Arg</b>( <i>argument_list</i>, <a href="../../reference/data-types.html">datatype</a> )</code><br>
+<div class="indent"><code><b>Cva_Arg</b></code> returns the current argument in the <code><i>argument_list</i></code>, with an expected data-type of <code><i>datatype</i></code>.<br>
+(<code><b>Cva_Arg</b></code> automatically increments <code><i>argument_list</i></code> to the next argument within the list after obtaining the value of the current argument)<br>
+<br>
+</div><code><b>Cva_End</b>( <i>argument_list</i> )</code><br>
+<div class="indent"><code><b>Cva_End</b></code> "destructs" the <code><i>argument_list</i></code> object of <code><b>Cva_List</b></code> data-type (previously "constructed" with <code><b>Cva_Start</b></code> or <code><b>Cva_Copy</b></code>).<br>
+<br>
+</div></div>The implementation and code emitted for <code><b>Cva_List</b></code>, <code><b>Cva_Start</b></code>, <code><b>Cva_Copy</b></code>, <code><b>Cva_Arg</b></code>, <code><b>Cva_End</b></code> varies depending on target, backend, and architecture.<br>
+<br>
+Note:<br>
+<div class="indent">The exact type and size of <code><b>Cva_List</b></code> depends on <code>-target</code>, <code>-arch</code>, <code>-gen</code> command line options:<br>
+<div class="indent">In <code>-gen gas</code>, <code><b>Cva_List</b></code> is a pointer.<br>
+In <code>-gen gcc</code>, <code><b>Cva_List</b></code> is a pointer, a struct, or a struct array. The <code><b>Cva_List</b></code> type is replaced by <code>"__builtin_va_list"</code> in gcc.<br>
+On 32-bit targets, gas backend: <code>type <b>Cva_List</b> as any alias "char" ptr</code><br>
+On 32-bit targets, gcc backend: <code>type <b>Cva_List</b> as any alias "__builtin_va_list" ptr</code><br>
+On Windows 64-bit, gcc backend: <code>type <b>Cva_List</b> as any alias "__builtin_va_list" ptr</code><br>
+On Linux x86_64, gcc backend: <code>type <b>Cva_List</b> as __va_list_tag alias "__builtin_va_list[]"</code><br>
+On arm64, gcc backend: <code>type <b>Cva_List</b> as __va_list alias "__builtin_va_list"</code><br>
+<br>
+</div><code><b>Cva_Start</b> (or <b>Cva_Copy</b>)</code> is like a constructor (or a copy-constructor) for the variadic <code><i>argument_list</i></code> object and must finally have a matching call to <code><b>Cva_End</b></code>, which is like a destructor.<br>
+After <code><b>Cva_End</b></code> for <code><i>argument_list</i></code> has been called, <code><i>argument_list</i></code> can be reused and reinitialized with another call to <code><b>Cva_Start</b> (or <b>Cva_Copy</b>)</code>.<br>
+The <code><b>Cva_Start</b> (or <b>Cva_Copy</b>)</code> and <code><b>Cva_End</b></code> calls must both be called in pairs in the same procedure (for cross platform compatibility).<br>
+<br>
+</div>Examples:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">' Variadic function:</span>
+
+<span class="tok-cm">'    The first(fixed) parameter provides the number of elements.</span>
+
+<span class="tok-cm">'    The variable arguments are all strings except the last one which must be a float.</span>
+
+<span class="tok-cm">'    The user's string arguments are in fact passed under the hood through zstring pointers.</span>
+
+
+
+<span class="tok-kw">Function</span> <span>concatenation</span> <span class="tok-kw">cdecl</span> <span>(</span><span class="tok-kw">ByVal</span> <span>count</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>...)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Dim</span> <span>s</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Dim</span> <span>args</span> <span class="tok-kw">As</span> <span class="tok-kw">Cva_List</span>
+
+    
+
+    <span class="tok-kw">Cva_Start</span><span>(</span><span>args</span><span>,</span> <span>count</span><span>)</span>
+
+    
+
+    <span class="tok-kw">For</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span>count</span>
+
+        <span class="tok-kw">If</span> <span>i</span> <span>&lt;</span> <span>count</span> <span class="tok-kw">Then</span>
+
+            <span>s</span> <span>&amp;=</span> <span>*</span><span class="tok-kw">Cva_Arg</span><span>(</span><span>args</span><span>,</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+        <span class="tok-kw">Else</span>
+
+            <span>s</span> <span>&amp;=</span> <span class="tok-kw">Cva_Arg</span><span>(</span><span>args</span><span>,</span> <span class="tok-kw">Double</span><span>)</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+    <span class="tok-kw">Next</span>
+
+    
+
+    <span class="tok-kw">Cva_End</span><span>(</span><span>args</span><span>)</span>
+
+   
+
+    <span class="tok-kw">Return</span> <span>s</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Print</span> <span>concatenation</span><span>(</span><span class="tok-nu">6</span><span>,</span> <span>&quot;Free&quot;</span><span>,</span> <span>&quot;BASIC&quot;</span><span>,</span> <span>&quot; &quot;</span><span>,</span> <span>&quot;version&quot;</span><span>,</span> <span>&quot; &quot;</span><span>,</span> <span class="tok-nu">1.07</span><span>)</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-cm">' Output: FreeBASIC version 1.07</span></pre></code><br>
+<code><pre class="code"><span class="tok-cm">' Variadic sub:</span>
+
+<span class="tok-cm">'    The first(fixed) parameter provides the number of elements.</span>
+
+<span class="tok-cm">'    The variable arguments are all UDT Ptr.</span>
+
+
+
+<span class="tok-kw">Type</span> <span>UDT</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>s</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span> <span>d</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>printUDT</span> <span class="tok-kw">cdecl</span> <span>(</span><span class="tok-kw">ByVal</span> <span>count</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>...)</span>
+
+    <span class="tok-kw">Dim</span> <span>args</span> <span class="tok-kw">As</span> <span class="tok-kw">Cva_List</span>
+
+    <span class="tok-kw">Dim</span> <span>pu</span> <span class="tok-kw">As</span> <span>UDT</span> <span class="tok-kw">Ptr</span>
+
+   
+
+    <span class="tok-kw">Cva_Start</span><span>(</span><span>args</span><span>,</span> <span>count</span><span>)</span>
+
+
+
+    <span class="tok-kw">For</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span>count</span>
+
+        <span>pu</span> <span>=</span> <span class="tok-kw">Cva_Arg</span><span>(</span><span>args</span><span>,</span> <span>UDT</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+        <span class="tok-kw">Print</span> <span>pu</span><span>-&gt;</span><span>s</span><span>,</span> <span>pu</span><span>-&gt;</span><span>d</span>
+
+    <span class="tok-kw">Next</span>
+
+    
+
+    <span class="tok-kw">Cva_End</span><span>(</span><span>args</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>u1</span><span>,</span> <span>u2</span><span>,</span> <span>u3</span>
+
+<span>u1.s</span> <span>=</span> <span>&quot;4*Atn(1)&quot;</span> <span>:</span> <span>u1.d</span> <span>=</span> <span class="tok-nu">4</span> <span>*</span> <span class="tok-kw">Atn</span><span>(</span><span class="tok-nu">1</span><span>)</span>
+
+<span>u2.s</span> <span>=</span> <span>&quot;Sqr(2)&quot;</span>   <span>:</span> <span>u2.d</span> <span>=</span> <span class="tok-kw">Sqr</span><span>(</span><span class="tok-nu">2</span><span>)</span>
+
+<span>u3.s</span> <span>=</span> <span>&quot;Log(10)&quot;</span>  <span>:</span> <span>u3.d</span> <span>=</span> <span class="tok-kw">Log</span><span>(</span><span class="tok-nu">10</span><span>)</span>
+
+
+
+<span>printUDT</span><span>(</span><span class="tok-nu">3</span><span>,</span> <span>@</span><span>u1</span><span>,</span> <span>@</span><span>u2</span><span>,</span> <span>@</span><span>u3</span><span>)</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-cm">' Output:</span>
+
+<span class="tok-cm">' 4*Atn(1)       3.141593</span>
+
+<span class="tok-cm">' Sqr(2)         1.414214</span>
+
+<span class="tok-cm">' Log(10)        2.302585</span></pre></code><br>
+<code><pre class="code"><span class="tok-cm">' Variadic sub:</span>
+
+<span class="tok-cm">'    The first (fixed) parameter is the type of the variable arguments (Integer Ptr or Double Ptr).</span>
+
+<span class="tok-cm">'    One terminal argument (added after the useful arguments) must be the null pointer.</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>printNumericList</span> <span class="tok-kw">cdecl</span> <span>(</span><span class="tok-kw">ByRef</span> <span>argtype</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span>...)</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>datatype</span> <span>=</span> <span class="tok-nu">0</span>
+
+    <span class="tok-kw">If</span> <span class="tok-kw">UCase</span><span>(</span><span>argtype</span><span>)</span> <span>=</span> <span>&quot;INTEGER PTR&quot;</span> <span class="tok-kw">Then</span>
+
+        <span>datatype</span> <span>=</span> <span class="tok-nu">1</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;List of integers : &quot;</span><span>;</span>
+
+    <span class="tok-kw">ElseIf</span> <span class="tok-kw">UCase</span><span>(</span><span>argtype</span><span>)</span> <span>=</span> <span>&quot;DOUBLE PTR&quot;</span> <span class="tok-kw">Then</span>
+
+        <span>datatype</span> <span>=</span> <span class="tok-nu">2</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;List of doubles : &quot;</span><span>;</span>
+
+    <span class="tok-kw">Else</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;Invalid argument type&quot;</span>
+
+        <span class="tok-kw">Exit</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+   
+
+    <span class="tok-kw">Dim</span> <span>args</span> <span class="tok-kw">As</span> <span class="tok-kw">Cva_List</span>
+
+    <span class="tok-kw">Dim</span> <span>pn</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+   
+
+    <span class="tok-kw">Cva_Start</span><span>(</span><span>args</span><span>,</span> <span>argtype</span><span>)</span>
+
+   
+
+    <span class="tok-kw">Do</span>
+
+        <span>pn</span> <span>=</span> <span class="tok-kw">Cva_Arg</span><span>(</span><span>args</span><span>,</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+        <span class="tok-kw">If</span> <span>pn</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span class="tok-kw">Exit</span> <span class="tok-kw">Do</span>
+
+        <span class="tok-kw">Print</span> <span>,</span>
+
+        <span class="tok-kw">Select</span> <span class="tok-kw">Case</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span>datatype</span>
+
+        <span class="tok-kw">Case</span> <span class="tok-nu">1</span>
+
+            <span class="tok-kw">Print</span> <span>*</span><span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span><span>,</span> <span>pn</span><span>);</span>
+
+        <span class="tok-kw">Case</span> <span class="tok-nu">2</span>
+
+            <span class="tok-kw">Print</span> <span>*</span><span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Double</span> <span class="tok-kw">Ptr</span><span>,</span> <span>pn</span><span>);</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Select</span>    
+
+    <span class="tok-kw">Loop</span>
+
+   
+
+    <span class="tok-kw">Print</span>
+
+   
+
+    <span class="tok-kw">Cva_End</span><span>(</span><span>args</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span>printNumericList</span><span>(</span><span>&quot;Integer Ptr&quot;</span><span>,</span> <span>@</span><span class="tok-kw">Type</span><span>&lt;</span><span class="tok-kw">Integer</span><span>&gt;(</span><span class="tok-nu">123</span><span>),</span> <span>@</span><span class="tok-kw">Type</span><span>&lt;</span><span class="tok-kw">Integer</span><span>&gt;(</span><span class="tok-nu">456</span><span>),</span> <span>@</span><span class="tok-kw">Type</span><span>&lt;</span><span class="tok-kw">Integer</span><span>&gt;(</span><span class="tok-nu">789</span><span>),</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span><span>,</span> <span class="tok-nu">0</span><span>))</span>
+
+<span>printNumericList</span><span>(</span><span>&quot;Double Ptr&quot;</span><span>,</span> <span>@</span><span class="tok-kw">Type</span><span>&lt;</span><span class="tok-kw">Double</span><span>&gt;(</span><span class="tok-nu">1.2</span><span>),</span> <span>@</span><span class="tok-kw">Type</span><span>&lt;</span><span class="tok-kw">Double</span><span>&gt;(</span><span class="tok-nu">3.4</span><span>),</span> <span>@</span><span class="tok-kw">Type</span><span>&lt;</span><span class="tok-kw">Double</span><span>&gt;(</span><span class="tok-nu">5.6</span><span>),</span> <span>@</span><span class="tok-kw">Type</span><span>&lt;</span><span class="tok-kw">Double</span><span>&gt;(</span><span class="tok-nu">7.8</span><span>),</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Double</span> <span class="tok-kw">Ptr</span><span>,</span> <span class="tok-nu">0</span><span>))</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-cm">' Output:</span>
+
+<span class="tok-cm">' List of integers :           123           456           789</span>
+
+<span class="tok-cm">' List of doubles :            1.2           3.4           5.6           7.8</span></pre></code><br>
+</div><div><a href="#ProPgVariadicArgumentsTop">Back to top</a></div><br>
+<br>
+</div><div>See also</div><div><br>
+<ul><li> <code><a href="../../procedures/procedures/ellipsis.html">... (Ellipsis)</a></code><br>
+<li> <code><a href="../../procedures/procedures/va-first.html">va_first</a></code><br>
+<li> <code><a href="../../procedures/procedures/va-arg.html">va_arg</a></code><br>
+<li> <code><a href="../../procedures/procedures/va-next.html">va_next</a></code><br>
+<li> <code><a href="../../procedures/procedures/cva-list.html">Cva_List</a></code><br>
+<li> <code><a href="../../procedures/procedures/cva-start.html">Cva_Start</a></code><br>
+<li> <code><a href="../../procedures/procedures/cva-copy.html">Cva_Copy</a></code><br>
+<li> <code><a href="../../procedures/procedures/cva-arg.html">Cva_Arg</a></code><br>
+<li> <code><a href="../../procedures/procedures/cva-end.html">Cva_End</a></code><br>
+<br>
+</li></li></li></li></li></li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

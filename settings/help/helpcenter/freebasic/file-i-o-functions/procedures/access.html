@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Access — Help Center</title>
+<meta name="description" content="Clause of the Open statement to specify requested privileges">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/file-i-o-functions/procedures/access.html">
+<meta property="og:title" content="Access">
+<meta property="og:description" content="Clause of the Open statement to specify requested privileges">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/file-i-o-functions/procedures/access.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/file-i-o-functions/procedures/access.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Access<span class="h1kind">keyword</span></h1>
+<p class="lede">Clause of the Open statement to specify requested privileges</p>
+<div class="badges"><a class="badge" href="../index.html">File I/O Functions</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Open filename for Binary Access {Read | Write | Read Write} as [#]filenum</code></pre>
+<h2>Description</h2>
+<br>
+<code>Access</code> is used with the <code><a href="open.html">Open</a></code> statement to request read, write, or read and write privileges.  If the <code>Access</code> clause is not specified, <code>Read Write</code> is assumed.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+open <i>filename</i> for binary <b>Access Read</b> as #<i>filenum</i><br>
+open <i>filename</i> for binary <b>Access Write</b> as #<i>filenum</i><br>
+open <i>filename</i> for binary <b>Access Read Write</b> as #<i>filenum</i><br>
+</code><br>
+
+<h3>Differences from QB</h3><br>
+<ul><li> None known.<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="open.html">Open</a></code><br>
+<li> <code><a href="read-file-access.html">Read</a></code><br>
+<li> <code><a href="write-file-access.html">Write</a></code><br>
+<br>
+</li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<br>
+This example shows how to open the file "data.raw" with <code><a href="read-file-access.html">Read</a></code> and then "data.out" with <code><a href="write-file-access.html">Write</a></code> access, in <code><a href="binary.html">Binary</a></code> mode, in an open file number returned by <code><a href="freefile.html">FreeFile</a></code>.<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>o</span>
+
+
+
+  <span class="tok-cm">'' get an open file number.</span>
+
+  <span>o</span> <span>=</span> <span class="tok-kw">FreeFile</span>
+
+  
+
+  <span class="tok-cm">'' open file for read-only access.    </span>
+
+  <span class="tok-kw">Open</span> <span>&quot;data.raw&quot;</span> <span class="tok-kw">For</span> <span class="tok-kw">Binary</span> <span class="tok-kw">Access</span> <span class="tok-kw">Read</span> <span class="tok-kw">As</span> <span>#</span><span>o</span>
+
+    
+
+    <span class="tok-cm">'' make a buffer in memory thats the entire size of the file</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span>file_char</span><span>(</span> <span class="tok-kw">LOF</span><span>(</span> <span>o</span> <span>)</span> <span>-</span> <span class="tok-nu">1</span> <span>)</span>
+
+
+
+      <span class="tok-cm">'' get the file into the buffer.      </span>
+
+      <span class="tok-kw">Get</span> <span>#</span><span>o</span><span>,</span> <span>,</span> <span>file_char</span><span>()</span>
+
+    
+
+  <span class="tok-kw">Close</span>
+
+  
+
+  <span class="tok-cm">'' get another open file number.</span>
+
+  <span>o</span> <span>=</span> <span class="tok-kw">FreeFile</span>
+
+  
+
+  <span class="tok-cm">'' open file for write-only access.    </span>
+
+  <span class="tok-kw">Open</span> <span>&quot;data.out&quot;</span> <span class="tok-kw">For</span> <span class="tok-kw">Binary</span> <span class="tok-kw">Access</span> <span class="tok-kw">Write</span> <span class="tok-kw">As</span> <span>#</span><span>o</span>
+
+
+
+    <span class="tok-cm">'' put the buffer into the new file.      </span>
+
+    <span class="tok-kw">Put</span> <span>#</span><span>o</span><span>,</span> <span>,</span> <span>file_char</span><span>()</span>
+
+    
+
+  <span class="tok-kw">Close</span>
+
+
+
+  <span class="tok-kw">Print</span> <span>&quot;Copied file &quot;&quot;data.raw&quot;&quot; to file &quot;&quot;data.out&quot;&quot;&quot;</span>
+
+
+
+  <span class="tok-kw">Sleep</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgAccess.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

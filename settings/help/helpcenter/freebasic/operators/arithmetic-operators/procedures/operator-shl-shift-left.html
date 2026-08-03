@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operator Shl (Shift Left) — Help Center</title>
+<meta name="description" content="Shifts the bits of a numeric expression to the left">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/operators/arithmetic-operators/procedures/operator-shl-shift-left.html">
+<meta property="og:title" content="Operator Shl (Shift Left)">
+<meta property="og:description" content="Shifts the bits of a numeric expression to the left">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/operators/arithmetic-operators/procedures/operator-shl-shift-left.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/operators/arithmetic-operators/procedures/operator-shl-shift-left.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Operator Shl (Shift Left)<span class="h1kind">operator</span></h1>
+<p class="lede">Shifts the bits of a numeric expression to the left</p>
+<div class="badges"><a class="badge" href="../../index.html">Operators</a><span class="badge">operator</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Operator Shl ( ByRef lhs As Integer, ByRef rhs As Integer ) As Integer</code></pre>
+<pre class="code sig"><code>Declare Operator Shl ( ByRef lhs As UInteger, ByRef rhs As UInteger ) As UInteger</code></pre>
+<pre class="code sig"><code>Declare Operator Shl ( ByRef lhs As LongInt, ByRef rhs As LongInt ) As LongInt</code></pre>
+<pre class="code sig"><code>Declare Operator Shl ( ByRef lhs As ULongInt, ByRef rhs As ULongInt ) As ULongInt</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>lhs</code></td><td></td><td>The left-hand side expression.</td></tr><tr><td><code>rhs</code></td><td></td><td>The right-hand side shift expression.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+Returns the result of <code><i>lhs</i></code> being shifted left <code><i>rhs</i></code> number of times.<br>
+<br>
+
+<h2>Description</h2>
+<br>
+<b><code>Operator Shl</code> (Shift left)</b> shifts all of the bits in the left-hand side expression (<code><i>lhs</i></code>) left a number of times specified by the right-hand side expression (<code><i>rhs</i></code>). Numerically, the result is the same as "<code><a href="../../../converting-data-types/procedures/cint.html">CInt</a>( lhs <a href="operator-multiply.html">*</a> 2 <a href="operator-exponentiate.html">^</a> rhs )</code>". For example, "<code>&b0101 <b>Shl</b> 1</code>" returns the binary number <code>&b01010</code>, and "<code>5 <b>Shl</b> 1</code>" returns <code>10</code>.<br>
+<br>
+Neither of the operands are modified in any way.<br>
+<br>
+If the result is too large to fit inside the result's data type, the leftmost bits are discarded ("shifted out").<br>
+The results of this operation are undefined for values of <code><i>rhs</i></code> less than zero, or greater than or equal to the number of bits in the result's data type.<br>
+<br>
+This operator can be overloaded for user-defined types.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<i>result</i> = <i>lhs</i> <b>Shl</b> <i>rhs</i><br>
+</code><br>
+
+<h3>Dialect Differences</h3><br>
+<ul><li> Not available in the <i><a href="../../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect unless referenced with the alias <code><b>__Shl</b></code>.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../assignment-operators/procedures/operator-shl-shift-left-and-assign.html">Operator Shl= (Shift Left And Assign)</a></code><br>
+<li> <code><a href="operator-shr-shift-right.html">Operator Shr (Shift Right)</a></code><br>
+<li> <code><a href="../../../string-functions/procedures/bin.html">Bin</a></code><br>
+<li> <a href="../../../mathematical-functions/mathematical-functions.html">Mathematical Functions</a><br>
+<br>
+</li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'Double a number</span>
+
+<span class="tok-kw">For</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span>
+
+    
+
+    <span class="tok-kw">Print</span> <span class="tok-nu">5</span> <span class="tok-kw">Shl</span> <span>i</span><span>,</span> <span class="tok-kw">Bin</span><span>(</span><span class="tok-nu">5</span> <span class="tok-kw">Shl</span> <span>i</span><span>,</span> <span class="tok-nu">16</span><span>)</span>
+
+    
+
+<span class="tok-kw">Next</span> <span>i</span></pre></code><br>
+Output:<br>
+<pre class="code">
+ 5            0000000000000101
+ 10           0000000000001010
+ 20           0000000000010100
+ 40           0000000000101000
+ 80           0000000001010000
+ 160          0000000010100000
+ 320          0000000101000000
+ 640          0000001010000000
+ 1280         0000010100000000
+ 2560         0000101000000000
+ 5120         0001010000000000
+</pre><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgOpShiftLeft.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

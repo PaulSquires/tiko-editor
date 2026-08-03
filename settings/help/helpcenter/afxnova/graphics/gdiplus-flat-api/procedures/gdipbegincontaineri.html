@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipBeginContainerI — Help Center</title>
+<meta name="description" content="Begins a new graphics container.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipbegincontaineri.html">
+<meta property="og:title" content="GdipBeginContainerI">
+<meta property="og:description" content="Begins a new graphics container.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipbegincontaineri.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipbegincontaineri.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../graphics-functions.html">Graphics Functions</a></div>
+<h1>GdipBeginContainerI<span class="h1kind">function</span></h1>
+<p class="lede">Begins a new graphics container.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipBeginContainerI (BYVAL graphics AS GpGraphics PTR, BYVAL dstrect AS GpRect PTR, BYVAL srcrect AS GpRect PTR, BYVAL unit AS GpUnit, BYVAL state AS GraphicsContainer PTR) AS GpStatus</code></pre>
+<div class="note">Also documented as <code>GdipBeginContainer</code> — one description covers them all.</div>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>graphics</code></td><td></td><td>[in] Pointer to the <strong>Graphics</strong> object.</td></tr><tr><td><code>dstrect</code></td><td></td><td>[in] Reference to a rectangle that, together with <em>srcrect</em>, specifies a transformation for the container.</td></tr><tr><td><code>srcrect</code></td><td></td><td>[in] Reference to a rectangle that, together with <em>dstrect</em>, specifies a transformation for the container.</td></tr><tr><td><code>unit</code></td><td></td><td>[in] Unit of measure for the container.</td></tr><tr><td><code>state</code></td><td></td><td>[out] Pointer to a <strong>GraphicsContainer</strong> object variable that receives a value that identifies the container.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Begins a new graphics container.</p>
+<h2>Remarks</h2>
+<p>Use this function to create nested graphics containers. Graphics containers are used to retain graphics state, such as transformations, clipping regions, and various rendering properties.</p>
+<p>The <strong>GdipBeginContainer</strong> function returns a value of type <strong>GraphicsContainer</strong>. When you have finished using a container, pass that value to the <strong>GdipEndContainer</strong> function.</p>
+<p>When you call the <strong>GdipBeginContainer</strong> function, an information block that holds the state of the <strong>Graphics</strong> object is put on a stack. The <strong>GdipBeginContainer</strong> function returns a value that identifies that information block. When you pass the identifying value to the <strong>GdipEndContainer</strong> function, the information block is removed from the stack and is used to restore the <strong>Graphics</strong> object to the state it was in at the time of the <strong>GdipBeginContainer</strong> call.</p>
+<p>Containers can be nested; that is, you can call the <strong>GdipBeginContainer</strong> function several times before you call the <strong>GdipEndContainer</strong> function. Each time you call the <strong>GdipBeginContainer</strong> function, an information block is put on the stack, and you receive an identifier for the information block. When you pass one of those identifiers to the <strong>GdipEndContainer</strong> function, the <strong>Graphics</strong> object is returned to the state it was in at the time of the <strong>GdipBeginContainer</strong> call that returned that particular identifier. The information block placed on the stack by that <strong>GdipBeginContainer</strong> call is removed from the stack, and all information blocks placed on that stack after that <strong>GdipBeginContainer</strong> call are also removed.</p>
+<p>Calls to the <strong>GdipSaveGraphics</strong> function place information blocks on the same stack as calls to the <strong>GdipBeginContainer</strong> function. Just as an <strong>GdipEndContainer</strong> call is paired with a <strong>GdipBeginContainer</strong> call, a <strong>GdipRestoreGraphics</strong> call is paired with a <strong>GdipSaveGraphics</strong> call.</p>
+<p><strong>Caution</strong>: When you call <strong>GdipEndContainer</strong>, all information blocks placed on the stack (by <strong>GdipSaveGraphics</strong> or by <strong>GdipBeginContainer</strong>) after the corresponding call to <strong>GdipBeginContainerare</strong> removed from the stack. Likewise, when you call <strong>GdipRestoreGraphics</strong>, all information blocks placed on the stack (by <strong>GdipSaveGraphics</strong> or by <strong>GdipBeginContainer</strong>) after the corresponding call to <strong>GdipSaveGraphics</strong> are removed from the stack.</p>
+<p>For more information about graphics containers, see <a href="https://learn.microsoft.com/en-us/windows/win32/gdiplus/-gdiplus-nested-graphics-containers-use" target="_blank" rel="noopener">Nested Graphics Containers</a>.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' This example demonstrates how to use GdipBeginContainer and GdipEndContainer ' to isolate transformations and rendering settings within a scoped graphics container. ' ======================================================================================== SUB Example_BeginContainer (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Draw a base rectangle (no transformation) DIM basePen AS GpPen PTR hStatus = GdipCreatePen1(ARGB_BLACK, 2.0, UnitWorld, @basePen) hStatus = GdipDrawRectangle(graphics, basePen, 20, 20, 100, 50)</p>
+<p>' // Begin container DIM container AS GraphicsContainer hStatus = GdipBeginContainer2(graphics, @container)</p>
+<p>' // Apply transformation inside container hStatus = GdipTranslateWorldTransform(graphics, 150, 0, MatrixOrderPrepend) hStatus = GdipRotateWorldTransform(graphics, 30.0, MatrixOrderAppend)</p>
+<p>' // Draw transformed rectangle DIM redPen AS GpPen PTR hStatus = GdipCreatePen1(ARGB_RED, 2.0, UnitWorld, @redPen) hStatus = GdipDrawRectangle(graphics, redPen, 20, 20, 100, 50)</p>
+<p>' // End container (restores previous state) hStatus = GdipEndContainer(graphics, container)</p>
+<p>' // Draw another rectangle (back to original state) DIM bluePen AS GpPen PTR hStatus = GdipCreatePen1(ARGB_BLUE, 2.0, UnitWorld, @bluePen) hStatus = GdipDrawRectangle(graphics, bluePen, 20, 90, 100, 50)</p>
+<p>' // Cleanup IF basePen THEN GdipDeletePen(basePen) IF redPen THEN GdipDeletePen(redPen) IF bluePen THEN GdipDeletePen(bluePen) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:1941</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusGraphics.md</span></li><li>Topic: <a href="../graphics-functions.html">Graphics Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Extends — Help Center</title>
+<meta name="description" content="Specifies a base type from which to derive a new type">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/user-defined-types/procedures/extends.html">
+<meta property="og:title" content="Extends">
+<meta property="og:description" content="Specifies a base type from which to derive a new type">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/user-defined-types/procedures/extends.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/user-defined-types/procedures/extends.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Extends<span class="h1kind">type</span></h1>
+<p class="lede">Specifies a base type from which to derive a new type</p>
+<div class="badges"><a class="badge" href="../index.html">User Defined Types</a><span class="badge">type</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Type|Union typename Extends base_typename</code></pre>
+<pre class="code sig"><code>...</code></pre>
+<pre class="code sig"><code>End Type|Union</code></pre>
+<h2>Description</h2>
+<br>
+<code><b>Extends</b></code> declares <code><i>typename</i></code> to be derived from <code><i>base_typename</i></code>. The derived user-defined type, <code><i>typename</i></code>, inherits fields and methods of the <code><i>base_typename</i></code> base type. <code><i>typename</i></code> objects may be used in place of <code><i>base_typename</i></code> objects. Fields and methods inherited from <code><i>base_typename</i></code> will be implicitly accessible like members of <code><i>typename</i></code>.<br>
+However, a member will shadow an inherited member if they have the same identifier. The <code><a href="base-member-access.html">Base (Member Access)</a></code> keyword can be used to explicitly access members of the base type shadowed by local members.<br>
+<br>
+User-defined types that extend another type will include the base type structure at their beginning, and their size as reported by <code><a href="../../miscellaneous-keywords/procedures/sizeof.html">Sizeof()</a></code> is the sum of their base type's size plus the size needed for any regular data fields (non-static data fields). Since the inherited members make sure that the structure is not empty, a derived type is not required to have regular data fields of its own.<br>
+<br>
+In <code><i>typename</i></code> (the derived user-defined type), the fields can share the same memory space than the <code><i>base_typename</i></code> only if <code><i>typename</i></code> is a <code><a href="union.html">Union</a></code>. Here it does not matter whether <code><i>base_typename</i></code> is a <code><a href="union.html">Union</a></code> or not.<br>
+If only <code><i>base_typename</i></code> is a <code><a href="union.html">Union</a></code>, then it will not be affected by fields from <code><i>typename</i></code> (the derived user-defined type).<br>
+As a <code><a href="union.html">Union</a></code> is not allowed to have complex fields (i.e. user-defined types with constructor/destructor, or dynamic strings), a derived <code><a href="union.html">Union</a></code> cannot be allowed to have (contain) a complex <code><i>base_typename</i></code>.<br>
+<br>
+The <code><a href="base-initializer.html">Base (Initializer)</a></code> keyword can be used at the top of constructor of derived user-defined type. It allows to specify an initializer or constructor call for the base type.<br>
+<br>
+Extending the built-in <code><a href="../../standard-data-types/procedures/object.html">Object</a></code> type allows a user-defined type to be used with <code><a href="../../operators/type-or-class-operators/procedures/operator-is-run-time-type-information.html">Operator Is</a></code> to perform run-time type checks, to support <code><a href="virtual.html">Virtual</a></code> and <code><a href="abstract.html">Abstract</a></code> methods, and to use the <code><a href="override.html">Override</a></code> method attribute.<br>
+<br>
+ <b>Note:</b> UDT pointer can only be cast to pointer types of "widened compatibility" (up or even down in the inheritance hierarchy), or to <code><a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code>. Otherwise, cast to <code><a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> first (or to <code><a href="../../standard-data-types/procedures/object.html">Object</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> first if both types are directly or indirectly derived from <code><a href="../../standard-data-types/procedures/object.html">Object</a></code>).<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Dialect Differences</h3><br>
+<ul><li> Not available in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect unless referenced with the alias <code><b>__Extends</b></code>.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code><br>
+<li> <code><a href="union.html">Union</a></code><br>
+<li> <code><a href="base-initializer.html">Base (Initializer)</a></code><br>
+<li> <code><a href="base-member-access.html">Base (Member Access)</a></code><br>
+<li> <code><a href="../../standard-data-types/procedures/object.html">Object</a></code><br>
+<li> <code><a href="../../operators/type-or-class-operators/procedures/operator-is-run-time-type-information.html">Operator Is</a></code><br>
+<li> <code><a href="virtual.html">Virtual</a></code><br>
+<li> <code><a href="abstract.html">Abstract</a></code><br>
+<li> <code><a href="override.html">Override</a></code><br>
+<li> <code><a href="extends-zstring.html">Extends Zstring</a></code><br>
+<li> <code><a href="extends-wstring.html">Extends Wstring</a></code><br>
+<br>
+</li></li></li></li></li></li></li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>SchoolMember</span> <span class="tok-cm">'Represents any school member'</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>Init</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span class="tok-kw">ByVal</span> <span>_age</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span class="tok-kw">Name</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>age</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>SchoolMember</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Initialized SchoolMember&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>SchoolMember.Init</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span class="tok-kw">ByVal</span> <span>_age</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span>This.name</span> <span>=</span> <span>_name</span>
+
+    <span>This.age</span> <span>=</span> <span>_age</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Name: &quot;</span><span>;</span> <span>This.name</span><span>;</span> <span>&quot;   Age:&quot;</span><span>;</span> <span>This.age</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+
+
+<span class="tok-kw">Type</span> <span>Teacher</span> <span class="tok-kw">Extends</span> <span>SchoolMember</span> <span class="tok-cm">'Represents a teacher derived from SchoolMember'</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span class="tok-kw">ByVal</span> <span>_age</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>_salary</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>salary</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>Tell</span> <span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>Teacher</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span class="tok-kw">ByVal</span> <span>_age</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>_salary</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Initialized Teacher&quot;</span>
+
+    <span>This.Init</span><span>(</span><span>_name</span><span>,</span> <span>_age</span><span>)</span> <span class="tok-cm">'implicit access to base member procedure'</span>
+
+    <span>This.salary</span> <span>=</span> <span>_salary</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>Teacher.Tell</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Salary:&quot;</span><span>;</span> <span>This.salary</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+
+
+<span class="tok-kw">Type</span> <span>Student</span> <span class="tok-kw">Extends</span> <span>SchoolMember</span> <span class="tok-cm">'Represents a student derived from SchoolMember'</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span class="tok-kw">ByVal</span> <span>_age</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>_marks</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>marks</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>Tell</span> <span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>Student</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span class="tok-kw">ByVal</span> <span>_age</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>_marks</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Initialized Student&quot;</span>
+
+    <span>This.Init</span><span>(</span><span>_name</span><span>,</span> <span>_age</span><span>)</span> <span class="tok-cm">'implicit access to base member procedure'</span>
+
+    <span>This.marks</span> <span>=</span> <span>_marks</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+    
+
+<span class="tok-kw">Sub</span> <span>Student.Tell</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Marks:&quot;</span><span>;</span> <span>This.marks</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>Teacher</span> <span>t</span> <span>=</span> <span>Teacher</span><span>(</span><span>&quot;Mrs. Shrividya&quot;</span><span>,</span> <span class="tok-nu">40</span><span>,</span> <span class="tok-nu">30000</span><span>)</span>
+
+<span>t.Tell</span><span>()</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>Student</span> <span>s</span> <span>=</span> <span>Student</span><span>(</span><span>&quot;Swaroop&quot;</span><span>,</span> <span class="tok-nu">22</span><span>,</span> <span class="tok-nu">75</span><span>)</span>
+
+<span>s.Tell</span><span>()</span></pre></code><br>
+<code><pre class="code"><span class="tok-cm">' Example using all eight keywords of inheritance:</span>
+
+<span class="tok-cm">'   'Extends', 'Base.', 'Base()', 'Object', 'Is' operator, 'Virtual', 'Abstract', 'Override'</span>
+
+
+
+<span class="tok-kw">Type</span> <span>root</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span> <span class="tok-cm">' 'Extends' to activate RTTI by inheritance of predefined Object type</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>ObjectHierarchy</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Abstract</span> <span class="tok-kw">Function</span> <span>ObjectRealType</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span class="tok-cm">' 'Abstract' declares function without local body</span>
+
+                                                        <span class="tok-cm">'    which must be overriden</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">Name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Destructor</span> <span>()</span> <span class="tok-cm">' 'Virtual' declares destructor with body ('Abstract' forbidden)</span>
+
+<span class="tok-kw">Protected</span><span>:</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span> <span class="tok-cm">' to avoid user construction from root</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>root</span><span>)</span> <span class="tok-cm">'' to avoid user copy-construction from root</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span> <span class="tok-cm">' derived type may be member data empty</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>root</span> <span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Function</span> <span>root.ObjectHierarchy</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+  <span class="tok-kw">Return</span> <span>&quot;Object(forRTTI) &lt;- root&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Virtual</span> <span class="tok-kw">Destructor</span> <span>root</span> <span>()</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;root destructor&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+
+
+<span class="tok-kw">Type</span> <span>animal</span> <span class="tok-kw">Extends</span> <span>root</span> <span class="tok-cm">' 'Extends' to inherit of root</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>=</span> <span>&quot;&quot;</span><span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>ObjectHierarchy</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>ObjectRealType</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span class="tok-kw">Override</span> <span class="tok-cm">' 'Virtual' declares function with local</span>
+
+                                                                <span class="tok-cm">'    body which can be overriden</span>
+
+                                                                <span class="tok-cm">' 'Override' to check if the function is</span>
+
+                                                                <span class="tok-cm">'    well an override</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Destructor</span> <span>()</span> <span class="tok-kw">Override</span> <span class="tok-cm">' 'Virtual' declares destructor with local body</span>
+
+                                         <span class="tok-cm">' 'Override' to check if the destructor is well an override</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>animal</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>=</span> <span>&quot;&quot;</span><span>)</span>
+
+  <span>This.name</span> <span>=</span> <span>_name</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Function</span> <span>animal.ObjectHierarchy</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+  <span class="tok-kw">Return</span> <span>Base.ObjectHierarchy</span> <span>&amp;</span> <span>&quot; &lt;- animal&quot;</span> <span class="tok-cm">' 'Base.' allows to access to parent member function</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>animal.ObjectRealType</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+  <span class="tok-kw">Return</span> <span>&quot;animal&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Virtual</span> <span class="tok-kw">Destructor</span> <span>animal</span> <span>()</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;  animal destructor: &quot;</span> <span>&amp;</span> <span>This.name</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+
+
+<span class="tok-kw">Type</span> <span>dog</span> <span class="tok-kw">Extends</span> <span>animal</span> <span class="tok-cm">' 'Extends' to inherit of animal</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>=</span> <span>&quot;&quot;</span><span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>ObjectHierarchy</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>ObjectRealType</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span class="tok-kw">Override</span> <span class="tok-cm">' 'Override' to check if the function is well an</span>
+
+                                                        <span class="tok-cm">'    override</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span> <span>()</span> <span class="tok-kw">Override</span> <span class="tok-cm">' 'Override' to check if the destructor is well an override</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span> <span class="tok-cm">' derived type may be member data empty</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>dog</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>=</span> <span>&quot;&quot;</span><span>)</span>
+
+  <span class="tok-kw">Base</span><span>(</span><span>_name</span><span>)</span> <span class="tok-cm">' 'Base()' allows to call parent constructor</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Function</span> <span>dog.ObjectHierarchy</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+  <span class="tok-kw">Return</span> <span>Base.ObjectHierarchy</span> <span>&amp;</span> <span>&quot; &lt;- dog&quot;</span> <span class="tok-cm">' 'Base.' allows to access to parent member function</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Function</span> <span>dog.ObjectRealType</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+  <span class="tok-kw">Return</span> <span>&quot;dog&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Destructor</span> <span>dog</span> <span>()</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;    dog destructor: &quot;</span> <span>&amp;</span> <span>This.name</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+
+
+<span class="tok-kw">Type</span> <span>cat</span> <span class="tok-kw">Extends</span> <span>animal</span> <span class="tok-cm">' 'Extends' to inherit of animal</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>=</span> <span>&quot;&quot;</span><span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>ObjectHierarchy</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>ObjectRealType</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span class="tok-kw">Override</span> <span class="tok-cm">' 'Override' to check if the function is well an</span>
+
+                                                        <span class="tok-cm">'    override</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span> <span>()</span> <span class="tok-kw">Override</span> <span class="tok-cm">' 'Override' to check if the destructor is well an override</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span> <span class="tok-cm">' derived type may be member data empty</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>cat</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>=</span> <span>&quot;&quot;</span><span>)</span>
+
+  <span class="tok-kw">Base</span><span>(</span><span>_name</span><span>)</span> <span class="tok-cm">' 'Base()' allows to call parent constructor</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Function</span> <span>cat.ObjectHierarchy</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+  <span class="tok-kw">Return</span> <span>Base.ObjectHierarchy</span> <span>&amp;</span> <span>&quot; &lt;- cat&quot;</span> <span class="tok-cm">' 'Base.' allows to access to parent member function</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Function</span> <span>cat.ObjectRealType</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+  <span class="tok-kw">Return</span> <span>&quot;cat&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Destructor</span> <span>cat</span> <span>()</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;    cat destructor: &quot;</span> <span>&amp;</span> <span>This.name</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+
+
+<span class="tok-kw">Sub</span> <span>PrintInfo</span> <span>(</span><span class="tok-kw">ByVal</span> <span>p</span> <span class="tok-kw">As</span> <span>root</span> <span class="tok-kw">Ptr</span><span>)</span> <span class="tok-cm">' must be put after definition of animal type, dog type and cat type</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>p</span><span>-&gt;</span><span class="tok-kw">Name</span><span>,</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>p</span><span>-&gt;</span><span>ObjectRealType</span><span>,</span> <span>&quot;           &quot;</span><span>;</span>
+
+  <span class="tok-kw">If</span> <span>*</span><span>p</span> <span class="tok-kw">Is</span> <span>dog</span> <span class="tok-kw">Then</span> <span class="tok-cm">' 'Is' allows to check compatibility with type symbol</span>
+
+    <span class="tok-kw">Print</span>  <span class="tok-kw">Cast</span><span>(</span><span>dog</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)-&gt;</span><span>ObjectHierarchy</span>
+
+  <span class="tok-kw">ElseIf</span> <span>*</span><span>p</span> <span class="tok-kw">Is</span> <span>cat</span> <span class="tok-kw">Then</span> <span class="tok-cm">' 'Is' allows to check compatibility with type symbol</span>
+
+    <span class="tok-kw">Print</span> <span class="tok-kw">Cast</span><span>(</span><span>cat</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)-&gt;</span><span>ObjectHierarchy</span>
+
+  <span class="tok-kw">ElseIf</span> <span>*</span><span>p</span> <span class="tok-kw">Is</span> <span>animal</span> <span class="tok-kw">Then</span> <span class="tok-cm">' 'Is' allows to check compatibility with type symbol</span>
+
+    <span class="tok-kw">Print</span> <span class="tok-kw">Cast</span><span>(</span><span>animal</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)-&gt;</span><span>ObjectHierarchy</span>
+
+  <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Name:&quot;</span><span>,</span> <span>&quot;Object (real):         Hierarchy:&quot;</span>
+
+<span class="tok-kw">Dim</span> <span>a</span> <span class="tok-kw">As</span> <span>root</span> <span class="tok-kw">Ptr</span> <span>=</span> <span class="tok-kw">New</span> <span>animal</span><span>(</span><span>&quot;Mouse&quot;</span><span>)</span>
+
+<span>PrintInfo</span><span>(</span><span>a</span><span>)</span>
+
+<span class="tok-kw">Dim</span> <span>d</span> <span class="tok-kw">As</span> <span>root</span> <span class="tok-kw">Ptr</span> <span>=</span> <span class="tok-kw">New</span> <span>dog</span><span>(</span><span>&quot;Buddy&quot;</span><span>)</span>
+
+<span>PrintInfo</span><span>(</span><span>d</span><span>)</span>
+
+<span class="tok-kw">Dim</span> <span>c</span> <span class="tok-kw">As</span> <span>root</span> <span class="tok-kw">Ptr</span> <span>=</span> <span class="tok-kw">New</span> <span>cat</span><span>(</span><span>&quot;Tiger&quot;</span><span>)</span>
+
+<span>Printinfo</span><span>(</span><span>c</span><span>)</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Delete</span> <span>a</span>
+
+<span class="tok-kw">Delete</span> <span>d</span>
+
+<span class="tok-kw">Delete</span> <span>c</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgExtends.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AfxPathFindOnPath — Help Center</title>
+<meta name="description" content="Searches for a file.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/string-management/procedures/afxpathfindonpath.html">
+<meta property="og:title" content="AfxPathFindOnPath">
+<meta property="og:description" content="Searches for a file.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/string-management/procedures/afxpathfindonpath.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/string-management/procedures/afxpathfindonpath.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../path-and-url-procedures.html">Path and Url procedures</a></div>
+<h1>AfxPathFindOnPath<span class="h1kind">function</span></h1>
+<p class="lede">Searches for a file.</p>
+<div class="badges"><a class="badge" href="../index.html">String Management</a><span class="badge">function</span><span class="badge">AfxPath.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION AfxPathFindOnPath (BYREF wszFile AS CONST WSTRING, BYVAL ppwszOtherDirs AS WSTRING PTR PTR = NULL) AS DWSTRING</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszFile</code></td><td></td><td>A string that contains the file name for which to search. If the search is successful, this parameter is used to return the fully-qualified path name.</td></tr><tr><td><code>ppwszOtherDirs</code></td><td></td><td>An optional, null-terminated array of directories to be searched first. This value can be NULL.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>The fully-qualified path name on success or an empty string on failure.</p>
+<h2>Description</h2>
+<p>Searches for a file.</p>
+<h2>Remarks</h2>
+<p><strong>AfxPathFindOnPath</strong> searches for the file specified by <em>wszFile</em>. If no directories are specified in <em>ppwszOtherDirs</em>, it attempts to find the file by searching standard directories such as System32 and the directories specified in the PATH environment variable. To expedite the process or enable <strong>AfxPathFindOnPath</strong> to search a wider range of directories, use the <em>ppwszOtherDirs</em> parameter to specify one or more directories to be searched first. If more than one file has the name specified by <em>wszFile</em>, <strong>AfxPathFindOnPath</strong> returns the first instance it finds.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>AfxPath.inc</code></li><li>Defined in <span class="srcref">AfxNova/AfxPath.inc:603</span></li><li>Documented in <span class="srcref">String Management/Path and Url Procedures.md</span></li><li>Topic: <a href="../path-and-url-procedures.html">Path and Url procedures</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

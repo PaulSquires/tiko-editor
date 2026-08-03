@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Iterators — Help Center</title>
+<meta name="description" content="Iterators — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/iterators.html">
+<meta property="og:title" content="Iterators">
+<meta property="og:description" content="Iterators — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/iterators.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/iterators.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Iterators</h1>
+<h2>Documentation</h2>
+
+	The overload Operators <b>For</b>, <b>Next</b>, and <b>Step</b>, allowing to construct User-Defined Types <b>Iterators</b> (instead of only intrinsic scalar types iterators) for a For...Next loop<br>
+<br>
+<div>Syntax (declaration)</div><div><br>
+{ <a href="../../operators/operators/procedures/type-udt.html">Type</a> | <a href="../../operators/operators/procedures/class.html">Class</a> | <a href="../../user-defined-types/procedures/union.html">Union</a> } <i>typename</i><br>
+<div class="indent">' <code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code>' statement with implicit step (1st version of operators)<br>
+<div class="indent"><a href="../../procedures/procedures/declare.html">Declare</a> <b>Operator</b> <a href="../../operators/iterating-operators/procedures/operator-for-iteration.html">For</a> ( )<br>
+<a href="../../procedures/procedures/declare.html">Declare</a> <b>Operator</b> <a href="../../operators/iterating-operators/procedures/operator-next-iteration.html">Next</a> ( [ <a href="../../procedures/procedures/byref-parameters.html">ByRef</a> | <a href="../../procedures/procedures/byval.html">ByVal</a> ] <i>cond</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <i>typename</i> ) <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../standard-data-types/procedures/integer.html">Integer</a><br>
+<a href="../../procedures/procedures/declare.html">Declare</a> <b>Operator</b> <a href="../../operators/iterating-operators/procedures/operator-step-iteration.html">Step</a> ( )<br>
+</div>' <code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code>' statement with explicit step (2nd version of operators)<br>
+<div class="indent"><a href="../../procedures/procedures/declare.html">Declare</a> <b>Operator</b> <a href="../../operators/iterating-operators/procedures/operator-for-iteration.html">For</a> ( [ <a href="../../procedures/procedures/byref-parameters.html">ByRef</a> | <a href="../../procedures/procedures/byval.html">ByVal</a> ] <i>stp</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <i>typename</i> )<br>
+<a href="../../procedures/procedures/declare.html">Declare</a> <b>Operator</b> <a href="../../operators/iterating-operators/procedures/operator-next-iteration.html">Next</a> ( [ <a href="../../procedures/procedures/byref-parameters.html">ByRef</a> | <a href="../../procedures/procedures/byval.html">ByVal</a> ] <i>cond</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <i>typename</i>, [ <a href="../../procedures/procedures/byref-parameters.html">ByRef</a> | <a href="../../procedures/procedures/byval.html">ByVal</a> ] <i>stp</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <i>typename</i> ) <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../standard-data-types/procedures/integer.html">Integer</a><br>
+<a href="../../procedures/procedures/declare.html">Declare</a> <b>Operator</b> <a href="../../operators/iterating-operators/procedures/operator-step-iteration.html">Step</a> ( [ <a href="../../procedures/procedures/byref-parameters.html">ByRef</a> | <a href="../../procedures/procedures/byval.html">ByVal</a> ] <i>stp</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <i>typename</i> )<br>
+</div></div>End { <a href="../../operators/operators/procedures/type-udt.html">Type</a> | <a href="../../operators/operators/procedures/class.html">Class</a> | <a href="../../user-defined-types/procedures/union.html">Union</a> }<br>
+<br>
+</div><div>Usage</div><div><br>
+<a href="../../operators/iterating-operators/procedures/for-next.html">For</a> <i>iterator</i> [ As <i>typename</i> ] = <i>start_value</i> To <i>end_value</i> [ <a href="../../operators/iterating-operators/procedures/for-next.html">Step</a> <i>step_value</i> ]<br>
+<div class="indent">[<i> ...statements... </i>]<br>
+</div><a href="../../operators/iterating-operators/procedures/for-next.html">Next</a><br>
+<br>
+The first version of operators is used if no <code><i>step_value</i></code> is given in the <code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code> statement.<br>
+If a <code><i>step_value</i></code> is given, the second version is used and a step object (initialized with <code><i>step-value</i></code>) is passed through the <code><i>stp</i></code> parameter:<br>
+<div class="indent"><b>-</b> to <code><a href="../../operators/iterating-operators/procedures/operator-for-iteration.html">Operator For</a></code> because eventual additional initialization may use it,<br>
+<b>-</b> to <code><a href="../../operators/iterating-operators/procedures/operator-next-iteration.html">Operator Next</a></code> because testing for iterating end may depend on it,<br>
+<b>-</b> to <code><a href="../../operators/iterating-operators/procedures/operator-step-iteration.html">Operator Step</a></code> to increment the iterator object.<br>
+</div>Both versions of the operators can coexist (thanks to member overloading) in the same user-defined type (to be able to both use and not use the explicit increment in <code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code> statements of the user code).<br>
+<br>
+</div><div>Parameters</div><div><br>
+<b><code>(including arguments)</code></b><br>
+<code><i>typename</i></code><br>
+<div class="indent">name of the <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code>, <code><a href="../../operators/operators/procedures/class.html">Class</a></code>, or <code><a href="../../user-defined-types/procedures/union.html">Union</a></code><br>
+</div><code><i>stp</i></code>, <code><i>step_value</i></code><br>
+<div class="indent">a <code><i>typename</i></code> object used as an incremental value<br>
+</div><code><i>iterator</i></code><br>
+<div class="indent">a <code><i>typename</i></code> object used as an iterator<br>
+</div><code><i>cond</i></code>, <code><i>end_value</i></code><br>
+<div class="indent">a <code><i>typename</i></code> object used as a loop-terminating value<br>
+</div><code><i>start_value</i></code><br>
+<div class="indent">a <code><i>typename</i></code> object used to copy construct or assign to the iterator initially<br>
+<br>
+</div></div><div>Description</div><div><br>
+<code><a href="../../operators/iterating-operators/procedures/operator-for-iteration.html">Operator For</a></code>, <code><a href="../../operators/iterating-operators/procedures/operator-next-iteration.html">Operator Next</a></code> and <code><a href="../../operators/iterating-operators/procedures/operator-step-iteration.html">Operator Step</a></code> can be overloaded in user-defined type definitions to allow objects of that type to be used as iterators and step values in <code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code> loops (instead of the pre-defined for intrinsic scalar types).<br>
+<br>
+As all non-static member procedures, the 3 operators have passed a hidden <code><a href="../../user-defined-types/procedures/this.html">This</a></code> parameter that allows to access by reference to the iterator object (initialized to the <code><i>start_value</i></code> argument value from the <code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code> statement).<br>
+The <code><i>cond</i></code> parameter of the <code><a href="../../operators/iterating-operators/procedures/operator-next-iteration.html">Operator Next</a></code> allows to access the <code><i>end_value</i></code> argument value from the <code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code> statement.<br>
+If a <code><i>step_value</i></code> is given (as argument) in the <code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code> statement, the <code><i>stp</i></code> parameter allows to access this value in the 3 operators.<br>
+<br>
+<b>Note:</b> If no <code><i>step_value</i></code> is given in the <code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code> statement (implicit step), the user-defined type must have a default constructor (implicit or explicit) or a conversion constructor. It is a bug at the moment because if the user defines a default constructor, the compiler does not even use it when initializing the <code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code> loop!<br>
+<br>
+<u>Operator For</u><br>
+<div class="indent"><code><a href="../../operators/iterating-operators/procedures/operator-for-iteration.html">Operator For</a></code> is called once immediately after copy constructing or assigning to the iterator object (with the <code><i>start_value</i></code>), constructing the end object (with the <code><i>end_value</i></code>), and constructing the step object (with <code><i>step_value</i></code> if defined in the <code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code> statement).<br>
+<code><a href="../../operators/iterating-operators/procedures/operator-for-iteration.html">Operator For</a></code> allows to perform any additional initialization needed in preparation for the loop.<br>
+<br>
+</div><u>Operator Next</u><br>
+<div class="indent"><code><a href="../../operators/iterating-operators/procedures/operator-next-iteration.html">Operator Next</a></code> is called every time the iterator object needs to be checked against the end value. This happens immediately after the call to the <code><a href="../../operators/iterating-operators/procedures/operator-for-iteration.html">Operator For</a></code>, and then immediately after any calls to the <code><a href="../../operators/iterating-operators/procedures/operator-step-iteration.html">Operator Step</a></code>.<br>
+<code><a href="../../operators/iterating-operators/procedures/operator-next-iteration.html">Operator Next</a></code> should return zero (0) if the loop should be terminated, or non-zero if the loop should continue iterating.<br>
+The first time <code><a href="../../operators/iterating-operators/procedures/operator-next-iteration.html">Operator Next</a></code> is called, no statements in the <code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code> body have been executed yet.<br>
+<code><a href="../../operators/iterating-operators/procedures/operator-next-iteration.html">Operator Next</a></code> also allows to perform some processing before the execution of all statements in the <code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code> body.<br>
+<br>
+</div><u>Operator Step</u><br>
+<div class="indent"><code><a href="../../operators/iterating-operators/procedures/operator-step-iteration.html">Operator Step</a></code> is called to increment the iterator object immediately after all statements in the <code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code> body are executed.<br>
+<br>
+</div><u>Advanced usage</u><br>
+<div class="indent">The above description seems to imply that the 3 arguments <code><i>start_value</i></code>, <code><i>end_value</i></code>, and <code><i>step_value</i></code> must be of the same type as the <code><i>iterator</i></code> (this is the more obvious use), but it is not quite true:<br>
+<div class="indent"><b>-</b> The <code><i>start_value</i></code>, <code><i>end_value</i></code>, and <code><i>step_value</i></code> arguments can be of any type (of different types among themselves and also of different types from the one of the <code><i>iterator</i></code>).<br>
+<b>-</b> The only constraint is that the <code><i>iterator</i></code> could be constructed (in case of local <code><i>iterator</i></code>) or assigned (in case of global <code><i>iterator</i></code>) from the <code><i>start_value</i></code> argument (because the <code><i>iterator</i></code> is implicitly constructed or assigned under the hood).<br>
+<b>-</b> Similarly the other arguments <code><i>end_value</i></code>, and <code><i>step_value</i></code> must be able to be converted into objects of the same type as the <code><i>iterator</i></code>.<br>
+<br>
+</div></div></div><div>Algorithm</div><div><br>
+<code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code> loop algorithm around the 3 overload operators:<br>
+<div class="indent"><pre class="code">
+'                       FOR...NEXT loop
+'                              V
+'                              |
+'            constructing/assigning iterator object
+'       (This = start_value from For...Next statement)
+'                              |
+'                   constructing end object
+'       (cond = end_value from For...Next statement)
+'                              |
+'                   if step_value is defined >---------------------.
+'                            else                                  :
+'                              v                                   v
+'                              :                        constructing step object
+'                              :               (stp = step_value from For...Next statement)
+'                              :                                   :
+'                              :<----------------------------------'
+'                              |
+'                    calling Operator For
+'                              |
+'     .----------------------->|
+'     |                        |
+'     |              calling Operator Next
+'     |     (if end-condition verified: =0 returned) >-------------.
+'     |               (else: <>0 returned)                         |
+'     |                        v                                   |
+'     |                        |                                   |
+'     |            executing For...Next body                       |
+'     |                        |                                   |
+'     |              calling Operator Step                         |
+'     |                        |                                   |
+'     '------------------------'                                   |
+'                                                                  |
+'                                                                  V
+</pre></div></div><div>Example</div><div><br>
+Type for iterating through screen resolutions, with implicit step-value:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>screenResolution</span>
+
+    <span class="tok-cm">' user interface</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByVal</span> <span>colorBit</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span><span>)</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>colorDepth</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>screenWidth</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>screenHeigth</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span>
+
+    <span class="tok-cm">' overload iteration operators when Step is not defined in For...Next statement</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">For</span> <span>()</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Next</span> <span>(</span><span class="tok-kw">ByRef</span> <span>iterateCondition</span> <span class="tok-kw">As</span> <span>screenResolution</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Step</span> <span>()</span>
+
+    <span class="tok-cm">' internal variables</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>colorBit</span><span>,</span> <span>resolutionWH</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>screenResolution</span> <span>(</span><span class="tok-kw">ByVal</span> <span>colorBit</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span><span>)</span>
+
+    <span>This.colorBit</span> <span>=</span> <span>colorBit</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Property</span> <span>screenResolution.colorDepth</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span>
+
+    <span class="tok-kw">Return</span> <span>This.colorBit</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Property</span> <span>screenResolution.screenWidth</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span>
+
+    <span class="tok-kw">Return</span> <span class="tok-kw">HiWord</span><span>(</span><span>This.resolutionWH</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Property</span> <span>screenResolution.screenHeigth</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span>
+
+    <span class="tok-kw">Return</span> <span class="tok-kw">LoWord</span><span>(</span><span>This.resolutionWH</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>screenResolution.For</span> <span>()</span>
+
+    <span>This.resolutionWH</span> <span>=</span> <span class="tok-kw">ScreenList</span><span>(</span><span>This.colorBit</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>screenResolution.Next</span> <span>(</span><span class="tok-kw">ByRef</span> <span>iterateCondition</span> <span class="tok-kw">As</span> <span>screenResolution</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">While</span> <span>This.resolutionWH</span> <span>=</span> <span class="tok-nu">0</span>
+
+        <span class="tok-kw">If</span> <span>This.colorBit</span> <span>&lt;</span> <span>iterateCondition.colorBit</span> <span class="tok-kw">Then</span>
+
+            <span>This.colorBit</span> <span>+=</span> <span class="tok-nu">1</span>
+
+            <span>This.resolutionWH</span> <span>=</span> <span class="tok-kw">ScreenList</span><span>(</span><span>This.colorBit</span><span>)</span>
+
+        <span class="tok-kw">Else</span>
+
+            <span class="tok-kw">Exit</span> <span class="tok-kw">While</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+    <span class="tok-kw">Wend</span>
+
+    <span class="tok-kw">Return</span> <span>(</span><span>This.resolutionWH</span> <span>&lt;&gt;</span> <span>iterateCondition.resolutionWH</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>screenResolution.Step</span> <span>()</span>
+
+    <span>This.resolutionWH</span> <span>=</span> <span class="tok-kw">ScreenList</span><span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Screen resolutions supported within [1 bpp , 64 bpp]:&quot;</span>
+
+<span class="tok-kw">For</span> <span>iterator</span> <span class="tok-kw">As</span> <span>screenResolution</span> <span>=</span> <span>screenResolution</span><span>(</span><span class="tok-nu">1</span><span>)</span> <span class="tok-kw">To</span> <span>screenResolution</span><span>(</span><span class="tok-nu">64</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    &quot;</span> <span>&amp;</span> <span>iterator.colorDepth</span> <span>&amp;</span> <span>&quot; bpp &quot;</span><span>,</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;:&quot;</span> <span>&amp;</span> <span>iterator.screenWidth</span> <span>&amp;</span> <span>&quot;x&quot;</span> <span>&amp;</span> <span>iterator.screenHeigth</span>
+
+<span class="tok-kw">Next</span> <span>iterator</span>
+
+<span class="tok-kw">Print</span> <span>&quot;End of supported screen resolutions&quot;</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output example:<br>
+<div class="indent"><pre class="code">
+Screen resolutions supported within [1 bpp , 64 bpp]:
+	24 bpp    :320x200
+	24 bpp    :320x240
+	24 bpp    :400x300
+	24 bpp    :512x384
+	24 bpp    :640x400
+	24 bpp    :640x480
+	24 bpp    :800x600
+	24 bpp    :1024x768
+	24 bpp    :1152x864
+	24 bpp    :1280x600
+	24 bpp    :1280x720
+	24 bpp    :1280x768
+	24 bpp    :1280x800
+	24 bpp    :1280x960
+	24 bpp    :1280x1024
+	24 bpp    :1360x768
+	24 bpp    :1366x768
+	24 bpp    :1400x1050
+	24 bpp    :1440x900
+	24 bpp    :1600x900
+	24 bpp    :1680x1050
+	24 bpp    :1920x1080
+	32 bpp    :320x200
+	32 bpp    :320x240
+	32 bpp    :400x300
+	32 bpp    :512x384
+	32 bpp    :640x400
+	32 bpp    :640x480
+	32 bpp    :800x600
+	32 bpp    :1024x768
+	32 bpp    :1152x864
+	32 bpp    :1280x600
+	32 bpp    :1280x720
+	32 bpp    :1280x768
+	32 bpp    :1280x800
+	32 bpp    :1280x960
+	32 bpp    :1280x1024
+	32 bpp    :1360x768
+	32 bpp    :1366x768
+	32 bpp    :1400x1050
+	32 bpp    :1440x900
+	32 bpp    :1600x900
+	32 bpp    :1680x1050
+	32 bpp    :1920x1080
+End of supported screen resolutions
+</pre></div></div>Type for iterating through fractions, with explicit step-value used in the 3 operators:<br>
+(improved example compared to the one of <code><a href="../../operators/iterating-operators/procedures/operator-step-iteration.html">Operator Step</a></code> page)<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>fraction</span>
+
+    <span class="tok-cm">' user interface</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByVal</span> <span>n</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>d</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-cm">' overload iteration operators when Step is defined in For...Next statement</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">For</span> <span>(</span><span class="tok-kw">ByRef</span> <span>iterateStep</span> <span class="tok-kw">As</span> <span>fraction</span><span>)</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Next</span> <span>(</span><span class="tok-kw">ByRef</span> <span>iterateCondition</span> <span class="tok-kw">As</span> <span>fraction</span><span>,</span> <span class="tok-kw">ByRef</span> <span>iterateStep</span> <span class="tok-kw">As</span> <span>fraction</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Step</span> <span>(</span><span class="tok-kw">ByRef</span> <span>step_var</span> <span class="tok-kw">As</span> <span>fraction</span><span>)</span>
+
+    <span class="tok-cm">' internal variables and cast operator</span>
+
+        <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>num</span><span>,</span> <span>den</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>fraction</span> <span>(</span><span class="tok-kw">ByVal</span> <span>n</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>d</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span>this.num</span> <span>=</span> <span>n</span>
+
+    <span>this.den</span> <span>=</span> <span>d</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>fraction.Cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-cm">' search for the highest common factor (a) between numerator and denominator</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>a</span> <span>=</span> <span class="tok-kw">Abs</span><span>(</span><span>This.num</span><span>),</span> <span>b</span> <span>=</span> <span class="tok-kw">Abs</span><span>(</span><span>This.den</span><span>)</span>
+
+        <span class="tok-kw">If</span> <span>a</span> <span>&lt;&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+            <span class="tok-kw">While</span> <span>a</span> <span>&lt;&gt;</span> <span>b</span> 
+
+                <span class="tok-kw">If</span> <span>a</span> <span>&gt;</span> <span>b</span> <span class="tok-kw">Then</span>
+
+                    <span>a</span> <span>-=</span> <span>b</span>
+
+                <span class="tok-kw">Else</span>
+
+                    <span>b</span> <span>-=</span> <span>a</span>
+
+                <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+            <span class="tok-kw">Wend</span>
+
+        <span class="tok-kw">Else</span>
+
+            <span>a</span> <span>=</span> <span class="tok-nu">1</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+    <span class="tok-cm">' reduce the fraction</span>
+
+        <span class="tok-kw">Return</span> <span>num</span> <span>\</span> <span>a</span> <span>&amp;</span> <span>&quot;/&quot;</span> <span>&amp;</span> <span>den</span> <span>\</span> <span>a</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>fraction.Cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span>
+
+    <span class="tok-kw">Return</span> <span>This.num</span> <span>/</span> <span>This.den</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>fraction.For</span> <span>(</span><span class="tok-kw">ByRef</span> <span>iterateStep</span> <span class="tok-kw">As</span> <span>fraction</span><span>)</span>
+
+    <span class="tok-cm">' search for the least common multiple (a) between the two denominators</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>a</span> <span>=</span> <span class="tok-kw">Abs</span><span>(</span><span>This.den</span><span>),</span> <span>b</span> <span>=</span> <span class="tok-kw">Abs</span><span>(</span><span>iterateStep.den</span><span>),</span> <span>c</span> <span>=</span> <span>a</span><span>,</span> <span>d</span> <span>=</span> <span>b</span>
+
+        <span class="tok-kw">While</span> <span>a</span> <span>&lt;&gt;</span> <span>b</span>
+
+            <span class="tok-kw">If</span> <span>a</span> <span>&gt;</span> <span>b</span> <span class="tok-kw">Then</span>
+
+                <span>b</span> <span>+=</span> <span>d</span>
+
+            <span class="tok-kw">Else</span>
+
+                <span>a</span> <span>+=</span> <span>c</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+        <span class="tok-kw">Wend</span>
+
+    <span class="tok-cm">' align at the same denominator the 2 fractions</span>
+
+        <span>This.num</span> <span>*=</span> <span>a</span> <span>\</span> <span>This.den</span>
+
+        <span>This.den</span> <span>=</span> <span>a</span>
+
+        <span>iterateStep.num</span> <span>*=</span> <span>a</span> <span>\</span> <span>iterateStep.den</span>
+
+        <span>iterateStep.den</span> <span>=</span> <span>a</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>fraction.Next</span> <span>(</span><span class="tok-kw">ByRef</span> <span>iterateCondition</span> <span class="tok-kw">As</span> <span>fraction</span><span>,</span> <span class="tok-kw">ByRef</span> <span>iterateStep</span> <span class="tok-kw">As</span> <span>fraction</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">If</span> <span>iterateStep.num</span> <span>&lt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Or</span> <span>iterateStep.den</span> <span>&lt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+        <span class="tok-kw">Return</span> <span class="tok-kw">This</span> <span>&gt;=</span> <span>iterateCondition</span>
+
+    <span class="tok-kw">Else</span>
+
+        <span class="tok-kw">Return</span> <span class="tok-kw">This</span> <span>&lt;=</span> <span>iterateCondition</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>fraction.Step</span> <span>(</span><span class="tok-kw">ByRef</span> <span>iterateStep</span> <span class="tok-kw">As</span> <span>fraction</span><span>)</span>
+
+    <span>This.num</span> <span>+=</span> <span>iterateStep.num</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span> 
+
+
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;iteration from 1/8 to 1/2 by step of 1/12:&quot;</span>
+
+<span class="tok-kw">For</span> <span>iterator</span> <span class="tok-kw">As</span> <span>fraction</span> <span>=</span> <span>fraction</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">8</span><span>)</span> <span class="tok-kw">To</span> <span>fraction</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span><span>)</span> <span class="tok-kw">Step</span> <span>fraction</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">12</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    &quot;</span> <span>&amp;</span> <span>iterator</span><span>;</span>
+
+<span class="tok-kw">Next</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;iteration from 7/10 to -8/5 by step of -8/15:&quot;</span>
+
+<span class="tok-kw">For</span> <span>iterator</span> <span class="tok-kw">As</span> <span>fraction</span> <span>=</span> <span>fraction</span><span>(</span><span class="tok-nu">7</span><span>,</span> <span class="tok-nu">10</span><span>)</span> <span class="tok-kw">To</span> <span>fraction</span><span>(-</span><span class="tok-nu">8</span><span>,</span> <span class="tok-nu">5</span><span>)</span> <span class="tok-kw">Step</span> <span>fraction</span><span>(-</span><span class="tok-nu">8</span><span>,</span> <span class="tok-nu">15</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    &quot;</span> <span>&amp;</span> <span>iterator</span><span>;</span>
+
+<span class="tok-kw">Next</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+iteration from 1/8 to 1/2 by step of 1/12:
+	1/8    5/24    7/24    3/8    11/24
+	
+iteration from 7/10 to -8/5 by step of -8/15:
+	7/10    1/6    -11/30    -9/10    -43/30
+</pre></div></div></div><div>See also</div><div><br>
+<ul><li> <code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code><br>
+<li> <code><a href="../../user-defined-types/procedures/operator.html">Operator</a></code><br>
+<br>
+</li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

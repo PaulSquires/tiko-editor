@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Any — Help Center</title>
+<meta name="description" content="The Any keyword is used as a placeholder for a type or value in various ways.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/procedures/procedures/any.html">
+<meta property="og:title" content="Any">
+<meta property="og:description" content="The Any keyword is used as a placeholder for a type or value in various ways.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/procedures/procedures/any.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/procedures/procedures/any.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Any<span class="h1kind">sub</span></h1>
+<p class="lede">The Any keyword is used as a placeholder for a type or value in various ways.</p>
+<div class="badges"><a class="badge" href="../index.html">Procedures</a><span class="badge">sub</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Dim identifier As Any Pointer|Ptr</code></pre>
+<pre class="code sig"><code>Declare Sub|Function identifier ( ByRef identifier As Any [ , ... ] )</code></pre>
+<pre class="code sig"><code>Dim identifier(Any [, Any...]) As DataType</code></pre>
+<pre class="code sig"><code>[ Declare ] { Sub | Function } proc_name ( param(Any [, Any...]) As DataType )</code></pre>
+<pre class="code sig"><code>Dim identifier As DataType = Any</code></pre>
+<pre class="code sig"><code>New DataType ( Any )</code></pre>
+<pre class="code sig"><code>New(Address) DataType [count] { Any }</code></pre>
+<pre class="code sig"><code>InStr|InStrRev ( identifier, Any substring )</code></pre>
+<h2>Description</h2>
+<br>
+<ul><li> Pointers (1st syntax):<br>
+</li></ul><div class="indent">A special pointer type called the <code><b>Any</b> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> (or "<code><b>Any</b> <a href="../../standard-data-types/procedures/pointer-ptr.html">Pointer</a></code>") allows pointing to any variable type.  If you cast it to a <code><i>DataType</i> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code>, it can be indexed or dereferenced to access the memory as an instance of <code><i>DataType</i></code>. Pointer arithmetic is allowed on an <code><b>Any</b> Ptr</code>, and treats it like a <code><a href="../../standard-data-types/procedures/byte.html">Byte</a> Ptr</code>: The pointer is changed by increments of <code>1</code>.<br>
+<br>
+A pure <code><b>Any</b> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> has no type checking by the compiler.  It can be implicitly converted to and from other pointer types through assignment or parameter passing.<br>
+<br>
+<code><b>Any</b></code> on its own is not a valid data type for a variable. Also, it is illegal to dereference an <code><b>Any</b> Ptr</code> (although an <code><b>Any</b> Ptr Ptr</code> may be dereferenced to produce a <code><b>Any</b> Ptr</code>).<br>
+<br>
+This should not be confused with <code><b>Variant</b></code>, a Visual Basic data type which can contain any type of variable. FreeBASIC does not provide native support for a <code><b>Variant</b></code> type.<br>
+<br>
+</div><ul><li> Byref parameters (2nd syntax):<br>
+</li></ul><div class="indent"><b><code>Any</code></b> can be used in procedure prototypes (in a <code><a href="declare.html">Declare</a></code> statement) with <code><a href="byref-parameters.html">ByRef</a></code> parameters to disable the compiler checking for the correct type of the variable passed (this includes the array parameters because always implicitly passed by reference).<br>
+Obviously, this does not work with overload procedures, and therefore neither with UDT member procedures.<br>
+This use of <code><b>Any</b></code> exists for compatibility with QB, but can be superseded by procedure overloading.<br>
+<br>
+</div><ul><li> Array dimensions (3rd/4th syntax):<br>
+</li></ul><div class="indent">In array declarations, <b><code>Any</code></b> can be specified in place of the array bounds in order to create a dynamic array with a certain amount of dimensions that is determined based on the number of <b><code>Any</code></b>s specified (use the syntax with <b><code>Any</code></b> is mandatory when declaring a dynamic array member inside a <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code>).<br>
+<br>
+In parameter declarations, <b><code>Any</code></b> can be also specified instead of empty parenthesis in order to fix the amount of dimensions.<br>
+<br>
+</div><ul><li> Initialization (5th/6th/7th syntax):<br>
+</li></ul><div class="indent"><code><b>Any</b></code> can be used as a fake initializer to disable the default initialization of variables to <code>0</code>, leaving the variable uninitialized. This may save time in critical sections of a program. It is the program's responsibility to fill the variables with meaningful data before reading it.<br>
+<br>
+For a UDT, the member data fields are also not initialized, and the default constructors, if they exist, are not called.<br>
+<br>
+Comparison to C/C++: This matches the behavior of a variable declaration without initialization value in C/C++.<br>
+<br>
+<code><b>Any</b></code> is not allowed when the <code><i>DataType</i></code> is a var-len <code><a href="../../operators/preprocessor-operators/procedures/string.html">String</a></code>, because there is no string character data, and not initializing the descriptor would be an aberration.<br>
+<br>
+For a var-len array, <b><code>Any</code></b> is used only once at the declaration level, not at each resize level with <code><a href="../../array-functions/procedures/redim.html">ReDim</a></code> (<code><a href="../../array-functions/procedures/erase.html">Erase</a></code> does not reset this initialization state).<br>
+<br>
+Similar to <b><code>Any</code></b> initializers for variables, <b><code>Any</code></b> can also be used with the <code><a href="../../operators/memory-operators/procedures/operator-new-expression.html">New Expression</a></code> or <code><a href="../../operators/memory-operators/procedures/operator-placement-new.html">Placement New</a></code> operators in order to leave the newly created object uninitialized (only allowed with data types that do not have a constructor, also excluding the var-len string type).<br>
+<br>
+</div><ul><li> Instr/InstrRev (8th syntax):<br>
+</li></ul><div class="indent"><b><code>Any</code></b> can be used with <code><a href="../../string-functions/procedures/instr.html">InStr</a></code> or <code><a href="../../string-functions/procedures/instrrev.html">InStrRev</a></code> as a qualifier for the <code><i>substring</i></code> parameter, to indicate that any individual character in it may be matched.<br>
+<br>
+</div><ul><li> Procptr (9th syntax):<br>
+</li></ul><div class="indent"><b><code>Any</code></b>, ie any procedure signature, does not induce any particular selection (compared to its non-use), but just allows for writing <code><a href="../../operators/pointer-operators/procedures/operator-procptr-procedure-pointer-and-vtable-index.html">ProcPtr</a></code> always with 2 arguments.<br>
+<br>
+</div>
+<h2>Remarks</h2>
+<h3>Dialect Differences</h3><br>
+<ul><li> Not available in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> Pointers and initializers are new to FreeBASIC.<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code><br>
+<li> <code><a href="declare.html">Declare</a></code><br>
+<br>
+</li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>echo</span><span>(</span><span class="tok-kw">ByVal</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span> <span class="tok-cm">'' echo will accept any pointer type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>a</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span><span>)</span> <span>=</span> <span class="tok-kw">Any</span> <span class="tok-cm">'' this variable is not initialized</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span>  <span>d</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">4</span><span>)</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>p</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>pa</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span> <span>=</span> <span>@</span><span>a</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Not initialized &quot;</span><span>;</span>
+
+<span>echo</span> <span>pa</span>       <span class="tok-cm">'' pass to echo a pointer to integer</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>pd</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span class="tok-kw">Ptr</span> <span>=</span> <span>@</span><span>d</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Initialized &quot;</span><span>;</span>
+
+<span>echo</span> <span>pd</span>       <span class="tok-cm">'' pass to echo a pointer to double</span>
+
+
+
+<span>p</span> <span>=</span> <span>pa</span>     <span class="tok-cm">'' assign to p a pointer to integer</span>
+
+<span>p</span> <span>=</span> <span>pd</span>     <span class="tok-cm">'' assign to p a pointer to double      </span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>echo</span> <span>(</span><span class="tok-kw">ByVal</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>i</span>
+
+    <span class="tok-kw">For</span> <span>i</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">39</span>
+
+        <span class="tok-cm">'echo interprets the data in the pointer as bytes</span>
+
+        <span class="tok-kw">Print</span> <span class="tok-kw">Cast</span><span>(</span><span class="tok-kw">UByte</span> <span class="tok-kw">Ptr</span><span>,</span> <span>x</span><span>)[</span><span>i</span><span>]</span> <span>&amp;</span> <span>&quot; &quot;</span><span>;</span>
+
+    <span class="tok-kw">Next</span>
+
+    <span class="tok-kw">Print</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-cm">'Example of ANY disabling the variable type checking</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>echo</span> <span>(</span><span class="tok-kw">ByRef</span> <span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span><span>)</span> <span class="tok-cm">'' ANY disables the checking for the type of data passed to the function</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span>
+
+<span>x</span> <span>=</span> <span>-</span><span class="tok-nu">15</span>
+
+<span>echo</span> <span>x</span>                  <span class="tok-cm">'' Passing a single to a function that expects an integer. The compiler does not complain!!             </span>
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>echo</span> <span>(</span><span class="tok-kw">ByRef</span> <span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span class="tok-kw">Print</span> <span class="tok-kw">Hex</span><span>(</span><span>a</span><span>)</span>         
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>a</span><span>(</span><span class="tok-kw">Any</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-cm">' 1-dimensional dynamic array</span>
+
+<span class="tok-kw">Dim</span> <span>b</span><span>(</span><span class="tok-kw">Any</span><span>,</span> <span class="tok-kw">Any</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-cm">' 2-dimensional dynamic array</span>
+
+<span class="tok-kw">Dim</span> <span>c</span><span>(</span><span class="tok-kw">Any</span><span>,</span> <span class="tok-kw">Any</span><span>,</span> <span class="tok-kw">Any</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-cm">' 3-dimensional dynamic array</span>
+
+<span class="tok-cm">' etc.</span>
+
+
+
+<span class="tok-cm">' Further Redims or array accesses must have a matching amount of dimensions</span>
+
+<span class="tok-kw">ReDim</span> <span>a</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">1</span><span>)</span>
+
+<span class="tok-kw">ReDim</span> <span>b</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span><span>,</span> <span class="tok-nu">2</span> <span class="tok-kw">To</span> <span class="tok-nu">5</span><span>)</span>
+
+<span class="tok-kw">ReDim</span> <span>c</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span><span>,</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">5</span><span>,</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">1</span><span>)</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgAny.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

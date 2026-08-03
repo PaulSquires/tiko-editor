@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MousePointer — Help Center</title>
+<meta name="description" content="Returns or sets a value indicating the type of mouse pointer displayed when the mouse is over a particular part of an object at run time.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/procedures/mousepointer.html">
+<meta property="og:title" content="MousePointer">
+<meta property="og:description" content="Returns or sets a value indicating the type of mouse pointer displayed when the mouse is over a particular part of an object at run time.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/procedures/mousepointer.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-gui/procedures/mousepointer.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../microsoft-hierarchical-grid.html">Microsoft Hierarchical Grid</a></div>
+<h1>MousePointer<span class="h1kind">function</span></h1>
+<p class="lede">Returns or sets a value indicating the type of mouse pointer displayed when the mouse is over a particular part of an object at run time.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">function</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION MousePointer () AS MousePointerSettings</code></pre>
+<pre class="code sig"><code>PROPERTY MousePointer (BYVAL settings AS MousePointerSettings)</code></pre>
+<h2>Description</h2>
+<p>Returns or sets the default arrow cursor to different standard system shapes or a custom image.</p>
+<h2>Remarks</h2>
+<p>It provides immediate visual feedback to the user about what kind of interaction is possible (e.g., resizing columns, selecting text, or indicating a wait state).</p>
+<p>It allows you to use standard Windows cursors or load a custom icon file (.ico or .cur).</p>
+<p>The cursor may be temporarily overridden by the control during certain operations:</p>
+<ul><li>hovering over column borders (column resizing)</li><li>hovering over row borders (row resizing)</li><li>dragging column headers *scrolling</li></ul>
+<p>After these temporary overrides, the cursor returns to the value specified by MousePointer.</p>
+<p>You typically set <strong>MousePointer</strong> using predefined constants:</p>
+<h2>Examples</h2>
+<p>' Change cursor to hourglass while processing grid.MousePointer = flexHourglass</p>
+<p>' ... run a long database query or data load ...</p>
+<p>' Reset cursor to default when done grid.MousePointer = flexDefault</p>
+<p>' Load a custom icon from a file grid.MouseIcon = LoadPicture("C:\path\to\mycursor.ico") grid.MousePointer = flexCustom</p>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">Windows/Windows GUI/MSHFlexGrid Class.md</span></li><li>Topic: <a href="../microsoft-hierarchical-grid.html">Microsoft Hierarchical Grid</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

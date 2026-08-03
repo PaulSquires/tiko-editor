@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipEnumerateMetafileSrcRectDestPoints — Help Center</title>
+<meta name="description" content="Calls an application-defined callback function for each record in a specified metafile.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipenumeratemetafilesrcrectdestpoints.html">
+<meta property="og:title" content="GdipEnumerateMetafileSrcRectDestPoints">
+<meta property="og:description" content="Calls an application-defined callback function for each record in a specified metafile.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipenumeratemetafilesrcrectdestpoints.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipenumeratemetafilesrcrectdestpoints.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../graphics-functions.html">Graphics Functions</a></div>
+<h1>GdipEnumerateMetafileSrcRectDestPoints<span class="h1kind">function</span></h1>
+<p class="lede">Calls an application-defined callback function for each record in a specified metafile.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipEnumerateMetafileSrcRectDestPoints (BYVAL graphics AS GpGraphics PTR, BYVAL metafile AS GpMetafile PTR, BYVAL destPoints AS GpPointF PTR, BYVAL count AS INT_, BYVAL srcRect AS GpRectF PTR, BYVAL srcUnit AS GpUnit, BYVAL callback AS EnumerateMetafileProc, BYVAL callbackData AS VOID PTR, BYVAL imageAttributes AS GpImageAttributes PTR) AS GpStatus</code></pre>
+<div class="note">Also documented as <code>GdipEnumerateMetafileSrcRectDestPointsI</code> — one description covers them all.</div>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>graphics</code></td><td></td><td>[in] Pointer to the <strong>Graphics</strong> object.</td></tr><tr><td><code>metafile</code></td><td></td><td>[in] Pointer to a metafile to be enumerated.</td></tr><tr><td><code>destPoints</code></td><td></td><td>[in] Pointer to an array of destination points. This is an array of three points that defines the destination parallelogram for the displayed metafile.</td></tr><tr><td><code>count</code></td><td></td><td>[in] Long integer value that specifies the number of points in the <em>destPoints</em> array.</td></tr><tr><td><code>srcRect</code></td><td></td><td>[in] Reference to a rectangle that specifies the portion of the metafile that is displayed.</td></tr><tr><td><code>srcUnit</code></td><td></td><td>[in] Element of the <strong>GpUnit</strong> enumeration that specifies the unit of measure for the source rectangle.</td></tr><tr><td><code>callback</code></td><td></td><td>[in] Pointer to an application-defined callback function. The prototype for the callback function is given in Gdiplustypes.h.</td></tr><tr><td><code>callbackData</code></td><td></td><td>[in] Pointer to a block of data that is passed to the callback function. The default value is NULL.</td></tr><tr><td><code>imageAttributes</code></td><td></td><td>[in] Pointer to a <strong>GpImageAttributes</strong> object that specifies color adjustments for the displayed metafile. The default value is NULL.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Calls an application-defined callback function for each record in a specified metafile. You can use this method to display a metafile by calling <strong>GdipPlayMetafileRecord</strong> in the callback function.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' Cropped and Transformed Metafile Playback. ' Combines cropping and transforming in one step. ' Destination points define a parallelogram, allowing skew, rotation, and scaling. ' Ideal for advanced rendering scenarios like perspective effects or layout fitting. ' ========================================================================================</p>
+<p>' Callback function prototype FUNCTION MetafileCallback (BYVAL recordType AS EmfPlusRecordType, BYVAL flags AS UINT, _</p>
+<pre class="code"><code>BYVAL dataSize AS UINT, BYVAL byteData AS CONST UBYTE PTR, _
+                       BYVAL callbackData AS ANY PTR) AS BOOL</code></pre>
+<p>' You can inspect or modify each record here OutputDebugStringW "Record type: " &amp; WsTR(recordType) &amp; " Size: " &amp; WSTR(dataSize) RETURN TRUE  ' Continue enumeration END FUNCTION ' ========================================================================================</p>
+<p>' ======================================================================================== SUB Example_EnumerateMetafileSrcRectDestPoints (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Load a metafile DIM metafile AS GpMetafile PTR DIM filename AS WSTRING * 64 = "SampleMetafile.emf" hStatus = GdipCreateMetafileFromFile(@filename, @metafile) IF hStatus &lt;&gt; 0 OR metafile = NULL THEN</p>
+<pre class="code"><code>AfxMsg "Failed to load metafile: " &amp; WSTR(hStatus)
+  EXIT SUB</code></pre>
+<p>END IF</p>
+<p>' // Create graphics object from HDC DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Define source rectangle (crop area) DIM srcRect AS GpRectF = (50.0, 50.0, 200.0, 100.0)</p>
+<p>' // Define destination parallelogram (3 points) DIM destPoints(2) AS GpPointF destPoints(0) = TYPE&lt;GpPointF&gt;(300.0, 100.0)   ' Top-left destPoints(1) = TYPE&lt;GpPointF&gt;(500.0, 120.0)   ' Top-right (skewed) destPoints(2) = TYPE&lt;GpPointF&gt;(280.0, 250.0)   ' Bottom-left</p>
+<p>' // Enumerate and replay cropped metafile hStatus = GdipEnumerateMetafileSrcRectDestPoints(graphics, metafile, @destPoints(0), 3, _</p>
+<pre class="code"><code>@srcRect, UnitPixel, @MetafileCallback, NULL, NULL)</code></pre>
+<p>IF hStatus &lt;&gt; 0 THEN</p>
+<pre class="code"><code>AfxMsg "Enumeration failed: " &amp; WSTR(hStatus)</code></pre>
+<p>END IF</p>
+<p>' // Cleanup IF graphics THEN GdipDeleteGraphics(graphics) IF metafile THEN GdipDisposeImage(metafile)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:1905</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusGraphics.md</span></li><li>Topic: <a href="../graphics-functions.html">Graphics Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

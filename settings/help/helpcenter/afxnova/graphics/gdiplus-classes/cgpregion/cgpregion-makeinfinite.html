@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpRegion.MakeInfinite — Help Center</title>
+<meta name="description" content="Updates this region to an infinite region.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpregion/cgpregion-makeinfinite.html">
+<meta property="og:title" content="CGpRegion.MakeInfinite">
+<meta property="og:description" content="Updates this region to an infinite region.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpregion/cgpregion-makeinfinite.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpregion/cgpregion-makeinfinite.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpregion-class.html">CGpRegion Class</a></div>
+<h1>CGpRegion.MakeInfinite<span class="h1kind">method</span></h1>
+<p class="lede">Updates this region to an infinite region.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpRegion.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION MakeInfinite () AS GpStatus</code></pre>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h2>Description</h2>
+<p>Updates this region to an infinite region.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates a region from a rectangle, makes the region infinite, and ' fills the region to show the infinite region. ' ======================================================================================== SUB Example_MakeInfiniteRegion (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Get the DPI scaling ratios DIM rxRatio AS SINGLE = graphics.GetDpiX / 96 DIM ryRatio AS SINGLE = graphics.GetDpiY / 96 ' // Set the scale transform graphics.ScaleTransform(rxRatio, ryRatio)</p>
+<p>' // Create red and blue solid brushes DIM redBrush AS CGpSolidBrush = ARGB_RED DIM blueBrush AS CGpSolidBrush = ARGB_BLUE</p>
+<p>' // Create a region, and fill it with a red brush DIM rc AS GpRect = (65, 15, 70, 45) DIM rectRegion AS CGpRegion = @rc graphics.FillRegion(@redBrush, @rectRegion)</p>
+<p>' // Make the region infinite, and then fill it with a blue brush rectRegion.MakeInfinite graphics.FillRegion(@blueBrush, @rectRegion)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpRegion.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpRegion.inc:91</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpRegion Class.md</span></li><li>Topic: <a href="../cgpregion-class.html">CGpRegion Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CPowerTime.AstroDay — Help Center</title>
+<meta name="description" content="Returns the Astronomical Day for any given date.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/datetime/cpowertime/cpowertime-astroday.html">
+<meta property="og:title" content="CPowerTime.AstroDay">
+<meta property="og:description" content="Returns the Astronomical Day for any given date.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/datetime/cpowertime/cpowertime-astroday.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/datetime/cpowertime/cpowertime-astroday.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cpowertime-class.html">CPowerTime Class</a></div>
+<h1>CPowerTime.AstroDay<span class="h1kind">method</span></h1>
+<p class="lede">Returns the Astronomical Day for any given date.</p>
+<div class="badges"><a class="badge" href="../index.html">DateTime</a><span class="badge">method</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION AstroDay () AS LONG</code></pre>
+<pre class="code sig"><code>FUNCTION AstroDay (BYVAL nYear AS LONG, BYVAL nMonth AS LONG, BYVAL nDay AS LONG) AS LONG</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>nYear</code></td><td></td><td>A four digit year.</td></tr><tr><td><code>nMonth</code></td><td></td><td>A month number (1-12).</td></tr><tr><td><code>nDay</code></td><td></td><td>A day number (1-31).</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>The astronomical day.</p>
+<h2>Description</h2>
+<p>Returns the Astronomical Day for this <strong>CPowerTime</strong> object.</p>
+<p>Returns the Astronomical Day for any given date.</p>
+<h2>Remarks</h2>
+<p>Among other things, can be used to find the number of days between any two dates, e.g.:</p>
+<h2>Example</h2>
+<p>DIM cpt AS CPowerTime PRINT cpt.AstroDay(-12400, 3, 1) - cpt.AstroDay(-12400, 2, 28)  ' Prints 2 PRINT cpt.AstroDay(12000, 3, 1) - cpt.AstroDay(-12000, 2, 28) ' Prints 8765822 PRINT cpt.AstroDay(1902, 2, 28) - cpt.AstroDay(1898, 3, 1)  ' Prints 1459 days</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/CPowerTime.inc:634</span></li><li>Documented in <span class="srcref">DateTime/CPowerTime Class.md</span></li><li>Topic: <a href="../cpowertime-class.html">CPowerTime Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

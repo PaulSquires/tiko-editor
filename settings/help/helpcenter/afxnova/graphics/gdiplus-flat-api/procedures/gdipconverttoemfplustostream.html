@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipConvertToEmfPlusToStream — Help Center</title>
+<meta name="description" content="Converts a **Metafile** object to the **EMF+** format..">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipconverttoemfplustostream.html">
+<meta property="og:title" content="GdipConvertToEmfPlusToStream">
+<meta property="og:description" content="Converts a **Metafile** object to the **EMF+** format..">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipconverttoemfplustostream.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipconverttoemfplustostream.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../image-functions.html">Image Functions</a></div>
+<h1>GdipConvertToEmfPlusToStream<span class="h1kind">function</span></h1>
+<p class="lede">Converts a **Metafile** object to the **EMF+** format..</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipConvertToEmfPlusToStream (BYVAL refGraphics AS GpGraphics PTR, BYVAL stream AS IStream PTR, BYVAL conversionFailureFlag AS INT_ PTR, BYVAL emfType AS EmfType, BYVAL description AS WSTRING PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>refGraphics</code></td><td></td><td>[in] Pointer to a <strong>Graphics</strong> object whose state (settings for antialiasing, interpolation, and the like) is applied to the records stored in the converted metafile.</td></tr><tr><td><code>stream</code></td><td></td><td>[in] Pointer to an <strong>IStream</strong> interface that specifies the stream to which the converted metafile is written.</td></tr><tr><td><code>conversionFailureFlag</code></td><td></td><td>Optional. Pointer to a BOOL that receives TRUE if all the metafile records were converted successfully; FALSE otherwise. Pass NULL if you do not want to receive this information. The default value is NULL.</td></tr><tr><td><code>emfType</code></td><td></td><td>Optional. Element of the <em>EmfType</em> enumeration that specifies whether the converted file has the <em>EmfTypeEmfPlusOnly</em> format or the <em>EmfTypeEmfPlusDual</em> format. Do not pass <em>EmfTypeEmfOnly</em>. The default value is <em>EmfTypeEmfPlusOnly</em>.</td></tr><tr><td><code>description</code></td><td></td><td>Optional. Pointer to a null-terminated wide-character string that is stored in the header of the converted metafile. The default value is NULL.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Converts a metafile of the type <em>MetafileTypeEmf</em> (4) to the <strong>EMF+</strong> format and saves it to a stream.</p>
+<h2>Remarks</h2>
+<p>This method replaces the records originally in the <strong>Metafile</strong> object with the converted records. To retain a copy of the original <strong>Metafile</strong> object, call the <strong>GdipCloneImage</strong> function.</p>
+<p>If you set the <strong>emfType</strong> parameter to <strong>EmfTypeEmfPlusDual</strong>, the converted metafile contains an Enhanced Metafile (EMF) representation and an EMF+ representation. The EMF representation is the original set of EMF records rather than EMF records converted back from the newly created EMF+ records.</p>
+<p>It is possible for the return value to be <strong>Ok</strong> and the value returned in conversionSuccess to be <strong>FALSE</strong>. Sometimes the overall conversion is considered to be successful even if a few individual records failed to convert with complete accuracy. For example, the original metafile might have records or operations that are not supported by Windows GDI+ (or EMF+), in which case those records or operations are emulated.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' Convert EMF to EMF+ and Save to Stream. ' ======================================================================================== SUB Example_ConvertToEmfPlusToStream (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' Load original EMF metafile DIM metafile AS GpMetafile PTR hStatus = GdipCreateMetafileFromFile("EMF13.emf", @metafile)</p>
+<p>' Create stream to hold converted EMF+ DIM stream AS IStream PTR hStatus = CreateStreamOnHGlobal(NULL, TRUE, @stream) IF hStatus &lt;&gt; StatusOk THEN</p>
+<pre class="code"><code>AfxMsg "Failed to create stream."
+  GdipDisposeImage(metafile)
+  GdipDeleteGraphics(graphics)
+  EXIT SUB</code></pre>
+<p>END IF</p>
+<p>' // Convert to EMF+ and write to stream DIM success AS LONG DIM description AS WSTRING * 64 = "Converted EMF+" DIM converted AS GpMetafile PTR hStatus = GdipConvertToEmfPlusToStream(graphics, metafile, @success, stream, EmfTypeEmfPlusDual, @description, @converted)</p>
+<p>AfxMsg "Conversion status: " &amp; WSTR(hStatus) AfxMsg "Conversion success: " &amp; WSTR(success)</p>
+<p>' // Cleanup IF converted THEN GdipDisposeImage(converted) IF stream THEN stream-&gt;lpvtbl-&gt;Release(stream) IF metafile THEN GdipDisposeImage(metafile) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2226</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusImage.md</span></li><li>Topic: <a href="../image-functions.html">Image Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTextStream Class — Help Center</title>
+<meta name="description" content="CTextStream Class — 26 documented members. File Management reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/file-management/ctextstream-class.html">
+<meta property="og:title" content="CTextStream Class">
+<meta property="og:description" content="CTextStream Class — 26 documented members. File Management reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/file-management/ctextstream-class.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/file-management/ctextstream-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>File Management</div>
+<h1>CTextStream Class</h1>
+<h2>Members (26)</h2>
+<div class="memberlist"><a href="ctextstream/ctextstream-close.html"><span class="m-n">Close</span><span class="m-d">Closes an open **TextStream** file.</span></a><a href="ctextstream/ctextstream-column.html"><span class="m-n">Column</span><span class="m-d">Returns the column number of the current character position in a **TextStream** file.</span></a><a href="ctextstream/ctextstream-create.html"><span class="m-n">Create</span><span class="m-d">Creates a file and returns a **TextStream** object that can be used to read from or write to the file.</span></a><a href="ctextstream/ctextstream-eol.html"><span class="m-n">EOL</span><span class="m-d">Returns TRUE if the file pointer is positioned immediately before the end-of-line marker in a **TextStream** file; FALSE if it is not.</span></a><a href="ctextstream/ctextstream-eos.html"><span class="m-n">EOS</span><span class="m-d">Returns TRUE if the file pointer is at the end of a **TextStream** file; FALSE if it is not.</span></a><a href="ctextstream/ctextstream-geterrorinfo.html"><span class="m-n">GetErrorInfo</span><span class="m-d">Returns a description of the specified error code.</span></a><a href="ctextstream/ctextstream-getlastresult.html"><span class="m-n">GetLastResult</span><span class="m-d">Returns the last result code.</span></a><a href="ctextstream/ctextstream-line.html"><span class="m-n">Line</span><span class="m-d">Returns the current line number in a **TextStream** file.</span></a><a href="ctextstream/ctextstream-open.html"><span class="m-n">Open</span><span class="m-d">Opens a file and returns a **TextStream** object that can be used to read from, write to, or append to the file.</span></a><a href="ctextstream/ctextstream-openforappenda.html"><span class="m-n">OpenForAppendA</span><span class="m-d">Opens a file for append and returns a **TextStream** object that can be used to write to the file.</span></a><a href="ctextstream/ctextstream-openforappendw.html"><span class="m-n">OpenForAppendW</span><span class="m-d">Opens a file for append and returns a **TextStream** object that can be used to write to the file.</span></a><a href="ctextstream/ctextstream-openforinputa.html"><span class="m-n">OpenForInputA</span><span class="m-d">Opens a file for input and returns a **TextStream** object that can be used to read from the file.</span></a><a href="ctextstream/ctextstream-openforinputw.html"><span class="m-n">OpenForInputW</span><span class="m-d">Opens a file for input and returns a **TextStream** object that can be used to read from the file.</span></a><a href="ctextstream/ctextstream-openforoutputa.html"><span class="m-n">OpenForOutputA</span><span class="m-d">Opens a file for putput and returns a **TextStream** object that can be used to write to the file.</span></a><a href="ctextstream/ctextstream-openforoutputa.html"><span class="m-n">OpenForOutputA</span><span class="m-d">Opens a file for putput and returns a **TextStream** object that can be used to write to the file.</span></a><a href="ctextstream/ctextstream-openforoutputw.html"><span class="m-n">OpenForOutputW</span><span class="m-d">Opens a file for putput and returns a **TextStream** object that can be used to write to the file.</span></a><a href="ctextstream/ctextstream-openunicode.html"><span class="m-n">OpenUnicode</span><span class="m-d">Opens a file and returns a **TextStream** object that can be used to read from, write to, or append to the file.</span></a><a href="ctextstream/ctextstream-read.html"><span class="m-n">Read</span><span class="m-d">Reads a specified number of characters from a **TextStream** file and returns the resulting string.</span></a><a href="ctextstream/ctextstream-readall.html"><span class="m-n">ReadAll</span><span class="m-d">Reads an entire **TextStream** file and returns the resulting string.</span></a><a href="ctextstream/ctextstream-readline.html"><span class="m-n">ReadLine</span><span class="m-d">Reads an entire line (up to, but not including, the newline character) from a **TextStream** file and returns the resulting string.</span></a><a href="ctextstream/ctextstream-setresult.html"><span class="m-n">SetResult</span><span class="m-d">Sets the last result code.</span></a><a href="ctextstream/ctextstream-skip.html"><span class="m-n">Skip</span><span class="m-d">Skips a specified number of characters when reading a **TextStream** file.</span></a><a href="ctextstream/ctextstream-skipline.html"><span class="m-n">SkipLine</span><span class="m-d">Skips the next line when reading a **TextStream** file.</span></a><a href="ctextstream/ctextstream-write.html"><span class="m-n">Write</span><span class="m-d">Writes a specified string to a **TextStream** file.</span></a><a href="ctextstream/ctextstream-writeblanklines.html"><span class="m-n">WriteBlankLines</span><span class="m-d">Writes a specified number of newline characters to a **TextStream** file.</span></a><a href="ctextstream/ctextstream-writeline.html"><span class="m-n">WriteLine</span><span class="m-d">Writes a specified string and newline character to a **TextStream** file.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="ctextstream-class">CTextStream Class</h2>
+<p>Allows to read and write sequential text files (sometimes referred to as a text streams).</p>
+<p>Works with ASCII and Unicode.</p>
+<p>Works with Windows CRLF files and with Linux LF files.</p>
+<p><strong>Include file</strong>: AfxNova/CTextStream.inc</p>
+<hr>
+<h3 id="constructors">Constructors</h3>
+<p>Besides the default constructor, that initializes the COM library and creates an instance of the <strong>ITextStream</strong> interface, this additional constructor allows to create an instance of the class by passing a pointer to an existing <strong>ITextStream</strong> interface that becomes attached to the class (therefore, don't release the passed pointer, it will be released by the <code>CTextStream</code> class).</p>
+<pre class="code"><code>CONSTRUCTOR CTextStream (BYVAL pstm AS Afx_ITextStream PTR)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pstm</em></td><td>Pointer to an instance of the <strong>Afx_ITextStream</strong> interface.</td></tr></tbody></table></div>
+<p>This allows to work with the standard StdIn, StdErr and StdOut streams using the methods of the <code>CTextStream</code> class.</p>
+<pre class="code"><code>#include "AfxNova/CTextStream.inc"
+' // Create an instance of the CTextStream class initialized with a pointer to the standard StdOut stream
+DIM pTxtStm AS CTextStream = CFileSys().GetStdOutStream(TRUE)   ' or FALSE to work with ansi
+' // Write a string and an end of line to the stream
+pTxtStm.WriteLine "This is a test."</code></pre>
+<hr>
+<h3 id="operators">Operators</h3>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td>LET</td><td>Initializes the class from an existing stream and attaches it.</td></tr><tr><td>CAST</td><td>Returns a pointer to the underlying <strong>ITextStream</strong> interface of the text stream object.</td></tr></tbody></table></div>
+<pre class="code"><code>OPERATOR LET (BYVAL pstm AS Afx_ITextStream PTR)
+OPERATOR CAST () AS Afx_ITextStream PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pstm</em></td><td>A pointer to the <strong>ITextStream</strong> interface of an existing text stream that will be attached to the class.</td></tr></tbody></table></div>
+<hr>
+<h3 id="methods-and-properties">Methods and properties</h3>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="ctextstream/ctextstream-create.html">Create</a></td><td>Creates a file and returns a <strong>TextStream</strong> object that can be used to read from or write to the file.</td></tr><tr><td><a href="ctextstream/ctextstream-open.html">Open</a></td><td>Opens a file and returns a <strong>TextStream</strong> object that can be used to read from, write to, or append to the file.</td></tr><tr><td><a href="ctextstream/ctextstream-openunicode.html">OpenUnicode</a></td><td>Opens a file and returns a <strong>TextStream</strong> object that can be used to read from, write to, or append to the file.</td></tr><tr><td><a href="ctextstream/ctextstream-openforinputa.html">OpenForInputA</a></td><td>Opens a file for input and returns a <strong>TextStream</strong> object that can be used to read from the file.</td></tr><tr><td><a href="ctextstream/ctextstream-openforinputw.html">OpenForInputW</a></td><td>Opens a file for input and returns a <strong>TextStream</strong> object that can be used to read from the file.</td></tr><tr><td><a href="ctextstream/ctextstream-openforoutputa.html">OpenForOutputA</a></td><td>Opens a file for putput and returns a <strong>TextStream</strong> object that can be used to write to the file.</td></tr><tr><td><a href="ctextstream/ctextstream-openforoutputw.html">OpenForOutputW</a></td><td>Opens a file for putput and returns a <strong>TextStream</strong> object that can be used to write to the file.</td></tr><tr><td><a href="ctextstream/ctextstream-openforappenda.html">OpenForAppendA</a></td><td>Opens a file for append and returns a <strong>TextStream</strong> object that can be used to write to the file.</td></tr><tr><td><a href="ctextstream/ctextstream-openforappendw.html">OpenForAppendW</a></td><td>Opens a file for append and returns a <strong>TextStream</strong> object that can be used to write to the file.</td></tr><tr><td><a href="ctextstream/ctextstream-close.html">Close</a></td><td>Closes an open <strong>TextStream</strong> file.</td></tr><tr><td><a href="ctextstream/ctextstream-eol.html">EOL</a></td><td>Returns TRUE if the file pointer is positioned immediately before the end-of-line marker in a <strong>TextStream</strong> file; FALSE if it is not.</td></tr><tr><td><a href="ctextstream/ctextstream-eos.html">EOS</a></td><td>Returns TRUE if the file pointer is at the end of a <strong>TextStream</strong> file; FALSE if it is not.</td></tr><tr><td><a href="ctextstream/ctextstream-read.html">Read</a></td><td>Reads a specified number of characters from a <strong>TextStream</strong> file and returns the resulting string.</td></tr><tr><td><a href="ctextstream/ctextstream-readline.html">ReadLine</a></td><td>Reads an entire line (up to, but not including, the newline character) from a <strong>TextStream</strong> file and returns the resulting string.</td></tr><tr><td><a href="ctextstream/ctextstream-readall.html">ReadAll</a></td><td>Reads an entire <strong>TextStream</strong> file and returns the resulting string.</td></tr><tr><td><a href="ctextstream/ctextstream-write.html">Write</a></td><td>Writes a specified string to a <strong>TextStream</strong> file.</td></tr><tr><td><a href="ctextstream/ctextstream-writeline.html">WriteLine</a></td><td>Writes a specified string and newline character to a <strong>TextStream</strong> file.</td></tr><tr><td><a href="ctextstream/ctextstream-writeblanklines.html">WriteBlankLines</a></td><td>Writes a specified number of newline characters to a <strong>TextStream</strong> file.</td></tr><tr><td><a href="ctextstream/ctextstream-skip.html">Skip</a></td><td>Skips a specified number of characters when reading a <strong>TextStream</strong> file.</td></tr><tr><td><a href="ctextstream/ctextstream-skipline.html">SkipLine</a></td><td>Skips the next line when reading a <strong>TextStream</strong> file.</td></tr><tr><td><a href="ctextstream/ctextstream-line.html">Line</a></td><td>Returns the current line number in a <strong>TextStream</strong> file.</td></tr><tr><td><a href="ctextstream/ctextstream-column.html">Column</a></td><td>Returns the column number of the current character position in a <strong>TextStream</strong> file.</td></tr></tbody></table></div>
+<hr>
+<h3 id="error-and-result-codes">Error and result codes</h3>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="ctextstream/ctextstream-geterrorinfo.html">GetErrorInfo</a></td><td>Returns a description of the specified error code.</td></tr><tr><td><a href="ctextstream/ctextstream-getlastresult.html">GetLastResult</a></td><td>Returns the last result code.</td></tr><tr><td><a href="ctextstream/ctextstream-setresult.html">SetResult</a></td><td>Sets the last result code.</td></tr></tbody></table></div>
+<hr>
+<h3 id="Create">Create</h3>
+<p>Creates a specified file name and returns a TextStream object that can be used to read from or write to the file.</p>
+<pre class="code"><code>FUNCTION Create (BYREF wszFileName AS WSTRING, BYVAL bOverwrite AS BOOLEAN = TRUE, _
+   BYVAL bUnicode AS BOOLEAN = FALSE) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFileName</em></td><td>String expression that identifies the file to create.</td></tr><tr><td><em>bOverwrite</em></td><td>Boolean value that indicates whether you can overwrite an existing file. The value is true if the file can be overwritten, false if it can't be overwritten. If omitted, existing files are not overwritten.</td></tr><tr><td><em>bUnicode</em></td><td>Boolean value that indicates whether the file is created as a Unicode or ASCII file. The value is true if the file is created as a Unicode file, false if it's created as an ASCII file. If omitted, an ASCII file is assumed.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>HRESULT. S_OK (0) on success, or an error code on failure.</p>
+<h5 id="example-ansi-text">Example (Ansi text)</h5>
+<pre class="code"><code>#include "AfxNova/CTextStream.inc"
+USING AfxNova
+
+' // Create an instance of the CTextStream class
+DIM pTxtStm AS CTextStream
+' // Create a text stream
+DIM dwsFile AS DWSTRING = ExePath &amp; "\Test.txt"
+pTxtStm.Create(dwsFile, TRUE)
+' // Write a string and an end of line to the stream
+pTxtStm.WriteLine "This is a test."
+' // Write more strings
+pTxtStm.WriteLine "This is a string."
+pTxtStm.WriteLine "This is a second string."
+pTxtStm.WriteLine "This is the end line."</code></pre>
+<h5 id="example-unicode-text">Example (Unicode text)</h5>
+<pre class="code"><code>#include "AfxNova/CTextStream.inc"
+USING AfxNova
+
+' // Create an instance of the CTextStream class
+DIM pTxtStm AS CTextStream
+' // Create a text stream
+DIM dwsFile AS DWSTRING = ExePath &amp; "\TestW.txt"
+pTxtStm.Create(dwsFile, TRUE, TRUE)
+' // Write a string and an end of line to the stream
+pTxtStm.WriteLine "This is a test."
+' // Write more strings
+pTxtStm.WriteLine "This is a string."
+pTxtStm.WriteLine "This is a second string."
+pTxtStm.WriteLine "This is the end line."</code></pre>
+<hr>
+<h3 id="Open">Open</h3>
+<p>Opens a specified file and returns a <strong>TextStream</strong> object that can be used to read from, write to, or append to the file.</p>
+<pre class="code"><code>FUNCTION Open (BYREF wszFileName AS WSTRING, BYVAL IOMode AS LONG = 1, _
+   BYVAL bCreate AS BOOLEAN = FALSE, BYVAL bUnicode AS BOOLEAN = FALSE) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFileName</em></td><td>String expression that identifies the file to open.</td></tr><tr><td><em>IOMode</em></td><td>Can be one of three constants: <em>IOMode_ForReading</em>, <em>IOMode_ForWriting</em>, or <em>IOMode_ForAppending</em>.</td></tr><tr><td><em>bCreate</em></td><td>Boolean value that indicates whether a new file can be created if the specified filename doesn't exist. The value is True if a new file is created, False if it isn't created. If omitted, a new file isn't created.</td></tr><tr><td><em>bUnicode</em></td><td>Boolean value that indicates whether the file is created as a Unicode or ASCII file. The value is true if the file is created as a Unicode file, false if it's created as an ASCII file. If omitted, an ASCII file is assumed.</td></tr></tbody></table></div>
+<p>The <em>IOMode</em> argument can have any of the following settings:</p>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Value</th><th>Description</th></tr></thead><tbody><tr><td>IOMode_ForReading</td><td>1</td><td>Open a file for reading only. You can't write to this file.</td></tr><tr><td>IOMode_ForWriting</td><td>2</td><td>Open a file for writing.</td></tr><tr><td>IOMode_ForAppending</td><td>8</td><td>Open a file and write to the end of the file.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>HRESULT. S_OK (0) on success, or an error code on failure.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include "AfxNova/CTextStream.inc"
+USING AfxNova
+
+' // Create an instance of the CTextStream class
+DIM pTxtStm AS CTextStream
+' // Open file as a text stream
+DIM dwsFile AS DWSTRING = ExePath &amp; "\Test.txt"
+pTxtStm.Open(dwsFile, IOMode_ForReading)
+' // Read the file sequentially
+DIM s AS STRING
+DO UNTIL pTxtStm.EOS
+   s = pTxtStm.ReadLine
+   PRINT s
+LOOP
+pTxtStm.Close</code></pre>
+<hr>
+<h3 id="OpenUnicode">OpenUnicode</h3>
+<p>Opens a specified file and returns a TextStream object that can be used to read from, write to, or append to the file.</p>
+<pre class="code"><code>FUNCTION OpenUnicode (BYREF wszFileName AS WSTRING, BYVAL IOMode AS LONG = 1, _
+   BYVAL bCreate AS BOOLEAN = FALSE) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>cbsFileName</em></td><td>String expression that identifies the file to open.</td></tr><tr><td><em>IOMode</em></td><td>LONG. Can be one of three constants: <em>IOMode_ForReading</em>, <em>IOMode_ForWriting</em>, or <em>IOMode_ForAppending</em>.</td></tr><tr><td><em>bCreate</em></td><td>Boolean value that indicates whether a new file can be created if the specified filename doesn't exist. The value is True if a new file is created, False if it isn't created. If omitted, a new file isn't created.</td></tr></tbody></table></div>
+<p>The <em>IOMode</em> argument can have any of the following settings:</p>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Value</th><th>Description</th></tr></thead><tbody><tr><td>IOMode_ForReading</td><td>1</td><td>Open a file for reading only. You can't write to this file.</td></tr><tr><td>IOMode_ForWriting</td><td>2</td><td>Open a file for writing.</td></tr><tr><td>IOMode_ForAppending</td><td>8</td><td>Open a file and write to the end of the file.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>HRESULT. S_OK (0) on success, or an error code on failure.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include "AfxNova/CTextStream.inc"
+USING AfxNova
+
+' // Create an instance of the CTextStream class
+DIM pTxtStm AS CTextStream
+' // Open file as a text stream
+DIM dwsFile AS DWSTRING = ExePath &amp; "\TestW.txt"
+IF pTxtStm.OpenUnicode(dwsFile, IOMode_ForReading) = S_OK THEN
+   ' // Read the file sequentially
+   DIM dws AS DWSTRING
+   DO UNTIL pTxtStm.EOS
+      dws = pTxtStm.ReadLine
+      PRINT dws
+   LOOP
+   pTxtStm.Close
+END IF</code></pre>
+<hr>
+<h3 id="OpenForInputA">OpenForInputA</h3>
+<p>Opens a file for input and returns a <strong>TextStream</strong> object that can be used to read from the file. (Ansi version.)</p>
+<pre class="code"><code>FUNCTION OpenForInputA (BYREF wszFileName AS WSTRING, BYVAL bCreate AS BOOLEAN = FALSE) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFileName</em></td><td>String expression that identifies the file to open.</td></tr><tr><td><em>bCreate</em></td><td>Boolean value that indicates whether a new file can be created if the specified filename doesn't exist. The value is True if a new file is created, False if it isn't created. If omitted, a new file isn't created.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>HRESULT. S_OK (0) on success, or an error code on failure.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include "AfxNova/CTextStream.inc"
+USING AfxNova
+
+' // Create an instance of the CTextStream class
+DIM pTxtStm AS CTextStream
+' // ' // Open file for input as a text stream
+IF pTxtStm.OpenForInputA(ExePath &amp; "\Test.txt") = S_OK THEN
+   ' // Read the file sequentially
+   DIM s AS STRING
+   DO UNTIL pTxtStm.EOS
+      s = pTxtStm.ReadLine
+      PRINT s
+   LOOP
+   pTxtStm.Close
+END IF</code></pre>
+<hr>
+<h3 id="OpenForInputW">OpenForInputW</h3>
+<p>Opens a file for input and returns a <strong>TextStream</strong> object that can be used to read from the file. (Unicode version.)</p>
+<pre class="code"><code>FUNCTION OpenForInputW (BYREF wszFileName AS WsTRING, BYVAL bCreate AS BOOLEAN = FALSE) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFileName</em></td><td>String expression that identifies the file to open.</td></tr><tr><td><em>bCreate</em></td><td>Boolean value that indicates whether a new file can be created if the specified filename doesn't exist. The value is True if a new file is created, False if it isn't created. If omitted, a new file isn't created.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>HRESULT. S_OK (0) on success, or an error code on failure.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include "AfxNova/CTextStream.inc"
+USING AfxNova
+
+' // Create an instance of the CTextStream class
+DIM pTxtStm AS CTextStream
+' // ' // Open file for input as a text stream
+IF pTxtStm.OpenForInputW(ExePath &amp; "\TestW.txt") = S_OK THEN
+   ' // Read the file sequentially
+   DIM dws AS DWSTRING
+   DO UNTIL pTxtStm.EOS
+      dws = pTxtStm.ReadLine
+      PRINT dws
+   LOOP
+   pTxtStm.Close
+END IF</code></pre>
+<hr>
+<h3 id="OpenForOutputA">OpenForOutputA</h3>
+<p>Opens a file for output and returns a <strong>TextStream</strong> object that can be used to write to the file. (Ansi version.)</p>
+<pre class="code"><code>FUNCTION OpenForOutputA (BYREF wszFileName AS WSTRING, BYVAL bCreate AS BOOLEAN = FALSE) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFileName</em></td><td>String expression that identifies the file to open.</td></tr><tr><td><em>bCreate</em></td><td>Boolean value that indicates whether a new file can be created if the specified filename doesn't exist. The value is True if a new file is created, False if it isn't created. If omitted, a new file isn't created.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>HRESULT. S_OK (0) on success, or an error code on failure.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include "AfxNova/CTextStream.inc"
+USING AfxNova
+
+' // Create an instance of the CTextStream class
+DIM pTxtStm AS CTextStream
+' // Open file for output as a text stream
+IF pTxtStm.OpenForOutputA(ExePath &amp; "\Test.txt") = S_OK THEN
+   ' // Write a string and an end of line to the stream
+   pTxtStm.WriteLine "This is a test."
+   '// Close the file
+   pTxtStm.Close
+END IF</code></pre>
+<hr>
+<h3 id="OpenForOutputW">OpenForOutputW</h3>
+<p>Opens a file for output and returns a <strong>TextStream</strong> object that can be used to write to the file. (Unicode version.)</p>
+<pre class="code"><code>FUNCTION OpenForOutputW (BYREF wszFileName AS WSTRING, BYVAL bCreate AS BOOLEAN = FALSE) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFileName</em></td><td>String expression that identifies the file to open.</td></tr><tr><td><em>bCreate</em></td><td>Boolean value that indicates whether a new file can be created if the specified filename doesn't exist. The value is True if a new file is created, False if it isn't created. If omitted, a new file isn't created.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>HRESULT. S_OK (0) on success, or an error code on failure.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include "AfxNova/CTextStream.inc"
+USING AfxNova
+
+' // Create an instance of the CTextStream class
+DIM pTxtStm AS CTextStream
+' // Open file for output as a text stream
+IF pTxtStm.OpenForOutputW(ExePath &amp; "\TestW.txt") = S_OK THEN
+   ' // Write a string and an end of line to the stream
+   pTxtStm.WriteLine "This is a test."
+   '// Close the file
+   pTxtStm.Close
+END IF</code></pre>
+<hr>
+<h3 id="OpenForAppendA">OpenForAppendA</h3>
+<p>Opens a file for append and returns a <strong>TextStream</strong> object that can be used to write to the file. (Ansi version.)</p>
+<pre class="code"><code>FUNCTION OpenForOutputA (BYREF wszFileName AS WSTRING, BYVAL bCreate AS BOOLEAN = FALSE) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFileName</em></td><td>String expression that identifies the file to open.</td></tr><tr><td><em>bCreate</em></td><td>Boolean value that indicates whether a new file can be created if the specified filename doesn't exist. The value is True if a new file is created, False if it isn't created. If omitted, a new file isn't created.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>HRESULT. S_OK (0) on success, or an error code on failure.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include "AfxNova/CTextStream.inc"
+USING AfxNova
+
+' // Create an instance of the CTextStream class
+DIM pTxtStm AS CTextStream
+' // Open file for append as a text stream
+IF pTxtStm.OpenForAppendA(ExePath &amp; "\Test.txt") = S_OK THEN
+   ' // Write a string and an end of line to the stream
+   pTxtStm.WriteLine "This is a test."
+   '// Close the file
+   pTxtStm.Close
+END IF</code></pre>
+<hr>
+<h3 id="OpenForAppendW">OpenForAppendW</h3>
+<p>Opens a file for append and returns a <strong>TextStream</strong> object that can be used to write to the file. (Unicode version.)</p>
+<pre class="code"><code>FUNCTION OpenForAppendW (BYREF wszFileName AS WSTRING, BYVAL bCreate AS BOOLEAN = FALSE) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFileName</em></td><td>String expression that identifies the file to open.</td></tr><tr><td><em>bCreate</em></td><td>Boolean value that indicates whether a new file can be created if the specified filename doesn't exist. The value is True if a new file is created, False if it isn't created. If omitted, a new file isn't created.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>HRESULT. S_OK (0) on success, or an error code on failure.</p>
+<pre class="code"><code>#include "AfxNova/CTextStream.inc"
+USING AfxNova
+
+' // Create an instance of the CTextStream class
+DIM pTxtStm AS CTextStream
+' // Open file for append as a text stream
+IF pTxtStm.OpenForAppendW(ExePath &amp; "\TestW.txt") = S_OK THEN
+   ' // Write a string and an end of line to the stream
+   pTxtStm.WriteLine "This is a test."
+   '// Close the file
+   pTxtStm.Close
+END IF</code></pre>
+<hr>
+<h3 id="Close">Close</h3>
+<p>Closes an open <strong>TextStream</strong> file.</p>
+<pre class="code"><code>FUNCTION Close () AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>HRESULT. S_OK (0) on success, or an error code on failure.</p>
+<hr>
+<h3 id="EOL">EOL</h3>
+<p>Returns TRUE if the file pointer is positioned immediately before the end-of-line marker in a <strong>TextStream</strong> file; FALSE if it is not.</p>
+<pre class="code"><code>FUNCTION EOL () AS BOOLEAN</code></pre>
+<h5 id="remark">Remark</h5>
+<p>The EOL (End of Line) property applies only to <strong>TextStream</strong> files that are open for reading; otherwise, an error occurs.</p>
+<hr>
+<h3 id="EOS">EOS</h3>
+<p>Returns TRUE if the file pointer is at the end of a <strong>TextStream</strong> file; FALSE if it is not.</p>
+<pre class="code"><code>FUNCTION EOS () AS BOOLEAN</code></pre>
+<h5 id="remark">Remark</h5>
+<p>The EOS (End os Stream) property applies only to <strong>TextStream</strong> files that are open for reading, otherwise, an error occurs.</p>
+<hr>
+<h2 id="Read">Read</h2>
+<p>Reads a specified number of characters from a <strong>TextStream</strong> file and returns the resulting string.</p>
+<pre class="code"><code>FUNCTION Read (BYVAL numChars AS LONG) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>numChars</em></td><td>LONG. Number of characters you want to read from the file.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>A string with the characters read.</p>
+<hr>
+<h3 id="ReadLine">ReadLine</h3>
+<p>Reads an entire line (up to, but not including, the newline character) from a TextStream file and returns the resulting string.</p>
+<pre class="code"><code>FUNCTION ReadLine  () AS DWSTRING</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>A string with the content of the line read.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include "AfxNova/CTextStream.inc"
+USING AfxNova
+
+' // Create an instance of the CTextStream class
+DIM pTxtStm AS CTextStream
+' // Open file as a text stream
+DIM dwsFile AS DWSTRING = ExePath &amp; "\Test.txt"
+IF pTxtStm.Open(dwsFile, IOMode_ForReading) = S_OK THEN
+   ' // Read the file sequentially
+   DO
+     IF pTxtStm.EOS THEN EXIT DO
+     DIM curLine AS LONG = pTxtStm.Line
+     DIM dwsText AS DWSTRING = pTxtStm.ReadLine
+     PRINT "Line " &amp; STR(curLine) &amp; ": " &amp; dwsText
+   LOOP
+   '// Close the file
+   pTxtStm.Close
+END IF</code></pre>
+<hr>
+<h3 id="ReadAll">ReadAll</h3>
+<p>Reads an entire <strong>TextStream</strong> file and returns the resulting string.</p>
+<pre class="code"><code>FUNCTION ReadAll  () AS DWSTRING</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>A string with the content of all the file.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include "AfxNova/CTextStream.inc"
+USING AfxNova
+
+' // Create an instance of the CTextStream class
+DIM pTxtStm AS CTextStream
+' // Open file as a text stream
+DIM dwsFile AS DWSTRING = ExePath &amp; "\Test.txt"
+IF pTxtStm.Open(dwsFile, IOMode_ForReading) = S_OK THEN
+   ' // Read all the contents of the file
+   DIM dwsText AS DWSTRING = pTxtStm.ReadAll
+   PRINT dwsText
+   '// Close the file
+   pTxtStm.Close
+END IF</code></pre>
+<hr>
+<h3 id="Write">Write</h3>
+<p>Writes a specified string to a <strong>TextStream</strong> file.</p>
+<pre class="code"><code>FUNCTION Write (BYREF dwsText AS DWSTRING) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>dwsText</em></td><td>The text you want to write to the file.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The text you want to write to the file.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include "AfxNova/CTextStream.inc"
+USING AfxNova
+
+' // Create an instance of the CTextStream class
+DIM pTxtStm AS CTextStream
+' // Create a text stream
+DIM dwsFile AS DWSTRING = ExePath &amp; "\Test.txt"
+IF pTxtStm.Create(dwsFile, TRUE) = S_OK THEN
+   ' // Write strings
+   pTxtStm.Write "This is a string."
+   pTxtStm.Write "This is a second string."
+   '// Close the file
+   pTxtStm.Close
+END IF</code></pre>
+<hr>
+<h3 id="WriteLine">WriteLine</h3>
+<p>Writes a specified string and newline character to a <strong>TextStream</strong> file.</p>
+<pre class="code"><code>FUNCTION WriteLine (BYREF dwsText AS DWSTRING) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>dwsText</em></td><td>The text you want to write to the file. If omitted, a newline character is written to the file.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The text you want to write to the file.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include "AfxNova/CTextStream.inc"
+USING AfxNova
+
+' // Create an instance of the CTextStream class
+DIM pTxtStm AS CTextStream
+' // Create a text stream
+DIM dwsFile AS DWSTRING = ExePath &amp; "\Test.txt"
+IF pTxtStm.Create(dwsFile, TRUE) = S_OK THEN
+   ' // Write strings
+   pTxtStm.WriteLine "This is a string."
+   pTxtStm.WriteLine "This is a second string."
+   '// Close the file
+   pTxtStm.Close
+END IF</code></pre>
+<hr>
+<h3 id="WriteBlankLines">WriteBlankLines</h3>
+<p>Writes a specified string and newline character to a TextStream file.</p>
+<pre class="code"><code>FUNCTION WriteBlankLines (BYVAL numLines AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>numLines</em></td><td>LONG. Number of newline characters you want to write to the file.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>HRESULT. S_OK (0) on success, or an error code on failure.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include "AfxNova/CTextStream.inc"
+USING AfxNova
+
+' // Create an instance of the CTextStream class
+DIM pTxtStm AS CTextStream
+' // Create a text stream
+DIM dwsFile AS DWSTRING = ExePath &amp; "\Test.txt"
+IF pTxtStm.Create(dwsFile, TRUE) = S_OK THEN
+   ' // Write a string and an end of line to the stream
+   pTxtStm.WriteLine "This is a test."
+   ' // Write more strings
+   pTxtStm.Write "This is a string."
+   pTxtStm.Write "This is a second string."
+   ' // Write two blank lines (the first will serve as an end of line for the previous write instructions)
+   pTxtStm.WriteBlankLines 2
+   pTxtStm.WriteLine "This is the end line."
+   '// Close the file
+   pTxtStm.Close
+END IF</code></pre>
+<hr>
+<h3 id="Skip">Skip</h3>
+<p>Skips a specified number of characters when reading a <strong>TextStream</strong> file.</p>
+<pre class="code"><code>FUNCTION Skip (BYVAL numChars AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>numChars</em></td><td>LONG. Number of characters  to skip when reading a file.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>HRESULT. S_OK (0) on success, or an error code on failure.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include "AfxNova/CTextStream.inc"
+USING AfxNova
+
+' // Create an instance of the CTextStream class
+DIM pTxtStm AS CTextStream
+' // Open file as a text stream
+DIM dwsFile AS DWSTRING = ExePath &amp; "\Test.txt"
+IF pTxtStm.Open(dwsFile, IOMode_ForReading) = S_OK THEN
+   ' // Read the file sequentially
+   DO
+     ' // Ext if we are at the end of the stream
+     IF pTxtStm.EOS THEN EXIT DO
+     ' // Current line
+     DIM curLine AS LONG = pTxtStm.Line
+     ' // Skip the 3rd line
+     IF curLine = 3 THEN
+        pTxtStm.SkipLine
+        curLine + = 1
+     END IF
+     ' // Skip 10 characters
+     pTxtStm.Skip 10
+     ' // Current column
+     DIM curColumn AS LONG = pTxtStm.Column
+     ' // Read 5 characters
+     DIM dwsText AS DWSTRING = pTxtStm.Read(5)
+     ' // Skip the rest of the line
+     pTxtStm.SkipLine
+     PRINT "Line " + WSTR(curLine) + ", Column " +  WSTR(curColumn) &amp; ": " + dwsText
+   LOOP
+   '// Close the file
+   pTxtStm.Close
+END IF</code></pre>
+<hr>
+<h3 id="SkipLine">SkipLine</h3>
+<p>Skips the next line when reading a <strong>TextStream</strong> file.</p>
+<pre class="code"><code>FUNCTION SkipLine () AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>HRESULT. S_OK (0) on success, or an error code on failure.</p>
+<hr>
+<h2 id="Line">Line</h2>
+<p>Read-only property that returns the current line number in a <strong>TextStream</strong> file.</p>
+<pre class="code"><code>PROPERTY Line  () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>LONG. The current line number.</p>
+<h4 id="remarks">Remarks</h4>
+<p>After a file is initially opened and before anything is written, Line is equal to 1.</p>
+<hr>
+<h3 id="Column">Column</h3>
+<p>Read-only property that returns the column number of the current character position in a <strong>TextStream</strong> file.</p>
+<pre class="code"><code>PROPERTY Column  () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>LONG. The current column number.</p>
+<h5 id="remarks">Remarks</h5>
+<p>After a newline character has been written, but before any other character is written, Column is equal to 1.</p>
+<hr>
+<h3 id="GetLastResult">GetLastResult</h3>
+<p>Returns the last result code.</p>
+<pre class="code"><code>FUNCTION GetLastResult () AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>HRESULT. S_OK (0) on success, or an error code on failure.</p>
+<hr>
+<h3 id="setresult">SetResult</h3>
+<p>Sets the result code.</p>
+<pre class="code"><code>FUNCTION SetResult (BYVAL Result AS HRESULT) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Result</em></td><td>The error code returned by the methods.</td></tr></tbody></table></div>
+<hr>
+<h4 id="geterrorinfo">GetErrorInfo</h4>
+<p>Returns a description of the last error code.</p>
+<pre class="code"><code>PRIVATE FUNCTION GetErrorInfo () AS DWSTRING</code></pre>
+<h5 id="error-codes">Error codes</h5>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Description</th></tr></thead><tbody><tr><td>&amp;h800A0034</td><td>Bad file name or number</td></tr><tr><td>&amp;h800A0035</td><td>File not found</td></tr><tr><td>&amp;h800A0036</td><td>Bad file mode</td></tr><tr><td>&amp;h800A0037</td><td>File is already open</td></tr><tr><td>&amp;h800A0039</td><td>Device I/O error</td></tr><tr><td>&amp;h800A003A</td><td>File already exists</td></tr><tr><td>&amp;h800A003D</td><td>Disk space is full</td></tr><tr><td>&amp;h800A003E</td><td>Input beyond the end of the file</td></tr><tr><td>&amp;h800A0043</td><td>Too many files</td></tr><tr><td>&amp;h800A0044</td><td>Device not available</td></tr><tr><td>&amp;h800A0046</td><td>Permission denied</td></tr><tr><td>&amp;h800A0047</td><td>Disk not ready</td></tr><tr><td>&amp;h800A004A</td><td>Cannot rename with different drive</td></tr><tr><td>&amp;h800A004B</td><td>Path/file access error</td></tr><tr><td>&amp;h800A004C</td><td>Path not found</td></tr></tbody></table></div>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

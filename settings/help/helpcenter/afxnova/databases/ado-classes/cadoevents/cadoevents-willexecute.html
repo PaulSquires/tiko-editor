@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoEvents.WillExecute — Help Center</title>
+<meta name="description" content="Called just before a pending command executes on this connection and affords the user an opportunity to examine and modify the pending execution parameters.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadoevents/cadoevents-willexecute.html">
+<meta property="og:title" content="CAdoEvents.WillExecute">
+<meta property="og:description" content="Called just before a pending command executes on this connection and affords the user an opportunity to examine and modify the pending execution parameters.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadoevents/cadoevents-willexecute.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadoevents/cadoevents-willexecute.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadoevents-class.html">CAdoEvents Class</a></div>
+<h1>CAdoEvents.WillExecute<span class="h1kind">method</span></h1>
+<p class="lede">Called just before a pending command executes on this connection and affords the user an opportunity to examine and modify the pending execution parameters.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION WillExecute (BYVAL Source AS Afx_BSTR PTR, BYVAL CursorType AS CursorTypeEnum PTR, BYVAL LockType AS LockTypeEnum PTR, BYVAL Options AS LONG PTR, BYVAL adStatus AS EventStatusEnum PTR, BYVAL pCommand AS Afx_ADOCommand PTR, BYVAL pRecordset AS Afx_ADORecordset PTR, BYVAL pConnection AS Afx_ADOConnection PTR) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>Source</code></td><td></td><td>A BSTR that contains an SQL command or a stored procedure name.</td></tr><tr><td><code>CursorType</code></td><td></td><td>A <em>CursorTypeEnum</em> that contains the type of cursor for the <strong>Recordset</strong> that will be opened. With this parameter, you can change the cursor to any type during a <strong>Recordset</strong> Open operation. <em>CursorType</em> will be ignored for any other operation.</td></tr><tr><td><code>LockType</code></td><td></td><td>A <em>LockTypeEnum</em> that contains the lock type for the <strong>Recordset</strong> that will be opened. With this parameter, you can change the lock to any type during a <strong>Recordset</strong> Open operation. LockType will be ignored for any other operation.</td></tr><tr><td><code>Options</code></td><td></td><td>A Long value that indicates options that can be used to execute the command or open the <strong>Recordset</strong>.</td></tr><tr><td><code>adStatus</code></td><td></td><td><em>EventStatusEnum</em>. Before this event returns, set this parameter to <em>adStatusUnwantedEvent</em> to prevent subsequent notifications, or <em>adStatusCancel</em> to request cancellation of the operation that caused this event.</td></tr><tr><td><code>pCommand</code></td><td></td><td>The <strong>Command</strong> object for which this event notification applies.</td></tr><tr><td><code>pRecordset</code></td><td></td><td>The <strong>Recordset</strong> object for which this event notification applies.</td></tr><tr><td><code>pConnection</code></td><td></td><td>The <strong>Connection</strong> object for which this event notification applies.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Called ust before a pending command executes on a connection.</p>
+<h2>Remarks</h2>
+<p>A <strong>WillExecute</strong> event may occur due to a <strong>Connection.Execute</strong>, <strong>Command.Execute</strong>, or <strong>Recordset.Open</strong> method The <em>pConnection</em> parameter should always contain a valid reference to a <strong>Connection</strong> object. If the event is due to <strong>Connection.Execute</strong>, the <em>pRecordset</em> and <em>pCommand</em> parameters are set to Nothing. If the event is due to Recordset.Open, the pRecordset parameter will reference the Recordset object and the pCommand parameter is set to NULL. If the event is due to <strong>Command.Execute</strong>, the <em>pCommand</em> parameter will reference the <strong>Command</strong> object and the <em>pRecordset</em> parameter is set to NULL.</p>
+<p><strong>WillExecute</strong> allows you to examine and modify the pending execution parameters. This event may return a request that the pending command be canceled.</p>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoEvents Class.md</span></li><li>Topic: <a href="../cadoevents-class.html">CAdoEvents Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

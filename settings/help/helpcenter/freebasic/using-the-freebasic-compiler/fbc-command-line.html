@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fbc command-line — Help Center</title>
+<meta name="description" content="fbc command-line — 0 documented members. Using the FreeBASIC compiler reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/using-the-freebasic-compiler/fbc-command-line.html">
+<meta property="og:title" content="fbc command-line">
+<meta property="og:description" content="fbc command-line — 0 documented members. Using the FreeBASIC compiler reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/using-the-freebasic-compiler/fbc-command-line.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/using-the-freebasic-compiler/fbc-command-line.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Using the FreeBASIC compiler</div>
+<h1>fbc command-line</h1>
+<h2>Documentation</h2>
+
+	Using the <b>fbc</b> command-line.<br>
+<br>
+<div class="indent">The official FreeBASIC distribution comes with <b>fbc</b>, FreeBASIC's flagship compiler. <b>fbc</b> is a command line compiler, and can be launched from the console - from DOS, the Windows command prompt or a Linux shell. Running <b>fbc</b> from the console without any arguments displays a list of available options, or command-line switches, that can be used to adjust the behavior of the compiler.<br>
+<br>
+At its simplest, <b>fbc</b> takes a source file as a command-line argument and produces an executable file. It does this by compiling the source file (.bas) into an assembly (.asm) file, then compiling this into an object file (.o) using GAS and finally linking using LD this object file to other object files and libraries it needs to run, producing the final executable file. The assembly and compiled object files are deleted at this point by default. For example, the following command,<br>
+<br>
+<div class="indent"><code>fbc foo.bas</code><br>
+</div>produces the executable <code>foo.exe</code> in DOS and Windows, and <code>./foo</code> in Linux. <b>fbc</b> can accept multiple source files at once, compile and link them all into one executable. For example, the following command,<br>
+<br>
+<div class="indent"><code>fbc foo.bas bar.bas baz.bas</code><br>
+</div>produces the executable <code>foo.exe</code> in DOS and Windows, and <code>./foo</code> in Linux. Since <code>foo.bas</code> was listed first, it will be the main entry point into the executable, and also provide its name. To specify a different entry point or executable name, use the "-m" and "-x" switches, respectively. To have, for example, <code>baz.bas</code> provide the main entry point into an executable called <code>foobar.exe</code>, you would use<br>
+<br>
+<div class="indent"><code>fbc -x foobar.exe -m baz foo.bas bar.bas baz.bas</code><br>
+</div>The "-x" switch names the executable verbatim, so in Linux, the executable produced from the above command would be called <code>./foobar.exe</code>.<br>
+<br>
+</div><div>Syntax</div><div><br>
+<div class="indent"><code>fbc [ <i>options</i> ] [ <i>input_list</i> ]</code><br>
+<br>
+Where <i>input_list</i> is a list of filenames. Accepted files are:<br>
+<br>
+<div class="indent"><div><table><tr><td>File extension</td><td>Description</td></tr><tr><td>.bas</td><td>FreeBASIC source file</td></tr><tr><td>.a</td><td>Library</td></tr><tr><td>.o</td><td>Object file</td></tr><tr><td>.rc</td><td>Resource script (Windows only)</td></tr><tr><td>.res</td><td>Compiled resource (Windows only)</td></tr><tr><td>.xpm</td><td>X icon pixmap (Linux only)</td></tr></table></div><br>
+<br>
+</div></div><table><tr><td><b><u>Source code</u></b><br>
+<div class="indent"><b><a href="command-line-options/compiler-option-b.html">-b &lt; name &gt;</a></b><br>
+<div class="indent">Add a source file to compilation<br>
+</div><b><a href="command-line-options/compiler-option-i.html">-i &lt; name &gt;</a></b><br>
+<div class="indent">Add a path to search for include files<br>
+</div><b><a href="command-line-options/compiler-option-include.html">-include &lt; name &gt;</a></b><br>
+<div class="indent">Include a header file on each source compiled<br>
+</div><b><a href="command-line-options/compiler-option-d.html">-d &lt; name=val &gt;</a></b><br>
+<div class="indent">Add a preprocessor's define<br>
+</div><b><a href="command-line-options/compiler-option-lang.html">-lang &lt; name &gt;</a></b><br>
+<div class="indent">Select language mode: <code>fb</code>, <code>fblite</code>, <code>qb</code>, <code>deprecated</code><br>
+</div><b><a href="command-line-options/compiler-option-forcelang.html">-forcelang &lt; name &gt;</a></b><br>
+<div class="indent">Select language mode: <code>fb</code>, <code>fblite</code>, <code>qb</code>, <code>deprecated</code> (overrides statements in code)<br>
+<br>
+</div></div><b><u>Code generation</u></b><br>
+<div class="indent"><b><a href="command-line-options/compiler-option-target.html">-target &lt; platform &gt;</a></b><br>
+<div class="indent">Set the target platform for cross compilation<br>
+</div><b><a href="command-line-options/compiler-option-gen.html">-gen &lt; backend &gt;</a></b><br>
+<div class="indent">Sets the compiler backend (default is 'gas' for x86 and 'gcc' for x86_64)<br>
+</div><b><a href="command-line-options/compiler-option-asm.html">-asm &lt; format &gt;</a></b><br>
+<div class="indent">Sets the assembler format for Asm block<br>
+</div><b><a href="command-line-options/compiler-option-arch.html">-arch &lt; type &gt;</a></b><br>
+<div class="indent">Set target architecture<br>
+</div><b><a href="command-line-options/compiler-option-o-2.html">-O &lt; level &gt;</a></b><br>
+<div class="indent">Set the optimization level (-gen gcc)<br>
+</div><b><a href="command-line-options/compiler-option-vec.html">-vec &lt; level &gt;</a></b><br>
+<div class="indent">Set level of vector optimizations enabled by the compiler (default: <code>0</code>)<br>
+</div><b><a href="command-line-options/compiler-option-fpu.html">-fpu &lt; type &gt;</a></b><br>
+<div class="indent">Set the floating point arithmetics unit (default: <code>X87</code>)<br>
+</div><b><a href="command-line-options/compiler-option-fpmode.html">-fpmode &lt; type &gt;</a></b><br>
+<div class="indent">Select between fast and accurate floating-point operations (default: <code>PRECISE</code>)<br>
+</div><b><a href="command-line-options/compiler-option-z.html">-z &lt; value &gt;</a></b><br>
+<div class="indent">Sets miscellaneous or experimental options<br>
+</div><b><a href="command-line-options/compiler-option-pic.html">-pic</a></b><br>
+<div class="indent">Generate position-independent code (non-x86 Unix shared libs)<br>
+<br>
+</div></div><b><u>Compilation</u></b><br>
+<div class="indent"><b><a href="command-line-options/compiler-option-m.html">-m &lt; name &gt;</a></b><br>
+<div class="indent">Define main file (without extension), the entry point (default is the first .bas file on the command line)<br>
+</div><b><a href="command-line-options/compiler-option-entry.html">-entry &lt; name &gt;</a></b><br>
+<div class="indent">Override public exported name of implicit user main function<br>
+</div><b><a href="command-line-options/compiler-option-g.html">-g</a></b><br>
+<div class="indent">Add debug info<br>
+</div><b><a href="command-line-options/compiler-option-profgen.html">-profgen &lt; profiler &gt;</a></b><br>
+<div class="indent">Enable function profiling by selecting a specific profiler<br>
+</div><b><a href="command-line-options/compiler-option-profile.html">-profile</a></b><br>
+<div class="indent">Enable function profiling for gmon/gprof<br>
+</div><b><a href="command-line-options/compiler-option-e.html">-e</a></b><br>
+<div class="indent">Add error checking<br>
+</div><b><a href="command-line-options/compiler-option-ex.html">-ex</a></b><br>
+<div class="indent">Add error checking with RESUME support<br>
+</div><b><a href="command-line-options/compiler-option-exx.html">-exx</a></b><br>
+<div class="indent">Same as <code>-ex</code>, plus array bounds and dimensions, null-pointer, and error location reporting<br>
+</div><b><a href="command-line-options/compiler-option-eunwind.html">-eunwind</a></b><br>
+<div class="indent">Enable stack unwind information<br>
+</div><b><a href="command-line-options/compiler-option-wa.html">-Wa &lt; opt &gt;</a></b><br>
+<div class="indent">Pass options to GAS (separated by commas)<br>
+</div><b><a href="command-line-options/compiler-option-wc.html">-Wc &lt; opt &gt;</a></b><br>
+<div class="indent">Pass options to GCC (separated by commas)<br>
+</div><b><a href="command-line-options/compiler-option-o.html">-o &lt; name &gt;</a></b><br>
+<div class="indent">Set object file path/name (must be passed after the .bas file)<br>
+</div><b><a href="command-line-options/compiler-option-earray.html">-earray</a></b><br>
+<div class="indent">Enable array bounds checking<br>
+</div><b><a href="command-line-options/compiler-option-earraydims.html">-earraydims</a></b><br>
+<div class="indent">Enable array dimensions checking<br>
+</div><b><a href="command-line-options/compiler-option-eassert.html">-eassert</a></b><br>
+<div class="indent">Enable assert() and assertwarn() checking<br>
+</div><b><a href="command-line-options/compiler-option-edebug.html">-edebug</a></b><br>
+<div class="indent">Enable <code><a href="../compiler-options/procedures/fb-debug.html">__FB_DEBUG__</a></code><br>
+</div><b><a href="command-line-options/compiler-option-edebuginfo.html">-edebuginfo</a></b><br>
+<div class="indent">Add debug information<br>
+</div><b><a href="command-line-options/compiler-option-elocation.html">-elocation</a></b><br>
+<div class="indent">Enable full error location reporting<br>
+</div><b><a href="command-line-options/compiler-option-enullptr.html">-enullptr</a></b><br>
+<div class="indent">Enable null-pointer checking<br>
+<br>
+</div></div></td><td><b><u>Linking</u></b><br>
+<div class="indent"><b><a href="command-line-options/compiler-option-a.html">-a &lt; name &gt;</a></b><br>
+<div class="indent">Add an object file to linker's list<br>
+</div><b><a href="command-line-options/compiler-option-l.html">-l &lt; name &gt;</a></b><br>
+<div class="indent">Add a library file to linker's list<br>
+</div><b><a href="command-line-options/compiler-option-p.html">-p &lt; name &gt;</a></b><br>
+<div class="indent">Add a path to search for libraries<br>
+</div><b><a href="command-line-options/compiler-option-mt.html">-mt</a></b><br>
+<div class="indent">Link with thread-safe runtime library<br>
+</div><b><a href="command-line-options/compiler-option-nodeflibs.html">-nodeflibs</a></b><br>
+<div class="indent">Do not include the default libraries<br>
+</div><b><a href="command-line-options/compiler-option-nolib.html">-nolib &lt; name(s) &gt;</a></b><br>
+<div class="indent">Do not include specific library(s)<br>
+</div><b><a href="command-line-options/compiler-option-static.html">-static</a></b><br>
+<div class="indent">Prefer static libraries over dynamic ones when linking<br>
+</div><b><a href="command-line-options/compiler-option-map.html">-map &lt; name &gt;</a></b><br>
+<div class="indent">Save the linking map to file name<br>
+</div><b><a href="command-line-options/compiler-option-wl.html">-Wl &lt; opt &gt;</a></b><br>
+<div class="indent">Pass options to LD (separated by commas)<br>
+</div><b><a href="command-line-options/compiler-option-export.html">-export</a></b><br>
+<div class="indent">Export symbols for dynamic linkage<br>
+</div><b><a href="command-line-options/compiler-option-lib.html">-lib</a></b><br>
+<div class="indent">Create a static library<br>
+</div><b><a href="command-line-options/compiler-option-dylib.html">-dylib</a></b><br>
+<div class="indent">Create a DLL, including the import library<br>
+</div><b><a href="command-line-options/compiler-option-dll.html">-dll</a></b><br>
+<div class="indent">Create a DLL, including the import library.  (Same as <code>-dylib</code>)<br>
+</div><b><a href="command-line-options/compiler-option-x.html">-x &lt; name &gt;</a></b><br>
+<div class="indent">Set executable/library path/name<br>
+</div><b><a href="command-line-options/compiler-option-nostrip.html">-nostrip</a></b><br>
+<div class="indent">Do not strip symbol information from the output file<br>
+</div><b><a href="command-line-options/compiler-option-strip.html">-strip</a></b><br>
+<div class="indent">Omit all symbol information from the output file<br>
+</div><b><a href="command-line-options/compiler-option-sysroot.html">-sysroot &lt; path &gt;</a></b><br>
+<div class="indent">Tell the linker where to find libraries (needed by some toolchains)<br>
+<br>
+</div></div><b><u>Behaviour</u></b><br>
+<div class="indent"><b><a href="command-line-options/compiler-option-prefix.html">-prefix &lt; path &gt;</a></b><br>
+<div class="indent">Set the compiler prefix path<br>
+</div><b><a href="command-line-options/compiler-option-buildprefix.html">-buildprefix &lt; name &gt;</a></b><br>
+<div class="indent">Set the internal buildprefix option<br>
+</div><b><a href="command-line-options/compiler-option-version.html">-version</a></b><br>
+<div class="indent">Show compiler version on the command line, do not compile or link<br>
+</div><b><a href="command-line-options/compiler-option-v.html">-v</a></b><br>
+<div class="indent">Be verbose<br>
+</div><b><a href="command-line-options/compiler-option-print.html">-print &lt; option &gt;</a></b><br>
+<div class="indent">Display certain information (<code>fblibdir</code>, <code>host</code>, <code>target</code>, <code>x</code>)<br>
+</div><b><a href="command-line-options/compiler-option-pp.html">-pp</a></b><br>
+<div class="indent">Emit the preprocessed input file only, do not compile<br>
+</div><b><a href="command-line-options/compiler-option-r.html">-r</a></b><br>
+<div class="indent">Compile into intermediate file(s) only, do not assemble or link<br>
+</div><b><a href="command-line-options/compiler-option-rr.html">-rr</a></b><br>
+<div class="indent">Compile into asm file(s) only, do not assemble or link<br>
+</div><b><a href="command-line-options/compiler-option-c.html">-c</a></b><br>
+<div class="indent">Compile and assemble source file only, do not link<br>
+</div><b><a href="command-line-options/compiler-option-r-2.html">-R</a></b><br>
+<div class="indent">Do not delete the intermediate file(s)<br>
+</div><b><a href="command-line-options/compiler-option-rr-2.html">-RR</a></b><br>
+<div class="indent">Do not delete the asm file(s)<br>
+</div><b><a href="command-line-options/compiler-option-c-2.html">-C</a></b><br>
+<div class="indent">Do not delete the object file(s)<br>
+</div><b><a href="command-line-options/compiler-option-w.html">-w &lt; value &gt;</a></b><br>
+<div class="indent">Set min warning level: <code>all</code>, <code>none</code>, <code>param</code>, <code>escape</code>, <code>pedantic</code>, <code>next</code>, <code>funcptr</code>, <code>constness</code>, <code>suffix</code>, <code>error</code>, <code>upcast</code> or a value<br>
+</div><b><a href="command-line-options/compiler-option-maxerr.html">-maxerr &lt; val &gt;</a></b><br>
+<div class="indent">Only stop parsing if &lt;val&gt; errors occurred<br>
+</div><b><a href="command-line-options/compiler-option-noerrline.html">-noerrline</a></b><br>
+<div class="indent">Do not show source line where error occurred<br>
+</div><b><a href="command-line-options/compiler-option-noobjinfo.html">-noobjinfo</a></b><br>
+<div class="indent">Do not read/write compile-time info from/to .o and .a files<br>
+</div><b><a href="command-line-options/compiler-option-showincludes.html">-showincludes</a></b><br>
+<div class="indent">Display a tree of file names of #included files<br>
+<br>
+</div></div><b><u>Target specific</u></b><br>
+<div class="indent"><b><a href="command-line-options/compiler-option-s.html">-s &lt; name &gt;</a></b><br>
+<div class="indent">Set subsystem (<code>gui</code>, <code>console</code>)<br>
+</div><b><a href="command-line-options/compiler-option-t.html">-t &lt; value &gt;</a></b><br>
+<div class="indent">Set stack size in kbytes (default: 1 MB or 2 MB)<br>
+<br>
+</div></div><b><u>Meta</u></b><br>
+<div class="indent"><b><a href="command-line-options/compiler-option-file.html">@&lt; file &gt;</a></b><br>
+<div class="indent">Read (additional) command-line options from a file<br>
+<br>
+</div></div></td></tr></table><div>&nbsp;</div><br>
+</div><div>Example</div><div><br>
+<div class="indent"><code>fbc myfile.bas</code><br>
+<div class="indent"><i>(With DOS version of FBC, compile and link a DOS executable <code>MYFILE.EXE</code>.)</i><br>
+<br>
+</div><code>fbc -s gui myfile.bas</code><br>
+<div class="indent"><i>(With Windows version of FBC, compile and link a Windows executable <code>myfile.exe</code>. Running the program will not show the console window ("MS-DOS Prompt"))</i><br>
+<br>
+</div><code>fbc -lib module1.bas module2.bas module3.bas -x libmylib.a</code><br>
+<div class="indent"><i>(Compile and link a static library <code>libmylib.a</code> from the three source files)</i><br>
+<br>
+</div><code>fbc -m main_module -c main_module.bas</code><br>
+<div class="indent"><i>(Compile an object file <code>main_module.o</code> and mark it as an entry point)</i><br>
+<br>
+</div><code>fbc -c sub_module.bas</code><br>
+<div class="indent"><i>(Compile an object file <code>sub_module.o</code>)</i><br>
+<br>
+</div><code>fbc -x application.exe main_module.o sub_module.o</code><br>
+<div class="indent"><i>(Link an executable <code>application.exe</code>)</i><br>
+<br>
+</div><b>Note:</b> How to include an icon in a FB executable program<br>
+<div class="indent">There is a simple command line option to compile a FB program into an executable with an Icon:<br>
+<div class="indent"><b>-</b> Create a *.rc file, for example appicon.rc, with this info:<br>
+<div class="indent"><div class="indent">FB_PROGRAM_ICON ICON "appicon.ico"<br>
+<div class="indent">(where appicon.ico is the name of icon)<br>
+</div></div></div><b>-</b> Then when compiling program, add appicon.rc in the list of files to compile.<br>
+<br>
+</div></div></div></div><div>See also</div><div><br>
+<ul><li> <a href="../compiler-options/compiler-options.html">Compiler Options</a><br>
+<li> <a href="installing.html">Installing FreeBASIC</a><br>
+<li> <a href="running.html">Invoking the FreeBASIC compiler</a><br>
+<li> <code><a href="../compiler-options/procedures/cmdline.html">#Cmdline</a></code><br>
+<br>
+</li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoStream.CopyTo — Help Center</title>
+<meta name="description" content="Copies the specified number of characters or bytes (depending on **Type_**) in the `Stream` to another `Stream` object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadostream/cadostream-copyto.html">
+<meta property="og:title" content="CAdoStream.CopyTo">
+<meta property="og:description" content="Copies the specified number of characters or bytes (depending on **Type_**) in the `Stream` to another `Stream` object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadostream/cadostream-copyto.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadostream/cadostream-copyto.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadostream-class.html">CAdoStream Class</a></div>
+<h1>CAdoStream.CopyTo<span class="h1kind">method</span></h1>
+<p class="lede">Copies the specified number of characters or bytes (depending on **Type_**) in the `Stream` to another `Stream` object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CAdoStream.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION CopyTo (BYVAL pDestStream AS ADOStream PTR, BYVAL CharNumber AS LONG = adReadAll) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>pDestStream</code></td><td></td><td>An object variable value that contains a reference to an open <code>Stream</code> object. The current <code>Stream</code> is copied to the destination <code>Stream</code> specified by <em>pDestStream</em>. The destination Stream must already be open. If not, a run-time error occurs. <strong>Note</strong>: The <em>pDestStream</em> parameter may not be a proxy of <code>Stream</code> object because this requires access to a private interface on the <code>Stream</code> object that cannot be remoted to the client.</td></tr><tr><td><code>CharNumber</code></td><td></td><td>Optional. An integer value that specifies the number of bytes or characters to be copied from the current position in the source <code>Stream</code> to the destination <code>Stream</code>. The default value is <em>adReadAll</em> (-1), which specifies that all characters or bytes are copied from the current position to <strong>EOS</strong>.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Copies the specified number of characters or bytes (depending on <strong>Type_</strong>) in the <code>Stream</code> to another <code>Stream</code> object.</p>
+<h2>Remarks</h2>
+<p>This method copies the specified number of characters or bytes, starting from the current position specified by the <strong>Position</strong> property. If the specified number is more than the available number of bytes until <strong>EOS</strong>, then only characters or bytes from the current position to <strong>EOS</strong> are copied. If the value of <em>NumChars</em> is –1, or omitted, all characters or bytes starting from the current position are copied.</p>
+<p>If there are existing characters or bytes in the destination stream, all contents beyond the point where the copy ends remain, and are not truncated. Position becomes the byte immediately following the last byte copied. If you want to truncate these bytes, call <strong>SetEOS</strong>.</p>
+<p><strong>CopyTo</strong> should be used to copy data to a destination <code>Stream</code> of the same type as the source <code>Stream</code> (their <strong>Type_</strong> property settings are both <strong>adTypeText</strong> or both <strong>adTypeBinary</strong>). For text <code>Stream</code> objects, you can change the <strong>Charset</strong> property setting of the destination <code>Stream</code> to translate from one character set to another. Also, text <code>Stream</code> objects can be successfully copied into binary <strong>Stream objects</strong>, but binary <code>Stream</code> objects cannot be copied into text <code>Stream</code> objects.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CAdoStream.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoStream.inc:420</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoStream Class.md</span></li><li>Topic: <a href="../cadostream-class.html">CAdoStream Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

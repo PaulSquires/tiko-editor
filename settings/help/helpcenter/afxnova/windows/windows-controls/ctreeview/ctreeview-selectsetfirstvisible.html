@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTreeView.SelectSetFirstVisible — Help Center</title>
+<meta name="description" content="Scrolls the treeview control vertically to ensure that the specified item is visible.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctreeview/ctreeview-selectsetfirstvisible.html">
+<meta property="og:title" content="CTreeView.SelectSetFirstVisible">
+<meta property="og:description" content="Scrolls the treeview control vertically to ensure that the specified item is visible.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctreeview/ctreeview-selectsetfirstvisible.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/ctreeview/ctreeview-selectsetfirstvisible.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../ctreeview-class.html">CTreeView Class</a></div>
+<h1>CTreeView.SelectSetFirstVisible<span class="h1kind">method</span></h1>
+<p class="lede">Scrolls the treeview control vertically to ensure that the specified item is visible.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge">CTreeView.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION SelectSetFirstVisible (BYVAL hTreeView AS HWND, BYVAL hitem AS HTREEITEM) AS BOOLEAN</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hTreeView</code></td><td></td><td>The handle of the TreeView control.</td></tr><tr><td><code>hitem</code></td><td></td><td>Handle to an item. If the <em>hitem</em> parameter is NULL, the control is set to have no selected item.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>Returns TRUE if successful, or FALSE otherwise.</p>
+<h2>Description</h2>
+<p>Scrolls the tree-view control vertically to ensure that the specified item is visible. If possible, the specified item becomes the first visible item at the top of the control's window.</p>
+<h2>Remarks</h2>
+<p>Tree-view controls display as many items as will fit in the window. If the specified item is near the bottom of the control's hierarchy of items, it might not become the first visible item, depending on how many items fit in the window.</p>
+<p>If the specified item is the child of a collapsed parent item, the parent's list of child items is expanded to reveal the specified item. In this case, the parent window receives the <strong>TVN_ITEMEXPANDING</strong> and <strong>TVN_ITEMEXPANDED</strong> notification codes.</p>
+<p>Using the <strong>SelectSetFirstVisible</strong> method is equivalent to sending the <strong>TVM_SELECTITEM</strong> message with its flag parameter set to the <strong>TVGN_FIRSTVISIBLE</strong> value.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CTreeView.inc</code></li><li>Defined in <span class="srcref">AfxNova/CTreeView.inc:1095</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/CTreeView Class.md</span></li><li>Topic: <a href="../ctreeview-class.html">CTreeView Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

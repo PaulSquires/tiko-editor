@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AfxControlRunDLL — Help Center</title>
+<meta name="description" content="Launches control panel applications.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/procedures/afxcontrolrundll.html">
+<meta property="og:title" content="AfxControlRunDLL">
+<meta property="og:description" content="Launches control panel applications.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/procedures/afxcontrolrundll.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/procedures/afxcontrolrundll.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../windows-procedures.html">Windows Procedures</a></div>
+<h1>AfxControlRunDLL<span class="h1kind">function</span></h1>
+<p class="lede">Launches control panel applications.</p>
+<div class="badges"><a class="badge" href="../index.html">Windows</a><span class="badge">function</span><span class="badge">AfxWin.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION AfxControlRunDLL (BYVAL hwnd AS HWND, BYVAL hInst AS HINSTANCE, BYVAL cmd AS WSTRING PTR, BYVAL nCmdShow AS LONG) AS BOOLEAN</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hwnd</code></td><td></td><td>Handle to a window. This parameter can be NULL.</td></tr><tr><td><code>hInst</code></td><td></td><td>Instance handle. This parameter can be NULL.</td></tr><tr><td><code>cmd</code></td><td></td><td>The command and parameters.</td></tr><tr><td><code>nCmdShow</code></td><td></td><td>Controls how the window is to be shown, e.g. SW_SHOWNORMAL.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Control_RunDLL is an undocumented procedure in the Shell32.dll which can be used to launch control panel applications. You’ve to pass the name of the control panel file (.cpl) and the tool represented by it will be launched. For launching some control panel applications, you’ve to provide a valid windows handle (hwnd parameter) and program instance (<em>hInst</em>) parameter).</p>
+<h2>Example</h2>
+<p>AfxControlRunDLL(0, 0, "", SW_SHOWNORMAL)   ' Opens the control panel AfxControlRunDLL(0, 0, "appwiz.cpl", SW_SHOWNORMAL)   ' Opens the applications wizard</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>AfxWin.inc</code></li><li>Defined in <span class="srcref">AfxNova/AfxWin.inc:862</span></li><li>Documented in <span class="srcref">Windows/Windows Procedures.md</span></li><li>Topic: <a href="../windows-procedures.html">Windows Procedures</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

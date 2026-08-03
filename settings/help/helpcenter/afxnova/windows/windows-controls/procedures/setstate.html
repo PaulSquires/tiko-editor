@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SetState — Help Center</title>
+<meta name="description" content="Sets the state of the specified menu item.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/procedures/setstate.html">
+<meta property="og:title" content="SetState">
+<meta property="og:description" content="Sets the state of the specified menu item.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/procedures/setstate.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/procedures/setstate.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../about-menus.html">About Menus</a></div>
+<h1>SetState<span class="h1kind">function</span></h1>
+<p class="lede">Sets the state of the specified menu item.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">function</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION SetState (BYVAL hMenu AS HMENU, BYVAL item AS LONG, BYVAL fState AS UINT, BYVAL fByPosition AS BOOLEAN = FALSE) AS BOOLEAN</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hMenu</code></td><td></td><td>A handle to the menu that contains the menu item.</td></tr><tr><td><code>item</code></td><td></td><td></td></tr><tr><td><code>fState</code></td><td></td><td>The menu item state. It can be one or more of these values:<br>MFS_CHECKED: Checks the menu item.<br>MFS_DEFAULT: Specifies that the menu item is the default.<br>MFS_DISABLED: Disables the menu item and grays it so that it cannot be selected.<br>MFS_ENABLED: Enables the menu item so that it can be selected. This is the default state.<br>MFS_GRAYED: Disables the menu item and grays it so that it cannot be selected.<br> MFS_HILITE: Highlights the menu item.<br>MFS_UNCHECKED Unchecks the menu item.<br>MFS_UNHILITE: Removes the highlight from the menu item. This is the default state.</td></tr><tr><td><code>fByPosition</code></td><td></td><td>The meaning of item. If this parameter is FALSE, <em>item</em> is a menu item identifier. Otherwise, it is a menu item position, where position = 1 for the first position, position = 2 for the second, and so on.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>TRUE or FALSE. To get extended error information, use the <strong>GetLastError</strong> function.</p>
+<h2>Description</h2>
+<p>Sets the state of the specified menu item.</p>
+<h2>Remarks</h2>
+<p>The application must call the <strong>CMenu.DrawBar</strong> function whenever a menu changes, whether or not the menu is in a displayed window. <strong>SetState</strong> does this call internally.</p>
+<h2>Example</h2>
+<p>CMenu.SetState(hMenu, IDM_OPEN, MFS_CHECKED)</p>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">Windows/WIndows Controls/CMenu Class.md</span></li><li>Topic: <a href="../about-menus.html">About Menus</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

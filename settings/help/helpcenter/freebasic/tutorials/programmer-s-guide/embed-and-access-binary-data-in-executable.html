@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Embed and Access binary Data in Executable — Help Center</title>
+<meta name="description" content="Embed and Access binary Data in Executable — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/embed-and-access-binary-data-in-executable.html">
+<meta property="og:title" content="Embed and Access binary Data in Executable">
+<meta property="og:description" content="Embed and Access binary Data in Executable — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/embed-and-access-binary-data-in-executable.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/embed-and-access-binary-data-in-executable.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Embed and Access binary Data in Executable</h1>
+<h2>Documentation</h2>
+
+	How to <b>embed</b> binary <b>data</b> into an <b>executable</b> file at compile time, and <b>access</b> it from program code.<br>
+<code><i>(based from forum posts of caseih and coderJeff)</i></code><br>
+<br>
+This article describes a way to include binary data in a compiled program, and how to access them.<br>
+<br>
+<div>Principle</div><div><br>
+The (G)LD linker (included in the FreeBASIC distribution) can process binary data in a file, by turning them into an object file. This object file exports symbols that can be accessed from the program code to read the data.<br>
+The linker will so build two byte symbols based on the file name provided:<br>
+<div class="indent">- a symbol for the beginning of the data block (the first data byte),<br>
+- another symbol for the end of the data block (just after the last data byte).<br>
+</div>By compiling the user program with the object file, the addresses of these byte symbols allow to get pointers to the beginning and end of the data.<br>
+<br>
+<b>Note:</b> It may be advantageous to apply this principle for example to an audio data file which can thus be included in the executable file. Both a pointer to the start of the audio data and the size of the audio data can be passed to any audio player function.<br>
+<br>
+</div><div>Example</div><div><br>
+Simple example to only demonstrate the principle (tested on linux/win 32/64-bit gas/gas64/gcc).<br>
+This example uses as binary data the ASCII code bytes of a text inserted in a <code><i>hello.txt</i></code> text file:<br>
+<div class="indent"><code><i>hello.txt</i></code> text file for example:<br>
+<div class="indent"><pre class="code">
+Hello!
+Welcome to the forum.
+			</pre></div>Invoke the LD linker manually to turn the <code><i>hello.txt</i></code> text file into an <code><i>hello.o</i></code> object file exporting symbols:<br>
+<div class="indent"><code>...\ld -r -b binary -o <i>hello.o</i> <i>hello.txt</i></code><br>
+<br>
+</div>Two byte symbols are exported from the <code><i>hello.o</i></code> object file:<br>
+<div class="indent"><b>-</b> on Windows 32-bit:<br>
+<div class="indent"><div class="indent"><code><i>binary_hello_txt_start</i></code> : beginning of the data block (the first data byte)<br>
+<code><i>binary_hello_txt_end</i></code> : end of the data block (just after the last data byte)<br>
+</div></div><b>-</b> otherwise:<br>
+<div class="indent"><div class="indent"><code><i>_binary_hello_txt_start</i></code> : beginning of the data block (the first data byte)<br>
+<code><i>_binary_hello_txt_end</i></code> : end of the data block (just after the last data byte)<br>
+<br>
+</div></div></div>Include the <code><i>hello.o</i></code> object file in the command-line when compiling the following program (which prints the ASCII code bytes embedded in the executable):<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Extern</span> <span>&quot;C&quot;</span>
+
+    <span>#if defined(__FB_WIN32__) And Not defined(__FB_64BIT__)
+
+</span>        <span class="tok-kw">Extern</span> <span>hello_txt_start</span> <span class="tok-kw">Alias</span> <span>&quot;binary_hello_txt_start&quot;</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">Byte</span>
+
+        <span class="tok-kw">Extern</span> <span>hello_txt_end</span> <span class="tok-kw">Alias</span> <span>&quot;binary_hello_txt_end&quot;</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">Byte</span>
+
+    <span>#else
+
+</span>        <span class="tok-kw">Extern</span> <span>hello_txt_start</span> <span class="tok-kw">Alias</span> <span>&quot;_binary_hello_txt_start&quot;</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">Byte</span>
+
+        <span class="tok-kw">Extern</span> <span>hello_txt_end</span> <span class="tok-kw">Alias</span> <span>&quot;_binary_hello_txt_end&quot;</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">Byte</span>
+
+    <span>#endif
+
+</span><span class="tok-kw">End</span> <span class="tok-kw">Extern</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>hello_ptr</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">Byte</span> <span class="tok-kw">Const</span> <span class="tok-kw">Ptr</span> <span>=</span> <span>@</span><span>hello_txt_start</span>
+
+<span class="tok-kw">Dim</span> <span>hello_length</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">UInteger</span> <span>=</span> <span>@</span><span>hello_txt_end</span> <span>-</span> <span>@</span><span>hello_txt_start</span>
+
+
+
+<span class="tok-kw">For</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span>hello_length</span> <span>-</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Print</span> <span class="tok-kw">Chr</span><span>(</span><span>hello_ptr</span><span>[</span><span>i</span><span>]);</span>
+
+<span class="tok-kw">Next</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+</div></div></div><div>See also</div><div><br>
+<ul><li> <a href="executables.html">Executables</a><br>
+<li> <a href="../../using-the-freebasic-compiler/fbc-command-line.html">fbc command-line</a><br>
+<br>
+</li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

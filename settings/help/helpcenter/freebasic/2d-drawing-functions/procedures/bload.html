@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLoad — Help Center</title>
+<meta name="description" content="Loads arbitrary data from a file created with BSave, or a compatible BMP image file.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/2d-drawing-functions/procedures/bload.html">
+<meta property="og:title" content="BLoad">
+<meta property="og:description" content="Loads arbitrary data from a file created with BSave, or a compatible BMP image file.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/2d-drawing-functions/procedures/bload.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/2d-drawing-functions/procedures/bload.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>BLoad<span class="h1kind">function</span></h1>
+<p class="lede">Loads arbitrary data from a file created with BSave, or a compatible BMP image file.</p>
+<div class="badges"><a class="badge" href="../index.html">2D Drawing Functions</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Function BLoad ( ByRef filename As Const String, ByVal dest As Any Ptr = 0, ByVal pal As Any Ptr = 0 ) As Long</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>filename</code></td><td></td><td>the name of the file to load the image from; can include a file path</td></tr><tr><td><code>dest</code></td><td></td><td>the memory location to load the image to, or null (<code>0</code>) to copy the image to the current graphics screen work page</td></tr><tr><td><code>pal</code></td><td></td><td>the memory location to load the palette to, or null (<code>0</code>) to change the current graphics screen palette, if it uses one</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+Returns zero (<code>0</code>) if successful, or a non-zero error code to indicate a failure. <i><a href="../../language-documentation/other/error-handling.html">(throws a runtime error)</a></i><br>
+<br>
+
+<h2>Description</h2>
+<br>
+<code><b>BLoad</b></code> can be used to load image data or any other data from a file created with <code><a href="bsave.html">BSave</a></code>, and store that data in an array or paste it to the screen. If <code><i>dest</i></code> is absent or null (<code>0</code>), the image data is pasted to the current graphics screen work page.  Otherwise it is loaded as image data to the address given by <code><i>dest</i></code>.<br>
+<code><b>BLoad</b></code> must be called only if a graphics mode is initialized, else the program crashes (see <code><a href="../../reference/bload-bsave-text-mode-work-around.html">BLOAD/BSAVE text mode work-around</a></code> to work in text mode).<br>
+<br>
+<code><b>BLoad</b></code> can load 3 different types of files:<br>
+<ul><ul><li> Old QB-like data files, saved with <code>BSAVE</code> from QB code, containing "raw" data preceded by a 7-byte header, beginning with <code>&HFD</code>, up to 64 KiB in size<br>
+<li> New FB-like data files, saved with <code><a href="bsave.html">BSave</a></code> from FB code, containing "raw" data preceded by a 5-byte header, beginning with <code>&HFE</code>. There is no 64 KiB limit with this format<br>
+<li> BMP image files, supports a subset of valid ("Windows") .BMP files, beginning with <code>"BM"</code>, saved from FB code with <code><a href="bsave.html">BSave</a></code>, or created / saved in a compatible format using a graphics editor / converter.<br>
+</li></li></li></ul></ul>QB-like data files and BMP files are converted to an FB-compatible image format when opened.<br>
+<br>
+Image files with 8-bit per pixel resolution or lower contain a palette that describes the color values used in the images. If <code><i>pal</i></code> is not null (<code>0</code>), the palette is copied to memory starting at the address specified. Otherwise, if the current graphics screen uses a palette then its palette is changed to match that of the image file.<br>
+<br>
+When using one of the 2 "non-BMP" file formats to save images, the image files must have been created with <code><a href="bsave.html">BSave</a></code> in the same graphics screen mode as it is being loaded into. When using the BMP file format, this restriction doesn't apply. <br>
+<br>
+When loading a BMP file using <code><b>BLoad</b></code>,  the images must be true-color (15-, 16-, 24- or 32-bits per pixel) or palettized/indexed (8-bit or lower). The image data will be converted to the proper pixel format for the current color depth, except that true-color can't be reduced to a palettized image. <code><b>BLoad</b></code> doesn't support BMP files using RLE compression or other image file types (PNG, JPG, GIF, ...).  <code><b>BLoad</b></code> will load alpha channel information, if available, from 32-bit BMP files with <code>BITMAPV4HEADER</code> or <code>BITMAPV5HEADER</code> file headers.<br>
+<br>
+The error code returned by <code><b>BLoad</b></code> can be checked using <code><a href="../../error-handling-functions/procedures/err.html">Err</a></code> in the next line. The function version of  <code><b>BLoad</b></code> returns directly the error code as a 32 bit <code><a href="../../standard-data-types/procedures/long.html">Long</a></code>.<br>
+<br>
+<b>Runtime errors:</b><br>
+<code><b>BLoad</b></code> throws one of the following <a href="../../language-documentation/other/error-handling.html">runtime errors</a>:<br>
+<div class="indent"><i>(<code>1</code>) Illegal function call</i><br>
+</div><ul><ul><ul><li> <code><i>dest</i></code> was not specified or was null (<code>0</code>), and no graphics screen was set.<br>
+<li> The Bitmap uses an unsupported BMP file compression type (<code>BI_RLE4</code>, <code>BI_RLE8</code>)<br>
+<li> The Bitmap is true-color (16, 24, or 32 bits per pixel) and the current graphics screen uses a palette (8 bits per pixel or lower).<br>
+</li></li></li></ul></ul></ul><div class="indent"><i>(<code>2</code>) File not found</i><br>
+</div><ul><ul><ul><li> The file <code><i>filename</i></code> could not be found.<br>
+</li></ul></ul></ul><div class="indent"><i>(<code>3</code>) File I/O error</i><br>
+</div><ul><ul><ul><li> The file doesn't have any of the supported types <br>
+<li> A general read error occurred.<br>
+</li></li></ul></ul></ul><i>Note: When you use <code><b>BLoad</b></code> to load a BMP file into an image buffer, the original dimensions of the image are not changed.  If you want the image buffer to have the same dimensions as the BMP file, you have to find out the dimensions beforehand, and create an image of the right size yourself.  See <a href="#bmp_load">the example below</a> for an example of how to do this.</i><br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<i>result</i> = <b>BLoad</b>( <i>filename</i> [, [ <i>dest</i> ] [, <i>pal</i> ] ] )<br>
+</code><br>
+
+<h3>Differences from QB</h3><br>
+<ul><li> Support for loading BMP files is new to FreeBASIC.<br>
+<li> Support for retrieving the palette from BMP files is new to FreeBASIC.<br>
+<li> FreeBASIC uses a different file format from QBASIC internally, which doesn't have the 64 KiB limit, and is unsupported by QBASIC.<br>
+<br>
+</li></li></li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="bsave.html">BSave</a></code><br>
+<li> <code><a href="palette.html">Palette</a></code><br>
+<li> <code><a href="imagecreate.html">ImageCreate</a></code><br>
+<li> <code><a href="imagedestroy.html">ImageDestroy</a></code><br>
+<li> <a href="../../tutorials/programmer-s-guide/internal-graphics-formats.html">Internal Graphics Formats</a><br>
+<br>
+</li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'Load a graphic to current work page</span>
+
+<span class="tok-kw">Screen</span> <span class="tok-nu">18</span><span>,</span> <span class="tok-nu">32</span>
+
+<span class="tok-kw">Cls</span>
+
+<span class="tok-kw">BLoad</span> <span>&quot;picture.bmp&quot;</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<code><pre class="code"><span class="tok-cm">'Load a 48x48 bitmap into an image</span>
+
+<span class="tok-kw">ScreenRes</span> <span class="tok-nu">320</span><span>,</span> <span class="tok-nu">200</span><span>,</span> <span class="tok-nu">32</span>
+
+<span class="tok-kw">Dim</span> <span>myImage</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>=</span> <span class="tok-kw">ImageCreate</span><span>(</span> <span class="tok-nu">48</span><span>,</span> <span class="tok-nu">48</span> <span>)</span>
+
+<span class="tok-kw">BLoad</span> <span>&quot;picture.bmp&quot;</span><span>,</span> <span>myImage</span>
+
+<span class="tok-kw">Put</span> <span>(</span><span class="tok-nu">10</span><span>,</span><span class="tok-nu">10</span><span>),</span> <span>myImage</span>
+
+<span class="tok-kw">ImageDestroy</span><span>(</span> <span>myImage</span> <span>)</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<code><pre class="code"><span class="tok-kw">ScreenRes</span> <span class="tok-nu">640</span><span>,</span> <span class="tok-nu">480</span><span>,</span> <span class="tok-nu">8</span> <span class="tok-cm">'' 8-bit palette graphics mode</span>
+
+<span class="tok-kw">Dim</span> <span>pal</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">256</span><span>-</span><span class="tok-nu">1</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-cm">'' 32-bit integer array with room for 256 colors</span>
+
+
+
+<span class="tok-cm">'' load bitmap to screen, put palette into pal() array</span>
+
+<span class="tok-kw">BLoad</span> <span>&quot;picture.bmp&quot;</span><span>,</span> <span>,</span> <span>@</span><span>pal</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+
+
+<span class="tok-kw">WindowTitle</span> <span>&quot;Old palette&quot;</span>
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-cm">'' set new palette from pal() array</span>
+
+<span class="tok-kw">Palette</span> <span class="tok-kw">Using</span> <span>pal</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+
+
+<span class="tok-kw">WindowTitle</span> <span>&quot;New palette&quot;</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<a></a><br>
+<code><pre class="code"><span class="tok-cm">'' A function that creates an image buffer with the same </span>
+
+<span class="tok-cm">'' dimensions as a BMP image, and loads a file into it.</span>
+
+
+
+<span class="tok-kw">Const</span> <span>NULL</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>=</span> <span class="tok-nu">0</span>
+
+
+
+<span class="tok-kw">Function</span> <span>bmp_load</span><span>(</span> <span class="tok-kw">ByRef</span> <span>filename</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">String</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>filenum</span><span>,</span> <span>bmpwidth</span><span>,</span> <span>bmpheight</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>img</span>
+
+
+
+    <span class="tok-cm">'' open BMP file</span>
+
+    <span>filenum</span> <span>=</span> <span class="tok-kw">FreeFile</span><span>()</span>
+
+    <span class="tok-kw">If</span> <span class="tok-kw">Open</span><span>(</span> <span>filename</span> <span class="tok-kw">For</span> <span class="tok-kw">Binary</span> <span class="tok-kw">Access</span> <span class="tok-kw">Read</span> <span class="tok-kw">As</span> <span>#</span><span>filenum</span> <span>)</span> <span>&lt;&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span class="tok-kw">Return</span> <span>NULL</span>
+
+
+
+        <span class="tok-cm">'' retrieve BMP dimensions</span>
+
+        <span class="tok-kw">Get</span> <span>#</span><span>filenum</span><span>,</span> <span class="tok-nu">19</span><span>,</span> <span>bmpwidth</span>
+
+        <span class="tok-kw">Get</span> <span>#</span><span>filenum</span><span>,</span> <span class="tok-nu">23</span><span>,</span> <span>bmpheight</span>
+
+
+
+    <span class="tok-kw">Close</span> <span>#</span><span>filenum</span>
+
+
+
+    <span class="tok-cm">'' create image with BMP dimensions</span>
+
+    <span>img</span> <span>=</span> <span class="tok-kw">ImageCreate</span><span>(</span> <span>bmpwidth</span><span>,</span> <span class="tok-kw">Abs</span><span>(</span><span>bmpheight</span><span>)</span> <span>)</span>
+
+
+
+    <span class="tok-kw">If</span> <span>img</span> <span>=</span> <span>NULL</span> <span class="tok-kw">Then</span> <span class="tok-kw">Return</span> <span>NULL</span>
+
+
+
+    <span class="tok-cm">'' load BMP file into image buffer</span>
+
+    <span class="tok-kw">If</span> <span class="tok-kw">BLoad</span><span>(</span> <span>filename</span><span>,</span> <span>img</span> <span>)</span> <span>&lt;&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span class="tok-kw">ImageDestroy</span><span>(</span> <span>img</span> <span>):</span> <span class="tok-kw">Return</span> <span>NULL</span>
+
+
+
+    <span class="tok-kw">Return</span> <span>img</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>img</span>
+
+
+
+<span class="tok-kw">ScreenRes</span> <span class="tok-nu">640</span><span>,</span> <span class="tok-nu">480</span><span>,</span> <span class="tok-nu">32</span>
+
+
+
+<span>img</span> <span>=</span> <span>bmp_load</span><span>(</span> <span>&quot;picture.bmp&quot;</span> <span>)</span>
+
+
+
+<span class="tok-kw">If</span> <span>img</span> <span>=</span> <span>NULL</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;bmp_load failed&quot;</span>
+
+
+
+<span class="tok-kw">Else</span>
+
+
+
+    <span class="tok-kw">Put</span> <span>(</span><span class="tok-nu">10</span><span>,</span> <span class="tok-nu">10</span><span>),</span> <span>img</span>
+
+
+
+    <span class="tok-kw">ImageDestroy</span><span>(</span> <span>img</span> <span>)</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgBload.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

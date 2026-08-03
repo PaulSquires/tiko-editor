@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdiPlusAdjustableArrowCap — Help Center</title>
+<meta name="description" content="GpAdjustableArrowCap">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdiplusadjustablearrowcap.html">
+<meta property="og:title" content="GdiPlusAdjustableArrowCap">
+<meta property="og:description" content="GpAdjustableArrowCap">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdiplusadjustablearrowcap.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdiplusadjustablearrowcap.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../gdiplus-objects.html">GdiPlus Objects</a></div>
+<h1>GdiPlusAdjustableArrowCap<span class="h1kind">operator</span></h1>
+<p class="lede">GpAdjustableArrowCap</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">operator</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PRIVATE OPERATOR GdiPlusAdjustableArrowCap.@ () AS GpAdjustableArrowCap PTR PTR</code></pre>
+<h2>Description</h2>
+<p>Builds a line cap that looks like an arrow.</p>
+<h2>Examples</h2>
+<p>' ======================================================================================== TYPE GdiPlusAdjustableArrowCap Public: m_AdjustableArrowCap AS GpAdjustableArrowCap PTR DECLARE CONSTRUCTOR (BYVAL cap AS GpAdjustableArrowCap PTR = NULL) DECLARE CONSTRUCTOR (BYVAL nHeight AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL bIsFilled AS BOOL = CTRUE) DECLARE DESTRUCTOR DECLARE OPERATOR @ () AS GpAdjustableArrowCap PTR PTR DECLARE OPERATOR CAST () AS GpAdjustableArrowCap PTR END TYPE ' ========================================================================================</p>
+<p>' ======================================================================================== ' Creates a AdjustableArrowCap ' ======================================================================================== PRIVATE CONSTRUCTOR GdiPlusAdjustableArrowCap (BYVAL cap AS GpAdjustableArrowCap PTR = NULL) IF cap THEN SetLastError(GdipCloneCustomLineCap(cap, @m_AdjustableArrowCap)) END CONSTRUCTOR ' ========================================================================================</p>
+<p>' ===================================================================================== ' Creates an adjustable arrow line cap with the specified height and width. The arrow ' line cap can be filled or nonfilled. The middle inset defaults to zero. ' ===================================================================================== PRIVATE CONSTRUCTOR GdiPlusAdjustableArrowCap (BYVAL nHeight AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL bIsFilled AS BOOL = CTRUE) SetLastError(GdipCreateAdjustableArrowCap(nHeight, nWidth, bIsFilled, @m_AdjustableArrowCap)) END CONSTRUCTOR ' ===================================================================================== ' ======================================================================================== ' * Cleanup ' ======================================================================================== PRIVATE DESTRUCTOR GdiPlusAdjustableArrowCap IF m_AdjustableArrowCap THEN SetLastError(GdipDeleteCustomLineCap(m_AdjustableArrowCap)) END DESTRUCTOR ' ======================================================================================== ' ======================================================================================== ' Returns a pointer to the GpAdjustableArrowCap object ' ======================================================================================== PRIVATE OPERATOR * (BYREF cap AS GdiPlusAdjustableArrowCap) AS GpAdjustableArrowCap PTR RETURN cap.m_AdjustableArrowCap END OPERATOR ' ======================================================================================== ' ======================================================================================== ' Returns the address of a pointer to the GpAdjustableArrowCap object ' ======================================================================================== PRIVATE OPERATOR GdiPlusAdjustableArrowCap.@ () AS GpAdjustableArrowCap PTR PTR RETURN @m_AdjustableArrowCap END OPERATOR ' ======================================================================================== ' ======================================================================================== PRIVATE OPERATOR GdiPlusAdjustableArrowCap.CAST () AS GpAdjustableArrowCap PTR RETURN m_AdjustableArrowCap END OPERATOR ' ========================================================================================</p>
+<p>' ======================================================================================== ' The following example creates an AdjustableArrowCap object, myArrow, and sets the fill ' mode to TRUE. The code then creates a Pen object and assigns myArrow as the ending line ' cap for this Pen object. Next, the code tests whether myArrow is filled and, if it is, ' draws a line. ' ======================================================================================== SUB Example_IsFilled (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GdiPlusGraphics = hdc ' // Set the scale transform DIM dpiRatio AS SINGLE = graphics.DpiRatio graphics.ScaleTransform(dpiRatio)</p>
+<p>' // Create an AdjustableArrowCap that is filled. DIM myArrow AS GdiPlusAdjustableArrowCap = GdiPlusAdjustableArrowCap(10, 10, TRUE) ' // Adjust to DPI by setting the scale width GdipSetCustomLineCapWidthScale(myArrow, dpiRatio)</p>
+<p>' // Create a Pen, and assign myArrow as the end cap. DIM arrowPen AS GdiPlusPen = GdiPlusPen(ARGB_Violet, 1) ' // Assign myArrow as the end cap. GdipSetPenCustomEndCap(arrowPen, myArrow)</p>
+<p>' // If the cap is filled, draw a line using arrowPen. DIM isFilled AS BOOL GdipGetAdjustableArrowCapFillState(myArrow, @isFilled) IF isFilled THEN GdipDrawLine(graphics, arrowPen, 0, 0, 100, 100)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdipObjects.inc:229</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlus Objects.md</span></li><li>Topic: <a href="../gdiplus-objects.html">GdiPlus Objects</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

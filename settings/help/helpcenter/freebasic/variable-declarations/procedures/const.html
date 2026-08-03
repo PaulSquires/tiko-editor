@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Const — Help Center</title>
+<meta name="description" content="Non-modifiable variable declaration.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/variable-declarations/procedures/const.html">
+<meta property="og:title" content="Const">
+<meta property="og:description" content="Non-modifiable variable declaration.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/variable-declarations/procedures/const.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/variable-declarations/procedures/const.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Const<span class="h1kind">keyword</span></h1>
+<p class="lede">Non-modifiable variable declaration.</p>
+<div class="badges"><a class="badge" href="../index.html">Variable Declarations</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Const symbolname1 [AS DataType] = value1 [, symbolname2 [AS DataType] = value2, ...]</code></pre>
+<pre class="code sig"><code>Const [AS DataType] symbolname1 = value1 [, symbolname2 = value2, ...]</code></pre>
+<h2>Description</h2>
+<br>
+Declares non-modifiable constant data that can be integer or decimal (floating-point) numbers or strings. The constant type will be inferred if <code><a href="../../reference/data-types.html">DataType</a></code> isn't explicitly given.<br>
+<br>
+Specifying <code><a href="../../operators/preprocessor-operators/procedures/string.html">String * Size</a></code>, <code><a href="../../standard-data-types/procedures/zstring.html">Zstring * Size</a></code> or <code><a href="../../standard-data-types/procedures/wstring.html">Wstring * Size</a></code> as <code><a href="../../reference/data-types.html">DataType</a></code> is not allowed.<br>
+Specifying <code><a href="../../operators/preprocessor-operators/procedures/string.html">String</a></code> as <code><a href="../../reference/data-types.html">DataType</a></code> is tolerated but without effect because the resulting type is always a <code><a href="../../standard-data-types/procedures/zstring.html">Zstring * Size</a></code>.<br>
+<br>
+Constants follow visibility rules similar to those of variables for Namespace blocks, Type blocks, and compound block statements.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Differences from QB</h3><br>
+<ul><li> QB does not support the <code><a href="../../miscellaneous-keywords/procedures/as.html">As</a></code> <code><a href="../../reference/data-types.html">datatype</a></code> syntax.<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../preprocessor/procedures/define.html">#define</a></code><br>
+<li> <code><a href="../../standard-data-types/procedures/const-qualifier.html">Const (Qualifier)</a></code><br>
+<li> <code><a href="../../user-defined-types/procedures/const-member.html">Const (Member)</a></code><br>
+<li> <code><a href="../../user-defined-types/procedures/enum.html">Enum</a></code><br>
+<li> <code><a href="var.html">Var</a></code><br>
+<br>
+</li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Const</span> <span>Red</span> <span>=</span> <span class="tok-kw">RGB</span><span>(</span><span class="tok-nu">252</span><span>,</span> <span class="tok-nu">2</span><span>,</span> <span class="tok-nu">4</span><span>)</span>
+
+<span class="tok-kw">Const</span> <span>Black</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>=</span> <span class="tok-kw">RGB</span><span>(</span><span class="tok-nu">0</span><span>,</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-nu">0</span><span>)</span>
+
+<span class="tok-kw">Const</span> <span>Text</span> <span>=</span> <span>&quot;This is red text on a black bkgnd.&quot;</span>
+
+
+
+<span class="tok-kw">Locate</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Color</span> <span>Red</span><span>,</span> <span>Black</span>
+
+<span class="tok-kw">Print</span> <span>Text</span>
+
+<span class="tok-kw">Sleep</span>
+
+<span class="tok-kw">End</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgConst.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

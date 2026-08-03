@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LPrint — Help Center</title>
+<meta name="description" content="Writes text to the default printer.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/miscellaneous-keywords/procedures/lprint.html">
+<meta property="og:title" content="LPrint">
+<meta property="og:description" content="Writes text to the default printer.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/miscellaneous-keywords/procedures/lprint.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/miscellaneous-keywords/procedures/lprint.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>LPrint<span class="h1kind">keyword</span></h1>
+<p class="lede">Writes text to the default printer.</p>
+<div class="badges"><a class="badge" href="../index.html">Miscellaneous Keywords</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>LPrint [ Using formatstring,] [expressionlist] [(, | ;)] ...</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>formatstring</code></td><td></td><td>String specifying the output format.</td></tr><tr><td><code>expressionlist</code></td><td></td><td>List of variables to output according to the specified format.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+Prints <code><i>expressionlist</i></code> to the printer attached to the parallel port LPT1, or if it does not exist, to the default printer.  To print to a printer different from the default one, use <code><a href="../../file-i-o-functions/procedures/open-lpt.html">Open Lpt</a></code>.<br>
+<br>
+The <code><a href="../../console-functions/procedures/print-using.html">Using</a></code> clause formats <code><i>expressionlist</i></code> according to <code><i>formatstring</i></code>.  Except an UDT, any data type can be passed to <b><code>LPrint</code></b> <code><i>expressionlist</i></code>, expressions do not need to be first converted to strings.<br>
+<br>
+Using a comma (<code>,</code>) as separator or in the end of the <code><i>expressionlist</i></code> will place the cursor in the next column (every 14 characters), using a semi-colon (<code>;</code>) won't move the cursor. If neither of them are used in the end of the <code><i>expressionlist</i></code>, then a new-line will be printed.<br>
+<br>
+Some printers will not print at all until a <code><a href="../../string-functions/procedures/chr.html">Chr</a>(12)</code> (End of Page) character is printed.<br>
+<br>
+Internally, FreeBASIC uses the special file number <code>-1</code> for printing using <b><code>LPrint</code></b>.  This file number may be safely closed using <code><a href="../../file-i-o-functions/procedures/close.html">Close</a> -1</code>.  The next use of <b><code>LPrint</code></b> will automatically reopen it as needed.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Differences from QB</h3><br>
+<ul><li> None<br>
+<br>
+</li></ul>
+<h3>Dialect Differences</h3><br>
+<ul><li> <code><b>LPrint</b></code> is not supported in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i> dialect. In this dialect the printer must be properly opened with <code><a href="../../file-i-o-functions/procedures/open-lpt.html">Open Lpt</a></code> and <code><a href="../../file-i-o-functions/procedures/print.html">Print #</a></code> must be used to print.<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../file-i-o-functions/procedures/open-lpt.html">Open Lpt</a></code><br>
+<li> <code><a href="../../console-functions/procedures/print.html">Print</a></code><br>
+<li> <code><a href="../../console-functions/procedures/print.html">?</a></code><br>
+<li> <code><a href="../../file-i-o-functions/procedures/print.html">Print #</a></code><br>
+<li> <code><a href="../../file-i-o-functions/procedures/print.html">? #</a></code><br>
+<li> <code><a href="../../console-functions/procedures/write.html">Write</a></code><br>
+<br>
+</li></li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Compile with -lang fblite or qb</span>
+
+
+
+<span>#lang &quot;fblite&quot;
+
+</span>
+
+<span class="tok-cm">'' new-line</span>
+
+<span class="tok-kw">LPrint</span> <span>&quot;Hello World!&quot;</span>
+
+
+
+<span class="tok-cm">'' no new-line</span>
+
+<span class="tok-kw">LPrint</span> <span>&quot;Hello&quot;</span><span>;</span> <span>&quot;World&quot;</span><span>;</span> <span>&quot;!&quot;</span><span>;</span>
+
+
+
+<span class="tok-kw">LPrint</span>
+
+
+
+<span class="tok-cm">'' column separator</span>
+
+<span class="tok-kw">LPrint</span> <span>&quot;Hello!&quot;</span><span>,</span> <span>&quot;World!&quot;</span>
+
+
+
+<span class="tok-cm">'' end of page</span>
+
+<span class="tok-kw">LPrint</span> <span class="tok-kw">Chr$</span><span>(</span><span class="tok-nu">12</span><span>)</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgLprint.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>On...Goto — Help Center</title>
+<meta name="description" content="Jumps to a label based on an expression.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/control-flow-statements/procedures/on-goto.html">
+<meta property="og:title" content="On...Goto">
+<meta property="og:description" content="Jumps to a label based on an expression.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/control-flow-statements/procedures/on-goto.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/control-flow-statements/procedures/on-goto.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>On...Goto<span class="h1kind">keyword</span></h1>
+<p class="lede">Jumps to a label based on an expression.</p>
+<div class="badges"><a class="badge" href="../index.html">Control Flow Statements</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>On expression Goto label1[, ...]</code></pre>
+<h2>Description</h2>
+<br>
+Branches to different labels depending on the value of <i>expression</i>. An expression value of 1 will branch to the first label, a value of 2 to the second, etc.  If the value of <i>expression</i> is zero (0) or greater than the number of items in the list, execution continues on the next statement following the <code><b>On...Goto</b></code>.<br>
+<br>
+It is recommended that the structured <code><a href="select-case.html">Select Case</a></code> conditional statement be used instead of <code><b>On...Goto</b></code>.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Differences from QB</h3><br>
+<ul><li> FreeBASIC does not generate a run-time error if <code><i>expression</i></code> is negative or greater than 255.<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="select-case.html">Select Case</a></code><br>
+<li> <code><a href="on-gosub.html">On...Gosub</a></code><br>
+<li> <code><a href="goto.html">Goto</a></code><br>
+<li> <code><a href="../../tutorials/programmer-s-guide/labels.html">Labels</a></code><br>
+<br>
+</li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>choice</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-kw">Input</span> <span>&quot;Enter a number: &quot;</span><span>,</span> <span>choice</span>
+
+
+
+<span class="tok-kw">On</span> <span>choice</span> <span class="tok-kw">Goto</span> <span>labela</span><span>,</span> <span>labelb</span><span>,</span> <span>labelc</span>
+
+
+
+<span>labela</span><span>:</span>
+
+<span class="tok-kw">Print</span> <span>&quot;choice a&quot;</span>
+
+<span class="tok-kw">End</span>
+
+
+
+<span>labelb</span><span>:</span>
+
+<span class="tok-kw">Print</span> <span>&quot;choice b&quot;</span>
+
+<span class="tok-kw">End</span>
+
+
+
+<span>labelc</span><span>:</span>
+
+<span class="tok-kw">Print</span> <span>&quot;choice c&quot;</span>
+
+<span class="tok-kw">End</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgOngoto.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

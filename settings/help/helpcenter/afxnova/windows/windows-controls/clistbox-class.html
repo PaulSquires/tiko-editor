@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CListBox Class — Help Center</title>
+<meta name="description" content="CListBox Class — 55 documented members. Windows reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/clistbox-class.html">
+<meta property="og:title" content="CListBox Class">
+<meta property="og:description" content="CListBox Class — 55 documented members. Windows reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/clistbox-class.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/clistbox-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>Windows</div>
+<h1>CListBox Class</h1>
+<h2>Members (55)</h2>
+<div class="memberlist"><a href="clistbox/clistbox-addfile.html"><span class="m-n">AddFile</span><span class="m-d">Adds item data to the list box.</span></a><a href="clistbox/clistbox-additemdata.html"><span class="m-n">AddItemData</span><span class="m-d">Adds the specified filename to a list box that contains a directory listing.</span></a><a href="clistbox/clistbox-addstring.html"><span class="m-n">AddString</span><span class="m-d">Adds a string to a list box.</span></a><a href="clistbox/clistbox-assstring.html"><span class="m-n">AssString</span><span class="m-d"></span></a><a href="clistbox/clistbox-calchorizontalextent.html"><span class="m-n">CalcHorizontalExtent</span><span class="m-d">Calculates the size, in logical units, of the widest string item.</span></a><a href="clistbox/clistbox-deletestring.html"><span class="m-n">DeleteString</span><span class="m-d">Deletes a string in a list box.</span></a><a href="clistbox/clistbox-dir.html"><span class="m-n">Dir</span><span class="m-d">Adds names to the list displayed by a list box. The message adds the names of directories and files that match a specified string and set of file attributes. LB_DIR can also add mapped drive letters to the list box.</span></a><a href="clistbox/clistbox-disable.html"><span class="m-n">Disable</span><span class="m-d">Disables the control.</span></a><a href="clistbox/clistbox-enable.html"><span class="m-n">Enable</span><span class="m-d">Enables the control.</span></a><a href="clistbox/clistbox-finditemdata.html"><span class="m-n">FindItemData</span><span class="m-d">Finds the first item in a list box that has the specified item data.</span></a><a href="clistbox/clistbox-findstring.html"><span class="m-n">FindString</span><span class="m-d">Finds the first string in a list box that begins with the specified string.</span></a><a href="clistbox/clistbox-findstringexact.html"><span class="m-n">FindStringExact</span><span class="m-d">Finds the first list box string that exactly matches the specified string, except that the search is not case sensitive.</span></a><a href="clistbox/clistbox-getanchorindex.html"><span class="m-n">GetAnchorIndex</span><span class="m-d">Gets the index of the anchor item--that is, the item from which a multiple selection starts.</span></a><a href="clistbox/clistbox-getcaretindex.html"><span class="m-n">GetCaretIndex</span><span class="m-d">Determines the index of the item that has the focus rectangle in a multiple-selection list box.</span></a><a href="clistbox/clistbox-getcount.html"><span class="m-n">GetCount</span><span class="m-d">Gets the number of items in a list box.</span></a><a href="clistbox/clistbox-getcursel.html"><span class="m-n">GetCurSel</span><span class="m-d">Gets the index of the currently selected item, if any, in a list box.</span></a><a href="clistbox/clistbox-gethorizontalextent.html"><span class="m-n">GetHorizontalExtent</span><span class="m-d">Gets the width, in pixels, that a list box can be scrolled horizontally (the scrollable width) if the list box has a horizontal scroll bar.</span></a><a href="clistbox/clistbox-getitemdata.html"><span class="m-n">GetItemData</span><span class="m-d">Gets the application-defined value associated with the specified list box item.</span></a><a href="clistbox/clistbox-getitemheight.html"><span class="m-n">GetItemHeight</span><span class="m-d">Gets the height of items in a list box.</span></a><a href="clistbox/clistbox-getitemrect.html"><span class="m-n">GetItemRect</span><span class="m-d">Gets the dimensions of the rectangle that bounds a list box item as it is currently displayed in the list box.</span></a><a href="clistbox/clistbox-getlistboxinfo.html"><span class="m-n">GetListBoxInfo</span><span class="m-d">Gets the number of items in a list box.</span></a><a href="clistbox/clistbox-getlocale.html"><span class="m-n">GetLocale</span><span class="m-d">Gets the current locale of the list box.</span></a><a href="clistbox/clistbox-getsel.html"><span class="m-n">GetSel</span><span class="m-d">Gets the selection state of an item.</span></a><a href="clistbox/clistbox-getselcount.html"><span class="m-n">GetSelCount</span><span class="m-d">Gets the total number of selected items in a multiple-selection list box.</span></a><a href="clistbox/clistbox-getselect.html"><span class="m-n">GetSelect</span><span class="m-d">The listbox is searched to find the first selected item.</span></a><a href="clistbox/clistbox-getselitems.html"><span class="m-n">GetSelItems</span><span class="m-d">Fills a buffer with an array of integers that specify the item numbers of selected items in a multiple-selection list box.</span></a><a href="clistbox/clistbox-gettext.html"><span class="m-n">GetText</span><span class="m-d">Gets a string from a list box.</span></a><a href="clistbox/clistbox-gettextlen.html"><span class="m-n">GetTextLen</span><span class="m-d">Gets the length of a string in a list box.</span></a><a href="clistbox/clistbox-gettopindex.html"><span class="m-n">GetTopIndex</span><span class="m-d">Gets the index of the first visible item in a list box.</span></a><a href="clistbox/clistbox-initstorage.html"><span class="m-n">InitStorage</span><span class="m-d">Allocates memory for storing list box items.</span></a><a href="clistbox/clistbox-insertitemdata.html"><span class="m-n">InsertItemData</span><span class="m-d">Inserts item data to a list box.</span></a><a href="clistbox/clistbox-insertstring.html"><span class="m-n">InsertString</span><span class="m-d">Inserts a string into a list box.</span></a><a href="clistbox/clistbox-itemfrompoint.html"><span class="m-n">ItemFromPoint</span><span class="m-d">Gets the zero-based index of the item nearest the specified point in a list box.</span></a><a href="clistbox/clistbox-removedarkmode.html"><span class="m-n">RemoveDarkMode</span><span class="m-d">Removes the control dark mode.</span></a><a href="clistbox/clistbox-replacestring.html"><span class="m-n">ReplaceString</span><span class="m-d">Replaces a string, and his associated data, into a list box.</span></a><a href="clistbox/clistbox-resetcontent.html"><span class="m-n">ResetContent</span><span class="m-d">Removes all items from a list box.</span></a><a href="clistbox/clistbox-selectitemdata.html"><span class="m-n">SelectItemData</span><span class="m-d">Searches a list box for an item that has the specified item data.</span></a><a href="clistbox/clistbox-selectstring.html"><span class="m-n">SelectString</span><span class="m-d">Searches a list box for an item that begins with the characters in a specified string.</span></a><a href="clistbox/clistbox-selitemrange.html"><span class="m-n">SelItemRange</span><span class="m-d">Selects one or more consecutive items in a multiple-selection list box.</span></a><a href="clistbox/clistbox-selitemrangeex.html"><span class="m-n">SelItemRangeEx</span><span class="m-d">Selects one or more consecutive items in a multiple-selection list box.</span></a><a href="clistbox/clistbox-setanchorindex.html"><span class="m-n">SetAnchorIndex</span><span class="m-d">Sets the anchor item--that is, the item from which a multiple selection starts.</span></a><a href="clistbox/clistbox-setcaretindex.html"><span class="m-n">SetCaretIndex</span><span class="m-d">Sets the focus rectangle to the item at the specified index in a multiple-selection list box.</span></a><a href="clistbox/clistbox-setcolumnwidth.html"><span class="m-n">SetColumnWidth</span><span class="m-d">Sets the width, in pixels, of all columns in a multiple-column list box.</span></a><a href="clistbox/clistbox-setcount.html"><span class="m-n">SetCount</span><span class="m-d">Sets the count of items in a list box created with the LBS_NODATA style and not created with the LBS_HASSTRINGS style.</span></a><a href="clistbox/clistbox-setcursel.html"><span class="m-n">SetCurSel</span><span class="m-d">Selects a string and scroll it into view, if necessary.</span></a><a href="clistbox/clistbox-setdarkmode.html"><span class="m-n">SetDarkMode</span><span class="m-d">Set the control dark mode.</span></a><a href="clistbox/clistbox-sethorizontalextent.html"><span class="m-n">SetHorizontalExtent</span><span class="m-d">Sets the width, in pixels, by which a list box can be scrolled horizontally.</span></a><a href="clistbox/clistbox-setitemdata.html"><span class="m-n">SetItemData</span><span class="m-d">Sets a value associated with the specified item in a list box.</span></a><a href="clistbox/clistbox-setitemheight.html"><span class="m-n">SetItemHeight</span><span class="m-d">Sets the height, in pixels, of items in a list box.</span></a><a href="clistbox/clistbox-setlocale.html"><span class="m-n">SetLocale</span><span class="m-d">Sets the current locale of the list box.</span></a><a href="clistbox/clistbox-setsel.html"><span class="m-n">SetSel</span><span class="m-d">Selects a string in a list box.</span></a><a href="clistbox/clistbox-settabstops.html"><span class="m-n">SetTabStops</span><span class="m-d">Sets the tab-stop positions in a list box.</span></a><a href="clistbox/clistbox-settext.html"><span class="m-n">SetText</span><span class="m-d">Sets the text of the specified item.</span></a><a href="clistbox/clistbox-settopindex.html"><span class="m-n">SetTopIndex</span><span class="m-d">Ensures that a particular item in a list box is visible.</span></a><a href="clistbox/clistbox-unselectstring.html"><span class="m-n">UnselectString</span><span class="m-d">Unselects the specified string in a multiple-selection list box.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="clistbox-class">CListBox Class</h2>
+<p>Wrapper static class on top of all the Windows <code>ListBox</code> messages</p>
+<p>A list box control contains a simple list from which the user can generally select one or more items. List boxes provide limited flexibility compared with List View controls.</p>
+<p>List box items can be represented by text strings, bitmaps, or both. If the list box is not large enough to display all the list box items at once, the list box provides a scroll bar. The user scrolls through the list box items and applies or removes selection status as necessary. Selecting a list box item changes its visual appearance, usually by changing the text and background colors to those specified by the relevant operating system metrics. When the user selects or deselects an item, the system sends a notification message to the parent window of the list box.</p>
+<p>There are two types of list boxes: single-selection (the default) and multiple-selection. In a single-selection list box, the user can select only one item at a time. In a multiple-selection list box, the user can select more than one item at a time. To create a multiple-selection list box, specify the <strong>LBS_MULTIPLESEL</strong> or the <strong>LBS_EXTENDEDSEL</strong> style.</p>
+<p>The appearance and operation of a list box is controlled by list box styles and window styles. These styles indicate whether the list is sorted, arranged in multiple columns, drawn by the application, and so on.</p>
+<h5 id="drag-list-boxes">Drag list boxes</h5>
+<p>A drag list box is a special type of list box that enables the user to drag items from one position to another. An application can use a drag list box to display strings in a particular sequence and enable the user to change the sequence by dragging the items into position.</p>
+<p>Drag list boxes have the same window styles and process the same messages as standard list boxes. To create a drag list box, first create a standard list box and then call the <strong>MakeDragList</strong> function.</p>
+<p>See: <a href="https://learn.microsoft.com/en-us/windows/win32/controls/about-list-boxes" target="_blank" rel="noopener">About List Boxes</a></p>
+<p><strong>Include file</strong>: CListBox.inc.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="clistbox/clistbox-addfile.html">AddFile</a></td><td>Adds item data to the list box.</td></tr><tr><td><a href="clistbox/clistbox-additemdata.html">AddItemData</a></td><td>Adds the specified filename to a list box that contains a directory listing.</td></tr><tr><td><a href="clistbox/clistbox-addstring.html">AddString</a></td><td>Adds a string to a list box.</td></tr><tr><td><a href="clistbox/clistbox-calchorizontalextent.html">CalcHorizontalExtent</a></td><td>Calculates the size, in logical units, of the widest string item.</td></tr><tr><td><a href="clistbox/clistbox-deletestring.html">DeleteString</a></td><td>Deletes a string in a list box.</td></tr><tr><td><a href="clistbox/clistbox-dir.html">Dir</a></td><td>Adds the names of directories and files that match a specified string and set of file attributes.</td></tr><tr><td><a href="clistbox/clistbox-disable.html">Disable</a></td><td>Disables the control.</td></tr><tr><td><a href="clistbox/clistbox-enable.html">Enable</a></td><td>Enables the control.</td></tr><tr><td><a href="clistbox/clistbox-finditemdata.html">FindItemData</a></td><td>Finds the first item in a list box that has the specified item data.</td></tr><tr><td><a href="clistbox/clistbox-findstring.html">FindString</a></td><td>Finds the first string in a list box that begins with the specified string.</td></tr><tr><td><a href="clistbox/clistbox-findstringexact.html">FindStringExact</a></td><td>Finds the first list box string that exactly matches the specified string, except that the search is not case sensitive.</td></tr><tr><td><a href="clistbox/clistbox-getanchorindex.html">GetAnchorIndex</a></td><td>Gets the index of the anchor item--that is, the item from which a multiple selection starts.</td></tr><tr><td><a href="clistbox/clistbox-getcaretindex.html">GetCaretIndex</a></td><td>Determines the index of the item that has the focus rectangle in a multiple-selection list box.</td></tr><tr><td><a href="clistbox/clistbox-getcount.html">GetCount</a></td><td>Gets the number of items in a list box.</td></tr><tr><td><a href="clistbox/clistbox-getcursel.html">GetCurSel</a></td><td>Gets the index of the currently selected item, if any, in a list box.</td></tr><tr><td><a href="clistbox/clistbox-gethorizontalextent.html">GetHorizontalExtent</a></td><td>Gets the width, in pixels, that a list box can be scrolled horizontally (the scrollable width) if the list box has a horizontal scroll bar.</td></tr><tr><td><a href="clistbox/clistbox-getlistboxinfo.html">GetListBoxInfo</a></td><td>Gets the number of items in a list box.</td></tr><tr><td><a href="clistbox/clistbox-getitemdata.html">GetItemData</a></td><td>Gets the application-defined value associated with the specified list box item.</td></tr><tr><td><a href="clistbox/clistbox-getitemheight.html">GetItemHeight</a></td><td>Gets the height of items in a list box.</td></tr><tr><td><a href="clistbox/clistbox-getitemrect.html">GetItemRect</a></td><td>Gets the dimensions of the rectangle that bounds a list box item as it is currently displayed in the list box.</td></tr><tr><td><a href="clistbox/clistbox-getlocale.html">GetLocale</a></td><td>Gets the current locale of the list box.</td></tr><tr><td><a href="clistbox/clistbox-getsel.html">GetSel</a></td><td>Gets the selection state of an item.</td></tr><tr><td><a href="clistbox/clistbox-getselcount.html">GetSelCount</a></td><td>Gets the total number of selected items in a multiple-selection list box.</td></tr><tr><td><a href="clistbox/clistbox-getselect.html">GetSelect</a></td><td>The listbox is searched to find the first selected item.</td></tr><tr><td><a href="clistbox/clistbox-getselitems.html">GetSelItems</a></td><td>Fills a buffer with an array of integers that specify the item numbers of selected items in a multiple-selection list box.</td></tr><tr><td><a href="clistbox/clistbox-gettext.html">GetText</a></td><td>Gets a string from a list box.</td></tr><tr><td><a href="clistbox/clistbox-gettextlen.html">GetTextLen</a></td><td>Gets the length of a string in a list box.</td></tr><tr><td><a href="clistbox/clistbox-gettopindex.html">GetTopIndex</a></td><td>Gets the index of the first visible item in a list box.</td></tr><tr><td><a href="clistbox/clistbox-initstorage.html">InitStorage</a></td><td>Allocates memory for storing list box items.</td></tr><tr><td><a href="clistbox/clistbox-insertitemdata.html">InsertItemData</a></td><td>Inserts item data to a list box.</td></tr><tr><td><a href="clistbox/clistbox-insertstring.html">InsertString</a></td><td>Inserts a string into a list box.</td></tr><tr><td><a href="clistbox/clistbox-itemfrompoint.html">ItemFromPoint</a></td><td>Gets the zero-based index of the item nearest the specified point in a list box.</td></tr><tr><td><a href="clistbox/clistbox-removedarkmode.html">RemoveDarkMode</a></td><td>Removes the control dark mode.</td></tr><tr><td><a href="clistbox/clistbox-replacestring.html">ReplaceString</a></td><td>Replaces a string, and his associated data, into a list box.</td></tr><tr><td><a href="clistbox/clistbox-resetcontent.html">ResetContent</a></td><td>Removes all items from a list box.</td></tr><tr><td><a href="clistbox/clistbox-selectitemdata.html">SelectItemData</a></td><td>Searches a list box for an item that has the specified item data.</td></tr><tr><td><a href="clistbox/clistbox-selectstring.html">SelectString</a></td><td>Searches a list box for an item that begins with the characters in a specified string.</td></tr><tr><td><a href="clistbox/clistbox-selitemrange.html">SelItemRange</a></td><td>Selects one or more consecutive items in a multiple-selection list box.</td></tr><tr><td><a href="clistbox/clistbox-selitemrangeex.html">SelItemRangeEx</a></td><td>Selects one or more consecutive items in a multiple-selection list box.</td></tr><tr><td><a href="clistbox/clistbox-setanchorindex.html">SetAnchorIndex</a></td><td>Sets the anchor item--that is, the item from which a multiple selection starts.</td></tr><tr><td><a href="clistbox/clistbox-setcaretindex.html">SetCaretIndex</a></td><td>Sets the focus rectangle to the item at the specified index in a multiple-selection list box.</td></tr><tr><td><a href="clistbox/clistbox-setcolumnwidth.html">SetColumnWidth</a></td><td>Sets the width, in pixels, of all columns in a multiple-column list box.</td></tr><tr><td><a href="clistbox/clistbox-setcount.html">SetCount</a></td><td>Sets the count of items in a list box created with the LBS_NODATA style and not created with the LBS_HASSTRINGS style.</td></tr><tr><td><a href="clistbox/clistbox-setcursel.html">SetCurSel</a></td><td>Selects a string and scroll it into view, if necessary.</td></tr><tr><td><a href="clistbox/clistbox-setdarkmode.html">SetDarkMode</a></td><td>Set the control dark mode.</td></tr><tr><td><a href="clistbox/clistbox-sethorizontalextent.html">SetHorizontalExtent</a></td><td>Sets the width, in pixels, by which a list box can be scrolled horizontally.</td></tr><tr><td><a href="clistbox/clistbox-setitemdata.html">SetItemData</a></td><td>Sets a value associated with the specified item in a list box.</td></tr><tr><td><a href="clistbox/clistbox-setitemheight.html">SetItemHeight</a></td><td>Sets the height, in pixels, of items in a list box.</td></tr><tr><td><a href="clistbox/clistbox-setlocale.html">SetLocale</a></td><td>Sets the current locale of the list box.</td></tr><tr><td><a href="clistbox/clistbox-setsel.html">SetSel</a></td><td>Selects a string in a list box.</td></tr><tr><td><a href="clistbox/clistbox-settabstops.html">SetTabStops</a></td><td>Sets the tab-stop positions in a list box.</td></tr><tr><td><a href="clistbox/clistbox-settext.html">SetText</a></td><td>Sets the text of the specified item.</td></tr><tr><td><a href="clistbox/clistbox-settopindex.html">SetTopIndex</a></td><td>Ensures that a particular item in a list box is visible.</td></tr><tr><td><a href="clistbox/clistbox-unselectstring.html">UnselectString</a></td><td>Unselects the specified string in a multiple-selection list box.</td></tr></tbody></table></div>
+<hr>
+<h4 id="addfile">AddFile</h4>
+<p>Adds the specified filename to a list box that contains a directory listing.</p>
+<pre class="code"><code>FUNCTION CListBox.AddFile (BYVAL hListBox AS HWND, BYVAL pwszFileName AS WSTRING PTR) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>pwszFileName</em></td><td>A pointer to a buffer that specifies the name of the file to add.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the zero-based index of the file that was added, or LB_ERR if an error occurs.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The list box to which <em>pwszFileName</em> is added must have been filled by the <strong>DlgDirList</strong> function.</p>
+<p>The <strong>LB_INITSTORAGE</strong> message helps speed up the initialization of list boxes that have a large number of items (more than 100). It reserves the specified amount of memory so that subsequent <strong>LB_ADDFILE</strong> messages take the shortest possible time. You can use estimates for the <em>wParam</em> and <em>lParam</em> parameters. If you overestimate, the extra memory is allocated; if you underestimate, the normal allocation is used for items that exceed the requested amount.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.AddFile(hListBox, filename)</code></pre>
+<hr>
+<h4 id="additemdata">AddItemData</h4>
+<p>Adds item data to the list box.</p>
+<pre class="code"><code>FUNCTION CListBox.AddItemData (BYVAL hListBox AS HWND, BYVAL pData AS ANY PTR) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>pData</em></td><td>Specifies the value to be associated with the item. If the list box has an owner-drawn style but not the LBS_HASSTRINGS style, this parameter is stored as item data instead of a string. You can send the LB_GETITEMDATA and LB_SETITEMDATA messages to retrieve or modify the item data.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the zero-based index of the string in the list box. If an error occurs, the return value is LB_ERR. If there is insufficient space to store the new string, the return value is LB_ERRSPACE.</p>
+<hr>
+<h4 id="addstring">AddString</h4>
+<p>Adds a string to a list box. If the list box does not have the LBS_SORT style, the string is added to the end of the list. Otherwise, the string is inserted into the list and the list is sorted.</p>
+<pre class="code"><code>FUNCTION CListBox.AssString(BYVAL hListBox AS HWND, BYVAL pwszText AS WSTRING PTR) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>pwszText</em></td><td>A pointer to the null-terminated string that is to be added.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the zero-based index of the string in the list box. If an error occurs, the return value is LB_ERR. If there is insufficient space to store the new string, the return value is LB_ERRSPACE.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If the list box has an owner-drawn style and the LBS_SORT style, but not the LBS_HASSTRINGS style, the system sends the WM_COMPAREITEM message one or more times to the owner of the list box to place the new item properly in the list box.</p>
+<p>The LB_INITSTORAGE message helps speed up the initialization of list boxes that have a large number of items (more than 100). It reserves the specified amount of memory so that subsequent LB_ADDSTRING messages take the shortest possible time. You can use estimates for the wParam and lParam parameters. If you overestimate, the extra memory is allocated; if you underestimate, the normal allocation is used for items that exceed the requested amount.</p>
+<p>If the list box has the WS_HSCROLL style and you add a string wider than the list box, send an LB_SETHORIZONTALEXTENT message to ensure the horizontal scroll bar appears.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.AddString(hListBox, "New string")</code></pre>
+<hr>
+<h4 id="calchorizontalextent">CalcHorizontalExtent</h4>
+<p>Calculates the size, in logical units, of the widest string item.</p>
+<pre class="code"><code>FUNCTION CListBox.CalcHorizontalExtent(BYVAL hListBox AS HWND) AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>Returns the size, in logical units, of the widest string item in the ListBox.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM cx AS LONG = CListBox.CalcHorizontalExtent(hListBox)</code></pre>
+<hr>
+<h4 id="deletestring">DeleteString</h4>
+<p>Deletes a string in a list box.</p>
+<pre class="code"><code>FUNCTION CListBox.DeleteString (BYVAL hListBox AS HWND, BYVAL index AS LONG) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>index</em></td><td>The zero-based index of the string to be deleted.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is a count of the strings remaining in the list. The return value is LB_ERR if the <em>index</em> parameter specifies an index greater than the number of items in the list.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If an application creates the list box with an owner-drawn style but without the LBS_HASSTRINGS style, the system sends a WM_DELETEITEM message to the owner of the list box so the application can free any additional data associated with the item.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.DeleteString(hListBox, 5)</code></pre>
+<hr>
+<h4 id="adddir">AddDir</h4>
+<p>Adds names to the list displayed by a list box. The message adds the names of directories and files that match a specified string and set of file attributes. It can also add mapped drive letters to the list box.</p>
+<pre class="code"><code>FUNCTION Dir (BYVAL hListBox AS HWND, BYVAL Attr AS DWORD, BYVAL pwszFileSpec AS WSTRING PTR) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>Attr</em></td><td>The attributes of the files or directories to be added to the list box. This parameter can be one or more of the values listed below.</td></tr><tr><td><em>pwszFileSpec</em></td><td>A pointer to the null-terminated string that specifies an absolute path, relative path, or filename. An absolute path can begin with a drive letter (for example, d:) or a UNC name (for example, \\\\machinename\\sharename). If the string specifies a filename or directory that has the attributes specified by the <em>Attr</em> parameter, the filename or directory is added to the list. If the filename or directory name contains wildcard characters (? or *), all files or directories that match the wildcard expression and have the attributes specified by the <em>Attr</em> parameter are added to the list.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Attribute</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>DDL_ARCHIVE</strong></td><td>Includes archived files.</td></tr><tr><td><strong>DDL_DIRECTORY</strong></td><td>Includes subdirectories. Subdirectory names are enclosed in square brackets ([ ]).</td></tr><tr><td><strong>DDL_DRIVES</strong></td><td>All mapped drives are added to the list. Drives are listed in the form [-x-], where x is the drive letter.</td></tr><tr><td><strong>DDL_EXCLUSIVE</strong></td><td>Includes only files with the specified attributes. By default, read/write files are listed even if <strong>DDL_READWRITE</strong> is not specified.</td></tr><tr><td><strong>DDL_HIDDEN</strong></td><td>Includes hidden files.</td></tr><tr><td><strong>DDL_READONLY</strong></td><td>Includes read-only files.</td></tr><tr><td><strong>DDL_READWRITE</strong></td><td>Includes read/write files with no additional attributes. This is the default setting.</td></tr><tr><td><strong>DDL_SYSTEM</strong></td><td>Includes system files.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the message succeeds, the return value is the zero-based index of the last name added to the list.</p>
+<p>If an error occurs, the return value is LB_ERR. If there is insufficient space to store the new strings, the return value is LB_ERRSPACE.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The LB_INITSTORAGE message helps speed up the initialization of list boxes that have a large number of items (more than 100). It reserves the specified amount of memory so that subsequent LB_DIR messages take the shortest possible time. You can use estimates for the <em>wParam</em> and <em>lParam</em> parameters. If you overestimate, the extra memory is allocated; if you underestimate, the normal allocation is used for items that exceed the requested amount.</p>
+<p>If <em>Attr</em> includes the DDL_DIRECTORY flag and <em>pwszFileSpec</em> specifies all the subdirectories of a first-level directory, such as C:\\TEMP\\*, the list box will always include a ".." entry for the root directory. This is true even if the root directory has hidden or system attributes and the DDL_HIDDEN and DDL_SYSTEM flags are not specified. The root directory of an NTFS volume has hidden and system attributes.</p>
+<p>The list displays long filenames, if any.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.Adddir(hListBox, DDL_DIRECTORY, filepath)</code></pre>
+<hr>
+<h4 id="disable">Disable</h4>
+<p>Disables the control</p>
+<pre class="code"><code>FUNCTION Disable (BYVAL hListBox AS HWND) AS BOOLEAN</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>False if the control was previous disabled; otherwise TRUE.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.Disable(hListBox)</code></pre>
+<hr>
+<h4 id="enable">Enable</h4>
+<p>Enables the control</p>
+<pre class="code"><code>FUNCTION Enable (BYVAL hListBox AS HWND) AS BOOLEAN</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>Return value: False if the control was previous enabled; otherwise TRUE</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.Enable(hListBox)</code></pre>
+<hr>
+<h4 id="finditemdata">FindItemData</h4>
+<p>Finds the first item in a list box that has the specified item data.</p>
+<pre class="code"><code>FUNCTION FindItemData (BYVAL hListBox AS HWND, BYVAL indexStart AS LONG, BYVAL pData AS ANY PTR) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>indexStart</em></td><td>The zero-based index of the item before the first item to be searched. When the search reaches the bottom of the list box, it continues searching from the top of the list box back to the item specified by the <em>indexStart</em> parameter. If <em>indexStart</em> is -1, the entire list box is searched from the beginning.</td></tr><tr><td><em>pData</em></td><td>The data value to find.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the index of the matching item, or LB_ERR if the search was unsuccessful.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.FindItemData(hListBox, 4, pdata)</code></pre>
+<hr>
+<h4 id="findstring">FindString</h4>
+<p>Finds the first string in a list box that begins with the specified string.</p>
+<pre class="code"><code>FUNCTION FindString (BYVAL hListBox AS HWND, BYVAL indexStart AS LONG, BYVAL pwszString AS WSTRING PTR) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>indexStart</em></td><td>The zero-based index of the item before the first item to be searched. When the search reaches the bottom of the list box, it continues searching from the top of the list box back to the item specified by the <em>indexStart</em> parameter. If <em>indexStart</em> is -1, the entire list box is searched from the beginning.</td></tr><tr><td><em>pwszString</em></td><td>A pointer to the null-terminated string that contains the string for which to search. The search is case independent, so this string can contain any combination of uppercase and lowercase letters.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the index of the matching item, or LB_ERR if the search was unsuccessful.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If the list box has the owner-drawn style but not the LBS_HASSTRINGS style, the action taken by LB_FINDSTRING depends on whether the LBS_SORT style is used. If LBS_SORT is used, the system sends WM_COMPAREITEM messages to the list box owner to determine which item matches the specified string.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.FindString(hListBox, 4, "strig to find")</code></pre>
+<hr>
+<h4 id="findstringexact">FindStringExact</h4>
+<p>Finds the first list box string that exactly matches the specified string, except that the search is not case sensitive.</p>
+<pre class="code"><code>FUNCTION FindStringExact (BYVAL hListBox AS HWND, BYVAL indexStart AS LONG, BYVAL pwszSearchString AS WSTRING PTR) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>indexStart</em></td><td>The zero-based index of the item before the first item to be searched. When the search reaches the bottom of the list box, it continues searching from the top of the list box back to the item specified by the <em>indexStart</em> parameter. If <em>indexStart</em> is -1, the entire list box is searched from the beginning.</td></tr><tr><td><em>pwszString</em></td><td>A pointer to the null-terminated string that contains the string for which to search. The search is case independent, so this string can contain any combination of uppercase and lowercase letters.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the index of the matching item, or LB_ERR if the search was unsuccessful.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This function is only successful if the specified string and a list box item have the same length (except for the null at the end of the specified string) and have exactly the same characters.</p>
+<p>If the list box has the owner-drawn style but not the LBS_HASSTRINGS style, the action taken by LB_FINDSTRING depends on whether the LBS_SORT style is used. If LBS_SORT is used, the system sends WM_COMPAREITEM messages to the list box owner to determine which item matches the specified string.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.FindStringExact(hListBox, 4, "strig to find")</code></pre>
+<hr>
+<h4 id="getanchorindex">GetAnchorIndex</h4>
+<p>Gets the index of the anchor item that is, the item from which a multiple selection starts. A multiple selection spans all items from the anchor item to the caret item.</p>
+<pre class="code"><code>FUNCTION GetAnchorIndex (BYVAL hListBox AS HWND) AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the zero-based index of the anchor item, or LB_ERR if an error occurs.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM index AS LONG = CListBox.GetAnchorIndex(hListBox)</code></pre>
+<hr>
+<h4 id="getcaretindex">GetCaretIndex</h4>
+<p>Retrieves the index of the item that has the focus in a multiple-selection list box. The item may or may not be selected.</p>
+<pre class="code"><code>FUNCTION GetCaretIndex (BYVAL hListBox AS HWND) AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the zero-based index of the focused list box item, or 0 if no item has the focus.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This message can also be used to get the index of the item that is currently selected in a single-selection list box.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM index AS LONG = CListBox.GetCaretIndex(hListBox)</code></pre>
+<hr>
+<h4 id="getcount">GetCount</h4>
+<p>Gets the number of items in a list box.</p>
+<pre class="code"><code>FUNCTION GetCount (BYVAL hListBox AS HWND) AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the number of items in the list box, or LB_ERR if an error occurs.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The returned count is one greater than the index value of the last item (the index is zero-based).</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM count AS LONG = CListBox.GetCount(hListBox)</code></pre>
+<hr>
+<h4 id="getcursel">GetCurSel</h4>
+<p>Gets the index of the currently selected item, if any, in a list box.</p>
+<pre class="code"><code>FUNCTION GetCurSel (BYVAL hListBox AS HWND) AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the zero-based index of the currently selected item. If there is no selection, the return value is LB_ERR.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM sel AS LONG = CListBox.GetCurSel(hListBox)</code></pre>
+<hr>
+<h4 id="gethorizontalextent">GetHorizontalExtent</h4>
+<p>Gets the width, in pixels, that a list box can be scrolled horizontally (the scrollable width) if the list box has a horizontal scroll bar.</p>
+<pre class="code"><code>FUNCTION GetHorizontalExtent (BYVAL hListBox AS HWND) AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the scrollable width, in pixels, of the list box.</p>
+<h5 id="remarks">Remarks</h5>
+<p>To respond to the LB_GETHORIZONTALEXTENT message, the list box must have been defined with the WS_HSCROLL style.</p>
+<p>If the application does not set the horizontal extent of the list box (using LB_SETHORIZONTALEXTENT), the default horizontal extent is zero. Note that the list box does not update its horizontal extent dynamically.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM cx AS LONG = CListBox.GetHorizontalExtent(hListBox)</code></pre>
+<hr>
+<h4 id="getlistboxinfo">GetListBoxInfo</h4>
+<p>Gets the number of items per column in a specified list box.</p>
+<pre class="code"><code>FUNCTION GetListBoxInfo (BYVAL hListBox AS HWND) AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the number of items per column.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This message is equivalent to <strong>GetListBoxInfo</strong>.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM items AS LONG = CListBox.GetListBoxInfo(hListBox)</code></pre>
+<hr>
+<h4 id="getitemdata">GetItemData</h4>
+<p>Gets the application-defined value associated with the specified list box item.</p>
+<pre class="code"><code>FUNCTION GetItemData (BYVAL hListBox AS HWND, BYVAL index AS LONG) AS ANY PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>index</em></td><td>The index of the item.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the value associated with the item, or LB_ERR if an error occurs. If the item is in an owner-drawn list box and was created without the LBS_HASSTRINGS style, this value was in the lParam parameter of the LB_ADDSTRING or LB_INSERTSTRING message that added the item to the list box. Otherwise, it is the value in the lParam of the LB_SETITEMDATA message.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM pData AS ANY PTR = CListBox.GetItemData(hListBox)</code></pre>
+<hr>
+<h4 id="getitemheight">GetItemHeight</h4>
+<p>Gets the height of items in a list box.</p>
+<pre class="code"><code>FUNCTION GetItemHeight (BYVAL hListBox AS HWND, BYVAL index AS LONG) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>index</em></td><td>The index of the item.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the height, in pixels, of each item in the list box. The return value is the height of the item specified by the wParam parameter if the list box has the LBS_OWNERDRAWVARIABLE style. The return value is LB_ERR if an error occurs.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM height AS LONG = CListBox.GetItemHeight(hListBox)</code></pre>
+<hr>
+<h4 id="getitemrect">GetItemRect</h4>
+<p>Gets the dimensions of the rectangle that bounds a list box item as it is currently displayed in the list box.</p>
+<pre class="code"><code>FUNCTION GetItemRect (BYVAL hListBox AS HWND, BYVAL index AS LONG, BYVAL prc AS RECT PTR) AS LONG
+FUNCTION GetItemRect (BYVAL hListBox AS HWND, BYVAL index AS LONG, BYREF rc AS RECT) AS LONG
+FUNCTON GetItemRect (BYVAL hListBox AS HWND, BYVAL index AS LONG) AS RECT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>index</em></td><td>The zero-based index of the item.</td></tr><tr><td><em>prc</em></td><td>A pointer to a RECT structure that will receive the client coordinates for the item in the list box.</td></tr><tr><td><em>rc</em></td><td>A RECT structure that will receive the client coordinates for the item in the list box.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If an error occurs, the return value is LB_ERR.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM rc AS RECT
+CListBox.GetItemRect(hListBox, 5, @rc)
+CListBox.GetItemRect(hListBox, 5, rc)
+rc = CListBox.GetItemRect(hListBox, 5)</code></pre>
+<hr>
+<h4 id="getlocale">GetLocale</h4>
+<p>Gets the current locale of the list box. You can use the locale to determine the correct sorting order of displayed text (for list boxes with the LBS_SORT style) and of text added by the LB_ADDSTRING message.</p>
+<pre class="code"><code>FUNCTION GetLocale (BYVAL hListBox AS HWND) AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The return value specifies the current locale of the list box. The HIWORD contains the country/region code and the LOWORD contains the language identifier.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The language identifier consists of a sublanguage identifier and a primary language identifier. Use the PRIMARYLANGID macro to extract the primary language identifier from the LOWORD of the return value, and the SUBLANGID macro to extract the sublanguage identifier.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM locale AS LONG = CListBox.GetLocale(hListBox)</code></pre>
+<hr>
+<h4 id="getsel">GetSel</h4>
+<p>Gets the selection state of an item.</p>
+<pre class="code"><code>FUNCTION GetSel (BYVAL hListBox AS HWND, BYVAL Index AS LONG) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>index</em></td><td>The zero-based index of the item.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If an item is selected, the return value is greater than zero; otherwise, it is zero. If an error occurs, the return value is LB_ERR.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM bSel AS BOOLEAN = CListBox.GetSel(hListBox)</code></pre>
+<hr>
+<h4 id="getselcount">GetSelCount</h4>
+<p>Gets the total number of selected items in a multiple-selection list box.</p>
+<pre class="code"><code>FUNCTION GetSelCount (BYVAL hListBox AS HWND) AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the count of selected items in the list box. If the list box is a single-selection list box, the return value is LB_ERR.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM count AS LONG = CListBox.GetSelCount(hListBox)</code></pre>
+<hr>
+<h4 id="getselect">GetSelect</h4>
+<p>The listbox is searched to find the first selected item. If the item parameter is included, searching starts at that position to facilitate retrieving multiple selected items. If item is omitted, the search starts at the first data item. The index number of the selected item is returned as the result of the function. If no item is selected, the value -1 is returned</p>
+<pre class="code"><code>FUNCTION GetSelect (BYVAL hListBox AS HWND, BYVAL startIndex AS LONG = 0) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>startIndex</em></td><td>The zero-based index of the starting item.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The index of the first select index; if no item is selected, the value -1 is returned</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM index AS LONG = CListBox.GetSelect(hListBox, 4)</code></pre>
+<hr>
+<h4 id="getselitems">GetSelItems</h4>
+<p>Fills a buffer with an array of integers that specify the item numbers of selected items in a multiple-selection list box.</p>
+<pre class="code"><code>FUNCTION GetSelItems (BYVAL hListBox AS HWND, BYVAL items AS DWORD, BYVAL prgItems AS LONG PTR) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>items</em></td><td>The maximum number of selected items whose item numbers are to be placed in the buffer.</td></tr><tr><td><em>prgItems</em></td><td>A pointer to a buffer large enough for the number of integers specified by the <em>items</em> parameter.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the number of items placed in the buffer. If the list box is a single-selection list box, the return value is LB_ERR.</p>
+<hr>
+<h4 id="gettext">GetText</h4>
+<p>Gets a string from a list box.</p>
+<pre class="code"><code>FUNCTION GetText (BYVAL hListBox AS HWND, BYVAL index AS LONG) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>index</em></td><td>The zero-based index of the item to retrieve.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The text of the item.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dwsText AS DWSTRING = CListBox.GetText(hListBox, 4)</code></pre>
+<hr>
+<h4 id="gettextlen">GetTextLen</h4>
+<p>Gets the length of a string in a list box.</p>
+<pre class="code"><code>FUNCTION GetTextLen (BYVAL hListBox AS HWND, BYVAL index AS LONG) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>index</em></td><td>The zero-based index of the string.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM nLen AS LONG = CListBox.GetTextLen(hListBox, 4)</code></pre>
+<hr>
+<h4 id="gettopindex">GetTopIndex</h4>
+<p>Gets the index of the first visible item in a list box. Initially the item with index 0 is at the top of the list box, but if the list box contents have been scrolled another item may be at the top. The first visible item in a multiple-column list box is the top-left item.</p>
+<pre class="code"><code>FUNCTION GetTopIndex (BYVAL hListBox AS HWND) AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the index of the first visible item in the list box.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM index AS LONG = CListBox.GetTopIndex(hListBox)</code></pre>
+<hr>
+<h4 id="initstorage">InitStorage</h4>
+<p>Allocates memory for storing list box items. This message can be used before an application adds a large number of items to a list box.</p>
+<pre class="code"><code>FUNCTION InitStorage (BYVAL hListBox AS HWND, BYVAL nItems AS DWORD, BYVAL nBytes AS DWORD) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>nItems</em></td><td>The number of items for which to reserve space.</td></tr><tr><td><em>nBytes</em></td><td>The amount of additional memory, in bytes, to allocate for item strings.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the message is successful, the return value is the total number of items that the list box can store before a memory reallocation is needed.</p>
+<p>If the message fails, the return value is LB_ERRSPACE.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The LB_INITSTORAGE message helps speed up the initialization of list boxes that have a large number of items (more than 100). It reserves the specified amount of memory so that subsequent LB_ADDSTRING, LB_INSERTSTRING, LB_DIR, and LB_ADDFILE messages are more efficient. You can use estimates for the <em>nItems</em> and <em>nBytes</em> parameters. If you overestimate, the extra memory remains allocated; if you underestimate, the list box will allocate additional memory as necessary.</p>
+<p>The memory required to store a string includes the null terminator. Therefore, if you plan to add 100 strings, each with a length of 10 characters, you would pass a <em>nItems</em> of 100 and an <em>nBytes</em> of 100 × (10 + 1) × sizeof(TCHAR).</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM items AS LONG = CListBox.InitStorage(hListBox, nItems, nBytes)</code></pre>
+<hr>
+<h4 id="insertitemdata">InsertItemData</h4>
+<p>Inserts item data to a list box.</p>
+<pre class="code"><code>FUNCTION InsertItemData (BYVAL hListBox AS HWND, BYVAL index AS LONG, BYVAL pData AS ANY PTR) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>index</em></td><td>The zero-based index of the position at which to insert the string. If this parameter is -1, the string is added to the end of the list.</td></tr><tr><td><em>pData</em></td><td>Specifies the value to be associated with the item.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the index of the position at which the string was inserted. If an error occurs, the return value is LB_ERR. If there is insufficient space to store the new string, the return value is LB_ERRSPACE.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM index AS LONG = CListBox.InsertItemData(hListBox, 3, pData)</code></pre>
+<hr>
+<h4 id="insertstring">InsertString</h4>
+<p>Inserts a string or item data into a list box. Unlike the LB_ADDSTRING message, the LB_INSERTSTRING message does not cause a list with the LBS_SORT style to be sorted.</p>
+<pre class="code"><code>FUNCTION InsertString (BYVAL hListBox AS HWND, BYVAL index AS LONG, BYVAL pwszText AS WSTRING PTR) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>index</em></td><td>The zero-based index of the position at which to insert the string. If this parameter is -1, the string is added to the end of the list.</td></tr><tr><td><em>pData</em></td><td>Specifies the value to be associated with the item.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the index of the position at which the string was inserted. If an error occurs, the return value is LB_ERR. If there is insufficient space to store the new string, the return value is LB_ERRSPACE.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The LB_INITSTORAGE message helps speed up the initialization of list boxes that have a large number of items (more than 100). It reserves the specified amount of memory so that subsequent LB_INSERTSTRING messages take the shortest possible time. You can use estimates for the wParam and lParam parameters. If you overestimate, the extra memory is allocated; if you underestimate, the normal allocation is used for items that exceed the requested amount.</p>
+<p>If the list box has WS_HSCROLL style and you insert a string wider than the list box, send an LB_SETHORIZONTALEXTENT message to ensure the horizontal scroll bar appears.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM index AS LONG = CListBox.InsertString(hListBox, 3, "Text string")</code></pre>
+<hr>
+<h4 id="itemfrompoint">ItemFromPoint</h4>
+<p>Gets the zero-based index of the item nearest the specified point in a list box.</p>
+<pre class="code"><code>FUNCTION ItemFromPoint (BYVAL hListBox AS HWND, BYVAL x AS SHORT, BYVAL y AS SHORT) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>x</em></td><td>The x-coordinate of a point, relative to the upper-left corner of the client area of the list box.</td></tr><tr><td><em>x</em></td><td>The y-coordinate of a point, relative to the upper-left corner of the client area of the list box.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM index AS LONG = CListBox.ItemFromPoint(hListBox, x, y)</code></pre>
+<hr>
+<h4 id="removedarkmode">RemoveDarkMode</h4>
+<p>Removes the control dark mode. Only affects the scroll bars.</p>
+<pre class="code"><code>FUNCTION RemoveDarkMode (BYVAL hListBox AS HWND) AS HRESULT</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.RemoveDarkMode(hListBox)</code></pre>
+<hr>
+<h4 id="replacestring">ReplaceString</h4>
+<p>Replaces a string, and his associated data, into a list box.</p>
+<pre class="code"><code>FUNCTION ReplaceString (BYVAL hListBox AS HWND, BYVAL index AS LONG, _
+   BYVAL pwszNewText AS WSTRING PTR, BYVAL pNewData AS ANY PTR = NULL) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>index</em></td><td>The zero-based index of the string to be deleted.</td></tr><tr><td><em>pwszText</em></td><td>A pointer to a null-terminated unicode string.</td></tr><tr><td><em>pNewData</em></td><td>Specifies the value to be associated with the item. Default is NULL.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the index of the position at which the string was inserted. As there is not a message to replace a string, the string is deleted and a new string is inserted.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.ReplaceString(hListBox, 3, "New string")</code></pre>
+<hr>
+<h4 id="resetcontent">ResetContent</h4>
+<p>Removes all items from a list box.</p>
+<pre class="code"><code>SUB ResetContent (BYVAL hListBox AS HWND)</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>If the list box has an owner-drawn style but not the LBS_HASSTRINGS style, the owner of the list box receives a WM_DELETEITEM message for each item in the list box.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.ResetContent(hListBox)</code></pre>
+<hr>
+<h4 id="selectitemdata">SelectItemData</h4>
+<p>Searches a list box for an item that has the specified item data. If a matching item is found, the item is selected.</p>
+<pre class="code"><code>SUB SelectItemData (BYVAL hListBox AS HWND, BYVAL indexStart AS LONG, BYVAL pData AS ANY PTR) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>indexStart</em></td><td>The zero-based index of the item before the first item to be searched. When the search reaches the bottom of the list box, it continues searching from the top of the list box back to the item specified by the <em>indexStart</em> parameter. If <em>indexStart</em> is -1, the entire list box is searched from the beginning.</td></tr><tr><td><em>pData</em></td><td>The data value to find.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.SelectItemData(hListBox, 3, pData)</code></pre>
+<hr>
+<h4 id="selectstring">SelectString</h4>
+<p>Searches a list box for an item that begins with the characters in a specified string. If a matching item is found, the item is selected.</p>
+<pre class="code"><code>FUNCTION SelectString (BYVAL hListBox AS HWND, BYVAL start AS LONG, BYVAL pwszText AS WSTRING PTR) AS LONG
+FUNCTION SelectString (BYVAL hListBox AS HWND, BYVAL index AS LONG =-1) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>start</em></td><td>The zero-based index of the item before the first item to be searched. When the search reaches the bottom of the list box, it continues searching from the top of the list box back to the item specified by the <em>start</em> parameter. If <em>start</em> is -1, the entire list box is searched from the beginning.</td></tr><tr><td><em>pwszText</em></td><td>A pointer to the null-terminated string that contains the prefix for which to search. The search is case independent, so this string can contain any combination of uppercase and lowercase letters.</td></tr><tr><td><em>index</em></td><td>The zero-based index of the item to be selected.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.SelectString(hListBox, 3, "Item 10")
+CListBox.SelectString(hListBox, 5)</code></pre>
+<hr>
+<h4 id="selitemrange">SelItemRange</h4>
+<p>Selects or deselects one or more consecutive items in a multiple-selection list box.</p>
+<pre class="code"><code>FUNCTION SelItemRange (BYVAL hListBox AS HWND, BYVAL fSel AS BOOLEAN, _
+   BYVAL startIndex AS SHORT, BYVAL endIndex AS SHORT) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>fSel</em></td><td>TRUE to select the range of items, or FALSE to deselect it.</td></tr><tr><td><em>startIndex</em></td><td>The zero-based index of the first item to select.</td></tr><tr><td><em>endIndex</em></td><td>The zero-based index of the last item to select.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If an error occurs, the return value is LB_ERR.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Use this message only with multiple-selection list boxes.</p>
+<p>This message can select a range only within the first 65,536 items.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.SelItemRange(hListBox, TRUE, 3, 10)</code></pre>
+<hr>
+<h4 id="selitemrangeex">SelItemRangeEx</h4>
+<p>Selects one or more consecutive items in a multiple-selection list box.</p>
+<pre class="code"><code>FUNCTION SelItemRangeEx (BYVAL hListBox AS HWND, BYVAL startIndex AS LONG, BYVAL endIndex AS LONG) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>startIndex</em></td><td>The zero-based index of the first item to select.</td></tr><tr><td><em>endIndex</em></td><td>The zero-based index of the last item to select.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.SelItemRangeEx(hListBox, TRUE, 3, 10)</code></pre>
+<hr>
+<h4 id="setanchorindex">SetAnchorIndex</h4>
+<p>Sets the anchor item that is, the item from which a multiple selection starts. A multiple selection spans all items from the anchor item to the caret item.</p>
+<pre class="code"><code>FUNCTION SetAnchorIndex (BYVAL hListBox AS HWND, BYVAL index AS LONG) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>index</em></td><td>Specifies the zero-based index of the new anchor item.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the message succeeds, the return value is zero.</p>
+<p>If the message fails, the return value is LB_ERR.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.SetAnchorIndex(hListBox, 4)</code></pre>
+<hr>
+<h4 id="setcaretindex">SetCaretIndex</h4>
+<p>Sets the focus rectangle to the item at the specified index in a multiple-selection list box. If the item is not visible, it is scrolled into view.</p>
+<pre class="code"><code>FUNCTION SetCaretIndex (BYVAL hListBox AS HWND, BYVAL index AS LONG, BYVAL fVisibility AS BOOLEAN = FALSE) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>index</em></td><td>Specifies the zero-based index of the list box item that is to receive the focus rectangle.</td></tr><tr><td><em>fVisibility</em></td><td>If this value is FALSE, the item is scrolled until it is fully visible; if it is TRUE, the item is scrolled until it is at least partially visible.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If an error occurs, the return value is LB_ERR (-1). Otherwise, LB_OKAY (0) is returned.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If this message is sent to a single-selection list box that does not contain a selected item, the caret index is set to the item specified by the <em>fVisibility</em> parameter. If the single-selection list box does contain a selected item, the list box returns LB_ERR.</p>
+<hr>
+<h4 id="setcolumnwidth">SetColumnWidth</h4>
+<p>Sets the width, in pixels, of all columns in a multiple-column list box.</p>
+<pre class="code"><code>SUB SetColumnWidth (BYVAL hListBox AS HWND, BYVAL nWidth AS DWORD) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>nWidth</em></td><td>Specifies the width, in pixels, of all columns.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.SetColumnWidth(hListBox, 100)</code></pre>
+<hr>
+<h4 id="setcount">SetCount</h4>
+<p>Sets the count of items in a list box created with the LBS_NODATA style and not created with the LBS_HASSTRINGS style.</p>
+<pre class="code"><code>SUB SetCount (BYVAL hListBox AS HWND, BYVAL nCount AS DWORD) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>nCount</em></td><td>Specifies the new count of items in the list box.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If an error occurs, the return value is LB_ERR. If there is insufficient memory to store the items, the return value is LB_ERRSPACE.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The LB_SETCOUNT message is supported only by list boxes created with the LBS_NODATA style and not created with the LBS_HASSTRINGS style. All other list boxes return LB_ERR.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.SetCount(hListBox, 200)</code></pre>
+<hr>
+<h4 id="setcursel">SetCurSel</h4>
+<p>Selects a string and scrolls it into view, if necessary. When the new string is selected, the list box removes the highlight from the previously selected string.</p>
+<pre class="code"><code>SUB SetCurSel (BYVAL hListBox AS HWND, BYVAL index AS LONG) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>index</em></td><td>Specifies the zero-based index of the string that is selected. If this parameter is -1, the list box is set to have no selection.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If an error occurs, the return value is LB_ERR. If the wParam parameter is -1, the return value is LB_ERR even though no error occurred.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Use this message only with single-selection list boxes. You cannot use it to set or remove a selection in a multiple-selection list box.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.SetCurSel(hListBox, 200)</code></pre>
+<hr>
+<h4 id="setdarkmode">SetDarkMode</h4>
+<p>Set the control dark mode. Only affects the scroll bars.</p>
+<pre class="code"><code>FUNCTION CListBox.SetDarkMode (BYVAL hListBox AS HWND) AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>If this function succeeds, it returns S_OK. Otherwise, it returns an HRESULT error code.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.SetDarkMode(hListBox)</code></pre>
+<hr>
+<h4 id="sethorizontalextent">SetHorizontalExtent</h4>
+<p>Sets the width, in pixels, by which a list box can be scrolled horizontally (the scrollable width). If the width of the list box is smaller than this value, the horizontal scroll bar horizontally scrolls items in the list box. If the width of the list box is equal to or greater than this value, the horizontal scroll bar is hidden.</p>
+<pre class="code"><code>SUB SetHorizontalExtent (BYVAL hListBox AS HWND, BYVAL cxExtent AS LONG)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>cxExtent</em></td><td>Specifies the number of pixels by which the list box can be scrolled.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>To respond to the LB_SETHORIZONTALEXTENT message, the list box must have been defined with the WS_HSCROLL style.</p>
+<p>Note that a list box does not update its horizontal extent dynamically.</p>
+<p>This message has no effect on a multiple-column list box.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.SetHorizontalExtent(hListBox, 300)</code></pre>
+<hr>
+<h4 id="setitemdata">SetItemData</h4>
+<p>Sets a value associated with the specified item in a list box.</p>
+<pre class="code"><code>FUNCTION SetItemData (BYVAL hListBox AS HWND, BYVAL index AS LONG, BYVAL pData AS ANY PTR) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>index</em></td><td>Specifies the zero-based index of the item. If this value is -1, the <em>pData</em> value applies to all items in the list box.</td></tr><tr><td><em>pData</em></td><td>Specifies the value to be associated with the item.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If an error occurs, the return value is LB_ERR.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If the item is in an owner-drawn list box created without the LBS_HASSTRINGS style, this message replaces the value contained in the <em>pData</em> parameter of the LB_ADDSTRING or LB_INSERTSTRING message that added the item to the list box.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.SetItemData(hListBox, 10, pData)</code></pre>
+<hr>
+<h4 id="setitemheight">SetItemHeight</h4>
+<p>Sets the height, in pixels, of items in a list box. If the list box has the LBS_OWNERDRAWVARIABLE style, this message sets the height of the item specified by the wParam parameter. Otherwise, this message sets the height of all items in the list box.</p>
+<pre class="code"><code>FUNCTION SetItemHeight (BYVAL hListBox AS HWND, BYVAL nHeight AS DWORD) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>index</em></td><td>Specifies the zero-based index of the item in the list box. Use this parameter only if the list box has the LBS_OWNERDRAWVARIABLE style; otherwise, set it to zero.</td></tr><tr><td><em>nHeight</em></td><td>Specifies the height, in pixels, of the item. The maximum height is 255 pixels.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the index or height is invalid, the return value is LB_ERR.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.SetItemHeight(hListBox, 30)</code></pre>
+<hr>
+<h4 id="setlocale">SetLocale</h4>
+<p>Sets the current locale of the list box. You can use the locale to determine the correct sorting order of displayed text (for list boxes with the LBS_SORT style) and of text added by the LB_ADDSTRING message.</p>
+<pre class="code"><code>FUNCTION SetLocale (BYVAL hListBox AS HWND, BYVAL wLocaleID AS DWORD) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>wLocaleID</em></td><td>Specifies the locale identifier that the list box will use for sorting when adding text.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the previous locale identifier. If the wParam parameter specifies a locale that is not installed on the system, the return value is LB_ERR and the current list box locale is not changed.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Use the MAKELCID macro to construct a locale identifier.</p>
+<hr>
+<h4 id="setsel">SetSel</h4>
+<p>Selects an item in a multiple-selection list box and, if necessary, scrolls the item into view.</p>
+<pre class="code"><code>FUNCTION SetSel (BYVAL hListBox AS HWND, BYVAL fSelect AS BOOLEAN, BYVAL index AS LONG = -1) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>fSelect</em></td><td>Specifies how to set the selection. If this parameter is TRUE, the item is selected and highlighted; if it is FALSE, the highlight is removed and the item is no longer selected.</td></tr><tr><td><em>index</em></td><td>Specifies the zero-based index of the item to set. If this parameter is -1, the selection is added to or removed from all items, depending on the value of <em>fSelect</em>, and no scrolling occurs.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.SetSel(hListBox, TRUE, 10)</code></pre>
+<hr>
+<h4 id="settabstops">SetTabStops</h4>
+<p>Sets the tab-stop positions in a list box.</p>
+<pre class="code"><code>FUNCTION SetTabStops (BYVAL hListBox AS HWND, BYVAL cTabs AS LONG, BYVAL prgTabs AS LONG PTR)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>cTabs</em></td><td>Specifies the number of tab stops.</td></tr><tr><td><em>prgTabs</em></td><td>Pointer to the first member of an array of integers containing the tab stops. The integers represent the number of quarters of the average character width for the font that is selected into the list box. For example, a tab stop of 4 is placed at 1.0 character units, and a tab stop of 6 is placed at 1.5 average character units. However, if the list box is part of a dialog box, the integers are in dialog template units. The tab stops must be sorted in ascending order; backward tabs are not allowed.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If all the specified tabs are set, the return value is TRUE; otherwise, it is FALSE.</p>
+<h5 id="remarks">Remarks</h5>
+<p>To respond to the LB_SETTABSTOPS message, the list box must have been created with the LBS_USETABSTOPS style.</p>
+<p>If <em>cTabs</em> is 0 and <em>prgTabs</em> is NULL, the default tab stop is two dialog template units. If <em>cTabs</em> is 1, the list box will have tab stops separated by the distance specified by <em>prgTabs</em>.</p>
+<p>If <em>prgTabs</em> points to more than a single value, a tab stop will be set for each value in <em>prgTabs</em>, up to the number specified by <em>cTabs</em>.</p>
+<p>The values specified by <em>prgTabs</em> are in dialog template units, which are the device-independent units used in dialog box templates. To convert measurements from dialog template units to screen units (pixels), use the <strong>MapDialogRect</strong> function.</p>
+<hr>
+<h4 id="settext">SetText</h4>
+<p>Sets the tab-stop positions in a list box.</p>
+<pre class="code"><code>FUNCTION SetText (BYVAL hListBox AS HWND, BYVAL index AS LONG, BYVAL pwszNewText AS WSTRING PTR) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>index</em></td><td>The zero-based index of the string to be deleted.</td></tr><tr><td><em>pwszNewText</em></td><td>A pointer to a null-terminated unicode string.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the index of the position at which the string was inserted. As there is not a message to replace a string, the string is deleted and a new string is inserted.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.SetText(hListBox, 3, "New string")</code></pre>
+<hr>
+<h4 id="settopindex">SetTopIndex</h4>
+<p>Ensures that a particular item in a list box is visible.</p>
+<pre class="code"><code>FUNCTION SetTopIndex (BYVAL hListBox AS HWND, BYVAL index AS LONG) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>index</em></td><td>The zero-based index of the item in the list box.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If an error occurs, the return value is LB_ERR.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The system scrolls the list box contents so that either the specified item appears at the top of the list box or the maximum scroll range has been reached.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.SetTopIndex(hListBox, 15)</code></pre>
+<hr>
+<h4 id="unselectstring">UnselectString</h4>
+<p>Unselects the specified string in a multiple-selection list box.</p>
+<pre class="code"><code>FUNCTION UnselectString (BYVAL hListBox AS HWND, BYVAL index AS LONG = -1) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hListBox</em></td><td>The handle of the listbox control.</td></tr><tr><td><em>index</em></td><td>Specifies the zero-based index of the item to unselect. If this parameter is -1, the selection is removed from all items and no scrolling occurs.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CListBox.UnselectString(hListBox, 5)</code></pre>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

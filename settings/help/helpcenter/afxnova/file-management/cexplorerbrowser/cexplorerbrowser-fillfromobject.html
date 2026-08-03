@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CExplorerBrowser.FillFromObject — Help Center</title>
+<meta name="description" content="Creates a results folder and fills it with items.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/file-management/cexplorerbrowser/cexplorerbrowser-fillfromobject.html">
+<meta property="og:title" content="CExplorerBrowser.FillFromObject">
+<meta property="og:description" content="Creates a results folder and fills it with items.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/file-management/cexplorerbrowser/cexplorerbrowser-fillfromobject.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/file-management/cexplorerbrowser/cexplorerbrowser-fillfromobject.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cexplorerbrowser-class.html">CExplorerBrowser Class</a></div>
+<h1>CExplorerBrowser.FillFromObject<span class="h1kind">method</span></h1>
+<p class="lede">Creates a results folder and fills it with items.</p>
+<div class="badges"><a class="badge" href="../index.html">File Management</a><span class="badge">method</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION FillFromObject (BYVAL punk AS IUnknown PTR, BYVAL dwFlags AS EXPLORER_BROWSER_FILL_FLAGS) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>punk</code></td><td></td><td>An interface pointer on the source object that will fill the <strong>IResultsFolder</strong>. This can be an <strong>IDataObject</strong> or any object that can be used with <strong>INamespaceWalk</strong>.</td></tr><tr><td><code>dwFlags</code></td><td></td><td>One of the <strong>EXPLORER_BROWSER_FILL_FLAGS</strong> values.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If this method succeeds, it returns <strong>S_OK</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<h2>Description</h2>
+<p>Creates a results folder and fills it with items.</p>
+<p><strong>EXPLORER_BROWSER_FILL_FLAGS</strong></p>
+<h2>Remarks</h2>
+<p>The object passed via interface pointer <em>punk</em> fills <strong>IResultsFolder</strong>.</p>
+<p>The parameter <em>dwFlags</em> can be any of the <strong>EXPLORER_BROWSER_FILL_FLAGS</strong> or any of the flags defined in <strong>BrowseObject</strong>'s <em>wFlags</em> parameter, except for flags that indicate navigation.</p>
+<p>The parameter punk can be any object that <strong>INamespaceWalk</strong> can consume. If called with <strong>EBF_SELECTFROMDATAOBJECT</strong>, <em>punk</em> must be an <strong>IDataObject</strong> and the namespace will be walked at the parent level of the data object, including all peer items, but selecting only those contained in the data object. This flag is most commonly used when <strong>FOLDERSETTINGS</strong> have <em>FWF_CHECKSELECT</em> enabled, allowing check-selection of a set of items that have been compiled in the data object.</p>
+<p><strong>Note</strong>. If a pointer to an item identifier list (PIDL) in the data object is fully qualified, the parent folder cannot be successfully walked, because desktop folder items would be added to the list.</p>
+<p>This method may be called more than once, with each successive call adding additional items to the view. <strong>RemoveAll</strong> may be called to clear the contents of the results folder. This function should be called with <strong>EBF_NODROPTARGET</strong> to prevent users from drag dropping new items into the view, unless this is desired. Setting <strong>EBO_NAVIGATEONCE</strong> is also recommended so that the browser will stay in the <strong>ResultsFolder</strong>, preventing the user from navigating to a folder that may be represented in the data object.</p>
+<p>To manipulate items in the results folder directly, call <strong>GetCurrentView</strong> to get the view from <strong>ExplorerBrowser</strong> and then ask the view for results folder using <strong>GetFolder</strong>. Using the obtained results folder enables manipulation of the data in the folder with more flexibility than with the methods that <strong>IExplorerBrowser</strong> provides.</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/CExplorerBrowser.inc:323</span></li><li>Documented in <span class="srcref">File Management/CExplorerBrowser Class.md</span></li><li>Topic: <a href="../cexplorerbrowser-class.html">CExplorerBrowser Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

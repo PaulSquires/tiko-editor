@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Array Index — Help Center</title>
+<meta name="description" content="Array Index — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/array-index.html">
+<meta property="og:title" content="Array Index">
+<meta property="og:description" content="Array Index — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/array-index.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/array-index.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Array Index</h1>
+<h2>Documentation</h2>
+
+	An array index is the number used to access an <a href="arrays.html">Array</a> of <a href="variables.html">Variables</a> created using the <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code> command.<br>
+<br>
+<div>Description</div><div><br>
+The following examples illustrate the use of array elements.<br>
+<br>
+If we have an array <code>myArray</code> with elements of 1 to 10, filled with random data:<br>
+<pre class="code">
+Index        Data
+1              5
+2              2
+3              6
+4              5
+5              9
+6              1
+7              0
+8              4
+9              5
+10             7
+</pre><br>
+One can access each piece of data separately by pointing to the Index of the array element:<br>
+<code><pre class="code"><span class="tok-kw">Print</span> <span>myArray</span><span>(</span><span class="tok-nu">5</span><span>)</span></pre></code><br>
+Printing the data contained in the fifth element of <code>myArray</code> results in an output of:<br>
+<pre class="code">
+	9
+	</pre>To change the contents of an array, use it like any other <a href="variables.html">Variable</a>:<br>
+<code><pre class="code"><span>myArray</span><span>(</span><span class="tok-nu">3</span><span>)</span> <span>=</span> <span class="tok-nu">0</span></pre></code><br>
+To print the contents of <code>myArray(3)</code>, use the command:<br>
+<code><pre class="code"><span class="tok-kw">Print</span> <span>myArray</span><span>(</span><span class="tok-nu">3</span><span>)</span></pre></code><br>
+Which results in an output of:<br>
+<pre class="code">
+	0
+	</pre>Array elements can be indexed using another <a href="variables.html">Variable</a>. In this example we set all elements in our array to zero:<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">For</span> <span>a</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span>
+
+      <span>myArray</span><span>(</span><span>a</span><span>)</span> <span>=</span> <span class="tok-nu">0</span>
+
+    <span class="tok-kw">Next</span> <span>a</span></pre></code><br>
+To change a random array element to a random value:<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>Index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Dim</span> <span>Value</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span>index</span> <span>=</span> <span class="tok-kw">Int</span><span>(</span><span class="tok-kw">Rnd</span><span>(</span><span class="tok-nu">1</span><span>)</span> <span>*</span> <span class="tok-nu">10</span><span>)</span> <span>+</span> <span class="tok-nu">1</span> <span class="tok-cm">'This line will simply return a random value between 1 and 10</span>
+
+    <span>Value</span> <span>=</span> <span class="tok-kw">Int</span><span>(</span><span class="tok-kw">Rnd</span><span>(</span><span class="tok-nu">1</span><span>)</span> <span>*</span> <span class="tok-nu">10</span><span>)</span> <span>+</span> <span class="tok-nu">1</span> <span class="tok-cm">'This line will do the same</span>
+
+    <span>myArray</span><span>(</span><span>index</span><span>)</span> <span>=</span> <span>Value</span></pre></code><br>
+<br>
+</div><div>Example</div><div><br>
+<code><pre class="code"><span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>PrintArray</span><span>()</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>Numbers</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span>OtherNumbers</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">Dim</span> <span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span>Numbers</span><span>(</span><span class="tok-nu">1</span><span>)</span> <span>=</span> <span class="tok-nu">1</span>
+
+<span>Numbers</span><span>(</span><span class="tok-nu">2</span><span>)</span> <span>=</span> <span class="tok-nu">2</span>
+
+<span>OtherNumbers</span><span>(</span><span class="tok-nu">1</span><span>)</span> <span>=</span> <span class="tok-nu">3</span>
+
+<span>OtherNumbers</span><span>(</span><span class="tok-nu">2</span><span>)</span> <span>=</span> <span class="tok-nu">4</span>
+
+
+
+<span>PrintArray</span> <span>()</span>
+
+
+
+<span class="tok-kw">For</span> <span>a</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span>
+
+ <span class="tok-kw">Print</span> <span>Numbers</span><span>(</span><span>a</span><span>)</span>
+
+<span class="tok-kw">Next</span> <span>a</span>
+
+
+
+<span class="tok-kw">Print</span> <span>OtherNumbers</span><span>(</span><span class="tok-nu">1</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>OtherNumbers</span><span>(</span><span class="tok-nu">2</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>OtherNumbers</span><span>(</span><span class="tok-nu">3</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>OtherNumbers</span><span>(</span><span class="tok-nu">4</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>OtherNumbers</span><span>(</span><span class="tok-nu">5</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>OtherNumbers</span><span>(</span><span class="tok-nu">6</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>OtherNumbers</span><span>(</span><span class="tok-nu">7</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>OtherNumbers</span><span>(</span><span class="tok-nu">8</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>OtherNumbers</span><span>(</span><span class="tok-nu">9</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>OtherNumbers</span><span>(</span><span class="tok-nu">10</span><span>)</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>PrintArray</span> <span>()</span>
+
+ <span class="tok-kw">Dim</span> <span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+ <span class="tok-kw">For</span> <span>a</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span>
+
+   <span class="tok-kw">Print</span> <span>otherNumbers</span><span>(</span><span>a</span><span>)</span>
+
+ <span class="tok-kw">Next</span> <span>a</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+<br>
+</div><div>See also</div><div><br>
+<ul><li> <a href="arrays.html">Arrays Overview</a><br>
+<li> <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code><br>
+<li> <code><a href="../../procedures/procedures/function.html">Function</a></code><br>
+<li> <code><a href="../../procedures/procedures/sub.html">Sub</a></code><br>
+<li> <a href="variables.html">Variables</a> <br>
+<li> <a href="variable-scope.html">Variable Scope</a><br>
+<li> <code><a href="../../language-documentation/variables-and-data-types/standard-data-type-limits.html">Standard Data Type Limits</a></code><br>
+<br>
+</li></li></li></li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Storage Classes — Help Center</title>
+<meta name="description" content="Storage Classes — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/storage-classes.html">
+<meta property="og:title" content="Storage Classes">
+<meta property="og:description" content="Storage Classes — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/storage-classes.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/storage-classes.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Storage Classes</h1>
+<h2>Documentation</h2>
+
+	Visibility and lifetime of variables, objects and arrays<br>
+<br>
+A variable, object or array's storage class determines when and where memory is allocated for it and when that memory is destroyed. There are 2 storage classes in FreeBASIC: <i>automatic</i> and <i>static</i>.<br>
+<br>
+<div>Automatic</div><div><br>
+<br>
+<i>Automatic</i> variable, object and array lifetimes begin at the point of declaration and end when leaving the scope they are declared in.<br>
+<br>
+<i>Automatic</i> entities are guaranteed to have unique storage for each instance of the block in which they are declared. For example, the <i>automatic</i> variables declared within a procedure will be allocated at different addresses and have unique state (value) for each call to the procedure.<br>
+<br>
+<i>Automatic</i> variables, objects and arrays are defined using the <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code>, <code><a href="../../array-functions/procedures/redim.html">ReDim</a></code> and <code><a href="../../variable-declarations/procedures/var.html">Var</a></code> keywords without the <code><a href="../../variable-declarations/procedures/shared.html">Shared</a></code> specifier.<br>
+<br>
+The memory for <i>automatic</i> variables, objects and arrays is allocated on the program stack.<br>
+<br>
+<i>Automatic</i> variables, objects and arrays have no linkage.<br>
+<br>
+</div><div>Static</div><div><br>
+<br>
+<i>Static</i> variable, object and array lifetimes begin at program creation and end with program termination.<br>
+<br>
+<i>Static</i> entities are guaranteed to have the same storage for each instance of the block in which they are declared. For example, the <i>static</i> variables declared within a procedure will be allocated at the same address, and retain their state (value) across each call to the procedure.<br>
+<br>
+<i>Static</i> variables, objects and arrays are declared using the <code><a href="../../variable-declarations/procedures/static.html">Static</a></code> keyword. Entities declared using the <code><a href="../../variable-declarations/procedures/shared.html">Shared</a></code> specifier are implicitly <i>static</i>. All entities declared within a procedure that is declared using the <code><a href="../../variable-declarations/procedures/static.html">Static</a></code> specifier are also implicitly <i>static</i>.<br>
+<br>
+The memory for <i>static</i> variables, objects and arrays is allocated in the <code>.BSS</code> section of the executable, or in the <code>.DATA</code> section if they are initialized when defined. <i>Static</i> variable-length arrays must be declared empty, with an empty subscript range list; their element data is still allocated in the free store (when they are resized), but the internal array data is allocated in the <code>.DATA</code> section of the executable to allow the element data to persist throughout program execution.<br>
+<br>
+<i>Static</i> variables, objects and arrays have internal linkage by default, unless previously declared using the <code><a href="../../modularizing/procedures/extern.html">Extern</a></code> or <code><a href="../../modularizing/procedures/common.html">Common</a></code> keywords.<br>
+<br>
+</div><div>Platform Differences</div><div><br>
+<ul><li>  In DOS and Windows platforms, the size of the program stack can be adjusted at compile-time using the <code><i>-t</i></code> <a href="../../using-the-freebasic-compiler/fbc-command-line.html">command-line switch</a>. In Linux platforms, the size of the program stack can be adjusted at load-time by modifying <code>/etc/security/limits.conf</code>, or on a per-thread basis using the shell builtin <code>ulimit</code>.<br>
+<br>
+</li></ul></div><div>Differences from QB</div><div><br>
+<ul><li> QuickBASIC allows <i>static</i> entities to be declared within procedures and <code>DEF FN</code> routines only.<br>
+<br>
+</li></ul></div><div>See also</div><div><br>
+<ul><li> <code><a href="../../modularizing/procedures/extern.html">Extern</a></code>, <code><a href="../../modularizing/procedures/common.html">Common</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code>, <code><a href="../../array-functions/procedures/redim.html">ReDim</a></code>, <code><a href="../../variable-declarations/procedures/var.html">Var</a></code>, <code><a href="../../variable-declarations/procedures/shared.html">Shared</a></code>, <code><a href="../../variable-declarations/procedures/byref-variables.html">Byref (Variables)</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/static.html">Static</a></code><br>
+<li> <a href="variable-and-procedure-linkage.html">Linkage</a><br>
+<br>
+</li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

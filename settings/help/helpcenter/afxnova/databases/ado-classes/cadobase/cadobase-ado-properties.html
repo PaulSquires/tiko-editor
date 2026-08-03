@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoBase.ADO Properties — Help Center</title>
+<meta name="description" content="Represents a dynamic characteristic of an ADO object that is defined by the provider.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadobase/cadobase-ado-properties.html">
+<meta property="og:title" content="CAdoBase.ADO Properties">
+<meta property="og:description" content="Represents a dynamic characteristic of an ADO object that is defined by the provider.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadobase/cadobase-ado-properties.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadobase/cadobase-ado-properties.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadodb.html">CADODB</a></div>
+<h1>CAdoBase.ADO Properties<span class="h1kind">method</span></h1>
+<p class="lede">Represents a dynamic characteristic of an ADO object that is defined by the provider.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CAdoProperties.inc</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>[Count](#count)</code></td><td></td><td>Retrieves the number of objects of the <strong>Properties</strong> collection.</td></tr><tr><td><code>[Item](#count)</code></td><td></td><td>Indicates a specific member of the <strong>Properties</strong> collection, by name or ordinal number.</td></tr><tr><td><code>[Refresh](#refresh)</code></td><td></td><td>Refreshes the contents of the <strong>Properties</strong> collection.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Represents a dynamic characteristic of an ADO object that is defined by the provider.</p>
+<p>ADO objects have two types of properties: built-in and dynamic.</p>
+<p>Built-in properties are those properties implemented in ADO and immediately available to any new object, using the <em>MyObject.Property</em> syntax. They do not appear as <strong>Property</strong> objects in an object's <strong>Properties</strong> collection, so although you can change their values, you cannot modify their characteristics.</p>
+<p>Dynamic properties are defined by the underlying data provider, and appear in the <strong>Properties</strong> collection for the appropriate ADO object. For example, a property specific to the provider may indicate if a <strong>Recordset</strong> object supports transactions or updating. These additional properties will appear as <strong>Property</strong> objects in that <strong>Recordset</strong> object's <strong>Properties</strong> collection. Dynamic properties can be referenced only through the collection, using the <em>MyObject.Properties(0)</em> or <em>MyObject.Properties("Name")</em> syntax.</p>
+<p>You cannot delete either kind of property.</p>
+<p>A dynamic <strong>Property</strong> object has four built-in properties of its own:</p>
+<ul><li>The <strong>Name</strong> property is a string that identifies the property.</li><li>The <strong>Type_</strong> property is an integer that specifies the property data type.</li><li>The <strong>Value</strong> property is a variant that contains the property setting. <strong>Value</strong> is the default property for a <strong>Property</strong> object.</li><li>The <strong>Attributes</strong> property is a long value that indicates characteristics of the property specific to the provider.</li></ul>
+<p>The <strong>Properties</strong> collection contains all the <strong>Property</strong> objects for a specific instance of an object.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CAdoProperties.inc</code></li><li>Documented in <span class="srcref">Databases/ADO Classes/ADO.md</span></li><li>Topic: <a href="../cadodb.html">CADODB</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

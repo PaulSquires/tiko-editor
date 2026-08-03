@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScreenList — Help Center</title>
+<meta name="description" content="Finds available fullscreen video modes">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/screen-functions/procedures/screenlist.html">
+<meta property="og:title" content="ScreenList">
+<meta property="og:description" content="Finds available fullscreen video modes">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/screen-functions/procedures/screenlist.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/screen-functions/procedures/screenlist.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>ScreenList<span class="h1kind">function</span></h1>
+<p class="lede">Finds available fullscreen video modes</p>
+<div class="badges"><a class="badge" href="../index.html">Screen Functions</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Function ScreenList ( ByVal depth As Long = 0 ) As Long</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>depth</code></td><td></td><td>the color depth for which the list of modes is requested  (supported depths are <code>8</code>, <code>15</code>, <code>16</code>, <code>24</code> and <code>32</code>)</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+returns <code>0</code>, when there are no more resolutions to read.<br>
+<br>
+
+<h2>Description</h2>
+<br>
+It works like the <code><a href="../../operating-system-functions/procedures/dir.html">Dir</a></code> function: the first call to the function requires the <code><i>depth</i></code> parameter to be specified, it  returns the lowest supported resolution for the requested depth. Further calls to <code><b>ScreenList</b></code> without arguments returns the next resolutions. When no more resolutions are available, <code><a href="screenlist.html">ScreenList</a></code> returns <code>0</code>.<br>
+<br>
+The result of <code><a href="screenlist.html">ScreenList</a></code> is encoded as a 32 bit value, with the screen width as the <a href="../../bit-manipulation/procedures/hiword.html">High Word</a> and the height as the <a href="../../bit-manipulation/procedures/loword.html">Low Word</a>.<br>
+<br>
+Resolutions are returned from lowest to highest supported ones. <br>
+<br>
+It is safe to call this function before any graphics mode has been set.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<i>result</i> = <b>ScreenList</b>( [ <i>depth</i> ] )<br>
+</code><br>
+
+<h3>Dialect Differences</h3><br>
+<ul><li> Not available in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect unless referenced with the alias <code><b>__Screenlist</b></code>.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="screen-graphics.html">Screen (Graphics)</a></code><br>
+<li> <code><a href="screenres.html">ScreenRes</a></code><br>
+<br>
+</li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>mode</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>w</span><span>,</span> <span>h</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Resolutions supported at 8 bits per pixel:&quot;</span>
+
+
+
+<span>mode</span> <span>=</span> <span class="tok-kw">ScreenList</span><span>(</span><span class="tok-nu">8</span><span>)</span>
+
+<span class="tok-kw">While</span> <span>(</span><span>mode</span> <span>&lt;&gt;</span> <span class="tok-nu">0</span><span>)</span>
+
+    <span>w</span> <span>=</span> <span class="tok-kw">HiWord</span><span>(</span><span>mode</span><span>)</span>
+
+    <span>h</span> <span>=</span> <span class="tok-kw">LoWord</span><span>(</span><span>mode</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>w</span> <span>&amp;</span> <span>&quot;x&quot;</span> <span>&amp;</span> <span>h</span>
+
+    <span>mode</span> <span>=</span> <span class="tok-kw">ScreenList</span><span>()</span>
+
+<span class="tok-kw">Wend</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgScreenlist.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

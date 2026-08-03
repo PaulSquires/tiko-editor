@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdiPlusPathIterator — Help Center</title>
+<meta name="description" content="GpPathIterator">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipluspathiterator.html">
+<meta property="og:title" content="GdiPlusPathIterator">
+<meta property="og:description" content="GpPathIterator">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipluspathiterator.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipluspathiterator.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../gdiplus-objects.html">GdiPlus Objects</a></div>
+<h1>GdiPlusPathIterator<span class="h1kind">operator</span></h1>
+<p class="lede">GpPathIterator</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">operator</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PRIVATE OPERATOR GdiPlusPathIterator.@ () AS GpPathIterator PTR PTR</code></pre>
+<h2>Description</h2>
+<p>The PathIterator functions allow to isolate selected subsets of the path stored in a GraphicsPath object. A path consists of one or more figures. You can use a GraphicsPathIterator to isolate one or more of those figures. A path can also have markers that divide the path into sections. You can use a GraphicsPathIterator object to isolate one or more of those sections.</p>
+<h2>Examples</h2>
+<p>' ======================================================================================== TYPE GdiPlusPathIterator Public: m_PathIretator AS GpPathIterator PTR DECLARE CONSTRUCTOR (BYVAL path AS GpPath PTR) DECLARE DESTRUCTOR DECLARE OPERATOR @ () AS GpPathIterator PTR PTR DECLARE OPERATOR CAST () AS GpPathIterator PTR END TYPE ' ========================================================================================</p>
+<p>' ===================================================================================== ' Creates a new CGpGraphicsPathIterator object and associates it with a CGpGraphicsPath object. ' ===================================================================================== PRIVATE CONSTRUCTOR GdiPlusPathIterator (BYVAL path AS GpPath PTR) SetLasTError(GdipCreatePathIter(@m_pathIretator, path)) END CONSTRUCTOR ' ===================================================================================== ' ======================================================================================== ' Cleanup ' ======================================================================================== PRIVATE DESTRUCTOR GdiPlusPathIterator IF m_PathIretator THEN GdipDeletePathIter(m_PathIretator) END DESTRUCTOR ' ======================================================================================== ' ======================================================================================== ' Returns a pointer to the GpPathIterator object ' ======================================================================================== PRIVATE OPERATOR * (BYREF pathIterator AS GdiPlusPathIterator) AS GpPathIterator PTR RETURN pathIterator.m_PathIretator END OPERATOR ' ======================================================================================== ' ======================================================================================== ' Returns the address of a pointer to the GpPathIterator object ' ======================================================================================== PRIVATE OPERATOR GdiPlusPathIterator.@ () AS GpPathIterator PTR PTR RETURN @m_PathIretator END OPERATOR ' ======================================================================================== ' ======================================================================================== PRIVATE OPERATOR GdiPlusPathIterator.CAST () AS GpPathIterator PTR RETURN m_PathIretator END OPERATOR ' ========================================================================================</p>
+<p>' ======================================================================================== ' This example demonstrates ' How to build a path with multiple figures. ' How to use PathIterator to inspect each figure’s bounds and closure status. ' ======================================================================================== SUB Example_CreatePathIter (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GdiPlusGraphics = hdc ' // Set the scale transform graphics.ScaleTransform</p>
+<p>' Create a GraphicsPath with two figures DIM path AS GdiPlusGraphicsPath = FillModeAlternate</p>
+<p>' First figure: triangle (closed) GdipAddPathLine(path, 10, 10, 100, 10) GdipAddPathLine(path, 100, 10, 55, 80) GdipClosePathFigure(path)</p>
+<p>' Second figure: open zigzag GdipStartPathFigure(path) GdipAddPathLine(path, 120, 10, 180, 50) GdipAddPathLine(path, 180, 50, 120, 90)</p>
+<p>' Create PathIterator DIM iterator AS GdiPlusPathIterator = *path</p>
+<p>' Get subpath count DIM subpathCount AS LONG GdipPathIterGetSubpathCount(iterator, @subpathCount)</p>
+<p>' Create font and brush for drawing text DIM fontFamily AS GdiPlusFontFamily ="Arial" DIM font AS GdiPlusFont = GdiPlusFont(*fontFamily, AfxGdipPointsToPixels(12, TRUE), FontStyleRegular, UnitPixel) DIM brush AS GdiPlusSolidBrush = ARGB_BLACK</p>
+<p>' Iterate through subpaths and draw info DIM resultCount AS LONG, startIdx AS LONG, endIdx AS LONG DIM isClosed AS BOOL DIM yOffset AS SINGLE = 10.0</p>
+<p>FOR i AS LONG = 1 TO subpathCount</p>
+<pre class="code"><code>GdipPathIterNextSubpath(iterator, @resultCount, @startIdx, @endIdx, @isClosed)
+  DIM info AS STRING
+  info = "Subpath " &amp; i &amp; ": Start=" &amp; startIdx &amp; ", End=" &amp; endIdx &amp; ", Closed=" &amp; IIF(isClosed, "True", "False")
+  DIM layout AS GpRectF = (10 * graphics.dpiRatioX, yOffset * graphics.dpiRatioY, 300 * graphics.dpiRatioX, 20 * graphics.dpiRatioY)
+  GdipDrawString(graphics, info, -1, font, @layout, NULL, brush)
+  yOffset += 20.0</code></pre>
+<p>NEXT</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdipObjects.inc:1687</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlus Objects.md</span></li><li>Topic: <a href="../gdiplus-objects.html">GdiPlus Objects</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

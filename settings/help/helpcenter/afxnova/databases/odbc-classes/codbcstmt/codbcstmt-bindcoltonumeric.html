@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CODBCStmt.BindColToNumeric — Help Center</title>
+<meta name="description" content="CODBCStmt.BindColToNumeric — AfxNova method reference.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbcstmt/codbcstmt-bindcoltonumeric.html">
+<meta property="og:title" content="CODBCStmt.BindColToNumeric">
+<meta property="og:description" content="CODBCStmt.BindColToNumeric — AfxNova method reference.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbcstmt/codbcstmt-bindcoltonumeric.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/odbc-classes/codbcstmt/codbcstmt-bindcoltonumeric.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../codbcstmt-class.html">CODBCStmt Class</a></div>
+<h1>CODBCStmt.BindColToNumeric<span class="h1kind">method</span></h1>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CODBCStmt.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION BindColToNumeric (BYVAL ColNumber AS SQLUSMALLINT, BYREF TargetValue AS ZSTRING, BYVAL StrLen_or_IndPtr AS ANY PTR) AS SQLRETURN</code></pre>
+<div class="note">Also documented as <code>BindCol</code> — one description covers them all.</div>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>ColNumber</code></td><td></td><td>Number of the result set column to bind. Columns are numbered in increasing column order starting at 0, where column 0 is the bookmark column. If bookmarks are not used — that is, the SQL_ATTR_USE_BOOKMARKS statement attribute is set to SQL_UB_OFF — then column numbers start at 1.</td></tr><tr><td><code>TargetValue</code></td><td></td><td>Pointer to the data buffer to bind to the column. <strong>Fetch</strong> and <strong>FetchScroll</strong> return data in this buffer. <strong>BulkOperations</strong> returns data in this buffer when <em>Operation</em> is SQL_FETCH_BY_BOOKMARK; it retrieves data from this buffer when <em>Operation</em> is SQL_ADD or SQL_UPDATE_BY_BOOKMARK. <strong>SetPos</strong> returns data in this buffer when <em>Operation</em> is SQL_REFRESH; it retrieves data from this buffer when <em>Operation</em> is SQL_UPDATE.<br>If <em>TargetValue</em> is a null pointer, the driver unbinds the data buffer for the column. An application can unbind all columns by calling <strong>UnbindColumns</strong> or <strong>FreeStmt</strong> with the SQL_UNBIND option. An application can unbind the data buffer for a column but still have a length/indicator buffer bound for the column, if the <em>TargetValue</em> argument in the call to <strong>BindCol</strong> is a null pointer but the <em>StrLen_or_IndPtr</em> argument is a valid value.</td></tr><tr><td><code>StrLen_or_IndPtr</code></td><td></td><td>Pointer to the length/indicator buffer to bind to the column. <strong>Fetch</strong> and <strong>FetchScroll</strong> return a value in this buffer. <strong>BulkOperations</strong> retrieves a value from this buffer when <em>Operation</em> is SQL_ADD, SQL_UPDATE_BY_BOOKMARK, or SQL_DELETE_BY_BOOKMARK. <strong>BulkOperations</strong> returns a value in this buffer when <em>Operation</em> is SQL_FETCH_BY_BOOKMARK. <strong>SetPos</strong> returns a value in this buffer when <em>Operation</em> is SQL_REFRESH; it retrieves a value from this buffer when <em>Operation</em> is SQL_UPDATE.<br><br><strong>Fetch</strong>, <strong>FetchScroll</strong>, <strong>BulkOperations</strong>, and <strong>SetPos</strong> can return the following values in the length/indicator buffer:<br><ul><li>The length of the data available to return</li><li>SQL_NO_TOTAL</li><li>SQL_NULL_DATA</li></ul>The application can place the following values in the length/indicator buffer for use with <strong>BulkOperations</strong> or <strong>SetPos</strong>:<ul><li>The length of the data being sent</li><li>SQL_NTS</li><li>SQL_NULL_DATA</li><li>SQL_DATA_AT_EXEC</li><li>The result of the SQL_LEN_DATA_AT_EXEC macro</li><li>SQL_COLUMN_IGNORE</li></ul>If the indicator buffer and the length buffer are separate buffers, the indicator buffer can return only SQL_NULL_DATA, while the length buffer can return all other values.<br><br>If <em>StrLen_or_IndPtr</em> is a null pointer, no length or indicator value is used. This is an error when fetching data and the data is NULL.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>SQL_SUCCESS, SQL_SUCCESS_WITH_INFO, SQL_INVALID_HANDLE, or SQL_ERROR.</p>
+<h2>Description</h2>
+<p>Binds application data buffers to columns in the result set.</p>
+<h2>Example</h2>
+<p>#include once "AfxNova/COdbc.inc" USING AfxNova</p>
+<p>' // Create a connection object and connect with the database DIM wszConStr AS WSTRING * 260 = "DRIVER={Microsoft Access Driver (*.mdb)};DBQ=biblio.mdb" DIM pDbc AS CODBC = wszConStr IF pDbc.Handle = NULL THEN PRINT "Unable to create the connection handle" : SLEEP : END</p>
+<p>' // Allocate an statement object DIM pStmt AS COdbcStmt = @pDbc IF pStmt.Handle = NULL THEN PRINT "Unable to create the statement handle" : SLEEP : END</p>
+<p>' // Cursor type pStmt.SetMultiuserKeysetCursor ' // Bind the columns DIM AS LONG lAuId, cbAuId pStmt.BindCol(1, @lAuId, @cbAuId) DIM wszAuthor AS WSTRING * 260, cbAuthor AS LONG pStmt.BindCol(2, @wszAuthor, SIZEOF(wszAuthor), @cbAuthor) DIM iYearBorn AS SHORT, cbYearBorn AS LONG pStmt.BindCol(3, @iYearBorn, @cbYearBorn)</p>
+<p>' // Generate a result set pStmt.ExecDirect ("SELECT * FROM Authors ORDER BY Author")</p>
+<p>' // Parse the result set DIM dwsOutput AS DWSTRING DO ' // Fetch the record IF pStmt.Fetch = FALSE THEN EXIT DO ' // Get the values of the columns and display them dwsOutput = "" dwsOutput += pStmt.GetData(1) &amp; " " dwsOutput += pStmt.GetData(2) &amp; " " dwsOutput += pStmt.GetData(3) PRINT dwsOutput LOOP</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CODBCStmt.inc</code></li><li>Defined in <span class="srcref">AfxNova/COdbcStmt.inc:538</span></li><li>Documented in <span class="srcref">Databases/ODBC Classes/CODBCStmt Class.md</span></li><li>Topic: <a href="../codbcstmt-class.html">CODBCStmt Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAxHost.Constructor — Help Center</title>
+<meta name="description" content="Creates an instance of the OLE container using a ProgId.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/com/caxhost/caxhost-constructor.html">
+<meta property="og:title" content="CAxHost.Constructor">
+<meta property="og:description" content="Creates an instance of the OLE container using a ProgId.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/com/caxhost/caxhost-constructor.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/com/caxhost/caxhost-constructor.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../caxhost-class.html">CAxHost Class</a></div>
+<h1>CAxHost.Constructor<span class="h1kind">constructor</span></h1>
+<p class="lede">Creates an instance of the OLE container using a ProgId.</p>
+<div class="badges"><a class="badge" href="../index.html">COM</a><span class="badge">constructor</span><span class="badge">CaxHost.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>CONSTRUCTOR CAxHost (BYVAL pWindow AS CWindow PTR, BYVAL cID AS LONG_PTR, BYREF wszProgID AS WSTRING, BYVAL x AS LONG = 0, BYVAL y AS LONG = 0, BYVAL nWidth AS LONG = 0, BYVAL nHeight AS LONG = 0, BYVAL dwStyle AS DWORD = 0, BYVAL dwExStyle AS DWORD = 0, BYVAL pAmbientDisp AS CAXHOST_AMBIENTDISP PTR = NULL)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR CAxHost (BYVAL pWindow AS CWindow PTR, BYVAL cID AS INTEGER, BYREF wszProgID AS WSTRING, BYREF wszLicKey AS WSTRING, BYVAL x AS LONG = 0, BYVAL y AS LONG = 0, BYVAL nWidth AS LONG = 0, BYVAL nHeight AS LONG = 0, BYVAL dwStyle AS DWORD = 0, BYVAL dwExStyle AS DWORD = 0, BYVAL pAmbientDisp AS CAXHOST_AMBIENTDISP PTR = NULL)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>pWindow</code></td><td></td><td>Pointer to the instance of the <strong>CWindow</strong> class used to create the form.</td></tr><tr><td><code>cID</code></td><td></td><td>The identifier of the control. It must be unique.</td></tr><tr><td><code>wszProgID</code></td><td></td><td>The <strong>ProgID</strong> of the object to create, such "MSCAL.Calendar".</td></tr><tr><td><code>wszLicKey</code></td><td></td><td>The license key of the control, if the control is licensed.</td></tr><tr><td><code>x, y</code></td><td></td><td>The coordinates of the upper-left corner of the window relative to the upper-left corner of the parent window's client area.</td></tr><tr><td><code>nWidth</code></td><td></td><td>The width of the window.</td></tr><tr><td><code>nHeight</code></td><td></td><td>The height of the window.</td></tr><tr><td><code>dwStyle</code></td><td></td><td>The style of the window being created.</td></tr><tr><td><code>dwExStyle</code></td><td></td><td>The extended style of the window being created.</td></tr><tr><td><code>pAmbientDisp</code></td><td></td><td>Pointer to a <strong>CAXHOST_AMBIENTDISP</strong> structure.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Creates an instance of the OLE container using a ProgId.</p>
+<h2>Examples</h2>
+<p>#define UNICODE #include once "AfxNova/DVARIANT.inc" #INCLUDE ONCE "AfxNova/CWindow.inc" #include once "AfxNova/CAxHost.inc" USING AfxNova</p>
+<p>DECLARE FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _</p>
+<pre class="code"><code>BYVAL hPrevInstance AS HINSTANCE, _
+                       BYVAL pwszCmdLine AS WSTRING PTR, _
+                       BYVAL nCmdShow AS LONG) AS LONG</code></pre>
+<p>END wWinMain(GetModuleHandleW(NULL), NULL, wCommand(), SW_NORMAL)</p>
+<p>' // Forward declaration DECLARE FUNCTION WndProc (BYVAL hwnd AS HWND, BYVAL uMsg AS UINT, BYVAL wParam AS WPARAM, BYVAL lParam AS LPARAM) AS LRESULT</p>
+<p>CONST IDC_WEBBROWSER = 1001</p>
+<p>' ======================================================================================== ' Main ' ======================================================================================== FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _</p>
+<pre class="code"><code>BYVAL hPrevInstance AS HINSTANCE, _
+               BYVAL pwszCmdLine AS WSTRING PTR, _
+               BYVAL nCmdShow AS LONG) AS LONG</code></pre>
+<p>' // Set process DPI aware SetProcessDpiAwareness(PROCESS_SYSTEM_DPI_AWARE) ' // Enable visual styles without including a manifest file AfxEnableVisualStyles</p>
+<p>' // Creates the main window DIM pWindow AS CWindow = "MyClassName"   ' Use the name you wish DIM hWin AS HWND = pWindow.Create(NULL, "CWindow - CAxHost -WebBrowser", @WndProc) ' // Sizes it by setting the wanted width and height of its client area pWindow.SetClientSize(900, 450) ' // Centers the window pWindow.Center</p>
+<p>' // Create an instance of the WebBrowser control DIM pHost AS CAxHost = CAxHost(@pWindow, IDC_WEBBROWSER, "Shell.Explorer", 0, 0, pWindow.ClientWidth, pWindow.ClientHeight) ' // Get a direct pointer to the Afx_IWebBrowser2 interface DIM hWb AS HWND = GetDlgItem(pWindow.hWindow, IDC_WEBBROWSER) DIM pWb AS Afx_IWebBrowser2 PTR = CAST(ANY PTR, AfxCAxHostDispPtr(hWb)) IF pWb THEN</p>
+<pre class="code"><code>DIM dvUrl AS DVARIANT = "http://www.jose.it-berater.org/index.html"
+  DIM hr AS HRESULT = pWb-&gt;Navigate2(dvUrl, NULL, NULL, NULL, NULL)</code></pre>
+<p>END IF</p>
+<p>' // Displays the window and dispatches the Windows messages FUNCTION = pWindow.DoEvents(nCmdShow)</p>
+<p>END FUNCTION ' ========================================================================================</p>
+<p>' ======================================================================================== ' Main window procedure ' ======================================================================================== FUNCTION WndProc (BYVAL hwnd AS HWND, BYVAL uMsg AS UINT, BYVAL wParam AS WPARAM, BYVAL lParam AS LPARAM) AS LRESULT</p>
+<p>SELECT CASE uMsg</p>
+<pre class="code"><code>' // If an application processes this message, it should return zero to continue
+  ' // creation of the window. If the application returns –1, the window is destroyed
+  ' // and the CreateWindowExW function returns a NULL handle.
+  CASE WM_CREATE
+     RETURN 0
+
+  ' // Sent when the user selects a command item from a menu, when a control sends a
+  ' // notification message to its parent window, or when an accelerator keystroke is translated.
+  CASE WM_COMMAND
+     SELECT CASE CBCTL(wParam, lParam)
+        CASE IDCANCEL
+           ' // If ESC key pressed, close the application by sending an WM_CLOSE message
+           IF CBCTLMSG(wParam, lParam) = BN_CLICKED THEN SendMessageW(hwnd, WM_CLOSE, 0, 0)
+     END SELECT
+     RETURN 0
+
+  CASE WM_DESTROY
+     ' // End the application by sending an WM_QUIT message
+     PostQuitMessage(0)
+     RETURN 0</code></pre>
+<p>END SELECT</p>
+<p>' // Default processing of Windows messages FUNCTION = DefWindowProcW(hwnd, uMsg, wParam, lParam)</p>
+<p>END FUNCTION ' ========================================================================================</p>
+<p>The following example embeds an instance of the WebBrowser control and navigates to a site:</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CaxHost.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAxHost.inc:206</span></li><li>Documented in <span class="srcref">COM/CAxHost Class.md</span></li><li>Topic: <a href="../caxhost-class.html">CAxHost Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

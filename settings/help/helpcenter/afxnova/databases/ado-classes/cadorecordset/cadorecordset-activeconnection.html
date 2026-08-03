@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CADORecordset.ActiveConnection — Help Center</title>
+<meta name="description" content="Sets or returns a BSTR value that contains a definition for a connection if the connection is closed, or a Variant containing the current **Connection** object if the connection is open. Default is a null object reference.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecordset/cadorecordset-activeconnection.html">
+<meta property="og:title" content="CADORecordset.ActiveConnection">
+<meta property="og:description" content="Sets or returns a BSTR value that contains a definition for a connection if the connection is closed, or a Variant containing the current **Connection** object if the connection is open. Default is a null object reference.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecordset/cadorecordset-activeconnection.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadorecordset/cadorecordset-activeconnection.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadorecordset-class.html">CADORecordset Class</a></div>
+<h1>CADORecordset.ActiveConnection<span class="h1kind">property</span></h1>
+<p class="lede">Sets or returns a BSTR value that contains a definition for a connection if the connection is closed, or a Variant containing the current **Connection** object if the connection is open. Default is a null object reference.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">property</span><span class="badge">CADORecordset.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PROPERTY ActiveConnection (BYREF vConn AS DVARIANT)</code></pre>
+<pre class="code sig"><code>PROPERTY ActiveConnection (BYVAL pconn AS Afx_ADOConnection PTR)</code></pre>
+<pre class="code sig"><code>PROPERTY ActiveConnection (BYREF pconn AS CAdoConnection)</code></pre>
+<pre class="code sig"><code>PROPERTY ActiveConnection () AS Afx_ADOConnection</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>vConn</code></td><td></td><td>An string value that contains a definition for a connection if the connection is closed, or a Variant containing the current <strong>Connection</strong> object if the connection is open.</td></tr><tr><td><code>pconn</code></td><td></td><td>A reference to the <strong>Connection</strong> object or to the <strong>CAdoConnection</strong> class.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>A reference to the <strong>Afx_ADOConnection</strong> object. You must release it calling the <strong>Release</strong> method when no longer needed.</p>
+<h2>Description</h2>
+<p>Sets or returns an string value that contains a definition for a connection if the connection is closed, or a Variant containing the current <strong>Connection</strong> object if the connection is open. Default is a null object reference.</p>
+<h2>Remarks</h2>
+<p>Use the <strong>ActiveConnection</strong> property to determine the <strong>Connection</strong> object over which the specified <code>Recordset</code> will be opened.</p>
+<p>For open <code>Recordset</code> objects or for <code>Recordset</code> objects whose <strong>Source</strong> property is set to a valid <code>Command</code> object, the <strong>ActiveConnection</strong> property is read-only. Otherwise, it is read/write.</p>
+<p>You can set this property to a valid <strong>Connection</strong> object or to a valid connection string. In this case, the provider creates a new <strong>Connection</strong> object using this definition and opens the connection. Additionally, the provider may set this property to the new <strong>Connection</strong> object to give you a way to access the <strong>Connection</strong> object for extended error information or to execute other commands.</p>
+<p>If you use the <strong>ActiveConnection</strong> argument of the <strong>Open</strong> method to open a <code>Recordset</code> object, the <strong>ActiveConnection</strong> property will inherit the value of the argument.</p>
+<p>If you set the <strong>Source</strong> property of the <code>Recordset</code> object to a valid <code>Command</code> object variable, the <strong>ActiveConnection</strong> property of the <code>Recordset</code> inherits the setting of the <code>Command</code> object's <strong>ActiveConnection</strong> property.</p>
+<h2>Examples</h2>
+<p>#include once "AfxNova/CADODB.inc" USING AfxNova</p>
+<p>' // Create a Recordset object DIM pRecordset AS CAdoRecordset ' // Set the active connection pRecordset.ActiveConnection = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=biblio.mdb" ' // Open the recordset DIM dvSource AS DVARIANT = "SELECT TOP 20 * FROM Authors ORDER BY Author" DIM hr AS HRESULT = pRecordset.Open(dvSource)</p>
+<p>#include once "AfxNova/CADODB.inc" USING AfxNova</p>
+<p>' // Create a Connection object DIM pConnection AS CAdoConnection ' // Create a Recordset object DIM pRecordset AS CAdoRecordset ' // Open the connection pConnection.Open("Provider=Microsoft.Jet.OLEDB.4.0;Data Source=biblio.mdb") ' // Set the active connection pRecordset.ActiveConnection = pConnection ' // Open the recordset DIM dvSource AS CDVARIANTVAR = "SELECT TOP 20 * FROM Authors ORDER BY Author" DIM hr AS HRESULT = pRecordset.Open(dvSource)</p>
+<p>#include once "AfxNova/CADODB.inc" USING AfxNova</p>
+<p>' // Open the connection DIM pConnection AS CAdoConnection PTR = NEW CAdoConnection pConnection-&gt;Open "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=biblio.mdb"</p>
+<p>' // Open the recordset DIM pRecordset AS CAdoRecordset ' // Setting the cursor location to client side is important to get a disconnected recordset pRecordset.CursorLocation = adUseClient ' // Open the recordset DIM dvSource AS DVARIANT = "SELECT * FROM Authors" pRecordset.Open(dvSource, pConnection, adOpenKeyset, adLockOptimistic, adCmdText)</p>
+<p>' // Disconnect the recordset by setting its active connection to null. ' // Casting to Afx_ADOConnection PTR is needed to get the correct overloaded method called; ' // otherwise, the DVARIANT version will be called and it will fail. pRecordset.ActiveConnection = cast(Afx_ADOConnection PTR, NULL)</p>
+<p>' // Close and release the connection Delete pConnection</p>
+<p>' // Parse the recordset DO WHILE NOT pRecordset.EOF ' // Get the content of the "Author" column DIM dvRes AS DVARIANT = pRecordset.Collect("Author") PRINT dvRes ' // Fetch the next row IF pRecordset.MoveNext &lt;&gt; S_OK THEN EXIT DO LOOP</p>
+<p>' // === Close the recordset pRecordset.Close</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CADORecordset.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoRecordset.inc:416</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoRecordset Class.md</span></li><li>Topic: <a href="../cadorecordset-class.html">CADORecordset Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

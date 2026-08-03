@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AfxStrParse — Help Center</title>
+<meta name="description" content="Returns a delimited field from a string expression.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/string-management/procedures/afxstrparse.html">
+<meta property="og:title" content="AfxStrParse">
+<meta property="og:description" content="Returns a delimited field from a string expression.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/string-management/procedures/afxstrparse.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/string-management/procedures/afxstrparse.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../string-procedures-2.html">String Procedures</a></div>
+<h1>AfxStrParse<span class="h1kind">function</span></h1>
+<p class="lede">Returns a delimited field from a string expression.</p>
+<div class="badges"><a class="badge" href="../index.html">String Management</a><span class="badge">function</span><span class="badge">AfxStr.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION AfxStrParse (BYREF wszMainStr AS CONST WSTRING, BYVAL nPosition AS LONG = 1, BYREF wszDelimiter AS CONST WSTRING = &quot;,&quot;) AS DWSTRING</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszMainStr</code></td><td></td><td>The string to be parsed.</td></tr><tr><td><code>nPosition</code></td><td></td><td>Starting position. If <em>nPosition</em> is zero or is outside of the actual field count, an empty string is returned. If <em>nPosition</em> is negative, fields are searched from the right to left of the <em>wszMainStr</em>.</td></tr><tr><td><code>wszDelimiter</code></td><td></td><td>A string of one or more characters that must be fully matched to be successful.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Returns a delimited field from a string expression.</p>
+<h2>Example</h2>
+<p>DIM dws AS DWSTRING = AfxStrParse("one,two,three", 2)   ' Returns "two" DIM dws AS DWSTRING = AfxStrParse("one;two,three", 1, ";")   ' Returns "one"</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>AfxStr.inc</code></li><li>Defined in <span class="srcref">AfxNova/AfxStr.inc:1201</span></li><li>Documented in <span class="srcref">String Management/String Procedures.md</span></li><li>Topic: <a href="../string-procedures-2.html">String Procedures</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

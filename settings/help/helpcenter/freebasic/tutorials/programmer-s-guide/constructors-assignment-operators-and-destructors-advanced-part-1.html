@@ -1,0 +1,1150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Constructors, &#x27;=&#x27; Assignment-Operators, and Destructors (advanced, part #1) — Help Center</title>
+<meta name="description" content="Constructors, &#x27;=&#x27; Assignment-Operators, and Destructors (advanced, part #1) — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/constructors-assignment-operators-and-destructors-advanced-part-1.html">
+<meta property="og:title" content="Constructors, &#x27;=&#x27; Assignment-Operators, and Destructors (advanced, part #1)">
+<meta property="og:description" content="Constructors, &#x27;=&#x27; Assignment-Operators, and Destructors (advanced, part #1) — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/constructors-assignment-operators-and-destructors-advanced-part-1.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/constructors-assignment-operators-and-destructors-advanced-part-1.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Constructors, &#x27;=&#x27; Assignment-Operators, and Destructors (advanced, part #1)</h1>
+<h2>Documentation</h2>
+
+	Proper use of <b>Constructors</b>, '=' <b>Assignment-Operators</b>, and <b>Destructors</b>, which are the special member procedures for constructing/initializing, assigning, and destroying objects (part #1).<br>
+<a></a><br>
+<b>Preamble:</b><br>
+<br>
+Some member procedures, which have a predefined name in the Type, have a specific role that is constructing, assigning, and destroying objects. These are the constructors, the '=' assignment-operators, and the destructor.<br>
+Of these, some are special because a version will be automatically built by the compiler if they are needed and not explicitly defined by the user. These are the default-constructor, the copy-constructor, the copy-assignment operator, and the destructor.<br>
+<br>
+It is therefore often necessary that user defines its own explicit versions in order to execute actions that must take place during all lifetime of an object:<br>
+<div class="indent"><b>-</b> For example, if the object contains dynamically allocated variables, it is necessary to reserve them memory when the object is created.<br>
+<b>-</b> For object assignment, the memory must often be reallocated.<br>
+<b>-</b> At the destruction of the object, it is necessary to free the allocated memory.<br>
+<br>
+</div>Once the user defines any explicit constructor or explicit destructor, the compiler no longer automatically defines the implicit default constructor or the implicit destructor.<br>
+In particular, if the user only defines an explicit constructor taking parameters, it will no longer be possible to simply construct an object, without providing the parameters to this constructor, unless, of course, the user defines also an explicit default constructor (the one which does not take parameters).<br>
+<br>
+Type inheritance and virtuality must also be taken into account for defining these special member procedures.<br>
+<br>
+As any member, these special member procedures may have any accessibility, public, protected or private (but a private access does not have much interest, and even can totally prevent any direct or derived object construction).<br>
+<br>
+<u>Table of Contents</u><br>
+<div class="indent"><b><a href="#ProPgCtorsAssignDtors1">1. Constructors and destructors</a></b><br>
+<b><a href="#ProPgCtorsAssignDtors2">2. '=' Assignment-operators</a></b><br>
+<b><a href="#ProPgCtorsAssignDtors3">3. Processing variable-length arrays as members of Type</a></b><br>
+<br>
+</div><a></a><br>
+<div>1. Constructors and destructors</div><div><br>
+A constructor is called automatically when instantiating the object. The destructor is called automatically when it is destroyed.<br>
+This destruction occurs when outputting the current scope block for auto storage kind objects.<br>
+<br>
+For dynamically allocated objects, the constructor and destructor are automatically called by expressions that use the 'New', 'New[]', and 'Delete', 'Delete[]' operators. That is why it is recommended to use them instead of the '[C|Re]]Allocate' and 'Deallocate' functions to dynamically create objects.<br>
+Also, do not use 'Delete' or 'Delete[]' on 'Any Ptr' pointers, because the compiler must determine which destructor to call with the type of pointer.<br>
+<br>
+<u>Definition of constructors and destructors</u><br>
+<div class="indent">The constructor is called after the memory allocation of the object and the destructor is called before this memory is freed. The management of the dynamic allocation of memory with the Types is thus simplified.<br>
+In the case of member object fields, the order of construction is that of their declarations, and the order of destruction is the reverse. It is in this order that the constructors and destructors of each member object field are called.<br>
+<br>
+The explicit constructors may have parameters. They can be overloaded, but not the explicit destructors. This is because in general one knows the context in which an object is created, but one cannot know the context in which it is destroyed: there can only be one destructor.<br>
+Constructors that do not take a parameter or with all parameters having a default value, automatically replace the default constructors defined by the compiler if there were no explicitly defined constructors in the Types. This means that these constructors will be called automatically by the default constructors of the derived Types.<br>
+<br>
+Example - Constructors and destructor ('ZstringChain' Type):<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>ZstringChain</span>                                <span class="tok-cm">'' implement a zstring chain</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span> <span>pz</span>                        <span class="tok-cm">'' define a pointer to the chain</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>                       <span class="tok-cm">'' declare the explicit default constructor</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>  <span class="tok-cm">'' declare the explicit constructor with as parameter the chain size</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span> <span>()</span>                        <span class="tok-cm">'' declare the explicit destructor</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>ZstringChain</span> <span>()</span>
+
+    <span>This.pz</span> <span>=</span> <span class="tok-nu">0</span>  <span class="tok-cm">'' reset the chain pointer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>ZstringChain</span> <span>(</span><span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span>This.pz</span> <span>=</span> <span class="tok-kw">CAllocate</span><span>(</span><span>size</span> <span>+</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">ZString</span><span>))</span>  <span class="tok-cm">'' allocate memory for the chain</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Destructor</span> <span>ZstringChain</span> <span>()</span>
+
+    <span class="tok-kw">If</span> <span>This.pz</span> <span>&lt;&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+        <span class="tok-kw">Deallocate</span> <span>This.pz</span>  <span class="tok-cm">'' free the allocated memory if necessary</span>
+
+    <span>This.pz</span> <span>=</span> <span class="tok-nu">0</span>         <span class="tok-cm">'' reset the chain pointer</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>ZstringChain</span> <span>zc1</span>  <span class="tok-cm">'' instantiate a non initialized chain : useless</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>ZstringChain</span> <span>zc2</span> <span>=</span> <span>ZstringChain</span><span>(</span><span class="tok-nu">9</span><span>)</span>  <span class="tok-cm">'' instantiate a szstring chain of 9 useful characters</span>
+
+<span class="tok-cm">'                                          '' shortcut: Dim As ZstringChain zc2 = 9</span>
+
+<span>*</span><span>zc2.pz</span> <span>=</span> <span>&quot;FreeBASIC&quot;</span>                      <span class="tok-cm">'' fill up the chain with 9 characters</span>
+
+<span class="tok-kw">Print</span> <span>&quot;zc2 chain:&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>*</span><span>zc2.pz</span> <span>&amp;</span> <span>&quot;'&quot;</span>                  <span class="tok-cm">'' print the chain</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+zc2 chain:
+'FreeBASIC'
+				</pre></div></div>The constructors will sometimes have to perform more complicated tasks than those given in this example. In general, they can do all the feasible operations in a normal member procedure, except using uninitialized data of course.<br>
+In particular, the data of inherited objects are not initialized as long as the constructors of the base-Types are not called. For this reason, the constructors of the base-Types must always be called before running the constructor of the Type being instantiated.<br>
+If the constructors of the base-Types are not explicitly called, the compiler will call, by default, the constructors of the base-Types that do not take a parameter or whose parameters have a default value (and, if no such a constructor is explicitly defined in the base-Types, it will call the implicit default constructors of these Types).<br>
+<br>
+</div><u>Constructors</u><br>
+<div class="indent">A constructor is a kind of member procedure that initializes an instance of its Type. A constructor has the same name as the Type and no return value. A constructor can have any number of parameters and a Type may have any number of overloaded constructors.<br>
+<br>
+If not any constructor is explicitly defined, the compiler will generate (if needed) a default-constructor that takes no parameters. The user can cancel this behavior by declaring and defining explicitly its own default-constructor.<br>
+If the user defines his own constructor(s), implicit default-initialization operations are always done prior to the user's constructor(s) code execution.<br>
+<br>
+Order of Construction:<br>
+<div class="indent"><b>-</b> The Type constructor is called.<br>
+<b>-</b> The base Types and their member constructors are called in the order of declaration.<br>
+<b>-</b> If the Type has virtual member procedures (including these inherited from its Base), the virtual-pointer (vptr) is set to point to the virtual-table (vtbl) of the Type.<br>
+<b>-</b> The body of the Type constructor procedure is executed.<br>
+<br>
+</div><b>Default-constructor:</b><br>
+<div class="indent">The default-constructor has no parameters.<br>
+It follows slightly different rules:<br>
+<div class="indent"><b>-</b> The default-constructor is one of the special member functions.<br>
+<b>-</b> If no constructors are explicitly declared in a Type, the compiler provides a default-constructor.<br>
+<b>-</b> If any non default-constructors are declared, the compiler does not provide a default-constructor and the user is forced to declare one if necessary.<br>
+<br>
+</div></div><b>Conversion-constructors:</b><br>
+<div class="indent">If a Type has a constructor with a single parameter, or if at least all other parameters have a default value, the type of the first argument can be implicitly converted to the type of the Type by the compiler.<br>
+In such expressions, the term <i>'variable'</i> may be considered as a short-cut of <i>'typename(variable)'</i>.<br>
+<br>
+Such conversions can be useful in some cases, but more often they can lead to poor readability (in these cases, it is better to explicitly call the matching constructor).<br>
+<br>
+Example - Implicit conversion:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>UDT</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByVal</span> <span>i0</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span> <span>()</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>i</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>UDT</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;   =&gt; UDT.default-constructor&quot;</span><span>,</span> <span>@</span><span class="tok-kw">This</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>UDT</span> <span>(</span><span class="tok-kw">ByVal</span> <span>i0</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;   =&gt; UDT.conversion-constructor&quot;</span><span>,</span> <span>@</span><span class="tok-kw">This</span>
+
+    <span>This.i</span> <span>=</span> <span>i0</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Function</span> <span>RtnI</span> <span>(</span><span class="tok-kw">ByRef</span> <span>u</span> <span class="tok-kw">As</span> <span>UDT</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Return</span> <span>u.i</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+ 
+
+<span class="tok-kw">Destructor</span> <span>UDT</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;   =&gt; UDT.destructor&quot;</span><span>,</span> <span>,</span> <span>@</span><span class="tok-kw">This</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+<span class="tok-kw">Scope</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Construction: 'Dim As UDT u'&quot;</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>u</span>
+
+    <span class="tok-kw">Print</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Assignment: 'u = 123'&quot;</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;      &quot;</span> <span>&amp;</span> <span>RtnI</span><span>(</span><span class="tok-nu">123</span><span>)</span>            <span class="tok-cm">''  RtnI(123): implicite conversion using the conversion-constructor,</span>
+
+    <span class="tok-cm">'                                     ''             short_cut of RtnI(UDT(123))</span>
+
+    <span class="tok-kw">Print</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Going out scope: 'End Scope'&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Scope</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output example:<br>
+<div class="indent"><pre class="code">
+Construction: 'Dim As UDT u'
+   => UDT.default-constructor             1703588
+
+Assignment: 'u = 123'
+   => UDT.conversion-constructor          1703580
+	  123
+   => UDT.destructor                      1703580
+
+Going out scope: 'End Scope'
+   => UDT.destructor                      1703588
+					</pre></div></div>But such conversions can even lead to subtle but serious errors in the code.<br>
+<br>
+Example - Subtle/Serious errors in the code:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>point2D</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByVal</span> <span>x0</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-kw">ByVal</span> <span>y0</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span><span>)</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>x</span><span>,</span> <span>y</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>point2D</span> <span>(</span><span class="tok-kw">ByVal</span> <span>x0</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-kw">ByVal</span> <span>y0</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span><span>)</span>
+
+    <span>This.x</span> <span>=</span> <span>x0</span>
+
+    <span>This.y</span> <span>=</span> <span>y0</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>point2D.cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Return</span> <span>&quot;(&quot;</span> <span>&amp;</span> <span>This.x</span> <span>&amp;</span> <span>&quot;, &quot;</span> <span>&amp;</span> <span>This.y</span> <span>&amp;</span> <span>&quot;)&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>+</span> <span>(</span><span class="tok-kw">ByRef</span> <span>v0</span> <span class="tok-kw">As</span> <span>point2D</span><span>,</span> <span class="tok-kw">ByRef</span> <span>v1</span> <span class="tok-kw">As</span> <span>point2D</span><span>)</span> <span class="tok-kw">As</span> <span>point2D</span>
+
+    <span class="tok-kw">Return</span> <span class="tok-kw">Type</span><span>(</span><span>v0.x</span> <span>+</span> <span>v1.x</span><span>,</span> <span>v0.y</span> <span>+</span> <span>v1.y</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>*</span> <span>(</span><span class="tok-kw">ByRef</span> <span>v0</span> <span class="tok-kw">As</span> <span>point2D</span><span>,</span> <span class="tok-kw">ByRef</span> <span>v1</span> <span class="tok-kw">As</span> <span>point2D</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Return</span> <span>v0.x</span> <span>*</span> <span>v1.x</span> <span>+</span> <span>v0.y</span> <span>*</span> <span>v1.y</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Construction of v1: 'Dim As point2D v1 = point2D(2, 3)'&quot;</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>point2D</span> <span>v1</span> <span>=</span> <span>point2D</span><span>(</span><span class="tok-nu">2</span><span>,</span> <span class="tok-nu">3</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  =&gt; &quot;</span> <span>&amp;</span> <span>v1</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Addition to v1: 'v1 + 4'&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  =&gt; &quot;</span> <span>&amp;</span> <span>v1</span> <span>+</span> <span class="tok-nu">4</span>                  <span class="tok-cm">''  4: implicite conversion using the conversion-constructor,</span>
+
+<span class="tok-cm">'                                       ''             short_cut of point2D(4, ) or point2D(4)</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Multiplication of v1: 'v1 * 5'&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  =&gt; &quot;</span> <span>&amp;</span> <span>v1</span> <span>*</span> <span class="tok-nu">5</span>                  <span class="tok-cm">''  5: implicite conversion using the conversion-constructor,</span>
+
+<span class="tok-cm">'                                       ''             short_cut of point2D(5, ) or point2D(5)</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output example:<br>
+<div class="indent"><pre class="code">
+Construction of v1: 'Dim As point2D v1 = point2D(2, 3)'
+  => (2, 3)
+
+Addition to v1: 'v1 + 4'
+  => (6, 3)
+
+Multiplication of v1: 'v1 * 5'
+  => 10
+					</pre>In this case, it is dangerous to declare a multi-parameter constructor with optional parameters, because the compiler can interpret one of its forms as a conversion-constructor.<br>
+<br>
+</div></div>A workaround: define a default constructor, and the multi-parameter constructor but without optional parameters (or at least one non-optional parameter without considering the first one).<br>
+<br>
+</div><b>Copy-constructor:</b><br>
+<div class="indent">The copy-constructor is a special member procedure that takes as input a reference to an object of the same type, and constructs a new object by copying it.<br>
+If the user does not declare a copy-constructor, the compiler generates (if needed) a copy-constructor for him. The declaration of a copy-assignment operator (see above) does not remove the generation by the compiler of a copy-constructor.<br>
+<br>
+It will sometimes be necessary to create a copy constructor. The purpose of this kind of constructor is to initialize an object when instantiating it from another object.<br>
+Any Type has if needed an implicit copy constructor automatically generated by the compiler, whose sole purpose is to copy the fields of the object to be copied one by one into the fields of the object to be instantiated.<br>
+However, this implicit copy constructor will not always be enough, and the user will sometimes have to provide one explicitly.<br>
+<br>
+This will be particularly the case when some data objects have been allocated dynamically (only member pointers in the Type for object aggregation). A shallow copy of the fields of one object in another would only copy the pointers, not the data pointed. Thus, changing this data for one object would result in the modification of the other object's data, which would probably not be the desired effect.<br>
+<br>
+If the user implements a copy-constructor, it is recommend to also implement a copy-assignment operator so that the meaning of the code is clear.<br>
+<br>
+In addition to the explicit syntax for calling the copy-constructor, this one is also called when an object is passed by value to a procedure, and when a function returns an object by value by using the <i>'Return'</i> keyword.<br>
+<br>
+A copy constructor can not take into account its argument (the object to clone) by value,  because "byval arg" itself generally calls the copy-constructor, and this would induce an infinite loop.<br>
+<br>
+For the 'ZstringChain' Type defined above, the user needs a copy constructor:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>ZstringChain</span>                                   <span class="tok-cm">'' implement a zstring chain</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span> <span>pz</span>                           <span class="tok-cm">'' define a pointer to the chain</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>                          <span class="tok-cm">'' declare the explicit default constructor</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>     <span class="tok-cm">'' declare the explicit constructor with as parameter the chain size</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>zc</span> <span class="tok-kw">As</span> <span>ZstringChain</span><span>)</span>  <span class="tok-cm">'' declare the explicit copy constructor</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span> <span>()</span>                           <span class="tok-cm">'' declare the explicit destructor</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>ZstringChain</span> <span>()</span>
+
+    <span>This.pz</span> <span>=</span> <span class="tok-nu">0</span>  <span class="tok-cm">'' reset the chain pointer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>ZstringChain</span> <span>(</span><span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span>This.pz</span> <span>=</span> <span class="tok-kw">CAllocate</span><span>(</span><span>size</span> <span>+</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">ZString</span><span>))</span>  <span class="tok-cm">'' allocate memory for the chain</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>ZstringChain</span> <span>(</span><span class="tok-kw">ByRef</span> <span>zc</span> <span class="tok-kw">As</span> <span>ZstringChain</span><span>)</span>
+
+    <span>This.pz</span> <span>=</span> <span class="tok-kw">CAllocate</span><span>(</span><span class="tok-kw">Len</span><span>(*</span><span>zc.pz</span><span>)</span> <span>+</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">ZString</span><span>))</span>  <span class="tok-cm">'' allocate memory for the new chain</span>
+
+    <span>*</span><span>This.pz</span> <span>=</span> <span>*</span><span>zc.pz</span>                                      <span class="tok-cm">'' initialize the new chain</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Destructor</span> <span>ZstringChain</span> <span>()</span>
+
+    <span class="tok-kw">If</span> <span>This.pz</span> <span>&lt;&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+        <span class="tok-kw">Deallocate</span> <span>This.pz</span>  <span class="tok-cm">'' free the allocated memory if necessary</span>
+
+        <span>This.pz</span> <span>=</span> <span class="tok-nu">0</span>         <span class="tok-cm">'' reset the chain pointer</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>ZstringChain</span> <span>zc1</span>  <span class="tok-cm">'' instantiate a non initialized chain : useless</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>ZstringChain</span> <span>zc2</span> <span>=</span> <span>ZstringChain</span><span>(</span><span class="tok-nu">9</span><span>)</span>           <span class="tok-cm">'' instantiate a szstring chain of 9 useful characters</span>
+
+<span class="tok-cm">'                                                   '' shortcut: Dim As ZstringChain zc2 = 9</span>
+
+<span>*</span><span>zc2.pz</span> <span>=</span> <span>&quot;FreeBASIC&quot;</span>                               <span class="tok-cm">'' fill up the chain with 9 characters</span>
+
+<span class="tok-kw">Print</span> <span>&quot;zc2 chain:&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>*</span><span>zc2.pz</span> <span>&amp;</span> <span>&quot;'&quot;</span>                           <span class="tok-cm">'' print the chain</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>ZstringChain</span> <span>zc3</span> <span>=</span> <span>zc2</span>                       <span class="tok-cm">'' instantiate a new szstring chain by copy construction</span>
+
+<span class="tok-kw">Print</span> <span>&quot;zc3 chain (zc3 copy constructed from zc2):&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>*</span><span>zc3.pz</span> <span>&amp;</span> <span>&quot;'&quot;</span>                           <span class="tok-cm">'' print the chain</span>
+
+<span class="tok-kw">Print</span>
+
+<span>*</span><span>zc3.pz</span> <span>=</span> <span>&quot;modified&quot;</span>                                <span class="tok-cm">'' modify the new chain</span>
+
+<span class="tok-kw">Print</span> <span>&quot;zc3 chain (modified):&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>*</span><span>zc3.pz</span> <span>&amp;</span> <span>&quot;'&quot;</span>                           <span class="tok-cm">'' print the new chain</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;zc2 chain:&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>*</span><span>zc2.pz</span> <span>&amp;</span> <span>&quot;'&quot;</span>                           <span class="tok-cm">'' print the copied chain (not modified)</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+zc2 chain:
+'FreeBASIC'
+
+zc3 chain (zc3 copy constructed from zc2):
+'FreeBASIC'
+
+zc3 chain (modified):
+'modified'
+
+zc2 chain:
+'FreeBASIC'
+					</pre></div></div></div></div><u>Destructor</u><br>
+<div class="indent">The destructor function is the inverse of constructor function. It is called when an objects is destroyed.<br>
+The destructor is commonly used to "clean up" when an object is no longer necessary. The destructor cannot have parameters.<br>
+<br>
+If none destructor is explicitly defined, the compiler will generate (if needed) a destructor. The user can override this behavior by declaring and defining explicitly its own destructor.<br>
+If the user defines his own destructor, implicit destruction operations are always done posterior to the user's destruction code execution.<br>
+<br>
+The destructor is called when one of the following events occurs:<br>
+<div class="indent"><b>-</b> An object created using the New operator is explicitly destroyed using the Delete operator.<br>
+<b>-</b> A local object with block scope goes out of scope.<br>
+<b>-</b> A program terminates and global or static objects exist.<br>
+<br>
+</div>If a base Type or data member has an accessible destructor, and if the Type does not declare a destructor, the compiler generates one.<br>
+<br>
+Order of destruction:<br>
+<div class="indent"><b>-</b> The Type destructor is called<br>
+<b>-</b> If the Type has virtual member procedures (including these inherited from its Base), the virtual-pointer (vptr) is set to point to the virtual-table (vtbl) of the Type.<br>
+<b>-</b> The body of the Type destructor procedure is executed.<br>
+<b>-</b> Destructors for base Types are called in the reverse order of declaration.<br>
+<br>
+</div></div><u>Constructors and destructors when inheritance</u><br>
+<div class="indent">How to call constructors and destructors of base Types when instantiating and destroying a derived Type instance?<br>
+The compiler cannot know which constructor to call among the different overloaded constructors potentially present. To call another constructor of a base Type than the constructor taking no parameter, use the keyword <i>'Base ()'</i> specifying the parameters to pass, and this, only authorized on the first code line of the calling constructor.<br>
+<br>
+On the other hand, it is useless to specify the destructor to call, since this one is unique. The user must not call the destructors of the base Types themselves, the compiler does it on its own by chaining the destructors.<br>
+<br>
+Example - Explicit call of the base Type constructor ('Child' Type extends 'Parent' Type):<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>Parent</span>  <span class="tok-cm">'' declare the parent type</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByVal</span> <span>i0</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span> <span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>Parent</span> <span>()</span>  <span class="tok-cm">'' define parent Type constructor</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Parent.Constructor()&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>Parent</span> <span>(</span><span class="tok-kw">ByVal</span> <span>i0</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>  <span class="tok-cm">'' define parent Type constructor</span>
+
+    <span>This.I</span> <span>=</span> <span>i0</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Parent.Constructor(Byval As Integer)&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Destructor</span> <span>Parent</span> <span>()</span>  <span class="tok-cm">'' define parent Type destructor</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Parent.Destructor()&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+<span class="tok-kw">Type</span> <span>Child</span> <span class="tok-kw">Extends</span> <span>Parent</span>  <span class="tok-cm">'' declare the child Type</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span> <span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>Child</span> <span>()</span>  <span class="tok-cm">'' define child Type default constructor</span>
+
+    <span class="tok-kw">Base</span><span>(</span><span class="tok-nu">123</span><span>)</span>         <span class="tok-cm">'' authorize only on the first code line of the constructor body</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;  Child.Constructor()&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Destructor</span> <span>Child</span> <span>()</span>  <span class="tok-cm">'' define child Type destructor</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;  Child.Destructor()&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+
+
+<span class="tok-kw">Scope</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>Child</span> <span>c</span>
+
+    <span class="tok-kw">Print</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Scope</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+Parent.Constructor(Byval As Integer)
+  Child.Constructor()
+
+  Child.Destructor()
+Parent.Destructor()
+				</pre>If it was not specified that the constructor to be called for the base Type was the constructor taking an Integer parameter, the compiler would have called the default constructor of the base Type (in the above example, one can put in comment the line <i>'Base(123)'</i> and execute again to see this different behavior).<br>
+<br>
+</div></div>If the Type derives from several base Types (multiple-level inheritance), each derived Type constructor can explicitly call only one constructor, the one of its direct base Type, thus the all constituting a chaining of the base constructors.<br>
+<br>
+When using inheritance polymorphism (sub-type polymorphism), the object are manipulated through base Type pointers or references:<br>
+<div class="indent"><b>-</b> If at least one derived Type has an explicit destructor defined, all its base destructors must be virtual so that the destruction can start at this most derived Type and works its way down to the last base Type.<br>
+<b>-</b> To do this, it may be necessary to add virtual destructors with an empty body anywhere an explicit destruction was not yet required, in order to supersede each non-virtual implicit destructor built by the compiler.<br>
+<br>
+</div>Note:<br>
+<div class="indent"><b>-</b> When a derived Type has a base Type where a default constructor or copy constructor or destructor is defined (implicitly or explicitly), the compiler defines a default constructor or copy constructor or destructor for that derived Type.<br>
+<b>-</b> The built-in 'Object' Type having a default-constructor and a copy-constructor both defined implicitly, so all Types deriving (directly or indirectly) from 'Object' have at least implicitly a default constructor and copy constructor.<br>
+<br>
+</div></div><u>Virtual procedures calls in constructors and destructors</u><br>
+<div class="indent">It is usually safe to call any member procedure from within a constructor or destructor because the object is completely set up (virtual tables are initialized and so on) prior to the execution of the first line of user code. However, it is potentially unsafe for a member procedure to call a virtual member procedure for an abstract base Type during construction or destruction.<br>
+<br>
+Be careful when calling virtual procedures in constructors or destructor, because the procedures that are called in the base constructors or destructor is the base Type versions, not the derived Type versions. When such a virtual procedure is called, the procedure invoked is the procedure defined for the constructor's or destructor's own Type (or inherited from its Bases).<br>
+<br>
+</div><div><a href="#ProPgCtorsAssignDtorsTop">Back to top</a></div><br>
+<a></a><br>
+</div><div>2. '=' Assignment-operators</div><div><br>
+Among all '=' assignment-operators, there is a specific one that takes as input a reference to an object of the same type, and makes a copy of it (without creating a new object).<br>
+It is the copy-assignment operator.<br>
+<br>
+<u>Copy-assignment operator</u><br>
+<div class="indent">If the user does not declare a copy-assignment operator, the compiler generates (if needed) a copy-assignment operator for him. The declaration of a copy-constructor (see above) does not remove the generation by the compiler of a copy-assignment operator.<br>
+<br>
+A copy-assignment operator must be defined if the implicit copy is not sufficient.<br>
+This happens in cases when the object manages dynamically allocated memory or other resources which need to be specially copied (for example if a member pointer points to dynamically allocated memory, the implicit '=' assignment operator will simply copy the pointer value instead of allocate memory and then perform the copy of data).<br>
+<br>
+If the user implements a copy-assignment operator, it is recommend to also implement a copy-constructor so that the meaning of the code is clear.<br>
+<br>
+In addition to the explicit syntax for calling the copy-assignment operator, this one is also called when a function returns an object by value by using the <i>'Function ='</i> keyword.<br>
+<br>
+A copy-assignment operator can not take into account its argument (the object to clone) by value, because there are cases where "byval arg" is coded as default-construction + copy-assignment (when for example the UDT has no copy-constructor but has an object field with a default-constructor or a Base with default-constructor), and this would induce an infinite loop.<br>
+<br>
+For the 'ZstringChain' Type defined above, the user needs also a copy-assignment operator (see the 'rule of three' in 'advanced #2' page):<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>ZstringChain</span>                                    <span class="tok-cm">'' implement a zstring chain</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span> <span>pz</span>                            <span class="tok-cm">'' define a pointer to the chain</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>                           <span class="tok-cm">'' declare the explicit default constructor</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>      <span class="tok-cm">'' declare the explicit constructor with as parameter the chain size</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>zc</span> <span class="tok-kw">As</span> <span>ZstringChain</span><span>)</span>   <span class="tok-cm">'' declare the explicit copy constructor</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Let</span> <span>(</span><span class="tok-kw">ByRef</span> <span>zc</span> <span class="tok-kw">As</span> <span>ZstringChain</span><span>)</span>  <span class="tok-cm">'' declare the explicit copy assignment operator</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span> <span>()</span>                            <span class="tok-cm">'' declare the explicit destructor</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>ZstringChain</span> <span>()</span>
+
+    <span>This.pz</span> <span>=</span> <span class="tok-nu">0</span>  <span class="tok-cm">'' reset the chain pointer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>ZstringChain</span> <span>(</span><span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span>This.pz</span> <span>=</span> <span class="tok-kw">CAllocate</span><span>(</span><span>size</span> <span>+</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">ZString</span><span>))</span>  <span class="tok-cm">'' allocate memory for the chain</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>ZstringChain</span> <span>(</span><span class="tok-kw">ByRef</span> <span>zc</span> <span class="tok-kw">As</span> <span>ZstringChain</span><span>)</span>
+
+    <span>This.pz</span> <span>=</span> <span class="tok-kw">CAllocate</span><span>(</span><span class="tok-kw">Len</span><span>(*</span><span>zc.pz</span><span>)</span> <span>+</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">ZString</span><span>))</span>  <span class="tok-cm">'' allocate memory for the new chain</span>
+
+    <span>*</span><span>This.pz</span> <span>=</span> <span>*</span><span>zc.pz</span>                                      <span class="tok-cm">'' initialize the new chain</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>ZstringChain.Let</span> <span>(</span><span class="tok-kw">ByRef</span> <span>zc</span> <span class="tok-kw">As</span> <span>ZstringChain</span><span>)</span>
+
+    <span class="tok-kw">If</span> <span>@</span><span>zc</span> <span>&lt;&gt;</span> <span>@</span><span class="tok-kw">This</span> <span class="tok-kw">Then</span>                                       <span class="tok-cm">'' avoid self assignment destroying the chain</span>
+
+        <span class="tok-kw">If</span> <span>This.pz</span> <span>&lt;&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+            <span class="tok-kw">Deallocate</span> <span>This.pz</span>                                 <span class="tok-cm">'' free the allocated memory if necessary</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+        <span>This.pz</span> <span>=</span> <span class="tok-kw">CAllocate</span><span>(</span><span class="tok-kw">Len</span><span>(*</span><span>zc.pz</span><span>)</span> <span>+</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">ZString</span><span>))</span>  <span class="tok-cm">'' allocate memory for the new chain</span>
+
+        <span>*</span><span>This.pz</span> <span>=</span> <span>*</span><span>zc.pz</span>                                      <span class="tok-cm">'' initialize the new chain</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Destructor</span> <span>ZstringChain</span> <span>()</span>
+
+    <span class="tok-kw">If</span> <span>This.pz</span> <span>&lt;&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+        <span class="tok-kw">Deallocate</span> <span>This.pz</span>  <span class="tok-cm">'' free the allocated memory if necessary</span>
+
+        <span>This.pz</span> <span>=</span> <span class="tok-nu">0</span>         <span class="tok-cm">'' reset the chain pointer</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>ZstringChain</span> <span>zc1</span>  <span class="tok-cm">'' instantiate a non initialized chain : useless</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>ZstringChain</span> <span>zc2</span> <span>=</span> <span>ZstringChain</span><span>(</span><span class="tok-nu">9</span><span>)</span>           <span class="tok-cm">'' instantiate a szstring chain of 9 useful characters</span>
+
+<span class="tok-cm">'                                                   '' shortcut: Dim As ZstringChain zc2 = 9</span>
+
+<span>*</span><span>zc2.pz</span> <span>=</span> <span>&quot;FreeBASIC&quot;</span>                               <span class="tok-cm">'' fill up the chain with 9 characters</span>
+
+<span class="tok-kw">Print</span> <span>&quot;zc2 chain:&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>*</span><span>zc2.pz</span> <span>&amp;</span> <span>&quot;'&quot;</span>                           <span class="tok-cm">'' print the chain</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>ZstringChain</span> <span>zc3</span> <span>=</span> <span>zc2</span>                       <span class="tok-cm">'' instantiate a new szstring chain by copy construction</span>
+
+<span class="tok-kw">Print</span> <span>&quot;zc3 chain (zc3 copy constructed from zc2):&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>*</span><span>zc3.pz</span> <span>&amp;</span> <span>&quot;'&quot;</span>                           <span class="tok-cm">'' print the chain</span>
+
+<span class="tok-kw">Print</span>
+
+<span>*</span><span>zc3.pz</span> <span>=</span> <span>&quot;modified&quot;</span>                                <span class="tok-cm">'' modify the new chain</span>
+
+<span class="tok-kw">Print</span> <span>&quot;zc3 chain (modified):&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>*</span><span>zc3.pz</span> <span>&amp;</span> <span>&quot;'&quot;</span>                           <span class="tok-cm">'' print the new chain</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;zc2 chain:&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>*</span><span>zc2.pz</span> <span>&amp;</span> <span>&quot;'&quot;</span>                           <span class="tok-cm">'' print the copied chain (not modified)</span>
+
+<span class="tok-kw">Print</span>
+
+<span>zc3</span> <span>=</span> <span>zc2</span>
+
+<span class="tok-kw">Print</span> <span>&quot;zc3 chain (zc3 copy assigned from zc2):&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>*</span><span>zc3.pz</span> <span>&amp;</span> <span>&quot;'&quot;</span>                           <span class="tok-cm">'' print the new chain</span>
+
+<span class="tok-kw">Print</span>
+
+<span>*</span><span>zc3.pz</span> <span>=</span> <span>&quot;changed&quot;</span>                                 <span class="tok-cm">'' modify the new chain</span>
+
+<span class="tok-kw">Print</span> <span>&quot;zc3 chain (changed):&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>*</span><span>zc3.pz</span> <span>&amp;</span> <span>&quot;'&quot;</span>                           <span class="tok-cm">'' print the new chain</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;zc2 chain:&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>*</span><span>zc2.pz</span> <span>&amp;</span> <span>&quot;'&quot;</span>                           <span class="tok-cm">'' print the copied chain (not modified)</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+zc2 chain:
+'FreeBASIC'
+
+zc3 chain (zc3 copy constructed from zc2):
+'FreeBASIC'
+
+zc3 chain (modified):
+'modified'
+
+zc2 chain:
+'FreeBASIC'
+
+zc3 chain (zc3 copy assigned from zc2):
+'FreeBASIC'
+
+zc3 chain (changed):
+'changed'
+
+zc2 chain:
+'FreeBASIC'
+				</pre></div></div></div><div><a href="#ProPgCtorsAssignDtorsTop">Back to top</a></div><br>
+<a></a><br>
+</div><div>3. Processing variable-length arrays as members of Type</div><div><br>
+A variable-length array is not a pseudo-object like a variable-length string, because there is no default copy-constructor and copy-assignment operators as for a variable-length string.<br>
+<br>
+But when a variable-length array is declared in a Type, the compiler build a default copy-constructor and a default copy-assignment operator for the Type. It includes all code for sizing the destination array and copying the data from the source array, if needed:<br>
+<div class="indent">Example for automatic array sizing and copying by the compiler:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>UDT</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>array</span><span>(</span><span class="tok-kw">Any</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>u1</span><span>,</span> <span>u2</span>
+
+
+
+<span class="tok-kw">ReDim</span> <span>u1.array</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span><span>)</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>u1.array</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>u1.array</span><span>)</span>
+
+    <span>u1.array</span><span>(</span><span>I</span><span>)</span> <span>=</span> <span>I</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+ 
+
+<span>u2</span> <span>=</span> <span>u1</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>u2.array</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>u2.array</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>u2.array</span><span>(</span><span>I</span><span>);</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>u3</span> <span>=</span> <span>u1</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>u3.array</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>u3.array</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>u3.array</span><span>(</span><span>I</span><span>);</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+ 1 2 3 4 5 6 7 8 9
+ 1 2 3 4 5 6 7 8 9
+				</pre></div></div></div>If the user want to specify his own copy-constructor and copy-assignment operator (to process additional complex field members for example), the above automatic array sizing and copying by the compiler is broken:<br>
+<div class="indent">Example for automatic array sizing and copying by the compiler broken by an explicit copy-constructor and copy-assignment operator:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>UDT</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>array</span><span>(</span><span class="tok-kw">Any</span><span>)</span>
+
+  <span class="tok-cm">'user fields</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>u</span> <span class="tok-kw">As</span> <span>UDT</span><span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Let</span> <span>(</span><span class="tok-kw">ByRef</span> <span>u</span> <span class="tok-kw">As</span> <span>UDT</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>UDT</span> <span>()</span>
+
+  <span class="tok-cm">'code for user fields in constructor</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>UDT</span> <span>(</span><span class="tok-kw">ByRef</span> <span>u</span> <span class="tok-kw">As</span> <span>UDT</span><span>)</span>
+
+  <span class="tok-cm">'code for user fields in copy-constructor</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDT.Let</span> <span>(</span><span class="tok-kw">ByRef</span> <span>u</span> <span class="tok-kw">As</span> <span>UDT</span><span>)</span>
+
+  <span class="tok-cm">'code for user fields in copy-assignement operator</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>u1</span><span>,</span> <span>u2</span>
+
+
+
+<span class="tok-kw">ReDim</span> <span>u1.array</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span><span>)</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>u1.array</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>u1.array</span><span>)</span>
+
+  <span>u1.array</span><span>(</span><span>I</span><span>)</span> <span>=</span> <span>I</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+ 
+
+<span>u2</span> <span>=</span> <span>u1</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>u2.array</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>u2.array</span><span>)</span>
+
+  <span class="tok-kw">Print</span> <span>u2.array</span><span>(</span><span>I</span><span>);</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>u3</span> <span>=</span> <span>u1</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>u3.array</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>u3.array</span><span>)</span>
+
+  <span class="tok-kw">Print</span> <span>u3.array</span><span>(</span><span>I</span><span>);</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output (none):<br>
+<div class="indent"><pre class="code">
+				</pre></div></div></div>The elementary variable-length array member cannot be copied as a pseudo-object like a variable-length string member, because there is not implicit assignment (referring to the above example, 'This.array = u.array' is disallowed).<br>
+The user must code explicitly the sizing and the copying of the array member:<br>
+<div class="indent">Example for array sizing and copying explicitly set in the user copy-constructor and copy-assignment operator:<br>
+<div class="indent"><code><pre class="code"><span>#include &quot;crt/string.bi&quot;
+
+</span>
+
+<span class="tok-kw">Type</span> <span>UDT</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>array</span><span>(</span><span class="tok-kw">Any</span><span>)</span>
+
+    <span class="tok-cm">'user fields</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>u</span> <span class="tok-kw">As</span> <span>UDT</span><span>)</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Let</span> <span>(</span><span class="tok-kw">ByRef</span> <span>u</span> <span class="tok-kw">As</span> <span>UDT</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>UDT</span> <span>()</span>
+
+    <span class="tok-cm">'code for user fields in constructor</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>UDT</span> <span>(</span><span class="tok-kw">ByRef</span> <span>u</span> <span class="tok-kw">As</span> <span>UDT</span><span>)</span>
+
+    <span class="tok-cm">'code for user fields in copy-constructor</span>
+
+    <span class="tok-kw">If</span> <span class="tok-kw">UBound</span><span>(</span><span>u.array</span><span>)</span> <span>&gt;=</span> <span class="tok-kw">LBound</span><span>(</span><span>u.array</span><span>)</span> <span class="tok-kw">Then</span>  <span class="tok-cm">'' explicit array sizing and copying</span>
+
+        <span class="tok-kw">ReDim</span> <span>This.array</span><span>(</span><span class="tok-kw">LBound</span><span>(</span><span>u.array</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>u.array</span><span>))</span>
+
+        <span>memcpy</span><span>(@</span><span>This.array</span><span>(</span><span class="tok-kw">LBound</span><span>(</span><span>This.array</span><span>)),</span> <span>@</span><span>u.array</span><span>(</span><span class="tok-kw">LBound</span><span>(</span><span>u.array</span><span>)),</span> <span>(</span><span class="tok-kw">UBound</span><span>(</span><span>u.array</span><span>)</span> <span>-</span> <span class="tok-kw">LBound</span><span>(</span><span>u.array</span><span>)</span> <span>+</span> <span class="tok-nu">1</span><span>)</span> <span>*</span> <span class="tok-kw">SizeOf</span><span>(@</span><span>u.array</span><span>(</span><span class="tok-kw">LBound</span><span>(</span><span>u.array</span><span>))))</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDT.Let</span> <span>(</span><span class="tok-kw">ByRef</span> <span>u</span> <span class="tok-kw">As</span> <span>UDT</span><span>)</span>
+
+    <span class="tok-cm">'code for user fields in copy-assignement operator</span>
+
+    <span class="tok-kw">If</span> <span>@</span><span class="tok-kw">This</span> <span>&lt;&gt;</span> <span>@</span><span>u</span> <span class="tok-kw">And</span> <span class="tok-kw">UBound</span><span>(</span><span>u.array</span><span>)</span> <span>&gt;=</span> <span class="tok-kw">LBound</span><span>(</span><span>u.array</span><span>)</span> <span class="tok-kw">Then</span>  <span class="tok-cm">'' explicit array sizing and copying</span>
+
+        <span class="tok-kw">ReDim</span> <span>This.array</span><span>(</span><span class="tok-kw">LBound</span><span>(</span><span>u.array</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>u.array</span><span>))</span>
+
+        <span>memcpy</span><span>(@</span><span>This.array</span><span>(</span><span class="tok-kw">LBound</span><span>(</span><span>This.array</span><span>)),</span> <span>@</span><span>u.array</span><span>(</span><span class="tok-kw">LBound</span><span>(</span><span>u.array</span><span>)),</span> <span>(</span><span class="tok-kw">UBound</span><span>(</span><span>u.array</span><span>)</span> <span>-</span> <span class="tok-kw">LBound</span><span>(</span><span>u.array</span><span>)</span> <span>+</span> <span class="tok-nu">1</span><span>)</span> <span>*</span> <span class="tok-kw">SizeOf</span><span>(@</span><span>u.array</span><span>(</span><span class="tok-kw">LBound</span><span>(</span><span>u.array</span><span>))))</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>u1</span><span>,</span> <span>u2</span>
+
+
+
+<span class="tok-kw">ReDim</span> <span>u1.array</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span><span>)</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>u1.array</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>u1.array</span><span>)</span>
+
+    <span>u1.array</span><span>(</span><span>I</span><span>)</span> <span>=</span> <span>I</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+ 
+
+<span>u2</span> <span>=</span> <span>u1</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>u2.array</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>u2.array</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>u2.array</span><span>(</span><span>I</span><span>);</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>u3</span> <span>=</span> <span>u1</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>u3.array</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>u3.array</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>u3.array</span><span>(</span><span>I</span><span>);</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+ 1 2 3 4 5 6 7 8 9
+ 1 2 3 4 5 6 7 8 9
+				</pre></div></div></div>Another elegant possibility is to keep this sizing/copying automatically coded by the compiler, but by simply calling it explicitly. For this, an obvious solution for the member array is to no longer put it at the level of the Type itself, but rather in another specific Type, but inherited (seen from the outside, it is exactly the same):<br>
+<div class="indent">Example for using a base Type including the dynamic array member:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>UDT0</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>array</span><span>(</span><span class="tok-kw">Any</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Type</span> <span>UDT</span> <span class="tok-kw">Extends</span> <span>UDT0</span>
+
+    <span class="tok-cm">'user fields</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>u</span> <span class="tok-kw">As</span> <span>UDT</span><span>)</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Let</span> <span>(</span><span class="tok-kw">ByRef</span> <span>u</span> <span class="tok-kw">As</span> <span>UDT</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>UDT</span> <span>()</span>
+
+    <span class="tok-cm">'code for user fields in constructor</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>UDT</span> <span>(</span><span class="tok-kw">ByRef</span> <span>u</span> <span class="tok-kw">As</span> <span>UDT</span><span>)</span>
+
+    <span class="tok-cm">'code for user fields in copy-constructor</span>
+
+    <span class="tok-kw">Base</span><span>(</span><span>u</span><span>)</span>  <span class="tok-cm">'' inherited array sizing and copying from Base copy-constructor</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDT.Let</span> <span>(</span><span class="tok-kw">ByRef</span> <span>u</span> <span class="tok-kw">As</span> <span>UDT</span><span>)</span>
+
+    <span class="tok-cm">'code for user fields in copy-assignement operator</span>
+
+    <span class="tok-kw">Cast</span><span>(</span><span>UDT0</span><span>,</span> <span class="tok-kw">This</span><span>)</span> <span>=</span> <span>u</span>  <span class="tok-cm">'' inherited array sizing and copying from Base copy-assignement operator</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>u1</span><span>,</span> <span>u2</span>
+
+
+
+<span class="tok-kw">ReDim</span> <span>u1.array</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span><span>)</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>u1.array</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>u1.array</span><span>)</span>
+
+    <span>u1.array</span><span>(</span><span>I</span><span>)</span> <span>=</span> <span>I</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+ 
+
+<span>u2</span> <span>=</span> <span>u1</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>u2.array</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>u2.array</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>u2.array</span><span>(</span><span>I</span><span>);</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>u3</span> <span>=</span> <span>u1</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>u3.array</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>u3.array</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>u3.array</span><span>(</span><span>I</span><span>);</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+ 1 2 3 4 5 6 7 8 9
+ 1 2 3 4 5 6 7 8 9
+				</pre></div></div></div><div><a href="#ProPgCtorsAssignDtorsTop">Back to top</a></div><br>
+<br>
+</div><div>See also</div><div><br>
+<ul><li> <code><a href="../../user-defined-types/procedures/constructor.html">Constructor</a></code>, <code><a href="../../user-defined-types/procedures/destructor.html">Destructor</a></code><br>
+<li> <code><a href="../../operators/operators/procedures/operator-assign.html">Operator =[&gt;] (Assignment)</a></code>, <code><a href="../../operators/assignment-operators/procedures/operator-let-assign.html">Operator Let (Assignment)</a></code><br>
+<li> <a href="constructors-and-destructors-basics.html">Constructors and Destructors (basics)</a><br>
+<li> <a href="constructors-assignment-operators-and-destructors-advanced-part-2.html">Constructors, '=' Assignment-Operators, and Destructors (advanced, part #2)</a><br>
+<br>
+</li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

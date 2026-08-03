@@ -1,0 +1,1242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpRegion Class — Help Center</title>
+<meta name="description" content="CGpRegion Class — 21 documented members. Graphics reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpregion-class.html">
+<meta property="og:title" content="CGpRegion Class">
+<meta property="og:description" content="CGpRegion Class — 21 documented members. Graphics reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpregion-class.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpregion-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>Graphics</div>
+<h1>CGpRegion Class</h1>
+<h2>Members (21)</h2>
+<div class="memberlist"><a href="cgpregion/cgpregion-clone.html"><span class="m-n">Clone</span><span class="m-d">Copies the contents of the existing **Region** object into a new **Region** object.</span></a><a href="cgpregion/cgpregion-complement.html"><span class="m-n">Complement</span><span class="m-d">Updates this region to the portion of the specified rectangle&#x27;s interior that does not intersect this region.</span></a><a href="cgpregion/cgpregion-constructors.html"><span class="m-n">Constructors</span><span class="m-d">Create a **Region** object.</span></a><a href="cgpregion/cgpregion-equals.html"><span class="m-n">Equals</span><span class="m-d">Determines whether this region is equal to a specified region.</span></a><a href="cgpregion/cgpregion-exclude.html"><span class="m-n">Exclude</span><span class="m-d">Updates this region to the portion of itself that does not intersect the specified rectangle&#x27;s interior.</span></a><a href="cgpregion/cgpregion-getbounds.html"><span class="m-n">GetBounds</span><span class="m-d">Gets a rectangle that encloses this region.</span></a><a href="cgpregion/cgpregion-getdata.html"><span class="m-n">GetData</span><span class="m-d">Gets data that describes this region.</span></a><a href="cgpregion/cgpregion-getdatasize.html"><span class="m-n">GetDataSize</span><span class="m-d">Gets the number of bytes of data that describes this region.</span></a><a href="cgpregion/cgpregion-gethrgn.html"><span class="m-n">GetHRGN</span><span class="m-d">Creates a Windows Graphics Device Interface (GDI) region from this region.</span></a><a href="cgpregion/cgpregion-getregionscans.html"><span class="m-n">GetRegionScans</span><span class="m-d">Gets an array of rectangles that approximate this region.</span></a><a href="cgpregion/cgpregion-getregionscanscount.html"><span class="m-n">GetRegionScansCount</span><span class="m-d">Gets the number of rectangles that approximate this region.</span></a><a href="cgpregion/cgpregion-intersect.html"><span class="m-n">Intersect</span><span class="m-d">Updates this region to the portion of itself that intersects the specified rectangle&#x27;s interior.</span></a><a href="cgpregion/cgpregion-isempty.html"><span class="m-n">IsEmpty</span><span class="m-d">Determines whether this region is empty.</span></a><a href="cgpregion/cgpregion-isinfinite.html"><span class="m-n">IsInfinite</span><span class="m-d">Determines whether this region is infinite.</span></a><a href="cgpregion/cgpregion-isvisible.html"><span class="m-n">IsVisible</span><span class="m-d">Determines whether a point is inside this region.</span></a><a href="cgpregion/cgpregion-makeempty.html"><span class="m-n">MakeEmpty</span><span class="m-d">Updates this region to an empty region. In other words, the region occupies no space on the display device.</span></a><a href="cgpregion/cgpregion-makeinfinite.html"><span class="m-n">MakeInfinite</span><span class="m-d">Updates this region to an infinite region.</span></a><a href="cgpregion/cgpregion-transform.html"><span class="m-n">Transform</span><span class="m-d">Transforms this region by multiplying each of its data points by a specified matrix.</span></a><a href="cgpregion/cgpregion-translate.html"><span class="m-n">Translate</span><span class="m-d">Offsets this region by specified amounts in the horizontal and vertical directions.</span></a><a href="cgpregion/cgpregion-union.html"><span class="m-n">Union_</span><span class="m-d">Updates this region to all portions (intersecting and nonintersecting) of itself and all portions of the specified rectangle&#x27;s interior.</span></a><a href="cgpregion/cgpregion-xor.html"><span class="m-n">Xor_</span><span class="m-d">Updates this region to the nonintersecting portions of itself and the specified rectangle&#x27;s interior.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="cgpregion-class">CGpRegion Class</h2>
+<p>Provides methods to manage <strong>Regions</strong>. <strong>Regions</strong> are used in clipping and hit-testing operations.</p>
+<p>The <strong>Region</strong> object describes an area of the display surface. The area can be any shape. In other words, the boundary of the area can be a combination of curved and straight lines. Regions can also be created from the interiors of rectangles, paths, or a combination of these. Regions are used in clipping and hit-testing operations.</p>
+<p><strong>Inherits from</strong>: CGpBase.<br> <strong>Include file</strong>: CGpRegion.inc.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cgpregion/cgpregion-constructors.html">Constructors</a></td><td>Create a <strong>Region</strong> object.</td></tr><tr><td><a href="cgpregion/cgpregion-clone.html">Clone</a></td><td>Copies the contents of the existing <strong>Region</strong> object into a new <strong>Region</strong> object.</td></tr><tr><td><a href="cgpregion/cgpregion-complement.html">Complement</a></td><td>Updates this region to the portion of the specified rectangle's interior that does not intersect this region.</td></tr><tr><td><a href="cgpregion/cgpregion-equals.html">Equals</a></td><td>Determines whether this region is equal to a specified region.</td></tr><tr><td><a href="cgpregion/cgpregion-exclude.html">Exclude</a></td><td>Updates this region to the portion of itself that does not intersect the specified rectangle's interior.</td></tr><tr><td><a href="cgpregion/cgpregion-getbounds.html">GetBounds</a></td><td>Gets a rectangle that encloses this region.</td></tr><tr><td><a href="cgpregion/cgpregion-getdata.html">GetData</a></td><td>Gets data that describes this region.</td></tr><tr><td><a href="cgpregion/cgpregion-getdatasize.html">GetDataSize</a></td><td>Gets the number of bytes of data that describes this region.</td></tr><tr><td><a href="cgpregion/cgpregion-gethrgn.html">GetHRGN</a></td><td>Creates a Windows Graphics Device Interface (GDI) region from this region.</td></tr><tr><td><a href="cgpregion/cgpregion-getregionscans.html">GetRegionScans</a></td><td>Gets an array of rectangles that approximate this region.</td></tr><tr><td><a href="cgpregion/cgpregion-getregionscanscount.html">GetRegionScansCount</a></td><td>Gets the number of rectangles that approximate this region.</td></tr><tr><td><a href="cgpregion/cgpregion-intersect.html">Intersect</a></td><td>Updates this region to the portion of itself that intersects the specified rectangle's interior.</td></tr><tr><td><a href="cgpregion/cgpregion-isempty.html">IsEmpty</a></td><td>Determines whether this region is empty.</td></tr><tr><td><a href="cgpregion/cgpregion-isinfinite.html">IsInfinite</a></td><td>Determines whether this region is infinite.</td></tr><tr><td><a href="cgpregion/cgpregion-isvisible.html">IsVisible</a></td><td>Determines whether a point is inside this region.</td></tr><tr><td><a href="cgpregion/cgpregion-makeempty.html">MakeEmpty</a></td><td>Updates this region to an empty region. In other words, the region occupies no space on the display device.</td></tr><tr><td><a href="cgpregion/cgpregion-makeinfinite.html">MakeInfinite</a></td><td>Updates this region to an infinite region.</td></tr><tr><td><a href="cgpregion/cgpregion-transform.html">Transform</a></td><td>Transforms this region by multiplying each of its data points by a specified matrix.</td></tr><tr><td><a href="cgpregion/cgpregion-translate.html">Translate</a></td><td>Offsets this region by specified amounts in the horizontal and vertical directions.</td></tr><tr><td><a href="cgpregion/cgpregion-union.html">Union_</a></td><td>Updates this region to all portions (intersecting and nonintersecting) of itself and all portions of the specified rectangle's interior.</td></tr><tr><td><a href="cgpregion/cgpregion-xor.html">Xor_</a></td><td>Updates this region to the nonintersecting portions of itself and the specified rectangle's interior.</td></tr></tbody></table></div>
+<hr>
+<h3 id="constructors">Constructors</h3>
+<p>Creates a region that is defined by a rectangle.</p>
+<pre class="code"><code>CONSTRUCTOR CGpRegion
+CONSTRUCTOR CGpRegion (BYVAL pRegion AS CGpRegion PTR)
+CONSTRUCTOR CGpRegion (BYVAL rc AS GpRectF PTR)
+CONSTRUCTOR CGpRegion (BYVAL rc AS GpRect PTR)
+CONSTRUCTOR CGpRegion (BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, BYVAL nHeight AS SINGLE)</code></pre>
+<p>Creates a region that is defined by a path (a <strong>GraphicsPath</strong> object) and has a fill mode that is contained in the <strong>GraphicsPath</strong> object.</p>
+<pre class="code"><code>CONSTRUCTOR CGpRegion (BYVAL pPath AS CGpGraphicsPath PTR)</code></pre>
+<p>Creates a region that is defined by data obtained from another region.</p>
+<pre class="code"><code>CONSTRUCTOR CGpRegion (BYVAL regionData AS BYTE PTR, BYVAL nSize AS LONG)</code></pre>
+<p>Creates a region that is identical to the region that is specified by a handle to a Windows Graphics Device Interface (GDI) region.</p>
+<pre class="code"><code>CONSTRUCTOR CGpRegion (BYVAL hRgn AS HRGN)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>rc</em></td><td>Reference to a rectangle.</td></tr><tr><td><em>x, y, nWidth, nHeight</em></td><td>left coordinate, top coordinate, width and height of a rectangle.</td></tr><tr><td><em>pPath</em></td><td>Pointer to a <strong>GraphicsPath</strong> object that specifies the path</td></tr><tr><td><em>regionData</em></td><td>Pointer to an array of bytes that specifies a region. The data contained in the bytes is obtained from another region by using the <strong>GetData</strong> method.</td></tr><tr><td><em>nSize</em></td><td>Integer that specifies the number of bytes in the <em>regionData</em> array.</td></tr><tr><td><em>hRgn</em></td><td>Handle to an existing GDI region.</td></tr></tbody></table></div>
+<hr>
+<h3 id="clone">Clone</h3>
+<p>Copies the contents of the existing <strong>Region</strong> object into a new <strong>Region</strong> object.</p>
+<pre class="code"><code>FUNCTION Clone (BYVAL pCloneRegion AS CGpRegion PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pCloneRegion</em></td><td>Pointer to the <strong>Region</strong> object where to copy the contents of the existing object.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates two regions, one from a rectangle and the other from a path.
+' Next, the code clones the region that was created from a path and uses a solid brush to
+' fill the cloned region. Then, it forms the union of the two regions and fills it.
+' ========================================================================================
+SUB Example_CloneRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   DIM alphaBrush AS CGpSolidBrush = GDIP_ARGB(128, 0, 0, 255)
+
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM pPath AS CGpGraphicsPath
+   pPath.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a rectangle.
+   DIM rc AS GpRect = (65, 15, 70, 45)
+   DIM rectRegion AS CGpRegion = @rc
+
+   ' // Create a region from a curved path.
+   DIM pathRegion AS CGpRegion = @pPath
+
+   ' // Make a copy (clone) of the curved region.
+   DIM pClonedRegion AS CGpRegion
+   pathRegion.Clone(@pClonedRegion)
+
+   ' // Fill the cloned region with a red brush.
+   graphics.FillRegion(@solidBrush, @pClonedRegion)
+
+   ' // Form the union of the cloned region and the rectangular region.
+   pClonedRegion.Union_(@rectRegion)
+
+   ' // Fill the union of the two regions with a semitransparent blue brush.
+   graphics.FillRegion(@alphaBrush, @pClonedRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="complement">Complement</h3>
+<p>Updates this region to the portion of the specified rectangle's interior that does not intersect this region.</p>
+<pre class="code"><code>FUNCTION Complement (BYVAL rc AS GpRectF PTR) AS GpStatus
+FUNCTION Complement (BYVAL rc AS GpRect PTR) AS GpStatus</code></pre>
+<p>Updates this region to the portion of the specified path's interior that does not intersect this region.</p>
+<pre class="code"><code>FUNCTION Complement (BYVAL pPath AS CGpGraphicsPath PTR) AS GpStatus</code></pre>
+<p>Updates this region to the portion of another region that does not intersect this region.</p>
+<pre class="code"><code>FUNCTION Complement (BYVAL pRegion AS CGpRegion PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>rc</em></td><td>Reference to a rectangle to use to update this <strong>Region</strong> object.</td></tr><tr><td><em>pPath</em></td><td>Pointer to a <strong>GraphicsPath</strong> object that specifies the path to use to update this <strong>Region</strong> object.</td></tr><tr><td><em>pRegion</em></td><td>Pointer to a <strong>Region</strong> object to use to update this <strong>Region</strong> object.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a region from a path and then uses a rectangle to update the region.
+' ========================================================================================
+SUB Example_ComplementRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM pPath AS CGpGraphicsPath
+   pPath.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a path.
+   DIM pRegion AS CGpRegion = @pPath
+
+   ' // Update the region so that it consists of all points inside the
+   ' // rectangle but outside the path region.
+   DIM rcf AS GpRectF = (65.3, 15.1, 70.0, 45.8)
+   pRegion.Complement(@rcf)
+   graphics.FillRegion(@solidBrush, @pRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a region from a path and then uses a rectangle to update the region.
+' ========================================================================================
+SUB Example_ComplementRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM pPath AS CGpGraphicsPath
+   pPath.AddClosedCurve(@pts(0), 6)
+
+      ' // Create a region from a rectangle
+   DIM rc AS GpRect = (65, 15, 70, 45)
+   DIM pRegion AS CGpRegion = @rc
+
+   ' // Update the region so that it consists of all points inside the
+   ' // rectangle but outside the path region
+   pRegion.Complement(@pPath)
+   graphics.FillRegion(@solidBrush, @pRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a region from a path and then uses a rectangle to update the region.
+' ========================================================================================
+SUB Example_ComplementRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM pPath AS CGpGraphicsPath
+   pPath.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a rectangle
+   DIM rc AS GpRect = (65, 15, 70, 45)
+   DIM rectRegion AS CGpRegion = @rc
+   ' // Create a region from a path
+   DIM pathRegion AS CGpRegion = @pPath
+
+   ' // Update the region so that it consists of all points inside the
+   ' // rectangle but outside the path region
+   rectRegion.Complement(@pathRegion)
+   graphics.FillRegion(@solidBrush, @rectRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="equals">Equals</h3>
+<p>Determines whether this region is equal to a specified region.</p>
+<pre class="code"><code>FUNCTION Equals (BYVAL pRegion AS CGpRegion PTR, BYVAL pGraphics AS CGpGraphics PTR) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pRegion</em></td><td>Pointer to a <strong>Region</strong> object to test against this Region object.</td></tr><tr><td><em>pGraphics</em></td><td>Pointer to a <strong>Graphics</strong> object that contains the world and page transformations required to calculate the device coordinates of this region and the region that is specified by the region parameter.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If this region is identical to the specified region, this method returns TRUE; otherwise, it returns FALSE.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates two regions, one from a rectangle and the other from a path.
+' The code then tests to determine whether the two regions are the same and performs a task
+' based on the result of the test.
+' ========================================================================================
+SUB Example_Equals (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   ' // Create solid brushes
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   DIM alphaBrush AS CGpSolidBrush = ARGB(128, 0, 0, 255)
+
+   DIM pts(0 TO 5) AS GpPoint = {(20, 20), (120, 20), (120, 70), (20, 70)}
+   DIM path AS CGpGraphicsPath
+   path.AddPolygon(@pts(0), 4)
+
+   ' // Create a region from a rectangle.
+   DIM rc AS GpRect = (20, 20, 100, 50)
+   DIM rectRegion AS CGpRegion = @rc
+   graphics.FillRegion(@solidBrush, @rectRegion)
+
+   ' // Create a region from a path.
+   DIM pathRegion AS CGpRegion = @path
+   graphics.FillRegion(@alphaBrush, @pathRegion)
+
+   IF pathRegion.Equals(@rectRegion, @graphics) THEN
+      ' // The two regions are the same.
+      ' // Perform some task.
+      PRINT "Equal"
+   ELSE
+      ' // The two regions are not the same.
+      ' // Perform a different task.
+      PRINT "Not equal"
+   END IF
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="exclude">Exclude</h3>
+<p>Updates this region to the portion of itself that does not intersect the specified rectangle's interior.</p>
+<pre class="code"><code>FUNCTION Exclude (BYVAL rc AS GpRectF PTR) AS GpStatus
+FUNCTION Exclude (BYVAL rc AS GpRect PTR) AS GpStatus</code></pre>
+<p>Updates this region to the portion of itself that does not intersect the specified path's interior.</p>
+<pre class="code"><code>FUNCTION Exclude (BYVAL pPath AS CGpGraphicsPath PTR) AS GpStatus</code></pre>
+<p>Updates this region to the portion of itself that does not intersect another region.</p>
+<pre class="code"><code>FUNCTION Exclude (BYVAL pRegion AS CGpRegion PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>rc</em></td><td>Reference to a rectangle to use to update this <strong>Region</strong> object.</td></tr><tr><td><em>pPath</em></td><td>Pointer to a <strong>GraphicsPath</strong> object that specifies the path to use to update this <strong>Region</strong> object.</td></tr><tr><td><em>pRegion</em></td><td>Pointer to a Region object to use to update this Region object.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a region from a path and then uses a rectangle to update the region.
+' ========================================================================================
+SUB Example_ExcludeRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM pPath AS CGpGraphicsPath
+   pPath.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a path
+   DIM pRegion AS CGpRegion = @pPath
+
+   ' // Exclude a rectangle from the path region.
+   DIM rcf AS GpRectF = (65.3, 15.1, 70.0, 45.8)
+   pRegion.Exclude(@rcf)
+   graphics.FillRegion(@solidBrush, @pRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a region from a rectangle and then uses a path to update the region.
+' ========================================================================================
+SUB Example_ExcludeRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM pPath AS CGpGraphicsPath
+   pPath.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a rectangle
+   DIM rcf AS GpRectF = (65.3, 15.1, 70.0, 45.8)
+   DIM pRegion AS CGpRegion = @rcf
+
+   ' // Exclude the intersecting portion of the path interior from the region.
+   pRegion.Exclude(@pPath)
+   graphics.FillRegion(@solidBrush, @pRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates two regions, one from a rectangle and the other from a path.
+' Then the code uses the rectangular region to update the path region.
+' ========================================================================================
+SUB Example_ExcludeRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM pPath AS CGpGraphicsPath
+   pPath.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a rectangle
+   DIM rcf AS GpRectF = (65.3, 15.1, 70.0, 45.8)
+   DIM rectRegion AS CGpRegion = @rcf
+
+  ' // Create a region from a path.
+   DIM pathRegion AS CGpRegion = @pPath
+
+   ' // Exclude a rectangle region from the path region.
+   pathRegion.Exclude(@rectRegion)
+   graphics.FillRegion(@solidBrush, @pathRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getbounds">GetBounds</h3>
+<p>Gets a rectangle that encloses this region.</p>
+<pre class="code"><code>FUNCTION GetBounds (BYVAL rc AS GpRectF PTR, BYVAL pGraphics AS CGpGraphics PTR) AS GpStatus
+FUNCTION GetBounds (BYVAL rc AS GpRect PTR, BYVAL pGraphics AS CGpGraphics PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>rc</em></td><td>Pointer to a <strong>GpRectF</strong> or <strong>GpRect</strong> structure that receives the enclosing rectangle.</td></tr><tr><td><em>pGraphics</em></td><td>Pointer to a <strong>Graphics</strong> object that contains the world and page transformations required to calculate the device coordinates of this region and the rectangle.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a region from a path, gets the region's enclosing rectangle,
+' and then displays both.
+' ========================================================================================
+SUB Example_GetBoundsRect (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM path AS CGpGraphicsPath
+   path.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a path
+   DIM pathRegion AS CGpRegion = @path
+
+   ' // Get the region's enclosing rectangle.
+   DIM rc AS GpRect
+   pathRegion.GetBounds(@rc, @graphics)
+
+   ' // Show the region and the enclosing rectangle.
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   DIM pen AS CGpPen = ARGB_RED
+   graphics.FillRegion(@solidBrush, @pathRegion)
+   graphics.DrawRectangle(@pen, @rc)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getdata">GetData</h3>
+<p>Gets data that describes this region.</p>
+<pre class="code"><code>FUNCTION GetData (BYVAL buffer AS BYTE PTR, BYVAL bufferSize AS UINT, _
+   BYVAL sizeFilled AS UINT PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>buffer</em></td><td>Out. Pointer to an array of BYTE values that receives the region data.</td></tr><tr><td><em>bufferSize</em></td><td>Integer that specifies the size, in bytes, of the buffer array. The size of the buffer array can be greater than or equal to the number of bytes required to store the region data. The exact number of bytes required can be determined by calling the Region.GetDataSize method.</td></tr><tr><td><em>sizeFilled</em></td><td>Out. Pointer to a UINT variable that receives the number of bytes of data actually received by the buffer array. The default value is NULL.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' The following example creates a region from a path and then gets the data that describes
+' the region.
+' ========================================================================================
+SUB Example_GetData (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM path AS CGpGraphicsPath
+   path.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a path
+   DIM pathRegion AS CGpRegion = @path
+
+   ' // Get the region data.
+   DIM bufferSize AS UINT
+   DIM sizeFilled AS UINT
+   DIM pData AS BYTE PTR
+
+   bufferSize = pathRegion.GetDataSize
+   pData = Allocate(bufferSize)
+   pathRegion.GetData(pData, bufferSize, @sizeFilled)
+
+   ' // Inspect or use the region data.
+   ' ...
+   Delete pData
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getdatasize">GetDataSize</h3>
+<p>Gets the number of bytes of data that describes this region.</p>
+<pre class="code"><code>FUNCTION GetDataSize () AS UINT</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a region from a path and then gets the data that describes
+' the region.
+' ========================================================================================
+SUB Example_GetDataSize (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM path AS CGpGraphicsPath
+   path.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a path
+   DIM pathRegion AS CGpRegion = @path
+
+   ' // Get the region data.
+   DIM bufferSize AS UINT
+   DIM sizeFilled AS UINT
+   DIM pData AS BYTE PTR
+
+   bufferSize = pathRegion.GetDataSize
+   pData = Allocate(bufferSize)
+   pathRegion.GetData(pData, bufferSize, @sizeFilled)
+
+   ' // Inspect or use the region data.
+   ' ...
+   Delete pData
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gethrgn">GetHRGN</h3>
+<p>Creates a Windows Graphics Device Interface (GDI) region from this region.</p>
+<pre class="code"><code>FUNCTION GetHRGN (BYVAL pGraphics AS CGpGraphics PTR) AS HRGN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pGraphics</em></td><td>Pointer to a Graphics object that contains the world and page transformations required to calculate the device coordinates of this region.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>This method returns a Windows handle to a GDI region that is created from this region.</p>
+<h5 id="remarks">Remarks</h5>
+<p>It is the caller's responsibility to call the GDI function <strong>DeleteObject</strong> to free the GDI region when it is no longer needed.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a GDI+ region from a path and then uses the GDI+ region to
+' create a GDI region. The code then uses a GDI function to display the GDI region.
+' ========================================================================================
+SUB Example_GetHRGN (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratio
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM pPath AS CGpGraphicsPath
+   pPath.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a path
+   DIM pathRegion AS CGpRegion = @pPath
+
+   ' // Get a handle to a GDI region.
+   DIM hRegion AS HRGN = pathRegion.GetHRGN(@graphics)
+
+   ' // Use GDI to display the region.
+   DIM hBrush AS HBRUSH = CreateSolidBrush(RGB_RED)
+   FillRgn(hdc, hRegion, hBrush)
+
+   IF hBrush THEN DeleteObject(hBrush)
+   IF hRegion THEN DeleteObject(hRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getregionscans">GetRegionScans</h3>
+<p>Gets an array of rectangles that approximate this region. The region is transformed by a specified matrix before the rectangles are calculated.</p>
+<pre class="code"><code>FUNCTION GetRegionScans (BYVAL pMatrix AS CGpMatrix PTR, BYVAL rects AS GpRectF PTR, _
+   BYVAL count AS INT_ PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pMatrix</em></td><td>Pointer to a <strong>Matrix</strong> object that is used to transform the region.</td></tr><tr><td><em>rects</em></td><td>Out. Pointer to an array of <strong>GpRectF</strong> objects that receives the rectangles.</td></tr><tr><td><em>count</em></td><td>Out. Pointer to a LONG that receives a value that indicates the number of rectangles that approximate this region. The value is valid even if rects is a NULL pointer.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The <strong>GetRegionScansCount</strong> method can be used first to determine the number of rectangles. Then, you can allocate a buffer that is the correct size and set the rects parameter to point to the buffer.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a region from a path and gets a set of rectangles that
+' approximate the region. The code then draws each of the rectangles.
+' ========================================================================================
+SUB Example_GetRegionScans (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratio
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   DIM pen AS CGpPen = ARGB_BLACK
+   DIM pPath AS CGpGraphicsPath
+   DIM matrix AS CGpMatrix
+
+   ' // Create a region from a path
+   pPath.AddEllipse(10 * rxRatio, 10 * rxRatio, 50 * rxRatio, 300 * rxRatio)
+   DIM pathRegion AS CGpRegion = @pPath
+   graphics.FillRegion(@solidBrush, @pathRegion)
+
+   ' // Get the rectangles
+   graphics.GetTransform(@matrix)
+   DIM nCount AS LONG = pathRegion.GetRegionScansCount(@matrix)
+   DIM rects(nCount - 1) AS GpRectF
+   pathRegion.GetRegionScans(@matrix, @rects(0), @nCount)
+
+   ' // Draw the rectangles.
+   FOR j AS LONG = 0 TO nCount - 1
+      graphics.DrawRectangle(@pen, @rects(j))
+   NEXT
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="getregionscanscount">GetRegionScansCount</h3>
+<p>Gets the number of rectangles that approximate this region. The region is transformed by a specified matrix before the rectangles are calculated.</p>
+<pre class="code"><code>FUNCTION GetRegionScansCount (BYVAL pMatrix AS CGpMatrix PTR) AS UINT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pMatrix</em></td><td>Pointer to a <strong>Matrix</strong> object that is used to transform the region.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>The <strong>GetRegionScansCount</strong> method can be used before the <strong>GetRegionScans</strong> method to determine the number of rectangles. Then, you can allocate a buffer that is the correct size to store the rectangles that are obtained with the <strong>GetRegionScans</strong> method.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a region from a path and gets a set of rectangles that
+' approximate the region. The code then draws each of the rectangles.
+' ========================================================================================
+SUB Example_GetRegionScansCount (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   DIM pen AS CGpPen = ARGB_BLACK
+   DIM pPath AS CGpGraphicsPath
+   DIM matrix AS CGpMatrix
+
+   ' // Create a region from a path
+   pPath.AddEllipse(10 * rxRatio, 10 * rxRatio, 50 * rxRatio, 300 * rxRatio)
+   DIM pathRegion AS CGpRegion = @pPath
+   graphics.FillRegion(@solidBrush, @pathRegion)
+
+   ' // Get the rectangles
+   graphics.GetTransform(@matrix)
+   DIM nCount AS LONG = pathRegion.GetRegionScansCount(@matrix)
+   DIM rects(nCount - 1) AS GpRectF
+   pathRegion.GetRegionScans(@matrix, @rects(0), @nCount)
+
+   ' // Draw the rectangles.
+   FOR j AS LONG = 0 TO nCount - 1
+      graphics.DrawRectangle(@pen, @rects(j))
+   NEXT
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="intersect">Intersect</h3>
+<p>Updates this region to the portion of itself that intersects the specified rectangle's interior.</p>
+<pre class="code"><code>FUNCTION Intersect (BYVAL rc AS GpRectF PTR) AS GpStatus
+FUNCTION Intersect (BYVAL rc AS GpRect PTR) AS GpStatus</code></pre>
+<p>Updates this region to the portion of itself that intersects the specified path's interior.</p>
+<pre class="code"><code>FUNCTION Intersect (BYVAL pPath AS CGpGraphicsPath PTR) AS GpStatus</code></pre>
+<p>Updates this region to the portion of itself that intersects another region.</p>
+<pre class="code"><code>FUNCTION Intersect (BYVAL pRegion AS CGpRegion PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>rc</em></td><td>Reference to a rectangle to use to update this **Region* object.</td></tr><tr><td><em>pPath</em></td><td>Pointer to a <strong>GraphicsPath</strong> object that specifies the path to use to update this <strong>Region</strong> object.</td></tr><tr><td><em>pRegion</em></td><td>Pointer to a <strong>Region</strong> object to use to update this <strong>Region</strong> object.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a region from a path and then uses a rectangle to update the region.
+' ========================================================================================
+SUB Example_IntersectRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM pPath AS CGpGraphicsPath
+   pPath.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a path
+   DIM pRegion AS CGpRegion = @pPath
+
+   ' // Update the region to the portion that intersects with the rectangle
+   DIM rcf AS GpRectF = (65.2, 15.0, 70.9, 45.0)
+   pRegion.Intersect(@rcf)
+   graphics.FillRegion(@solidBrush, @pRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a region from a rectangle and then uses a path to update the region.
+' ========================================================================================
+SUB Example_IntersectRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM pPath AS CGpGraphicsPath
+   pPath.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a rectangle
+   DIM rcf AS GpRectF = (65.2, 15.0, 70.9, 45.0)
+   DIM pRegion AS CGpRegion = @rcf
+
+   ' // Update the region to the portion that intersects with the rectangle
+   pRegion.Intersect(@pPath)
+   graphics.FillRegion(@solidBrush, @pRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates two regions, one from a path and the other from a rectangle.
+' The code then uses the rectangular region to update the path region.
+' ========================================================================================
+SUB Example_IntersectRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM pPath AS CGpGraphicsPath
+   pPath.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a rectangle
+   DIM rcf AS GpRectF = (65.2, 15.0, 70.9, 45.0)
+   DIM rectRegion AS CGpRegion = @rcf
+
+   ' // Create a region from a path
+   DIM pathRegion AS CGpRegion = @pPath
+
+   ' // Update the region to the portion that intersects with another region
+   pathRegion.Intersect(@rectRegion)
+   graphics.FillRegion(@solidBrush, @pathRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="isempty">IsEmpty</h3>
+<p>Determines whether this region is empty.</p>
+<pre class="code"><code>FUNCTION IsEmpty (BYVAL pGraphics AS CGpGraphics PTR) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pGraphics</em></td><td>Pointer to a <strong>Graphics</strong> object that contains the world and page transformations required to calculate the device coordinates of this region.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If this region is empty, this method returns TRUE; otherwise, it returns FALSE.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates two regions, one from a path and the other from a rectangle.
+' The code then updates the path region with the rectangular region and tests the updated
+' region to determine if it is empty.
+' ========================================================================================
+SUB Example_IsEmpty (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM path AS CGpGraphicsPath
+   path.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a path
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   DIM pathRegion AS CGpRegion = @path
+   graphics.FillRegion(@solidBrush, @pathRegion)
+
+   ' // Create a region from a rectangle.
+   DIM rc AS GpRect = (5, 15, 70, 45)
+   DIM rectRegion AS CGpRegion = @rc
+   graphics.FillRegion(@solidBrush, @rectRegion)
+
+   ' // Update the path region to the portion that intersects the rectangular region.
+   pathRegion.Intersect(@rectRegion)
+   IF pathRegion.IsEmpty(@graphics) THEN
+      '// The intersection is empty.
+      PRINT "Region is empty"
+   END IF
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="isinfinite">IsInfinite</h3>
+<p>Determines whether this region is infinite.</p>
+<pre class="code"><code>FUNCTION IsInfinite (BYVAL pGraphics AS CGpGraphics PTR) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pGraphics</em></td><td>Pointer to a <strong>Graphics</strong> object that contains the world and page transformations required to calculate the device coordinates of this region.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If this region is infinite, this method returns TRUE; otherwise, it returns FALSE.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example uses the default constructor to create an infinite region. Then the
+' code tests the region to determine if it is infinite and performs a task based on the result.
+' ========================================================================================
+SUB Example_IsInfinite (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+
+   graphics.SetPageUnit(UnitInch)
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+
+   ' // The default constructor creates an infinite region.
+   DIM region AS CGpRegion
+
+   IF region.IsInfinite(@graphics) THEN
+      ' // The region is infinite. Perform some task.
+      PRINT "Region is infinite"
+   ELSE
+      ' // Perform a different task.
+   END IF
+
+   graphics.FillRegion(@solidBrush, @region)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="isvisible">IsVisible</h3>
+<p>Determines whether a point is inside this region.</p>
+<pre class="code"><code>FUNCTION IsVisible (BYVAL pt AS GpPointF PTR, BYVAL pGraphics AS CGpGraphics PTR) AS GpStatus
+FUNCTION IsVisible (BYVAL pt AS GpPoint PTR, BYVAL pGraphics AS CGpGraphics PTR) AS GpStatus
+FUNCTION IsVisible (BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL pGraphics AS CGpGraphics PTR) AS GpStatus
+FUNCTION IsVisible (BYVAL pt AS GpRectF PTR, BYVAL pGraphics AS CGpGraphics PTR) AS GpStatus
+FUNCTION IsVisible (BYVAL pt AS GpRect PTR, BYVAL pGraphics AS CGpGraphics PTR) AS GpStatus
+FUNCTION IsVisible (BYVAL x AS SINGLE, BYVAL y AS SINGLE, BYVAL nWidth AS SINGLE, _
+   BYVAL nHeight AS SINGLE, BYVAL pGraphics AS CGpGraphics PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pt</em></td><td>Reference to a point to test.</td></tr><tr><td><em>rc</em></td><td>Reference to a rectangle to test.</td></tr><tr><td><em>x</em></td><td>x-coordinate of the upper-left corner of the rectangle to test.</td></tr><tr><td><em>x</em></td><td>y-coordinate of the upper-left corner of the rectangle to test.</td></tr><tr><td><em>nWidth</em></td><td>The width of the rectangle to test</td></tr><tr><td><em>nHeight</em></td><td>The height of the rectangle to test</td></tr><tr><td><em>pGraphics</em></td><td>Optional. Pointer to a <strong>Graphics</strong> object that contains the world and page transformations required to calculate the device coordinates of this region and the point. The default value is NULL.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the point is inside this region, this method returns TRUE; otherwise, it returns FALSE.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a region from a path and then tests to determine whether a
+' rectangle intersects the region.
+' ========================================================================================
+SUB Example_IsVisibleRect (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM path AS CGpGraphicsPath
+   path.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a path
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   DIM pathRegion AS CGpRegion = @path
+   graphics.FillRegion(@solidBrush, @pathRegion)
+
+   ' // Check to see whether a rectangle intersects the region.
+   DIM rc AS GpRect = (65, 25, 70, 30)
+   IF pathRegion.IsVisible(@rc, @graphics) THEN
+      ' // All or part of the rectangle is in the region.
+      PRINT "Is visible"
+   END IF
+
+   ' // Draw the test rectangle.
+   DIM pen AS CGpPen = GDIP_ARGB(255, 0, 0, 0)
+   graphics.DrawRectangle(@pen, @rc)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="makeempty">MakeEmpty</h3>
+<p>Updates this region to an empty region. In other words, the region occupies no space on the display device.</p>
+<pre class="code"><code>FUNCTION MakeEmpty () AS GpStatus</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a region from a rectangle and paints it with a brush. Then
+' the code makes the region empty and paints the region with a different color to show that
+' the region occupies no space on the display device.
+' ========================================================================================
+SUB Example_MakeEmptyRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM rc AS GpRect = (65, 15, 70, 45)
+
+   ' // Create red and blue solid brushes
+   DIM redBrush AS CGpSolidBrush = ARGB_RED
+   DIM blueBrush AS CGpSolidBrush = ARGB_BLUE
+
+   ' // Create a region, and fill it with a red brush.
+   DIM rectRegion AS CGpRegion = @rc
+   graphics.FillRegion(@redBrush, @rectRegion)
+
+   ' // Make the region empty, and then fill it with a blue brush.
+   ' // The color won't change because it is empty and can't be filled with FillRegion.
+   rectRegion.MakeEmpty
+   graphics.FillRegion(@blueBrush, @rectRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="makeinfinite">MakeInfinite</h3>
+<p>Updates this region to an infinite region.</p>
+<pre class="code"><code>FUNCTION MakeInfinite () AS GpStatus</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a region from a rectangle, makes the region infinite, and
+' fills the region to show the infinite region.
+' ========================================================================================
+SUB Example_MakeInfiniteRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   ' // Create red and blue solid brushes
+   DIM redBrush AS CGpSolidBrush = ARGB_RED
+   DIM blueBrush AS CGpSolidBrush = ARGB_BLUE
+
+   ' // Create a region, and fill it with a red brush
+   DIM rc AS GpRect = (65, 15, 70, 45)
+   DIM rectRegion AS CGpRegion = @rc
+   graphics.FillRegion(@redBrush, @rectRegion)
+
+   ' // Make the region infinite, and then fill it with a blue brush
+   rectRegion.MakeInfinite
+   graphics.FillRegion(@blueBrush, @rectRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="transform">Transform</h3>
+<p>Transforms this region by multiplying each of its data points by a specified matrix.</p>
+<pre class="code"><code>FUNCTION Transform (BYVAL pMatrix AS CGpMatrix PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pMatrix</em></td><td>Pointer to a matrix that specifies the transformation.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a region from a path and fills it. The code then transforms
+' the region and fills the transformed region to show the transformation.
+' ========================================================================================
+SUB Example_TransformRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM pPath AS CGpGraphicsPath
+   pPath.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a path.
+   DIM pathRegion AS CGpRegion = @pPath
+
+   ' // Transform the region.
+   DIM matrix AS CGpMatrix = CGpMatrix(1, 0, 0, 3, 100, 0)   ' // vertical stretch, shift right
+   pathRegion.Transform(@matrix)
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   graphics.FillRegion(@solidBrush, @pathRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<h3 id="translate">Translate</h3>
+<p>Offsets this region by specified amounts in the horizontal and vertical directions.</p>
+<pre class="code"><code>FUNCTION Translate (BYVAL dx AS SINGLE, BYVAL dy AS SINGLE) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>dx</em></td><td>The amount to shift the region in the x direction.</td></tr><tr><td><em>dy</em></td><td>The amount to shift the region in the y direction.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a region from a path and fills it. The code then
+' translates the region and fills the translated region to show how the region has shifted.
+' ========================================================================================
+SUB Example_TranslateRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM pPath AS CGpGraphicsPath
+   pPath.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a path.
+   DIM pathRegion AS CGpRegion = @pPath
+
+   ' // Translate the region.
+   DIM matrix AS CGpMatrix = CGpMatrix(1, 0, 0, 3, 100, 0)   ' // vertical stretch, shift right
+   pathRegion.Translate(100, 60)
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   graphics.FillRegion(@solidBrush, @pathRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<h3 id="union_">Union_</h3>
+<p>Updates this region to all portions (intersecting and nonintersecting) of itself and all portions of the specified rectangle's interior.</p>
+<pre class="code"><code>FUNCTION Union_ (BYVAL rc AS GpRectF PTR) AS GpStatus
+FUNCTION Union_ (BYVAL rc AS GpRect PTR) AS GpStatus</code></pre>
+<p>Updates this region to all portions (intersecting and nonintersecting) of itself and all portions of the specified path's interior.</p>
+<pre class="code"><code>FUNCTION Union_ (BYVAL pPath AS CGpGraphicsPath PTR) AS GpStatus</code></pre>
+<p>Updates this region to all portions (intersecting and nonintersecting) of itself and all portions of another region.</p>
+<pre class="code"><code>FUNCTION Union_ (BYVAL pRegion AS CGpRegion PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>rc</em></td><td>Reference to a rectangle to use to update this **Region* object.</td></tr><tr><td><em>pPath</em></td><td>Pointer to a <strong>GraphicsPath</strong> object that specifies the path to use to update this <strong>Region</strong> object.</td></tr><tr><td><em>pRegion</em></td><td>Pointer to a <strong>Region</strong> object to use to update this <strong>Region</strong> object.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a region from a path and then uses a rectangle to update
+' the region. The updated region is the union of the path region and a rectangle.
+' ========================================================================================
+SUB Example_UnionRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM pPath AS CGpGraphicsPath
+   pPath.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a path.
+   DIM pRegion AS CGpRegion = @pPath
+
+   ' // Form the union of the region and a rectangle
+   DIM rcf AS GpRectF = (65.3, 15.1, 70.0, 45.8)
+   pRegion.Union_(@rcf)
+   graphics.FillRegion(@solidBrush, @pRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a region from a rectangle and then uses a path to update
+' the region. The updated region is the union of the rectangular region and the path.
+' ========================================================================================
+SUB Example_UnionRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM pPath AS CGpGraphicsPath
+   pPath.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a rectangle
+   DIM rcf AS GpRectF = (65.3, 15.1, 70.0, 45.8)
+   DIM pRegion AS CGpRegion = @rcf
+
+   ' // Exclude the intersecting portion of the path interior from the region.
+   pRegion.Union_(@pPath)
+   graphics.FillRegion(@solidBrush, @pRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates two regions, one from a path and the other from a rectangle.
+' The code then uses the rectangular region to update the path region. The updated region
+' is the union of the two regions.
+' ========================================================================================
+SUB Example_UnionRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM pPath AS CGpGraphicsPath
+   pPath.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a rectangle
+   DIM rcf AS GpRectF = (65.3, 15.1, 70.0, 45.8)
+   DIM rectRegion AS CGpRegion = @rcf
+
+   ' // Create a region from a path.
+   DIM pathRegion AS CGpRegion = @pPath
+
+   ' // Exclude a rectangle region from the path region.
+   pathRegion.Union_(@rectRegion)
+   graphics.FillRegion(@solidBrush, @pathRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="xor_">Xor_</h3>
+<p>Updates this region to the nonintersecting portions of itself and the specified rectangle's interior.</p>
+<pre class="code"><code>FUNCTION Xor_ (BYVAL rc AS GpRectF PTR) AS GpStatus
+FUNCTION Xor_ (BYVAL rc AS GpRect PTR) AS GpStatus</code></pre>
+<p>Updates this region to the nonintersecting portions of itself and the specified path's interior.</p>
+<pre class="code"><code>FUNCTION Xor_ (BYVAL pPath AS CGpGraphicsPath PTR) AS GpStatus</code></pre>
+<p>Updates this region to the nonintersecting portions of itself and another region.</p>
+<pre class="code"><code>FUNCTION Xor_ (BYVAL pRegion AS CGpRegion PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>rc</em></td><td>Reference to a rectangle to use to update this **Region* object.</td></tr><tr><td><em>pPath</em></td><td>Pointer to a <strong>GraphicsPath</strong> object that specifies the path to use to update this <strong>Region</strong> object.</td></tr><tr><td><em>pRegion</em></td><td>Pointer to a <strong>Region</strong> object to use to update this <strong>Region</strong> object.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' Updates a region to the nonintersecting portions of itself and the specified rectangle's interior.
+' ========================================================================================
+SUB Example_XorRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM pPath AS CGpGraphicsPath
+   pPath.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a path.
+   DIM pRegion AS CGpRegion = @pPath
+
+   ' // Perform an exclusive OR operation on the region and a rectangle.
+   DIM rcf AS GpRectF = (65.3, 15.1, 70.0, 45.8)
+   pRegion.Xor_(@rcf)
+   graphics.FillRegion(@solidBrush, @pRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a region from a path and then uses a rectangle to update the region.
+' ========================================================================================
+SUB Example_XorRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM pPath AS CGpGraphicsPath
+   pPath.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a rectangle
+   DIM rcf AS GpRectF = (65.3, 15.1, 70.0, 45.8)
+   DIM pRegion AS CGpRegion = @rcf
+
+   ' // Perform an exclusive OR operation on the region and a rectangle.
+   pRegion.Xor_(@pPath)
+   graphics.FillRegion(@solidBrush, @pRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' Updates a region to the nonintersecting portions of itself and the specified rectangle's interior.
+' ========================================================================================
+SUB Example_XorRegion (BYVAL hdc AS HDC)
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS CGpGraphics = hdc
+   ' // Get the DPI scaling ratios
+   DIM rxRatio AS SINGLE = graphics.GetDpiX / 96
+   DIM ryRatio AS SINGLE = graphics.GetDpiY / 96
+   ' // Set the scale transform
+   graphics.ScaleTransform(rxRatio, ryRatio)
+
+   DIM solidBrush AS CGpSolidBrush = ARGB_RED
+   DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)}
+   DIM pPath AS CGpGraphicsPath
+   pPath.AddClosedCurve(@pts(0), 6)
+
+   ' // Create a region from a rectangle
+   DIM rcf AS GpRectF = (65.3, 15.1, 70.0, 45.8)
+   DIM rectRegion AS CGpRegion = @rcf
+
+   ' // Create a region from a path
+   DIM pathRegion AS CGpRegion = @pPath
+
+   ' // Perform an exclusive OR operation on the region and a rectangle.
+   pathRegion.Xor_(@rectRegion)
+   graphics.FillRegion(@solidBrush, @pathRegion)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

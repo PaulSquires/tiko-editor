@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>As — Help Center</title>
+<meta name="description" content="Part of a declaration which specifies a data type, or part of the Open statement which specifies a file handle.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/miscellaneous-keywords/procedures/as.html">
+<meta property="og:title" content="As">
+<meta property="og:description" content="Part of a declaration which specifies a data type, or part of the Open statement which specifies a file handle.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/miscellaneous-keywords/procedures/as.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/miscellaneous-keywords/procedures/as.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>As<span class="h1kind">keyword</span></h1>
+<p class="lede">Part of a declaration which specifies a data type, or part of the Open statement which specifies a file handle.</p>
+<div class="badges"><a class="badge" href="../index.html">Miscellaneous Keywords</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>symbolname As datatype</code></pre>
+<pre class="code sig"><code>Open ... As #filenumber</code></pre>
+<pre class="code sig"><code>Type ... As datatype</code></pre>
+<h2>Description</h2>
+<br>
+<code><b>As</b></code> is used to declare the type of variables, fields or arguments and is also used in the <code><a href="../../file-i-o-functions/procedures/open.html">Open</a></code> statement to determine the file handle. <code><b>As</b></code> is also used with the <code><a href="../../user-defined-types/procedures/type-alias.html">Type (Alias)</a></code> syntax, similar to C's typedef statement.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Differences from QB</h3><br>
+<ul><li> The <a href="../../user-defined-types/procedures/type-alias.html">Type (Alias)</a> syntax was not supported in QB.<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../procedures/procedures/declare.html">Declare</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code><br>
+<li> <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code><br>
+<li> <code><a href="../../file-i-o-functions/procedures/open.html">Open</a></code><br>
+<br>
+</li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' don't try to compile this code, the examples are unrelated</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>mySub</span> <span>(</span><span>X</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>Y</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span><span>,</span> <span>Z</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span>
+
+<span class="tok-cm">' ...</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>X</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-cm">' ...</span>
+
+
+
+<span class="tok-kw">Type</span> <span>myType</span>
+
+  <span>X</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span>Y</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span>
+
+  <span>Z</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-cm">' ...</span>
+
+
+
+<span class="tok-kw">Type</span> <span>TheNewType</span> <span class="tok-kw">As</span> <span>myType</span>
+
+<span class="tok-cm">' ...</span>
+
+
+
+<span class="tok-kw">Open</span> <span>&quot;test&quot;</span> <span class="tok-kw">For</span> <span class="tok-kw">Input</span> <span class="tok-kw">As</span> <span>#</span><span class="tok-nu">1</span>
+
+<span class="tok-cm">' ...</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgAs.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

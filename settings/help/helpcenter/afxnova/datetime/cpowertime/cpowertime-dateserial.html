@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CPowerTime.DateSerial — Help Center</title>
+<meta name="description" content="Gets/sets the date and time as a date serial.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/datetime/cpowertime/cpowertime-dateserial.html">
+<meta property="og:title" content="CPowerTime.DateSerial">
+<meta property="og:description" content="Gets/sets the date and time as a date serial.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/datetime/cpowertime/cpowertime-dateserial.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/datetime/cpowertime/cpowertime-dateserial.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cpowertime-class.html">CPowerTime Class</a></div>
+<h1>CPowerTime.DateSerial<span class="h1kind">property</span></h1>
+<p class="lede">Gets/sets the date and time as a date serial.</p>
+<div class="badges"><a class="badge" href="../index.html">DateTime</a><span class="badge">property</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PROPERTY DateSerial () AS DOUBLE</code></pre>
+<pre class="code sig"><code>PROPERTY DateSerial (BYVAL dTime AS DOUBLE)</code></pre>
+<h2>Description</h2>
+<p>Gets/sets the date and time as a date serial.</p>
+<h2>Remarks</h2>
+<p>A date serial is a number that holds a date and time value in the same format used by PDS or VBDOS. The value is a count of the days from 0:00 AM of December 30,1899; it's mainly used for easy counting of the time between two dates.</p>
+<p>The date serial unit is one day and the fractional part represents the time of the day. If a date serial is written into an integer, the time is lost. FreeBASIC date serials are not limited to dates between 1753 and 2078 as in VBDOS. FreeBASIC date serial handling functions use Double arguments.</p>
+<p>FreeBASIC date serial handling functions require the inclusion of vbcompat.bi or datetime.bi in the source.</p>
+<p>A date serial can be created by the functions Now, TimeSerial+DateSerial, or DateValue+TimeValue.</p>
+<p>The functions Year, Month, Weekday, Day, Hour, Minute, Second allow to recover the different components of a date serial.</p>
+<p>The Format function has formatting expressions to print date serials in a human readable way.</p>
+<h2>Example</h2>
+<p>DIM ct AS CPowerTime ct.DateSerial = DateSerial(2019, 2, 4) Print Format(ct.DateSerial, "yyyy/mm/dd") ct.DateSerial = DateValue("4/2/2019") Print Format(ct.DateSerial, "yyyy/mm/dd") ct.DateSerial = TimeValue("11:59:59PM") Print Format(dt, "hh:mm:ss") ct.DateSerial = Now Print Format(ct.DateSerial, "yyyy/mm/dd hh:mm:ss") ct.DateSerial = DateSerial(2005, 11, 28) + TimeSerial(7, 30, 50) Print Format(ct.DateSerial, "yyyy/mm/dd hh:mm:ss")</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/CPowerTime.inc:246</span></li><li>Documented in <span class="srcref">DateTime/CPowerTime Class.md</span></li><li>Topic: <a href="../cpowertime-class.html">CPowerTime Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

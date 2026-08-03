@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__FB_UNIQUEID_POP__ — Help Center</title>
+<meta name="description" content="Intrinsic define (macro) performed by the compiler.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/intrinsic-defines/procedures/fb-uniqueid-pop.html">
+<meta property="og:title" content="__FB_UNIQUEID_POP__">
+<meta property="og:description" content="Intrinsic define (macro) performed by the compiler.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/intrinsic-defines/procedures/fb-uniqueid-pop.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/intrinsic-defines/procedures/fb-uniqueid-pop.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>__FB_UNIQUEID_POP__<span class="h1kind">keyword</span></h1>
+<p class="lede">Intrinsic define (macro) performed by the compiler.</p>
+<div class="badges"><a class="badge" href="../index.html">Intrinsic Defines</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>__FB_UNIQUEID_POP__( stack-id )</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>stack-id</code></td><td></td><td>the name of the stack to pop</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+Pops an identifier off of stack identified by <code><i>stack-id</i></code> (the size of the stack is decreased by 1).<br>
+(<code><a href="fb-uniqueid.html">__FB_UNIQUEID__</a></code> allows to get the identifier at the top of the stack, and <code><a href="fb-uniqueid-push.html">__FB_UNIQUEID_PUSH__</a></code> allows to push a new unique identifier on to the stack)<br>
+<br>
+Note:<br>
+<div class="indent"><b>-</b> The "stack-id" name itself is a separate namespace from all other symbols.<br>
+<b>-</b> The stack can only contain "unique identifiers".<br>
+<b>-</b> "unique identifier" is a name of an fb symbol that is unique to the module, so does not conflict or shadow other symbol names ("unique identifier" will have the form "LT_xxxx" as a name so it might not be completely unique).<br>
+<b>-</b> fb uses the form "LT_xxxx" internally for labels, symbols, temp variables, etc (so should avoid naming fbc symbols of this form for any fbc program since version 0.0).<br>
+<br>
+</div>When such a stack is no longer in use, it is recommended that it be empty (at the end there must have been applied as many <code><a href="fb-uniqueid-pop.html">__FB_UNIQUEID_POP__</a></code> as <code><a href="fb-uniqueid-push.html">__FB_UNIQUEID_PUSH__</a></code> for this stack).<br>
+At any time of its use, the number of <code><a href="fb-uniqueid-pop.html">__FB_UNIQUEID_POP__</a></code> applied from the beginning must always be less than or equal to the number of <code><a href="fb-uniqueid-push.html">__FB_UNIQUEID_PUSH__</a></code> applied.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Version</h3><br>
+<ul><li> Since fbc 1.08.0<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="fb-uniqueid-push.html">__FB_UNIQUEID_PUSH__</a></code><br>
+<li> <code><a href="fb-uniqueid.html">__FB_UNIQUEID__</a></code><br>
+<br>
+</li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+See also <code><a href="fb-uniqueid.html">__FB_UNIQUEID__</a></code> example.<br>
+<br>
+<code><pre class="code"><span>#macro repeat ? ( count )  '' with user named variable
+
+</span>    <span class="tok-kw">Scope</span>
+
+        <span class="tok-kw">Dim</span> <span>__counter__</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>=</span> <span>count</span>
+
+        <span class="tok-kw">While</span><span>(</span> <span>__counter__</span><span>)</span>
+
+<span>#endmacro
+
+</span>
+
+<span>#macro end_repeat  '' with user named variable
+
+</span>            <span>__counter__</span> <span>-=</span> <span class="tok-nu">1</span>
+
+        <span class="tok-kw">Wend</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Scope</span>   
+
+<span>#endmacro
+
+</span>
+
+<span class="tok-kw">Print</span> <span>&quot;With user named variable:&quot;</span>
+
+<span>repeat</span> <span class="tok-nu">3</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;   outer&quot;</span>
+
+    <span>repeat</span> <span class="tok-nu">2</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;   --- inner&quot;</span>
+
+    <span>end_repeat</span>
+
+<span>end_repeat</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+
+
+<span>#undef repeat
+
+#undef end_repeat
+
+</span>
+
+<span>#macro repeat ? ( count )  '' with &quot;unique identifier&quot; variable
+
+</span>    <span class="tok-kw">__FB_UNIQUEID_PUSH__</span><span>(</span> <span>ctx</span> <span>)</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">__FB_UNIQUEID__</span><span>(</span> <span>ctx</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>=</span> <span>count</span>
+
+    <span class="tok-kw">While</span><span>(</span> <span class="tok-kw">__FB_UNIQUEID__</span><span>(</span> <span>ctx</span> <span>)</span> <span>)</span>
+
+<span>#endmacro
+
+</span>
+
+<span>#macro end_repeat  '' with &quot;unique identifier&quot; variable
+
+</span>        <span class="tok-kw">__FB_UNIQUEID__</span><span>(</span> <span>ctx</span> <span>)</span> <span>-=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Wend</span>
+
+    <span class="tok-kw">__FB_UNIQUEID_POP__</span><span>(</span> <span>ctx</span> <span>)</span>
+
+<span>#endmacro
+
+</span>
+
+<span class="tok-kw">Print</span> <span>&quot;With &quot;&quot;unique identifier&quot;&quot; variable:&quot;</span>
+
+<span>repeat</span> <span class="tok-nu">3</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;   outer&quot;</span>
+
+    <span>repeat</span> <span class="tok-nu">2</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;   --- inner&quot;</span>
+
+    <span>end_repeat</span>
+
+<span>end_repeat</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-cm">/' Output:</span>
+
+<span class="tok-cm">With user named variable:</span>
+
+<span class="tok-cm">   outer</span>
+
+<span class="tok-cm">   --- inner</span>
+
+<span class="tok-cm">   --- inner</span>
+
+<span class="tok-cm">   outer</span>
+
+<span class="tok-cm">   --- inner</span>
+
+<span class="tok-cm">   --- inner</span>
+
+<span class="tok-cm">   outer</span>
+
+<span class="tok-cm">   --- inner</span>
+
+<span class="tok-cm">   --- inner</span>
+
+
+
+<span class="tok-cm">With &quot;unique identifier&quot; variable:</span>
+
+<span class="tok-cm">   outer</span>
+
+<span class="tok-cm">   --- inner</span>
+
+<span class="tok-cm">   --- inner</span>
+
+<span class="tok-cm">   outer</span>
+
+<span class="tok-cm">   --- inner</span>
+
+<span class="tok-cm">   --- inner</span>
+
+<span class="tok-cm">   outer</span>
+
+<span class="tok-cm">   --- inner</span>
+
+<span class="tok-cm">   --- inner</span>
+
+<span class="tok-cm">'/</span></pre></code><br>
+The first part of code works, because the '__counter__' variable is defined in a [Scope...End Scope] block and therefore allows nesting.<br>
+The second part of code works (without [Scope...End Scope] block) because of using a "unique identifier" (provided by the compiler).<br>
+<br>
+See also <code><a href="fb-uniqueid-push.html">__FB_UNIQUEID_PUSH__</a></code> example.<br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgDdfbuniqueidpop.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

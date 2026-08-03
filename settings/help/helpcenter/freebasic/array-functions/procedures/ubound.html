@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UBound — Help Center</title>
+<meta name="description" content="Returns the upper bound of an array&#x27;s dimension">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/array-functions/procedures/ubound.html">
+<meta property="og:title" content="UBound">
+<meta property="og:description" content="Returns the upper bound of an array&#x27;s dimension">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/array-functions/procedures/ubound.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/array-functions/procedures/ubound.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>UBound<span class="h1kind">function</span></h1>
+<p class="lede">Returns the upper bound of an array&#x27;s dimension</p>
+<div class="badges"><a class="badge" href="../index.html">Array Functions</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Function UBound ( array() As Any, ByVal dimension As Integer = 1 ) As Integer</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>array</code></td><td></td><td>an array of any type</td></tr><tr><td><code>dimension</code></td><td></td><td>the dimension to get upper bound of</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+Returns the upper bound of an array's dimension.<br>
+ <br>
+
+<h2>Description</h2>
+<br>
+<code><b>UBound</b></code> returns the largest value that can be used as an index into a particular dimension of an array.<br>
+<br>
+Array dimensions are numbered from one (<code>1</code>) to <code><i>n</i></code>, where <code><i>n</i></code> is the total number of dimensions. If <code><i>dimension</i></code> is not specified, <code><b>UBound</b></code> will return the upper bound of the first dimension.<br>
+<br>
+If <code><i>dimension</i></code> is zero (0), <code><b>UBound</b></code> returns <code><i>n</i></code>, the number of dimensions in the array. For any other <code><i>dimension</i></code> values outside of the valid range <code>1</code>..<code><i>n</i></code>, the result is <code>-1</code>. This can be used to detect the number of dimensions of variable-length arrays, and in combination with the result of <code>Lbound()</code> for such cases, whether a given dimension exists, or whether the array is empty (zero dimensions). See the <code><a href="lbound.html">LBound</a></code> page for more information.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<i>result</i> = <b>UBound</b>( <i>array</i> [, <i>dimension</i> ] )<br>
+</code><br>
+
+<h3>See also</h3><br>
+<ul><li> <code><a href="lbound.html">LBound</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/static.html">Static</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code><br>
+<li> <code><a href="redim.html">ReDim</a></code><br>
+<li> <code><a href="../../miscellaneous-keywords/procedures/sizeof.html">SizeOf</a></code><br>
+<br>
+</li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>array</span><span>(-</span><span class="tok-nu">10</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span><span>,</span> <span class="tok-nu">5</span> <span class="tok-kw">To</span> <span class="tok-nu">15</span><span>,</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-kw">Print</span> <span class="tok-kw">UBound</span><span>(</span><span>array</span><span>)</span> <span class="tok-cm">'returns 10</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">UBound</span><span>(</span><span>array</span><span>,</span> <span class="tok-nu">2</span><span>)</span> <span class="tok-cm">'returns 15</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">UBound</span><span>(</span><span>array</span><span>,</span> <span class="tok-nu">3</span><span>)</span> <span class="tok-cm">'returns 2</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' determining the size of an array</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Short</span> <span>array</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span><span>)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>arraylen</span><span>,</span> <span>arraysize</span>
+
+
+
+<span>arraylen</span> <span>=</span> <span class="tok-kw">UBound</span><span>(</span><span>array</span><span>)</span> <span>-</span> <span class="tok-kw">LBound</span><span>(</span><span>array</span><span>)</span> <span>+</span> <span class="tok-nu">1</span>
+
+<span>arraysize</span> <span>=</span> <span>arraylen</span> <span>*</span> <span class="tok-kw">SizeOf</span><span>(</span> <span class="tok-kw">Short</span> <span>)</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Number of elements in array:&quot;</span><span>,</span> <span>arraylen</span>    <span class="tok-cm">'10</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Number of bytes used in array:&quot;</span><span>,</span> <span>arraysize</span> <span class="tok-cm">'10 * 2 = 20 </span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' determining the size of a multi-dimensional array</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>array4D</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>,</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span><span>,</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">4</span><span>,</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">5</span><span>)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>arraylen</span><span>,</span> <span>arraysize</span>
+
+
+
+
+
+<span>arraylen</span> <span>=</span> <span>(</span><span class="tok-kw">UBound</span><span>(</span><span>array4D</span><span>,</span> <span class="tok-nu">4</span><span>)</span> <span>-</span> <span class="tok-kw">LBound</span><span>(</span><span>array4D</span><span>,</span> <span class="tok-nu">4</span><span>)</span> <span>+</span> <span class="tok-nu">1</span><span>)</span> <span>_</span>
+
+         <span>*</span> <span>(</span><span class="tok-kw">UBound</span><span>(</span><span>array4D</span><span>,</span> <span class="tok-nu">3</span><span>)</span> <span>-</span> <span class="tok-kw">LBound</span><span>(</span><span>array4D</span><span>,</span> <span class="tok-nu">3</span><span>)</span> <span>+</span> <span class="tok-nu">1</span><span>)</span> <span>_</span>
+
+         <span>*</span> <span>(</span><span class="tok-kw">UBound</span><span>(</span><span>array4D</span><span>,</span> <span class="tok-nu">2</span><span>)</span> <span>-</span> <span class="tok-kw">LBound</span><span>(</span><span>array4D</span><span>,</span> <span class="tok-nu">2</span><span>)</span> <span>+</span> <span class="tok-nu">1</span><span>)</span> <span>_</span>
+
+         <span>*</span> <span>(</span><span class="tok-kw">UBound</span><span>(</span><span>array4D</span><span>,</span> <span class="tok-nu">1</span><span>)</span> <span>-</span> <span class="tok-kw">LBound</span><span>(</span><span>array4D</span><span>,</span> <span class="tok-nu">1</span><span>)</span> <span>+</span> <span class="tok-nu">1</span><span>)</span>
+
+
+
+<span>arraysize</span> <span>=</span> <span>arraylen</span> <span>*</span> <span class="tok-kw">SizeOf</span><span>(</span> <span class="tok-kw">Long</span> <span>)</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Number of elements in array:&quot;</span><span>,</span> <span>arraylen</span>    <span class="tok-cm">'2 * 3 * 4 * 5 = 120</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Number of bytes used in array:&quot;</span><span>,</span> <span>arraysize</span> <span class="tok-cm">'120 * 4 = 480</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' determining whether an array is empty</span>
+
+<span class="tok-kw">Dim</span> <span>array</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;lbound: &quot;</span><span>;</span> <span class="tok-kw">LBound</span><span>(</span> <span>array</span> <span>),</span> <span>&quot;ubound: &quot;</span><span>;</span> <span class="tok-kw">UBound</span><span>(</span> <span>array</span> <span>)</span>  <span class="tok-cm">''  0 and -1</span>
+
+
+
+<span class="tok-kw">If</span> <span class="tok-kw">LBound</span><span>(</span> <span>array</span> <span>)</span> <span>&gt;</span> <span class="tok-kw">UBound</span><span>(</span> <span>array</span> <span>)</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;array is empty&quot;</span>
+
+<span class="tok-kw">Else</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;array is not empty&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">If</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-kw">Sub</span> <span>printArrayDimensions</span><span>(</span> <span>array</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;dimensions: &quot;</span> <span>&amp;</span> <span class="tok-kw">UBound</span><span>(</span> <span>array</span><span>,</span> <span class="tok-nu">0</span> <span>)</span>
+
+
+
+    <span class="tok-cm">'' For each dimension...</span>
+
+    <span class="tok-kw">For</span> <span>d</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span> <span>array</span><span>,</span> <span class="tok-nu">0</span> <span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span> <span>array</span><span>,</span> <span class="tok-nu">0</span> <span>)</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;dimension &quot;</span> <span>&amp;</span> <span>d</span> <span>&amp;</span> <span>&quot;: &quot;</span> <span>&amp;</span> <span class="tok-kw">LBound</span><span>(</span> <span>array</span><span>,</span> <span>d</span> <span>)</span> <span>&amp;</span> <span>&quot; to &quot;</span> <span>&amp;</span> <span class="tok-kw">UBound</span><span>(</span> <span>array</span><span>,</span> <span>d</span> <span>)</span>
+
+    <span class="tok-kw">Next</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>array</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span>printArrayDimensions</span><span>(</span> <span>array</span><span>()</span> <span>)</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;---&quot;</span>
+
+
+
+<span class="tok-kw">ReDim</span> <span>array</span><span>(</span><span class="tok-nu">10</span> <span class="tok-kw">To</span> <span class="tok-nu">11</span><span>,</span> <span class="tok-nu">20</span> <span class="tok-kw">To</span> <span class="tok-nu">22</span><span>)</span>
+
+<span>printArrayDimensions</span><span>(</span> <span>array</span><span>()</span> <span>)</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgUbound.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

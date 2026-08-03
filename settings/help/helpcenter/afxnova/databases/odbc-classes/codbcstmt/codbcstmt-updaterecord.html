@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CODBCStmt.UpdateRecord — Help Center</title>
+<meta name="description" content="Updates a record.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbcstmt/codbcstmt-updaterecord.html">
+<meta property="og:title" content="CODBCStmt.UpdateRecord">
+<meta property="og:description" content="Updates a record.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbcstmt/codbcstmt-updaterecord.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/odbc-classes/codbcstmt/codbcstmt-updaterecord.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../codbcstmt-class.html">CODBCStmt Class</a></div>
+<h1>CODBCStmt.UpdateRecord<span class="h1kind">method</span></h1>
+<p class="lede">Updates a record.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CODBCStmt.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION UpdateRecord (BYVAL wRow AS SQLSETPOSIROW = 1) AS SQLRETURN</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wRow</code></td><td></td><td>Optional. Row number inside the rowset.<br>Note: <em>wRow</em> is the row number inside the rowset (if the rowset has only one row, then <em>wRow</em> must be always 1).</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>SQL_SUCCESS, SQL_SUCCESS_WITH_INFO, SQL_NEED_DATA, SQL_STILL_EXECUTING, SQL_ERROR, or SQL_INVALID_HANDLE.</p>
+<h2>Description</h2>
+<p>The driver positions the cursor in the row specified by <em>wRow</em> and updates the underlying row of data with the values in the rowset buffers (the <em>TargetValue</em> argument in <strong>BindCol</strong>). It retrieves the lengths of the data from the length indicator buffers (the StrLen_or_Ind argument in <strong>BindCol</strong>). If the length of any column is SQL_COLUMN_IGNORE, the column is not updated. After updating the row, the driver changes the corresponding element of the row status array to SQL_ROW_UPDATED or SQL_ROW_ACCESS_WITH_INFO (if the row status array exists).</p>
+<h2>Example</h2>
+<p>#include once "AfxNova/COdbc.inc" USING AfxNova</p>
+<p>' // Connect with the database DIM wszConStr AS WSTRING * 260 = "DRIVER={Microsoft Access Driver (*.mdb)};DBQ=biblio.mdb" DIM pDbc AS CODBC = wszConStr</p>
+<p>' // Allocate an statement object DIM pStmt AS COdbcStmt = @pDbc IF pStmt.Handle = NULL THEN PRINT "Failed to allocate the statement handle": SLEEP : END</p>
+<p>' // Cursor type pStmt.SetMultiuserKeysetCursor</p>
+<p>' // Bind the columns DIM AS LONG lAuId, cbAuId pStmt.BindCol(1, @lAuId, @cbAuId) DIM wszAuthor AS WSTRING * 256, cbAuthor AS LONG pStmt.BindCol(2, @wszAuthor, 256, @cbAuthor) DIM iYearBorn AS SHORT, cbYearBorn AS LONG pStmt.BindCol(3, @iYearBorn, @cbYearBorn)</p>
+<p>' // Generate a result set pStmt.ExecDirect ("SELECT * FROM Authors WHERE Au_Id=999")</p>
+<p>' // Fetch the record pstmt.Fetch</p>
+<p>' // Fill the values of the binded application variables and its sizes cbAuID = SQL_COLUMN_IGNORE wszAuthor = "Félix Lope de Vega Carpio" cbAuthor = LEN(wszAuthor) * 2   ' Unicode uses 2 bytes per character iYearBorn = 1562 cbYearBorn = SIZEOF(iYearBorn)</p>
+<p>' // Update the record pStmt.UpdateRecord IF pStmt.Error = FALSE THEN PRINT "Record updated" ELSE PRINT pStmt.GetErrorInfo</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CODBCStmt.inc</code></li><li>Defined in <span class="srcref">AfxNova/COdbcStmt.inc:713</span></li><li>Documented in <span class="srcref">Databases/ODBC Classes/CODBCStmt Class.md</span></li><li>Topic: <a href="../codbcstmt-class.html">CODBCStmt Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

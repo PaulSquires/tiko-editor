@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open Pipe — Help Center</title>
+<meta name="description" content="Opens an external process&#x27; standard input (stdin) or output (stdout) stream, using it as if it were file operations.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/file-i-o-functions/procedures/open-pipe.html">
+<meta property="og:title" content="Open Pipe">
+<meta property="og:description" content="Opens an external process&#x27; standard input (stdin) or output (stdout) stream, using it as if it were file operations.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/file-i-o-functions/procedures/open-pipe.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/file-i-o-functions/procedures/open-pipe.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Open Pipe<span class="h1kind">keyword</span></h1>
+<p class="lede">Opens an external process&#x27; standard input (stdin) or output (stdout) stream, using it as if it were file operations.</p>
+<div class="badges"><a class="badge" href="../index.html">File I/O Functions</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Open Pipe shell_command For Input As [#]filenumber</code></pre>
+<pre class="code sig"><code>Open Pipe shell_command For Output As [#]filenumber</code></pre>
+<pre class="code sig"><code>Open Pipe shell_command For Binary access_type [#]filenumber</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>shell_command</code></td><td></td><td>The external process to execute in the operating system command shell. Relative file paths are relative to the current directory (see <code><a href="../../operating-system-functions/procedures/curdir.html">CurDir</a></code>).  When opening a pipe for a process that requires double quotes in either its executable path, or its arguments, the entire pipe string should be nested inside of double quotes.</td></tr><tr><td><code>access_type</code></td><td></td><td>The type of read or write access requested by the calling process.<br>
+<ul><ul><ul><li> <code><a href="access.html">Access</a></code> {<code>Read</code>|<code>Write</code>} <i>(either the </i>stdin<i> or </i>stdout<i> stream of the external process can be opened)</i><br>
+</li></ul></ul></ul></td></tr><tr><td><code>filenumber</code></td><td></td><td>An available file number to bind to the external process' <i>stdin</i> or <i>stdout</i> stream.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+In the first usage, <code><b>Open Pipe()</b></code> returns a 32 bit <code><a href="../../standard-data-types/procedures/long.html">Long</a></code>: a zero (<code>0</code>) on success and a non-zero error code otherwise.<br>
+<br>
+
+<h2>Description</h2>
+<br>
+<code><b>Open Pipe</b></code> executes another process in the command shell and opens either its <i>stdin</i> or <i>stdout</i> streams for reading or writing. A <i>file number</i> is bound to the stream, which is used in subsequent file operations, such as <code><a href="input.html">Input #</a></code>. An available <code><i>filenumber</i></code> can be retrieved with <code><a href="freefile.html">FreeFile</a></code>. If the external process does not exist, a runtime error is thrown.<br>
+<br>
+The <code><a href="input-file-mode.html">Input</a></code> and <code><a href="output.html">Output</a></code> <i>file modes</i> open the external process' <i>stdin</i> and <i>stdout</i> streams, respectively, for sequential text I/O, useful for reading or writing plain text. Characters, words or whole lines can then be read or written using text-mode file operations, such as <code><a href="../../user-input-runtime-library/procedures/line-input.html">Line Input #</a></code> and <code><a href="print.html">Print #</a></code>.<br>
+<br>
+The <code><a href="binary.html">Binary</a></code> <i>file mode</i> opens the external process' <i>stdin</i> or <i>stdout</i> streams - depending on the <i>access type</i> specified (see description of the <code><i>access_type</i></code> parameter above) - for random-access reading or writing of arbitrarily sized and interpreted raw data. Simple data type values, like <code><a href="../../standard-data-types/procedures/byte.html">Byte</a></code> and <code><a href="../../standard-data-types/procedures/longint.html">LongInt</a></code>, and whole chunks of memory can be read from or written to the streams with binary-mode file operations like <code><a href="get-file-i-o.html">Get #</a></code> and <code><a href="put-file-i-o.html">Put #</a></code>.<br>
+Bidirectional pipes are not supported by FB and must be implemented using the OS' API functions.<br>
+<br>
+The error code returned by <code><b>Open Pipe</b></code> can be checked using <code><a href="../../error-handling-functions/procedures/err.html">Err</a></code> in the next line. The function version of  <code><b>Open Pipe</b></code> returns directly the error code as a 32 bit <code><a href="../../standard-data-types/procedures/long.html">Long</a></code>.<br>
+<br>
+<b>Runtime errors:</b><br>
+<code><b>Open Pipe</b></code> throws one of the following <a href="../../language-documentation/other/error-handling.html">runtime errors</a>:<br>
+<br>
+<i>(<code>1</code>) Illegal function call</i><br>
+<ul><ul><li> <code><i>filenumber</i></code> was not free at the time. use <code><a href="freefile.html">FreeFile</a></code> to ensure that <code><i>filenumber</i></code> is free.<br>
+<br>
+</li></ul></ul>
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<i>result</i> = <b>Open Pipe</b>( <i>command</i>[,] <b>For</b> {<b><a href="input-file-mode.html">Input</a></b>|<b><a href="output.html">Output</a></b>}[,] <b>As</b> <i>filenumber</i> )<br>
+<div class="indent"></div></code><i>or,</i><code><br>
+<i>result</i> = <b>Open Pipe</b>( <i>command</i>[,] <b>For</b> <b><a href="binary.html">Binary</a></b>[,] <i>access_type</i>[,] <b>As</b> <i>filenumber</i> )<br>
+<div class="indent"></div></code><i>(or in the QB-like syntax,)</i><code><br>
+<b>Open Pipe</b> <i>filename</i> <b>For</b> {<b><a href="input-file-mode.html">Input</a></b>|<b><a href="output.html">Output</a></b>} <b>As</b> <i>filenumber</i><br>
+<div class="indent"></div></code><i>(or,)</i><code><br>
+<b>Open Pipe</b> <i>filename</i> <b>For</b> <b><a href="binary.html">Binary</a></b> <i>access_type</i> <b>As</b> <i>filenumber</i><br>
+</code><br>
+
+<h3>Platform Differences</h3><br>
+<ul><li> The <code><a href="binary.html">Binary</a></code> <i>file mode</i> is not supported on all platforms; <code><b>Open Pipe</b></code> will throw an error if it is unable to open the external process' <i>stdin</i> or <i>stdout</i> streams in binary mode.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../operating-system-functions/procedures/shell.html">Shell</a></code><br>
+<li> <code><a href="open.html">Open</a></code><br>
+<li> <code><a href="open-cons.html">Open Cons</a></code><br>
+<li> <code><a href="open-err.html">Open Err</a></code><br>
+<li> <code><a href="freefile.html">FreeFile</a></code><br>
+<br>
+</li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' This example uses Open Pipe to run a shell command and retrieve its output. </span>
+
+<span>#ifdef __FB_UNIX__
+
+</span><span class="tok-kw">Const</span> <span>TEST_COMMAND</span> <span>=</span> <span>&quot;ls *&quot;</span>
+
+<span>#else
+
+</span><span class="tok-kw">Const</span> <span>TEST_COMMAND</span> <span>=</span> <span>&quot;dir *.*&quot;</span>
+
+<span>#endif
+
+</span>
+
+<span class="tok-kw">Open</span> <span class="tok-kw">Pipe</span> <span>TEST_COMMAND</span> <span class="tok-kw">For</span> <span class="tok-kw">Input</span> <span class="tok-kw">As</span> <span>#</span><span class="tok-nu">1</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>ln</span>
+
+<span class="tok-kw">Do</span> <span class="tok-kw">Until</span> <span class="tok-kw">EOF</span><span>(</span><span class="tok-nu">1</span><span>)</span>
+
+    <span class="tok-kw">Line</span> <span class="tok-kw">Input</span> <span>#</span><span class="tok-nu">1</span><span>,</span> <span>ln</span>
+
+    <span class="tok-kw">Print</span> <span>ln</span>
+
+<span class="tok-kw">Loop</span>
+
+
+
+<span class="tok-kw">Close</span> <span>#</span><span class="tok-nu">1</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgOpenPipe.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

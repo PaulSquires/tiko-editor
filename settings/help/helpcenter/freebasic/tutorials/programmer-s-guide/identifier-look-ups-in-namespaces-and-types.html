@@ -1,0 +1,1380 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Identifier Look-ups in namespaces and types — Help Center</title>
+<meta name="description" content="Identifier Look-ups in namespaces and types — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/identifier-look-ups-in-namespaces-and-types.html">
+<meta property="og:title" content="Identifier Look-ups in namespaces and types">
+<meta property="og:description" content="Identifier Look-ups in namespaces and types — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/identifier-look-ups-in-namespaces-and-types.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/identifier-look-ups-in-namespaces-and-types.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Identifier Look-ups in namespaces and types</h1>
+<h2>Documentation</h2>
+
+	When referencing to an <b>identifier</b> is encountered in a program, a <b>look-up</b> is performed to locate the declaration that introduced that identifier.<br>
+<br>
+<b>Preamble:</b><br>
+<br>
+The identifiers to look-up can be unqualified or qualified:<br>
+<div class="indent"><b>-</b> An unqualified identifier is an identifier that does not have a prefix to specify what scope it comes from.<br>
+<b>-</b> A qualified identifier includes a prefix to clarify the interpretive scope by overriding the default scope.<br>
+<br>
+</div><div>Scope priority hierarchy</div><div><br>
+Unqualified identifier look-ups verify the priority hierarchy as follows:<br>
+<ul><ul><li> [1] Current <code><a href="../../modularizing/procedures/namespace.html">Namespace</a></code>/<code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code>.<br>
+<li> [2] Base Types (by <code><a href="../../user-defined-types/procedures/extends.html">Extends</a></code>), ranked from closest to furthest in inheritance hierarchy.<br>
+<li> [3] Parent Namespaces (by nesting), ranked from closest to furthest in ancestry hierarchy (including global namespace: always furthest in hierarchy).<br>
+<li> [4] Imported Namespaces (by <code><a href="../../modularizing/procedures/using-namespaces.html">Using</a></code>), without hierarchy between them (regardless of their respective level of nesting).<br>
+<br>
+</li></li></li></li></ul></ul><div class="indent">Unqualified identifiers for look-up can be:<br>
+<div class="indent"><b>-</b> Variable identifiers.<br>
+<div class="indent">=&gt; Look-up order: [1], [2], [3], [4].<br>
+</div><b>-</b> Procedure identifiers.<br>
+<div class="indent">=&gt; Look-up order: [1], [2], [3], [4].<br>
+</div><b>-</b> Type/Union identifiers.<br>
+<div class="indent">=&gt; Look-up order: [1], [3], [4].<br>
+</div><b>-</b> Enum identifiers, not their field symbols alone.<br>
+<div class="indent">=&gt; Look-up order: [1], [3], [4].<br>
+<br>
+</div></div></div>If a qualified identifier with a prefix referring to a namespace is used instead of an unqualified identifier, the previous rules for unqualified identifiers are amended as follows:<br>
+<ul><ul><li> The look-up begins at the level of the namespace corresponding to the specified prefix (as in [1]).<br>
+<li> Failing that, then only namespaces imported into this namespace can be candidates for the look-up (as in [4]).<br>
+<li> But never the parent namespaces of this namespace nor also the global namespace can be candidates (not as in [3]).<br>
+</li></li></li></ul></ul><div class="indent">=&gt; Look-up order: [1], [4].<br>
+<br>
+</div>If a qualified identifier with a prefix (<code>object-name/<a href="../../user-defined-types/procedures/this.html">This</a></code> or <code><a href="../../user-defined-types/procedures/base-member-access.html">Base (Member Access)</a></code>) referring to a type is used instead of an unqualified identifier, the previous rules for unqualified identifiers are amended as follows:<br>
+<ul><ul><li> The look-up begins at the level of the type or base type depending on the specified prefix <code>object-name/<a href="../../user-defined-types/procedures/this.html">This</a></code> or <code><a href="../../user-defined-types/procedures/base-member-access.html">Base (Member Access)</a></code> (similarly to [1]).<br>
+<li> Failing that, then only higher base types from closest to furthest can be successively candidates for the look-up (as in [2]).<br>
+<li> But never any namespaces, the current also excluded, can be candidates (not as in [3] or [4]).<br>
+</li></li></li></ul></ul><div class="indent">=&gt; Look-up order: [1], [2].<br>
+<br>
+</div></div><div>Full process</div><div><br>
+The full process simplifies the problem by dealing with it in two successive phases:<br>
+<ul><ul><li> Using the scope priority hierarchy rules above, selection of a single scope among all those which are accessible by only taking into account the identifier for look-up, regardless of the signature supplied by the caller (if at least two scopes containing this identifier have equivalent accessibility priority, then the process is stopped with an ambiguity status).<br>
+<li> Within the single scope retained if it exists, one final overload resolution taking into account the full signature is carried out (if there is no compatibility with the declared signature(s), the process is stopped without testing another accessible scope).<br>
+<br>
+</li></li></ul></ul>The problem is thus simplified to one single full overload resolution within a same scope (instead of a full overload resolution within each scope candidate, and then the difficult choice of the best result among the scope candidates).<br>
+<br>
+The coding of a very optimized resolution process (the best of human intelligence) for a procedure identifier is cumbersome, because having to take into account from the start the complete signature of the called procedure (identifier of the procedure + type and number of parameters + calling convention + return type if it exists).<br>
+In addition, it must be taken into account that the signature deduced from the call may not necessarily be identical but just compatible with certain declared ones in the scope candidates.<br>
+<br>
+<u>Identifier look-ups for the overload non-member operators</u><br>
+<div class="indent">Currently, the look-up for the overload non-member operator identifiers is simplified by the fact that the compiler always define these operators in the global namespace even if the user declared them in named namespaces. <br>
+But the global namespace is always a scope candidate when looking-up for a non-member overload operator identifier from another scope, because this operator identifier cannot be used with a qualifier prefix but always as an unqualified identifier (seen from the operator call, the global namespace is either the current namescape or a parent namescape).<br>
+<br>
+</div><u>Identifier look-ups for the Using commands</u><br>
+<div class="indent">The look-up for the Using command identifiers follows rules similar to those of a Type.<br>
+<br>
+</div></div><div>Examples</div><div><br>
+The following four codes test different look-ups both for one unqualified and one qualified identifier of procedures defined in different scope cases (from the highest to the lowest priority hierarchy):<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Sub</span> <span>duplicateSub</span><span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;   ..duplicateSub&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>M</span>
+
+    <span class="tok-kw">Sub</span> <span>duplicateSub</span><span>()</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;   M.duplicateSub&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>N</span>
+
+    <span class="tok-kw">Sub</span> <span>duplicateSub</span><span>()</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;   N.duplicateSub&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">Namespace</span> <span>P</span>
+
+        <span class="tok-kw">Using</span> <span>M</span>
+
+        <span class="tok-kw">Sub</span> <span>duplicateSub</span><span>()</span>
+
+            <span class="tok-kw">Print</span> <span>&quot;   N.P.duplicateSub&quot;</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+        <span class="tok-kw">Sub</span> <span>test</span><span>()</span>
+
+            <span class="tok-kw">Using</span> <span>M</span>  <span class="tok-cm">'' useless, but just to demonstrate that does not increase priority level of imported namespace </span>
+
+            <span>duplicateSub</span><span>()</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;From Namespace:&quot;</span>
+
+<span class="tok-cm">' &quot;N.P.test()&quot; calls the unqualified identifier &quot;duplicateSub&quot;</span>
+
+<span class="tok-cm">' &quot;N.P.duplicateSub()&quot; calls the qualified identifier &quot;N.P.duplicateSub&quot;</span>
+
+
+
+<span>N.P.test</span><span>()</span>               <span class="tok-cm">'' &quot;N.P.duplicateSub&quot; expected : in (1) current namespace/type</span>
+
+<span>N.P.duplicateSub</span><span>()</span>       <span class="tok-cm">'' &quot;N.P.duplicateSub&quot; expected : in (1) current namespace/type</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<code><pre class="code"><span class="tok-kw">Sub</span> <span>duplicateSub</span><span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;   ..duplicateSub&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>M</span>
+
+    <span class="tok-kw">Sub</span> <span>duplicateSub</span><span>()</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;   M.duplicateSub&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>N</span>
+
+    <span class="tok-kw">Sub</span> <span>duplicateSub</span><span>()</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;   N.duplicateSub&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">Namespace</span> <span>P</span>
+
+        <span class="tok-kw">Using</span> <span>M</span>
+
+        <span class="tok-cm">'Sub duplicateSub()</span>
+
+        <span class="tok-cm">'    Print &quot;   N.P.duplicateSub&quot;</span>
+
+        <span class="tok-cm">'End Sub</span>
+
+        <span class="tok-kw">Sub</span> <span>test</span><span>()</span>
+
+            <span class="tok-kw">Using</span> <span>M</span>  <span class="tok-cm">'' useless, but just to demonstrate that does not increase priority level of imported namespace </span>
+
+            <span>duplicateSub</span><span>()</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;From Namespace:&quot;</span>
+
+<span class="tok-cm">' &quot;N.P.test()&quot; calls the unqualified identifier &quot;duplicateSub&quot;</span>
+
+<span class="tok-cm">' &quot;N.P.duplicateSub()&quot; calls the qualified identifier &quot;N.P.duplicateSub&quot;</span>
+
+
+
+<span>N.P.test</span><span>()</span>               <span class="tok-cm">'' &quot;N.duplicateSub&quot; expected : in [3] parent namespaces (by nesting)</span>
+
+<span>N.P.duplicateSub</span><span>()</span>       <span class="tok-cm">'' &quot;M.duplicateSub&quot; expected : in [4] imported namespaces (by 'Using')</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<code><pre class="code"><span class="tok-kw">Sub</span> <span>duplicateSub</span><span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;   ..duplicateSub&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>M</span>
+
+    <span class="tok-kw">Sub</span> <span>duplicateSub</span><span>()</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;   M.duplicateSub&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>N</span>
+
+    <span class="tok-cm">'Sub duplicateSub()</span>
+
+    <span class="tok-cm">'    Print &quot;   N.duplicateSub&quot;</span>
+
+    <span class="tok-cm">'End Sub</span>
+
+    <span class="tok-kw">Namespace</span> <span>P</span>
+
+        <span class="tok-kw">Using</span> <span>M</span>
+
+        <span class="tok-cm">'Sub duplicateSub()</span>
+
+        <span class="tok-cm">'    Print &quot;   N.P.duplicateSub&quot;</span>
+
+        <span class="tok-cm">'End Sub</span>
+
+        <span class="tok-kw">Sub</span> <span>test</span><span>()</span>
+
+            <span class="tok-kw">Using</span> <span>M</span>  <span class="tok-cm">'' useless, but just to demonstrate that does not increase priority level of imported namespace </span>
+
+            <span>duplicateSub</span><span>()</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;From Namespace:&quot;</span>
+
+<span class="tok-cm">' &quot;N.P.test()&quot; calls the unqualified identifier &quot;duplicateSub&quot;</span>
+
+<span class="tok-cm">' &quot;N.P.duplicateSub()&quot; calls the qualified identifier &quot;N.P.duplicateSub&quot;</span>
+
+
+
+<span>N.P.test</span><span>()</span>               <span class="tok-cm">'' &quot;..duplicateSub&quot; expected : in [3] parent namespaces (by nesting)</span>
+
+<span>N.P.duplicateSub</span><span>()</span>       <span class="tok-cm">'' &quot;M.duplicateSub&quot; expected : in [4] imported namespaces (by 'Using')</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<code><pre class="code"><span class="tok-cm">'Sub duplicateSub()</span>
+
+<span class="tok-cm">'    Print &quot;   ..duplicateSub&quot;</span>
+
+<span class="tok-cm">'End Sub</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>M</span>
+
+    <span class="tok-kw">Sub</span> <span>duplicateSub</span><span>()</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;   M.duplicateSub&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>N</span>
+
+    <span class="tok-cm">'Sub duplicateSub()</span>
+
+    <span class="tok-cm">'    Print &quot;   N.duplicateSub&quot;</span>
+
+    <span class="tok-cm">'End Sub</span>
+
+    <span class="tok-kw">Namespace</span> <span>P</span>
+
+        <span class="tok-kw">Using</span> <span>M</span>
+
+        <span class="tok-cm">'Sub duplicateSub()</span>
+
+        <span class="tok-cm">'    Print &quot;   N.P.duplicateSub&quot;</span>
+
+        <span class="tok-cm">'End Sub</span>
+
+        <span class="tok-kw">Sub</span> <span>test</span><span>()</span>
+
+            <span class="tok-kw">Using</span> <span>M</span>  <span class="tok-cm">'' useless, but just to demonstrate that does not increase priority level of imported namespace </span>
+
+            <span>duplicateSub</span><span>()</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;From Namespace:&quot;</span>
+
+<span class="tok-cm">' &quot;N.P.test()&quot; calls the unqualified identifier &quot;duplicateSub&quot;</span>
+
+<span class="tok-cm">' &quot;N.P.duplicateSub()&quot; calls the qualified identifier &quot;N.P.duplicateSub&quot;</span>
+
+
+
+<span>N.P.test</span><span>()</span>               <span class="tok-cm">'' &quot;M.duplicateSub&quot; expected : in [4] imported namespaces (by 'Using')</span>
+
+<span>N.P.duplicateSub</span><span>()</span>       <span class="tok-cm">'' &quot;M.duplicateSub&quot; expected : in [4] imported namespaces (by 'Using')</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+</div>The following six codes test different look-ups both for one unqualified and one qualified identifier of variables defined in different scope cases (from the highest to the lowest priority hierarchy):<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   ..duplicateVar&quot;</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>M</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span><span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   M.duplicateVar&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>N</span>
+
+    <span class="tok-kw">Using</span> <span>M</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   N.duplicateVar&quot;</span>
+
+    <span class="tok-kw">Type</span> <span>Parent</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   N.Parent.duplicateVar&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Type</span> <span>Child</span> <span class="tok-kw">Extends</span> <span>Parent</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   N.Child.duplicateVar&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Type</span> <span>GrandChild</span> <span class="tok-kw">Extends</span> <span>Child</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   N.GrandChild.duplicateVar&quot;</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>test</span><span>()</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Sub</span> <span>GrandChild.test</span><span>()</span>
+
+        <span class="tok-kw">Using</span> <span>M</span>  <span class="tok-cm">'' useless, but just to demonstrate that does not increase priority level of imported namespace</span>
+
+        <span class="tok-kw">Print</span> <span>duplicateVar</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;From Type:&quot;</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>N.GrandChild</span> <span>gc</span>
+
+<span class="tok-cm">' &quot;gc.test()&quot; calls the unqualified identifier &quot;duplicateVar&quot;</span>
+
+<span class="tok-cm">' &quot;Print gc.duplicateVar&quot; calls the qualified identifier &quot;gc.duplicateVar&quot;</span>
+
+
+
+<span>gc.test</span><span>()</span>                <span class="tok-cm">'' &quot;N.GrandChild.duplicateVar&quot; expected : in [1] current namespace/type</span>
+
+<span class="tok-kw">Print</span> <span>gc.duplicateVar</span>    <span class="tok-cm">'' &quot;N.GrandChild.duplicateVar&quot; expected : in [1] current namespace/type</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   ..duplicateVar&quot;</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>M</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span><span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   M.duplicateVar&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>N</span>
+
+    <span class="tok-kw">Using</span> <span>M</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   N.duplicateVar&quot;</span>
+
+    <span class="tok-kw">Type</span> <span>Parent</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   N.Parent.duplicateVar&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Type</span> <span>Child</span> <span class="tok-kw">Extends</span> <span>Parent</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   N.Child.duplicateVar&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Type</span> <span>GrandChild</span> <span class="tok-kw">Extends</span> <span>Child</span>
+
+        <span class="tok-cm">'Dim As Zstring * 32 duplicateVar = &quot;   N.GrandChild.duplicateVar&quot;</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>test</span><span>()</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Sub</span> <span>GrandChild.test</span><span>()</span>
+
+        <span class="tok-kw">Using</span> <span>M</span>  <span class="tok-cm">'' useless, but just to demonstrate that does not increase priority level of imported namespace</span>
+
+        <span class="tok-kw">Print</span> <span>duplicateVar</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;From Type:&quot;</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>N.GrandChild</span> <span>gc</span>
+
+<span class="tok-cm">' &quot;gc.test()&quot; calls the unqualified identifier &quot;duplicateVar&quot;</span>
+
+<span class="tok-cm">' &quot;Print gc.duplicateVar&quot; calls the qualified identifier &quot;gc.duplicateVar&quot;</span>
+
+
+
+<span>gc.test</span><span>()</span>                <span class="tok-cm">'' &quot;N.Child.duplicateVar&quot; expected : in [2] base types (by 'Extends')</span>
+
+<span class="tok-kw">Print</span> <span>gc.duplicateVar</span>    <span class="tok-cm">'' &quot;N.Child.duplicateVar&quot; expected : in [2] base types (by 'Extends')</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   ..duplicateVar&quot;</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>M</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span><span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   M.duplicateVar&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>N</span>
+
+    <span class="tok-kw">Using</span> <span>M</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   N.duplicateVar&quot;</span>
+
+    <span class="tok-kw">Type</span> <span>Parent</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   N.Parent.duplicateVar&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Type</span> <span>Child</span> <span class="tok-kw">Extends</span> <span>Parent</span>
+
+        <span class="tok-cm">'Dim As Zstring * 32 duplicateVar = &quot;   N.Child.duplicateVar&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Type</span> <span>GrandChild</span> <span class="tok-kw">Extends</span> <span>Child</span>
+
+        <span class="tok-cm">'Dim As Zstring * 32 duplicateVar = &quot;   N.GrandChild.duplicateVar&quot;</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>test</span><span>()</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Sub</span> <span>GrandChild.test</span><span>()</span>
+
+        <span class="tok-kw">Using</span> <span>M</span>  <span class="tok-cm">'' useless, but just to demonstrate that does not increase priority level of imported namespace</span>
+
+        <span class="tok-kw">Print</span> <span>duplicateVar</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;From Type:&quot;</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>N.GrandChild</span> <span>gc</span>
+
+<span class="tok-cm">' &quot;gc.test()&quot; calls the unqualified identifier &quot;duplicateVar&quot;</span>
+
+<span class="tok-cm">' &quot;Print gc.duplicateVar&quot; calls the qualified identifier &quot;gc.duplicateVar&quot;</span>
+
+
+
+<span>gc.test</span><span>()</span>                <span class="tok-cm">'' &quot;N.Parent.duplicateVar&quot; expected : in [2] base types (by 'Extends')</span>
+
+<span class="tok-kw">Print</span> <span>gc.duplicateVar</span>    <span class="tok-cm">'' &quot;N.Parent.duplicateVar&quot; expected : in [2] base types (by 'Extends')</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   ..duplicateVar&quot;</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>M</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span><span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   M.duplicateVar&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>N</span>
+
+    <span class="tok-kw">Using</span> <span>M</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   N.duplicateVar&quot;</span>
+
+    <span class="tok-kw">Type</span> <span>Parent</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span>
+
+        <span class="tok-cm">'Dim As Zstring * 32 duplicateVar = &quot;   N.Parent.duplicateVar&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Type</span> <span>Child</span> <span class="tok-kw">Extends</span> <span>Parent</span>
+
+        <span class="tok-cm">'Dim As Zstring * 32 duplicateVar = &quot;   N.Child.duplicateVar&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Type</span> <span>GrandChild</span> <span class="tok-kw">Extends</span> <span>Child</span>
+
+        <span class="tok-cm">'Dim As Zstring * 32 duplicateVar = &quot;   N.GrandChild.duplicateVar&quot;</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>test</span><span>()</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Sub</span> <span>GrandChild.test</span><span>()</span>
+
+        <span class="tok-kw">Using</span> <span>M</span>  <span class="tok-cm">'' useless, but just to demonstrate that does not increase priority level of imported namespace</span>
+
+        <span class="tok-kw">Print</span> <span>duplicateVar</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;From Type:&quot;</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>N.GrandChild</span> <span>gc</span>
+
+<span class="tok-cm">' &quot;gc.test()&quot; calls the unqualified identifier &quot;duplicateVar&quot;</span>
+
+<span class="tok-cm">' &quot;Print gc.duplicateVar&quot; calls the qualified identifier &quot;gc.duplicateVar&quot;</span>
+
+
+
+<span>gc.test</span><span>()</span>                <span class="tok-cm">'' &quot;N.duplicateVar&quot; expected : in [3] parent namespaces (by nesting)</span>
+
+<span class="tok-cm">'Print gc.duplicateVar   '' error</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   ..duplicateVar&quot;</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>M</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span><span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   M.duplicateVar&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>N</span>
+
+    <span class="tok-kw">Using</span> <span>M</span>
+
+    <span class="tok-cm">'Dim As Zstring * 32 duplicateVar = &quot;   N.duplicateVar&quot;</span>
+
+    <span class="tok-kw">Type</span> <span>Parent</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span>
+
+        <span class="tok-cm">'Dim As Zstring * 32 duplicateVar = &quot;   N.Parent.duplicateVar&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Type</span> <span>Child</span> <span class="tok-kw">Extends</span> <span>Parent</span>
+
+        <span class="tok-cm">'Dim As Zstring * 32 duplicateVar = &quot;   N.Child.duplicateVar&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Type</span> <span>GrandChild</span> <span class="tok-kw">Extends</span> <span>Child</span>
+
+        <span class="tok-cm">'Dim As Zstring * 32 duplicateVar = &quot;   N.GrandChild.duplicateVar&quot;</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>test</span><span>()</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Sub</span> <span>GrandChild.test</span><span>()</span>
+
+        <span class="tok-kw">Using</span> <span>M</span>  <span class="tok-cm">'' useless, but just to demonstrate that does not increase priority level of imported namespace</span>
+
+        <span class="tok-kw">Print</span> <span>duplicateVar</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;From Type:&quot;</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>N.GrandChild</span> <span>gc</span>
+
+<span class="tok-cm">' &quot;gc.test()&quot; calls the unqualified identifier &quot;duplicateVar&quot;</span>
+
+<span class="tok-cm">' &quot;Print gc.duplicateVar&quot; calls the qualified identifier &quot;gc.duplicateVar&quot;</span>
+
+
+
+<span>gc.test</span><span>()</span>                <span class="tok-cm">'' &quot;..duplicateVar&quot; expected : in [3] parent namespaces (by nesting)</span>
+
+<span class="tok-cm">'Print gc.duplicateVar   '' error</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<code><pre class="code"><span class="tok-cm">'Dim Shared As Zstring * 32 duplicateVar = &quot;   ..duplicateVar&quot;</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>M</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span><span class="tok-nu">32</span> <span>duplicateVar</span> <span>=</span> <span>&quot;   M.duplicateVar&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>N</span>
+
+    <span class="tok-kw">Using</span> <span>M</span>
+
+    <span class="tok-cm">'Dim As Zstring * 32 duplicateVar = &quot;   N.duplicateVar&quot;</span>
+
+    <span class="tok-kw">Type</span> <span>Parent</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span>
+
+        <span class="tok-cm">'Dim As Zstring * 32 duplicateVar = &quot;   N.Parent.duplicateVar&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Type</span> <span>Child</span> <span class="tok-kw">Extends</span> <span>Parent</span>
+
+        <span class="tok-cm">'Dim As Zstring * 32 duplicateVar = &quot;   N.Child.duplicateVar&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Type</span> <span>GrandChild</span> <span class="tok-kw">Extends</span> <span>Child</span>
+
+        <span class="tok-cm">'Dim As Zstring * 32 duplicateVar = &quot;   N.GrandChild.duplicateVar&quot;</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>test</span><span>()</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Sub</span> <span>GrandChild.test</span><span>()</span>
+
+        <span class="tok-kw">Using</span> <span>M</span>  <span class="tok-cm">'' useless, but just to demonstrate that does not increase priority level of imported namespace</span>
+
+        <span class="tok-kw">Print</span> <span>duplicateVar</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;From Type:&quot;</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>N.GrandChild</span> <span>gc</span>
+
+<span class="tok-cm">' &quot;gc.test()&quot; calls the unqualified identifier &quot;duplicateVar&quot;</span>
+
+<span class="tok-cm">' &quot;Print gc.duplicateVar&quot; calls the qualified identifier &quot;gc.duplicateVar&quot;</span>
+
+
+
+<span>gc.test</span><span>()</span>                <span class="tok-cm">'' &quot;M.duplicateVar&quot; expected : in [4] imported namespaces (by 'Using')</span>
+
+<span class="tok-cm">'Print gc.duplicateVar   '' error</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+</div>The following four codes test different look-ups both for one unqualified and one qualified identifier of types defined in different scope cases (from the highest to the lowest priority hierarchy):<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>duplicateType</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>root</span> <span>=</span> <span>&quot;   ..duplicateType&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>M</span>
+
+    <span class="tok-kw">Type</span> <span>duplicateType</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>root</span> <span>=</span> <span>&quot;   M.duplicateType&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>N</span>
+
+    <span class="tok-kw">Type</span> <span>duplicateType</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>root</span> <span>=</span> <span>&quot;   N.duplicateType&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Namespace</span> <span>P</span>
+
+        <span class="tok-kw">Using</span> <span>M</span>
+
+        <span class="tok-kw">Type</span> <span>duplicateType</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>root</span> <span>=</span> <span>&quot;   N.P.duplicateType&quot;</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+        <span class="tok-kw">Sub</span> <span>test</span><span>()</span>
+
+            <span class="tok-kw">Using</span> <span>M</span>  <span class="tok-cm">'' useless, but just to demonstrate that does not increase priority level of imported namespace</span>
+
+            <span class="tok-kw">Print</span> <span class="tok-kw">Type</span><span>&lt;</span><span>duplicateType</span><span>&gt;.</span><span>root</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-cm">' &quot;N.P.test()&quot; calls the unqualified identifier &quot;duplicateType&quot;</span>
+
+<span class="tok-cm">' &quot;Print Type&lt;N.P.duplicateType&gt;.root&quot; calls the qualified identifier &quot;N.P.duplicateType&quot;</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;From Namespace:&quot;</span>
+
+<span>N.P.test</span><span>()</span>                          <span class="tok-cm">'' &quot;N.P.duplicateSub&quot; expected : in (1) current namespace/type</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Type</span><span>&lt;</span><span>N.P.duplicateType</span><span>&gt;.</span><span>root</span>  <span class="tok-cm">'' &quot;N.P.duplicateSub&quot; expected : in (1) current namespace/type</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>duplicateType</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>root</span> <span>=</span> <span>&quot;   ..duplicateType&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>M</span>
+
+    <span class="tok-kw">Type</span> <span>duplicateType</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>root</span> <span>=</span> <span>&quot;   M.duplicateType&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>N</span>
+
+    <span class="tok-kw">Type</span> <span>duplicateType</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>root</span> <span>=</span> <span>&quot;   N.duplicateType&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Namespace</span> <span>P</span>
+
+        <span class="tok-kw">Using</span> <span>M</span>
+
+        <span class="tok-cm">'Type duplicateType</span>
+
+        <span class="tok-cm">'    Dim As Zstring * 32 root = &quot;   N.P.duplicateType&quot;</span>
+
+        <span class="tok-cm">'End type</span>
+
+        <span class="tok-kw">Sub</span> <span>test</span><span>()</span>
+
+            <span class="tok-kw">Using</span> <span>M</span>  <span class="tok-cm">'' useless, but just to demonstrate that does not increase priority level of imported namespace</span>
+
+            <span class="tok-kw">Print</span> <span class="tok-kw">Type</span><span>&lt;</span><span>duplicateType</span><span>&gt;.</span><span>root</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-cm">' &quot;N.P.test()&quot; calls the unqualified identifier &quot;duplicateType&quot;</span>
+
+<span class="tok-cm">' &quot;Print Type&lt;N.P.duplicateType&gt;.root&quot; calls the qualified identifier &quot;N.P.duplicateType&quot;</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;From Namespace:&quot;</span>
+
+<span>N.P.test</span><span>()</span>                          <span class="tok-cm">'' &quot;N.duplicateSub&quot; expected : in [3] parent namespaces (by nesting)</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Type</span><span>&lt;</span><span>N.P.duplicateType</span><span>&gt;.</span><span>root</span>  <span class="tok-cm">'' &quot;M.duplicateSub&quot; expected : in [4] imported namespaces (by 'Using')</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>duplicateType</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>root</span> <span>=</span> <span>&quot;   ..duplicateType&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>M</span>
+
+    <span class="tok-kw">Type</span> <span>duplicateType</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>root</span> <span>=</span> <span>&quot;   M.duplicateType&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>N</span>
+
+    <span class="tok-cm">'Type duplicateType</span>
+
+    <span class="tok-cm">'    Dim As Zstring * 32 root = &quot;   N.duplicateType&quot;</span>
+
+    <span class="tok-cm">'End type</span>
+
+    <span class="tok-kw">Namespace</span> <span>P</span>
+
+        <span class="tok-kw">Using</span> <span>M</span>
+
+        <span class="tok-cm">'Type duplicateType</span>
+
+        <span class="tok-cm">'    Dim As Zstring * 32 root = &quot;   N.P.duplicateType&quot;</span>
+
+        <span class="tok-cm">'End type</span>
+
+        <span class="tok-kw">Sub</span> <span>test</span><span>()</span>
+
+            <span class="tok-kw">Using</span> <span>M</span>  <span class="tok-cm">'' useless, but just to demonstrate that does not increase priority level of imported namespace</span>
+
+            <span class="tok-kw">Print</span> <span class="tok-kw">Type</span><span>&lt;</span><span>duplicateType</span><span>&gt;.</span><span>root</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-cm">' &quot;N.P.test()&quot; calls the unqualified identifier &quot;duplicateType&quot;</span>
+
+<span class="tok-cm">' &quot;Print Type&lt;N.P.duplicateType&gt;.root&quot; calls the qualified identifier &quot;N.P.duplicateType&quot;</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;From Namespace:&quot;</span>
+
+<span>N.P.test</span><span>()</span>                          <span class="tok-cm">'' &quot;..duplicateSub&quot; expected : in [3] parent namespaces (by nesting)</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Type</span><span>&lt;</span><span>N.P.duplicateType</span><span>&gt;.</span><span>root</span>  <span class="tok-cm">'' &quot;M.duplicateSub&quot; expected : in [4] imported namespaces (by 'Using')</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<code><pre class="code"><span class="tok-cm">'Type duplicateType</span>
+
+<span class="tok-cm">'    Dim As Zstring * 32 root = &quot;   ..duplicateType&quot;</span>
+
+<span class="tok-cm">'End type</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>M</span>
+
+    <span class="tok-kw">Type</span> <span>duplicateType</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>root</span> <span>=</span> <span>&quot;   M.duplicateType&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>N</span>
+
+    <span class="tok-cm">'Type duplicateType</span>
+
+    <span class="tok-cm">'    Dim As Zstring * 32 root = &quot;   N.duplicateType&quot;</span>
+
+    <span class="tok-cm">'End type</span>
+
+    <span class="tok-kw">Namespace</span> <span>P</span>
+
+        <span class="tok-kw">Using</span> <span>M</span>
+
+        <span class="tok-cm">'Type duplicateType</span>
+
+        <span class="tok-cm">'    Dim As Zstring * 32 root = &quot;   N.P.duplicateType&quot;</span>
+
+        <span class="tok-cm">'End type</span>
+
+        <span class="tok-kw">Sub</span> <span>test</span><span>()</span>
+
+            <span class="tok-kw">Using</span> <span>M</span>  <span class="tok-cm">'' useless, but just to demonstrate that does not increase priority level of imported namespace</span>
+
+            <span class="tok-kw">Print</span> <span class="tok-kw">Type</span><span>&lt;</span><span>duplicateType</span><span>&gt;.</span><span>root</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-cm">' &quot;N.P.test()&quot; calls the unqualified identifier &quot;duplicateType&quot;</span>
+
+<span class="tok-cm">' &quot;Print Type&lt;N.P.duplicateType&gt;.root&quot; calls the qualified identifier &quot;N.P.duplicateType&quot;</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;From Namespace:&quot;</span>
+
+<span>N.P.test</span><span>()</span>                          <span class="tok-cm">'' &quot;M.duplicateSub&quot; expected : in [4] imported namespaces (by 'Using')</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Type</span><span>&lt;</span><span>N.P.duplicateType</span><span>&gt;.</span><span>root</span>  <span class="tok-cm">'' &quot;M.duplicateSub&quot; expected : in [4] imported namespaces (by 'Using')</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+</div>The following four codes test different look-ups both for one unqualified and one qualified identifier of enums defined in different scope cases (from the highest to the lowest priority hierarchy):<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>root</span><span>(...)</span> <span>=</span> <span>{</span><span>&quot;   ..duplicateEnum&quot;</span><span>,</span> <span>&quot;   M.duplicateEnum&quot;</span><span>,</span> <span>&quot;   N.duplicateEnum&quot;</span><span>,</span> <span>&quot;   N.P.duplicateEnum&quot;</span><span>}</span>
+
+
+
+<span class="tok-kw">Enum</span> <span>duplicateEnum</span>
+
+    <span>nb</span> <span>=</span> <span class="tok-nu">0</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Enum</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>M</span>
+
+    <span class="tok-kw">Enum</span> <span>duplicateEnum</span>
+
+        <span>nb</span> <span>=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Enum</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>N</span>
+
+    <span class="tok-kw">Enum</span> <span>duplicateEnum</span>
+
+        <span>nb</span> <span>=</span> <span class="tok-nu">2</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Enum</span>
+
+    <span class="tok-kw">Namespace</span> <span>P</span>
+
+        <span class="tok-kw">Using</span> <span>M</span>
+
+        <span class="tok-kw">Enum</span> <span>duplicateEnum</span>
+
+            <span>nb</span> <span>=</span> <span class="tok-nu">3</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Enum</span>
+
+        <span class="tok-kw">Sub</span> <span>test</span><span>()</span>
+
+            <span class="tok-kw">Using</span> <span>M</span>  <span class="tok-cm">'' useless, but just to demonstrate that does not increase priority level of imported namespace</span>
+
+            <span class="tok-kw">Print</span> <span>root</span><span>(</span><span>duplicateEnum.nb</span><span>)</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-cm">' &quot;N.P.test()&quot; calls the unqualified identifier &quot;duplicateEnum&quot;</span>
+
+<span class="tok-cm">' &quot;Print root(N.P.duplicateEnum.nb)&quot; calls the qualified identifier &quot;N.P.duplicateEnum&quot;</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;From Namespace:&quot;</span>
+
+<span>N.P.test</span><span>()</span>                        <span class="tok-cm">'' &quot;N.P.duplicateEnum&quot; expected : in (1) current namespace/type</span>
+
+<span class="tok-kw">Print</span> <span>root</span><span>(</span><span>N.P.duplicateEnum.nb</span><span>)</span>  <span class="tok-cm">'' &quot;N.P.duplicateEnum&quot; expected : in (1) current namespace/type</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>root</span><span>(...)</span> <span>=</span> <span>{</span><span>&quot;   ..duplicateEnum&quot;</span><span>,</span> <span>&quot;   M.duplicateEnum&quot;</span><span>,</span> <span>&quot;   N.duplicateEnum&quot;</span><span>,</span> <span>&quot;   N.P.duplicateEnum&quot;</span><span>}</span>
+
+
+
+<span class="tok-kw">Enum</span> <span>duplicateEnum</span>
+
+    <span>nb</span> <span>=</span> <span class="tok-nu">0</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Enum</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>M</span>
+
+    <span class="tok-kw">Enum</span> <span>duplicateEnum</span>
+
+        <span>nb</span> <span>=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Enum</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>N</span>
+
+    <span class="tok-kw">Enum</span> <span>duplicateEnum</span>
+
+        <span>nb</span> <span>=</span> <span class="tok-nu">2</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Enum</span>
+
+    <span class="tok-kw">Namespace</span> <span>P</span>
+
+        <span class="tok-kw">Using</span> <span>M</span>
+
+        <span class="tok-cm">'Enum duplicateEnum</span>
+
+        <span class="tok-cm">'    nb = 3</span>
+
+        <span class="tok-cm">'End Enum</span>
+
+        <span class="tok-kw">Sub</span> <span>test</span><span>()</span>
+
+            <span class="tok-kw">Using</span> <span>M</span>  <span class="tok-cm">'' useless, but just to demonstrate that does not increase priority level of imported namespace</span>
+
+            <span class="tok-kw">Print</span> <span>root</span><span>(</span><span>duplicateEnum.nb</span><span>)</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-cm">' &quot;N.P.test()&quot; calls the unqualified identifier &quot;duplicateEnum&quot;</span>
+
+<span class="tok-cm">' &quot;Print root(N.P.duplicateEnum.nb)&quot; calls the qualified identifier &quot;N.P.duplicateEnum&quot;</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;From Namespace:&quot;</span>
+
+<span>N.P.test</span><span>()</span>                        <span class="tok-cm">'' &quot;N.duplicateEnum&quot; expected : in [3] parent namespaces (by nesting)</span>
+
+<span class="tok-kw">Print</span> <span>root</span><span>(</span><span>N.P.duplicateEnum.nb</span><span>)</span>  <span class="tok-cm">'' &quot;M.duplicateEnum&quot; expected : in [4] imported namespaces (by 'Using')</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>root</span><span>(...)</span> <span>=</span> <span>{</span><span>&quot;   ..duplicateEnum&quot;</span><span>,</span> <span>&quot;   M.duplicateEnum&quot;</span><span>,</span> <span>&quot;   N.duplicateEnum&quot;</span><span>,</span> <span>&quot;   N.P.duplicateEnum&quot;</span><span>}</span>
+
+
+
+<span class="tok-kw">Enum</span> <span>duplicateEnum</span>
+
+    <span>nb</span> <span>=</span> <span class="tok-nu">0</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Enum</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>M</span>
+
+    <span class="tok-kw">Enum</span> <span>duplicateEnum</span>
+
+        <span>nb</span> <span>=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Enum</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>N</span>
+
+    <span class="tok-cm">'Enum duplicateEnum</span>
+
+    <span class="tok-cm">'    nb = 2</span>
+
+    <span class="tok-cm">'End Enum</span>
+
+    <span class="tok-kw">Namespace</span> <span>P</span>
+
+        <span class="tok-kw">Using</span> <span>M</span>
+
+        <span class="tok-cm">'Enum duplicateEnum</span>
+
+        <span class="tok-cm">'    nb = 3</span>
+
+        <span class="tok-cm">'End Enum</span>
+
+        <span class="tok-kw">Sub</span> <span>test</span><span>()</span>
+
+            <span class="tok-kw">Using</span> <span>M</span>  <span class="tok-cm">'' useless, but just to demonstrate that does not increase priority level of imported namespace</span>
+
+            <span class="tok-kw">Print</span> <span>root</span><span>(</span><span>duplicateEnum.nb</span><span>)</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-cm">' &quot;N.P.test()&quot; calls the unqualified identifier &quot;duplicateEnum&quot;</span>
+
+<span class="tok-cm">' &quot;Print root(N.P.duplicateEnum.nb)&quot; calls the qualified identifier &quot;N.P.duplicateEnum&quot;</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;From Namespace:&quot;</span>
+
+<span>N.P.test</span><span>()</span>                        <span class="tok-cm">'' &quot;..duplicateEnum&quot; expected : in [3] parent namespaces (by nesting)</span>
+
+<span class="tok-kw">Print</span> <span>root</span><span>(</span><span>N.P.duplicateEnum.nb</span><span>)</span>  <span class="tok-cm">'' &quot;M.duplicateEnum&quot; expected : in [4] imported namespaces (by 'Using')</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span> <span>root</span><span>(...)</span> <span>=</span> <span>{</span><span>&quot;   ..duplicateEnum&quot;</span><span>,</span> <span>&quot;   M.duplicateEnum&quot;</span><span>,</span> <span>&quot;   N.duplicateEnum&quot;</span><span>,</span> <span>&quot;   N.P.duplicateEnum&quot;</span><span>}</span>
+
+
+
+<span class="tok-cm">'Enum duplicateEnum</span>
+
+<span class="tok-cm">'    nb = 0</span>
+
+<span class="tok-cm">'End Enum</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>M</span>
+
+    <span class="tok-kw">Enum</span> <span>duplicateEnum</span>
+
+        <span>nb</span> <span>=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Enum</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>N</span>
+
+    <span class="tok-cm">'Enum duplicateEnum</span>
+
+    <span class="tok-cm">'    nb = 2</span>
+
+    <span class="tok-cm">'End Enum</span>
+
+    <span class="tok-kw">Namespace</span> <span>P</span>
+
+        <span class="tok-kw">Using</span> <span>M</span>
+
+        <span class="tok-cm">'Enum duplicateEnum</span>
+
+        <span class="tok-cm">'    nb = 3</span>
+
+        <span class="tok-cm">'End Enum</span>
+
+        <span class="tok-kw">Sub</span> <span>test</span><span>()</span>
+
+            <span class="tok-kw">Using</span> <span>M</span>  <span class="tok-cm">'' useless, but just to demonstrate that does not increase priority level of imported namespace</span>
+
+            <span class="tok-kw">Print</span> <span>root</span><span>(</span><span>duplicateEnum.nb</span><span>)</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-cm">' &quot;N.P.test()&quot; calls the unqualified identifier &quot;duplicateEnum&quot;</span>
+
+<span class="tok-cm">' &quot;Print root(N.P.duplicateEnum.nb)&quot; calls the qualified identifier &quot;N.P.duplicateEnum&quot;</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;From Namespace:&quot;</span>
+
+<span>N.P.test</span><span>()</span>                        <span class="tok-cm">'' &quot;M.duplicateEnum&quot; expected : in [4] imported namespaces (by 'Using')</span>
+
+<span class="tok-kw">Print</span> <span>root</span><span>(</span><span>N.P.duplicateEnum.nb</span><span>)</span>  <span class="tok-cm">'' &quot;M.duplicateEnum&quot; expected : in [4] imported namespaces (by 'Using')</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+</div></div><div>Version</div><div><br>
+<ul><li> Since fbc 1.09.0.<br>
+<li> Before fbc 1.09.0, the priority hierarchy was poorly managed with inconsistencies.<br>
+<br>
+</li></li></ul></div><div>See also</div><div><br>
+<ul><li> <a href="identifier-rules.html">Identifier Rules</a><br>
+<br>
+</li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

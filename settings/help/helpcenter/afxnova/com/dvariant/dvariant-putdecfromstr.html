@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DVARIANT.PutDecFromStr — Help Center</title>
+<meta name="description" content="Initializes DVARIANT as VT_DECIMAL from a string.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/com/dvariant/dvariant-putdecfromstr.html">
+<meta property="og:title" content="DVARIANT.PutDecFromStr">
+<meta property="og:description" content="Initializes DVARIANT as VT_DECIMAL from a string.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/com/dvariant/dvariant-putdecfromstr.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/com/dvariant/dvariant-putdecfromstr.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../dvariant-class.html">DVARIANT Class</a></div>
+<h1>DVARIANT.PutDecFromStr<span class="h1kind">method</span></h1>
+<p class="lede">Initializes DVARIANT as VT_DECIMAL from a string.</p>
+<div class="badges"><a class="badge" href="../index.html">COM</a><span class="badge">method</span><span class="badge">DVARIANT.INC</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION PutDecFromStr (BYVAL pwszIn AS WSTRING PTR, BYVAL lcid AS LCID = 0, BYVAL dwFlags AS ULONG = 0) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>pwszIn</code></td><td></td><td>The string value to convert.</td></tr><tr><td><code>lcid</code></td><td></td><td>The locale identifier.</td></tr><tr><td><code>dwFlags</code></td><td></td><td>One or more of the following flags.<br><em>LOCALE_NOUSEROVERRIDE</em> : Uses the system default locale settings, rather than custom locale settings.<br><em>VAR_TIMEVALUEONLY</em> : Omits the date portion of a VT_DATE and returns only the time. Applies to conversions to or from dates.<br><em>VAR_DATEVALUEONLY</em> : Omits the time portion of a VT_DATE and returns only the date. Applies to conversions to or from dates.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>This function can return one of these values.</p>
+<h2>Description</h2>
+<p>Initializes DVARIANT as VT_DECIMAL from a string.</p>
+<h2>Remarks</h2>
+<p>Creates a VT_DECIMAL variant.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>DVARIANT.INC</code></li><li>Defined in <span class="srcref">AfxNova/DVARIANT.inc:1425</span></li><li>Documented in <span class="srcref">COM/DVARIANT Class.md</span></li><li>Topic: <a href="../dvariant-class.html">DVARIANT Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

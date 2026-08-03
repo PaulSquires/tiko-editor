@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpBitmap.LockBits — Help Center</title>
+<meta name="description" content="Locks a rectangular portion of this bitmap and provides a temporary buffer that you can use to read or write pixel data in a specified format.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpbitmap/cgpbitmap-lockbits.html">
+<meta property="og:title" content="CGpBitmap.LockBits">
+<meta property="og:description" content="Locks a rectangular portion of this bitmap and provides a temporary buffer that you can use to read or write pixel data in a specified format.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpbitmap/cgpbitmap-lockbits.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpbitmap/cgpbitmap-lockbits.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpimage-class.html">CGpImage Class</a></div>
+<h1>CGpBitmap.LockBits<span class="h1kind">method</span></h1>
+<p class="lede">Locks a rectangular portion of this bitmap and provides a temporary buffer that you can use to read or write pixel data in a specified format.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpBitmap.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION LockBits (BYVAL rc AS GpRect PTR, BYVAL flags AS UINT, BYVAL pxFormat AS PixelFormat, BYVAL lockedBitmapData AS BitmapData PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>rc</code></td><td></td><td>Pointer to a rectangle structure that specifies the portion of the bitmap to be locked.</td></tr><tr><td><code>flags</code></td><td></td><td>Set of flags that specify whether the locked portion of the bitmap is available for reading or for writing and whether the caller has already allocated a buffer. Individual flags are defined in the <strong>ImageLockMode</strong> enumeration.</td></tr><tr><td><code>pxFormat</code></td><td></td><td>Integer that specifies the format of the pixel data in the temporary buffer. The pixel format of the temporary buffer does not have to be the same as the pixel format of this <strong>Bitmap</strong> object. The <strong>PixelFormat</strong> data type and constants that represent various pixel formats are defined in Gdipluspixelformats.h. GDI+ version 1.0 does not support processing of 16-bits-per-channel images, so you should not set this parameter equal to PixelFormat48bppRGB, PixelFormat64bppARGB, or PixelFormat64bppPARGB.</td></tr><tr><td><code>lockedBitmapData</code></td><td></td><td>Pointer to a <strong>BitmapData</strong> object. If the <strong>ImageLockModeUserInputBuf</strong> flag of the flags parameter is cleared, then <em>lockedBitmapData</em> serves only as an output parameter. In that case, the <em>Scan0</em> data member of the <strong>BitmapData</strong> object receives a pointer to a temporary buffer, which is filled with the values of the requested pixels. The other data members of the <strong>BitmapData</strong> object receive attributes (width, height, format, and stride) of the pixel data in the temporary buffer. If the pixel data is stored bottom-up, the <em>Stride</em> data member is negative. If the pixel data is stored top-down, the <em>Stride</em> data member is positive. If the <strong>ImageLockModeUserInputBuf</strong> flag of the <em>flags</em> parameter is set, then <em>lockedBitmapData</em> serves as an input parameter (and possibly as an output parameter). In that case, the caller must allocate a buffer for the pixel data that will be read or written. The caller also must create a <strong>BitmapData</strong> object, set the <em>Scan0</em> data member of that <strong>BitmapData</strong> object to the address of the buffer, and set the other data members of the <strong>BitmapData</strong> object to specify the attributes (width, height, format, and stride) of the buffer.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>StatusOk</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<p>Flat API function: <strong>GdipBitmapLockBits</strong></p>
+<h2>Description</h2>
+<p>Locks a rectangular portion of this bitmap and provides a temporary buffer that you can use to read or write pixel data in a specified format. Any pixel data that you write to the buffer is copied to the <strong>Bitmap</strong> object when you call <strong>UnlockBits</strong>.</p>
+<h2>Remarks</h2>
+<p>Use the <strong>LockBits</strong> method to lock an existing bitmap in system memory so that it can be changed programmatically. You can change the color of an image with the <strong>SetPixel</strong> method, although the <strong>LockBits</strong> method offers better performance for large-scale changes.</p>
+<p>The <strong>BitmapData</strong> specifies the attributes of the <strong>Bitmap</strong>, such as size, pixel format, the starting address of the pixel data in memory, and length of each scan line (stride).</p>
+<h2>Examples</h2>
+<p>' ======================================================================================== ' Demonstrates the use of GdipBitmapLockBits/GdipBitmapUnlockBits. ' This example inverts the colors of a Bitmap. ' ======================================================================================== SUB Example_LockBits (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scaling factors using the DPI ratios graphics.ScaleTransformForDpi</p>
+<p>' // Create a Bitmap object from a JPEG file. DIM bmp AS CGpBitmap = "climber.jpg" ' // Set the resolution of the image using the DPI ratios bmp.SetResolutionForDpi</p>
+<p>' // Get the width and height of the bitmap DIM nWidth AS DWORD = bmp.GetWidth DIM nHeight AS DWORD = bmp.GetHeight</p>
+<p>' // Define lock rectangle DIM rc AS GpRect = (0, 0, nWidth, nHeight)</p>
+<p>' // Lock bitmap bits DIM bmpData AS BitmapData bmp.LockBits(@rc, ImageLockModeRead OR ImageLockModeWrite, PixelFormat32bppARGB, @bmpData) ' // Alternate way ' DIM bmpData AS BitmapData = bmp.LockBits(@rc, ImageLockModeRead OR ImageLockModeWrite, PixelFormat32bppARGB)</p>
+<p>' // Invert colors DIM pPixels AS UBYTE PTR = bmpData.Scan0 FOR y AS LONG = 0 TO nHeight - 1</p>
+<pre class="code"><code>FOR x AS LONG = 0 TO nWidth - 1
+     DIM offset AS LONG = y * bmpData.Stride + x * 4
+     pPixels[offset + 0] = 255 - pPixels[offset + 0] ' Blue
+     pPixels[offset + 1] = 255 - pPixels[offset + 1] ' Green
+     pPixels[offset + 2] = 255 - pPixels[offset + 2] ' Red
+     ' Alpha remains unchanged
+  NEXT</code></pre>
+<p>NEXT</p>
+<p>' // Unlock bitmap bits bmp.UnlockBits(@bmpData)</p>
+<p>' // Draw the modified bitmap. graphics.DrawImage(@bmp, 10, 10)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' ======================================================================================== ' This example sets every third byte to 255 (red tint for 24bpp images) ' ======================================================================================== SUB Example_LockBits (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scaling factors using the DPI ratios graphics.ScaleTransformForDpi</p>
+<p>' // Create a Bitmap object from a JPEG file. DIM bmp AS CGpBitmap = "climber.jpg" ' // Set the resolution of the image using the DPI ratios bmp.SetResolutionForDpi</p>
+<p>' // Define rectangle to lock DIM rc AS GpRect = (0, 0, bmp.GetWidth, bmp.GetHeight)</p>
+<p>' // Lock bitmap bits DIM bmpData AS BitmapData = bmp.LockBits(@rc, ImageLockModeRead OR ImageLockModeWrite, bmp.GetPixelFormat)</p>
+<p>' // Get pointer to pixel data DIM ptrData AS UBYTE PTR = bmpData.Scan0</p>
+<p>' // Calculate total bytes DIM bytes AS LONG = ABS(bmpData.Stride) * bmp.GetHeight</p>
+<p>' // Copy pixel data to array DIM rgbValues(bytes - 1) AS UBYTE CopyMemory(@rgbValues(0), ptrData, bytes)</p>
+<p>' // Modify pixel data: set every third byte to 255 FOR i AS LONG = 2 TO bytes - 1 STEP 3</p>
+<pre class="code"><code>rgbValues(i) = 255</code></pre>
+<p>NEXT</p>
+<p>' // Copy modified data back CopyMemory(ptrData, @rgbValues(0), bytes)</p>
+<p>' // Unlock bitmap bmp.UnlockBits(@bmpData)</p>
+<p>' // Draw result graphics.DrawImage(@bmp, 10, 10)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpBitmap.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpBitmap.inc:627</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpImage Classes.md</span></li><li>Topic: <a href="../cgpimage-class.html">CGpImage Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

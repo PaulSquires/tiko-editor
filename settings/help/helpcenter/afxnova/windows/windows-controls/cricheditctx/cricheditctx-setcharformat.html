@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRichEditCtx.SetCharFormat — Help Center</title>
+<meta name="description" content="CRichEditCtx.SetCharFormat — AfxNova method reference.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditctx/cricheditctx-setcharformat.html">
+<meta property="og:title" content="CRichEditCtx.SetCharFormat">
+<meta property="og:description" content="CRichEditCtx.SetCharFormat — AfxNova method reference.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditctx/cricheditctx-setcharformat.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/cricheditctx/cricheditctx-setcharformat.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cricheditctx-class.html">CRichEditCtx Class</a></div>
+<h1>CRichEditCtx.SetCharFormat<span class="h1kind">method</span></h1>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION SetCharFormat (BYVAL chfmt AS DWORD, BYREF cf AS CHARFORMATW) AS BOOLEAN</code></pre>
+<div class="note">Also documented as <code>CharFormat</code> — one description covers them all.</div>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>fOption</code></td><td></td><td>(GET) Specifies the range of text from which to retrieve formatting. It can be one of the following values.<br><strong>SCF_DEFAULT</strong> The default character formatting.<br><strong>SCF_SELECTION</strong> The current selection's character formatting.</td></tr><tr><td><code>chfmt</code></td><td></td><td>(SET) Character formatting that applies to the control. If this parameter is zero, the default character format is set. Otherwise, it can be one of the following values (see Formatting values below).</td></tr><tr><td><code>cf</code></td><td></td><td>(SET) A <a href="https://learn.microsoft.com/en-us/windows/win32/api/richedit/ns-richedit-charformatw" target="_blank" rel="noopener">CHARFORMATW</a> structure specifying the character formatting to use. Only the formatting attributes specified by the <strong>dwMask</strong> member are changed. The <strong>szFaceName</strong> and <strong>bCharSet</strong> members may be overruled when invalid for characters, for example: Arial on kanji characters.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>(GET) Returns a <a href="https://learn.microsoft.com/en-us/windows/win32/api/richedit/ns-richedit-charformatw" target="_blank" rel="noopener">CHARFORMATW</a> structure with the attributes of the first character. The <strong>dwMask</strong> member specifies which attributes are consistent throughout the entire selection. For example, if the entire selection is either in italics or not in italics, CFM_ITALIC is set; if the selection is partly in italics and partly not, CFM_ITALIC is not set.</p>
+<p>(SET) If the operation succeeds, the return value is a nonzero value. If the operation fails, the return value is zero. Call <strong>GetErrorInfo</strong> to get information about the result.</p>
+<h2>Description</h2>
+<p>Gets/sets the current character formatting in a rich edit control.</p>
+<p>Gets/sets the default character formatting in a rich edit control.</p>
+<p>Gets/sets the character formatting attributes of the current selection.</p>
+<p>Gets/sets the character formatting attributes for the currently selected word.</p>
+<h2>Examples</h2>
+<p>(GET) PROPERTY CharFormat (BYVAL fOption AS DWORD) AS CHARFORMATW (SET) PROPERTY CharFormat (BYVAL chfmt AS DWORD, BYREF cf AS CHARFORMATW)</p>
+<p>(GET) PROPERTY DefaultCharFormat () AS CHARFORMATW (SET) PROPERTY DefaultCharFormat (BYREF cf AS CHARFORMATW)</p>
+<p>(GET) PROPERTY SelectionCharFormat () AS CHARFORMATW (SET) PROPERTY SelectionCharFormat (BYREF cf AS CHARFORMATW)</p>
+<p>(GET) PROPERTY WordCharFormat () AS CHARFORMATW (SET) PROPERTY WordCharFormat (BYREF cf AS CHARFORMATW)</p>
+<p>pRichEdit.ExSetSel(98, 113)         ' // Select word at position 98, 113 DIM cf AS CHARFORMAT cf.dwMask = CFM_COLOR               ' // Let's set the color cf.crTextColor = BGR(255, 0, 0)     ' // Red color pRichEdit.SelectionCharFormat = cf  ' // Set the color pRichEdit.HideSelection(TRUE)       ' // Hide selection</p>
+<p>pRichEdit.ExSetSel(98, 113)         ' // Select word at position 98, 113 DIM cf AS CHARFORMAT cf.dwMask = CFM_BOLD                ' // The CFE_BOLD value of the dwEffects member is valid. cf.dwEffects = CFE_BOLD             ' // Characters are bold pRichEdit.SelectionCharFormat = cf  ' // Set the format pRichEdit.HideSelection(TRUE)       ' // Hide selection</p>
+<p>pRichEdit.ExSetSel(98, 113)          ' // Select word at position 98, 113 DIM cf AS CHARFORMAT cf.dwMask = CFM_SIZE                 ' // The yHeight member is valid. cf.yHeight = 12 * 20                 ' // Character height, in twips (1/1440 of an inch or 1/20 of a printer's point) pRichEdit.SelectionCharFormat = cf   ' // Set the format pRichEdit.HideSelection(TRUE)        ' // Hide selection</p>
+<p>Select text and change color Select text and make it bold Select text and change the font height</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/CRichEditCtx.inc:893</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/RichEdit/CRichEditCtx Class.md</span></li><li>Topic: <a href="../cricheditctx-class.html">CRichEditCtx Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BSTRING Class — Help Center</title>
+<meta name="description" content="BSTRING Class — 8 documented members. String Management reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/string-management/bstring-class.html">
+<meta property="og:title" content="BSTRING Class">
+<meta property="og:description" content="BSTRING Class — 8 documented members. String Management reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/string-management/bstring-class.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/string-management/bstring-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>String Management</div>
+<h1>BSTRING Class</h1>
+<h2>Members (8)</h2>
+<div class="memberlist"><a href="bstring/bstring-attach.html"><span class="m-n">Attach</span><span class="m-d">Attaches a BSTR to the BSTRING class.</span></a><a href="bstring/bstring-constructors.html"><span class="m-n">Constructors</span><span class="m-d">Initialize the class with the specified value.</span></a><a href="bstring/bstring-detach.html"><span class="m-n">Detach</span><span class="m-d">Detaches the underlying BSTR from the BSTRING class and returns it as the result of the function.</span></a><a href="bstring/bstring-operator.html"><span class="m-n">Operator *</span><span class="m-d">One * returns the address of the `BSTRING` buffer.&lt;br&gt; Two ** returns the address of the start of the string data.</span></a><a href="bstring/bstring-operator-cast.html"><span class="m-n">Operator Cast</span><span class="m-d">Returns a pointer to the `BSTRING` buffer or the string data.&lt;br&gt;Casting is automatic. You don&#x27;t have to call this operator.</span></a><a href="bstring/bstring-utf8.html"><span class="m-n">Utf8</span><span class="m-d">Converts from UTF8 to Unicode and from Unicode to UTF8.</span></a><a href="bstring/bstring-vptr.html"><span class="m-n">vptr</span><span class="m-d">Frees the underlying BSTR and returns a pointer to a new empty allocated string.</span></a><a href="bstring/bstring-wchar.html"><span class="m-n">wchar</span><span class="m-d">Returns the string data as a new unicode string allocated with CoTaskMemAlloc.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="bstring-class">BSTRING Class</h2>
+<p>The <code>BSTRING</code> and <code>DWSTRING</code> classes implement a dynamic unicode null terminated string. Free Basic has a dynamic string data type (STRING) and a fixed length unicode data type (WSTRING), but it lacks a dynamic unicode string. <code>BSTRING</code> and <code>DWSTRING</code> behave as if they were native data types, working directly with the intrinsic FreeBasic string functions and operators.</p>
+<p>While <code>DWSTRING</code>manages its own memory allocations, <code>BSTRING</code>is a wrapper on top of of the OLE string (aka BSTR) data type and the memory management is done by the COM library. It is better to use <code>DWSTRING</code>for general purposes, since it is faster, reserving the use of <code>BSTRING</code> for COM programming.</p>
+<p><strong>Include file</strong>: AfxNova/BSTRING.inc.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="bstring/bstring-constructors.html">Constructors</a></td><td>Initialize the class with the specified value.</td></tr><tr><td><a href="bstring/bstring-operator.html">Operator \*</a></td><td>One * returns the address of the <code>BSTRING</code> buffer.<br> Two ** returns the address of the start of the string data.</td></tr><tr><td><a href="bstring/bstring-operator-cast.html">Operator Cast</a></td><td>Returns a pointer to the <code>BSTRING</code> buffer or the string data.<br>Casting is automatic. You don't have to call this operator.</td></tr><tr><td><a href="bstring/bstring-attach.html">Attach</a></td><td>Attaches a BSTR to the BSTRING class.</td></tr><tr><td><a href="bstring/bstring-detach.html">Detach</a></td><td>Detaches the underlying BSTR from the BSTRING class and returns it as the result of the function.</td></tr><tr><td><a href="bstring/bstring-utf8.html">Utf8</a></td><td>Converts from UTF8 to Unicode and from Unicode to UTF8.</td></tr><tr><td><a href="bstring/bstring-vptr.html">vptr</a></td><td>Frees the underlying BSTR and returns a pointer to a new empty allocated string.</td></tr><tr><td><a href="bstring/bstring-wchar.html">wchar</a></td><td>Returns the string data as a new unicode string allocated with CoTaskMemAlloc.</td></tr></tbody></table></div>
+<h2 id="constructors">Constructors</h2>
+<p>Initialize the class with the specified value.</p>
+<pre class="code"><code>CONSTRUCTOR
+CONSTRUCTOR (BYREF wszStr AS CONST WSTRING)
+CONSTRUCTOR (BYVAL pwszStr AS WSTRING PTR)
+CONSTRUCTOR (BYREF bs AS BSTRING)
+CONSTRUCTOR (BYREF dws AS DWSTRING)
+CONSTRUCTOR (BYREF ansiStr AS STRING, BYVAL nCodePage AS UINT = 0)
+CONSTRUCTOR (BYVAL nChars AS LONG, BYREF wszFill AS CONST WSTRING)
+CONSTRUCTOR (BYVAL n AS LONGINT)
+CONSTRUCTOR (BYVAL n AS DOUBLE)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszStr</em></td><td>A WSTRING.</td></tr><tr><td><em>pwszStr</em></td><td>A pointer to a WSTRING.</td></tr><tr><td><em>dws</em></td><td>A DWSTRING.</td></tr><tr><td><em>bs</em></td><td>A BSTRING.</td></tr><tr><td><em>ansiStr</em></td><td>An ansi string or string literal.</td></tr><tr><td><em>nCodePage</em></td><td>The code page to be used for ansi to unicode conversions.</td></tr><tr><td><em>n</em></td><td>A number.</td></tr></tbody></table></div>
+<ol><li>Creates an empty Unicode string buffer with an initial null-terminated string.</li></ol>
+<pre class="code"><code>Example: DIM bs AS BSTRING</code></pre>
+<ol><li>Initializes a <code>BSTRING</code> instance from a wide string pointer.</li></ol>
+<pre class="code"><code>DIM wsz AS WSTRING * 30 = "This is a test string"
+DIM bsText AS BSTRING = wsz</code></pre>
+<ol><li>Initializes a <code>BSTRING</code> from an ANSI or UTF-8 encoded string, with optional code page support.</li></ol>
+<pre class="code"><code>Example: DIM s AS STRING = "Hello, world"
+         DIM bs AS BSTRING = s
+Example: DIM bs AS BSTRING = BSTRING("Hello, utf", CP_UTF8)</code></pre>
+<p>For a list of code pages see: <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/dd317756(v=vs.85" target="_blank" rel="noopener">Code Page Identifiers</a>.aspx)</p>
+<ol><li>Creates a copy of an existing <code>BSTRING</code>.</li></ol>
+<pre class="code"><code>Example: DIM bs1 AS BSTRING = "Test string"
+         DIM bs2 AS BSTRING = bs1</code></pre>
+<ol><li>Creates a <code>BSTRING</code> with a fixed-length buffer, initialized with a fill character.</li></ol>
+<pre class="code"><code>Example: DIM bs AS BSTRING = BSTRING(260, " ")</code></pre>
+<ol><li>Initializes a <code>BSTRING</code> with a numeric value, allowing automatic conversion.</li></ol>
+<pre class="code"><code>Example: DIM bsNum AS BSTRING = 12345
+Example: DIM bsFloat AS BSTRING = 3.1415</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p><code>BSTRING</code> works transparently with literals and FreeBasic native strings, e.g.</p>
+<pre class="code"><code>DIM bs AS BSTRING = "One"
+DIM s AS STRING = "Three"
+bs = bs &amp; " Two " &amp; s
+PRINT bs</code></pre>
+<p>It can be used with Windows API functions, e.g.</p>
+<pre class="code"><code>DIM nLen AS LONG = SendMessageW(hWin, WM_GETTEXTLENGTH, 0, 0)
+DIM bsText AS BSTRING = WSPACE(nLen + 1)
+SendMessageW(hWin, WM_GETTEXT, nLen + 1, cast(LPARAM, *bsText))
+bsText = LEFT(bsText, LEN(bsText) - 1)
+PRINT bsText</code></pre>
+<p>We can use arrays of <code>DWSTRING</code> strings transparently, e.g.</p>
+<pre class="code"><code>DIM rg(1 TO 10) AS BSTRING
+FOR i AS LONG = 1 TO 10
+   rg(i) = "string " &amp; i
+NEXT
+FOR i AS LONG = 1 TO 10
+   PRINT rg(i)
+NEXT</code></pre>
+<p>A two-dimensional array</p>
+<pre class="code"><code>DIM rg2 (1 TO 2, 1 TO 2) AS BSTRING
+rg2(1, 1) = "string 1 1"
+rg2(1, 2) = "string 1 2"
+rg2(2, 1) = "string 2 1"
+rg2(2, 2) = "string 2 2"
+PRINT rg2(2, 1)</code></pre>
+<p>REDIM PRESERVE / ERASE</p>
+<pre class="code"><code>REDIM rg(0) AS BSTRING
+rg(0) = "string 0"
+REDIM PRESERVE rg(0 TO 2) AS BSTRING
+rg(1) = "string 1"
+rg(2) = "string 2"
+PRINT rg(0)
+PRINT rg(1)
+PRINT rg(2)
+ERASE rg</code></pre>
+<p>You can also use it with files:</p>
+<p>Using FreeBasic intrinsic statements:</p>
+<pre class="code"><code>DIM bs AS BSTRING = "Дмитрий Дмитриевич Шостакович"
+DIM f AS LONG = FREEFILE
+OPEN "Test.txt" FOR OUTPUT ENCODING "utf16" AS #f
+PRINT #f, bs
+CLOSE #f</code></pre>
+<p>Using the Windows API:</p>
+<pre class="code"><code>' // Writing to a file
+DIM bsFilename AS BSTRING = "тест.txt"
+DIM bsText AS BSTRING = "Дмитрий Дмитриевич Шостакович"
+DIM hFile AS HANDLE = CreateFileW(bsFilename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)
+IF hFile THEN
+   DIM dwBytesWritten AS DWORD
+   DIM bSuccess AS LONG = WriteFile(hFile, bsText, LEN(bsText) * 2, @dwBytesWritten, NULL)
+   CloseHandle(hFile)
+END IF</code></pre>
+<pre class="code"><code>' // Read the file
+hFile = CreateFileW(bsFilename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL)
+IF hFile THEN
+   DIM dwFileSize AS DWORD = GetFileSize(hFile, NULL)
+   IF dwFileSize THEN
+      DIM bsOut AS BSTRING = WSPACE(dwFileSize \ 2)
+      DIM bSuccess AS LONG = ReadFile(hFile, *bsOut, dwFileSize, NULL, NULL)
+      CloseHandle(hFile)
+      PRINT bsOut
+   END IF
+END IF</code></pre>
+<p>Notice that, contrarily to <strong>CreateFileW</strong>, FreeBasic's OPEN statement doesn't allow to use unicode for the file name.</p>
+<hr>
+<h2 id="operators">Operators</h2>
+<h3 id="operator*">Operator *</h3>
+<p>Deferences the <code>BSTRING</code>.<br>One * returns the address of the underlying <code>BSTR</code> handle (same as STRPTR).<br>Two ** returns the address of the start of the string data (same as *STRPTR).</p>
+<pre class="code"><code>OPERATOR * (BYREF bs AS BSTRING) AS WSTRING PTR</code></pre>
+<hr>
+<h2 id="casting-and-conversions">Casting and Conversions</h2>
+<h3 id="operatorcast">Operator Cast</h3>
+<p>Returns a pointer to the underlying <code>BSTR</code> or the string data. These operators aren't called directly.</p>
+<pre class="code"><code>OPERATOR CAST () BYREF AS CONST WSTRING
+OPERATOR CAST () AS ANY PTR</code></pre>
+<hr>
+<h3 id="utf8">Utf8</h3>
+<p>Converts from UTF8 to Unicode and from Unicode to UTF8.</p>
+<pre class="code"><code>PROPERTY Utf8() AS STRING
+PROPERTY Utf8 (BYREF utf8String AS STRING)</code></pre>
+<hr>
+<h3 id="vptr">vptr</h3>
+<p>Frees the underlying <code>BSTR</code> and returns a pointer to a new empty allocated <code>BSTR</code>.</p>
+<p>Used to pass the underlying <code>BSTR</code> to an OUT BYVAL BSTR PTR parameter. If we pass a <code>BSTRING</code> to a procedure with an OUT BSTR parameter without first freeing it we will have a memory leak.</p>
+<pre class="code"><code>FUNCTION vptr () AS BSTR PTR</code></pre>
+<hr>
+<h3 id="wchar">wchar</h3>
+<p>Returns the string data as a new unicode string allocated with <strong>CoTaskMemAlloc</strong>.</p>
+<p>Useful when we need to pass a pointer to a null terminated wide string to a function or method that will release it. If we pass a WSTRING it will GPF. If the length of the input string is 0, <strong>CoTaskMemAlloc</strong> allocates a zero-length item and returns a valid pointer to that item. If there is insufficient memory available, <strong>CoTaskMemAlloc</strong> returns NULL.</p>
+<pre class="code"><code>FUNCTION wchar () AS WSTRING PTR</code></pre>
+<hr>
+<h2 id="methods">Methods</h2>
+<h3 id="attach">Attach</h3>
+<p>Attaches a <code>BSTR</code> to the <code>BSTRING</code> class.</p>
+<pre class="code"><code>SUB Attach (BYVAL pbstrSrc AS BSTR)</code></pre>
+<hr>
+<h3 id="detach">Detach</h3>
+<p>Detaches the underlying <code>BSTR</code> from the <code>BSTRING</code> class and returns it as the result of the function. The returned pointer must be freed by <strong>SysFreeString</strong>.</p>
+<pre class="code"><code>FUNCTION Detach () AS BSTR</code></pre>
+<p>This method frees the <em>m_bstr</em> member of the <code>BSTRING</code> class and returns it as the result of the function. Because it no longer belongs to the class, it must be freed by <strong>SysFreeString</strong>.</p>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

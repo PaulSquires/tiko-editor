@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpBase.CompositingQuality — Help Center</title>
+<meta name="description" content="Specifies whether gamma correction is applied when colors are blended with background colors.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpbase/cgpbase-compositingquality.html">
+<meta property="og:title" content="CGpBase.CompositingQuality">
+<meta property="og:description" content="Specifies whether gamma correction is applied when colors are blended with background colors.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpbase/cgpbase-compositingquality.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpbase/cgpbase-compositingquality.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgdiplus.html">CGdiPlus</a></div>
+<h1>CGpBase.CompositingQuality<span class="h1kind">method</span></h1>
+<p class="lede">Specifies whether gamma correction is applied when colors are blended with background colors.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGdiPlus.inc</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Description</h2>
+<p>The <strong>CompositingQuality</strong> enumeration specifies whether gamma correction is applied when colors are blended with background colors. This enumeration is used by the <strong>GdipGetCompositingQuality</strong> and <strong>GdipSetCompositingQuality</strong> functions.</p>
+<h2>Remarks</h2>
+<p>When you specify that gamma correction should not be applied, the image data to be rendered (blended with the background) is assumed to be in a linear color space with a gamma value of 1.0. As a result, no gamma adjustment is applied to the image data before or after blending the image with the background.</p>
+<p>When you specify that gamma correction should be applied, the image data to be rendered (blended with the background) is assumed to be in the sRGB color space with a gamma value of 2.2. To ensure accurate blending, the input image data is transformed into a linear (gamma = 1.0) space before the colors are blended and transformed back into sRGB (gamma = 2.2) space afterward. This mode results in a more accurate blend at the expense of additional processing time.</p>
+<h2>Example</h2>
+<p>CompositingQualityInvalid        = QualityModeInvalid CompositingQualityDefault        = QualityModeDefault CompositingQualityHighSpeed      = QualityModeLow CompositingQualityHighQuality    = QualityModeHigh CompositingQualityGammaCorrected = 3 CompositingQualityAssumeLinear   = 4</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGdiPlus.inc</code></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGdiPlus.md</span></li><li>Topic: <a href="../cgdiplus.html">CGdiPlus</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

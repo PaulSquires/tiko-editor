@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipSaveAddImage — Help Center</title>
+<meta name="description" content="Adds a frame to a file or stream specified in a previous call to the **GdipSaveImageToFile** or **GdipSaveImageToStream** functions.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipsaveaddimage.html">
+<meta property="og:title" content="GdipSaveAddImage">
+<meta property="og:description" content="Adds a frame to a file or stream specified in a previous call to the **GdipSaveImageToFile** or **GdipSaveImageToStream** functions.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipsaveaddimage.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipsaveaddimage.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../image-functions.html">Image Functions</a></div>
+<h1>GdipSaveAddImage<span class="h1kind">function</span></h1>
+<p class="lede">Adds a frame to a file or stream specified in a previous call to the **GdipSaveImageToFile** or **GdipSaveImageToStream** functions.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipSaveAddImage (BYVAL image AS GpImage PTR, BYVAL newImage AS GpImage PTR, BYVAL encoderParams AS EncoderParameters PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>image</code></td><td></td><td>[in] Pointer to the <strong>Image</strong> object.</td></tr><tr><td><code>newImage</code></td><td></td><td>[in] Pointer to an <strong>Image</strong> object that holds the frame to be added.</td></tr><tr><td><code>encoderParams</code></td><td></td><td>[in] Pointer to an <strong>EncoderParameters</strong> structure that holds parameters required by the image encoder used by the save-add operation.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Adds a frame to a file or stream specified in a previous call to the <strong>GdipSaveImageToFile</strong> or <strong>GdipSaveImageToStream</strong> functions.</p>
+<h2>Examples</h2>
+<p>'#CONSOLE ON #define _WIN32_WINNT &amp;h0602 #INCLUDE ONCE "AfxNova/AfxGdiPlus.inc" USING AfxNova</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Initialize GDI+ DIM token AS ULONG_PTR = AfxGdipInit</p>
+<p>' // Create three image objects. DIM multi AS GpImage Ptr DIM page2 AS GpImage Ptr DIM page3 AS GpImage Ptr hStatus = GdipLoadImageFromFile("Shapes.bmp", @multi) hStatus = GdipLoadImageFromFile("Iron.jpg", @page2) hStatus = GdipLoadImageFromFile("House.png", @page3)</p>
+<p>' // Get TIFF encoder CLSID Dim clsid As CLSID = AfxGdipGetEncoderClsid("image/tiff")</p>
+<p>' // Prepare EncoderParameters DIM encoderParams As EncoderParameters DIM paramValue As ULONG encoderParams.Count = 1 encoderParams.Parameter(0).Guid = EncoderSaveFlag encoderParams.Parameter(0).Type = EncoderParameterValueTypeLong encoderParams.Parameter(0).NumberOfValues = 1 encoderParams.Parameter(0).Value = @paramValue</p>
+<p>' // Save first frame paramValue = EncoderValueMultiFrame hStatus = GdipSaveImageToFile(multi, "multiframe.tiff", @clsid, @encoderParams)</p>
+<p>' // Add second frame paramValue = EncoderValueFrameDimensionPage hStatus = GdipSaveAddImage(multi, page2, @encoderParams)</p>
+<p>' // Add third frame paramValue = EncoderValueFrameDimensionPage hStatus = GdipSaveAddImage(multi, page3, @encoderParams)</p>
+<p>' // Finalize file paramValue = EncoderValueFlush hStatus = GdipSaveAdd(multi, @encoderParams)</p>
+<p>IF hStatus = S_OK THEN PRINT "File saved" ELSE PRINT "Saving failed"</p>
+<p>' // Cleanup IF page3 THEN GdipDisposeImage(page3) IF page2 THEN GdipDisposeImage(page2) IF multi THEN GdipDisposeImage(multi)</p>
+<p>' // Shutdown GDI+ AfxGdipShutdown token</p>
+<p>PRINT PRINT "Press any key" SLEEP</p>
+<p><strong>Creating and Saving a Multiple-Frame Image</strong></p>
+<p>With certain file formats, you can save multiple images (frames) to a single file. For example, you can save several pages to a single TIFF file. To save the first page, call the <strong>GdipSaveImageToFile</strong> function. To save subsequent pages, call the <strong>GdipSaveAddImage</strong> function.</p>
+<p>The following console application creates a TIFF file with three pages. The images that become the pages of the TIFF file come from three disk files. The code first constructs three <strong>Image</strong> objects: multi, page2 and page3. As the individual pages are added to the multiImage object, they are also added to the disk file Multiframe.tif. Note that the code calls <strong>GdipSaveImageToFile</strong> (not <strong>GdipSaveAddImage</strong>) to save the first page. The second argument passed to the <strong>GdipSaveImageToFile</strong> function is the name of the disk file that will eventually contain several frames. The third argument passed to the <strong>GdipSaveImageToFile</strong> function specifies the encoder that will be used to convert the data in the multiImage object to the format (in this case TIFF) required by the disk file.</p>
+<p>That same encoder is used automatically by all subsequent calls to the <strong>GdipSaveAddImage</strong> function of the multiImage object.</p>
+<p>The fourth argument passed to the <strong>GdipSaveImageToFile</strong> function is the address of an <strong>EncoderParameters</strong> structure The <strong>EncoderParameters</strong> structure has an array that contains a single <strong>EncoderParameter</strong> structure. The <strong>Guid</strong> member of that <strong>EncoderParameter</strong> structure is set to <strong>EncoderSaveFlag</strong>. The <strong>Value</strong> member of the <strong>EncoderParameter</strong> structure points to an ULONG variable that contains the value <strong>EncoderValueMultiFrame</strong>. The code saves the second and third pages by calling the <strong>GdipSaveAddImage</strong> function.</p>
+<p>The first argument passed to the <strong>GdipSaveAddImage</strong> function is the address of the multi object. The second argument is the address of an <strong>Image</strong> object. The image in that <strong>Image</strong> object is added to the multiImage object and is also added to the Multiframe.tif disk file. The third argument passed to the <strong>GdipSaveAddImage</strong> function is the address of the same <strong>EncoderParameters</strong> structure that was used by the <strong>GdipSaveImageToFile</strong> function. The difference is that the ULONG pointed to by the Value member now contains the value <strong>EncoderValueFrameDimensionPage</strong>. Finally, the file is closed calling the <strong>GdipSaveAdd</strong> function with the <strong>Value</strong> member of the <strong>EncoderParameter</strong> structure pointing to an ULONG variable that contains the value <strong>EncoderValueFlush</strong>.</p>
+<p>The main function relies on the helper function <strong>AfxGdiPlusGetEncoderClsid</strong> to retrieve the guid of the TIFF encoder.</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2085</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusImage.md</span></li><li>Topic: <a href="../image-functions.html">Image Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

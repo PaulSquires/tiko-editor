@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipGetLineBlend — Help Center</title>
+<meta name="description" content="Gets the blend factors and their corresponding blend positions from a **LinearGradientBrush** object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipgetlineblend.html">
+<meta property="og:title" content="GdipGetLineBlend">
+<meta property="og:description" content="Gets the blend factors and their corresponding blend positions from a **LinearGradientBrush** object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipgetlineblend.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipgetlineblend.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../gdipluslineargradientbrush.html">GdiPlusLinearGradientBrush</a></div>
+<h1>GdipGetLineBlend<span class="h1kind">function</span></h1>
+<p class="lede">Gets the blend factors and their corresponding blend positions from a **LinearGradientBrush** object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipGetLineBlend (BYVAL brush AS GpLineGradient PTR, BYVAL blend AS REAL PTR, BYVAL positions AS REAL PTR, BYVAL count AS INT_) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>brush</code></td><td></td><td>[in] Pointer to the <strong>LinearGradientBrush</strong> object.</td></tr><tr><td><code>blend</code></td><td></td><td>[out] Pointer to an array that receives the blend factors. Each number in the array indicates a percentage of the ending color and is in the range from 0.0 through 1.0.</td></tr><tr><td><code>positions</code></td><td></td><td>[out] Pointer to an array that receives the blend positions. Each number in the array indicates a percentage of the distance between the starting boundary and the ending boundary and is in the range from 0.0 through 1.0, where 0.0 indicates the starting boundary of the gradient and 1.0 indicates the ending boundary. A blend position between 0.0 and 1.0 indicates a line, parallel to the boundary lines, that is a certain fraction of the distance from the starting boundary to the ending boundary. For example, a blend position of 0.7 indicates the line that is 70 percent of the distance from the starting boundary to the ending boundary. The color is constant on lines that are parallel to the boundary lines.</td></tr><tr><td><code>count</code></td><td></td><td>[in] Long integer value that specifies the number of blend factors to retrieve. Before calling the <strong>GdipGetLineBlend</strong> function, call the <strong>GdipGetLineBlendCount</strong> function to determine the current number of blend factors. The number of blend positions retrieved is the same as the number of blend factors retrieved.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Gets the blend factors and their corresponding blend positions from a <strong>LinearGradientBrush</strong> object.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' This example sets a custom blend, retrieves the count, and then extracts the blend factors ' and positions into arrays. You can use these values for logging, debugging, or applying ' to another brush. ' ======================================================================================== SUB Example_GetLineBlend (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create a linear gradient brush DIM rcf AS GpRectF = (0, 0, 200, 100) DIM brush AS GpLineGradient PTR GdipCreateLineBrushFromRect(@rcf, ARGB_RED, ARGB_BLUE, LinearGradientModeHorizontal, WrapModeTile, @brush)</p>
+<p>' // Set custom blend DIM setFactors(3) AS SINGLE = {0.0, 0.4, 0.6, 1.0} DIM setPositions(3) AS SINGLE = {0.0, 0.2, 0.8, 1.0} GdipSetLineBlend(brush, @setFactors(0), @setPositions(0), 4)</p>
+<p>' // Get blend count DIM count AS LONG GdipGetLineBlendCount(brush, @count)</p>
+<p>' // Retrieve blend factors and positions DIM getFactors(count - 1) AS SINGLE DIM getPositions(count - 1) AS SINGLE GdipGetLineBlend(brush, @getFactors(0), @getPositions(0), count)</p>
+<p>' // Fill rectangle GdipFillRectangle(graphics, brush, rcf.x, rcf.y, rcf.Width, rcf.Height)</p>
+<p>' // Cleanup IF brush THEN GdipDeleteBrush(brush) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2176</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusLinearGradientBrush.md</span></li><li>Topic: <a href="../gdipluslineargradientbrush.html">GdiPlusLinearGradientBrush</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTreeView.GetEditControl — Help Center</title>
+<meta name="description" content="Retrieves the handle to the edit control being used to edit a treeview item&#x27;s text.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctreeview/ctreeview-geteditcontrol.html">
+<meta property="og:title" content="CTreeView.GetEditControl">
+<meta property="og:description" content="Retrieves the handle to the edit control being used to edit a treeview item&#x27;s text.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctreeview/ctreeview-geteditcontrol.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/ctreeview/ctreeview-geteditcontrol.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../ctreeview-class.html">CTreeView Class</a></div>
+<h1>CTreeView.GetEditControl<span class="h1kind">method</span></h1>
+<p class="lede">Retrieves the handle to the edit control being used to edit a treeview item&#x27;s text.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge">CTreeView.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GetEditControl (BYVAL hTreeView AS HWND) AS HWND</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hTreeView</code></td><td></td><td>The handle of the TreeView control.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>The handle to the edit control being used to edit a tree-view item's text, or NULL if no item is being edited.</p>
+<h2>Description</h2>
+<p>Retrieves the handle to the edit control being used to edit a treeview item's text.</p>
+<h2>Remarks</h2>
+<p>When label editing begins, an edit control is created but not positioned or displayed. Before it is displayed, the tree-view control sends its parent window a <strong>TVN_BEGINLABELEDIT</strong> notification code.</p>
+<p>To customize label editing, implement a handler for <strong>TVN_BEGINLABELEDIT</strong> and have it use <strong>GetEditControl</strong> method to send a <strong>TVM_GETEDITCONTROL</strong> message to the tree-view control. If a label is being edited, the return value will be a handle to the edit control. Use this handle to customize the edit control by sending the usual EM_XXX messages.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CTreeView.inc</code></li><li>Defined in <span class="srcref">AfxNova/CTreeView.inc:887</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/CTreeView Class.md</span></li><li>Topic: <a href="../ctreeview-class.html">CTreeView Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

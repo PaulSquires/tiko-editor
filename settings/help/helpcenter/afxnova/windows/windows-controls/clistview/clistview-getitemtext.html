@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CListView.GetItemText — Help Center</title>
+<meta name="description" content="Gets the text of a list-view item or subitem.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/clistview/clistview-getitemtext.html">
+<meta property="og:title" content="CListView.GetItemText">
+<meta property="og:description" content="Gets the text of a list-view item or subitem.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/clistview/clistview-getitemtext.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/clistview/clistview-getitemtext.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../clistview-class.html">CListView Class</a></div>
+<h1>CListView.GetItemText<span class="h1kind">method</span></h1>
+<p class="lede">Gets the text of a list-view item or subitem.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge">CListView.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>SUB GetItemText (BYVAL hListView AS HWND, BYVAL i AS LONG, BYVAL iSubItem AS LONG, BYVAL pwszText AS WSTRING PTR, BYVAL cchTextMax AS LONG = MAX_PATH + 1)</code></pre>
+<div class="note">Also documented as <code>GetText</code> — one description covers them all.</div>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hListView</code></td><td></td><td>Handle to the ListView control.</td></tr><tr><td><code>item</code></td><td></td><td>The index of the list-view item.</td></tr><tr><td><code>iSubItem</code></td><td></td><td>The index of the subitem. To retrieve the item text, set iSubItem_ to zero.</td></tr><tr><td><code>pwszText</code></td><td></td><td>A pointer to a buffer that receives the item or subitem text.</td></tr><tr><td><code>cchTextMax</code></td><td></td><td>The number of characters in the <em>pwszText</em> buffer.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Gets the text of a list-view item or subitem.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CListView.inc</code></li><li>Defined in <span class="srcref">AfxNova/CListView.inc:849</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/CListView Class.md</span></li><li>Topic: <a href="../clistview-class.html">CListView Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

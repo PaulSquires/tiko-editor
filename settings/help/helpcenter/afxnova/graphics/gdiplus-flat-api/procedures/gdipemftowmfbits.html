@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipEmfToWmfBits — Help Center</title>
+<meta name="description" content="Converts an enhanced-format metafile to a Microsoft® Windows® Metafile Format (WMF) metafile and stores the converted records in a specified buffer.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipemftowmfbits.html">
+<meta property="og:title" content="GdipEmfToWmfBits">
+<meta property="og:description" content="Converts an enhanced-format metafile to a Microsoft® Windows® Metafile Format (WMF) metafile and stores the converted records in a specified buffer.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipemftowmfbits.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipemftowmfbits.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../image-functions.html">Image Functions</a></div>
+<h1>GdipEmfToWmfBits<span class="h1kind">function</span></h1>
+<p class="lede">Converts an enhanced-format metafile to a Microsoft® Windows® Metafile Format (WMF) metafile and stores the converted records in a specified buffer.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipEmfToWmfBits (BYVAL hemf AS HENHMETAFILE, BYVAL cbData16 AS UINT, BYVAL pData16 AS LPBYTE, BYVAL iMapMode AS INT_, BYVAL eFlags AS INT_) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hemf</code></td><td></td><td>[in] Handle to the enhanced-format metafile that is to be converted.</td></tr><tr><td><code>cbData16</code></td><td></td><td>[in] Unsigned integer that specifies the number of bytes in the buffer pointed to by the <em>pData16</em> parameter.</td></tr><tr><td><code>pData16</code></td><td></td><td>[out] Pointer to a buffer that receives the converted records. If <em>pData16</em> is NULL, <strong>GdipEmfToWmfBits</strong> returns the number of bytes required to store the converted metafile records.</td></tr><tr><td><code>iMapMode</code></td><td></td><td>[in] Specifies the mapping mode to use in the converted metafile. For a list of possible mapping modes, see <strong>SetMapMode</strong>. The default value is MM_ANISOTROPIC.</td></tr><tr><td><code>eFlags</code></td><td></td><td>[in] Element of the <em>EmfToWmfBitsFlags</em> enumeration that specifies options for the conversion. The default value is <em>EmfToWmfBitsFlagsDefault</em>.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds and the buffer pointer is NULL, the return value is the number of bytes required to store the converted records. If the function succeeds and the buffer pointer is a valid pointer, the return value is the size of the metafile data in bytes. If the function fails, the return value is zero.</p>
+<h2>Description</h2>
+<p>Converts an enhanced-format metafile to a Microsoft® Windows® Metafile Format (WMF) metafile and stores the converted records in a specified buffer.</p>
+<h2>Remarks</h2>
+<p>When you call <strong>GdipEmfToWmfBits</strong> to determine the size of the required buffer, you must pass the same value for <em>eFlags</em> that you pass later when you call <strong>GdipEmfToWmfBits</strong> to perform the conversion. Otherwise, the size returned by the first call to <strong>GdipEmfToWmfBits</strong> will be incorrect.</p>
+<p>This function cannot convert metafiles of type <em>EmfTypeEmfPlusOnly</em>. If you use this function to convert a metafile of type <em>EmfTypeEmfPlusDual</em>, the Enhanced Metafile (EMF) records in that metafile are converted, but the EMF+ records are not converted.</p>
+<p>This function converts an enhanced metafile into a WMF metafile so that its picture can be displayed in an application that recognizes the older format.</p>
+<p>The <strong>GdipEmfToWmfBits</strong> function does not invalidate the enhanced metafile handle. Call the <strong>DeleteEnhMetaFile</strong> function to release the handle when it is no longer needed.</p>
+<p>To create a scalable WMF metafile, specify MM_ANISOTROPIC as the <em>iMapMode</em> parameter.</p>
+<h2>Example</h2>
+<p>'#CONSOLE ON #define _WIN32_WINNT &amp;h0602 #INCLUDE ONCE "AfxNova/AfxGdiPlus.inc"</p>
+<p>' ======================================================================================== ' Convert EMF to a WMF bitstream. ' It operates directly on a Windows HENHMETAFILE handle. ' This example loads an EMF file, converts it to WMF bits using GdipEmfToWmfBits, ' and writes the result to a WMF file. ' GetEnhMetaFileW does no work with EMF+ files. ' ========================================================================================</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Initialize GDI+ DIM token AS ULONG_PTR = AfxGdipInit</p>
+<p>DIM hemf AS HENHMETAFILE DIM cbData16 AS UINT DIM result AS UINT</p>
+<p>' // Load the EMF file hemf = GetEnhMetaFileW("EMF13.emf") IF hemf = NULL THEN PRINT "Failed to load EMF file" SLEEP END END IF</p>
+<p>' // First call to get required buffer size cbData16 = GdipEmfToWmfBits(hemf, 0, NULL, MM_ANISOTROPIC, EmfToWmfBitsFlagsDefault)</p>
+<p>' // Allocate buffer DIM pData16 AS UBYTE PTR = CAllocate(cbData16)</p>
+<p>' // Convert EMF to WMF bits result = GdipEmfToWmfBits(hemf, cbData16, pData16, MM_ANISOTROPIC, EmfToWmfBitsFlagsDefault)</p>
+<p>' // Write to WMF file DIM hFile AS HANDLE = CreateFile("output.wmf", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL) IF hFile &lt;&gt; INVALID_HANDLE_VALUE THEN DIM bytesWritten AS DWORD WriteFile(hFile, pData16, result, @bytesWritten, NULL) CloseHandle(hFile) PRINT "WMF file written successfully." ELSE PRINT "Failed to create WMF file." END IF</p>
+<p>' // Cleanup IF pData16 THEN DEALLOCATE(pData16) IF hemf THEN DeleteEnhMetaFile(hemf)</p>
+<p>' // Shutdown GDI+ AfxGdipShutdown token</p>
+<p>PRINT PRINT "Press any key" SLEEP</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2231</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusImage.md</span></li><li>Topic: <a href="../image-functions.html">Image Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

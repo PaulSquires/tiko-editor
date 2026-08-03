@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Profiling with fb&#x27;s profiler — Help Center</title>
+<meta name="description" content="Profiling with fb&#x27;s profiler — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/profiling-with-fb-s-profiler.html">
+<meta property="og:title" content="Profiling with fb&#x27;s profiler">
+<meta property="og:description" content="Profiling with fb&#x27;s profiler — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/profiling-with-fb-s-profiler.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/profiling-with-fb-s-profiler.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Profiling with fb&#x27;s profiler</h1>
+<h2>Documentation</h2>
+
+	Profiling can be used to analyze the performance of an application.<br>
+<br>
+Since fbc 1.20.0, FreeBASIC can use fb's profiler for analyzing the execution of an application. The profiler information is collected while the program is running.<br>
+This profiling feature may give an easy to use tool to help novice and experienced users analyze their programs.<br>
+<br>
+Some of the capabilities of this profiler implemented through fb:<br>
+<div class="indent">- easy to use,<br>
+- no extra tools needed,<br>
+- can profile (analyze) calls to external libraries.<br>
+<br>
+</div>This profiling feature may give an easy to use tool to help novice and experienced users analyze their programs.<br>
+<br>
+The three basic steps to profiling a program are:<br>
+<div class="indent">- Prepare the program for profiling by passing the the appropriate <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-profgen.html">-profgen ...</a></i> option to the FreeBASIC compiler or compile the source with appropriate '-profgen ...' <i><a href="../../compiler-options/procedures/cmdline.html">#Cmdline</a></i> option.<br>
+- Run the program to build the profiling report stored by default in <code>&lt;filename[.exe]&gt;.prf</code> (where <code>&lt;filename[.exe]&gt;</code> is the name of the executable).<br>
+- Analyze directly the profiling report (text file).<br>
+<br>
+</div>The fb's profiler offers two types of profiling:<br>
+<div class="indent"><b>1. Function call profiling</b><br>
+<b>2. Cycle count profiling</b> (currently a work in progress on <code>-gen gas64</code> only)<br>
+<br>
+</div><div>1. Function Call Profiling (with fb's profiler)</div><div><br>
+<br>
+The performance of an application might be measured by how many times functions are called, how much time is spent executing those functions, and which functions are calling other functions.<br>
+This can help to identify functions that might be taking too long to execute or executed too many times and that might be worth reviewing for optimization.<br>
+<br>
+This feature is a reimplentation of Angelo Mottola's (lillo's) profiler from 2008, rewritten to fix some issues, and then some new features added on. This latest side quest started due to a desire to run some kind of profiling on the fbc compiler itself, and having no luck at all with gprof on windows. Years ago lillo's function call profiler was removed in favor of gmon/gprof.<br>
+<br>
+This tool is not suitable for high resolution timing profiling. However, it helps identify potential problem areas in a program, or gives a better understanding of procedures called as starting point for investigations.<br>
+<br>
+FreeBASIC supports function profiling; not basic-block or line-by-line profiling.<br>
+<br>
+<b><u>1.1 Preparing a Program for Profiling (with function call fb's profiler)</u></b><br>
+<div class="indent">Only code that is compiled with the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-profgen.html">-profgen fb</a></i> command line option can be so profiled.<br>
+Pass the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-profgen.html">-profgen fb</a></i> option to the FreeBASIC compiler to prepare the program to be profiled or compile the source with '-profgen fb' <i><a href="../../compiler-options/procedures/cmdline.html">#Cmdline</a></i> option:<br>
+<div class="indent"><pre class="code">
+fbc program.bas -profgen fb
+' or
+#cmdline "-profgen fb"
+</pre>		 This will tell the compiler to insert special startup code at the beginning of the application as well as at the beginning of each function.<br>
+<br>
+</div></div><b><u>1.2 Profiling (with function call fb's profiler) the Program</u></b><br>
+<div class="indent">The information needed to analyze execution of the program is gathered while the program is running.<br>
+Run the program to begin collecting the function call information.<br>
+The profiling report is automatically stored in a file named by default <code>&lt;filename[.exe]&gt;.prf</code> in the same directory as the program.<br>
+<br>
+</div><b><u>1.3 Analyzing the Profiling Report (from function call fb's profiler)</u></b><br>
+<div class="indent">After compiling and running the program, the user can open the default named profiling report <code>&lt;filename[.exe]&gt;.prf</code> (text file).<br>
+<br>
+There are two sections:<br>
+<div class="indent">- per function results - profile of individual procedures and the procedures called<br>
+- global results - profile of all procedures with respect to the whole program run time<br>
+<br>
+<b><code>Function</code>:</b> the parent function / child function profiled. Parents are on the left, children are indented<br>
+<b><code>Count</code>:</b> number of times the procedure was called<br>
+<b><code>Time</code>:</b> number of seconds executing the procedure<br>
+<b><code>Total%</code>:</b> the percentage of execution time versus the whole run time<br>
+<b><code>Proc%</code>:</b> the percentage of execution time versus the procedure run time<br>
+<br>
+</div>Times are based on fb's built-in TIMER function.<br>
+<br>
+In case of multi-threading, each thread has a separate instance of the profiler storing its data in thread-local storage.<br>
+The final profiling report groups together one after the other the elementary profiling reports of each thread (including firstly that of the main thread). There is no inter-thread grouping.<br>
+<br>
+</div><ul><ul><li> Simple example:<br>
+</li></ul></ul><div class="indent"><div class="indent"><code><pre class="code"><span>#cmdline &quot;-profgen fb&quot;
+
+</span>
+
+<span class="tok-kw">Sub</span> <span>Pause_100</span>
+
+    <span class="tok-kw">Sleep</span> <span class="tok-nu">100</span><span>,</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>Pause_200</span>
+
+    <span class="tok-kw">Sleep</span> <span class="tok-nu">200</span><span>,</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>Pause_400</span>
+
+    <span class="tok-kw">Sleep</span> <span class="tok-nu">400</span><span>,</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">For</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span>
+
+    <span>Pause_100</span>
+
+<span class="tok-kw">Next</span> <span>i</span>
+
+
+
+<span>Pause_200</span>
+
+
+
+<span>Pause_400</span></pre></code><br>
+			Example of profiling report:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">' .....</span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">'   Per function results:</span>
+
+<span class="tok-cm">'   </span>
+
+<span class="tok-cm">'           Function:         Count:       Time:    Total%:    Proc%:</span>
+
+<span class="tok-cm">'   </span>
+
+<span class="tok-cm">'   (main)                         1     0.92307    100.00%</span>
+
+<span class="tok-cm">'   </span>
+
+<span class="tok-cm">'           PAUSE_400              1     0.40091     43.43%    43.43%</span>
+
+<span class="tok-cm">'           PAUSE_100              3     0.32153     34.83%    34.83%</span>
+
+<span class="tok-cm">'           PAUSE_200              1     0.20060     21.73%    21.73%</span>
+
+<span class="tok-cm">'           FB___MAIN              1     0.00000      0.00%     0.00%</span>
+
+<span class="tok-cm">'   </span>
+
+<span class="tok-cm">'   PAUSE_100                      3     0.32153     34.83%</span>
+
+<span class="tok-cm">'   </span>
+
+<span class="tok-cm">'           SLEEP                  3     0.32152     34.83%   100.00%</span>
+
+<span class="tok-cm">'   </span>
+
+<span class="tok-cm">'   PAUSE_200                      1     0.20060     21.73%</span>
+
+<span class="tok-cm">'   </span>
+
+<span class="tok-cm">'           SLEEP                  1     0.20059     21.73%   100.00%</span>
+
+<span class="tok-cm">'   </span>
+
+<span class="tok-cm">'   PAUSE_400                      1     0.40091     43.43%</span>
+
+<span class="tok-cm">'   </span>
+
+<span class="tok-cm">'           SLEEP                  1     0.40086     43.43%    99.99%</span>
+
+<span class="tok-cm">'   </span>
+
+<span class="tok-cm">'   </span>
+
+<span class="tok-cm">'   </span>
+
+<span class="tok-cm">'   Global results:</span>
+
+<span class="tok-cm">'   </span>
+
+<span class="tok-cm">'   (main)                         1     0.92307    100.00%</span>
+
+<span class="tok-cm">'   FB___MAIN                      1     0.00000      0.00%</span>
+
+<span class="tok-cm">'   PAUSE_100                      3     0.32153     34.83%</span>
+
+<span class="tok-cm">'   PAUSE_200                      1     0.20060     21.73%</span>
+
+<span class="tok-cm">'   PAUSE_400                      1     0.40091     43.43%</span>
+
+<span class="tok-cm">'   SLEEP                          5     0.92297     99.99%</span></pre></code><br>
+</div></div></div><b><u>1.4 Advanced Profiling Features (with function call fb's profiler)</u></b><br>
+<div class="indent">The following features allow the user to control the information collected by the profiler as well as modify the profiling report, compared to the default operating.<br>
+<br>
+<u>1.4.1 Advanced procedures in the <code>./inc/fbc-int/profile.bi</code> include file</u><br>
+<div class="indent">The <code>./inc/fbc-int/profile.bi</code> include file allows user to access some advanced procedures (declared inside Namespace: <code>FBC</code>) for working with the fb's profiler.<br>
+These procedures expose fb's profiler as an API that can then be called directly and used to generate a profiling report based on whatever structure of call recording is made by the user:<br>
+<div class="indent"><div class="indent"><b>-</b> To set the output report file name at run-time:<br>
+<div class="indent"><div class="indent"><code>function ProfileSetFileName ( byval filename as const zstring ptr ) as long</code><br>
+</div></div><b>-</b> To set/get options for the profiler:<br>
+<div class="indent"><div class="indent"><code>function ProfileSetOptions ( byval options as PROFILE_OPTIONS ) as PROFILE_OPTIONS</code><br>
+<code>function ProfileGetOptions ( ) as PROFILE_OPTIONS</code><br>
+both associated with the <code>PROFILE_OPTIONS</code> Enum structure (see <code>./inc/fbc-int/profile.bi</code> include file)<br>
+</div></div><b>-</b> To ignore a procedure when profiling:<br>
+<div class="indent"><div class="indent"><code>sub ProfileIgnore ( byval procedurename as zstring ptr )</code><br>
+</div></div><b>-</b> To call fb's profiler directly to perform custom profiling and a report:<br>
+<div class="indent">Examples of procedures:<br>
+<div class="indent"><code>sub ProfileInit () '' <i>Initialize the profiler</i></code><br>
+<code>function ProfileEnd ( byval errorcode as long ) as long '' <i>Generate the profiling report and terminate the profiler</i></code><br>
+<code>function ProfileBeginCall ( byval procedurename as const zstring ptr ) as any ptr '' <i>Begin a call and return a caller_id pointer</i></code><br>
+<code>sub ProfileEndCall ( byval procctx as any ptr ) '' <i>End a call</i></code><br>
+<br>
+</div></div></div></div></div></div><ul><ul><ul><li> Example for setting the profiling report file name at run-time:<br>
+</li></ul></ul></ul><div class="indent"><div class="indent"><div class="indent"><div class="indent"><code><pre class="code"><span>#cmdline &quot;-profgen fb&quot;
+
+#include Once &quot;fbc-int/profile.bi&quot;
+
+</span><span class="tok-kw">Using</span> <span>FBC</span>
+
+
+
+<span class="tok-cm">'' automatically change the profile report name</span>
+
+<span class="tok-kw">Dim</span> <span>t</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>=</span> <span class="tok-kw">Time</span>
+
+<span class="tok-kw">Dim</span> <span>n</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>=</span> <span class="tok-kw">Left</span><span>(</span><span>t</span><span>,</span> <span class="tok-nu">2</span><span>)</span> <span>&amp;</span> <span class="tok-kw">Mid</span><span>(</span><span>t</span><span>,</span> <span class="tok-nu">4</span><span>,</span> <span class="tok-nu">2</span><span>)</span> <span>&amp;</span> <span class="tok-kw">Right</span><span>(</span><span>t</span><span>,</span> <span class="tok-nu">2</span><span>)</span>
+
+<span>ProfileSetFileName</span><span>(</span> <span>&quot;prof-&quot;</span> <span>&amp;</span> <span>n</span> <span>&amp;</span> <span>&quot;.txt&quot;</span> <span>)</span></pre></code><br>
+</div></div></div></div><ul><ul><ul><li> Example for telling the profiler to generate a call tree instead of timings and counts:<br>
+</li></ul></ul></ul><div class="indent"><div class="indent"><div class="indent"><div class="indent"><code><pre class="code"><span>#cmdline &quot;-profgen fb&quot; 
+
+#include Once &quot;fbc-int/profile.bi&quot;
+
+</span><span class="tok-kw">Using</span> <span>FBC</span>
+
+
+
+<span>ProfileSetOptions</span><span>(</span> <span>PROFILE_OPTION_REPORT_CALLTREE</span> <span>)</span> 
+
+
+
+<span class="tok-kw">Sub</span> <span>A</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;A&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>B</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;B&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>C</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;C&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>D</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;D&quot;</span>
+
+    <span>A</span>
+
+    <span>A</span>
+
+    <span>B</span>
+
+    <span>B</span>
+
+    <span>C</span>
+
+    <span>C</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span>D</span></pre></code><br>
+					Example of profiling report:<br>
+<div class="indent"><pre class="code">
+'	.....
+'	
+'	
+'	Call Tree:
+'	
+'	\- (main)
+'	   |- D
+'	   |  |- A
+'	   |  |  |- FB_PRINTSTRING
+'	   |  |  \- FB_STRALLOCTEMPDESCZEX
+'	   |  |- B
+'	   |  |  |- FB_PRINTSTRING
+'	   |  |  \- FB_STRALLOCTEMPDESCZEX
+'	   |  |- C
+'	   |  |  |- FB_PRINTSTRING
+'	   |  |  \- FB_STRALLOCTEMPDESCZEX
+'	   |  |- FB_PRINTSTRING
+'	   |  \- FB_STRALLOCTEMPDESCZEX
+'	   |- FB___MAIN
+'	   \- PROFILESETOPTIONS
+</pre></div></div></div></div></div><ul><ul><ul><li> Example for calling fb's profiler directly to perform custom profiling and a report:<br>
+</li></ul></ul></ul><div class="indent"><div class="indent"><div class="indent"><div class="indent"><code><pre class="code"><span>#include Once &quot;fbc-int/profile.bi&quot;
+
+</span><span class="tok-kw">Using</span> <span>FBC</span>
+
+
+
+<span>#if __FB_PROFILE__ = PROFILE_OPTION_REPORT_CALLS
+
+#error Do Not compile With -profgen fb
+
+#endif
+
+</span>
+
+<span>ProfileInit</span><span>()</span>
+
+
+
+<span class="tok-kw">Var</span> <span>ctx</span> <span>=</span> <span>ProfileBeginCall</span><span>(</span> <span>@</span><span>&quot;Begin&quot;</span> <span>)</span>
+
+
+
+<span class="tok-kw">Scope</span>
+
+    <span class="tok-kw">Var</span> <span>ctx</span> <span>=</span> <span>ProfileBeginCall</span><span>(</span> <span>@</span><span>&quot;Step 1&quot;</span> <span>)</span>
+
+        <span class="tok-kw">Sleep</span> <span class="tok-nu">100</span><span>,</span> <span class="tok-nu">1</span>
+
+    <span>ProfileEndCall</span><span>(</span> <span>ctx</span> <span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Scope</span>
+
+
+
+<span class="tok-kw">Scope</span>
+
+    <span class="tok-kw">Var</span> <span>ctx</span> <span>=</span> <span>ProfileBeginCall</span><span>(</span> <span>@</span><span>&quot;Step 2&quot;</span> <span>)</span>
+
+        <span class="tok-kw">Sleep</span> <span class="tok-nu">200</span><span>,</span> <span class="tok-nu">1</span>
+
+    <span>ProfileEndCall</span><span>(</span> <span>ctx</span> <span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Scope</span>
+
+
+
+<span>ProfileEndCall</span><span>(</span> <span>ctx</span> <span>)</span>
+
+
+
+<span>ProfileEnd</span><span>(</span><span class="tok-nu">0</span><span>)</span></pre></code><br>
+					Example of profiling report:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">' .....</span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">' Per function results:</span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">'         Function:         Count:       Time:    Total%:    Proc%:</span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">' (main)                         1     0.30183    100.00%</span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">'         Begin                  1     0.30183    100.00%   100.00%</span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">' Begin                          1     0.30183    100.00%</span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">'         Step 2                 1     0.20057     66.45%    66.45%</span>
+
+<span class="tok-cm">'         Step 1                 1     0.10125     33.54%    33.54%</span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">' Global results:</span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">' (main)                         1     0.30183    100.00%</span>
+
+<span class="tok-cm">' Begin                          1     0.30183    100.00%</span>
+
+<span class="tok-cm">' Step 1                         1     0.10125     33.54%</span>
+
+<span class="tok-cm">' Step 2                         1     0.20057     66.45%</span></pre></code><br>
+</div></div></div></div><u>1.4.2 Conditional generation of profiling code</u><br>
+<div class="indent">The user can also control a conditional generation of profiling code:<br>
+<div class="indent"><code><a href="../../preprocessor/procedures/pragma.html">#Pragma Profile</a></code> controls the generation of profiling code.<br>
+This allows optionally including or excluding sections of source code to be profiled.<br>
+<br>
+User can optionally disable profiling code generation with <code>#pragma profile = false</code> or <code>#pragma push( profile , false )</code><br>
+Profiling code generation can be reactivated with <code>#pragma profile = true</code> or <code>#pragma pop( profile )</code> respectively<br>
+<br>
+The <code><a href="../../intrinsic-defines/procedures/fb-option-profile.html">__FB_OPTION_PROFILE__</a></code> intrinsic define allows to indicate that the profiling code is generated or not:<br>
+<div class="indent"><div class="indent"><code>__FB_OPTION_PROFILE__</code> is set to non-zero when profiling code is generated<br>
+<code>__FB_OPTION_PROFILE__</code> is set to zero when profiling code is not generated<br>
+<br>
+</div></div></div></div></div><ul><ul><ul><li> Purely academic example:<br>
+</li></ul></ul></ul><div class="indent"><div class="indent"><div class="indent"><div class="indent"><code><pre class="code"><span>#cmdline &quot;-profgen fb&quot;
+
+</span>
+
+<span class="tok-kw">Print</span> <span>&quot;__FB_OPTION_PROFILE__ = &quot;</span> <span>&amp;</span> <span class="tok-kw">__FB_OPTION_PROFILE__</span>
+
+
+
+<span>#pragma push( profile , False )
+
+</span><span class="tok-kw">Print</span> <span>&quot;__FB_OPTION_PROFILE__ = &quot;</span> <span>&amp;</span> <span class="tok-kw">__FB_OPTION_PROFILE__</span>
+
+<span class="tok-kw">Sleep</span> <span class="tok-nu">100</span><span>,</span> <span class="tok-nu">1</span>
+
+<span>#pragma pop( profile )
+
+</span>
+
+<span class="tok-kw">Print</span> <span>&quot;__FB_OPTION_PROFILE__ = &quot;</span> <span>&amp;</span> <span class="tok-kw">__FB_OPTION_PROFILE__</span></pre></code><br>
+					Example of profiling report:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">' .....</span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">' Per function results:</span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">'         Function:                     Count:       Time:    Total%:    Proc%:</span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">' (main)                                     1     0.11714    100.00%</span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">'         FB_PRINTSTRING                     2     0.00517      4.42%     4.42%</span>
+
+<span class="tok-cm">'         FB_STRALLOCTEMPDESCZEX             2     0.00001      0.01%     0.01%</span>
+
+<span class="tok-cm">'         FB___MAIN                          1     0.00000      0.00%     0.00%</span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">' Global results:</span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">' (main)                                     1     0.11714    100.00%</span>
+
+<span class="tok-cm">' FB_PRINTSTRING                             2     0.00517      4.42%</span>
+
+<span class="tok-cm">' FB_STRALLOCTEMPDESCZEX                     2     0.00001      0.01%</span>
+
+<span class="tok-cm">' FB___MAIN                                  1     0.00000      0.00%</span></pre></code><br>
+						The code profiler only takes into account 2 PRINTs (instead of 3) and not the SLEEP.<br>
+<br>
+</div></div></div></div></div></div><div>2. Cycle Count Profiling (with fb's profiler)</div><div><br>
+<br>
+This is currently a work in progress on <code>-gen gas64</code> only.<br>
+<br>
+Cycle count fb's profiler enables cpu cycle count profiling on some targets.<br>
+It uses completely different methods than the function call fb's profiler. It stores data in specially named data sections, so will only work with linkers supporting arbitrarily named sections.<br>
+After running an executable compiled with this command, it can generate a basic report of cycle counts.<br>
+<br>
+For each called user procedure body, there are two different counts:<br>
+<div class="indent">- The profiler sums the CPU cycle counts for all internal code blocks that separate possible calls from any other user procedure or built-in procedure (all other called procedures are therefore excluded from this first count).<br>
+- The profiler also counts the total number of CPU cycles when executing the entire user procedure body.<br>
+<br>
+</div><b><u>2.1 Preparing a Program for Profiling (with cycle count fb's profiler)</u></b><br>
+<div class="indent">Only code that is compiled with the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-profgen.html">-profgen cycles</a></i> command line option can be so profiled.<br>
+Pass the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-profgen.html">-profgen cycles</a></i> option to the FreeBASIC compiler to prepare the program to be profiled or compile the source with '-profgen cycles' <i><a href="../../compiler-options/procedures/cmdline.html">#Cmdline</a></i> option:<br>
+<div class="indent"><pre class="code">
+fbc program.bas -profgen cycles
+' or
+#cmdline "-profgen cycles"
+</pre>			<br>
+</div></div><b><u>2.2 Profiling (with cycle count fb's profiler) the Program</u></b><br>
+<div class="indent">The information needed to analyze execution of the program is gathered while the program is running.<br>
+Run the program to begin collecting the function call information.<br>
+The profiling report is automatically stored in a file named by default <code>&lt;filename[.exe]&gt;.prf</code> in the same directory as the program.<br>
+<br>
+</div><b><u>2.3 Analyzing the Profiling Report (from cycle count fb's profiler)</u></b><br>
+<div class="indent">After compiling and running the program, the user can open the default named profiling report <code>&lt;filename[.exe]&gt;.prf</code> (text file).<br>
+<br>
+Profile of individual procedures per module:<br>
+<div class="indent"><b><code>total</code>:</b> the number of cycles between the end of the procedure and its beginning<br>
+<b><code>inside</code>:</b> the number of cycles really "spent" inside the procedure (procedure calls inside the procedure body are not taken into account)<br>
+<b><code>call count</code>:</b> number of times the procedure was called<br>
+<br>
+</div></div><ul><ul><li> Simple example:<br>
+</li></ul></ul><div class="indent"><div class="indent"><code><pre class="code"><span>#cmdline &quot;-gen gas64&quot;
+
+#cmdline &quot;-profgen cycles&quot;
+
+</span>
+
+<span class="tok-kw">Sub</span> <span>A</span><span>()</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I</span>
+
+    <span class="tok-kw">For</span> <span>J</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">1000</span>
+
+        <span>I</span> <span>=</span> <span>I</span> <span>+</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Next</span> <span>J</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>B</span><span>()</span>
+
+    <span>A</span><span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>C</span><span>()</span>
+
+    <span>B</span><span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;End&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span>C</span><span>()</span></pre></code><br>
+			Example of profiling report:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">' .....</span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">' </span>
+
+<span class="tok-cm">'   module  function             total             inside         call count</span>
+
+<span class="tok-cm">'   </span>
+
+<span class="tok-cm">'   *.bas</span>
+
+<span class="tok-cm">'   </span>
+
+<span class="tok-cm">'           A</span>
+
+<span class="tok-cm">'                                 4242               4242                  1</span>
+
+<span class="tok-cm">'           B</span>
+
+<span class="tok-cm">'                                 4473                 42                  1</span>
+
+<span class="tok-cm">'           C</span>
+
+<span class="tok-cm">'                               858301                169                  1</span>
+
+<span class="tok-cm">'           main</span>
+
+<span class="tok-cm">'                                    0                 63                  1</span></pre></code><br>
+<br>
+</div></div></div><br>
+</div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

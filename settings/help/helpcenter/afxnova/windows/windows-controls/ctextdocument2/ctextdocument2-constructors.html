@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTextDocument2.CONSTRUCTORS — Help Center</title>
+<meta name="description" content="Called when a class variable is created.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctextdocument2/ctextdocument2-constructors.html">
+<meta property="og:title" content="CTextDocument2.CONSTRUCTORS">
+<meta property="og:description" content="Called when a class variable is created.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctextdocument2/ctextdocument2-constructors.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/ctextdocument2/ctextdocument2-constructors.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../ctextdocument2-class.html">CTextDocument2 Class</a></div>
+<h1>CTextDocument2.CONSTRUCTORS<span class="h1kind">constructor</span></h1>
+<p class="lede">Called when a class variable is created.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">constructor</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>DECLARE CONSTRUCTOR</code></pre>
+<pre class="code sig"><code>DECLARE CONSTRUCTOR (BYVAL hRichEdit AS HWND)</code></pre>
+<pre class="code sig"><code>DECLARE CONSTRUCTOR (BYVAL pTextDocument2 AS ITextDocument2 PTR, BYVAL fAddRef AS BOOLEAN = FALSE)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR CTextDocument2 (BYVAL hRichEdit AS HWND)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR CTextDocument2 (BYVAL pTextDocument2 AS ITextDocument2 PTR, BYVAL fAddRef AS BOOLEAN = FALSE)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hRichEdit</code></td><td></td><td>Handle of the Rich Edit control.</td></tr><tr><td><code>pTextDocument2</code></td><td></td><td>An <strong>ITextDocument2</strong> interface pointer.</td></tr><tr><td><code>fAddRef</code></td><td></td><td>Optional. TRUE to increment the reference count of the passed <strong>ITextDocument2</strong> interface pointer; otherwise, FALSE. Default is FALSE.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>A pointer to the new instance of the class.</p>
+<h2>Description</h2>
+<p>Called when a <code>CTextDocument2</code> class variable is created.</p>
+<h2>Examples</h2>
+<p>DIM pCTextDocument2 AS CTextDocument2 pCTextDocument2.Attach(pTextDocument2)</p>
+<p>SCOPE ' // Create a new instance of the CTextDocument2 class DIM pTextDocument2 AS CTextDocument2 = hRichEdit ' // Get the number of characters of the text in the Rich Edit control DIM numChars AS LONG = RichEdit_GetTextLength(hRichEdit) ' // Get the 0-based range of all the text DIM pCRange2 AS CTextRange2 = pCTextDoc.Range2(0, numChars) ' // Get the text DIM dwsText AS DWSTRING = pCRange2.GetText2(0) ' // The CTextDocument2 class and the CTextRange2 class will be destroyed when the scope ends END SCOPE</p>
+<p>' // Create a new instance of the CTextDocument2 class DIM pCTextDocument2 AS CTextDocument2 PTR = NEW CTextDocument2(hRichEdit) ' // Get the number of characters of the text in the Rich Edit control DIM numChars AS LONG = RichEdit_GetTextLength(hRichEdit) ' // Get the 0-based range of all the text DIM pCRange2 AS CTextRange2 = pCTextDoc-&gt;Range2(0, numChars) ' // Get the text DIM dwsText AS DWSTRING = pCRange2-&gt;GetText2(0) ' // Delete the range Delete pCRange2 ' // Delete the class Delete pCTextDocument2</p>
+<p>To use with the dotted syntax.</p>
+<p>To use with the pointer syntax.</p>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">Windows/WIndows Controls/RichEdit/CTextDocument2 Class.md</span></li><li>Topic: <a href="../ctextdocument2-class.html">CTextDocument2 Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

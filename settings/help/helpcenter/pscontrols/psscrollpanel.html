@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PsScrollPanel — Help Center</title>
+<meta name="description" content="A scrolling panel for FreeBASIC Win32 applications: a viewport onto a page of ordinary child controls that is taller than the space available for it, with a vertical scrollbar in a reserved strip down the right edge.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/pscontrols/psscrollpanel.html">
+<meta property="og:title" content="PsScrollPanel">
+<meta property="og:description" content="A scrolling panel for FreeBASIC Win32 applications: a viewport onto a page of ordinary child controls that is taller than the space available for it, with a vertical scrollbar in a reserved strip down the right edge.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/pscontrols/psscrollpanel.html">
+<link rel="stylesheet" href="../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="pscontrols/psscrollpanel.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../index.html">Help Center</a><span>›</span><a href="../index.html">PlanetSquires Controls</a></div>
+<h2 id="psscrollpanel">PsScrollPanel</h2>
+<p>A scrolling panel for FreeBASIC Win32 applications: a viewport onto a page of ordinary child controls that is taller than the space available for it, with a vertical scrollbar in a reserved strip down the right edge.</p>
+<p>It is the container behind a settings dialog whose list of options runs past one screen. You build your page of labels, checkboxes and edit boxes exactly as you would on a plain window, lay them out once, and the control does the scrolling by <strong>moving the whole page</strong> underneath the viewport. Your controls keep the coordinates you gave them, forever.</p>
+<p>The scrollbar's thumb is normally invisible. It appears when the cursor is over the control or when something on the page has the focus, so the scrollbar reads as a hint rather than as furniture — but the strip it lives in is always reserved, so nothing on your page ever shifts sideways.</p>
+<p><strong>The one thing to get right: your controls are parented to <code>PsScrollPanel_GetPanel()</code>, never to the control's own handle.</strong> A control created on the control itself sits over the viewport and never scrolls.</p>
+<hr>
+<h3 id="what-it-looks-like">What it looks like</h3>
+<p><img src="PsScrollPanel.png" alt="The PsScrollPanel demo"></p>
+<p>A settings page taller than its viewport. The scrollbar <strong>is not visible here, and that is correct</strong> — the thumb appears only when the content overflows <em>and</em> the pointer is over the control or focus is inside the page. The strip it lives in stays reserved either way, so nothing on the page shifts when it appears. The host parents its controls to the panel, never to the container.</p>
+<hr>
+<h3 id="requirements">Requirements</h3>
+<p><strong>Files to copy into your project:</strong></p>
+<div class="table-wrap"><table><thead><tr><th>File</th><th>Purpose</th></tr></thead><tbody><tr><td><code>PsScrollPanel.bi</code></td><td>Declarations — types, callbacks, constants, function prototypes</td></tr><tr><td><code>PsScrollPanel.inc</code></td><td>Implementation</td></tr><tr><td><code>PsVScrollBar.bi</code></td><td>The vertical scrollbar the control creates and owns</td></tr><tr><td><code>PsVScrollBar.inc</code></td><td>Its implementation</td></tr><tr><td><code>PsBufferPaint.bi</code></td><td>The flicker-free drawing surface both controls paint through</td></tr><tr><td><code>PsBufferPaint.inc</code></td><td>Its implementation</td></tr></tbody></table></div>
+<p><strong>AfxNova is required.</strong> The control is built on <code>CWindow</code>, and <code>PsBufferPaint</code> draws through <code>AfxNova\CGdiPlus.inc</code>. Sources include AfxNova relative to the workspace root (<code>#include once "AfxNova\CWindow.inc"</code>), so builds need the workspace root on the include path:</p>
+<pre class="code" data-lang="bash"><code>fbc64.exe -i "C:\dev" main.bas</code></pre>
+<p><strong>Include order.</strong> <code>PsScrollPanel.bi</code> pulls in <code>PsBufferPaint.bi</code> and <code>PsVScrollBar.bi</code> for the types it names, but the three implementation files must be included in dependency order:</p>
+<pre class="code" data-lang="freebasic"><code>#include once "PsBufferPaint.inc"
+#include once "PsVScrollBar.inc"
+#include once "PsScrollPanel.inc"</code></pre>
+<p><strong>GDI+ must be running before the first repaint and must outlive the last one.</strong> Both controls render their geometry through GDI+, so bracket your message loop:</p>
+<pre class="code" data-lang="freebasic"><code>dim as ULONG_PTR gdipToken = AfxGdipInit()
+' ... create windows, run the message loop ...
+AfxGdipShutdown( gdipToken )</code></pre>
+<p><code>AfxGdipShutdown</code> must come after every window is destroyed, because each repaint builds and tears down a <code>PsBufferPaint</code>.</p>
+<p><strong>Never name an identifier <code>ok</code>.</strong> GDI+ defines <code>Ok = 0</code> as a <code>Status</code> enum value in namespace <code>AfxNova</code>, and hosts customarily say <code>using AfxNova</code>. An existing variable, parameter or function called <code>ok</code> becomes a duplicate definition the moment you adopt these files. Use <code>bOK</code> instead.</p>
+<p><strong>There is no message-filter obligation.</strong> The control installs no pump filter and exports none: it needs nothing from your message loop in order to work.</p>
+<p><strong>For Tab navigation into the page, call <code>IsDialogMessage</code> in your message pump.</strong> The controls on the page are ordinary tabstops, and only the dialog manager moves focus between them:</p>
+<pre class="code" data-lang="freebasic"><code>do while GetMessage( @uMsg, null, 0, 0 )
+    if uMsg.message = WM_QUIT then exit do
+    if IsDialogMessage( hWndForm, @uMsg ) = 0 then
+        TranslateMessage @uMsg
+        DispatchMessage @uMsg
+    end if
+loop</code></pre>
+<p>Both of the control's own windows already carry <code>WS_EX_CONTROLPARENT</code>, which is what allows <code>IsDialogMessage</code> to recurse past the viewport and reach the page. Without the pump call, Tab does nothing inside the page — and the focus-into-view scroll goes with it, since nothing ever changes focus.</p>
+<h4 id="host-obligations-in-full">Host obligations, in full</h4>
+<ol><li><strong>Parent your controls to <code>PsScrollPanel_GetPanel()</code></strong>, never to the control itself.</li><li><strong>Bracket your message loop with <code>AfxGdipInit</code> / <code>AfxGdipShutdown</code>.</strong></li><li><strong>Never name an identifier <code>ok</code>.</strong></li><li><strong>Call <code>IsDialogMessage</code> in your pump</strong> if you want Tab to reach the page.</li><li><strong>Tell the control how tall the page is</strong> — return a height from the layout callback, or call <code>PsScrollPanel_SetContentHeight</code> / <code>PsScrollPanel_AutoSizeContent</code>. Left at 0, the page is stretched to the viewport and nothing scrolls.</li><li><strong>Call <code>PsScrollPanel_Recalc</code></strong> after adding, removing, hiding or moving children outside of a resize. The control does not watch the page for you.</li><li><strong>Keep ownership of any <code>HFONT</code> you pass to <code>PsScrollPanel_SetFont</code>.</strong> The control never deletes it, and it must outlive the page.</li></ol>
+<hr>
+<h3 id="quick-start">Quick start</h3>
+<pre class="code" data-lang="freebasic"><code>' 1. Create it, theme it, wire it up. Created zero-sized and hidden.
+ghScrollPanel = PsScrollPanel_Create( HWND_FRMMAIN, IDC_FRMMAIN_SCROLLPANEL )
+PsScrollPanel_SetColors( ghScrollPanel, theme.BackColorBox, theme.ForeColor )
+PsScrollPanel_SetScrollBarColors( ghScrollPanel, theme.BackColorBox, _
+                                 theme.ForeColorScrollBar, theme.ForeColorScrollBarHot )
+PsScrollPanel_SetLayoutCallback( ghScrollPanel, @ScrollPanel_Layout )
+PsScrollPanel_SetLineHeight( ghScrollPanel, ROW_HEIGHT + ROW_GAP )   ' one notch ~ 3 rows
+
+' 2. Build the page. EVERY control is parented to the PANEL, never to ghScrollPanel.
+dim as HWND hPage = PsScrollPanel_GetPanel( ghScrollPanel )
+hChk = CreateWindowExW( 0, @wstr("BUTTON"), @wstr("Word wrap"), _
+                        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_AUTOCHECKBOX, _
+                        0, 0, 0, 0, hPage, _
+                        cast(HMENU, cast(LONG_PTR, IDC_WRAP)), hInst, NULL )
+
+' 3. Font the page, once it is built.
+PsScrollPanel_SetFont( ghScrollPanel, ghFont(GUIFONT_9) )
+
+' 4. Size and show it. The layout callback runs from here and on every later resize.
+SetWindowPos( ghScrollPanel, 0, x, y, cx, cy, SWP_NOZORDER or SWP_SHOWWINDOW )</code></pre>
+<p>And the layout callback — the only place your controls are ever positioned:</p>
+<pre class="code" data-lang="freebasic"><code>function ScrollPanel_Layout( byval hPanel as HWND, byval cxPanel as integer ) as integer
+    dim as integer y = 16
+    SetWindowPos( hChk, 0, 16, y, cxPanel - 32, 24, SWP_NOZORDER )
+    y += 34
+    ' ... the rest of the page, in PAGE coordinates ...
+    return y + 16          ' the new content height. 0 = leave it unchanged.
+end function</code></pre>
+<p>Notice what the callback does <em>not</em> do: it never touches the scroll position, never resizes the page window, and never calls <code>GetClientRect( hPanel )</code> — the width it must lay out against is handed to it as <code>cxPanel</code>.</p>
+<p>If you would rather not track the height yourself, position the controls and call <code>PsScrollPanel_AutoSizeContent( h, padding )</code>, which measures the deepest visible child.</p>
+<p>That is the whole minimum. Everything below is refinement.</p>
+<hr>
+<h3 id="concepts">Concepts</h3>
+<h4 id="three-windows">Three windows</h4>
+<pre class="code"><code>PsScrollPanel container HWND      WS_CLIPCHILDREN -- this is the VIEWPORT
+├── panel (CWindow)              the PAGE. As tall as the content.
+│     └── your controls          parented HERE, laid out in PAGE coordinates, once
+└── PsVScrollBar                  a reserved strip on the right edge</code></pre>
+<p><code>PsScrollPanel_Create</code> returns the <strong>container</strong>. It is an ordinary window handle, not an opaque type, so you place and size it with <code>SetWindowPos</code> and find it with <code>GetDlgItem</code> on the <code>CtrlID</code> you passed. The container's id is <code>CtrlID</code>; the panel takes <code>CtrlID + 1</code> and the scrollbar <code>CtrlID + 2</code>.</p>
+<p><code>PsScrollPanel_GetPanel</code> returns the <strong>page</strong>, and that is the parent for everything you put on it. The page is as wide as the viewport minus the reserved strip, and as tall as the content height you declare (or the viewport, whichever is larger).</p>
+<p>The control frees itself when its window is destroyed, including both child windows and the brush it hands to <code>WM_CTLCOLOR*</code>. Your controls are children of the page, so they are destroyed with it — do not <code>DestroyWindow</code> them yourself afterwards.</p>
+<h4 id="scrolling-moves-the-page">Scrolling moves the page</h4>
+<p>The scroll position is applied as <code>SetWindowPos( hPanel, 0, -nPos, … )</code>. The page's top edge in the container's client coordinates is always exactly <code>-nPos</code>. The container's <code>WS_CLIPCHILDREN</code> clips, and USER32 blits the whole subtree in one go.</p>
+<p>The consequence is the point of the control: <strong>your controls are laid out exactly once per resize and never touched again.</strong> Scrolling repositions nothing, so a page of fifty controls scrolls as cheaply as a page of five, and your layout code never has to know the scroll position exists.</p>
+<h4 id="everything-is-in-pixels">Everything is in pixels</h4>
+<p>Content height, scroll position, <code>EnsureVisible</code> margins, wheel step — all pixels, all in page coordinates. There are no lines, rows or scroll units to convert.</p>
+<p>The two unscaled inputs are the strip width and the wheel line height: you pass those at 100% DPI and the control scales them at use.</p>
+<h4 id="who-owns-layout">Who owns layout</h4>
+<div class="table-wrap"><table><thead><tr><th>Thing</th><th>Owner</th></tr></thead><tbody><tr><td>Where your controls sit on the page</td><td>You, in the layout callback</td></tr><tr><td>How tall the page is</td><td>You, by return value or <code>SetContentHeight</code> / <code>AutoSizeContent</code></td></tr><tr><td>The page's width, height and position</td><td>The control</td></tr><tr><td>The strip's rectangle</td><td>The control</td></tr><tr><td>The scroll position, and its clamping</td><td>The control</td></tr></tbody></table></div>
+<p>The layout callback is called with the width the page is <em>being given</em>, before any of your code runs, so it can never reason about a stale width. Calling <code>PsScrollPanel_SetContentHeight</code> from inside it is safe: the control records the value rather than starting a second layout pass.</p>
+<h4 id="the-thumb-is-normally-invisible">The thumb is normally invisible</h4>
+<p>The thumb is shown when:</p>
+<pre class="code"><code>there is something to scroll   AND   ( the cursor is over the control  OR  focus is on the page )</code></pre>
+<p>Either of the last two alone is enough, so a keyboard-only user Tabbing through the page still sees where they are. <code>PsScrollPanel_ShouldShow( bNeeds, bMouse, bFocus )</code> is that rule as a pure function, with the full truth table:</p>
+<div class="table-wrap"><table><thead><tr><th><code>bNeeds</code></th><th><code>bMouse</code></th><th><code>bFocus</code></th><th>Result</th></tr></thead><tbody><tr><td>FALSE</td><td>FALSE</td><td>FALSE</td><td>FALSE</td></tr><tr><td>FALSE</td><td>TRUE</td><td>FALSE</td><td>FALSE</td></tr><tr><td>FALSE</td><td>FALSE</td><td>TRUE</td><td>FALSE</td></tr><tr><td>FALSE</td><td>TRUE</td><td>TRUE</td><td>FALSE</td></tr><tr><td>TRUE</td><td>FALSE</td><td>FALSE</td><td>FALSE</td></tr><tr><td>TRUE</td><td>TRUE</td><td>FALSE</td><td><strong>TRUE</strong></td></tr><tr><td>TRUE</td><td>FALSE</td><td>TRUE</td><td><strong>TRUE</strong></td></tr><tr><td>TRUE</td><td>TRUE</td><td>TRUE</td><td><strong>TRUE</strong></td></tr></tbody></table></div>
+<p>"The cursor is over the control" is a geometric test against the container's client rectangle, so a cursor resting on one of your edit boxes still counts. "Focus is on the page" is true for the page itself and for any descendant of it.</p>
+<p>One override: while the user is dragging the thumb, it stays visible even if the cursor slides off the strip sideways.</p>
+<h4 id="the-strip-stays-reserved">The strip stays reserved</h4>
+<p>When the thumb hides, only the <strong>bar window</strong> goes; its strip of width keeps its place. The page's width therefore never changes as the mouse comes and goes, which is what stops a page full of right-aligned controls from jittering every time the cursor crosses the boundary.</p>
+<p>The strip is not visible when it is empty because the bar's background colour tracks the page's background — <code>PsScrollPanel_SetColors</code> pushes it through. The container paints itself in the same colour, and with <code>WS_CLIPCHILDREN</code> that fill can only ever reach the strip.</p>
+<h4 id="the-reveal-is-polled">The reveal is polled</h4>
+<p>A 100 ms timer re-evaluates the rule, rather than <code>TrackMouseEvent</code>. The cursor can enter the control directly over one of <em>your</em> child controls — an <code>EDIT</code>, a checkbox — in which case neither the container nor the page ever receives a <code>WM_MOUSEMOVE</code>, and there is no message to hang a leave-tracking request off. A periodic cursor test sees it regardless.</p>
+<p>The timer runs only while there is something to scroll, and stops when the control is hidden. The practical effect is that the thumb can appear or disappear up to 100 ms after the cursor crosses the edge.</p>
+<p>The same tick carries the focus-into-view scroll. It fires on a focus <strong>change</strong> only: a user who deliberately scrolls the focused control off screen does not have it yanked back under them on the next tick.</p>
+<h4 id="message-forwarding">Message forwarding</h4>
+<p>The page is the parent of your controls, so two families of message land there rather than on your form.</p>
+<p><strong><code>WM_CTLCOLORSTATIC</code> / <code>BTN</code> / <code>EDIT</code> / <code>LISTBOX</code></strong> are answered by the control itself, using the colours from <code>PsScrollPanel_SetColors</code>. That is why one call themes a whole settings page of plain labels and checkboxes with no host code at all. Your message callback gets first refusal, which is how you give (say) every <code>EDIT</code> a lighter background than the page — and it is why <code>SCP_MESSAGEINFO</code> carries an <code>lResult</code> field, since those messages answer with an <code>HBRUSH</code>.</p>
+<p><strong><code>WM_COMMAND</code> / <code>WM_NOTIFY</code> / <code>WM_HSCROLL</code> / <code>WM_VSCROLL</code></strong> are offered to your message callback and, if not claimed, <strong>forwarded to the container's parent</strong> — the window that would have received them if the page were not there. So an existing page keeps working unchanged when it moves onto a PsScrollPanel: your form's own <code>WM_COMMAND</code> handler still sees its controls. Claim them in the callback only if you want them <em>instead of</em>, not as well as, that.</p>
+<h4 id="the-mouse-wheel-converts-units">The mouse wheel converts units</h4>
+<p>The system's wheel setting (<code>SPI_GETWHEELSCROLLLINES</code>) counts <strong>lines</strong>; this control's range is <strong>pixels</strong>. The conversion happens at this boundary: one notch is <code>system lines × PsScrollPanel_SetLineHeight</code>, re-read per message so a Control Panel change takes effect immediately. If the system is set to <code>WHEEL_PAGESCROLL</code>, one notch is the viewport height.</p>
+<p>Set the line height to your settings row's pitch and one notch moves whole rows. Sub-notch deltas from a precision trackpad accumulate rather than being discarded, so a slow swipe scrolls smoothly.</p>
+<p>The wheel is handled on both the container and the page, so a gesture anywhere over the control scrolls it. Your own controls that ignore the wheel bubble it up through <code>DefWindowProc</code>, which is the parent direction, so an <code>EDIT</code> under the cursor costs nothing.</p>
+<h4 id="programmatic-changes-are-silent">Programmatic changes are silent</h4>
+<p><code>PsScrollPanel_SetPos</code>, <code>ScrollBy</code>, <code>SetContentHeight</code> and <code>EnsureVisible</code> never fire the scroll callback. It reports <strong>user</strong> action — wheel, thumb drag, track paging, and the focus-into-view scroll a Tab causes — and nothing else. That is what makes it safe to call any of those setters from inside your own scroll handler without re-entering yourself.</p>
+<hr>
+<h3 id="behaviour-and-limits">Behaviour and limits</h3>
+<p>Firm properties of the control, not settings:</p>
+<ul><li><strong>Vertical only.</strong> There is no horizontal scrolling and no horizontal scrollbar. The page is always exactly as wide as the viewport minus the reserved strip, and content wider than that is clipped. Re-flow to the width you are handed in the layout callback.</li><li><strong>The page is never shorter than the viewport.</strong> A content height below the viewport height is stretched to fill it, so the container's own fill can only ever show through in the strip.</li><li><strong>You own the content height.</strong> The control cannot know whether a collapsed section still counts, so it never guesses. Left at 0, nothing scrolls.</li><li><strong>The control does not watch the page.</strong> Adding, removing, hiding or moving a child outside of a resize needs a <code>PsScrollPanel_Recalc</code> before the scroll range reflects it.</li><li><strong><code>PsScrollPanel_SetFont</code> applies to existing children only.</strong> Controls created afterwards keep the system font until you call it again.</li><li><strong>No mouse capture is taken anywhere in this control.</strong> It tracks no press state and owns no drag; the scrollbar takes its own capture for a thumb drag, inside its own window.</li><li><strong>Double-clicks are not handled and not reported.</strong> <code>WM_LBUTTONDBLCLK</code> is not offered to the message callback and falls through to <code>DefWindowProc</code>. Double-clicks on your own controls are unaffected — they are delivered to those controls, not to the page.</li><li><strong>The reveal decision lags by up to 100 ms</strong>, because it is polled rather than tracked.</li><li><strong>Only the page forwards unclaimed <code>WM_COMMAND</code> / <code>WM_NOTIFY</code> / <code>WM_HSCROLL</code> / <code>WM_VSCROLL</code> to the container's parent.</strong> The container offers <code>WM_COMMAND</code> and <code>WM_NOTIFY</code> to your message callback but does not forward them, because your controls do not live there.</li><li><strong><code>PsScrollPanel_EnsureVisible</code> refuses a window that is not a descendant of the page</strong>, returning FALSE rather than scrolling somewhere arbitrary.</li><li><strong>The page's window class drops <code>CS_HREDRAW</code> and <code>CS_VREDRAW</code>.</strong> A window full of controls flickers heavily with them; the control invalidates deliberately instead.</li><li><strong>Your controls are destroyed with the page.</strong> Do not <code>DestroyWindow</code> them after the control has gone.</li></ul>
+<hr>
+<h3 id="api-reference">API reference</h3>
+<h4 id="creation">Creation</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsScrollPanel_Create( hWndParent, CtrlID ) as HWND</code></td><td>Creates the control as a child of <code>hWndParent</code> and returns the <strong>container's</strong> handle. Styles are <code>WS_CHILD</code>, <code>WS_CLIPSIBLINGS</code> and <code>WS_CLIPCHILDREN</code> with <code>WS_EX_CONTROLPARENT</code>; <code>WS_VISIBLE</code> is deliberately absent, so the control is created zero-sized and hidden. Place, size and show it with <code>SetWindowPos</code>. <code>CtrlID</code> becomes the container's <code>GWLP_ID</code>; the page takes <code>CtrlID + 1</code> and the scrollbar <code>CtrlID + 2</code>.</td></tr><tr><td><code>PsScrollPanel_GetPanel( hScp ) as HWND</code></td><td>The page. <strong>Parent every control you put on the page to this handle</strong>, and lay them out in page coordinates. A control parented to the container instead would sit over the viewport and never scroll.</td></tr><tr><td><code>PsScrollPanel_GetScrollBar( hScp ) as HWND</code></td><td>The owned <code>PsVScrollBar</code>, for anything this API does not expose. Do not show, hide, move or resize it — the control owns its visibility and its rectangle.</td></tr></tbody></table></div>
+<h4 id="the-page">The page</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsScrollPanel_SetContentHeight( hScp, nHeight )</code></td><td>Declares how tall the page is, in pixels. Clamped to a minimum of 0; a no-op when the value is unchanged. Re-clamps the current position, re-sizes the page and re-syncs the scrollbar. <strong>Silent.</strong> Safe to call from inside the layout callback, where it records the value and lets that pass finish rather than starting another.</td></tr><tr><td><code>PsScrollPanel_GetContentHeight( hScp ) as integer</code></td><td>The declared content height. Note this is the <em>declared</em> value, which may be less than the page window's actual height when the page is shorter than the viewport.</td></tr><tr><td><code>PsScrollPanel_AutoSizeContent( hScp, bottomPadding = 0 ) as integer</code></td><td>Measures the bottom edge of the deepest <strong>visible</strong> child of the page, adds <code>bottomPadding</code>, pushes the result through <code>SetContentHeight</code> and returns it. Hidden children are skipped, so a collapsed section leaves no tail of empty page behind it. With no visible children it returns 0 and the padding is not added.</td></tr><tr><td><code>PsScrollPanel_Recalc( hScp )</code></td><td>Forces a full layout pass — the layout callback, the page geometry, the strip, the scrollbar sync — and repaints the page. Call it after adding, removing, hiding or moving children outside of a resize.</td></tr><tr><td><code>PsScrollPanel_SetFont( hScp, hFont )</code></td><td>Sends <code>WM_SETFONT</code> to every <strong>existing</strong> child of the page. Call it after building the page. <strong>You keep ownership of the <code>HFONT</code></strong>; the control never deletes it, and the font must outlive the page.</td></tr></tbody></table></div>
+<h4 id="scrolling">Scrolling</h4>
+<p>All positions are pixels in page coordinates. Every one of these except <code>HandleWheelDelta</code> is <strong>silent</strong> — it does not fire the scroll callback.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsScrollPanel_GetPos( hScp ) as integer</code></td><td>The current scroll offset: the page's first visible row of pixels. The page's top edge in container coordinates is <code>-GetPos()</code>.</td></tr><tr><td><code>PsScrollPanel_SetPos( hScp, nPosition )</code></td><td>Moves the page there, clamped to <code>0 … contentHeight - viewportHeight</code>. Silent.</td></tr><tr><td><code>PsScrollPanel_ScrollBy( hScp, nDelta ) as boolean</code></td><td>Moves relative to the current position, clamped the same way. Returns TRUE only if the position actually changed — so it reports FALSE at either end. Silent.</td></tr><tr><td><code>PsScrollPanel_EnsureVisible( hScp, hChild, nMargin = 0 ) as boolean</code></td><td>Scrolls the <strong>minimum</strong> distance that brings <code>hChild</code> fully into view, with <code>nMargin</code> pixels of clearance above and below. A child taller than the viewport is top-aligned instead. Returns FALSE and does nothing if <code>hChild</code> is not a descendant of the page, or if no move was needed. Silent, and it never calls <code>SetFocus</code>.</td></tr><tr><td><code>PsScrollPanel_HandleWheelDelta( hScp, nDelta ) as boolean</code></td><td>Feeds a wheel delta to the page, for a host that received the gesture itself. Pass the <strong>already-extracted signed</strong> delta: <code>PsScrollPanel_HandleWheelDelta( hScp, cast(short, hiword(wParam)) )</code>. The cast is not optional — <code>hiword</code> yields an unsigned word, so a delta read without it turns −120 into ~65416 and the direction silently inverts. Returns TRUE if the page moved. <strong>This one is not silent</strong>: it is user action, so the scroll callback fires.</td></tr><tr><td><code>PsScrollPanel_SetLineHeight( hScp, nHeight )</code></td><td>One "line" for the wheel, in <strong>unscaled</strong> pixels (DPI-scaled at use). Clamped to a minimum of 1; default 20. One notch = system wheel lines × this. Set it to your row pitch and a notch moves whole rows.</td></tr><tr><td><code>PsScrollPanel_SetAutoScrollToFocus( hScp, bEnable )</code></td><td>ON by default. With it on, focus landing on an off-screen child — from a Tab or from your own <code>SetFocus</code> — scrolls that child into view. The scroll happens on a focus <strong>change</strong> only, so deliberately scrolling the focused control away does not yank it back. This scroll <em>does</em> fire the scroll callback.</td></tr><tr><td><code>PsScrollPanel_GetAutoScrollToFocus( hScp ) as boolean</code></td><td>The current setting.</td></tr></tbody></table></div>
+<h4 id="geometry-and-layout">Geometry and layout</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsScrollPanel_GetViewportHeight( hScp ) as integer</code></td><td>The container's client height — the visible slice of the page. Read live, never cached.</td></tr><tr><td><code>PsScrollPanel_GetPanelWidth( hScp ) as integer</code></td><td>The page's width: the container's client width minus the scaled strip width, floored at 0. This is the same number the layout callback is handed as <code>cxPanel</code>.</td></tr><tr><td><code>PsScrollPanel_IsThumbVisible( hScp ) as boolean</code></td><td>What the reveal rule last decided, i.e. whether the bar window is currently shown. Updated on each poll tick and on every scrollbar sync.</td></tr><tr><td><code>PsScrollPanel_ShouldShow( bNeeds, bMouse, bFocus ) as boolean</code></td><td>The reveal rule itself, as a pure function of three booleans — no window, no mouse, no focus required. <code>FALSE</code> unless <code>bNeeds</code> and at least one of <code>bMouse</code> / <code>bFocus</code>. Exposed so a host can predict or assert the behaviour.</td></tr></tbody></table></div>
+<h4 id="appearance">Appearance</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsScrollPanel_SetColors( hScp, backclr, foreclr )</code></td><td>Sets the page's fill <strong>and</strong> the colours handed to your controls through <code>WM_CTLCOLOR*</code>. When the background changes it also rebuilds the <code>WM_CTLCOLOR</code> brush and pushes the new background to the scrollbar, which is what keeps the reserved strip invisible. Repaints the container, and the page with its children. <strong>Call this before <code>PsScrollPanel_SetScrollBarColors</code></strong> — it overwrites the bar's background colour whenever the page background changes.</td></tr><tr><td><code>PsScrollPanel_SetScrollBarColors( hScp, backclr, foreclr, foreclrhot )</code></td><td>Forwarded straight to the owned <code>PsVScrollBar</code>: strip background, thumb, hot thumb.</td></tr><tr><td><code>PsScrollPanel_SetScrollBarWidth( hScp, nWidth )</code></td><td>The reserved strip's width, in <strong>unscaled</strong> pixels (DPI-scaled at use). Clamped to a minimum of 0; default 12. A no-op when unchanged, otherwise it triggers a full layout pass, because the page's width changed with it.</td></tr></tbody></table></div>
+<h4 id="callback-registration">Callback registration</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsScrollPanel_SetPaintCallback( hScp, usersub )</code></td><td>Installs a painter for the page background <strong>instead of</strong> the built-in flat fill. Repaints.</td></tr><tr><td><code>PsScrollPanel_SetMessageCallback( hScp, userfunc )</code></td><td>Installs an observer for messages on the container and the page.</td></tr><tr><td><code>PsScrollPanel_SetLayoutCallback( hScp, userfunc )</code></td><td>Installs the re-flow handler called on every resize.</td></tr><tr><td><code>PsScrollPanel_SetScrollCallback( hScp, usersub )</code></td><td>Installs the handler told when the <strong>user</strong> scrolls.</td></tr></tbody></table></div>
+<p>All four are optional and independent.</p>
+<hr>
+<h3 id="colors">Colors</h3>
+<p><strong>There is no colours struct.</strong> The control paints only two things of its own — the page's background and the text colour it hands to your controls — so the colour surface is two <code>COLORREF</code> arguments to one function, plus three more forwarded to the scrollbar.</p>
+<div class="table-wrap"><table><thead><tr><th>Colour</th><th>Set by</th><th>Default</th><th>Paints</th></tr></thead><tbody><tr><td>Background</td><td><code>PsScrollPanel_SetColors</code>, 2nd arg</td><td><code>BGR(33,37,43)</code></td><td>The page's fill, the container's fill (visible only in the strip), the <code>WM_CTLCOLOR*</code> background, and the brush handed back to <code>WM_CTLCOLOR*</code></td></tr><tr><td>Foreground</td><td><code>PsScrollPanel_SetColors</code>, 3rd arg</td><td><code>BGR(215,218,224)</code></td><td>The <code>WM_CTLCOLOR*</code> text colour for every control on the page</td></tr><tr><td>Scrollbar background</td><td><code>PsScrollPanel_SetScrollBarColors</code>, 2nd arg</td><td>tracks the page background</td><td>The strip behind the thumb</td></tr><tr><td>Scrollbar thumb</td><td><code>PsScrollPanel_SetScrollBarColors</code>, 3rd arg</td><td><code>BGR(53,59,69)</code></td><td>The thumb, idle</td></tr><tr><td>Scrollbar thumb, hot</td><td><code>PsScrollPanel_SetScrollBarColors</code>, 4th arg</td><td><code>BGR(90,98,112)</code></td><td>The thumb, hovered or dragged</td></tr></tbody></table></div>
+<p>The defaults are a dark theme, so a control you never call <code>PsScrollPanel_SetColors</code> on still looks right.</p>
+<p>The scrollbar's background defaulting to the page's is what makes the hidden state seamless: with the thumb away, the reserved strip is indistinguishable from the page beside it. If you set it to something else, you get a visible gutter down the right edge — which is a legitimate choice, but it is a choice.</p>
+<p>The one GDI object the control owns is the solid brush derived from the background colour. It is rebuilt by <code>PsScrollPanel_SetColors</code> and deleted when the control is destroyed; you never touch it.</p>
+<h4 id="what-the-built-in-painter-draws">What the built-in painter draws</h4>
+<p>A flat fill of the page rectangle in the background colour, and nothing else. A paint callback replaces that <strong>entirely</strong> — see below.</p>
+<hr>
+<h3 id="callbacks">Callbacks</h3>
+<h4 id="layout">Layout</h4>
+<pre class="code" data-lang="freebasic"><code>type SCP_LayoutCallbackFunc as function( byval hPanel as HWND, byval cxPanel as integer ) as integer</code></pre>
+<p>The viewport was resized: re-flow the page and return how tall it now is, in pixels. Return 0 to leave the content height unchanged.</p>
+<p><code>cxPanel</code> is the width the page is being given, <strong>handed to you</strong> rather than left to be read back — do not call <code>GetClientRect( hPanel )</code> in here and reason about a width that may be one call stale. The page window has already been set to that width before you are called.</p>
+<p>Calling <code>PsScrollPanel_SetContentHeight</code> from inside this callback is safe: the control is in a layout pass, and the setter records the value instead of starting another one.</p>
+<p>This callback runs on every resize, on <code>PsScrollPanel_Recalc</code>, and whenever the strip width changes.</p>
+<h4 id="paint">Paint</h4>
+<pre class="code" data-lang="freebasic"><code>type SCP_PaintCallbackSub as sub( byval p as SCP_PAINTINFO ptr )</code></pre>
+<p>Draws the page's background <strong>instead of</strong> the built-in flat fill. Paint through <code>p-&gt;b</code>, the page's double buffer for this repaint — do not touch the screen DC. Setting a callback replaces the default entirely, so it must fill the background itself. Use it for section rules, group boxes, alternating bands and so on.</p>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>hScrollPanel</code></td><td>The container, so the callback can query the control</td></tr><tr><td><code>hPanel</code></td><td>The window actually being painted — the page</td></tr><tr><td><code>b</code></td><td>The page's <code>PsBufferPaint</code> for this repaint (borrowed, not owned)</td></tr><tr><td><code>rcClient</code></td><td><strong>The whole page</strong>, not the visible slice</td></tr><tr><td><code>nPos</code></td><td>The current scroll offset, for content that cares</td></tr></tbody></table></div>
+<p><code>rcClient</code> being the whole page is what makes page-coordinate decoration easy: draw at the coordinates your layout pass recorded and Windows clips the repaint to whatever slice is on screen. There is no need to subtract the scroll position, and <code>nPos</code> is supplied only for content that genuinely wants it (a parallax band, a position readout).</p>
+<h4 id="message">Message</h4>
+<pre class="code" data-lang="freebasic"><code>type SCP_MessageCallbackFunc as function( byval m as SCP_MESSAGEINFO ptr ) as boolean</code></pre>
+<p>Observes messages on both of the control's windows. Return FALSE to let the control's own handling proceed. Return TRUE to suppress it — and if the message has a meaningful return value, <strong>set <code>m-&gt;lResult</code> first</strong>: it becomes the window procedure's return value.</p>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>hScrollPanel</code></td><td>The container</td></tr><tr><td><code>hPanel</code></td><td>The page</td></tr><tr><td><code>hFrom</code></td><td>Which of the two the message arrived on — equals <code>hScrollPanel</code> or <code>hPanel</code></td></tr><tr><td><code>uMsg</code></td><td>The message</td></tr><tr><td><code>wParam</code></td><td>Its <code>wParam</code></td></tr><tr><td><code>lParam</code></td><td>Its <code>lParam</code></td></tr><tr><td><code>lResult</code></td><td>The value to return when the callback claims the message. Ignored when the callback returns FALSE.</td></tr></tbody></table></div>
+<p>Which messages reach the callback:</p>
+<div class="table-wrap"><table><thead><tr><th>Message</th><th>On the page</th><th>On the container</th></tr></thead><tbody><tr><td><code>WM_CTLCOLORSTATIC</code> / <code>BTN</code> / <code>EDIT</code> / <code>LISTBOX</code></td><td>yes</td><td>—</td></tr><tr><td><code>WM_COMMAND</code>, <code>WM_NOTIFY</code></td><td>yes</td><td>yes</td></tr><tr><td><code>WM_HSCROLL</code>, <code>WM_VSCROLL</code></td><td>yes</td><td>—</td></tr><tr><td><code>WM_MOUSEWHEEL</code></td><td>yes</td><td>yes</td></tr><tr><td><code>WM_LBUTTONDOWN</code> / <code>UP</code>, <code>WM_RBUTTONDOWN</code> / <code>UP</code></td><td>yes</td><td>yes</td></tr><tr><td><code>WM_MOUSEMOVE</code>, <code>WM_SETCURSOR</code></td><td>yes</td><td>yes</td></tr></tbody></table></div>
+<p><strong><code>lResult</code> is what this callback is for.</strong> The page is the parent of your controls, so <code>WM_CTLCOLOR*</code> arrives there and nowhere else, and those messages answer with an <code>HBRUSH</code> — a bare "handled" boolean could not express it. Giving every <code>EDIT</code> on the page a lighter background than the rest:</p>
+<pre class="code" data-lang="freebasic"><code>function ScrollPanel_Message( byval m as SCP_MESSAGEINFO ptr ) as boolean
+    if m-&gt;uMsg &lt;&gt; WM_CTLCOLOREDIT then return false
+    SetBkColor( cast(HDC, m-&gt;wParam), theme.BackColorEdit )
+    SetTextColor( cast(HDC, m-&gt;wParam), theme.ForeColor )
+    m-&gt;lResult = cast( LRESULT, ghEditBrush )     ' a brush YOU own and destroy
+    return true
+end function</code></pre>
+<p>Everything not claimed falls through — which for <code>WM_COMMAND</code>, <code>WM_NOTIFY</code>, <code>WM_HSCROLL</code> and <code>WM_VSCROLL</code> on the page means being forwarded to the container's parent, so your form's own handlers keep working. Claim those here only if you want them <em>instead of</em>, not as well as, that.</p>
+<p>Your return value is honoured for every message listed above. The control takes no capture and tracks no press state, so there is no invariant a callback can strand by claiming a mouse message.</p>
+<h4 id="scroll">Scroll</h4>
+<pre class="code" data-lang="freebasic"><code>type SCP_ScrollCallbackSub as sub( byval hScrollPanel as HWND, byval newPos as integer )</code></pre>
+<p>The scroll position changed through <strong>user</strong> action: the wheel, a thumb drag, track paging, or the focus-into-view scroll that follows a Tab. Fires after the page has moved, so <code>PsScrollPanel_GetPos( hScrollPanel )</code> already equals <code>newPos</code>.</p>
+<p>It does not fire for <code>PsScrollPanel_SetPos</code>, <code>ScrollBy</code>, <code>SetContentHeight</code> or <code>EnsureVisible</code>, which is what makes those safe to call from inside this handler.</p>
+<hr>
+<h3 id="constants">Constants</h3>
+<p>There are no enums. Four <code>#define</code>s carry the defaults:</p>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><code>PSSCROLLPANEL_LINE_HEIGHT</code></td><td>20</td><td>Default wheel line height in unscaled pixels, DPI-scaled at use. Change it per instance with <code>PsScrollPanel_SetLineHeight</code>.</td></tr><tr><td><code>CVSCROLL_DEFAULT_WIDTH</code></td><td>12</td><td>Default strip width in unscaled pixels, DPI-scaled at use. From <code>PsVScrollBar.bi</code>. Change it per instance with <code>PsScrollPanel_SetScrollBarWidth</code>.</td></tr><tr><td><code>PSSCROLLPANEL_REVEAL_MS</code></td><td>100</td><td>The reveal poll interval, in milliseconds.</td></tr><tr><td><code>IDT_CSCROLLPANEL_REVEAL</code></td><td><code>&amp;hCB30</code></td><td>The reveal timer's id. Timer ids are per-window, so every instance shares this one — but do not use it for a timer of your own on the container.</td></tr></tbody></table></div>
+<hr>
+<h3 id="related-controls">Related controls</h3>
+<p>PsScrollPanel <strong>creates and owns a <code>PsVScrollBar</code></strong>, which is why <code>PsVScrollBar.bi</code> / <code>.inc</code> are required files rather than optional ones. The bar's rectangle, visibility, range and position all belong to the control; <code>PsScrollPanel_GetScrollBar</code> exists for the things this API does not expose, such as installing a custom bar painter. Do not show, hide, move or resize it yourself.</p>
+<p><code>PsBufferPaint</code> is the drawing surface both windows paint through, and the object a paint callback receives as <code>p-&gt;b</code>.</p>
+<p>Everything you put <em>on</em> the page is yours to choose. Plain Win32 <code>STATIC</code>, <code>BUTTON</code> and <code>EDIT</code> controls work without any special handling — the control themes them through <code>WM_CTLCOLOR*</code> and forwards their notifications to your form. Owner-drawn controls work equally well, since the page is an ordinary parent window.</p>
+    <footer class="foot">
+      <p>PlanetSquires owner-drawn controls for FreeBASIC / AfxNova. Copyright © Paul Squires, distributed under the MIT License. Documentation generated from each control&#x27;s own README. <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../index.html">Home</a> ·
+         <a href="../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../nav.js?v=70a6b70236"></script>
+<script src="../search-index.js"></script>
+<script src="../assets/app.js?v=456d079659"></script>
+<script src="../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

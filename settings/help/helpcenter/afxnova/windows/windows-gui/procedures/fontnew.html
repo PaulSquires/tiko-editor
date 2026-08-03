@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FontNew — Help Center</title>
+<meta name="description" content="FontNew — AfxNova function reference.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/procedures/fontnew.html">
+<meta property="og:title" content="FontNew">
+<meta property="og:description" content="FontNew — AfxNova function reference.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/procedures/fontnew.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-gui/procedures/fontnew.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova</div>
+<h1>FontNew<span class="h1kind">function</span></h1>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">function</span><span class="badge">DDT.inc</span><span class="badge badge--warn">undocumented</span></div>
+<div class="note note--warn"><strong>Not documented upstream.</strong> This symbol was found in the AfxNova source but appears in no documentation topic. The signature below is read directly from the code; any description comes from the source comments.</div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PRIVATE FUNCTION FontNew (BYREF wszFaceName AS WSTRING, BYVAL lPointSize AS LONG, BYVAL lWeight AS LONG = 0, BYVAL bItalic AS UBYTE = FALSE, BYVAL bUnderline AS UBYTE = FALSE, BYVAL bStrikeOut AS UBYTE = FALSE, BYVAL bCharSet AS UBYTE = DEFAULT_CHARSET) AS HFONT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszFaceName</code></td><td></td><td>= The typeface name.</td></tr><tr><td><code>lPointSize</code></td><td></td><td>= The point size.</td></tr><tr><td><code>DPI</code></td><td></td><td>= Dots per inch to calculate scaling. Default value = 96 (no scaling). If you pass -1 and the application is DPI aware, the DPI value used by the operating system will be used.</td></tr><tr><td><code>lWeight</code></td><td></td><td>= The weight of the font in the range 0 through 1000. For example, 400 is normal and 700 is bold. If this value is zero, a default weight is used. The following values are defined for convenience. FW_DONTCARE (0), FW_THIN (100), FW_EXTRALIGHT (200), FW_ULTRALIGHT (200), FW_LIGHT (300), FW_NORMAL (400), FW_REGULAR (400), FW_MEDIUM (500), FW_SEMIBOLD (600), FW_DEMIBOLD (600), FW_BOLD (700), FW_EXTRABOLD (800), FW_ULTRABOLD (800), FW_HEAVY (900), FW_BLACK (900)</td></tr><tr><td><code>bItalic</code></td><td></td><td>= Italic flag. CTRUE or FALSE</td></tr><tr><td><code>bUnderline</code></td><td></td><td>= Underline flag. CTRUE or FALSE</td></tr><tr><td><code>bStrikeOut</code></td><td></td><td>= StrikeOut flag. CTRUE or FALSE</td></tr><tr><td><code>bCharset</code></td><td></td><td>= Charset. The following values are predefined: ANSI_CHARSET, BALTIC_CHARSET, CHINESEBIG5_CHARSET, DEFAULT_CHARSET, EASTEUROPE_CHARSET, GB2312_CHARSET, GREEK_CHARSET, HANGUL_CHARSET, MAC_CHARSET, OEM_CHARSET, RUSSIAN_CHARSET, SHIFTJIS_CHARSET, SYMBOL_CHARSET, TURKISH_CHARSET, VIETNAMESE_CHARSET, JOHAB_CHARSET (Korean language edition of Windows), ARABIC_CHARSET and HEBREW_CHARSET (Middle East language edition of Windows), THAI_CHARSET (Thai language edition of Windows). The OEM_CHARSET value specifies a character set that is operating-system dependent. DEFAULT_CHARSET is set to a value based on the current system locale. For example, when the system locale is English (United States), it is set as ANSI_CHARSET. Fonts with other character sets may exist in the operating system. If an application uses a font with an unknown character set, it should not attempt to translate or interpret strings that are rendered with that font. This parameter is important in the font mapping process. To ensure consistent results, specify a specific character set. If you specify a typeface name in the lfFaceName member, make sure that the lfCharSet value matches the character set of the typeface specified in lfFaceName.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>The handle of the font or NULL on failure. Remarks: The returned font must be destroyed with DeleteObject or the macro DeleteFont when no longer needed to prevent memory leaks. Usage examples: hFont = FontNew("MS Sans Serif", 8, FW_NORMAL) hFont = FontNew("Courier New", 10, FW_BOLD) hFont = FontNew("Marlett", 8, FW_NORMAL, , , , SYMBOL_CHARSET)</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>DDT.inc</code></li><li>Defined in <span class="srcref">AfxNova/DDT.inc:628</span></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

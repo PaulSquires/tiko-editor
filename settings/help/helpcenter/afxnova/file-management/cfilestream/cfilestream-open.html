@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CFileStream.Open — Help Center</title>
+<meta name="description" content="Opens or creates a file and retrieves a stream to read or write to that file.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/file-management/cfilestream/cfilestream-open.html">
+<meta property="og:title" content="CFileStream.Open">
+<meta property="og:description" content="Opens or creates a file and retrieves a stream to read or write to that file.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/file-management/cfilestream/cfilestream-open.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/file-management/cfilestream/cfilestream-open.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cfilestream-class.html">CFileStream Class</a></div>
+<h1>CFileStream.Open<span class="h1kind">method</span></h1>
+<p class="lede">Opens or creates a file and retrieves a stream to read or write to that file.</p>
+<div class="badges"><a class="badge" href="../index.html">File Management</a><span class="badge">method</span><span class="badge">CStream.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION Open (BYREF wszFile AS WSTRING, BYVAL grfMode AS DWORD = STGM_READ, BYVAL dwAttributes AS DWORD = FILE_ATTRIBUTE_NORMAL, BYVAL fCreate AS BOOLEAN = FALSE) AS HRESULT</code></pre>
+<pre class="code sig"><code>FUNCTION Open (BYVAL pwszFile AS WSTRING PTR, BYVAL grfMode AS DWORD = STGM_READ, BYVAL dwAttributes AS DWORD = FILE_ATTRIBUTE_NORMAL, BYVAL fCreate AS BOOLEAN = FALSE) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszFile</code></td><td></td><td>The file name.</td></tr><tr><td><code>pwszFile</code></td><td></td><td>A pointer to a unicode null-terminated string that specifies the file name.</td></tr><tr><td><code>grfMode</code></td><td></td><td>One or more <strong>STGM</strong> values that are used to specify the file access mode and how the stream is created and deleted. The STGM constants are flags that indicate conditions for creating and deleting the stream and access modes for the stream. These elements are often combined using an <strong>OR</strong> operator. They are interpreted in groups as listed in the following table. It is not valid to use more than one element from a single group.</td></tr><tr><td><code>dwAttributes</code></td><td></td><td>One or more flag values that specify file attributes in the case that a new file is created.<br><strong><em>0</em></strong> = Prevents other processes from opening a file or device if they request delete, read, or write access.<br><strong>FILE_SHARE_DELETE</strong> : Enables subsequent open operations on a file or device to request delete access. Otherwise, other processes cannot open the file or device if they request delete access. If this flag is not specified, but the file or device has been opened for delete access, the function fails. Delete access allows both delete and rename operations.<br><strong>FILE_SHARE_READ</strong> : Enables subsequent open operations on a file or device to request read access. Otherwise, other processes cannot open the file or device if they request read access. If this flag is not specified, but the file or device has been opened for read access, the function fails.<br><strong>FILE_SHARE_WRITE</strong> : Enables subsequent open operations on a file or device to request write access. Otherwise, other processes cannot open the file or device if they request write access. If this flag is not specified, but the file or device has been opened for write access or has a file mapping with write access, the function fails.</td></tr><tr><td><code>fCreate</code></td><td></td><td>BOOL value that helps specify, in conjunction with <em>grfMode</em>, how existing files should be treated when creating the stream</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>HRESULT. S_OK (0) on success, or an error code on failure.</p>
+<h2>Description</h2>
+<p>Opens or creates a file and retrieves a stream to read or write to that file.</p>
+<h2>Example</h2>
+<p>#INCLUDE ONCE "AfxNova/CStream.inc" USING AfxNova</p>
+<p>DIM pStream AS CFileStream IF pStream.Open("binary.txt", STGM_CREATE OR STGM_WRITE) = S_OK then DIM s AS STRING = "This is a test" pStream.Write(STRPTR(s), LEN(s)) pStream.Close END IF</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CStream.inc</code></li><li>Defined in <span class="srcref">AfxNova/CStream.inc:289</span></li><li>Documented in <span class="srcref">File Management/CFileStream Class.md</span></li><li>Topic: <a href="../cfilestream-class.html">CFileStream Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

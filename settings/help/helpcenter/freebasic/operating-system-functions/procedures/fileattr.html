@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FileAttr — Help Center</title>
+<meta name="description" content="Returns information about an open file number">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/operating-system-functions/procedures/fileattr.html">
+<meta property="og:title" content="FileAttr">
+<meta property="og:description" content="Returns information about an open file number">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/operating-system-functions/procedures/fileattr.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/operating-system-functions/procedures/fileattr.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>FileAttr<span class="h1kind">function</span></h1>
+<p class="lede">Returns information about an open file number</p>
+<div class="badges"><a class="badge" href="../index.html">Operating System Functions</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Function FileAttr ( ByVal filenum As Long, ByVal returntype As Long = 1 ) As Integer</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>filenum</code></td><td></td><td>The file number of a file or device opened with <code><a href="../../file-i-o-functions/procedures/open.html">Open</a></code></td></tr><tr><td><code>returntype</code></td><td></td><td>An integer value indicating the type of information to return.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+A value associated with the return type, otherwise 0 on error.<br>
+<br>
+
+<h2>Description</h2>
+<br>
+Information about the file number is returned based on the supplied <code><i>returntype</i></code><br>
+<div class="indent"><div><table><tr><td>Value</td><td>Description</td><td>constant</td></tr><tr><td>1</td><td>File Mode</td><td>fbFileAttrMode</td></tr><tr><td>2</td><td>File Handle</td><td>fbFileAttrHandle</td></tr><tr><td>3</td><td>Encoding</td><td>fbFileAttrEncoding</td></tr></table></div><br>
+</div>For File Mode, <code><i>returntype</i></code> = 1 (<code>fbFileAttrMode</code>) the return value is the sum of one or more of the following values: <br>
+<div class="indent"><div><table><tr><td>Value</td><td>File Mode</td><td>Constant</td></tr><tr><td>1</td><td>Input</td><td>fbFileModeInput</td></tr><tr><td>2</td><td>Output</td><td>fbFileModeOutput</td></tr><tr><td>4</td><td>Random</td><td>fbFileModeRandom</td></tr><tr><td>8</td><td>Append</td><td>fbFileModeAppend</td></tr><tr><td>32</td><td>Binary</td><td>fbFileModeBinary</td></tr></table></div><br>
+</div>For File Handle, <code><i>returntype</i></code> = 2 (<code>fbFileAttrHandle</code>), the return value is the file handle as supplied by the C Runtime for file-type devices.  <br>
+<br>
+On Windows only: For File Handle, <code><i>returntype</i></code> = 2 (<code>fbFileAttrHandle</code>), the value returned for COM devices is the handle returned by <code>CreateFile()</code> when the device was first opened.  The value returned for LPT devices is the handle returned by <code>OpenPrinter()</code> when the device was first opened.  This handle value can be passed to other Windows API functions.<br>
+<br>
+On Linux only: For File Handle, <code><i>returntype</i></code> = 2 (<code>fbFileAttrHandle</code>), the value returned for COM devices is the file descriptor returned by open() when the device was first opened.<br>
+<br>
+For Encoding, <code><i>returntype</i></code> = 3 (<code>fbFileAttrEncoding</code>), the return value is one of the following values:<br>
+<div class="indent"><div><table><tr><td>Value</td><td>Encoding</td><td>Constant</td></tr><tr><td>0</td><td>Ascii</td><td>fbFileEncodASCII</td></tr><tr><td>1</td><td>UTF-8</td><td>fbFileEncodUTF8</td></tr><tr><td>2</td><td>UTF-16</td><td>fbFileEncodUTF16</td></tr><tr><td>3</td><td>UTF-32</td><td>fbFileEncodUTF32</td></tr></table></div><br>
+<br>
+</div>
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+#include "file.bi"<br>
+<i>result</i> = <b>FileAttr</b>( <i>filenum</i>, [ <i>returntype</i> ] )<br>
+</code><br>
+<i>or</i><br>
+<code><br>
+#include "vbcompat.bi"<br>
+<i>result</i> = <b>FileAttr</b>( <i>filenum</i>, [ <i>returntype</i> ] )<br>
+</code><br>
+
+<h3>Differences from QB</h3><br>
+<ul><li> None for <code><i>returntype</i></code> = 1<br>
+<li> QBasic and 16-bit Visual Basic returned DOS file handle for <code><i>returntype</i></code> = 2<br>
+<li> <code><i>returntype</i></code> = 3 is new to FreeBASIC<br>
+<br>
+</li></li></li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../file-i-o-functions/procedures/open.html">Open</a></code><br>
+<br>
+</li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span>#include &quot;vbcompat.bi&quot;
+
+#include &quot;crt.bi&quot;
+
+</span>
+
+<span class="tok-kw">Dim</span> <span>f</span> <span class="tok-kw">As</span> <span>FILE</span> <span class="tok-kw">Ptr</span><span>,</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-cm">'' Open a file and write some text to it</span>
+
+
+
+<span class="tok-kw">Open</span> <span>&quot;test.txt&quot;</span> <span class="tok-kw">For</span> <span class="tok-kw">Output</span> <span class="tok-kw">As</span> <span>#</span><span class="tok-nu">1</span>
+
+<span>f</span> <span>=</span> <span class="tok-kw">Cast</span><span>(</span> <span>FILE</span> <span class="tok-kw">Ptr</span><span>,</span> <span class="tok-kw">FileAttr</span><span>(</span> <span class="tok-nu">1</span><span>,</span> <span>fbFileAttrHandle</span> <span>))</span>
+
+<span class="tok-kw">For</span> <span>i</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span>
+
+  <span>fprintf</span><span>(</span> <span>f</span><span>,</span> <span>!</span><span>&quot;Line %i\n&quot;</span><span>,</span> <span>i</span> <span>)</span>
+
+<span class="tok-kw">Next</span> <span>i</span>
+
+<span class="tok-kw">Close</span> <span>#</span><span class="tok-nu">1</span>
+
+
+
+<span class="tok-cm">'' re-open the file and read the text back</span>
+
+
+
+<span class="tok-kw">Open</span> <span>&quot;test.txt&quot;</span> <span class="tok-kw">For</span> <span class="tok-kw">Input</span> <span class="tok-kw">As</span> <span>#</span><span class="tok-nu">1</span>
+
+<span>f</span> <span>=</span> <span class="tok-kw">Cast</span><span>(</span> <span>FILE</span> <span class="tok-kw">Ptr</span><span>,</span> <span class="tok-kw">FileAttr</span><span>(</span> <span class="tok-nu">1</span><span>,</span> <span>fbFileAttrHandle</span> <span>))</span>
+
+<span class="tok-kw">While</span> <span>feof</span><span>(</span><span>f</span><span>)</span> <span>=</span> <span class="tok-nu">0</span>
+
+  <span>i</span> <span>=</span> <span>fgetc</span><span>(</span><span>f</span><span>)</span>
+
+  <span class="tok-kw">Print</span> <span class="tok-kw">Chr</span><span>(</span><span>i</span><span>);</span>
+
+<span class="tok-kw">Wend</span>
+
+<span class="tok-kw">Close</span> <span>#</span><span class="tok-nu">1</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgFileattr.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

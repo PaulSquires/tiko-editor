@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipSetStringFormatTrimming — Help Center</title>
+<meta name="description" content="Sets the trimming style for a **StringFormat** object. The trimming style determines how to trim a string so that it fits into the layout rectangle.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipsetstringformattrimming.html">
+<meta property="og:title" content="GdipSetStringFormatTrimming">
+<meta property="og:description" content="Sets the trimming style for a **StringFormat** object. The trimming style determines how to trim a string so that it fits into the layout rectangle.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipsetstringformattrimming.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipsetstringformattrimming.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../gdiplusstringformat.html">GdiPlusStringFormat</a></div>
+<h1>GdipSetStringFormatTrimming<span class="h1kind">function</span></h1>
+<p class="lede">Sets the trimming style for a **StringFormat** object. The trimming style determines how to trim a string so that it fits into the layout rectangle.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipSetStringFormatTrimming (BYVAL format AS GpStringFormat PTR, BYVAL trimming AS StringTrimming) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>format</code></td><td></td><td>[in] Pointer to the <strong>StringFormat</strong> object.</td></tr><tr><td><code>trimming</code></td><td></td><td>[in] Element of the <strong>StringTrimming</strong> enumeration that specifies the style of trimming to be performed on the string.</td></tr><tr><td><code>StringTrimmingNone</code></td><td></td><td>0</td></tr><tr><td><code>StringTrimmingCharacter</code></td><td></td><td>1</td></tr><tr><td><code>StringTrimmingWord</code></td><td></td><td>2</td></tr><tr><td><code>StringTrimmingEllipsisCharacter</code></td><td></td><td>3</td></tr><tr><td><code>StringTrimmingEllipsisWord</code></td><td></td><td>4</td></tr><tr><td><code>StringTrimmingEllipsisPath</code></td><td></td><td>5</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Sets the trimming style for a <strong>StringFormat</strong> object. The trimming style determines how to trim a string so that it fits into the layout rectangle.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates a StringFormat object, sets the trimming style, and uses ' the StringFormat object to draw a string. The code also draws the string's layout rectangle. ' ======================================================================================== SUB Example_SetStringFormatTrimming (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create the font DIM fontFamily AS GpFontFamily PTR hStatus = GdipCreateFontFamilyFromName("Times New Roman", NULL, @fontFamily) DIm font AS GpFont PTR IF hStatus = StatusOk THEN</p>
+<pre class="code"><code>hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(18, TRUE), FontStyleRegular, UnitPixel, @font)
+  GdipDeleteFontFamily(fontFamily)</code></pre>
+<p>END IF</p>
+<p>' // Create a StringFormat object, and set its trimming style. DIM format AS GpStringFormat PTR hStatus = GdipCreateStringFormat(0, LANG_NEUTRAL, @format) hStatus = GdipSetStringFormatTrimming(format, StringTrimmingEllipsisWord)</p>
+<p>' // Create a solid brush DIM solidBrush AS GpSolidFill PTR hStatus = GdipCreateSolidFill(ARGB_RED, @solidBrush)</p>
+<p>' // Use the StringFormat object in a call to DrawString. DIM wszText AS WSTRING * 64 = "One two three four five six seven eight nine ten" DIM rcf AS GpRectF = (30, 30, 160, 60) hStatus = GdipDrawString(graphics, wszText, LEN(wszText), font, @rcf, format, solidBrush)</p>
+<p>' // Draw the rectangle that encloses the text DIM pen AS GpPen PTR hStatus = GdipCreatePen1(ARGB_RED, 1, UnitPixel, @pen) hStatus = GdipScalePenTransform(pen, rxRatio, ryRatio, MatrixOrderPrepend) hStatus = GdipDrawRectangle(graphics, pen, rcf.x, rcf.y, rcf.width, rcf.height)</p>
+<p>' // Cleanup IF font THEN GdipDeleteFont(font) IF solidBrush THEN GdipDeleteBrush(solidBrush) IF pen THEN GdipDeletePen(pen) IF format THEN GdipDeleteStringFormat(format) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2404</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusStringFormat.md</span></li><li>Topic: <a href="../gdiplusstringformat.html">GdiPlusStringFormat</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

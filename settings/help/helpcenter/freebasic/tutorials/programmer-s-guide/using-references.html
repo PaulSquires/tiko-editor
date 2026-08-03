@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Using References — Help Center</title>
+<meta name="description" content="Using References — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/using-references.html">
+<meta property="og:title" content="Using References">
+<meta property="og:description" content="Using References — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/using-references.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/using-references.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Using References</h1>
+<h2>Documentation</h2>
+
+	The syntax for declaring the <b>References</b> and <b>Using</b> them instead of pointers.<br>
+<a></a><br>
+<b>Preamble:</b><br>
+<br>
+The different syntaxes used to declare a reference all use the 'Byref' keyword.<br>
+Since a pointer is a variable, it is possible to modify its contents, and the same pointer can allow successive access to different variables. The association between a reference and the object that it designates is, however, fixed when it is declared.<br>
+<br>
+The 'Byref' keyword indicates a variable that is declared by reference. It is used in three different contexts:<br>
+<div class="indent"><b>-</b> In a procedure signature, to pass an argument by reference (byref parameter).<br>
+<b>-</b> In a function signature, to return a variable to the caller by reference (byref return).<br>
+<b>-</b> In the body of the code, to define a reference variable (byref variable).<br>
+<br>
+</div><u>Table of Contents</u><br>
+<div class="indent"><b><a href="#ProPgReferences1">1. Passing parameter by reference to procedure (byref parameter)</a></b><br>
+<b><a href="#ProPgReferences2">2. Returning variable by reference from function (byref return)</a></b><br>
+<b><a href="#ProPgReferences3">3. Defining reference variable in code (byref variable)</a></b><br>
+<b><a href="#ProPgReferences4">4. References versus pointers by comparative examples</a></b><br>
+<b><a href="#ProPgReferences5">5. Hacking on usage of references with the additional syntaxes allowed by FreeBASIC</a></b><br>
+<br>
+</div><a></a><br>
+<div>1. Passing parameter by reference to procedure (byref parameter)</div><div><br>
+<ul><li> Syntax of declaration:<br>
+</li></ul><div class="indent"><code>{<a href="../../procedures/procedures/sub.html">Sub</a>|<a href="../../procedures/procedures/function.html">Function</a>} <i>procedure_name</i> (<a href="../../variable-declarations/procedures/byref-variables.html">ByRef</a> <i>parameter</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> [<a href="../../standard-data-types/procedures/const-qualifier.html">Const</a>] <a href="../../reference/data-types.html">datatype</a>, ...</code><br>
+<br>
+When used in the parameter list of a procedure, the <i>Byref</i> keyword indicates that an argument is passed by reference, not by value. The consequence is that any modification made to the argument in the called procedure is reflected in the body of the call.<br>
+If the procedure does not need or must not to modify the transmitted object, the <i>Const</i> qualifier can be used in the declaration (before the declaration of the <i>datatype</i>) so that the compiler checks in the body of the procedure that the passed object is not modified in any place (otherwise, a compiler error message is issued).<br>
+<br>
+</div><ul><li> Full syntax example for passing a parameter by reference:<br>
+</li></ul><div class="indent"><code><pre class="code"><span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>passbyref</span> <span>(</span><span class="tok-kw">ByRef</span> <span>ref</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span><span>,</span> <span class="tok-kw">ByVal</span> <span>value</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span><span>)</span>  <span class="tok-cm">'' declaration for passing by reference</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span>X</span> <span>=</span> <span class="tok-nu">0</span>
+
+<span class="tok-kw">Print</span> <span>X</span>
+
+<span>passbyref</span><span>(</span><span>X</span><span>,</span> <span class="tok-nu">1.23</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>X</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>passbyref</span> <span>(</span><span class="tok-kw">ByRef</span> <span>ref</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span><span>,</span> <span class="tok-kw">ByVal</span> <span>value</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span><span>)</span>  <span class="tok-cm">'' declaration for passing by reference</span>
+
+    <span>ref</span> <span>=</span> <span>value</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+ 0
+ 1.23
+			</pre></div></div><b>Note:</b> A pointer can be passed directly (without first dereferencing it) to <code>Byref</code> procedure parameter if in argument term the <code>Byval</code> keyword is specified in front of the pointer name.<br>
+<br>
+<div><a href="#ProPgReferencesTop">Back to top</a></div><br>
+<a></a><br>
+</div><div>2. Returning variable by reference from function (byref return)</div><div><br>
+<ul><li> Syntax of declaration:<br>
+</li></ul><div class="indent"><code><a href="../../procedures/procedures/function.html">Function</a> <i>function_name</i> (...) <a href="../../variable-declarations/procedures/byref-variables.html">ByRef</a> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> [<a href="../../standard-data-types/procedures/const-qualifier.html">Const</a>] <a href="../../reference/data-types.html">datatype</a></code><br>
+<br>
+When used in the return type of a function, the <i>Byref</i> keyword indicates that the variable is returned by reference, not by value. The consequence is that the caller can modify the variable returned by the function and the modification is reflected in the state of the variable that the function processes.<br>
+If the caller does not need or must not to modify the transmitted object, the <i>Const</i> qualifier can be used in the declaration (before the declaration of the <i>datatype</i>) so that the compiler checks in the body of the caller that the returned object is not modified in any place (otherwise, a compiler error message is issued).<br>
+<br>
+Operators (member or global), when used as functions, have also the capability to return results by reference, by using the similar syntax.<br>
+<br>
+</div><ul><li> Full syntax example for returning a variable by reference:<br>
+</li></ul><div class="indent"><code><pre class="code"><span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>returnbyref</span> <span>()</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span>  <span class="tok-cm">'' declaration for returning by reference</span>
+
+
+
+<span class="tok-kw">Print</span> <span>returnbyref</span><span>()</span>
+
+<span>returnbyref</span><span>()</span> <span>=</span> <span class="tok-nu">4.56</span>
+
+<span class="tok-kw">Print</span> <span>returnbyref</span><span>()</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-kw">Function</span> <span>returnbyref</span> <span>()</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span>  <span class="tok-cm">'' declaration for returning by reference</span>
+
+    <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span>X</span> <span>=</span> <span class="tok-nu">0</span>
+
+    <span class="tok-kw">Return</span> <span>X</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+ 0
+ 4.56
+		</pre>As for the arguments list, it should always be surrounded with parentheses even if empty.<br>
+<br>
+<br>
+</div><b>Specific syntax:</b><br>
+<div class="indent">On the left-hand side of an assignment expression using the '=' symbol, the result of the function (returned by reference) must be enclosed in parentheses when the function calls one single argument, in order to solve the parsing ambiguity.<br>
+From fbc version 0.90, '=&gt;' can be used for assignments, in place of '=', same as for initializers, allowing to avoid parsing ambiguity (without parentheses):<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>transitbyref</span><span>(</span> <span class="tok-kw">ByRef</span> <span>_s</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>)</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>s</span>
+
+
+
+<span>s</span> <span>=</span> <span>&quot;abcd&quot;</span>
+
+<span class="tok-kw">Print</span> <span>s</span>
+
+
+
+<span class="tok-cm">'' the enclosing parentheses are required here.</span>
+
+<span>(</span> <span>transitbyref</span><span>(</span> <span>s</span> <span>)</span> <span>)</span> <span>=</span> <span>transitbyref</span><span>(</span> <span>s</span> <span>)</span> <span>&amp;</span> <span>&quot;efgh&quot;</span>
+
+<span class="tok-kw">Print</span> <span>s</span>
+
+
+
+<span class="tok-cm">'' the enclosing parentheses are not required here.</span>
+
+<span>transitbyref</span><span>(</span> <span>s</span> <span>)</span> <span>=&gt;</span> <span>transitbyref</span><span>(</span> <span>s</span> <span>)</span> <span>&amp;</span> <span>&quot;ijkl&quot;</span>
+
+<span class="tok-kw">Print</span> <span>s</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-kw">Function</span> <span>transitbyref</span><span>(</span> <span class="tok-kw">ByRef</span> <span>_s</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>)</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-cm">'' This var-len string will transit by reference (input and output), no copy will be created.</span>
+
+    <span class="tok-kw">Return</span> <span>_s</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+abcd
+abcdefgh
+abcdefghijkl
+					</pre></div></div></div></div><b>Note:</b> A pointer can be returned directly (without first dereferencing it) for a <code>Byref</code> function return if in <code>identifier=</code> or <code>Function=</code> or <code>Return</code> statement the <code>Byval</code> keyword is specified in front of the pointer name.<br>
+<br>
+<div><a href="#ProPgReferencesTop">Back to top</a></div><br>
+<a></a><br>
+</div><div>3. Defining reference variable in code (byref variable)</div><div><br>
+<ul><li> Syntax of declaration:<br>
+</li></ul><div class="indent"><div class="indent"><code>{<a href="../../variable-declarations/procedures/dim.html">Dim</a>|<a href="../../variable-declarations/procedures/static.html">Static</a>} [<a href="../../variable-declarations/procedures/shared.html">Shared</a>] <a href="../../variable-declarations/procedures/byref-variables.html">ByRef</a> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> [<a href="../../standard-data-types/procedures/const-qualifier.html">Const</a>] <a href="../../reference/data-types.html">datatype</a> <i>ref</i> = <i>variable</i></code><br>
+</div>or<br>
+<div class="indent"><code>[<a href="../../variable-declarations/procedures/static.html">Static</a>] <a href="../../variable-declarations/procedures/var.html">Var</a> [<a href="../../variable-declarations/procedures/shared.html">Shared</a>] <a href="../../variable-declarations/procedures/byref-variables.html">ByRef</a> <i>ref</i> = <i>variable</i></code><br>
+<br>
+</div>Unlike pointers, the reference variable must be assigned as soon as the declaration using an initializer.<br>
+<i>datatype</i> must be the same type as that of the variable, or a compatible type (for example one from the types of its Bases in case of inheritance):<br>
+<div class="indent"><b>-</b> Only when the two types are identical (or using the second syntax with <i>Var</i>), a reference variable can be considered as an alias of the variable. One can do the same operations through such a reference variable as one can do with the original variable.<br>
+<b>-</b> Otherwise (types compatible but not identical), one can not do all same operations than with the original variable:<br>
+<div class="indent">For example, a base type reference variable referring to a derived type object allows to activate polymorphism when a virtual method is called on it, similarly to a base type pointer referring to a derived type object. One can do the same operations through such a reference variable as one can do with a dereferenced pointer of same type (but for both not the same operations as using directly the derived type instance).<br>
+<br>
+</div></div>If the code does not need or must not to modify the referred object, the <i>Const</i> qualifier can be used in the declaration (before the declaration of the <i>data_type</i> in the first syntax) so that the compiler checks in the code that the object is not modified, through the reference variable, in any place (otherwise, a compiler error message is issued).<br>
+<br>
+There is no interaction between the life of a reference and the life of the object who is referred (similarly to a pointer: destroy an object does not destroy its pointer(s)).<br>
+Once created, each one lives his life independently.<br>
+<br>
+</div><ul><li> Full syntax example for defining a reference variable in code:<br>
+</li></ul><div class="indent"><code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span>X</span> <span>=</span> <span class="tok-nu">0</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span>refX</span> <span>=</span> <span>X</span>  <span class="tok-cm">'' declaration for defining a reference</span>
+
+<span class="tok-kw">Print</span> <span>X</span>
+
+<span>refX</span> <span>=</span> <span class="tok-nu">7.89</span>
+
+<span class="tok-kw">Print</span> <span>X</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+ 0
+ 7.89
+</pre><br>
+</div></div><div><a href="#ProPgReferencesTop">Back to top</a></div><br>
+<a></a><br>
+</div><div>4. References versus pointers by comparative examples</div><div><br>
+<ul><li> Function returning the greater variable between two integer variables:<br>
+</li></ul><div class="indent"><b>-</b> Using pointers (by passing/returning pointer variables):<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Function</span> <span>maxPtr</span> <span>(</span><span class="tok-kw">ByVal</span> <span>p1</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span><span>,</span> <span class="tok-kw">ByVal</span> <span>p2</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span>
+
+    <span class="tok-kw">If</span> <span>*</span><span>p1</span> <span>&gt;</span> <span>*</span><span>p2</span> <span class="tok-kw">Then</span>
+
+        <span class="tok-kw">Return</span> <span>p1</span>
+
+    <span class="tok-kw">Else</span>
+
+        <span class="tok-kw">Return</span> <span>p2</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>i1</span> <span>=</span> <span class="tok-nu">1</span><span>,</span> <span>i2</span> <span>=</span> <span class="tok-nu">2</span>
+
+<span class="tok-kw">Print</span> <span>i1</span><span>,</span> <span>i2</span>
+
+<span>*</span><span>maxPtr</span><span>(@</span><span>i1</span><span>,</span> <span>@</span><span>i2</span><span>)</span> <span>=</span> <span class="tok-nu">3</span>
+
+<span class="tok-kw">Print</span> <span>i1</span><span>,</span> <span>i2</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+ 1             2
+ 1             3
+				</pre></div></div><b>-</b> Using references (by passing/returning reference variables):<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Function</span> <span>maxRef</span> <span>(</span><span class="tok-kw">ByRef</span> <span>r1</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByRef</span> <span>r2</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">If</span> <span>r1</span> <span>&gt;</span> <span>r2</span> <span class="tok-kw">Then</span>
+
+        <span class="tok-kw">Return</span> <span>r1</span>
+
+    <span class="tok-kw">Else</span>
+
+        <span class="tok-kw">Return</span> <span>r2</span>
+
+  <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>i1</span> <span>=</span> <span class="tok-nu">1</span><span>,</span> <span>i2</span> <span>=</span> <span class="tok-nu">2</span>
+
+<span class="tok-kw">Print</span> <span>i1</span><span>,</span> <span>i2</span>
+
+<span>maxRef</span><span>(</span><span>i1</span><span>,</span> <span>i2</span><span>)</span> <span>=</span> <span class="tok-nu">3</span>
+
+<span class="tok-kw">Print</span> <span>i1</span><span>,</span> <span>i2</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+ 1             2
+ 1             3
+				</pre><br>
+</div></div></div><ul><li> Inheritance structure with overriding subroutine and overriding function with covariant return:<br>
+</li></ul><div class="indent"><b>-</b> Using pointers to objects:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>myBase</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>clone</span> <span>()</span> <span class="tok-kw">As</span> <span>myBase</span> <span class="tok-kw">Ptr</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Sub</span> <span>Destroy</span> <span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Function</span> <span>myBase.clone</span> <span>()</span> <span class="tok-kw">As</span> <span>myBase</span> <span class="tok-kw">Ptr</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>myBase</span> <span class="tok-kw">Ptr</span> <span>pp</span> <span>=</span> <span class="tok-kw">New</span> <span>myBase</span><span>(</span><span class="tok-kw">This</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;myBase.clone() As myBase Ptr&quot;</span><span>,</span> <span>pp</span>
+
+    <span class="tok-kw">Function</span> <span>=</span> <span>pp</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>myBase.Destroy</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;myBase.Destroy()&quot;</span><span>,</span> <span>,</span> <span>@</span><span class="tok-kw">This</span>
+
+    <span class="tok-kw">Delete</span> <span>@</span><span class="tok-kw">This</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+
+
+<span class="tok-kw">Type</span> <span>myDerived</span> <span class="tok-kw">Extends</span> <span>myBase</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>clone</span> <span>()</span> <span class="tok-kw">As</span> <span>myDerived</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Override</span>  <span class="tok-cm">'' overriding member function with covariant return</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>Destroy</span> <span>()</span> <span class="tok-kw">Override</span>                      <span class="tok-cm">'' overriding member subroutine</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Function</span> <span>myDerived.clone</span> <span>()</span> <span class="tok-kw">As</span> <span>myDerived</span> <span class="tok-kw">Ptr</span>      <span class="tok-cm">'' overriding member function with covariant return</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>myDerived</span> <span class="tok-kw">Ptr</span> <span>pc</span> <span>=</span> <span class="tok-kw">New</span> <span>myDerived</span><span>(</span><span class="tok-kw">This</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;myDerived.clone() As myDerived Ptr&quot;</span><span>,</span> <span>pc</span>
+
+    <span class="tok-kw">Function</span> <span>=</span> <span>pc</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>myDerived.Destroy</span> <span>()</span>                <span class="tok-cm">'' overriding member subroutine</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;myDerived.Destroy()&quot;</span><span>,</span> <span>,</span> <span>@</span><span class="tok-kw">This</span>
+
+    <span class="tok-kw">Delete</span> <span>@</span><span class="tok-kw">This</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>myDerived</span> <span>c</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>myBase</span> <span class="tok-kw">Ptr</span> <span>ppc</span> <span>=</span> <span>@</span><span>c</span>                <span class="tok-cm">'' base type pointer to derived object c</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>myDerived</span> <span class="tok-kw">Ptr</span> <span>pcc</span> <span>=</span> <span>@</span><span>c</span>             <span class="tok-cm">'' derived type pointer to derived object c</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>myBase</span> <span class="tok-kw">Ptr</span> <span>ppc1</span> <span>=</span> <span>ppc</span><span>-&gt;</span><span>clone</span><span>()</span>     <span class="tok-cm">'' base type pointer to clone of object c</span>
+
+<span class="tok-cm">'                                              (through its base type pointer and polymorphism)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>myDerived</span> <span class="tok-kw">Ptr</span> <span>pcc1</span> <span>=</span> <span>pcc</span><span>-&gt;</span><span>clone</span><span>()</span>  <span class="tok-cm">'' derived type pointer to derived object c</span>
+
+<span class="tok-cm">'                                              (through its derived type pointer and covariance of return value)</span>
+
+<span class="tok-kw">Print</span>
+
+<span>ppc1</span><span>-&gt;</span><span>Destroy</span><span>()</span>                           <span class="tok-cm">'' using base type pointer and polymorphism</span>
+
+<span>pcc1</span><span>-&gt;</span><span>Destroy</span><span>()</span>                           <span class="tok-cm">'' using derived type pointer</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output example:<br>
+<div class="indent"><pre class="code">
+myDerived.clone() As myDerived Ptr        4663904
+myDerived.clone() As myDerived Ptr        4663952
+
+myDerived.Destroy()                       4663904
+myDerived.Destroy()                       4663952
+				</pre></div></div><b>-</b> Using references to objects:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>myBase</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>clone</span> <span>()</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>myBase</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Sub</span> <span>Destroy</span> <span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Function</span> <span>myBase.clone</span> <span>()</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>myBase</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>myBase</span> <span class="tok-kw">Ptr</span> <span>pp</span> <span>=</span> <span class="tok-kw">New</span> <span>myBase</span><span>(</span><span class="tok-kw">This</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;myBase.clone() Byref As myBase&quot;</span><span>,</span> <span>pp</span>
+
+    <span class="tok-kw">Function</span> <span>=</span> <span>*</span><span>pp</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>myBase.Destroy</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;myBase.Destroy()&quot;</span><span>,</span> <span>,</span> <span>@</span><span class="tok-kw">This</span>
+
+    <span class="tok-kw">Delete</span> <span>@</span><span class="tok-kw">This</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+
+
+<span class="tok-kw">Type</span> <span>myDerived</span> <span class="tok-kw">Extends</span> <span>myBase</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>clone</span> <span>()</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>myDerived</span> <span class="tok-kw">Override</span>  <span class="tok-cm">'' overriding member function with covariant return</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>Destroy</span> <span>()</span> <span class="tok-kw">Override</span>                        <span class="tok-cm">'' overriding member subroutine</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Function</span> <span>myDerived.clone</span> <span>()</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>myDerived</span>      <span class="tok-cm">'' overriding member function with covariant return</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>myDerived</span> <span class="tok-kw">Ptr</span> <span>pc</span> <span>=</span> <span class="tok-kw">New</span> <span>myDerived</span><span>(</span><span class="tok-kw">This</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;myDerived.clone() Byref As myDerived&quot;</span><span>,</span> <span>pc</span>
+
+    <span class="tok-kw">Function</span> <span>=</span> <span>*</span><span>pc</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>myDerived.Destroy</span> <span>()</span>                <span class="tok-cm">'' overriding member subroutine</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;myDerived.Destroy()&quot;</span><span>,</span> <span>,</span> <span>@</span><span class="tok-kw">This</span>
+
+    <span class="tok-kw">Delete</span> <span>@</span><span class="tok-kw">This</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>myDerived</span> <span>c</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>myBase</span> <span>rpc</span> <span>=</span> <span>c</span>                <span class="tok-cm">'' base type reference to derived object c</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>myDerived</span> <span>rcc</span> <span>=</span> <span>c</span>             <span class="tok-cm">'' derived type reference to derived object c</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>myBase</span> <span>rpc1</span> <span>=</span> <span>rpc.clone</span><span>()</span>     <span class="tok-cm">'' base type reference to clone of object c</span>
+
+<span class="tok-cm">'                                               (through its base type reference and polymorphism)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>myDerived</span> <span>rcc1</span> <span>=</span> <span>rcc.clone</span><span>()</span>  <span class="tok-cm">'' derived type reference to derived object c</span>
+
+<span class="tok-cm">'                                               (through its derived type reference and covariance of return value)</span>
+
+<span class="tok-kw">Print</span>
+
+<span>rpc1.Destroy</span><span>()</span>                             <span class="tok-cm">'' using base typpe reference and polymorphism</span>
+
+<span>rcc1.Destroy</span><span>()</span>                             <span class="tok-cm">'' using derived type reference</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output example:<br>
+<div class="indent"><pre class="code">
+myDerived.clone() Byref As myDerived      9775712
+myDerived.clone() Byref As myDerived      9775760
+
+myDerived.Destroy()                       9775712
+myDerived.Destroy()                       9775760
+</pre></div></div></div><div><a href="#ProPgReferencesTop">Back to top</a></div><br>
+<a></a><br>
+</div><div>5. Hacking on usage of references with the additional syntaxes allowed by FreeBASIC</div><div><br>
+In FB, a reference is implemented under the hood through an internal pointer which holds the address of the variable.<br>
+<br>
+The access to this internal pointer is presently allowed for user, in read, and also in write for a reference variable (unlike many other languages):<br>
+<div class="indent"><b>-</b> Therefore, the address of the referred variable (the value of the internal pointer) can be get by using the '@' operator applied on the reference variable symbol name:<br>
+<div class="indent"><code><i>variable_address</i> = <a href="../../operators/pointer-operators/procedures/operator-address-of.html">@</a><i>ref</i></code><br>
+</div><b>-</b> And even, a reference variable can be reassigned (by modifying the value of the internal pointer) to refer to another variable (of compatible type) by doing:<br>
+<div class="indent"><code><a href="../../operators/pointer-operators/procedures/operator-address-of.html">@</a><i>ref</i> = <a href="../../operators/pointer-operators/procedures/operator-address-of.html">@</a><i>other_variable</i></code><br>
+</div><b>-</b> The address of the internal pointer of a reference variable can even be obtained:<br>
+<div class="indent"><code>internal_pointer_address = <a href="../../operators/pointer-operators/procedures/operator-address-of.html">@</a><a href="../../operators/pointer-operators/procedures/operator-address-of.html">@</a>ref</code><br>
+</div><b>Note:</b><br>
+<div class="indent"><b>-</b> A reference variable can also be re-initialized to a "null" reference:<br>
+<div class="indent"><code><a href="../../operators/pointer-operators/procedures/operator-address-of.html">@</a><i>ref</i> = 0</code><br>
+</div><b>-</b> A reference variable can even be directly declared as a "null" reference:<br>
+<div class="indent"><code><a href="../../variable-declarations/procedures/dim.html">Dim</a> <a href="../../variable-declarations/procedures/byref-variables.html">ByRef</a> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../reference/data-types.html">datatype</a> <i>ref</i> = <a href="../../operators/pointer-operators/procedures/operator-value-of.html">*</a><a href="../../converting-data-types/procedures/cptr.html">CPtr</a>(<a href="../../reference/data-types.html">datatype</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a>, 0)</code><br>
+<br>
+</div></div></div>Thus, by always using the same reference symbol name, one can mix the pure syntax on the reference with the syntax on its internal pointer.<br>
+<br>
+<ul><li> Example of hacking on reference symbol name:<br>
+</li></ul><div class="indent"><code><pre class="code"><span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>resizeZstring</span> <span>(</span><span class="tok-kw">ByRef</span> <span>refZstring</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span><span>,</span> <span class="tok-kw">ByVal</span> <span>length</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>prntZstring</span> <span>(</span><span class="tok-kw">ByRef</span> <span>refZstring</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span><span>)</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>refZ</span> <span>=</span> <span>*</span><span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span><span>,</span> <span class="tok-nu">0</span><span>)</span>  <span class="tok-cm">'' &quot;null&quot; reference declaration</span>
+
+
+
+<span class="tok-kw">Const</span> <span>cz1</span> <span>=</span> <span>&quot;FB&quot;</span>
+
+<span>@</span><span>refZ</span> <span>=</span> <span>@(</span><span>resizeZstring</span><span>(</span><span>refZ</span><span>,</span> <span class="tok-kw">Len</span><span>(</span><span>cz1</span><span>)))</span>           <span class="tok-cm">'' reference (re-)inititialization</span>
+
+<span>refZ</span> <span>=</span> <span>cz1</span>
+
+<span>prntZstring</span><span>(</span><span>refZ</span><span>)</span>
+
+
+
+<span class="tok-kw">Const</span> <span>cz2</span> <span>=</span> <span>&quot;FreeBASIC&quot;</span>
+
+<span>@</span><span>refZ</span> <span>=</span> <span>@(</span><span>resizeZstring</span><span>(</span><span>refZ</span><span>,</span> <span class="tok-kw">Len</span><span>(</span><span>cz2</span><span>)))</span>           <span class="tok-cm">'' reference re-inititialization</span>
+
+<span>refZ</span> <span>=</span> <span>cz2</span>
+
+<span>prntZstring</span><span>(</span><span>refZ</span><span>)</span>
+
+
+
+<span class="tok-kw">Const</span> <span>cz3</span> <span>=</span> <span>&quot;FreeBASIC 1.06.0&quot;</span>
+
+<span>@</span><span>refZ</span> <span>=</span> <span>@(</span><span>resizeZstring</span><span>(</span><span>refZ</span><span>,</span> <span class="tok-kw">Len</span><span>(</span><span>cz3</span><span>)))</span>           <span class="tok-cm">'' reference re-inititialization</span>
+
+<span>refZ</span> <span>=</span> <span>cz3</span>
+
+<span>prntZstring</span><span>(</span><span>refZ</span><span>)</span>
+
+
+
+<span class="tok-kw">Const</span> <span>cz4</span> <span>=</span> <span>&quot;&quot;</span>
+
+<span>@</span><span>refZ</span> <span>=</span> <span>@(</span><span>resizeZstring</span><span>(</span><span>refZ</span><span>,</span> <span class="tok-kw">Len</span><span>(</span><span>cz4</span><span>)))</span>           <span class="tok-cm">'' reference re-inititialization to &quot;null&quot; reference</span>
+
+<span>refZ</span> <span>=</span> <span>cz4</span>
+
+<span>prntZstring</span><span>(</span><span>refZ</span><span>)</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-kw">Function</span> <span>resizeZstring</span> <span>(</span><span class="tok-kw">ByRef</span> <span>refZstring</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span><span>,</span> <span class="tok-kw">ByVal</span> <span>length</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span>
+
+    <span class="tok-kw">If</span> <span>length</span> <span>&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+        <span class="tok-kw">If</span> <span>@</span><span>refZstring</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+            <span class="tok-kw">Print</span> <span>&quot;Zstring memory buffer allocation&quot;</span>
+
+        <span class="tok-kw">Else</span>
+
+            <span class="tok-kw">Print</span> <span>&quot;Zstring memory buffer re-allocation&quot;</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+        <span>length</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Else</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;Zstring memory buffer de-allocation&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-cm">' Return *Cptr(Zstring Ptr, Reallocate(@refZstring, length * Sizeof(Zstring)))</span>
+
+<span class="tok-cm">' '' Using the &quot;Return Byval ...&quot; syntax allows to avoid casting + dereferencing as above</span>
+
+    <span class="tok-kw">Return</span> <span class="tok-kw">ByVal</span> <span class="tok-kw">Reallocate</span><span>(@</span><span>refZstring</span><span>,</span> <span>length</span> <span>*</span> <span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">ZString</span><span>))</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>prntZstring</span> <span>(</span><span class="tok-kw">ByRef</span> <span>refZstring</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>@</span><span>refZstring</span><span>,</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>refZstring</span> <span>&amp;</span> <span>&quot;'&quot;</span>
+
+    <span class="tok-kw">Print</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+Output example:<br>
+<div class="indent"><pre class="code">
+Zstring memory buffer allocation
+  9513600     'FB'
+
+Zstring memory buffer re-allocation
+  9513600     'FreeBASIC'
+
+Zstring memory buffer re-allocation
+  9513600     'FreeBASIC 1.06.0'
+
+Zstring memory buffer de-allocation
+  0           ''
+</pre></div></div><div><a href="#ProPgVariadicArgumentsTop">Back to top</a></div><br>
+<br>
+</div><div>See also</div><div><br>
+<ul><li> <code><a href="../../procedures/procedures/byref-parameters.html">Byref (Parameters)</a></code>, <code><a href="../../procedures/procedures/byref-function-results.html">Byref (Function Results)</a></code>, <code><a href="../../variable-declarations/procedures/byref-variables.html">Byref (Variables)</a></code><br>
+<li> <code><a href="../../operators/pointer-operators/procedures/operator-address-of.html">Operator @ (Address Of)</a></code>, <code><a href="../../operators/pointer-operators/procedures/operator-value-of.html">Operator * (Value Of)</a></code><br>
+<li> <a href="from-pointers-to-references.html">From Pointers to References</a><br>
+<br>
+</li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>
