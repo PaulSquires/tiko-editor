@@ -936,7 +936,7 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
         ' Id 401, newly minted: there was no "Open File" string and no blank slot left, so
         ' MAXIMUM moved 400 -> 401 in all six .lang files, each with a real translation.
         ' "Alt+Enter" is deliberately NOT localized -- it is a keystroke, not a phrase.
-        dim as DWSTRING wszOpen = L(401, "Open File")
+        dim as DWSTRING wszOpen = L(390, "Open File")
 
         ' THE SHORTCUT IS SHOWN ONLY WHERE IT WOULD WORK. Alt+Enter acts on the excerpt
         ' holding the caret, so on a merely-hovered header it would advertise a keystroke
@@ -2505,7 +2505,7 @@ private sub FipBar_UpdateStatus()
     if idx <> -1 then
         ' Once there is a phrase the tab IS the phrase -- no prefix. The magnifier the tab
         ' painter puts to its left is what says this is a search.
-        dim as DWSTRING wszCap = L(206, "Find in Project")
+        dim as DWSTRING wszCap = L(203, "Find in Project")
         if len(gFipLastQuery) then wszCap = gFipLastQuery
         ' A long phrase is truncated rather than allowed to take over the whole bar. Measured
         ' in the tab bar's own font, and the "..." is added here rather than left to a paint
@@ -2857,7 +2857,7 @@ function frmFindInProject_Show() as LRESULT
         ' TAB_FINDINPROJECT goes into the itemData slot that normally holds a clsDocument
         ' ptr. AddTab calls SetTabText, which leaves the caption alone for a tab with no
         ' document -- which is what lets the caption below stick.
-        idx = PsTabBar_AddTab( gTTabCtl.hWindow, L(206, "Find in Project"), TAB_FINDINPROJECT )
+        idx = PsTabBar_AddTab( gTTabCtl.hWindow, L(203, "Find in Project"), TAB_FINDINPROJECT )
         if idx = -1 then return 0
     end if
 

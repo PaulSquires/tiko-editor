@@ -185,15 +185,15 @@ function frmTopTabsInfo_PositionWindows() as LRESULT
     dim as long vmargin = pWindow->ScaleY(1)
     dim as long nPadding = 10   ' 5 left 5 right
     
-    gTTabCtl.wszFileType = L(173,"Normal") 
+    gTTabCtl.wszFileType = L(171,"Normal") 
     dim as clsDocument ptr pDoc = gTTabCtl.GetActiveDocumentPtr()
     if pDoc then 
         select case pDoc->ProjectFileType
-            case FILETYPE_HEADER:    gTTabCtl.wszFileType = L(141,"Header") 
-            case FILETYPE_NORMAL:    gTTabCtl.wszFileType = L(173,"Normal") 
-            case FILETYPE_MODULE:    gTTabCtl.wszFileType = L(174,"Module")
-            case FILETYPE_MAIN:      gTTabCtl.wszFileType = L(175,"Main")
-            case FILETYPE_RESOURCE:  gTTabCtl.wszFileType = L(176,"Resource")
+            case FILETYPE_HEADER:    gTTabCtl.wszFileType = L(140,"Header") 
+            case FILETYPE_NORMAL:    gTTabCtl.wszFileType = L(171,"Normal") 
+            case FILETYPE_MODULE:    gTTabCtl.wszFileType = L(172,"Module")
+            case FILETYPE_MAIN:      gTTabCtl.wszFileType = L(173,"Main")
+            case FILETYPE_RESOURCE:  gTTabCtl.wszFileType = L(174,"Resource")
         end select 
     end if    
 

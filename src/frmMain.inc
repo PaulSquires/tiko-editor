@@ -152,7 +152,7 @@ function frmMain_SetStatusbar() as long
         PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, CRLF_PANEL, wszText )
         
         if SciExec( hEdit, SCI_GETREADONLY, 0, 0 ) then
-            wszText = L(185,"Read Only")
+            wszText = L(182,"Read Only")
             PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, COMPILE_STATUS_PANEL, wszText )
         end if
         
@@ -172,7 +172,7 @@ function frmMain_SetStatusbar() as long
     if pDoc then 
         wszText = wszText & " - [" & pDoc->DiskFilename & "]"
         if SciExec( pDoc->hWndActiveScintilla, SCI_GETREADONLY, 0, 0 ) then
-            wszText = wszText & " - [" & L(185,"Read Only") & "]"
+            wszText = wszText & " - [" & L(182,"Read Only") & "]"
         end if
     end if
     if wszText <> AfxGetWindowText( HWND_FRMMAIN ) then AfxSetWindowText( HWND_FRMMAIN, wszText )
@@ -1259,13 +1259,13 @@ function frmMain_OnClose( byval hwnd as HWND ) as LRESULT
     ' Returning here leaves the editor exactly as it was; the user can exit once the build
     ' finishes, which is seconds away.
     if BuildService_IsRunning() then
-        SetCompileStatusBarMessage( L(683, "A build is already running."), 0 )
+        SetCompileStatusBarMessage( L(515, "A build is already running."), 0 )
         return true
     end if
 
     ' if configuration option to confirm closing editor is active then ask now.
     if gConfig.AskExit then
-        if TikoMsgBox( HWND_FRMMAIN, L(217,"Are you sure you want to exit?"), L(218,"Confirm"), _
+        if TikoMsgBox( HWND_FRMMAIN, L(213,"Are you sure you want to exit?"), L(214,"Confirm"), _
                     TMB_ICON_QUESTION, TMB_YESNOCANCEL ) <> IDYES then
             return true
         end if            

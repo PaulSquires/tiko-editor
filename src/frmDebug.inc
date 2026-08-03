@@ -76,12 +76,12 @@ end sub
 
 private function frmDebug_ReasonText( byval reason as long ) as DWSTRING
     select case reason
-        case DBGP_STOP_ENTRY      : return L(603, "Started")
-        case DBGP_STOP_STEP       : return L(604, "Stepped")
-        case DBGP_STOP_BREAKPOINT : return L(605, "Breakpoint")
-        case DBGP_STOP_TEMPBP     : return L(256, "Run to Cursor")
-        case DBGP_STOP_USERBREAK  : return L(601, "Break")
-        case DBGP_STOP_EXCEPTION  : return L(606, "Exception")
+        case DBGP_STOP_ENTRY      : return L(435, "Started")
+        case DBGP_STOP_STEP       : return L(436, "Stepped")
+        case DBGP_STOP_BREAKPOINT : return L(437, "Breakpoint")
+        case DBGP_STOP_TEMPBP     : return L(252, "Run to Cursor")
+        case DBGP_STOP_USERBREAK  : return L(433, "Break")
+        case DBGP_STOP_EXCEPTION  : return L(438, "Exception")
     end select
     return ""
 end function
@@ -335,7 +335,7 @@ private function frmDebug_AddGroupRow( byval hLV as HWND, byval parentRow as lon
     dim as DWSTRING wszCaption = "[" & str(idxLo) & " .. " & str(idxHi) & "]"
     dim as long r = PsListTree_AddNode( hLV, parentRow, wszCaption, k )
     if r < 0 then return -1
-    PsListTree_SetCellText( hLV, r, 1, str(idxHi - idxLo + 1) & " " & L(626, "elements") )
+    PsListTree_SetCellText( hLV, r, 1, str(idxHi - idxLo + 1) & " " & L(458, "elements") )
     PsListTree_SetRowSelectable( hLV, r, false )
     frmDebug_AddPlaceholder( hLV, r )
     PsListTree_SetNodeCollapsed( hLV, r, true )
@@ -421,7 +421,7 @@ private sub frmDebug_ExpandRowChildren( byval hLV as HWND, byval row as long )
         gDbgRow(kk).kind = DBGROW_PLACEHOLDER
         dim as long r = PsListTree_AddNode( hLV, row, "", kk )
         if r >= 0 then
-            PsListTree_SetCellText( hLV, r, 1, L(607, "more elements not shown") & _
+            PsListTree_SetCellText( hLV, r, 1, L(439, "more elements not shown") & _
                                     "  (" & str(n - shown) & ")" )
             PsListTree_SetRowSelectable( hLV, r, false )
         end if
@@ -638,7 +638,7 @@ sub frmDebug_FillWatch()
             if r < 0 then exit for
             ' Out of scope is the NORMAL state for a watch on a local while execution is
             ' somewhere else, so it is reported as such rather than as an error.
-            PsListTree_SetCellText( hLV, r, 1, L(623, "<not in scope>") )
+            PsListTree_SetCellText( hLV, r, 1, L(455, "<not in scope>") )
         end if
     next
 
@@ -835,7 +835,7 @@ private sub frmDebug_OnStopped()
         gDbgFirstStop = false
         if gDbgHaveBreakpoints then
             debugparser_resume( DBGP_RUN_CONTINUE )
-            frmDebug_SetStatus( L(600, "Running...") )
+            frmDebug_SetStatus( L(432, "Running...") )
             frmDebug_SyncButtons()
             exit sub
         end if
@@ -858,12 +858,12 @@ private sub frmDebug_OnStopped()
     end if
 
     dim as DWSTRING wszMsg = frmDebug_ReasonText( si.reason ) & "   " & wszWhere
-    if len(si.wszProcName) then wszMsg = wszMsg & "   " & L(608, "in") & " " & si.wszProcName
+    if len(si.wszProcName) then wszMsg = wszMsg & "   " & L(440, "in") & " " & si.wszProcName
     if si.reason = DBGP_STOP_EXCEPTION then
         wszMsg = wszMsg & "   " & si.wszExcepText
         if si.excepCode = &hC0000005 then
-            dim as DWSTRING wszDir = L(610, "reading")
-            if si.excepIsWrite <> 0 then wszDir = L(609, "writing")
+            dim as DWSTRING wszDir = L(442, "reading")
+            if si.excepIsWrite <> 0 then wszDir = L(441, "writing")
             wszMsg = wszMsg & " (" & wszDir & " &h" & hex(si.excepTarget) & ")"
         end if
     end if
@@ -898,9 +898,9 @@ private sub frmDebug_OnExited( byval exitCode as long )
     frmDebug_ClearExecutionMarkers()
 
     if exitCode = 0 then
-        SetCompileStatusBarMessage( L(259, "Debug Target Exited Normally"), ghIconGood )
+        SetCompileStatusBarMessage( L(253, "Debug Target Exited Normally"), ghIconGood )
     else
-        SetCompileStatusBarMessage( L(260, "Debug Target Terminated Unexpectantly"), ghIconBad )
+        SetCompileStatusBarMessage( L(254, "Debug Target Terminated Unexpectantly"), ghIconBad )
     end if
 
     frmMain_DebugTopMenuStates()
@@ -924,7 +924,7 @@ sub frmDebug_Command( byval id as long )
             debugparser_resume( DBGP_RUN_STEPOUT )
         case IDC_FRMDEBUG_CMDBREAK, IDM_DEBUG_PAUSE
             debugparser_pause()
-            frmDebug_SetStatus( L(602, "Pausing at the next source line...") )
+            frmDebug_SetStatus( L(434, "Pausing at the next source line...") )
             exit sub
         case IDC_FRMDEBUG_CMDSTOP, IDM_DEBUG_STOPDEBUGGING
             debugparser_stop()
@@ -941,7 +941,7 @@ sub frmDebug_Command( byval id as long )
             debugparser_resume( DBGP_RUN_TOCURSOR )
     end select
 
-    frmDebug_SetStatus( L(600, "Running...") )
+    frmDebug_SetStatus( L(432, "Running...") )
     frmDebug_SyncButtons()
 end sub
 
@@ -1628,13 +1628,13 @@ sub frmDebug_ArmButtonTooltips()
             PsButton_SetTooltipText( gDbgBtn(id), frmDebug_TipFor( wszCap, idm ) )
         end if
     #endmacro
-    ARMTIP( IDC_FRMDEBUG_CMDCONTINUE,  L(621, "Continue"),      IDM_DEBUG_STARTDEBUGGING )
-    ARMTIP( IDC_FRMDEBUG_CMDBREAK,     L(601, "Break"),         IDM_DEBUG_PAUSE )
-    ARMTIP( IDC_FRMDEBUG_CMDSTOP,      L(622, "Stop"),          IDM_DEBUG_STOPDEBUGGING )
-    ARMTIP( IDC_FRMDEBUG_CMDSTEPINTO,  L(247, "Step"),          IDM_DEBUG_STEPINTO )
-    ARMTIP( IDC_FRMDEBUG_CMDSTEPOVER,  L(248, "Step Over"),     IDM_DEBUG_STEPOVER )
-    ARMTIP( IDC_FRMDEBUG_CMDSTEPOUT,   L(255, "Step Out"),      IDM_DEBUG_STEPOUT )
-    ARMTIP( IDC_FRMDEBUG_CMDRUNCURSOR, L(256, "Run to Cursor"), IDM_DEBUG_RUNTOCURSOR )
+    ARMTIP( IDC_FRMDEBUG_CMDCONTINUE,  L(453, "Continue"),      IDM_DEBUG_STARTDEBUGGING )
+    ARMTIP( IDC_FRMDEBUG_CMDBREAK,     L(433, "Break"),         IDM_DEBUG_PAUSE )
+    ARMTIP( IDC_FRMDEBUG_CMDSTOP,      L(454, "Stop"),          IDM_DEBUG_STOPDEBUGGING )
+    ARMTIP( IDC_FRMDEBUG_CMDSTEPINTO,  L(243, "Step"),          IDM_DEBUG_STEPINTO )
+    ARMTIP( IDC_FRMDEBUG_CMDSTEPOVER,  L(244, "Step Over"),     IDM_DEBUG_STEPOVER )
+    ARMTIP( IDC_FRMDEBUG_CMDSTEPOUT,   L(251, "Step Out"),      IDM_DEBUG_STEPOUT )
+    ARMTIP( IDC_FRMDEBUG_CMDRUNCURSOR, L(252, "Run to Cursor"), IDM_DEBUG_RUNTOCURSOR )
 end sub
 
 ' ==========================================================================================
@@ -1890,9 +1890,9 @@ private function frmDebug_CreateListView( byval CtrlID as long ) as HWND
 
     if CtrlID = IDC_FRMDEBUG_LVSTACK then
         PsListTree_AddColumn( hCtl, "",                 pWindow->ScaleX(20) )
-        PsListTree_AddColumn( hCtl, L(613, "Function"), pWindow->ScaleX(200) )
-        PsListTree_AddColumn( hCtl, L(203, "Line"),     pWindow->ScaleX(60) )
-        PsListTree_AddColumn( hCtl, L(204, "File"),     pWindow->ScaleX(160) )
+        PsListTree_AddColumn( hCtl, L(445, "Function"), pWindow->ScaleX(200) )
+        PsListTree_AddColumn( hCtl, L(200, "Line"),     pWindow->ScaleX(60) )
+        PsListTree_AddColumn( hCtl, L(201, "File"),     pWindow->ScaleX(160) )
         PsListTree_SetFillColumn( hCtl, 3 )
         PsListTree_SetSelChangeCallback( hCtl, @frmDebug_StackSelChange )
         PsListTree_SetPaintCallback( hCtl, @frmDebug_PaintStackRow )
@@ -1901,9 +1901,9 @@ private function frmDebug_CreateListView( byval CtrlID as long ) as HWND
         ' Value is the column being READ -- it carries array shapes, string previews and
         ' "{ 3 fields }" -- so it is given the room and is the fill column. Name and Type are
         ' both short and predictable.
-        PsListTree_AddColumn( hCtl, L(611, "Name"),  pWindow->ScaleX(140) )
-        PsListTree_AddColumn( hCtl, L(286, "Value"), pWindow->ScaleX(540) )
-        PsListTree_AddColumn( hCtl, L(612, "Type"),  pWindow->ScaleX(80) )
+        PsListTree_AddColumn( hCtl, L(443, "Name"),  pWindow->ScaleX(140) )
+        PsListTree_AddColumn( hCtl, L(276, "Value"), pWindow->ScaleX(540) )
+        PsListTree_AddColumn( hCtl, L(444, "Type"),  pWindow->ScaleX(80) )
         ' Value is the FILL column, so it absorbs whatever the other two do not use -- the
         ' way to widen it further is to widen the pane, which the splitters now remember.
         PsListTree_SetFillColumn( hCtl, 1 )
@@ -1995,8 +1995,8 @@ private function frmDebug_WndProc( byval hwnd as HWND, byval uMsg as UINT, _
             debugparser_get_error( @werr, 512 )
             gApp.IsDebuggerActive = false
             gDbgSessionEnding = true
-            TikoMsgBox( HWND_FRMMAIN, L(614, "The debugger could not start the program.") & _
-                        chr(13) & chr(13) & werr, L(218, "Confirm"), TMB_ICON_ERROR, TMB_OK )
+            TikoMsgBox( HWND_FRMMAIN, L(446, "The debugger could not start the program.") & _
+                        chr(13) & chr(13) & werr, L(214, "Confirm"), TMB_ICON_ERROR, TMB_OK )
             DestroyWindow( hwnd )
             return 0
 
@@ -2064,10 +2064,10 @@ private function frmDebug_WndProc( byval hwnd as HWND, byval uMsg as UINT, _
                         b.PaintText( wszCap, @rcCap, DT_LEFT or DT_END_ELLIPSIS )
                     end scope
                 #endmacro
-                PAINTCAPTION( lo.rcCapGlobals, ucase(L(620, "Globals")) )
-                PAINTCAPTION( lo.rcCapLocals,  ucase(L(619, "Locals")) )
-                PAINTCAPTION( lo.rcCapStack,   ucase(L(627, "Call Stack")) )
-                PAINTCAPTION( lo.rcCapWatch,   ucase(L(625, "Watch")) )
+                PAINTCAPTION( lo.rcCapGlobals, ucase(L(452, "Globals")) )
+                PAINTCAPTION( lo.rcCapLocals,  ucase(L(451, "Locals")) )
+                PAINTCAPTION( lo.rcCapStack,   ucase(L(459, "Call Stack")) )
+                PAINTCAPTION( lo.rcCapWatch,   ucase(L(457, "Watch")) )
             end if
 
             b.EndDoubleBuffer()
@@ -2139,14 +2139,14 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
     if rc <> DBGP_OK then
         dim as DWSTRING wszMsg
         if rc = DBGP_ERR_NODEBUGINFO then
-            wszMsg = L(615, "This program carries no debug information.") & chr(13) & chr(13) & _
-                     L(616, "Build it with -g and the gas64 backend, or gas for 32-bit. The gcc backend emits a format that cannot be read.")
+            wszMsg = L(447, "This program carries no debug information.") & chr(13) & chr(13) & _
+                     L(448, "Build it with -g and the gas64 backend, or gas for 32-bit. The gcc backend emits a format that cannot be read.")
         else
             dim as wstring * 512 werr
             debugparser_get_error( @werr, 512 )
-            wszMsg = L(617, "The debug information could not be read.") & chr(13) & chr(13) & werr
+            wszMsg = L(449, "The debug information could not be read.") & chr(13) & chr(13) & werr
         end if
-        TikoMsgBox( hWndParent, wszMsg, L(218, "Confirm"), TMB_ICON_ERROR, TMB_OK )
+        TikoMsgBox( hWndParent, wszMsg, L(214, "Confirm"), TMB_ICON_ERROR, TMB_OK )
         return 0
     end if
 
@@ -2155,7 +2155,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
     gDbgCurFrame        = 0
     gDbgFirstStop       = true
     gDbgHaveBreakpoints = false
-    gDbgStatusText      = L(600, "Running...")
+    gDbgStatusText      = L(432, "Running...")
     gDbgSortGlobals.nCol = -1 : gDbgSortGlobals.bDesc = false
     gDbgSortLocals.nCol  = -1 : gDbgSortLocals.bDesc  = false
     frmDebug_RowsReset()
@@ -2169,7 +2169,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
     dim pParent as CWindow ptr = AfxCWindowPtr(hWndParent)
     if pParent then pWindow->DPI = pParent->DPI
 
-    HWND_FRMDEBUG = pWindow->Create( hWndParent, L(618, "Debugger"), @frmDebug_WndProc, 0, 0, 0, 0, _
+    HWND_FRMDEBUG = pWindow->Create( hWndParent, L(450, "Debugger"), @frmDebug_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_THICKFRAME or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_CONTROLPARENT or WS_EX_LEFT or WS_EX_COMPOSITED )
     ' UNSCALED. SetClientSize applies the DPI factor itself; passing a pre-scaled value
@@ -2195,13 +2195,13 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
     pWindow->SmallIcon = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 16, 16, LR_SHARED)
 
     ' --- toolbar ---
-    frmDebug_CreateButton( IDC_FRMDEBUG_CMDCONTINUE,  L(621, "Continue"), wszIconContinue )
-    frmDebug_CreateButton( IDC_FRMDEBUG_CMDBREAK,     L(601, "Break"),              wszIconPause )
-    frmDebug_CreateButton( IDC_FRMDEBUG_CMDSTOP,      L(622, "Stop"),     wszIconStop )
-    frmDebug_CreateButton( IDC_FRMDEBUG_CMDSTEPINTO,  L(247, "Step"),               wszIconStepNext )
-    frmDebug_CreateButton( IDC_FRMDEBUG_CMDSTEPOVER,  L(248, "Step Over"),          wszIconStepOver )
-    frmDebug_CreateButton( IDC_FRMDEBUG_CMDSTEPOUT,   L(255, "Step Out"),           wszIconStepOut )
-    frmDebug_CreateButton( IDC_FRMDEBUG_CMDRUNCURSOR, L(256, "Run to Cursor"),      wszIconRunToCursor )
+    frmDebug_CreateButton( IDC_FRMDEBUG_CMDCONTINUE,  L(453, "Continue"), wszIconContinue )
+    frmDebug_CreateButton( IDC_FRMDEBUG_CMDBREAK,     L(433, "Break"),              wszIconPause )
+    frmDebug_CreateButton( IDC_FRMDEBUG_CMDSTOP,      L(454, "Stop"),     wszIconStop )
+    frmDebug_CreateButton( IDC_FRMDEBUG_CMDSTEPINTO,  L(243, "Step"),               wszIconStepNext )
+    frmDebug_CreateButton( IDC_FRMDEBUG_CMDSTEPOVER,  L(244, "Step Over"),          wszIconStepOver )
+    frmDebug_CreateButton( IDC_FRMDEBUG_CMDSTEPOUT,   L(251, "Step Out"),           wszIconStepOut )
+    frmDebug_CreateButton( IDC_FRMDEBUG_CMDRUNCURSOR, L(252, "Run to Cursor"),      wszIconRunToCursor )
 
     frmDebug_ArmButtonTooltips()
 
@@ -2233,9 +2233,9 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
         PsButton_SetClickCallback( h, cb )
     #endmacro
     MAKECAPBUTTON( gDbgBtnAddWatch, IDC_FRMDEBUG_CMDADDWATCH, wszIconAddFileButton, _
-                   L(629, "Add Watch"), @frmDebug_AddWatchClick )
+                   L(461, "Add Watch"), @frmDebug_AddWatchClick )
     MAKECAPBUTTON( gDbgBtnDelWatch, IDC_FRMDEBUG_CMDDELWATCH, wszIconTrash, _
-                   L(628, "Delete Watch"), @frmDebug_DelWatchClick )
+                   L(460, "Delete Watch"), @frmDebug_DelWatchClick )
 
     MAKESPLITTER( HWND_FRMDEBUG_SPLITMAIN,  IDC_FRMDEBUG_SPLITMAIN,  PSSPLITTER_VERTICAL )
     MAKESPLITTER( HWND_FRMDEBUG_SPLITLEFT,  IDC_FRMDEBUG_SPLITLEFT,  PSSPLITTER_HORIZONTAL )
@@ -2341,8 +2341,8 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
         debugparser_get_error( @werr, 512 )
         gApp.IsDebuggerActive = false
         gDbgSessionEnding = true
-        TikoMsgBox( hWndParent, L(614, "The debugger could not start the program.") & _
-                    chr(13) & chr(13) & werr, L(218, "Confirm"), TMB_ICON_ERROR, TMB_OK )
+        TikoMsgBox( hWndParent, L(446, "The debugger could not start the program.") & _
+                    chr(13) & chr(13) & werr, L(214, "Confirm"), TMB_ICON_ERROR, TMB_OK )
         DestroyWindow( HWND_FRMDEBUG )
         return 0
     end if
@@ -2651,7 +2651,7 @@ sub frmDebug_RunSelfTest()
     ' .lang files and deliberately NOT asserted: the slot stays claimed so a future feature
     ' does not reuse the id and inherit a stale translation in five languages.
     dim as long nBlank = 0
-    for id as long = 600 to 629
+    for id as long = 432 to 461
         if id = 624 then continue for
         if len( LL(id) ) = 0 then
             nBlank += 1
@@ -2660,20 +2660,20 @@ sub frmDebug_RunSelfTest()
     next
     frmDebug_Check( "every debugger string 600-629 resolves (624 retired)", nBlank = 0, str(nBlank) & " blank" )
 
-    for id as long = 247 to 248
+    for id as long = 243 to 244
         frmDebug_Check( "reused menu string " & id & " still resolves", len(LL(id)) > 0 )
     next
-    frmDebug_Check( "reused menu string 255 still resolves", len(LL(255)) > 0 )
-    frmDebug_Check( "reused menu string 256 still resolves", len(LL(256)) > 0 )
+    frmDebug_Check( "reused menu string 255 still resolves", len(LL(251)) > 0 )
+    frmDebug_Check( "reused menu string 256 still resolves", len(LL(252)) > 0 )
 
     ' len() > 0 CANNOT distinguish a real translation from the English fallback -- the
     ' loader fills a blank key with English, so this suite reads the same under any language
     ' file. Printing some of them is what actually distinguishes them. 247 is here because it
     ' was RE-WORDED rather than added ("Step Into" -> "Step"): a stale translation left behind
     ' in one of the six files still resolves, and only reading it back catches that.
-    sLine = "  NOTE resolved: 247=" & str(LL(247)) & " | 618=" & str(LL(618)) & _
-            " | 619=" & str(LL(619)) & " | 620=" & str(LL(620)) & _
-            " | 627=" & str(LL(627)) & " | 629=" & str(LL(629))
+    sLine = "  NOTE resolved: 247=" & str(LL(243)) & " | 618=" & str(LL(450)) & _
+            " | 619=" & str(LL(451)) & " | 620=" & str(LL(452)) & _
+            " | 627=" & str(LL(459)) & " | 629=" & str(LL(461))
     print sLine
 
     sLine = "--- TIKO_DEBUG_SELFTEST: " & str(gDbgTestPass) & " passed, " & _

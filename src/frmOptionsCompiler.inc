@@ -359,18 +359,18 @@ function frmOptionsCompiler_Layout( byval hPage as HWND, byval cxPanel as long )
     #endmacro
 
     ' Toolchains list.
-    FIELDLABEL( LL(273) & ":" )
+    FIELDLABEL( LL(267) & ":" )
     dim as long listH = AfxScaleY(COMP_LISTHEIGHT)
     SetWindowPos( ghCompToolchains, 0, padLeft, y, fullW, listH, SWP_NOZORDER or SWP_NOACTIVATE )
     y += listH + sectionGap
 
     ' Compiler switches.
-    FIELDLABEL( LL(133) )
+    FIELDLABEL( LL(132) )
     SetWindowPos( ghCompSwitches, 0, padLeft, y, fullW, fieldH, SWP_NOZORDER or SWP_NOACTIVATE )
     y += fieldH + sectionGap
 
     ' Include paths.
-    FIELDLABEL( LL(132) )
+    FIELDLABEL( LL(131) )
     SetWindowPos( ghCompIncludes, 0, padLeft, y, fullW, fieldH, SWP_NOZORDER or SWP_NOACTIVATE )
     y += fieldH + sectionGap
 
@@ -392,12 +392,12 @@ function frmOptionsCompiler_Layout( byval hPage as HWND, byval cxPanel as long )
         end scope
     #endmacro
 
-    TOGGLEROW( ghCompRunCmd, LL(215) )
-    TOGGLEROW( ghCompBeep, LL(268) )
+    TOGGLEROW( ghCompRunCmd, LL(211) )
+    TOGGLEROW( ghCompBeep, LL(262) )
     y += sectionGap
 
     ' ---- help file: label, then textbox + browse button on one line ------------------
-    FIELDLABEL( LL(134) & ":" )
+    FIELDLABEL( LL(133) & ":" )
     dim as long browseW = AfxScaleX(COMP_BROWSEWIDTH)
     dim as long txtW    = fullW - browseW - labelGap
     if txtW < 0 then txtW = 0

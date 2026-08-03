@@ -36,7 +36,7 @@
 ' ========================================================================================
 function code_Initialize() as COMPILE_TYPE ptr
     ' Indicate in the StatusBar that we have started to compile
-    SetCompileStatusBarMessage( L(294, "Generating compiler files") & "...", 0 )
+    SetCompileStatusBarMessage( L(284, "Generating compiler files") & "...", 0 )
 
     dim pCompile as COMPILE_TYPE ptr = new COMPILE_TYPE
     if pCompile = null then return null
@@ -114,10 +114,10 @@ function code_SetCompilerPath( byval pCompile as COMPILE_TYPE ptr ) as boolean
     ' Check to see if the compiler exists
     if AfxFileExists(pCompile->CompilerPath) = false then 
         dim as DWSTRING wszMsg = _
-            L(165,"Invalid defined compiler path.") & vbcrlf & _
+            L(163,"Invalid defined compiler path.") & vbcrlf & _
             "Path: " & pCompile->CompilerPath
         SetCompileStatusBarMessage( "", 0 )
-        TikoMsgBox( HWND_FRMMAIN, wszMsg, L(164,"Error"), _
+        TikoMsgBox( HWND_FRMMAIN, wszMsg, L(162,"Error"), _
                 TMB_ICON_INFO, TMB_OK )
         code_Cleanup( pCompile )
         return false        
@@ -141,7 +141,7 @@ function code_SetMainFile( byval pCompile as COMPILE_TYPE ptr ) as boolean
     end if
 
     if pDoc = null then
-        TikoMsgBox( HWND_FRMMAIN, L(171,"No Main file specified for the project."), L(164,"Error"), _
+        TikoMsgBox( HWND_FRMMAIN, L(169,"No Main file specified for the project."), L(162,"Error"), _
                         TMB_ICON_INFO, TMB_OK )
         return false
     end if
@@ -418,7 +418,7 @@ function code_CompileModules( byval pCompile as COMPILE_TYPE ptr ) as boolean
                     if (nFileCount mod 5) = 0 then AfxDoEvents
                     
                     ' Prepend with # so that spinner shows
-                    dim as DWSTRING wst = L(166, "Compiling") + "... " + AfxStrPathname("NAMEX", pDoc->DiskFilename) 
+                    dim as DWSTRING wst = L(164, "Compiling") + "... " + AfxStrPathname("NAMEX", pDoc->DiskFilename) 
                     SetCompileStatusBarMessage( wst, 0 )
                     
                     dim as DWSTRING wszCommand = pCompile->CompilerPath
@@ -483,7 +483,7 @@ function code_Compile( byval wID as long ) as boolean
     ' state has an owner now (modBuildService), and Begin is a TEST-AND-SET so the check and
     ' the claim cannot be separated by a later edit.
     if BuildService_Begin() = false then
-        SetCompileStatusBarMessage( L(683, "A build is already running."), 0 )
+        SetCompileStatusBarMessage( L(515, "A build is already running."), 0 )
         return false
     end if
 
@@ -631,7 +631,7 @@ function code_Compile( byval wID as long ) as boolean
     if IsProcessRunning( pCompile->OutputFilename ) then
         AfxDeleteFile( pCompile->OutputFilename )
         SetCompileStatusBarMessage( "", 0 )
-        TikoMsgBox( HWND_FRMMAIN, L(163,"Program running") & "...", L(164,"Error"), _
+        TikoMsgBox( HWND_FRMMAIN, L(161,"Program running") & "...", L(162,"Error"), _
                         TMB_ICON_INFO, TMB_OK )
         code_Cleanup( pCompile )
         return false        
@@ -721,7 +721,7 @@ function code_Compile( byval wID as long ) as boolean
 
 
     ' Prepend with # so that spinner shows
-    dim as DWSTRING wst = "#" + L(166, "Compiling") + "... " + AfxStrPathname("NAMEX", pCompile->MainFilename) 
+    dim as DWSTRING wst = "#" + L(164, "Compiling") + "... " + AfxStrPathname("NAMEX", pCompile->MainFilename) 
     SetCompileStatusBarMessage( wst, 0 )
     SetCursor( LoadCursor(0, IDC_WAIT) )
 
@@ -765,8 +765,8 @@ function code_Compile( byval wID as long ) as boolean
     if pThread = 0 then
         ' Nothing will ever signal the event, so do not wait on it.
         CloseHandle( hDone )
-        TikoMsgBox( HWND_FRMMAIN, L(682, "Could not start the compiler thread."), _
-                    L(164, "Error"), TMB_ICON_INFO, TMB_OK )
+        TikoMsgBox( HWND_FRMMAIN, L(514, "Could not start the compiler thread."), _
+                    L(162, "Error"), TMB_ICON_INFO, TMB_OK )
         code_Cleanup( pCompile )
         return false
     end if

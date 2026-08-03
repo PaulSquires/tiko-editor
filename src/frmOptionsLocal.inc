@@ -410,7 +410,7 @@ private sub frmOptionsLocal_MarkActiveRow()
         dim as boolean bActive = (ucase(gLocalLangFiles(i)) = ucase(gLocalCurrentFile))
         ' if/else, not iif: iif cannot return a UDT, and DWSTRING is one.
         dim as DWSTRING wszMark = ""
-        if bActive then wszMark = L(335,"Active")
+        if bActive then wszMark = L(324,"Active")
         PsListTree_SetCellText( ghLocalLanguages, i, 2, wszMark )
     next
     PsListTree_EndUpdate( ghLocalLanguages )
@@ -689,8 +689,8 @@ private sub frmOptionsLocal_DeleteClick( byval hButton as HWND, byval id as long
 
     ' Was MB_YESNOCANCEL; OK/Cancel is behaviourally identical here (No and Cancel both abort)
     ' and, unlike PsMessageBox's English-only Yes/No preset, stays localized.
-    if frmOptions_ThemedMsgBox( L(264,"Are you sure you want to delete?"), _
-                                L(218,"Confirm"), TMB_ICON_QUESTION, TMB_OKCANCEL ) <> IDOK then
+    if frmOptions_ThemedMsgBox( L(258,"Are you sure you want to delete?"), _
+                                L(214,"Confirm"), TMB_ICON_QUESTION, TMB_OKCANCEL ) <> IDOK then
         exit sub
     end if
 
@@ -811,13 +811,13 @@ sub frmOptionsLocal_Build( byval hPage as HWND )
 
     ' ---- command buttons --------------------------------------------------------------
     ghLocalSelect = PsButton_Create( hPage, IDC_FRMOPTIONSLOCAL_CMDLOCALIZATION )
-    PsButton_SetText( ghLocalSelect, L(122,"Select") )
+    PsButton_SetText( ghLocalSelect, L(121,"Select") )
     PsButton_SetFont( ghLocalSelect, OptionsFont_Base() )
     PsButton_SetClickCallback( ghLocalSelect, @frmOptionsLocal_SelectClick )
 
     ghLocalNew = PsButton_Create( hPage, IDC_FRMOPTIONSLOCAL_CMDNEW )
     ' Its own id, NOT 3. Id 3 is the File menu's "New File" and has to keep saying that.
-    PsButton_SetText( ghLocalNew, L(332,"New") )
+    PsButton_SetText( ghLocalNew, L(321,"New") )
     PsButton_SetFont( ghLocalNew, OptionsFont_Base() )
     PsButton_SetClickCallback( ghLocalNew, @frmOptionsLocal_NewClick )
 
@@ -827,7 +827,7 @@ sub frmOptionsLocal_Build( byval hPage as HWND )
     PsButton_SetClickCallback( ghLocalEdit, @frmOptionsLocal_EditClick )
 
     ghLocalDelete = PsButton_Create( hPage, IDC_FRMOPTIONSLOCAL_CMDDELETE )
-    PsButton_SetText( ghLocalDelete, L(223,"Delete") )
+    PsButton_SetText( ghLocalDelete, L(219,"Delete") )
     PsButton_SetFont( ghLocalDelete, OptionsFont_Base() )
     PsButton_SetClickCallback( ghLocalDelete, @frmOptionsLocal_DeleteClick )
 
@@ -836,7 +836,7 @@ sub frmOptionsLocal_Build( byval hPage as HWND )
     ' a way out. E72B is Segoe Fluent's Back arrow; the glyph font is the SEPARATE paint-time
     ' font the family requires, never the text font.
     ghLocalClose = PsButton_Create( hPage, IDC_FRMOPTIONSLOCAL_CMDCLOSE )
-    PsButton_SetText( ghLocalClose, L(334,"Back") )
+    PsButton_SetText( ghLocalClose, L(323,"Back") )
     PsButton_SetFont( ghLocalClose, OptionsFont_Base() )
     PsButton_SetGlyphFont( ghLocalClose, ghFont(SYMBOLFONT_10) )
     PsButton_SetGlyphLeft( ghLocalClose, !"\uE72B" )
@@ -996,7 +996,7 @@ function frmOptionsLocal_Layout( byval hPage as HWND, byval cxPanel as long ) as
     erase gLocalLabels
 
     ' ---- heading: the language the editor is actually set to -------------------------
-    frmOptionsLocal_AddLabel( L(125,"Localization") & ": " & frmOptionsLocal_PrettyName( gLocalCurrentFile ), _
+    frmOptionsLocal_AddLabel( L(124,"Localization") & ": " & frmOptionsLocal_PrettyName( gLocalCurrentFile ), _
                               padLeft, y, contentR, y + textH )
     y += textH + sectionGap
 
@@ -1062,7 +1062,7 @@ function frmOptionsLocal_Layout( byval hPage as HWND, byval cxPanel as long ) as
 
         ' The hint is the same sentence whatever language is open -- the third column's own
         ' header already names it ("French Phrase"), so repeating the name here said it twice.
-        frmOptionsLocal_AddLabel( L(333,"Double click the row to edit the new phrase"), _
+        frmOptionsLocal_AddLabel( L(322,"Double click the row to edit the new phrase"), _
                                   padLeft, y, contentR, y + textH )
         y += textH
     end if

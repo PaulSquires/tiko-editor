@@ -53,9 +53,9 @@ private function frmReplace_TipText( byval hTip as HWND, _
                                             byval idx as long ) as DWSTRING
     Theme_ApplyTooltip( hTip )
     select case idx
-        case REPLACETIP_PRESERVE:    return L(276,"Preserve Case")
-        case REPLACETIP_REPLACE:     return L(139,"Replace") & " (Enter)"
-        case REPLACETIP_REPLACEALL:  return L(140,"Replace All") & " (Ctrl+Alt+Enter)"
+        case REPLACETIP_PRESERVE:    return L(270,"Preserve Case")
+        case REPLACETIP_REPLACE:     return L(138,"Replace") & " (Enter)"
+        case REPLACETIP_REPLACEALL:  return L(139,"Replace All") & " (Ctrl+Alt+Enter)"
     end select
     return ""
 end function
@@ -380,7 +380,7 @@ function frmReplace_Show( byval hwndParent as HWND ) as LRESULT
     PsTextBox_SetForeColor( hCtlReplace, theme.toptabs.texthot.forecolor )
     PsTextBox_SetBackColor( hCtlReplace, theme.toptabs.texthot.backcolor )
     PsTextBox_SetBorderWidth( hCtlReplace, 0 )                    ' flat, as before
-    PsTextBox_SetCueBannerText( hCtlReplace, L(139,"Replace") & "..." )
+    PsTextBox_SetCueBannerText( hCtlReplace, L(138,"Replace") & "..." )
     PsTextBox_SetCueBannerColor( hCtlReplace, theme.toptabs.text.forecolor )
     PsTextBox_SetFocusCallback( hCtlReplace, @frmReplace_TextBoxFocus )
     PsTextBox_SetText( hCtlReplace, gFind.txtReplace )            ' carried-over replace term

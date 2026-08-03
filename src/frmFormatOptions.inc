@@ -131,38 +131,38 @@ private sub frmFormatOptions_BuildRowTable()
     gFmtRowCount = 0
     redim gFmtRows(0 to 0)
 
-    dim as DWSTRING wszCase = L(641,"Leave alone") & chr(9) & L(642,"lowercase") & chr(9) & _
-                              L(643,"UPPERCASE") & chr(9) & L(644,"Proper Case")
-    dim as DWSTRING wszParen = L(641,"Leave alone") & chr(9) & L(645,"Add spaces") & chr(9) & _
-                               L(646,"Remove spaces")
-    dim as DWSTRING wszBlank = L(641,"Leave alone") & chr(9) & "0" & chr(9) & "1" & chr(9) & "2"
+    dim as DWSTRING wszCase = L(473,"Leave alone") & chr(9) & L(474,"lowercase") & chr(9) & _
+                              L(475,"UPPERCASE") & chr(9) & L(476,"Proper Case")
+    dim as DWSTRING wszParen = L(473,"Leave alone") & chr(9) & L(477,"Add spaces") & chr(9) & _
+                               L(478,"Remove spaces")
+    dim as DWSTRING wszBlank = L(473,"Leave alone") & chr(9) & "0" & chr(9) & "1" & chr(9) & "2"
 
     ' -- Indentation ---------------------------------------------------------------------
-    frmFormatOptions_AddRow( FMTPAGE_INDENT, FMTROW_TOGGLE, 647, @gFmtWork.Reindent )
-    frmFormatOptions_AddRow( FMTPAGE_INDENT, FMTROW_TOGGLE, 648, @gFmtWork.IndentCase )
-    frmFormatOptions_AddRow( FMTPAGE_INDENT, FMTROW_NUMERIC, 649, @gFmtWork.ContinuationIndent, 0, 4 )
+    frmFormatOptions_AddRow( FMTPAGE_INDENT, FMTROW_TOGGLE, 479, @gFmtWork.Reindent )
+    frmFormatOptions_AddRow( FMTPAGE_INDENT, FMTROW_TOGGLE, 480, @gFmtWork.IndentCase )
+    frmFormatOptions_AddRow( FMTPAGE_INDENT, FMTROW_NUMERIC, 481, @gFmtWork.ContinuationIndent, 0, 4 )
 
     ' -- Casing ---------------------------------------------------------------------------
-    frmFormatOptions_AddRow( FMTPAGE_CASING, FMTROW_COMBO, 650, @gFmtWork.CaseKeywords, 0, 0, wszCase )
-    frmFormatOptions_AddRow( FMTPAGE_CASING, FMTROW_COMBO, 651, @gFmtWork.CaseTypes, 0, 0, wszCase )
-    frmFormatOptions_AddRow( FMTPAGE_CASING, FMTROW_COMBO, 652, @gFmtWork.CaseDirectives, 0, 0, wszCase )
+    frmFormatOptions_AddRow( FMTPAGE_CASING, FMTROW_COMBO, 482, @gFmtWork.CaseKeywords, 0, 0, wszCase )
+    frmFormatOptions_AddRow( FMTPAGE_CASING, FMTROW_COMBO, 483, @gFmtWork.CaseTypes, 0, 0, wszCase )
+    frmFormatOptions_AddRow( FMTPAGE_CASING, FMTROW_COMBO, 484, @gFmtWork.CaseDirectives, 0, 0, wszCase )
 
     ' -- Spacing ---------------------------------------------------------------------------
-    frmFormatOptions_AddRow( FMTPAGE_SPACING, FMTROW_TOGGLE, 653, @gFmtWork.SpaceAroundOperators )
-    frmFormatOptions_AddRow( FMTPAGE_SPACING, FMTROW_TOGGLE, 654, @gFmtWork.SpaceAfterComma )
-    frmFormatOptions_AddRow( FMTPAGE_SPACING, FMTROW_COMBO, 655, @gFmtWork.ParenSpacing, 0, 0, wszParen )
-    frmFormatOptions_AddRow( FMTPAGE_SPACING, FMTROW_NUMERIC, 656, @gFmtWork.SpacesBeforeComment, 0, 8 )
+    frmFormatOptions_AddRow( FMTPAGE_SPACING, FMTROW_TOGGLE, 485, @gFmtWork.SpaceAroundOperators )
+    frmFormatOptions_AddRow( FMTPAGE_SPACING, FMTROW_TOGGLE, 486, @gFmtWork.SpaceAfterComma )
+    frmFormatOptions_AddRow( FMTPAGE_SPACING, FMTROW_COMBO, 487, @gFmtWork.ParenSpacing, 0, 0, wszParen )
+    frmFormatOptions_AddRow( FMTPAGE_SPACING, FMTROW_NUMERIC, 488, @gFmtWork.SpacesBeforeComment, 0, 8 )
 
     ' -- Blank lines -----------------------------------------------------------------------
-    frmFormatOptions_AddRow( FMTPAGE_BLANKLINES, FMTROW_TOGGLE, 657, @gFmtWork.TrimTrailing )
-    frmFormatOptions_AddRow( FMTPAGE_BLANKLINES, FMTROW_NUMERIC, 658, @gFmtWork.MaxBlankLines, 0, 10 )
+    frmFormatOptions_AddRow( FMTPAGE_BLANKLINES, FMTROW_TOGGLE, 489, @gFmtWork.TrimTrailing )
+    frmFormatOptions_AddRow( FMTPAGE_BLANKLINES, FMTROW_NUMERIC, 490, @gFmtWork.MaxBlankLines, 0, 10 )
     ' The one row whose control index and stored value differ: -1 is the leave-alone
     ' sentinel, so index 0 stores -1, index 1 stores 0, and so on.
-    frmFormatOptions_AddRow( FMTPAGE_BLANKLINES, FMTROW_COMBO, 659, @gFmtWork.BlankLinesAroundProc, 0, 0, wszBlank, 1 )
+    frmFormatOptions_AddRow( FMTPAGE_BLANKLINES, FMTROW_COMBO, 491, @gFmtWork.BlankLinesAroundProc, 0, 0, wszBlank, 1 )
 
     ' -- Triggers ---------------------------------------------------------------------------
-    frmFormatOptions_AddRow( FMTPAGE_TRIGGERS, FMTROW_TOGGLE, 660, @gFmtWork.FormatOnEnter )
-    frmFormatOptions_AddRow( FMTPAGE_TRIGGERS, FMTROW_TOGGLE, 661, @gFmtWork.FormatOnPaste )
+    frmFormatOptions_AddRow( FMTPAGE_TRIGGERS, FMTROW_TOGGLE, 492, @gFmtWork.FormatOnEnter )
+    frmFormatOptions_AddRow( FMTPAGE_TRIGGERS, FMTROW_TOGGLE, 493, @gFmtWork.FormatOnPaste )
 end sub
 
 
@@ -237,9 +237,9 @@ private sub frmFormatOptions_RefreshPreview()
     if ghFmtPreview = 0 then exit sub
 
     if gFmtPage = FMTPAGE_TRIGGERS then
-        PsTextBox_SetText( ghFmtPreview, L(662,"These settings decide WHEN formatting runs, not what it does. The rules on the other pages are what get applied.") & _
+        PsTextBox_SetText( ghFmtPreview, L(494,"These settings decide WHEN formatting runs, not what it does. The rules on the other pages are what get applied.") & _
                            chr(13) & chr(10) & chr(13) & chr(10) & _
-                           L(663,"Formatting while you type only ever touches the line you just finished, never a line below the caret, and never removes a line. Both actions are a separate undo step, so Ctrl+Z rejects the formatting and keeps what you typed or pasted.") )
+                           L(495,"Formatting while you type only ever touches the line you just finished, never a line below the caret, and never removes a line. Both actions are a separate undo step, so Ctrl+Z rejects the formatting and keeps what you typed or pasted.") )
         exit sub
     end if
 
@@ -554,7 +554,7 @@ private sub frmFormatOptions_OnPaint( byval hwnd as HWND )
     ' dark navy in default_dark and a PALE tint in default_light -- a heading painted in it
     ' is legible in one theme and invisible in the other. The hairline does the separating.
     pb.SetForeColor( theme.panel.text.forecolor )
-    pb.PaintText( L(638,"Format Options"), @rcTitleText, DT_LEFT )
+    pb.PaintText( L(470,"Format Options"), @rcTitleText, DT_LEFT )
 
     dim as RECT rcRule = type( 0, nTitleH - AfxScaleY(1), rcClient.right, nTitleH )
     pb.SetBackColor( theme.ui.divider )
@@ -585,7 +585,7 @@ private sub frmFormatOptions_OnPaint( byval hwnd as HWND )
         dim as RECT rcCap = type( rcPrev.left, rcPrev.top - AfxScaleY(FRMFORMATOPTIONS_NAVROW_H), _
                                   rcPrev.right, rcPrev.top )
         pb.SetFont( ghFont(GUIFONTBOLD_11) )
-        pb.PaintText( L(664,"Preview"), @rcCap, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
+        pb.PaintText( L(496,"Preview"), @rcCap, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
     end if
 
     pb.EndDoubleBuffer()
@@ -710,7 +710,7 @@ function frmFormatOptions_Show( byval hWndParent as HWND ) as LRESULT
 
     dim pWindow as CWindow ptr = new CWindow
 
-    HWND_FRMFORMATOPTIONS = pWindow->Create( hWndParent, L(638,"Format Options"), _
+    HWND_FRMFORMATOPTIONS = pWindow->Create( hWndParent, L(470,"Format Options"), _
         @frmFormatOptions_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
@@ -742,11 +742,11 @@ function frmFormatOptions_Show( byval hWndParent as HWND ) as LRESULT
     ' the decision a new user has to make first -- whether this runs by hand or while they
     ' type -- and the rule pages follow. The page ids are unchanged; only the display order
     ' moved, and nothing reads the ids positionally.
-    PsListTree_AddString( HWND_FRMFORMATOPTIONS_NAV, L(669,"When To Format"), FMTPAGE_TRIGGERS )
-    PsListTree_AddString( HWND_FRMFORMATOPTIONS_NAV, L(665,"Indentation"), FMTPAGE_INDENT )
-    PsListTree_AddString( HWND_FRMFORMATOPTIONS_NAV, L(666,"Casing"), FMTPAGE_CASING )
-    PsListTree_AddString( HWND_FRMFORMATOPTIONS_NAV, L(667,"Spacing"), FMTPAGE_SPACING )
-    PsListTree_AddString( HWND_FRMFORMATOPTIONS_NAV, L(668,"Blank Lines"), FMTPAGE_BLANKLINES )
+    PsListTree_AddString( HWND_FRMFORMATOPTIONS_NAV, L(501,"When To Format"), FMTPAGE_TRIGGERS )
+    PsListTree_AddString( HWND_FRMFORMATOPTIONS_NAV, L(497,"Indentation"), FMTPAGE_INDENT )
+    PsListTree_AddString( HWND_FRMFORMATOPTIONS_NAV, L(498,"Casing"), FMTPAGE_CASING )
+    PsListTree_AddString( HWND_FRMFORMATOPTIONS_NAV, L(499,"Spacing"), FMTPAGE_SPACING )
+    PsListTree_AddString( HWND_FRMFORMATOPTIONS_NAV, L(500,"Blank Lines"), FMTPAGE_BLANKLINES )
 
     ' -- rule rows ---------------------------------------------------------------------------
     for i as long = 0 to gFmtRowCount - 1
@@ -797,7 +797,7 @@ function frmFormatOptions_Show( byval hWndParent as HWND ) as LRESULT
 
     ' -- buttons --------------------------------------------------------------------------------
     ghFmtReset = PsButton_Create( HWND_FRMFORMATOPTIONS, IDC_FRMFORMATOPTIONS_CMDRESET )
-    PsButton_SetText( ghFmtReset, L(670,"Reset to Defaults") )
+    PsButton_SetText( ghFmtReset, L(502,"Reset to Defaults") )
     PsButton_SetFont( ghFmtReset, ghFont(GUIFONT_11) )
     PsButton_SetClickCallback( ghFmtReset, @frmFormatOptions_ButtonClick )
 
@@ -946,14 +946,14 @@ sub frmFormatOptions_RunSelfTest( byval bLayoutHalf as boolean )
             dim as string sName = "lang id " & str(ids(i)) & " is not blank"
             CHECK( len(LL(ids(i))) > 0, sName )
         next
-        CHECK( len(LL(670)) > 0, "lang id 670 is not blank" )
+        CHECK( len(LL(502)) > 0, "lang id 502 is not blank" )
 
         ' AND WHAT THEY RESOLVED TO, printed rather than asserted. NOT decoration: the
         ' is-not-blank check passes under EVERY language file even when that language has the slot
         ' empty, because LoadLocalizationFile fills a blank key with the English text. So
         ' the assertions above cannot tell a translation from the English fallback, and
         ' running under french.lang and seeing them green proves only that the ids exist.
-        dim as string sShow = "  resolved: 665=" & LL(665) & " | 647=" & LL(647) & " | 644=" & LL(644)
+        dim as string sShow = "  resolved: 665=" & LL(497) & " | 647=" & LL(479) & " | 644=" & LL(476)
         print sShow
 
         ' ---- the row table ----------------------------------------------------------------

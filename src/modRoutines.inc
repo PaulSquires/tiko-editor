@@ -748,20 +748,20 @@ function AfxIFileOpenDialogW( _
 
     select case idButton
         case IDM_PROJECTOPEN
-            rgFileTypes(1).pszName = @L(179,"Project files")
+            rgFileTypes(1).pszName = @L(177,"Project files")
             rgFileTypes(1).pszSpec = @wstr("*" & APPEXTENSION)
-            rgFileTypes(2).pszName = @L(77,"All files")
+            rgFileTypes(2).pszName = @L(76,"All files")
             rgFileTypes(2).pszSpec = @wstr("*.*")
             pofd->lpVtbl->SetFileTypes(pofd, 2, @rgFileTypes(1))
             ' Set the title of the dialog
-            hr = pofd->lpVtbl->SetTitle(pofd, L(179,"Project files"))
+            hr = pofd->lpVtbl->SetTitle(pofd, L(177,"Project files"))
         
         case IDM_INSERTFILE
-            rgFileTypes(1).pszName = @L(103,"Source files")
-            rgFileTypes(2).pszName = @L(75,"Code files")
-            rgFileTypes(3).pszName = @L(76,"Header files")
-            rgFileTypes(4).pszName = @L(172,"Resource files")
-            rgFileTypes(5).pszName = @L(77,"All files")
+            rgFileTypes(1).pszName = @L(102,"Source files")
+            rgFileTypes(2).pszName = @L(74,"Code files")
+            rgFileTypes(3).pszName = @L(75,"Header files")
+            rgFileTypes(4).pszName = @L(170,"Resource files")
+            rgFileTypes(5).pszName = @L(76,"All files")
             rgFileTypes(1).pszSpec = @wstr("*.bas;*.bi;*.inc;*.rc")
             rgFileTypes(2).pszSpec = @wstr("*.bas;*.inc")
             rgFileTypes(3).pszSpec = @wstr("*.bi")
@@ -769,16 +769,16 @@ function AfxIFileOpenDialogW( _
             rgFileTypes(5).pszSpec = @wstr("*.*")
             pofd->lpVtbl->SetFileTypes(pofd, 5, @rgFileTypes(1))
             ' Set the title of the dialog
-            hr = pofd->lpVtbl->SetTitle(pofd, L(78,"Insert File"))
+            hr = pofd->lpVtbl->SetTitle(pofd, L(77,"Insert File"))
 
         case IDC_FRMOPTIONSLOCAL_CMDLOCALIZATION  '1012
-            rgFileTypes(1).pszName = @L(99,"Localization files")
+            rgFileTypes(1).pszName = @L(98,"Localization files")
             rgFileTypes(1).pszSpec = @wstr("*.lang")
-            rgFileTypes(2).pszName = @L(77,"All files")
+            rgFileTypes(2).pszName = @L(76,"All files")
             rgFileTypes(2).pszSpec = @wstr("*.*")
             pofd->lpVtbl->SetFileTypes(pofd, 2, @rgFileTypes(1))
             ' Set the title of the dialog
-            hr = pofd->lpVtbl->SetTitle(pofd, L(100,"Open Localization File"))
+            hr = pofd->lpVtbl->SetTitle(pofd, L(99,"Open Localization File"))
     
             dim as DWSTRING wszDefaultFolder = AfxGetExePathName & wstr("settings\languages\") 
             dim pFolder as IShellItem ptr
@@ -791,7 +791,7 @@ function AfxIFileOpenDialogW( _
             end if
 
         case IDC_FRMUSERTOOLS_CMDBROWSEEXE
-            rgFileTypes(1).pszName = @L(77,"All files")
+            rgFileTypes(1).pszName = @L(76,"All files")
             rgFileTypes(1).pszSpec = @wstr("*.*")
             pofd->lpVtbl->SetFileTypes(pofd, 1, @rgFileTypes(1))
             ' Set the title of the dialog
@@ -808,13 +808,13 @@ function AfxIFileOpenDialogW( _
             end if
 
         case IDC_FRMOPTIONSCOMPILER_CMDFBHELPFILE 
-            rgFileTypes(1).pszName = @L(101,"Help file")
+            rgFileTypes(1).pszName = @L(100,"Help file")
             rgFileTypes(1).pszSpec = @wstr("*.chm")
-            rgFileTypes(2).pszName = @L(77,"All files")
+            rgFileTypes(2).pszName = @L(76,"All files")
             rgFileTypes(2).pszSpec = @wstr("*.*")
             pofd->lpVtbl->SetFileTypes(pofd, 2, @rgFileTypes(1))
             ' Set the title of the dialog
-            hr = pofd->lpVtbl->SetTitle(pofd, L(102,"Find Help File"))
+            hr = pofd->lpVtbl->SetTitle(pofd, L(101,"Find Help File"))
 
             dim as DWSTRING wszDefaultFolder = AfxGetExePathName & wstr("settings\help\") 
             dim pFolder as IShellItem ptr
@@ -871,11 +871,11 @@ function AfxIFileOpenDialogMultiple( _
 
     select case idButton
         case IDM_FILEOPEN
-            rgFileTypes(1).pszName = @L(103,"Source files")
-            rgFileTypes(2).pszName = @L(75,"Code files")
-            rgFileTypes(3).pszName = @L(76,"Header files")
-            rgFileTypes(4).pszName = @L(172,"Resource files")
-            rgFileTypes(5).pszName = @L(77,"All files")
+            rgFileTypes(1).pszName = @L(102,"Source files")
+            rgFileTypes(2).pszName = @L(74,"Code files")
+            rgFileTypes(3).pszName = @L(75,"Header files")
+            rgFileTypes(4).pszName = @L(170,"Resource files")
+            rgFileTypes(5).pszName = @L(76,"All files")
             rgFileTypes(1).pszSpec = @wstr("*.bas;*.bi;*.inc;*.rc")
             rgFileTypes(2).pszSpec = @wstr("*.bas;*.inc")
             rgFileTypes(3).pszSpec = @wstr("*.bi")
@@ -885,7 +885,7 @@ function AfxIFileOpenDialogMultiple( _
     end select
 
     ' Set the title of the dialog
-    hr = pofd->lpVtbl->SetTitle(pofd, L(199,"Open file"))
+    hr = pofd->lpVtbl->SetTitle(pofd, L(196,"Open file"))
 
     ' Set the default folder to display in the open dialog
     dim wszDefaultFolder as wstring * MAX_PATH
@@ -974,25 +974,25 @@ function AfxIFileSaveDialog( _
     ' Set the file types
     select case id
         case IDM_FILERENAME
-            rgFileTypes(1).pszName = @L(77,"All files")
+            rgFileTypes(1).pszName = @L(76,"All files")
             rgFileTypes(1).pszSpec = @wstr("*.*")
             psfd->lpVtbl->SetFileTypes(psfd, 1, @rgFileTypes(1))
             ' // Set the title of the dialog
             hr = psfd->lpVtbl->SetTitle(psfd, L(21,"Rename"))
 
         case IDC_FRMPROJECTOPTIONS_CMDSELECT, IDM_PROJECTSAVE, IDM_PROJECTSAVEAS
-            rgFileTypes(1).pszName = @L(179,"Project files")
+            rgFileTypes(1).pszName = @L(177,"Project files")
             rgFileTypes(1).pszSpec = @wstr("*" & APPEXTENSION)
-            rgFileTypes(2).pszName = @L(77,"All files")
+            rgFileTypes(2).pszName = @L(76,"All files")
             rgFileTypes(2).pszSpec = @wstr("*.*")
             psfd->lpVtbl->SetFileTypes(psfd, 2, @rgFileTypes(1))
             ' // Set the title of the dialog
-            hr = psfd->lpVtbl->SetTitle(psfd, L(150,"Save Project As..."))
+            hr = psfd->lpVtbl->SetTitle(psfd, L(149,"Save Project As..."))
 
         case IDC_FRMOPTIONSLOCAL_CMDNEW
-            rgFileTypes(1).pszName = @L(99,"Localization files")
+            rgFileTypes(1).pszName = @L(98,"Localization files")
             rgFileTypes(1).pszSpec = @wstr("*.lang")
-            rgFileTypes(2).pszName = @L(77,"All files")
+            rgFileTypes(2).pszName = @L(76,"All files")
             rgFileTypes(2).pszSpec = @wstr("*.*")
             psfd->lpVtbl->SetFileTypes(psfd, 2, @rgFileTypes(1))
             psfd->lpVtbl->SetTitle(psfd, L(8,"Save As..."))
@@ -1008,9 +1008,9 @@ function AfxIFileSaveDialog( _
             end if
 
         case IDC_THEMES_SAVEAS
-            rgFileTypes(1).pszName = @L(329,"Themes")
+            rgFileTypes(1).pszName = @L(318,"Themes")
             rgFileTypes(1).pszSpec = @wstr("*.theme")
-            rgFileTypes(2).pszName = @L(77,"All files")
+            rgFileTypes(2).pszName = @L(76,"All files")
             rgFileTypes(2).pszSpec = @wstr("*.*")
             psfd->lpVtbl->SetFileTypes(psfd, 2, @rgFileTypes(1))
             psfd->lpVtbl->SetTitle(psfd, L(8,"Save As..."))
@@ -1026,11 +1026,11 @@ function AfxIFileSaveDialog( _
             end if
 
         case else
-            rgFileTypes(1).pszName = @L(103,"Source files")
-            rgFileTypes(2).pszName = @L(75,"Code files")
-            rgFileTypes(3).pszName = @L(76,"Header files")
-            rgFileTypes(4).pszName = @L(172,"Resource files")
-            rgFileTypes(5).pszName = @L(77,"All files")
+            rgFileTypes(1).pszName = @L(102,"Source files")
+            rgFileTypes(2).pszName = @L(74,"Code files")
+            rgFileTypes(3).pszName = @L(75,"Header files")
+            rgFileTypes(4).pszName = @L(170,"Resource files")
+            rgFileTypes(5).pszName = @L(76,"All files")
             rgFileTypes(1).pszSpec = @wstr("*.bas;*.bi;*.inc;*.rc")
             rgFileTypes(2).pszSpec = @wstr("*.bas;*.inc")
             rgFileTypes(3).pszSpec = @wstr("*.bi")

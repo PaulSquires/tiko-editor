@@ -211,7 +211,7 @@ private sub frmMenuBar_RebuildMRUFiles( byval hPopup as HWND )
         PsPopupMenu_AddItem( hPopup, IDM_MRUFILES, L(11,"(Empty)") )
     else
         PsPopupMenu_AddSeparator( hPopup )
-        PsPopupMenu_AddItem( hPopup, IDM_MRUCLEAR, L(188,"Clear this list") )
+        PsPopupMenu_AddItem( hPopup, IDM_MRUCLEAR, L(185,"Clear this list") )
     end if
 end sub
 
@@ -231,7 +231,7 @@ private sub frmMenuBar_RebuildMRUProjects( byval hPopup as HWND )
         PsPopupMenu_AddItem( hPopup, IDM_MRUPROJECTFILES, L(11,"(Empty)") )
     else
         PsPopupMenu_AddSeparator( hPopup )
-        PsPopupMenu_AddItem( hPopup, IDM_MRUPROJECTCLEAR, L(188,"Clear this list") )
+        PsPopupMenu_AddItem( hPopup, IDM_MRUPROJECTCLEAR, L(185,"Clear this list") )
     end if
 end sub
 

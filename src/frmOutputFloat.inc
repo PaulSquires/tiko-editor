@@ -209,7 +209,7 @@ private function frmOutputFloat_CreateWindow() as boolean
     if IsWindow( HWND_FRMMAIN ) = 0 then return false
 
     dim pWindow as CWindow ptr = new CWindow
-    dim as DWSTRING wszText = L(406, "Output")
+    dim as DWSTRING wszText = L(395, "Output")
 
     ' hParent = HWND_FRMMAIN together with WS_POPUP makes frmMain the OWNER (not the
     ' parent): that is what buys "always above tiko", "no taskbar button" and "goes away
@@ -442,9 +442,9 @@ sub frmOutputFloat_RunSelfTest()
     ' L() DISCARDS its default (it is #Define L(e,s) LL(e)), so an id missing from
     ' english.lang renders as an EMPTY caption -- a blank menu row and a blank tooltip, with
     ' nothing in the build or the warnings to say so.
-    frmOutput_Check( "lang: 404 (Undock Output Window) is not blank", len(L(404,"")) > 0 )
-    frmOutput_Check( "lang: 405 (Dock Output Window) is not blank",   len(L(405,"")) > 0 )
-    frmOutput_Check( "lang: 406 (the float window caption) is not blank", len(L(406,"")) > 0 )
+    frmOutput_Check( "lang: 404 (Undock Output Window) is not blank", len(L(393,"")) > 0 )
+    frmOutput_Check( "lang: 405 (Dock Output Window) is not blank",   len(L(394,"")) > 0 )
+    frmOutput_Check( "lang: 406 (the float window caption) is not blank", len(L(395,"")) > 0 )
 
     ' --- initial state -------------------------------------------------------------------
     frmOutput_Check( "state: starts docked", frmOutputFloat_IsFloating() = false )

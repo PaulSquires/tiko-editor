@@ -70,16 +70,16 @@ private function frmFind_TipText( byval hTip as HWND, _
     Theme_ApplyTooltip( hTip )
     select case idx
         case FINDTIP_TOGGLE:     return frmPanelMenu_FormatTooltip( IDM_TOGGLEREPLACE )
-        case FINDTIP_MATCHCASE:  return L(138,"Match Case")
-        case FINDTIP_WHOLEWORD:  return L(137,"Match Whole Words")
+        case FINDTIP_MATCHCASE:  return L(137,"Match Case")
+        case FINDTIP_WHOLEWORD:  return L(136,"Match Whole Words")
         case FINDTIP_UPARROW:    return frmPanelMenu_FormatTooltip( IDM_FINDPREVACCEL )
         case FINDTIP_DOWNARROW:  return frmPanelMenu_FormatTooltip( IDM_FINDNEXTACCEL )
-        case FINDTIP_SELECTION:  return L(131,"Selection")
-        case FINDTIP_CLOSE:      return L(136,"Close") & " (Esc)"
+        case FINDTIP_SELECTION:  return L(130,"Selection")
+        case FINDTIP_CLOSE:      return L(135,"Close") & " (Esc)"
         case FINDTIP_FOLDALL
             ' The tip names what the click WILL do, which is the opposite of the state.
-            if frmFindInProject_AllCollapsed() then return L(403,"Expand All Search Results")
-            return L(402,"Collapse All Search Results")
+            if frmFindInProject_AllCollapsed() then return L(392,"Expand All Search Results")
+            return L(391,"Collapse All Search Results")
     end select
     return ""
 end function
@@ -600,7 +600,7 @@ function frmFind_Show( byval hwndParent as HWND ) as LRESULT
     PsTextBox_SetForeColor( hCtlFind, theme.toptabs.texthot.forecolor )
     PsTextBox_SetBackColor( hCtlFind, theme.toptabs.texthot.backcolor )
     PsTextBox_SetBorderWidth( hCtlFind, 0 )                       ' flat, as before
-    PsTextBox_SetCueBannerText( hCtlFind, L(135,"Find") & "..." )
+    PsTextBox_SetCueBannerText( hCtlFind, L(134,"Find") & "..." )
     PsTextBox_SetCueBannerColor( hCtlFind, theme.toptabs.text.forecolor )
     PsTextBox_SetChangeCallback( hCtlFind, @frmFind_TextBoxChange )
     PsTextBox_SetFocusCallback( hCtlFind, @frmFind_TextBoxFocus )

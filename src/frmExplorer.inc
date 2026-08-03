@@ -483,7 +483,7 @@ sub frmExplorer_NewFolder( byval hCtl as HWND, byval row as integer )
     if catIndex < 0 then exit sub
     if ProjectFolders_CatAllowsFolders( catIndex ) = false then exit sub
 
-    dim as DWSTRING wszBase = L(630, "New Folder")
+    dim as DWSTRING wszBase = L(462, "New Folder")
     dim as DWSTRING wszName = wszBase
     dim as long nTry = 2
     do while ProjectFolders_Exists( catIndex, ProjectFolders_Combine( wszParent, wszName ) )
@@ -1013,9 +1013,9 @@ function frmExplorer_TooltipCallback( byval hCtl as HWND, byval row as integer, 
     ' that from being load-bearing if a file row ever grows an icon.
     if (row = gExpTipRow) andalso (gExpTipIcon <> EXPICON_NONE) then
         select case gExpTipIcon
-            case EXPICON_ADD:    return L(630, "New Folder")
-            case EXPICON_RENAME: return L(632, "Rename Folder")
-            case else:           return L(631, "Delete Folder")
+            case EXPICON_ADD:    return L(462, "New Folder")
+            case EXPICON_RENAME: return L(464, "Rename Folder")
+            case else:           return L(463, "Delete Folder")
         end select
     end if
 
@@ -1278,7 +1278,7 @@ function LoadExplorerFiles() as long
     ' above every header, and present only until the user names it -- IsProjectNamed is the
     ' whole condition, so it disappears the moment Save As succeeds.
     if gApp.IsProjectNamed() = false then
-        PsListTree_AddString( hCtrl, L(550,"Save as Project..."), 0, EXPKIND_PROMOTE )
+        PsListTree_AddString( hCtrl, L(398,"Save as Project..."), 0, EXPKIND_PROMOTE )
     end if
 
     ' Before any row is emitted: a file whose folder cannot be resolved must be pulled back

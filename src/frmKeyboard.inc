@@ -152,7 +152,7 @@ sub frmKeyboard_RunSelfTest()
     ' assertion passed.
     scope
         dim as long nBlank = 0
-        for id as long = 336 to 348
+        for id as long = 325 to 337
             if len(LL(id)) = 0 then
                 nBlank += 1
                 sLine = "  FAIL: localized string " & str(id) & " is empty -- it will render blank"
@@ -166,9 +166,9 @@ sub frmKeyboard_RunSelfTest()
         ' dialog goes partly blank and nothing else would notice.
         FKASSERT( len(LL(0))   > 0, "localized string 0 (OK) is empty" )
         FKASSERT( len(LL(1))   > 0, "localized string 1 (Cancel) is empty" )
-        FKASSERT( len(LL(183)) > 0, "localized string 220 (Keyboard Shortcuts) is empty" )
-        FKASSERT( len(LL(205)) > 0, "localized string 255 (Description) is empty" )
-        FKASSERT( len(LL(282)) > 0, "localized string 433 (Modify) is empty" )
+        FKASSERT( len(LL(180)) > 0, "localized string 220 (Keyboard Shortcuts) is empty" )
+        FKASSERT( len(LL(202)) > 0, "localized string 255 (Description) is empty" )
+        FKASSERT( len(LL(274)) > 0, "localized string 433 (Modify) is empty" )
     end scope
 
     ' ---- TEST C: the on-disk format round-trips, INCLUDING the disabled flag. ----
@@ -251,7 +251,7 @@ function frmKeyboard_CheckForKeyConflict ( _
     for i as long = lbound(gKeysWork) to ubound(gKeysWork)
         if i = nSkipIndex then continue for
         if wszKeys = frmKeyboard_EffectiveKeys(i) then
-            return L(345,"Conflict") & ": " & gKeysWork(i).wszDescription & " (" & wszKeys & ")"
+            return L(334,"Conflict") & ": " & gKeysWork(i).wszDescription & " (" & wszKeys & ")"
         end if
     next
 
@@ -294,9 +294,9 @@ function frmKeyboard_DefaultKeysDisplay( byval idx as long ) as DWSTRING
     dim as DWSTRING wsz = gKeysWork(idx).wszDefaultKeys
     if gKeysWork(idx).bDefaultDisabled then
         if len(wsz) = 0 then
-            wsz = L(339,"(disabled)")
+            wsz = L(328,"(disabled)")
         else
-            wsz = wsz & " " & L(339,"(disabled)")
+            wsz = wsz & " " & L(328,"(disabled)")
         end if
     end if
     return wsz
@@ -1021,7 +1021,7 @@ function frmKeyboard_Show( byval hWndParent as HWND ) as LRESULT
 
     dim pWindow as CWindow ptr = new CWindow
 
-    HWND_FRMKEYBOARD = pWindow->Create( hWndParent, L(183,"Keyboard Shortcuts"), _
+    HWND_FRMKEYBOARD = pWindow->Create( hWndParent, L(180,"Keyboard Shortcuts"), _
         @frmKeyboard_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
@@ -1044,16 +1044,16 @@ function frmKeyboard_Show( byval hWndParent as HWND ) as LRESULT
     PsTextBox_SetFont( HWND_FRMKEYBOARD_FILTER, ghFont(GUIFONT_11) )
     PsTextBox_SetBorderWidth( HWND_FRMKEYBOARD_FILTER, 0 )
     PsTextBox_SetCornerRadius( HWND_FRMKEYBOARD_FILTER, 0 )
-    PsTextBox_SetCueBannerText( HWND_FRMKEYBOARD_FILTER, L(340,"Filter shortcuts...") )
+    PsTextBox_SetCueBannerText( HWND_FRMKEYBOARD_FILTER, L(329,"Filter shortcuts...") )
     PsTextBox_SetChangeCallback( HWND_FRMKEYBOARD_FILTER, @frmKeyboard_FilterChanged )
 
     ' ---- the list ---------------------------------------------------------------------
     HWND_FRMKEYBOARD_LIST = PsListTree_Create( HWND_FRMKEYBOARD, IDC_FRMKEYBOARD_LIST1 )
 
-    PsListTree_AddColumn( HWND_FRMKEYBOARD_LIST, L(336,"Category"),     pWindow->ScaleX(FRMKEYBOARD_COL_CATEGORY) )
-    PsListTree_AddColumn( HWND_FRMKEYBOARD_LIST, L(205,"Description"),  pWindow->ScaleX(FRMKEYBOARD_COL_DESCRIPTION) )
-    PsListTree_AddColumn( HWND_FRMKEYBOARD_LIST, L(337,"Default Keys"), pWindow->ScaleX(FRMKEYBOARD_COL_DEFAULTKEYS) )
-    PsListTree_AddColumn( HWND_FRMKEYBOARD_LIST, L(338,"User Keys"),    pWindow->ScaleX(FRMKEYBOARD_COL_USERKEYS) )
+    PsListTree_AddColumn( HWND_FRMKEYBOARD_LIST, L(325,"Category"),     pWindow->ScaleX(FRMKEYBOARD_COL_CATEGORY) )
+    PsListTree_AddColumn( HWND_FRMKEYBOARD_LIST, L(202,"Description"),  pWindow->ScaleX(FRMKEYBOARD_COL_DESCRIPTION) )
+    PsListTree_AddColumn( HWND_FRMKEYBOARD_LIST, L(326,"Default Keys"), pWindow->ScaleX(FRMKEYBOARD_COL_DEFAULTKEYS) )
+    PsListTree_AddColumn( HWND_FRMKEYBOARD_LIST, L(327,"User Keys"),    pWindow->ScaleX(FRMKEYBOARD_COL_USERKEYS) )
     PsListTree_SetFillColumn( HWND_FRMKEYBOARD_LIST, 1 )      ' Description absorbs the slack
     PsListTree_ShowHeader( HWND_FRMKEYBOARD_LIST, true )
 
@@ -1075,14 +1075,14 @@ function frmKeyboard_Show( byval hWndParent as HWND ) as LRESULT
 
     ' ---- the four buttons -------------------------------------------------------------
     dim as HWND hModify = PsButton_Create( HWND_FRMKEYBOARD, IDC_FRMKEYBOARD_CMDMODIFY )
-    PsButton_SetText( hModify, L(282,"Modify") )
+    PsButton_SetText( hModify, L(274,"Modify") )
     PsButton_SetFont( hModify, ghFont(GUIFONT_11) )
     PsButton_SetClickCallback( hModify, @frmKeyboard_ButtonClickCallback )
 
     ' "Reset", not "Clear": it restores the row to its shipped default rather than emptying
     ' it -- it re-enables a suppressed default as well as dropping the user keys.
     dim as HWND hReset = PsButton_Create( HWND_FRMKEYBOARD, IDC_FRMKEYBOARD_CMDCLEAR )
-    PsButton_SetText( hReset, L(341,"Reset") )
+    PsButton_SetText( hReset, L(330,"Reset") )
     PsButton_SetFont( hReset, ghFont(GUIFONT_11) )
     PsButton_SetClickCallback( hReset, @frmKeyboard_ButtonClickCallback )
 

@@ -435,7 +435,7 @@ function OnCommand_FileClose( _
             ' tabs only some -- so nothing else in this loop would ever prompt for them.
             if FindProject_AnyDirty() then
                 gTTabCtl.SetFocusTab(i)
-                r = TikoMsgBox( hwnd, L(74,"Save current changes?") & wstr(" ") & wText, APPNAME, _
+                r = TikoMsgBox( hwnd, L(73,"Save current changes?") & wstr(" ") & wText, APPNAME, _
                                 TMB_ICON_QUESTION, TMB_YESNOCANCEL )
                 if r = IDCANCEL then exit function
                 if r = IDYES then
@@ -474,7 +474,7 @@ function OnCommand_FileClose( _
                     (pDoc->UserModified = true) then
 
                     gTTabCtl.SetFocusTab(i)
-                    r = TikoMsgBox( hwnd, L(74,"Save current changes?") & wstr(" ") & wText, APPNAME, _
+                    r = TikoMsgBox( hwnd, L(73,"Save current changes?") & wstr(" ") & wText, APPNAME, _
                                     TMB_ICON_QUESTION, TMB_YESNOCANCEL )
                     if r = IDCANCEL then exit function
                     if r = IDYES then

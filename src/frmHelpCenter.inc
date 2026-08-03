@@ -129,9 +129,9 @@ end function
 ' "files not found" box, so the two cannot name different things.
 function HelpCenter_SiteTitle( byval nSite as long ) as DWSTRING
     if nSite = HELPCENTER_SITE_TIKO then
-        function = L(687,"Tiko Editor Help")
+        function = L(519,"Tiko Editor Help")
     else
-        function = L(87,"Help Center")
+        function = L(86,"Help Center")
     end if
 end function
 
@@ -513,9 +513,9 @@ function frmHelpCenter_Show( byval wszSearch as DWSTRING, byval nSite as long ) 
     ' with the browser's own error page. Checking first costs one stat per F1.
     dim as DWSTRING wszIndex = HelpCenter_RootFolder( nSite ) & "index.html"
     if AfxFileExists( wszIndex ) = 0 then
-        dim as DWSTRING wszMissing = L(91,"Help Center files not found.")
+        dim as DWSTRING wszMissing = L(90,"Help Center files not found.")
         if nSite = HELPCENTER_SITE_TIKO then
-            wszMissing = L(688,"Tiko Editor Help files not found.")
+            wszMissing = L(520,"Tiko Editor Help files not found.")
         end if
         frmHelpCenter_ThemedMsgBox( wszMissing & !"\r\n\r\n" & wszIndex, _
                                     HelpCenter_SiteTitle( nSite ) )
@@ -631,8 +631,8 @@ function frmHelpCenter_Show( byval wszSearch as DWSTRING, byval nSite as long ) 
         delete gHelpCenter.pWeb
         gHelpCenter.pWeb = 0
         DestroyWindow( HWND_FRMHELPCENTER )
-        frmHelpCenter_ThemedMsgBox( L(90,"The Help Center needs the Microsoft Edge WebView2 Runtime, which is not installed on this computer."), _
-                                    L(89,"WebView2 Runtime Required") )
+        frmHelpCenter_ThemedMsgBox( L(89,"The Help Center needs the Microsoft Edge WebView2 Runtime, which is not installed on this computer."), _
+                                    L(88,"WebView2 Runtime Required") )
         exit function
     end if
 
@@ -816,7 +816,7 @@ sub frmHelpCenter_RunSelfTest()
         (len( HelpCenter_SiteTitle( HELPCENTER_SITE_DOCS ) ) > 0) andalso _
         (len( HelpCenter_SiteTitle( HELPCENTER_SITE_TIKO ) ) > 0) )
     HelpCenter_Check( "site: the not-found message is localized too", _
-        (len( L(91,"") ) > 0) andalso (len( L(688,"") ) > 0) )
+        (len( L(90,"") ) > 0) andalso (len( L(520,"") ) > 0) )
     ' These drive HelpCenter_PathToFileUrl -- the function IndexUrl actually calls -- on
     ' paths this machine does not have. tiko normally installs somewhere with no spaces,
     ' so an assertion against the live path alone would pass under an encoder that does
@@ -838,12 +838,12 @@ sub frmHelpCenter_RunSelfTest()
     ' len() > 0 CANNOT distinguish a real translation from the English fallback -- a key
     ' left blank in a translation is filled with English at load. The resolved values are
     ' printed for that reason; read them, do not just count the passes.
-    HelpCenter_Check( "lang: 90 (Help Center) is present",  len( LL(87) ) > 0 )
-    HelpCenter_Check( "lang: 92 (runtime title) is present", len( LL(89) ) > 0 )
-    HelpCenter_Check( "lang: 93 (runtime body) is present",  len( LL(90) ) > 0 )
-    HelpCenter_Check( "lang: 94 (files missing) is present", len( LL(91) ) > 0 )
-    dim as string sLang = "  resolved: 90=" & LL(87) & " | 92=" & LL(89) & _
-                          " | 94=" & LL(91)
+    HelpCenter_Check( "lang: 90 (Help Center) is present",  len( LL(86) ) > 0 )
+    HelpCenter_Check( "lang: 92 (runtime title) is present", len( LL(88) ) > 0 )
+    HelpCenter_Check( "lang: 93 (runtime body) is present",  len( LL(89) ) > 0 )
+    HelpCenter_Check( "lang: 94 (files missing) is present", len( LL(90) ) > 0 )
+    dim as string sLang = "  resolved: 90=" & LL(86) & " | 92=" & LL(88) & _
+                          " | 94=" & LL(90)
     print sLang
 
     print "--- TIKO_HELPCENTER_SELFTEST: " & str(gHelpCenterTestPass) & " passed, " & _

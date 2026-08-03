@@ -49,7 +49,7 @@ function OnCommand_DebugCommon( byval id as long ) as LRESULT
             pDoc->ToggleBreakPoint( pDoc->GetCurrentLineNumber )
             
         case IDM_DEBUG_DELETEALLBREAKPOINTS
-            if TikoMsgBox( HWND_FRMMAIN, L(251,"Do you want to delete all breakpoints?"), L(218,"Confirm"), _
+            if TikoMsgBox( HWND_FRMMAIN, L(247,"Do you want to delete all breakpoints?"), L(214,"Confirm"), _
                         TMB_ICON_QUESTION, TMB_YESNOCANCEL ) <> IDYES then
                 return true
             end if            

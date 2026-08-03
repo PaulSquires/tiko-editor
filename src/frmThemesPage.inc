@@ -241,22 +241,22 @@ end function
 ' The localized heading for a category id. Display only -- nothing branches on this.
 function frmThemes_CategoryTitle( byval nCat as long ) as DWSTRING
     select case nCat
-        case THEMECAT_MAIN:      return L(308, "Main Window")
-        case THEMECAT_PANEL:     return L(309, "Side Panels")
-        case THEMECAT_TOPTABS:   return L(310, "Document Tabs")
-        case THEMECAT_MENUBAR:   return L(311, "Menu Bar")
-        case THEMECAT_POPUP:     return L(312, "Menus and Popups")
-        case THEMECAT_STATUSBAR: return L(313, "Status Bar")
-        case THEMECAT_OUTPUT:    return L(314, "Output Pane")
-        case THEMECAT_COMPILE:   return L(315, "Build Indicators")
-        case THEMECAT_SHARED:    return L(316, "Shared Chrome")
-        case THEMECAT_SYNTAX:    return L(318, "Text and Syntax")
-        case THEMECAT_CURSOR:    return L(319, "Cursor and Selection")
-        case THEMECAT_MARGINS:   return L(320, "Margins and Folding")
-        case THEMECAT_MARKERS:   return L(321, "Markers and Highlights")
-        case THEMECAT_EDCHROME:  return L(322, "Editor Chrome")
+        case THEMECAT_MAIN:      return L(298, "Main Window")
+        case THEMECAT_PANEL:     return L(299, "Side Panels")
+        case THEMECAT_TOPTABS:   return L(300, "Document Tabs")
+        case THEMECAT_MENUBAR:   return L(301, "Menu Bar")
+        case THEMECAT_POPUP:     return L(302, "Menus and Popups")
+        case THEMECAT_STATUSBAR: return L(303, "Status Bar")
+        case THEMECAT_OUTPUT:    return L(304, "Output Pane")
+        case THEMECAT_COMPILE:   return L(305, "Build Indicators")
+        case THEMECAT_SHARED:    return L(306, "Shared Chrome")
+        case THEMECAT_SYNTAX:    return L(308, "Text and Syntax")
+        case THEMECAT_CURSOR:    return L(309, "Cursor and Selection")
+        case THEMECAT_MARGINS:   return L(310, "Margins and Folding")
+        case THEMECAT_MARKERS:   return L(311, "Markers and Highlights")
+        case THEMECAT_EDCHROME:  return L(312, "Editor Chrome")
     end select
-    return L(317, "Other")
+    return L(307, "Other")
 end function
 
 
@@ -388,7 +388,7 @@ private sub frmThemes_SyncEditControls()
             ' was left over from the key pages, where the pair of buttons picks a CHANNEL;
             ' here there is no channel to pick and the row may well be named "background",
             ' which made the button read as its own opposite.
-            PsButton_SetText( ghThemeFore, L(673, "Choose Color") & "..." )
+            PsButton_SetText( ghThemeFore, L(505, "Choose Color") & "..." )
             PsButton_SetDefault( ghThemeFore, true )
             PsButton_Refresh( ghThemeFore )
         end if
@@ -462,7 +462,7 @@ private sub frmThemes_SyncEditControls()
         ' Back to the channel caption. The Palette page renames this button, and without
         ' restoring it here the rename would survive the page switch -- the control is shared,
         ' so whichever page touched it last wins.
-        if ghThemeFore then PsButton_SetText( ghThemeFore, L(300, "Foreground") & "..." )
+        if ghThemeFore then PsButton_SetText( ghThemeFore, L(290, "Foreground") & "..." )
 
         ' The DEFAULT border marks the active channel. It is appearance-only and survives all
         ' four moods, so it says "this is the one you are editing" without a second colour or a
@@ -559,20 +559,20 @@ private function frmThemes_EnsureForked() as boolean
 
     dim as DWSTRING wszFork = frmThemes_MakeForkName( gThemeCurrentShortFilename )
 
-    dim as DWSTRING wszMsg = L(297, "This is a built-in theme and cannot be modified.") & _
+    dim as DWSTRING wszMsg = L(287, "This is a built-in theme and cannot be modified.") & _
                              chr(13) & chr(13) & _
-                             L(298, "Your changes will be saved as a new theme:") & _
+                             L(288, "Your changes will be saved as a new theme:") & _
                              chr(13) & wszFork
 
-    if frmThemes_ThemedMsgBox( wszMsg, L(329, "Themes"), _
+    if frmThemes_ThemedMsgBox( wszMsg, L(318, "Themes"), _
                                 TMB_ICON_QUESTION, TMB_OKCANCEL ) <> IDOK then return false
 
     dim as DWSTRING wszPath = AfxGetExePathName & "settings\themes\" & wszFork
     dim as DWSTRING wszDesc = theme.general.description & " (custom)"
 
     if Theme_WriteFile( wszPath, wszDesc ) then
-        frmThemes_ThemedMsgBox( L(299, "The new theme file could not be written."), _
-                                 L(329, "Themes"), TMB_ICON_ERROR, TMB_OK )
+        frmThemes_ThemedMsgBox( L(289, "The new theme file could not be written."), _
+                                 L(318, "Themes"), TMB_ICON_ERROR, TMB_OK )
         return false
     end if
 
@@ -615,8 +615,8 @@ function frmThemes_SaveThemeFile() as boolean
 
     dim as DWSTRING wszPath = AfxGetExePathName & "settings\themes\" & gThemesWorkFile
     if Theme_WriteFile( wszPath, theme.general.description ) then
-        frmThemes_ThemedMsgBox( L(299,"The new theme file could not be written."), _
-                                L(329,"Themes"), TMB_ICON_ERROR, TMB_OK )
+        frmThemes_ThemedMsgBox( L(289,"The new theme file could not be written."), _
+                                L(318,"Themes"), TMB_ICON_ERROR, TMB_OK )
         return false
     end if
 
@@ -1198,7 +1198,7 @@ private sub frmThemes_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
         if Theme_RoleIsExplicit(nb) = false then
             dim as RECT rcDf = ( rcSw.left - AfxScaleX(58), p->rc.top, rcSw.left - AfxScaleX(6), p->rc.bottom )
             p->b->SetForeColor( theme.role.clr(THROLE_FOREGROUNDDIM) )
-            p->b->PaintText( L(672, "default"), @rcDf, DT_RIGHT or DT_END_ELLIPSIS )
+            p->b->PaintText( L(504, "default"), @rcDf, DT_RIGHT or DT_END_ELLIPSIS )
         end if
 
         p->b->SetBackColor( theme.ui.divider )
@@ -1334,34 +1334,34 @@ sub frmThemes_Build( byval nPage as long, byval hPage as HWND )
     PsListTree_SetScrollBarWidth( ghThemeKeys, SCROLLBAR_WIDTH_PANEL )
 
     ghThemeFore = PsButton_Create( hPage, IDC_FRMTHEMES_CMDFORE )
-    PsButton_SetText( ghThemeFore, L(300, "Foreground") & "..." )
+    PsButton_SetText( ghThemeFore, L(290, "Foreground") & "..." )
     PsButton_SetClickCallback( ghThemeFore, @frmThemes_ForeClick )
 
     ghThemeBack = PsButton_Create( hPage, IDC_FRMTHEMES_CMDBACK )
-    PsButton_SetText( ghThemeBack, L(301, "Background") & "..." )
+    PsButton_SetText( ghThemeBack, L(291, "Background") & "..." )
     PsButton_SetClickCallback( ghThemeBack, @frmThemes_BackClick )
 
     ' Undo glyph (Segoe Fluent Icons E7A7) plus the caption. The glyph font is a SEPARATE
     ' paint-time input from the text font -- see PsButton_SetGlyphFont.
     ghThemeResetF = PsButton_Create( hPage, IDC_FRMTHEMES_CMDRESETF )
     PsButton_SetGlyphLeft( ghThemeResetF, wchr(&hE7A7) )
-    PsButton_SetTooltipText( ghThemeResetF, L(323, "Reset") )
+    PsButton_SetTooltipText( ghThemeResetF, L(313, "Reset") )
     PsButton_SetClickCallback( ghThemeResetF, @frmThemes_ResetForeClick )
 
     ' USE THE PALETTE COLOUR. Segoe Fluent E790 is the colour/palette glyph; the caption is a
     ' tooltip because the row already carries a button, a swatch and a reset in 300px.
     ghThemeInhF = PsButton_Create( hPage, IDC_FRMTHEMES_CMDINHF )
     PsButton_SetGlyphLeft( ghThemeInhF, !"\uE790" )
-    PsButton_SetTooltipText( ghThemeInhF, L(674, "Use palette color") )
+    PsButton_SetTooltipText( ghThemeInhF, L(506, "Use palette color") )
     PsButton_SetClickCallback( ghThemeInhF, @frmThemes_InheritForeClick )
 
     ghThemeInhB = PsButton_Create( hPage, IDC_FRMTHEMES_CMDINHB )
     PsButton_SetGlyphLeft( ghThemeInhB, !"\uE790" )
-    PsButton_SetTooltipText( ghThemeInhB, L(674, "Use palette color") )
+    PsButton_SetTooltipText( ghThemeInhB, L(506, "Use palette color") )
     PsButton_SetClickCallback( ghThemeInhB, @frmThemes_InheritBackClick )
 
     ghThemeResetB = PsButton_Create( hPage, IDC_FRMTHEMES_CMDRESETB )
-    PsButton_SetTooltipText( ghThemeResetB, L(323, "Reset") )
+    PsButton_SetTooltipText( ghThemeResetB, L(313, "Reset") )
     PsButton_SetGlyphLeft( ghThemeResetB, wchr(&hE7A7) )
     PsButton_SetClickCallback( ghThemeResetB, @frmThemes_ResetBackClick )
 
@@ -1434,7 +1434,7 @@ sub frmThemes_Build( byval nPage as long, byval hPage as HWND )
     ' No palette callbacks and no Assign button: canonical PsColorPicker has neither, and with
     ' %MACRO retired there is no named-colour table left for them to talk to. A key's "named
     ' colour" is its ROLE now, and a role is chosen on the page rather than inside the picker.
-    PsColorPicker_SetPreviewText( ghThemePicker, L(325, "Initial"), L(326, "Current") )
+    PsColorPicker_SetPreviewText( ghThemePicker, L(314, "Initial"), L(315, "Current") )
 
     ' THE PICKER'S OWN ALPHA FIELD STAYS HIDDEN, deliberately, even on an alpha-capable key.
     ' This page already has a PsNumericUpDown bound to alpha, which knows which CHANNEL the
@@ -1713,17 +1713,17 @@ function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPan
         PsToggle_GetIdealSize( ghThemeBold, togW, togH )
         dim as long lblX = xEdit + togW + AfxScaleX(10)
         dim as long lblDY = (togH - textH) \ 2                ' vertically centre the label with the pill
-        frmThemes_AddLabel( L(302, "Bold"), lblX, yEdit + lblDY, xEdit + editW, yEdit + togH )
+        frmThemes_AddLabel( L(292, "Bold"), lblX, yEdit + lblDY, xEdit + editW, yEdit + togH )
         SetWindowPos( ghThemeBold, 0, xEdit, yEdit, togW, togH, SWP_NOZORDER or SWP_NOACTIVATE )
         yEdit += togH + rowGap
-        frmThemes_AddLabel( L(303, "Italic"), lblX, yEdit + lblDY, xEdit + editW, yEdit + togH )
+        frmThemes_AddLabel( L(293, "Italic"), lblX, yEdit + lblDY, xEdit + editW, yEdit + togH )
         SetWindowPos( ghThemeItalic, 0, xEdit, yEdit, togW, togH, SWP_NOZORDER or SWP_NOACTIVATE )
         yEdit += togH + rowGap
-        frmThemes_AddLabel( L(304, "Underline"), lblX, yEdit + lblDY, xEdit + editW, yEdit + togH )
+        frmThemes_AddLabel( L(294, "Underline"), lblX, yEdit + lblDY, xEdit + editW, yEdit + togH )
         SetWindowPos( ghThemeUnder, 0, xEdit, yEdit, togW, togH, SWP_NOZORDER or SWP_NOACTIVATE )
         yEdit += togH + rowGap + rowGap
 
-        frmThemes_AddLabel( L(305, "Opacity"), xEdit, yEdit, xEdit + editW, yEdit + textH )
+        frmThemes_AddLabel( L(295, "Opacity"), xEdit, yEdit, xEdit + editW, yEdit + textH )
         yEdit += textH + AfxScaleY(8)
         ' Same height as the plain fields now that PsNumericUpDown insets its value cell by
         ' border + nVertPadding -- the inner PsTextBox clears the frame instead of clipping.

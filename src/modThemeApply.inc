@@ -857,7 +857,7 @@ sub Theme_RunSelfTest()
     '    build or the assertions to say so. That is exactly how the group headers shipped
     '    captionless. english.lang is the fallback for every other language, so checking it
     '    covers them all.
-    for nId as long = 297 to 323
+    for nId as long = 287 to 313
         dim as boolean bHasText = false
         if (nId >= lbound(LL)) andalso (nId <= ubound(LL)) then bHasText = (len(LL(nId)) > 0)
         THASSERT( bHasText, "localized string " & str(nId) & " is missing from english.lang" )
@@ -1179,14 +1179,14 @@ sub Theme_RunSelfTest()
     '
     '    Checked by VALUE, not by len() > 0. A wrong-but-present id passes a non-empty test
     '    perfectly, which is exactly how the bug would have shipped.
-    THASSERT( len( LL(671) ) > 0, "671 (Palette) is empty in this language file" )
-    THASSERT( len( LL(672) ) > 0, "672 (default) is empty in this language file" )
-    THASSERT( instr( LL(671), "document" ) = 0, _
-              "671 is not the Palette caption -- it reads: " & LL(671) )
-    THASSERT( instr( LL(672), "ANSI" ) = 0, _
-              "672 is not the default marker -- it reads: " & LL(672) )
-    THASSERT( len( LL(673) ) > 0, "673 (Choose Color) is empty in this language file" )
-    THASSERT( len( LL(674) ) > 0, "674 (Use palette color) is empty in this language file" )
+    THASSERT( len( LL(503) ) > 0, "671 (Palette) is empty in this language file" )
+    THASSERT( len( LL(504) ) > 0, "672 (default) is empty in this language file" )
+    THASSERT( instr( LL(503), "document" ) = 0, _
+              "671 is not the Palette caption -- it reads: " & LL(503) )
+    THASSERT( instr( LL(504), "ANSI" ) = 0, _
+              "672 is not the default marker -- it reads: " & LL(504) )
+    THASSERT( len( LL(505) ) > 0, "673 (Choose Color) is empty in this language file" )
+    THASSERT( len( LL(506) ) > 0, "674 (Use palette color) is empty in this language file" )
 
     ' -- 22n. A KEY CAN BE HANDED BACK TO ITS ROLE. --------------------------------------
     '    The half of the palette that was missing. Every edit DETACHES a key, so without a

@@ -419,7 +419,7 @@ private sub frmUnusedSymbols_OnPaint( byval hwnd as HWND )
         b.SetForeColor( theme.panel.text.forecolor )
         ' PaintText already forces DT_VCENTER or DT_SINGLELINE, so DT_CENTER completes the
         ' horizontal-and-vertical centring
-        b.PaintText( L(597, "Click here to restore window"), @rc, DT_CENTER )
+        b.PaintText( L(429, "Click here to restore window"), @rc, DT_CENTER )
         b.EndDoubleBuffer()
         exit sub
     end if
@@ -438,7 +438,7 @@ private sub frmUnusedSymbols_OnPaint( byval hwnd as HWND )
     rcT.right -= nPad
     rcT.bottom = rcT.top + pWindow->ScaleY(22)
     b.SetForeColor( theme.panel.text.forecolor )
-    b.PaintText( L(583, "Scanned:") & " " & gUnusedScannedText, @rcT, DT_LEFT )
+    b.PaintText( L(415, "Scanned:") & " " & gUnusedScannedText, @rcT, DT_LEFT )
 
     if len(gUnusedDirtyText) > 0 then
         dim as RECT rcW = lo.rcHeader
@@ -447,7 +447,7 @@ private sub frmUnusedSymbols_OnPaint( byval hwnd as HWND )
         rcW.top = rcT.bottom
         ' the one line here that must not be missed
         b.SetForeColor( theme.compile.iconfail )
-        b.PaintText( L(584, "Unsaved changes (line numbers may be stale):") & " " & gUnusedDirtyText, _
+        b.PaintText( L(416, "Unsaved changes (line numbers may be stale):") & " " & gUnusedDirtyText, _
                      @rcW, DT_LEFT )
         b.SetForeColor( theme.panel.text.forecolor )
     end if
@@ -461,11 +461,11 @@ private sub frmUnusedSymbols_OnPaint( byval hwnd as HWND )
     dim as DWSTRING wszStatus
     if gUnusedPending then
         ' an empty list while a scan is running must NOT read as "nothing found"
-        wszStatus = L(590, "Scanning...")
+        wszStatus = L(422, "Scanning...")
     elseif gUnusedRowCount = 0 then
-        wszStatus = L(585, "No unused symbols found")
+        wszStatus = L(417, "No unused symbols found")
     else
-        wszStatus = wstr(gUnusedVisCount) & " / " & wstr(gUnusedRowCount) & " " & L(587, "shown")
+        wszStatus = wstr(gUnusedVisCount) & " / " & wstr(gUnusedRowCount) & " " & L(419, "shown")
     end if
     b.PaintText( wszStatus, @rcS, DT_LEFT )
 
@@ -477,7 +477,7 @@ private sub frmUnusedSymbols_OnPaint( byval hwnd as HWND )
     ' Painted in the ordinary foreground rather than the warning colour the unsaved-buffer
     ' banner uses: this line never changes, and a permanently red strip along the bottom
     ' stops being read within a day.
-    dim as DWSTRING wszCaution = L(599, "Review before deleting - not every reference is visible to a scan.")
+    dim as DWSTRING wszCaution = L(431, "Review before deleting - not every reference is visible to a scan.")
     dim as long nLeftW  = getTextWidth( hwnd, wszStatus, GUIFONT_9 )
     dim as long nRightW = getTextWidth( hwnd, wszCaution, GUIFONT_9 )
 
@@ -709,7 +709,7 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
     dim as DWSTRING wszRoot = frmUnusedSymbols_RootFile()
     if len( wszRoot ) = 0 then
         ' nothing scannable at all: no document open, or the only one has never been saved
-        TikoMsgBox( hWndParent, L(588, "Open or save a source file first"), L(218, "Confirm"), _
+        TikoMsgBox( hWndParent, L(420, "Open or save a source file first"), L(214, "Confirm"), _
                     TMB_ICON_INFO, TMB_OK )
         return 0
     end if
@@ -747,7 +747,7 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
     ' window collapses to a stub instead - see the .bi. No WS_EX_APPWINDOW: that was only
     ' ever needed to give a REAL minimize somewhere to come back from, and this window
     ' never becomes iconic, so it does not need a taskbar button of its own.
-    HWND_FRMUNUSED = pWindow->Create( hWndParent, L(570, "Unused Symbols"), @frmUnusedSymbols_WndProc, 0, 0, 0, 0, _
+    HWND_FRMUNUSED = pWindow->Create( hWndParent, L(409, "Unused Symbols"), @frmUnusedSymbols_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_THICKFRAME or WS_CAPTION or WS_SYSMENU or WS_MINIMIZEBOX or _
         WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_CONTROLPARENT or WS_EX_LEFT )
@@ -789,7 +789,7 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
     ' set and is walked to build the kind mask. This is a behaviour switch, and both its id
     ' and its placement say so.
     gUnusedMinOnOpen = PsCheckBox_Create( HWND_FRMUNUSED, IDC_FRMUNUSED_MINONOPEN )
-    PsCheckBox_SetText( gUnusedMinOnOpen, L(560, "Minimize when a row is opened") )
+    PsCheckBox_SetText( gUnusedMinOnOpen, L(399, "Minimize when a row is opened") )
     PsCheckBox_SetFont( gUnusedMinOnOpen, ghFont(GUIFONT_9) )
     PsCheckBox_SetGlyphFont( gUnusedMinOnOpen, ghFont(SYMBOLFONT_10) )
     PsCheckBox_SetChecked( gUnusedMinOnOpen, gConfig.UnusedMinimizeOnOpen )
@@ -799,11 +799,11 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
     ' --- list ---
     dim as HWND hLV = PsListTree_Create( HWND_FRMUNUSED, IDC_FRMUNUSED_LIST )
     HWND_FRMUNUSED_LIST = hLV
-    PsListTree_AddColumn( hLV, L(571, "File"),   pWindow->ScaleX(300) )
-    PsListTree_AddColumn( hLV, L(572, "Line"),   pWindow->ScaleX(60) )
-    PsListTree_AddColumn( hLV, L(573, "Class"),  pWindow->ScaleX(90) )
-    PsListTree_AddColumn( hLV, L(574, "Name"),   pWindow->ScaleX(260) )
-    PsListTree_AddColumn( hLV, L(575, "Status"), pWindow->ScaleX(140) )
+    PsListTree_AddColumn( hLV, L(410, "File"),   pWindow->ScaleX(300) )
+    PsListTree_AddColumn( hLV, L(411, "Line"),   pWindow->ScaleX(60) )
+    PsListTree_AddColumn( hLV, L(412, "Class"),  pWindow->ScaleX(90) )
+    PsListTree_AddColumn( hLV, L(413, "Name"),   pWindow->ScaleX(260) )
+    PsListTree_AddColumn( hLV, L(414, "Status"), pWindow->ScaleX(140) )
     PsListTree_SetFillColumn( hLV, UnusedColName )
     PsListTree_ShowHeader( hLV, true )
     PsListTree_SetPaintCallback( hLV, @ListBox_LVPaintRow )

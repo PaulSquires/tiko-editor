@@ -126,9 +126,9 @@ function frmOutput_CreateListView( byval CtrlID as long ) as HWND
     ' Columns, in the order the chr(9)-delimited rows are built: spacer, Line, File,
     ' Description. Description is the fill column.
     PsListTree_AddColumn( hCtl, "",                  pWindow->ScaleX(20) )
-    PsListTree_AddColumn( hCtl, L(203, "Line"),      pWindow->ScaleX(75) )
-    PsListTree_AddColumn( hCtl, L(204, "File"),      pWindow->ScaleX(250) )
-    PsListTree_AddColumn( hCtl, L(205, "Description"), pWindow->ScaleX(250) )
+    PsListTree_AddColumn( hCtl, L(200, "Line"),      pWindow->ScaleX(75) )
+    PsListTree_AddColumn( hCtl, L(201, "File"),      pWindow->ScaleX(250) )
+    PsListTree_AddColumn( hCtl, L(202, "Description"), pWindow->ScaleX(250) )
     PsListTree_SetFillColumn( hCtl, 3 )
     PsListTree_ShowHeader( hCtl, true )
 
@@ -262,7 +262,7 @@ function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) as LRESULT
             hCtrl = hTextBox
             dim as DWSTRING wszText = ltrim(AfxGetWindowText(hTextBox))
             if wszText = "" then
-                AfxSetWindowText(hTextBox, L(93, "No compiler log file exists") )
+                AfxSetWindowText(hTextBox, L(92, "No compiler log file exists") )
             end if
 
         case OUTPUT_TAB_TODO
@@ -663,10 +663,10 @@ sub frmOutput_SetTabCaptions()
     ' so a loop overrunning the panel count would call SetText (which re-measures and
     ' re-lays out the whole bar) forever, silently, on the hot path.
     dim as DWSTRING wszCaption(OUTPUT_TAB_RESULTS to OUTPUT_TAB_NOTES)
-    wszCaption(OUTPUT_TAB_RESULTS) = ucase(L(154, "Compiler Results"))
-    wszCaption(OUTPUT_TAB_LOGFILE) = ucase(L(202, "Compiler Log File"))
-    wszCaption(OUTPUT_TAB_TODO)    = ucase(L(208, "TODO"))
-    wszCaption(OUTPUT_TAB_NOTES)   = ucase(L(209, "Notes"))
+    wszCaption(OUTPUT_TAB_RESULTS) = ucase(L(153, "Compiler Results"))
+    wszCaption(OUTPUT_TAB_LOGFILE) = ucase(L(199, "Compiler Log File"))
+    wszCaption(OUTPUT_TAB_TODO)    = ucase(L(204, "TODO"))
+    wszCaption(OUTPUT_TAB_NOTES)   = ucase(L(205, "Notes"))
 
     for i as long = 0 to PsSelectBar_GetCount( HWND_FRMOUTPUT_SELECTBAR ) - 1
         dim as long nTabID = PsSelectBar_GetPanelID( HWND_FRMOUTPUT_SELECTBAR, i )
@@ -896,10 +896,10 @@ sub frmOutput_UpdateDockIcon()
     ' iif to numerics.
     if bFloating then
         PsIconPanel_SetGlyph( HWND_FRMOUTPUT_UNDOCK, 0, wszIconDock )
-        PsIconPanel_SetTooltipText( HWND_FRMOUTPUT_UNDOCK, 0, L(405, "Dock Output Window") )
+        PsIconPanel_SetTooltipText( HWND_FRMOUTPUT_UNDOCK, 0, L(394, "Dock Output Window") )
     else
         PsIconPanel_SetGlyph( HWND_FRMOUTPUT_UNDOCK, 0, wszIconUndock )
-        PsIconPanel_SetTooltipText( HWND_FRMOUTPUT_UNDOCK, 0, L(404, "Undock Output Window") )
+        PsIconPanel_SetTooltipText( HWND_FRMOUTPUT_UNDOCK, 0, L(393, "Undock Output Window") )
     end if
 
     if IsWindow( HWND_FRMOUTPUT_CLOSE ) then
@@ -1132,7 +1132,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         PsIconPanel_SetClickCallback( HWND_FRMOUTPUT_CLOSE, @frmOutput_CloseClick )
         PsIconPanel_SetMessageCallback( HWND_FRMOUTPUT_CLOSE, @frmOutput_IconPanelMessage )
         PsIconPanel_AddItem( HWND_FRMOUTPUT_CLOSE, IP_KIND_COMMAND, wszIconClose, IDC_FRMOUTPUT_BTNCLOSE )
-        PsIconPanel_SetTooltipText( HWND_FRMOUTPUT_CLOSE, 0, L(136, "Close") )
+        PsIconPanel_SetTooltipText( HWND_FRMOUTPUT_CLOSE, 0, L(135, "Close") )
 
         dim as PSICONPANEL_COLORS IconPanelColors 
         PsIconPanel_GetColors( HWND_FRMOUTPUT_CLOSE, @IconPanelColors )

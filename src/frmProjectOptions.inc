@@ -97,7 +97,7 @@ function frmProjectOptions_CreateResourceManifest() as Long
                     "The following files(s) are missing from the Settings folder. " + _
                     "Please reinstall the application." & vbcrlf & vbcrlf & _
                     wszFilesMissing, _
-                    L(164,"Error"), TMB_ICON_WARNING, TMB_OK )
+                    L(162,"Error"), TMB_ICON_WARNING, TMB_OK )
         exit function
     end if
 
@@ -193,7 +193,7 @@ function frmProjectOptions_SaveProjectOptions( byval hwnd as HWND ) as BOOLEAN
     if len(gPOWork.ProjectPath) = 0 then
         ' Parented to THIS dialog, not frmMain: this window is up and modal, and a box owned by
         ' a disabled ancestor comes up behind it.
-        TikoMsgBox( hwnd, L(180,"Invalid project path specified."), L(164,"Error"), _
+        TikoMsgBox( hwnd, L(178,"Invalid project path specified."), L(162,"Error"), _
                         TMB_ICON_INFO, TMB_OK )
         return False
     end if
@@ -492,7 +492,7 @@ private function frmProjectOptions_OnPaint( byval hwnd as HWND ) as LRESULT
 
     dim as long xLabelRight = gPOLayout.xField - AfxScaleX(FRMPROJECTOPTIONS_GAP)
 
-    ROWLABEL( PO_ROW_PATH,        xLabelRight, L(196,"Project path") )
+    ROWLABEL( PO_ROW_PATH,        xLabelRight, L(193,"Project path") )
     ROWLABEL( PO_ROW_COMMANDLINE, xLabelRight, L(35,"Command line") )
     ROWLABEL( PO_ROW_OTHER32,     xLabelRight, L(33,"32-bit compiler") )
     ROWLABEL( PO_ROW_OTHER64,     xLabelRight, L(34,"64-bit compiler") )
@@ -501,7 +501,7 @@ private function frmProjectOptions_OnPaint( byval hwnd as HWND ) as LRESULT
         dim as long tw = 0, th = 0
         PsToggle_GetIdealSize( ghPOManifest, tw, th )
         ROWLABEL( PO_ROW_MANIFEST, gPOLayout.xFieldRight - tw - AfxScaleX(FRMPROJECTOPTIONS_GAP), _
-                  L(244,"Create resource file and manifest") )
+                  L(240,"Create resource file and manifest") )
     end scope
 
     ' ---- the footer rule ---------------------------------------------------------------
@@ -620,7 +620,7 @@ sub frmProjectOptions_RunSelfTest( byval bLayoutHalf as boolean )
             dim as string sL = "  resolved: " & str(27) & "=" & LL(27) & " | " & _
                                str(31) & "=" & LL(31) & " | " & str(35) & "=" & LL(35)
             print sL
-            dim as string sL2 = "  resolved: " & str(80) & "=" & LL(80)
+            dim as string sL2 = "  resolved: " & str(80) & "=" & LL(79)
             print sL2
         end scope
 
@@ -922,9 +922,9 @@ function frmProjectOptions_Show( _
     gApp.IsNewProjectFlag = IsNewProject
     frmProjectOptions_LoadWork( IsNewProject )
 
-    dim as DWSTRING wszTitle = L(177,"Project Options")
+    dim as DWSTRING wszTitle = L(175,"Project Options")
     if IsNewProject then
-        wszTitle = wszTitle & " - " & L(178,"New Project")
+        wszTitle = wszTitle & " - " & L(176,"New Project")
     else
         wszTitle = wszTitle & " - " & gApp.ProjectName
     end if
@@ -962,7 +962,7 @@ function frmProjectOptions_Show( _
     PsButton_SetClickCallback( ghPOSelect, @frmProjectOptions_ButtonClick )
 
     MAKEFIELD( ghPOCommandLine, IDC_FRMPROJECTOPTIONS_TXTCOMMANDLINE )
-    PsTextBox_SetCueBannerText( ghPOCommandLine, L(80,"arguments passed when the project is run") )
+    PsTextBox_SetCueBannerText( ghPOCommandLine, L(79,"arguments passed when the project is run") )
 
     MAKEFIELD( ghPOOther32, IDC_FRMPROJECTOPTIONS_TXTOPTIONS32 )
     MAKEFIELD( ghPOOther64, IDC_FRMPROJECTOPTIONS_TXTOPTIONS64 )

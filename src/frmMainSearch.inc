@@ -100,7 +100,7 @@ function OnCommand_SearchGotoDefinition( byval pDoc as clsDocument ptr ) as LRES
             ' This was the one box built inline rather than through a per-dialog helper, and
             ' the only one that was never themed -- it set fonts but no MBX_COLORS at all, so
             ' it came up in PsMessageBox's own dark defaults whatever the theme said.
-            TikoMsgBox( HWND_FRMMAIN, L(187,"Symbol definition not found."), APPNAME, _
+            TikoMsgBox( HWND_FRMMAIN, L(184,"Symbol definition not found."), APPNAME, _
                         TMB_ICON_WARNING, TMB_OK )
             exit function
         end if
@@ -452,7 +452,7 @@ function OnCommand_SearchBookmarks( _
             LoadBookmarksFiles()
 
         case IDM_BOOKMARKCLEARALLDOCS
-            if TikoMsgBox( HWND_FRMMAIN, L(252,"Do you want to delete all bookmarks?"), L(218,"Confirm"), _
+            if TikoMsgBox( HWND_FRMMAIN, L(248,"Do you want to delete all bookmarks?"), L(214,"Confirm"), _
                         TMB_ICON_QUESTION, TMB_YESNOCANCEL ) <> IDYES then
                 return true
             end if            

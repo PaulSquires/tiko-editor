@@ -22,12 +22,12 @@ end function
 
 function UnusedSymbols_KindText( byval nKind as long ) as DWSTRING
     select case nKind
-        case UnusedKindVariable  : return L(561, "Variable")
-        case UnusedKindProcedure : return L(562, "Procedure")
-        case UnusedKindParameter : return L(563, "Parameter")
-        case UnusedKindType      : return L(564, "Type")
-        case UnusedKindField     : return L(565, "Field")
-        case UnusedKindConstant  : return L(566, "Constant")
+        case UnusedKindVariable  : return L(400, "Variable")
+        case UnusedKindProcedure : return L(401, "Procedure")
+        case UnusedKindParameter : return L(402, "Parameter")
+        case UnusedKindType      : return L(403, "Type")
+        case UnusedKindField     : return L(404, "Field")
+        case UnusedKindConstant  : return L(405, "Constant")
     end select
     return ""
 end function
@@ -36,11 +36,11 @@ function UnusedSymbols_StatusText( byref r as UNUSEDROW ) as DWSTRING
     select case r.nStatus
         case UnusedStatusWriteOnly
             ' the count is the evidence - show it rather than only a word
-            return L(567, "Never read") & " (" & r.nWrites & "w)"
+            return L(406, "Never read") & " (" & r.nWrites & "w)"
         case UnusedStatusUnknown
-            return L(568, "Unknown")
+            return L(407, "Unknown")
     end select
-    return L(569, "Unused")
+    return L(408, "Unused")
 end function
 
 ' Case-insensitive text compare: -1 / 0 / +1.
@@ -429,9 +429,9 @@ sub UnusedSymbols_RunSelfTest()
                   "kind " & k & " has a non-empty localized name", nPass, nFail )
     next
     ' print them back: len()>0 cannot tell a real translation from the English fallback
-    dim as string sLang = "  langcheck 561=" & UnusedSymbols_KindText( UnusedKindVariable ) & _
-                          " | 562=" & UnusedSymbols_KindText( UnusedKindProcedure ) & _
-                          " | 569=" & UnusedSymbols_StatusText( rv )
+    dim as string sLang = "  langcheck 400=" & UnusedSymbols_KindText( UnusedKindVariable ) & _
+                          " | 401=" & UnusedSymbols_KindText( UnusedKindProcedure ) & _
+                          " | 408=" & UnusedSymbols_StatusText( rv )
     print sLang
 
     dim as string sOut = "--- TIKO_UNUSED_SELFTEST: " & nPass & " passed, " & nFail & " failed ---"

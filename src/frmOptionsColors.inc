@@ -332,10 +332,10 @@ sub frmOptionsColors_Build( byval hPage as HWND )
     ' index still means the same thing.
     ghColorCase = PsComboBox_Create( hPage, IDC_FRMOPTIONSCOLORS_COMBOCASE )
     PsComboBox_SetFont( ghColorCase, OptionsFont_Base() )
-    PsComboBox_AddItem( ghColorCase, L(126,"Lower Case") )
-    PsComboBox_AddItem( ghColorCase, L(127,"Upper Case") )
-    PsComboBox_AddItem( ghColorCase, L(214,"Proper Case") )
-    PsComboBox_AddItem( ghColorCase, L(128,"Original Case") )
+    PsComboBox_AddItem( ghColorCase, L(125,"Lower Case") )
+    PsComboBox_AddItem( ghColorCase, L(126,"Upper Case") )
+    PsComboBox_AddItem( ghColorCase, L(210,"Proper Case") )
+    PsComboBox_AddItem( ghColorCase, L(127,"Original Case") )
     PsComboBox_SetCurSel( ghColorCase, gOptWork.KeywordCase )
     PsComboBox_SetSelChangeCallback( ghColorCase, @frmOptionsColors_CaseSelChange )
     OptionsRows_RegisterCombo( ghColorCase )
@@ -456,7 +456,7 @@ function frmOptionsColors_Layout( byval hPage as HWND, byval cxPanel as long ) a
     ' with it, so the Font section is now the first thing on the page -- which is why the page
     ' was renamed "Editor Font".
     ' Fonts.
-    frmOptionsColors_AddLabel( L(130,"Font (applies to all styles)"), padLeft, y, contentR, y + textH )
+    frmOptionsColors_AddLabel( L(129,"Font (applies to all styles)"), padLeft, y, contentR, y + textH )
     y += textH + labelGapY
     SetWindowPos( ghColorFonts, 0, padLeft, y, fullW, AfxScaleY(COLORS_LISTHEIGHT_FONTS), SWP_NOZORDER or SWP_NOACTIVATE )
     y += AfxScaleY(COLORS_LISTHEIGHT_FONTS) + sectionGap
@@ -480,24 +480,24 @@ function frmOptionsColors_Layout( byval hPage as HWND, byval cxPanel as long ) a
     dim as long cw, ch
     PsComboBox_GetIdealSize( ghColorSize, cw, ch )
     if cw < AfxScaleX(COLORS_COMBOWIDTH) then cw = AfxScaleX(COLORS_COMBOWIDTH)
-    CTLROW( ghColorSize, L(295,"Size"), cw, ch )
+    CTLROW( ghColorSize, L(285,"Size"), cw, ch )
 
     PsComboBox_GetIdealSize( ghColorCharset, cw, ch )
     if cw < AfxScaleX(COLORS_COMBOWIDTH) then cw = AfxScaleX(COLORS_COMBOWIDTH)
-    CTLROW( ghColorCharset, L(296,"Character Set"), cw, ch )
+    CTLROW( ghColorCharset, L(286,"Character Set"), cw, ch )
 
     PsNumericUpDown_GetIdealSize( ghColorSpacing, cw, ch )
     if cw < AfxScaleX(COLORS_NUMWIDTH) then cw = AfxScaleX(COLORS_NUMWIDTH)
-    CTLROW( ghColorSpacing, L(274,"Extra line spacing"), cw, ch )
+    CTLROW( ghColorSpacing, L(268,"Extra line spacing"), cw, ch )
 
     ' Tab Size and Case, at the bottom of the page (moved from Code Editor).
     PsNumericUpDown_GetIdealSize( ghColorTabSize, cw, ch )
     if cw < AfxScaleX(COLORS_NUMWIDTH) then cw = AfxScaleX(COLORS_NUMWIDTH)
-    CTLROW( ghColorTabSize, L(123,"Tab Size"), cw, ch )
+    CTLROW( ghColorTabSize, L(122,"Tab Size"), cw, ch )
 
     PsComboBox_GetIdealSize( ghColorCase, cw, ch )
     if cw < AfxScaleX(COLORS_COMBOWIDTH) then cw = AfxScaleX(COLORS_COMBOWIDTH)
-    CTLROW( ghColorCase, L(124,"Case"), cw, ch )
+    CTLROW( ghColorCase, L(123,"Case"), cw, ch )
 
     function = y + AfxScaleY(OPTROW_PADBOTTOM)
 end function

@@ -433,11 +433,11 @@ sub frmExplorer_RunSelfTest()
         gExpTipRow = nRowAlpha
         gExpTipIcon = EXPICON_ADD
         Exp_Check( "the Add icon names itself", _
-            frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRowAlpha, 0 ) = L(630,"New Folder"), _
+            frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRowAlpha, 0 ) = L(462,"New Folder"), _
             frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRowAlpha, 0 ) )
         gExpTipIcon = EXPICON_DELETE
         Exp_Check( "the Delete icon names itself", _
-            frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRowAlpha, 0 ) = L(631,"Delete Folder"), _
+            frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRowAlpha, 0 ) = L(463,"Delete Folder"), _
             frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRowAlpha, 0 ) )
         ' The two tips must actually DIFFER. Both resolving to the same string would satisfy
         ' each assertion above on its own if the ids ever collided or one went blank.
@@ -448,10 +448,10 @@ sub frmExplorer_RunSelfTest()
         ' A stale zone must never leak onto another row -- the row is stored with it for
         ' exactly this reason.
         Exp_Check( "an icon tip does not leak onto another row", _
-            frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRootNormal, 0 ) <> L(630,"New Folder") )
+            frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRootNormal, 0 ) <> L(462,"New Folder") )
         gExpTipIcon = EXPICON_RENAME
         Exp_Check( "the Rename icon names itself", _
-            frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRowAlpha, 0 ) = L(632,"Rename Folder"), _
+            frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRowAlpha, 0 ) = L(464,"Rename Folder"), _
             frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRowAlpha, 0 ) )
         gExpTipIcon = EXPICON_NONE
         gExpTipRow = -1
@@ -583,8 +583,8 @@ sub frmExplorer_RunSelfTest()
         ' Printed, not merely length-checked: LoadLocalizationFile fills a blank key with the
         ' English text, so len() > 0 passes under every language even when that language has
         ' the slot empty. The value is what distinguishes a translation from the fallback.
-        Exp_Check( "the New Folder caption resolves", len(L(630,"New Folder")) > 0, L(630,"") )
-        Exp_Check( "the Delete Folder caption resolves", len(L(631,"Delete Folder")) > 0, L(631,"") )
+        Exp_Check( "the New Folder caption resolves", len(L(462,"New Folder")) > 0, L(462,"") )
+        Exp_Check( "the Delete Folder caption resolves", len(L(463,"Delete Folder")) > 0, L(463,"") )
 
     end if
 

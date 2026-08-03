@@ -517,8 +517,8 @@ end sub
 function OnCommand_FormatDocument() as LRESULT
     dim as clsDocument ptr pDoc = gTTabCtl.GetActiveDocumentPtr()
     if Format_IsFormattableDocument( pDoc ) = false then
-        TikoMsgBox( HWND_FRMMAIN, L(639,"This document cannot be formatted. The code formatter works on FreeBASIC source files (.bas, .bi, .inc) that are not read-only."), _
-                    L(633,"Format"), TMB_ICON_INFO, TMB_OK )
+        TikoMsgBox( HWND_FRMMAIN, L(471,"This document cannot be formatted. The code formatter works on FreeBASIC source files (.bas, .bi, .inc) that are not read-only."), _
+                    L(465,"Format"), TMB_ICON_INFO, TMB_OK )
         return 0
     end if
     dim as long n = Format_Document()
@@ -526,7 +526,7 @@ function OnCommand_FormatDocument() as LRESULT
     if n = 0 then
         ' Say so rather than doing nothing visible: silence is indistinguishable from a
         ' command that failed, and "already formatted" is the common case on a second run.
-        TikoMsgBox( HWND_FRMMAIN, L(640,"No changes were needed -- this document already matches your formatting rules."), L(633,"Format"), TMB_ICON_INFO, TMB_OK )
+        TikoMsgBox( HWND_FRMMAIN, L(472,"No changes were needed -- this document already matches your formatting rules."), L(465,"Format"), TMB_ICON_INFO, TMB_OK )
     end if
     return 0
 end function
@@ -546,11 +546,11 @@ function OnCommand_FormatAllOpenDocuments() as LRESULT
     dim as long nLines = Format_AllOpenDocuments( nFiles )
     
 
-    dim as string sMsg = L(589,"Formatting complete.") & vbcrlf & vbcrlf & _
-                         L(591,"Documents changed:") & " " & str(nFiles) & vbcrlf & _
-                         L(592,"Lines changed:") & " " & str(nLines) & vbcrlf & vbcrlf & _
-                         L(593,"Each document can be undone individually with Ctrl+Z.")
-    TikoMsgBox( HWND_FRMMAIN, sMsg, L(633,"Format"), TMB_ICON_INFO, TMB_OK )
+    dim as string sMsg = L(421,"Formatting complete.") & vbcrlf & vbcrlf & _
+                         L(423,"Documents changed:") & " " & str(nFiles) & vbcrlf & _
+                         L(424,"Lines changed:") & " " & str(nLines) & vbcrlf & vbcrlf & _
+                         L(425,"Each document can be undone individually with Ctrl+Z.")
+    TikoMsgBox( HWND_FRMMAIN, sMsg, L(465,"Format"), TMB_ICON_INFO, TMB_OK )
     return 0
 end function
 
@@ -590,14 +590,14 @@ function OnCommand_FormatProject() as LRESULT
     wend
 
     if nCandidates = 0 then
-        TikoMsgBox( HWND_FRMMAIN, L(594,"There are no FreeBASIC source files in this workspace that can be formatted."), _
-                    L(633,"Format"), TMB_ICON_INFO, TMB_OK )
+        TikoMsgBox( HWND_FRMMAIN, L(426,"There are no FreeBASIC source files in this workspace that can be formatted."), _
+                    L(465,"Format"), TMB_ICON_INFO, TMB_OK )
         return 0
     end if
 
-    dim as string sAsk = L(595,"Format every FreeBASIC file in this workspace?") & " (" & str(nCandidates) & ")" & vbcrlf & vbcrlf & _
-                         L(596,"Nothing is written to disk. Every file is changed in the editor only, so each one can be undone with Ctrl+Z and you decide what to save.")
-    if TikoMsgBox( HWND_FRMMAIN, sAsk, L(633,"Format"), TMB_ICON_QUESTION, TMB_YESNO ) <> IDYES then
+    dim as string sAsk = L(427,"Format every FreeBASIC file in this workspace?") & " (" & str(nCandidates) & ")" & vbcrlf & vbcrlf & _
+                         L(428,"Nothing is written to disk. Every file is changed in the editor only, so each one can be undone with Ctrl+Z and you decide what to save.")
+    if TikoMsgBox( HWND_FRMMAIN, sAsk, L(465,"Format"), TMB_ICON_QUESTION, TMB_YESNO ) <> IDYES then
         return 0
     end if
 
@@ -621,13 +621,13 @@ function OnCommand_FormatProject() as LRESULT
         pDoc = pNext
     wend
 
-    dim as string sMsg = L(589,"Formatting complete.") & vbcrlf & vbcrlf & _
-                         L(591,"Documents changed:") & " " & str(nChanged) & vbcrlf & _
-                         L(592,"Lines changed:") & " " & str(nLines) & vbcrlf & _
-                         L(598,"Already formatted:") & " " & str(nUnchanged) & vbcrlf & vbcrlf & _
-                         L(593,"Each document can be undone individually with Ctrl+Z.")
+    dim as string sMsg = L(421,"Formatting complete.") & vbcrlf & vbcrlf & _
+                         L(423,"Documents changed:") & " " & str(nChanged) & vbcrlf & _
+                         L(424,"Lines changed:") & " " & str(nLines) & vbcrlf & _
+                         L(430,"Already formatted:") & " " & str(nUnchanged) & vbcrlf & vbcrlf & _
+                         L(425,"Each document can be undone individually with Ctrl+Z.")
 
-    TikoMsgBox( HWND_FRMMAIN, sMsg, L(633,"Format"), TMB_ICON_INFO, TMB_OK )
+    TikoMsgBox( HWND_FRMMAIN, sMsg, L(465,"Format"), TMB_ICON_INFO, TMB_OK )
     return 0
 end function
 
@@ -676,7 +676,7 @@ sub Format_RunApplySelfTest()
     ' the assertions above cannot tell a real translation from the English fallback, and
     ' running under french.lang and seeing them green proves only that the ids exist.
     ' Reading this line is what distinguishes the two.
-    dim as string sShow = "  resolved: 633=" & LL(633) & " | 634=" & LL(634) & " | 598=" & LL(598)
+    dim as string sShow = "  resolved: 633=" & LL(465) & " | 634=" & LL(466) & " | 598=" & LL(430)
     print sShow
 
     dim as string sReport = "Format apply self-test: " & str(nPass) & " passed, " & str(nFail) & " failed"

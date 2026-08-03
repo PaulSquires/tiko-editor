@@ -209,13 +209,13 @@ function TikoMsgBox( byval hParent      as HWND, _
             PsMessageBox_SetCancelID( h, IDCANCEL )
             nCount = 2
         case TMB_YESNO
-            PsMessageBox_AddButton( h, MsgBox_Word( 95, "Yes" ), IDYES )
-            PsMessageBox_AddButton( h, MsgBox_Word( 96, "No" ),  IDNO )
+            PsMessageBox_AddButton( h, MsgBox_Word( 94, "Yes" ), IDYES )
+            PsMessageBox_AddButton( h, MsgBox_Word( 95, "No" ),  IDNO )
             PsMessageBox_SetCancelID( h, IDNO )
             nCount = 2
         case TMB_YESNOCANCEL
-            PsMessageBox_AddButton( h, MsgBox_Word( 95, "Yes" ),   IDYES )
-            PsMessageBox_AddButton( h, MsgBox_Word( 96, "No" ),    IDNO )
+            PsMessageBox_AddButton( h, MsgBox_Word( 94, "Yes" ),   IDYES )
+            PsMessageBox_AddButton( h, MsgBox_Word( 95, "No" ),    IDNO )
             PsMessageBox_AddButton( h, MsgBox_Word( 1, "Cancel" ), IDCANCEL )
             PsMessageBox_SetCancelID( h, IDCANCEL )
             nCount = 3
@@ -223,7 +223,7 @@ function TikoMsgBox( byval hParent      as HWND, _
             ' Save/Discard rather than Yes/No, but the same three ids, so a caller's IDYES /
             ' IDNO / IDCANCEL handling is identical to the YESNOCANCEL case.
             PsMessageBox_AddButton( h, MsgBox_Word( 7,   "Save" ),    IDYES )
-            PsMessageBox_AddButton( h, MsgBox_Word( 393, "Discard" ), IDNO )
+            PsMessageBox_AddButton( h, MsgBox_Word( 382, "Discard" ), IDNO )
             PsMessageBox_AddButton( h, MsgBox_Word( 1,   "Cancel" ),  IDCANCEL )
             PsMessageBox_SetCancelID( h, IDCANCEL )
             nCount = 3

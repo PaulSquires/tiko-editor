@@ -105,22 +105,22 @@ private sub frmAbout_BuildCredits()
     dim as long nRow
 
     nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "Jos" & wchr(233) & " Roca", 0 )
-    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(381,"AfxNova framework") )
+    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(370,"AfxNova framework") )
 
     nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "Paul Doe", 1 )
-    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(382,"Ideas and testing") )
+    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(371,"Ideas and testing") )
 
     nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "ImortisInglorian", 2 )
-    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(382,"Ideas and testing") )
+    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(371,"Ideas and testing") )
 
     nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "Laurent GRAS (SARG)", 3 )
-    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(382,"Ideas and testing") )
+    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(371,"Ideas and testing") )
 
     nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "Neil Hodgson", 4 )
-    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(383,"Scintilla editing component") )
+    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(372,"Scintilla editing component") )
 
     nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "FreeBASIC Development Team", 5 )
-    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(384,"The compiler tiko is built on and for") )
+    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(373,"The compiler tiko is built on and for") )
 
 
     ' EVERY ROW IS NON-SELECTABLE. This is a roll of names, not a picker: there is nothing to
@@ -379,7 +379,7 @@ private sub frmAbout_PaintHero( byval pb as PsBufferPaint ptr, byval rcHero as R
     r.top = y : r.bottom = y + lineH
     pb->SetFont( ghFont(GUIFONT_11) )
     pb->SetForeColor( theme.panel.text.forecolor )
-    pb->PaintText( L(370,"Programmer's code editor for the FreeBASIC compiler"), _
+    pb->PaintText( L(359,"Programmer's code editor for the FreeBASIC compiler"), _
                    @r, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
 
     ' ---- the three pills ---------------------------------------------------------------
@@ -391,7 +391,7 @@ private sub frmAbout_PaintHero( byval pb as PsBufferPaint ptr, byval rcHero as R
 
     dim as DWSTRING wszVersion = APPVERSION & "  " & wchr(183) & "  " & trim(APPBITS, any " ()")
     dim as DWSTRING wszLicense = "GPL v3"
-    dim as DWSTRING wszPropr   = L(408,"Proprietary")
+    dim as DWSTRING wszPropr   = L(397,"Proprietary")
 
     dim as long w1 = frmAbout_MeasurePill( pb, wszVersion )
     dim as long w2 = frmAbout_MeasurePill( pb, wszLicense )
@@ -430,7 +430,7 @@ private function frmAbout_PillRowRight( byval pb as PsBufferPaint ptr, byval rcH
 
     dim as long w = frmAbout_MeasurePill( pb, wszVersion )
     w += AfxScaleX(FRMABOUT_PILL_GAP) + frmAbout_MeasurePill( pb, "GPL v3" )
-    w += AfxScaleX(FRMABOUT_PILL_GAP) + frmAbout_MeasurePill( pb, L(408,"Proprietary") )
+    w += AfxScaleX(FRMABOUT_PILL_GAP) + frmAbout_MeasurePill( pb, L(397,"Proprietary") )
 
     function = tx + w
 
@@ -452,7 +452,7 @@ private sub frmAbout_PaintAboutPage( byval pb as PsBufferPaint ptr, byval rcBody
     ' DT_WORDBREAK needs PaintTextEx: PaintText forces DT_SINGLELINE and structurally cannot
     ' wrap. Measured first with DT_CALCRECT so the rows below start under however many lines
     ' the translated text actually took.
-    dim as DWSTRING wszDesc = L(371,"A fast, native Win32 editor for FreeBASIC -- project management, symbol browsing, integrated build and debug -- in one executable with no runtime to install.")
+    dim as DWSTRING wszDesc = L(360,"A fast, native Win32 editor for FreeBASIC -- project management, symbol browsing, integrated build and debug -- in one executable with no runtime to install.")
 
     dim as RECT rcText
     rcText.left   = mx
@@ -474,9 +474,9 @@ private sub frmAbout_PaintAboutPage( byval pb as PsBufferPaint ptr, byval rcBody
     dim as long keyW  = AfxScaleX(FRMABOUT_KV_KEYW)
 
     dim as DWSTRING wszKey(2), wszVal(2)
-    wszKey(0) = L(376,"Build date")      : wszVal(0) = __DATE_ISO__
-    wszKey(1) = L(377,"Copyright")       : wszVal(1) = APPCOPYRIGHT
-    wszKey(2) = L(378,"Settings folder") : wszVal(2) = AfxGetExePathName & "settings"
+    wszKey(0) = L(365,"Build date")      : wszVal(0) = __DATE_ISO__
+    wszKey(1) = L(366,"Copyright")       : wszVal(1) = APPCOPYRIGHT
+    wszKey(2) = L(367,"Settings folder") : wszVal(2) = AfxGetExePathName & "settings"
 
     for i as long = 0 to 2
         dim as RECT rcRow
@@ -1071,7 +1071,7 @@ private sub frmAbout_RunLayoutSelfTest( byval hwnd as HWND )
     ' an EMPTY STRING, so a missing caption is a blank tab, not a build error.
     scope
         dim as long nBlank = 0
-        for i as long = 370 to 385
+        for i as long = 359 to 374
             if len(LL(i)) = 0 then
                 nBlank += 1
                 dim as string s = "  (blank localization id " & str(i) & ")"
@@ -1083,7 +1083,7 @@ private sub frmAbout_RunLayoutSelfTest( byval hwnd as HWND )
         ' than appended, so it does not sit beside its neighbours and would be missed by the
         ' loop above. It is used TWICE (the hero pill and the sub-strip), so a blank value
         ' costs two captions.
-        ABOUTASSERT( len(LL(408)) > 0, "localization id 408 (Proprietary) is blank" )
+        ABOUTASSERT( len(LL(397)) > 0, "localization id 397 (Proprietary) is blank" )
     end scope
 
     scope
@@ -1165,7 +1165,7 @@ function frmAbout_Show( byval hWndParent as HWND ) as LRESULT
 
     dim pWindow as CWindow ptr = new CWindow
 
-    HWND_FRMABOUT = pWindow->Create( hWndParent, L(72,"About") & " " & APPNAME, _
+    HWND_FRMABOUT = pWindow->Create( hWndParent, L(71,"About") & " " & APPNAME, _
         @frmAbout_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
@@ -1185,11 +1185,11 @@ function frmAbout_Show( byval hWndParent as HWND ) as LRESULT
     ' The first panel's left padding is what puts "About" on the dialog's margin, since the
     ' bar spans the full client width.
     PsSelectBar_SetPadding( HWND_FRMABOUT_TABS, AfxScaleX(14), AfxScaleX(14) )
-    PsSelectBar_AddPanel( HWND_FRMABOUT_TABS, L(72,"About") )
-    PsSelectBar_AddPanel( HWND_FRMABOUT_TABS, L(372,"Credits") )
+    PsSelectBar_AddPanel( HWND_FRMABOUT_TABS, L(71,"About") )
+    PsSelectBar_AddPanel( HWND_FRMABOUT_TABS, L(361,"Credits") )
     ' PLURAL. tiko ships under two licences and this page shows both; a singular caption
     ' over a two-panel strip reads as a mistake before it reads as a licence statement.
-    PsSelectBar_AddPanel( HWND_FRMABOUT_TABS, L(373,"Licenses") )
+    PsSelectBar_AddPanel( HWND_FRMABOUT_TABS, L(362,"Licenses") )
     PsSelectBar_SetPanelPadding( HWND_FRMABOUT_TABS, 0, _
                                  AfxScaleX(FRMABOUT_MARGIN), AfxScaleX(14) )
     PsSelectBar_SetIndicator( HWND_FRMABOUT_TABS, AfxScaleY(2), AfxScaleY(6) )
@@ -1197,8 +1197,8 @@ function frmAbout_Show( byval hWndParent as HWND ) as LRESULT
 
     ' ---- the Credits list --------------------------------------------------------------
     HWND_FRMABOUT_CREDITS = PsListTree_Create( HWND_FRMABOUT, IDC_FRMABOUT_CREDITS )
-    PsListTree_AddColumn( HWND_FRMABOUT_CREDITS, L(379,"Contributor"), pWindow->ScaleX(FRMABOUT_COL_WHO) )
-    PsListTree_AddColumn( HWND_FRMABOUT_CREDITS, L(380,"For"), pWindow->ScaleX(200) )
+    PsListTree_AddColumn( HWND_FRMABOUT_CREDITS, L(368,"Contributor"), pWindow->ScaleX(FRMABOUT_COL_WHO) )
+    PsListTree_AddColumn( HWND_FRMABOUT_CREDITS, L(369,"For"), pWindow->ScaleX(200) )
     PsListTree_SetFillColumn( HWND_FRMABOUT_CREDITS, 1 )
     PsListTree_ShowHeader( HWND_FRMABOUT_CREDITS, true )
     PsListTree_SetPaintCallback( HWND_FRMABOUT_CREDITS, @frmAbout_CreditsPaintRow )
@@ -1228,7 +1228,7 @@ function frmAbout_Show( byval hWndParent as HWND ) as LRESULT
     PsSelectBar_SetPadding( HWND_FRMABOUT_LICSEL, AfxScaleX(14), AfxScaleX(14) )
     ' "GPL-3" is an identifier, not prose -- untranslated on purpose, like the "GPL v3" pill.
     PsSelectBar_AddPanel( HWND_FRMABOUT_LICSEL, "GPL-3" )
-    PsSelectBar_AddPanel( HWND_FRMABOUT_LICSEL, L(408,"Proprietary") )
+    PsSelectBar_AddPanel( HWND_FRMABOUT_LICSEL, L(397,"Proprietary") )
     PsSelectBar_SetPanelPadding( HWND_FRMABOUT_LICSEL, 0, 0, AfxScaleX(14) )
     ' NO RIGHT PADDING ON THE LAST PANEL. The strip is sized to its ideal width and pushed
     ' against the body's right margin, so trailing padding would show up as the last caption
@@ -1264,17 +1264,17 @@ function frmAbout_Show( byval hWndParent as HWND ) as LRESULT
 
     ' ---- the three footer buttons ------------------------------------------------------
     dim as HWND hWebsite = PsButton_Create( HWND_FRMABOUT, IDC_FRMABOUT_CMDWEBSITE )
-    PsButton_SetText( hWebsite, L(374,"Website") )
+    PsButton_SetText( hWebsite, L(363,"Website") )
     PsButton_SetFont( hWebsite, ghFont(GUIFONT_11) )
     PsButton_SetClickCallback( hWebsite, @frmAbout_ButtonClickCallback )
 
     dim as HWND hGitHub = PsButton_Create( HWND_FRMABOUT, IDC_FRMABOUT_CMDGITHUB )
-    PsButton_SetText( hGitHub, L(375,"GitHub") )
+    PsButton_SetText( hGitHub, L(364,"GitHub") )
     PsButton_SetFont( hGitHub, ghFont(GUIFONT_11) )
     PsButton_SetClickCallback( hGitHub, @frmAbout_ButtonClickCallback )
 
     dim as HWND hClose = PsButton_Create( HWND_FRMABOUT, IDC_FRMABOUT_CMDCLOSE )
-    PsButton_SetText( hClose, L(136,"Close") )
+    PsButton_SetText( hClose, L(135,"Close") )
     PsButton_SetFont( hClose, ghFont(GUIFONT_11) )
     PsButton_SetDefault( hClose, true )
     PsButton_SetClickCallback( hClose, @frmAbout_ButtonClickCallback )

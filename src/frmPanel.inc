@@ -49,7 +49,7 @@ private function frmPanel_TipText( byval hTip as HWND, _
                                    byval idx as long ) as DWSTRING
     Theme_ApplyTooltip( hTip )
     select case idx
-        case PANELTIP_ACTIONMENU:  return L(288, "More Actions") & "..."
+        case PANELTIP_ACTIONMENU:  return L(278, "More Actions") & "..."
     end select
     return ""
 end function
@@ -107,21 +107,21 @@ function frmPanel_PositionWindows() as LRESULT
             ShowWindow( HWND_FRMBOOKMARKS, SW_HIDE )
             ShowWindow( HWND_FRMFUNCTIONS, SW_HIDE )
 
-            gPanel.wszHeader = L(198,"EXPLORER")
+            gPanel.wszHeader = L(195,"EXPLORER")
             ShowWindow( HWND_FRMEXPLORER, SW_SHOW )
 
         case HWND_FRMBOOKMARKS
             ShowWindow( HWND_FRMEXPLORER, SW_HIDE )
             ShowWindow( HWND_FRMFUNCTIONS, SW_HIDE )
 
-            gPanel.wszHeader = ucase( L(152,"Bookmarks") )
+            gPanel.wszHeader = ucase( L(151,"Bookmarks") )
             ShowWindow( HWND_FRMBOOKMARKS, SW_SHOW )
         
         case HWND_FRMFUNCTIONS
             ShowWindow( HWND_FRMEXPLORER, SW_HIDE )
             ShowWindow( HWND_FRMBOOKMARKS, SW_HIDE )
 
-            gPanel.wszHeader = ucase( L(186,"Function List") )
+            gPanel.wszHeader = ucase( L(183,"Function List") )
             ShowWindow( HWND_FRMFUNCTIONS, SW_SHOW )
 
     end select

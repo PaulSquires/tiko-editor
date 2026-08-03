@@ -310,12 +310,12 @@ function Doc_ConfirmLossySave( _
     if (pDoc <> 0) andalso pDoc->bLossySaveAccepted then return true
 
     dim as long nAnswer = TikoMsgBox( HWND_FRMMAIN, _
-            L(684, "Some characters in this document cannot be represented in") & _
+            L(516, "Some characters in this document cannot be represented in") & _
             " " & Doc_EncodingName( nEncoding ) & "." & vbcrlf & vbcrlf & _
             wszPath & vbcrlf & vbcrlf & _
-            L(685, "Saving will replace them and cannot be undone. Change the file's " & _
+            L(517, "Saving will replace them and cannot be undone. Change the file's " & _
                    "encoding first to keep them."), _
-            L(686, "Characters will be lost"), _
+            L(518, "Characters will be lost"), _
             TMB_ICON_WARNING, TMB_OKCANCEL, 1 )   ' default = Cancel: this is destructive
 
     if nAnswer <> IDOK then return false
@@ -332,11 +332,11 @@ end function
 ' ========================================================================================
 sub Doc_ReportWriteFailure( byval wszPath as DWSTRING, byval wszErr as DWSTRING )
     TikoMsgBox( HWND_FRMMAIN, _
-                L(675, "The file could not be saved.") & vbcrlf & vbcrlf & _
+                L(507, "The file could not be saved.") & vbcrlf & vbcrlf & _
                 wszPath & vbcrlf & vbcrlf & _
                 wszErr & vbcrlf & vbcrlf & _
-                L(676, "The file on disk has not been changed."), _
-                L(677, "Save failed"), _
+                L(508, "The file on disk has not been changed."), _
+                L(509, "Save failed"), _
                 TMB_ICON_NONE, TMB_OK )
 end sub
 
@@ -409,9 +409,9 @@ function ConvertTextBuffer( _
             ' Converting to ANSI will destroy characters outside the system ANSI codepage,
             ' and SetText empties the undo buffer, so there is no going back. Confirm first.
             dim as long nAnswer = MessageBoxW( HWND_FRMMAIN, _
-                    L(327,"This document contains characters that cannot be represented in ANSI. " & _
+                    L(316,"This document contains characters that cannot be represented in ANSI. " & _
                           "Converting will replace them and cannot be undone. Convert anyway?"), _
-                    L(328,"Convert to ANSI"), _
+                    L(317,"Convert to ANSI"), _
                     MB_OKCANCEL or MB_ICONEXCLAMATION or MB_DEFBUTTON2 )
             if nAnswer <> IDOK then return false
         end if

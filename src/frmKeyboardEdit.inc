@@ -184,7 +184,7 @@ function frmKeyboardEdit_AcceptCapture( byval vk as long, _
     ' binding that saves and displays perfectly and never fires.
     dim as DWSTRING wszName = KeyBindings_VKToName( vk )
     if len(wszName) = 0 then
-        wszWhy = L(346,"That key cannot be used as a shortcut.")
+        wszWhy = L(335,"That key cannot be used as a shortcut.")
         return false
     end if
 
@@ -198,7 +198,7 @@ function frmKeyboardEdit_AcceptCapture( byval vk as long, _
         dim as boolean bLetter = (vk >= asc("A")) andalso (vk <= asc("Z"))
         dim as boolean bDigit  = (vk >= asc("0")) andalso (vk <= asc("9"))
         if bLetter orelse bDigit then
-            wszWhy = L(347,"A letter or digit needs Ctrl, Alt or Shift.")
+            wszWhy = L(336,"A letter or digit needs Ctrl, Alt or Shift.")
             return false
         end if
     end if
@@ -465,7 +465,7 @@ private function frmKeyboardEdit_CaptureProc( _
             dim as COLORREF clr = theme.ui.field.forecolor
             dim as boolean bWaiting = (len(wszShow) = 0)
             if bWaiting then
-                wszShow = L(343,"Press the new shortcut")
+                wszShow = L(332,"Press the new shortcut")
                 clr = theme.panel.text.forecolor
             end if
 
@@ -624,12 +624,12 @@ private function frmKeyboardEdit_OnPaint( byval hwnd as HWND ) as LRESULT
     ' above an empty shortcut field, and there is nothing to say which of the two is the
     ' default and which is what the user is about to set.
     dim as DWSTRING wszDef = gKeysEdit.wszDefaultKeys
-    if len(wszDef) = 0 then wszDef = L(348,"(no default)")
+    if len(wszDef) = 0 then wszDef = L(337,"(no default)")
     rcT.top = y : rcT.bottom = y + rowH
     rcT.right = rc.right - mx - AfxScaleX(210)
     buffer.SetForeColor( theme.panel.text.forecolor )
     buffer.SetFont( ghFont(GUIFONT_11) )
-    buffer.PaintText( L(337,"Default Keys") & ": " & wszDef, @rcT, DT_LEFT or DT_END_ELLIPSIS )
+    buffer.PaintText( L(326,"Default Keys") & ": " & wszDef, @rcT, DT_LEFT or DT_END_ELLIPSIS )
 
     ' The toggle's caption. PsToggle carries no caption of its own and therefore no font,
     ' so every host draws its label -- the same arrangement the Options dialog's rows use.
@@ -638,7 +638,7 @@ private function frmKeyboardEdit_OnPaint( byval hwnd as HWND ) as LRESULT
     ' its caption.
     rcT.left  = rc.right - mx - AfxScaleX(200)
     rcT.right = rc.right - mx - AfxScaleX(58)
-    buffer.PaintText( L(344,"Disable default"), @rcT, DT_RIGHT or DT_END_ELLIPSIS )
+    buffer.PaintText( L(333,"Disable default"), @rcT, DT_RIGHT or DT_END_ELLIPSIS )
     rcT.left = mx : rcT.right = rc.right - mx
     y += rowH + AfxScaleY(14)
 
@@ -1000,7 +1000,7 @@ function frmKeyboardEdit_Show( byval hWndParent as HWND ) as LRESULT
     dim pWindow as CWindow ptr = new CWindow
     pWindow->DPI = AfxCWindowOwnerPtr(hWndParent)->DPI
 
-    HWND_FRMKEYBOARDEDIT = pWindow->Create( hWndParent, L(342,"Assign Shortcut"), _
+    HWND_FRMKEYBOARDEDIT = pWindow->Create( hWndParent, L(331,"Assign Shortcut"), _
         @frmKeyboardEdit_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
@@ -1046,7 +1046,7 @@ function frmKeyboardEdit_Show( byval hWndParent as HWND ) as LRESULT
     ' where Modify/Reset are left and OK/Cancel right. It is created first so it takes its
     ' place in the tab order before the two commit buttons.
     ghEditReset = PsButton_Create( HWND_FRMKEYBOARDEDIT, IDC_FRMKEYBOARDEDIT_CMDRESET )
-    PsButton_SetText( ghEditReset, L(341,"Reset") )
+    PsButton_SetText( ghEditReset, L(330,"Reset") )
     PsButton_SetFont( ghEditReset, ghFont(GUIFONT_11) )
     PsButton_SetClickCallback( ghEditReset, @frmKeyboardEdit_ButtonClick )
 
