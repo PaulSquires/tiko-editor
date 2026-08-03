@@ -157,8 +157,14 @@ end function
 function RedirConsoleToFile( _
             byval wszExe as DWSTRING, _
             byval wszCmdLine as DWSTRING, _
-            byref sConsoleText as string _
+            byref sConsoleText as string, _
+            byref nExitCode as long _
             ) as long
+
+    ' Assume failure until the child says otherwise. If it never starts, or its exit code
+    ' cannot be read, "unknown" must not read as "succeeded" -- that conflation is the whole
+    ' defect this parameter exists to close.
+    nExitCode = -1
 
     ' A SPACE IN THE COMPILER PATH IS FINE, and the check that used to sit here -- which
     ' aborted the compile and told the user to reinstall tiko somewhere without spaces --
@@ -244,6 +250,26 @@ function RedirConsoleToFile( _
             
     end if
 
+    ' ---- the child's EXIT CODE, which nothing used to read --------------------------------
+    ' Build success was decided purely by scraping the compiler's stdout (ParseLogForError),
+    ' and its "good compile" flag is set merely by seeing the FreeBASIC banner -- i.e. by the
+    ' compiler having STARTED. A compiler that then failed without printing a line matching
+    ' the scraper's pattern was reported as a SUCCESSFUL build, and the stale output binary
+    ' was run or debugged. Measured: fbc returns 0 on success (warnings included) and 1 on
+    ' error, so the exit code is authoritative where the text is only a heuristic.
+    '
+    ' The wait is bounded rather than INFINITE. The read loop above ends when the pipe
+    ' breaks, which happens once every inherited write handle is closed -- normally because
+    ' the child and its descendants exited. A child that closed stdout and kept running
+    ' would previously just let tiko carry on; an INFINITE wait here would turn that into a
+    ' hang, so a timeout keeps the old behaviour and simply leaves the code unknown.
+    if ProcessInfo.hProcess then
+        if WaitForSingleObject( ProcessInfo.hProcess, 30000 ) = WAIT_OBJECT_0 then
+            dim as DWORD dwCode
+            if GetExitCodeProcess( ProcessInfo.hProcess, @dwCode ) then nExitCode = clng(dwCode)
+        end if
+    end if
+
     ' Close handles to the child process and its primary thread.
     ' Some applications might keep these handles to monitor the status 
     ' of the child process, for example.
@@ -260,8 +286,10 @@ sub compile_thread( byval userdata as any ptr )
     
     ' Create a compile process and redirect the output to a text file.
     dim as string sConsoleText = ctp->sConsoleText
-    RedirConsoleToFile( ctp->wszExe, ctp->wszCmdLine, sConsoleText )
+    dim as long nExitCode
+    RedirConsoleToFile( ctp->wszExe, ctp->wszCmdLine, sConsoleText, nExitCode )
     ctp->sConsoleText = sConsoleText
+    ctp->nExitCode    = nExitCode
             
     ctp->pCompile->bCompileThreadComplete = true
 end sub
@@ -592,6 +620,27 @@ function ParseLogForError ( _
     ' to call the 64 bit compiler using a 32 bit operating system. Show the message to the user via
     ' the Output window (log file).
     if fGoodCompile = false then NumErrors += 1
+
+    ' ---- THE EXIT CODE IS THE AUTHORITY -------------------------------------------------
+    ' Everything above is a heuristic over the compiler's stdout, and fGoodCompile in
+    ' particular is set by seeing the FreeBASIC banner -- it means "the compiler ran", not
+    ' "the build worked". So a failure whose diagnostic does not match any pattern here
+    ' scored zero errors and the build was reported GOOD, after which the stale output was
+    ' run or handed to the debugger.
+    '
+    ' A non-zero exit with no error line found is exactly that case: report it, and send the
+    ' user to the log file, which is the only place the real reason exists. -1 means the code
+    ' could not be read at all (the child never started, or outlived the bounded wait).
+    if (pCompile->nLastExitCode <> 0) andalso (NumErrors = 0) then
+        NumErrors += 1
+        fSwitchToLogFile = true
+        dim as DWSTRING wszWhy = iif( pCompile->nLastExitCode = -1, _
+                L(678, "the compiler did not report an exit code"), _
+                L(679, "compiler exit code") & " " & str(pCompile->nLastExitCode) )
+        ListBox_AddTabbedRow( hLV, "" & chr(9) & "0" & chr(9) & "" & chr(9) & _
+                L(680, "Compile FAILED") & " (" & wszWhy & ") -- " & _
+                L(681, "see the Compiler Log File tab") )
+    end if
     
     if (fSwitchToLogFile = false) andalso (NumDirectives > 0) then
         fSwitchToLogFile = true
@@ -848,6 +897,44 @@ sub CompileCmd_RunSelfTest()
     CompileCmd_Tokenize( BuildChildCommandLine( wszExe, "" ), tok(), nTok )
     CMDASSERT( nTok = 1, "empty params gave " & nTok & " tokens, expected 1" )
     CMDASSERT( tok(0) = wszExe, "empty params lost the exe" )
+
+    ' ---- 6. THE EXIT CODE, against a REAL child process ---------------------------------
+    ' Build success used to be decided purely by scraping stdout, and the "good compile"
+    ' flag that drove it is set merely by seeing the FreeBASIC banner -- i.e. by the compiler
+    ' having STARTED. So these assertions are the ones that matter: they run an actual
+    ' process with a known exit status and check it is reported.
+    '
+    ' cmd.exe by FULL PATH, because RedirConsoleToFile passes lpApplicationName, which does
+    ' NOT search PATH -- a bare "cmd.exe" would fail to launch and prove nothing.
+    dim as DWSTRING wszCmdExe = environ("COMSPEC")
+    if len( wszCmdExe ) = 0 then wszCmdExe = "C:\Windows\System32\cmd.exe"
+
+    if AfxFileExists( wszCmdExe ) = false then
+        ? "  NOTE: no COMSPEC; the exit-code assertions did NOT run."
+    else
+        dim as string sOut
+        dim as long nRc, nExit
+
+        nRc = RedirConsoleToFile( wszCmdExe, "/c exit 0", sOut, nExit )
+        CMDASSERT( nRc = 0, "a child that started was reported as a launch failure" )
+        CMDASSERT( nExit = 0, "a successful child reported exit code " & nExit )
+
+        sOut = ""
+        nRc = RedirConsoleToFile( wszCmdExe, "/c exit 7", sOut, nExit )
+        CMDASSERT( nExit = 7, "a child that exited 7 reported " & nExit & _
+                              " -- a failing compiler would read as SUCCESS" )
+
+        ' stdout must still be captured; the wait was added after the read loop, and putting
+        ' it before would deadlock on a child that fills the pipe buffer.
+        sOut = ""
+        RedirConsoleToFile( wszCmdExe, "/c echo tiko_marker", sOut, nExit )
+        CMDASSERT( instr( sOut, "tiko_marker" ) > 0, _
+                   "stdout was lost: [" & left(sOut, 40) & "]" )
+        CMDASSERT( nExit = 0, "echo reported exit code " & nExit )
+    end if
+    ' NOT asserted here: the launch-failure path (nExitCode = -1). It raises a modal AfxMsg,
+    ' which would hang an unattended run. Its "unknown is not success" behaviour is instead
+    ' guaranteed structurally -- nExitCode is initialised to -1 before anything can fail.
 
     sMsg = "TIKO_COMPILECMD_SELFTEST: " & nPass & " passed, " & nFail & " failed."
     ? sMsg

@@ -413,7 +413,9 @@ function code_CompileModules( byval pCompile as COMPILE_TYPE ptr ) as boolean
                             " -v -o " + wDQ + pCompile->ObjectFilename + wDQ 
                             
                     dim as string sConsoleText
-                    RedirConsoleToFile( wszCommand, wszParams, sConsoleText )
+                    dim as long nExitCode
+                    RedirConsoleToFile( wszCommand, wszParams, sConsoleText, nExitCode )
+                    pCompile->nLastExitCode = nExitCode
                     
                     pCompile->wszFullCommandLine = wszCommand & " " & wszParams
                     pCompile->wszFullLogFile = sConsoleText
@@ -708,6 +710,7 @@ function code_Compile( byval wID as long ) as boolean
         AfxDoEvents()
     loop    
     
+    pCompile->nLastExitCode      = ctp.nExitCode
     pCompile->wszFullCommandLine = pCompile->CompilerPath & " " & wszParams
     pCompile->wszFullLogFile = ctp.sConsoleText
     dim as string sConsoleText = ctp.sConsoleText

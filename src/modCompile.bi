@@ -45,6 +45,12 @@ type COMPILE_TYPE
     ObjectFilename         as DWSTRING   ' Set when compiling a Module and used afterwards to construct StatusBar message
     hCurSave               as HCURSOR    ' Cursor saved/restored during compile process
     wszStatusBarMessage    as DWSTRING   ' Success/Fail statusbar message
+    ' Exit code of the LAST child compiler process. fbc returns 0 on success (warnings
+    ' included) and non-zero on error -- measured, not assumed. It is the authority on
+    ' whether a build failed; ParseLogForError's text scraping only LOCATES the error.
+    ' Before this existed, a compiler that failed without printing a line the scraper
+    ' recognised was reported as a successful build and the stale output was then run.
+    nLastExitCode          as long
 end type
 
 type CompileThreadParams
@@ -52,6 +58,7 @@ type CompileThreadParams
     wszExe              as DWSTRING
     wszCmdLine          as DWSTRING
     sConsoleText        as string 
+    nExitCode           as long       ' out: the child's exit code (see COMPILE_TYPE)
 end type
 
 declare sub compile_thread( byval userdata as any ptr )
