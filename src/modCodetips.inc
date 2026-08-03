@@ -798,10 +798,43 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
             ' walked inside EnumMembers).
             dim as SYMBOLREF refExpr = DereferenceLine( pDoc, sDot, curPos - 1 )
             dim as SYMBOLREF refType = SymRefTypeOf( refExpr )
+
+            ' TIKO_MEMBER_TRACE=1: name which of the four steps failed. This chain gives
+            ' the user NOTHING when it breaks -- no popup, no message -- and every step
+            ' can fail for a different reason (the file missing from both sets, the caret
+            ' outside any proc body, the variable not scanned yet, the TYPE suppressed by
+            ' the merge masks), so a silent "return false" is untraceable from outside.
+            if environ("TIKO_MEMBER_TRACE") = "1" then
+                dim as string sT = "MEMBER: file=" & ScanMgr_GetRootName( pDoc ) & _
+                    " line=" & str(pDoc->GetCurrentLineNumber + 1) & " trigger='" & sDot & "'"
+                if refExpr.IsValid then
+                    sT &= "  expr=OK " & *gSymDb.SymName(refExpr)
+                    dim as wstring ptr pTT = gSymDb.SymTypeText(refExpr)
+                    if pTT then sT &= " type='" & *pTT & "'"
+                else
+                    sT &= "  expr=MISS"
+                end if
+                if refType.IsValid then
+                    sT &= "  resolved=OK " & *gSymDb.SymName(refType)
+                else
+                    sT &= "  resolved=MISS"
+                end if
+                dim as long nBuf = 0, nProj = 0
+                if gSymDb.BufferSet() then
+                    if gSymDb.BufferSet()->pResult then nBuf = gSymDb.BufferSet()->pResult->symbolCount
+                end if
+                if gSymDb.ProjectSet() then
+                    if gSymDb.ProjectSet()->pResult then nProj = gSymDb.ProjectSet()->pResult->symbolCount
+                end if
+                sT &= "  bufferSyms=" & str(nBuf) & " projectSyms=" & str(nProj)
+                print sT
+            end if
+
             if refType.IsValid = false then return false
 
             dim rs() as SYMBOLREF
             dim as long n = gSymDb.EnumMembers( refType, rs() )
+            if environ("TIKO_MEMBER_TRACE") = "1" then print "  members=" & str(n)
             for i as long = 0 to n - 1
                 if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit for
                 st = *gSymDb.SymName( rs(i) )
