@@ -614,7 +614,6 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
     dim nData          as long
     dim i              as long
     dim bReadingNote   as boolean
-    dim bNewConfigFile as boolean
 
     ' Builds AND Tools are rebuilt from the file on every load, including a hot reload.
     '
@@ -633,9 +632,10 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
     erase this.Builds
     erase this.Tools
 
-    if AfxFileExists(this.ConfigFilename) = 0 then
-        bNewConfigFile = true
-    else
+    ' A MISSING config file needs no branch of its own any more. Its only consumer was the
+    ' default-Tools seeding below, which is gone -- everything else here defaults through
+    ' the field initialisers in clsConfig.bi.
+    if AfxFileExists(this.ConfigFilename) <> 0 then
         dim pStream as CTextStream   '(utf16)
         ' The wrapper owns gApp.PreventConfigLoad, so this early return can no longer
         ' strand it -- which is exactly what it used to do.
@@ -916,36 +916,15 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
     ' We do the setting of default Categories in gConfig.SetCategoryDefaults
     ' in WinMain after the localization is correctly loaded.
 
-    ' Set some defaults if the config file was missing.
-    ' if no Tools exist then create some default ones...
-    if (ubound(this.Tools) = -1) andalso (bNewConfigFile = true) then
-        dim wszTools(1) as DWSTRING
-        wszTools(0) = "ASCII Chart|-|.\settings\tools\asciichart32.exe|-||-|1|-||-|1|-|0|-|0|-|0|-|0|-|0|-|1|-|0"
-        wszTools(1) = "GUID Generator|-|.\settings\tools\GUIDgen32.exe|-||-|2|-||-|1|-|0|-|0|-|0|-|0|-|0|-|1|-|0"
-        for i = lbound(wszTools) to ubound(wszTools)
-            if i > ubound(this.Tools) then
-                redim preserve this.Tools(i)
-                wData = wszTools(i)
-                this.Tools(i).wszDescription   = AfxStrParse(wData, 1, "|-|")
-                this.Tools(i).wszCommand       = ProcessFromCurdriveApp( AfxStrParse(wData, 2, "|-|") )
-                this.Tools(i).wszParameters    = AfxStrParse(wData, 3, "|-|")
-                this.Tools(i).wszKey           = AfxStrParse(wData, 4, "|-|")
-                this.Tools(i).wszWorkingFolder = ProcessFromCurdriveApp( AfxStrParse(wData, 5, "|-|") )
-                this.Tools(i).IsCtrl           = val(AfxStrParse(wData, 6, "|-|"))
-                this.Tools(i).IsAlt            = val(AfxStrParse(wData, 7, "|-|"))
-                this.Tools(i).IsShift          = val(AfxStrParse(wData, 8, "|-|"))
-                this.Tools(i).IsPromptRun      = val(AfxStrParse(wData, 9, "|-|"))
-                this.Tools(i).IsMinimized      = val(AfxStrParse(wData, 10, "|-|"))
-                this.Tools(i).IsWaitFinish     = val(AfxStrParse(wData, 11, "|-|"))
-                this.Tools(i).IsDisplayMenu    = val(AfxStrParse(wData, 12, "|-|"))
-                this.Tools(i).Action           = val(AfxStrParse(wData, 13, "|-|"))
-            end If
-        next
-    end if
+    ' NO DEFAULT USER TOOLS. A new config file used to be seeded with two entries --
+    ' "ASCII Chart" and "GUID Generator", pointing at asciichart32.exe and GUIDgen32.exe
+    ' under settings\tools -- but both executables have been removed from the distribution,
+    ' so seeding them gave a fresh install a Tools menu whose every entry failed to launch.
+    ' The Tools list now starts empty and is whatever the user adds.
 
     ' Set some defaults if the config file was missing or corrupt
-    ' if no builds exist then create some default ones... We do this
-    ' no matter if it is a bNewConfigFile or not.
+    ' if no builds exist then create some default ones... We do this whether or not
+    ' the config file was there to be read.
     if ubound(this.Builds) = -1 then
         redim this.Builds(11)
         this.Builds(0).id = AfxGuidText(AfxGuid())
