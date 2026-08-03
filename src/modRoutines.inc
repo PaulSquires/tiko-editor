@@ -213,6 +213,67 @@ end function
     
 
 ' ========================================================================================
+' Safely read the wide string out of a WM_COPYDATA payload.
+'
+' WM_COPYDATA IS AN OPEN DOOR. Any process on the same desktop can send it to tiko's main
+' window; nothing about it is privileged. The handler used to do:
+'
+'     dim as DWSTRING wszCommandLine = *cast(wstring ptr, pDataToGet->lpData)
+'
+' which dereferences another process's buffer as a NUL-terminated string without checking
+' lpData for null, without consulting cbData at all, and without any guarantee a terminator
+' exists inside the mapped copy. A payload that is simply not terminated reads off the end
+' of the mapping -- an access violation, i.e. any unprivileged process can close the editor
+' at will. The resulting string is then treated as a list of files to open.
+'
+' Every rule here is about staying inside cbData:
+'   - a null pointer, or fewer than 2 bytes, cannot hold even one UTF-16 code unit
+'   - an odd trailing byte cannot form a code unit, so integer division drops it
+'   - the scan for the terminator NEVER passes cbData\2, and the result is terminated by
+'     this function rather than trusted from the sender
+'   - the length is capped: a command line is bounded by the OS at 32767 characters, so
+'     anything longer is not one, whatever the sender claims
+'
+' Pure -- pointer and length in, string out -- so all of that is assertable without a second
+' process. Returns "" for anything malformed.
+'
+' NOTE: this validates the CONTENT, not the SENDER. tiko still acts on a file list from any
+' process that asks. Restricting that (checking the sender's image path) is a separate
+' decision and is deliberately not made here.
+' ========================================================================================
+function SafeCopyDataString( byval pData as any ptr, byval cbData as ulong ) as DWSTRING
+    const MAX_COPYDATA_CHARS = 32767      ' the OS command-line limit
+
+    if pData = 0 then return ""
+    if cbData < 2 then return ""
+
+    dim as ulong nMax = cbData \ 2        ' an odd trailing byte cannot be a code unit
+    if nMax > MAX_COPYDATA_CHARS then nMax = MAX_COPYDATA_CHARS
+
+    ' Find the terminator WITHIN the declared length. A well-formed sender includes one
+    ' (SpawnPreviousInstance sends (len+1)*2); a hostile or buggy one may not, and that is
+    ' precisely the case the old code read past.
+    dim as ushort ptr p = cast(ushort ptr, pData)
+    dim as ulong n = 0
+    while n < nMax
+        if p[n] = 0 then exit while
+        n += 1
+    wend
+    if n = 0 then return ""
+
+    ' Copy into our own buffer and terminate it ourselves.
+    dim as wstring ptr pBuf = allocate( (n + 1) * 2 )
+    if pBuf = 0 then return ""
+    memcpy( pBuf, pData, n * 2 )
+    pBuf[n] = 0
+    dim as DWSTRING wszOut = *pBuf
+    deallocate( pBuf )
+
+    return wszOut
+end function
+
+
+' ========================================================================================
 ' Reload a Document based on filename.
 ' - Used in Replace in Files
 ' - Used in WM_ACTIVATEAPP to reload externally modified file.
@@ -2011,4 +2072,100 @@ sub DoCheckForUpdates( byval param as any ptr )
         gApp.IsUpdateAvailable = true
     end if
    
+end sub
+
+
+' ########################################################################################
+' Env-gated: TIKO_COPYDATA_SELFTEST=1
+'
+' Asserts SafeCopyDataString stays inside cbData. The case that matters is the UNTERMINATED
+' buffer: that is what the old handler read past, and it is unreachable by inspection --
+' the only way to know a reader stops is to hand it something with no terminator and a hard
+' boundary after it.
+'
+' The buffer is deliberately allocated with a GUARD PATTERN after the declared length. If
+' the reader overruns, it consumes the guard and the assertion on the returned length fails,
+' rather than the test merely "not crashing" -- which proves nothing, since reading a few
+' bytes past a heap allocation usually succeeds.
+'
+' (Lives here because SafeCopyDataString does. When modRoutines is split -- it is a
+'  junk drawer and known to be -- both should move together.)
+' ########################################################################################
+sub CopyData_RunSelfTest()
+
+    if environ("TIKO_COPYDATA_SELFTEST") <> "1" then exit sub
+
+    dim as long nPass = 0, nFail = 0
+    dim as string sMsg
+
+    #macro CDASSERT( cond, msg )
+        if (cond) then
+            nPass += 1
+        else
+            nFail += 1
+            sMsg = "  FAIL: " & msg
+            ? sMsg
+        end if
+    #endmacro
+
+    ? "--- TIKO_COPYDATA_SELFTEST ---"
+
+    ' ---- malformed payloads are refused, not dereferenced -------------------------------
+    CDASSERT( len( SafeCopyDataString( 0, 100 ) ) = 0, "a NULL lpData was dereferenced" )
+    CDASSERT( len( SafeCopyDataString( 0, 0 ) ) = 0,   "NULL/0 was dereferenced" )
+
+    scope
+        dim as wstring * 16 w = "hello"
+        CDASSERT( len( SafeCopyDataString( @w, 0 ) ) = 0, "cbData=0 still returned text" )
+        CDASSERT( len( SafeCopyDataString( @w, 1 ) ) = 0, _
+                  "cbData=1 (half a code unit) still returned text" )
+
+        ' ---- the normal case: sender includes the terminator, as SpawnPreviousInstance does
+        CDASSERT( SafeCopyDataString( @w, (len(w) + 1) * 2 ) = "hello", _
+                  "a well-formed payload did not round-trip" )
+
+        ' ---- cbData SHORTER than the string: the declared length wins, not the terminator
+        CDASSERT( SafeCopyDataString( @w, 3 * 2 ) = "hel", _
+                  "read past a cbData that was shorter than the buffer" )
+
+        ' ---- an odd trailing byte cannot form a code unit and must be dropped ------------
+        CDASSERT( SafeCopyDataString( @w, 3 * 2 + 1 ) = "hel", _
+                  "an odd cbData was rounded UP, reading half a code unit past the end" )
+    end scope
+
+    ' ---- THE ONE THAT MATTERS: no terminator anywhere inside cbData ---------------------
+    scope
+        const N = 8
+        ' N code units of text, then a guard the reader must never reach.
+        dim as ushort ptr p = allocate( (N + 4) * 2 )
+        if p = 0 then
+            ? "  NOTE: allocation failed; the overrun assertions did NOT run."
+        else
+            for i as long = 0 to N - 1
+                p[i] = asc("A") + i
+            next
+            for i as long = N to N + 3
+                p[i] = asc("Z")            ' guard: NOT a terminator, so an overrun eats it
+            next
+
+            dim as DWSTRING wszGot = SafeCopyDataString( p, N * 2 )
+            CDASSERT( len( wszGot ) = N, _
+                      "unterminated payload returned " & len(wszGot) & " chars, expected " & N & _
+                      " -- the reader ran past cbData" )
+            CDASSERT( wszGot = "ABCDEFGH", "unterminated payload returned [" & wszGot & "]" )
+            CDASSERT( instr( wszGot, "Z" ) = 0, _
+                      "the guard pattern was consumed: the reader overran the declared length" )
+            deallocate( p )
+        end if
+    end scope
+
+    ' ---- an empty (terminator-first) payload is not text --------------------------------
+    scope
+        dim as ushort z(0 to 1) = { 0, 0 }
+        CDASSERT( len( SafeCopyDataString( @z(0), 4 ) ) = 0, _
+                  "a payload starting with a terminator returned text" )
+    end scope
+
+    sMsg = "TIKO_COPYDATA_SELFTEST: " & nPass & " passed, " & nFail & " failed."
+    ? sMsg
 end sub

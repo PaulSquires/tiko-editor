@@ -37,6 +37,10 @@ declare function RichEditCenterSingleLineText( byval hRichEdit as HWND ) as long
 declare function CompleteIncludeFilename( byval pDoc as clsDocument ptr, byval wszFilename as string ) as string
 declare function getTextWidth( byval hwnd as HWND, byref wszText as wstring, byval FontIndex as long ) as long
 declare function SpawnPreviousInstance() as boolean
+' Bounded read of a WM_COPYDATA payload -- see its header. Pure, so it is assertable
+' without a second process. Returns "" for anything malformed.
+declare function SafeCopyDataString( byval pData as any ptr, byval cbData as ulong ) as DWSTRING
+declare sub CopyData_RunSelfTest()
 declare function ReloadDocument( byref wszFilename as wstring ) as long
 declare function GetTemporaryFilename( byref wszFolder as wstring, byref wszExtension as wstring) as string
 declare function GetFontCharSetID(byref wzCharsetName as DWSTRING ) as long

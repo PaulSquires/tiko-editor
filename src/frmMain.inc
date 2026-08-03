@@ -1483,11 +1483,18 @@ function frmMain_WndProc( _
         '  owned and released by the controls that take it.)
 
         case WM_COPYDATA      ' used during processing of commandline
+            ' ANY process on this desktop can send this. The payload used to be dereferenced
+            ' as a NUL-terminated string with no null check, no use of cbData, and no
+            ' guarantee a terminator existed inside the mapped copy -- so an unterminated
+            ' payload read off the end of the mapping and took the editor down.
+            ' SafeCopyDataString stays inside cbData and returns "" for anything malformed.
             dim pDataToGet as COPYDATASTRUCT ptr = cast(COPYDATASTRUCT ptr, lParam)
             if pDataToGet then
                 if pDataToGet->dwData = IDM_COPYDATA_COMMANDLINE then  
-                    dim as DWSTRING wszCommandLine = *cast(wstring ptr, pDataToGet->lpData)
-                    
+                    dim as DWSTRING wszCommandLine = _
+                            SafeCopyDataString( pDataToGet->lpData, pDataToGet->cbData )
+                    if len( wszCommandLine ) = 0 then return 0
+
                     dim as integer numfiles = AfxStrParseCount(wszCommandLine, ";")
                     dim wszFiles(numfiles) as DWSTRING
 
@@ -1774,6 +1781,8 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Env-gated (TIKO_COMPILECMD_SELFTEST=1). Pure: it asserts the lpCommandLine STRING,
     ' because a suite cannot launch a process -- see the suite's own header.
     CompileCmd_RunSelfTest()
+    ' Env-gated (TIKO_COPYDATA_SELFTEST=1). Pure: bounded reads over local buffers.
+    CopyData_RunSelfTest()
     ' Env-gated (TIKO_DEBUG_SELFTEST=1). Pure: layout arithmetic, the datatip expression
     ' walk and the localized strings. It launches nothing -- see the suite's own header
     ' for what that means it cannot reach.
