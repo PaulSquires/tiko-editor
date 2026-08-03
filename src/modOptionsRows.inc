@@ -1,4 +1,4 @@
-'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
+﻿'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
 '    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
@@ -318,7 +318,6 @@ sub OptionsWork_Load()
     ' what the old compiler page did in its own Show.
     gOptWork.CompilerSwitches      = gConfig.CompilerSwitches
     gOptWork.CompilerIncludes      = gConfig.CompilerIncludes
-    gOptWork.CompilerHelpfile      = ProcessFromCurdriveApp( gConfig.CompilerHelpfile )
     gOptWork.RunViaCommandWindow   = gConfig.RunViaCommandWindow
     gOptWork.DisableCompileBeep    = gConfig.DisableCompileBeep
     ' The toolchain FOLDER name, parsed out of the stored 32-bit compiler path
@@ -378,7 +377,6 @@ sub OptionsWork_Commit()
 
     gConfig.CompilerSwitches      = gOptWork.CompilerSwitches
     gConfig.CompilerIncludes      = gOptWork.CompilerIncludes
-    gConfig.CompilerHelpfile      = gOptWork.CompilerHelpfile
     gConfig.RunViaCommandWindow   = gOptWork.RunViaCommandWindow
     gConfig.DisableCompileBeep    = gOptWork.DisableCompileBeep
     ' Only rebuild the compiler paths when a toolchain is actually named. "" means the

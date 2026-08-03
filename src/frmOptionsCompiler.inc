@@ -1,4 +1,4 @@
-'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
+﻿'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
 '    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
@@ -31,8 +31,7 @@
 #define COMP_LISTHEIGHT     120
 #define COMP_FIELDPAD        11      ' vertical padding inside a single-line PsTextBox
 #define COMP_LABELGAP         4      ' between a field label and the field under it
-#define COMP_SECTIONGAP      11      ' between one field block and the next (x4 on this page)
-#define COMP_BROWSEWIDTH     40
+#define COMP_SECTIONGAP      11      ' between one field block and the next
 
 
 ' One drawn label on the page. The caption is composed at layout time (some carry a
@@ -46,8 +45,6 @@ end type
 dim shared ghCompToolchains as HWND      ' PsListTree
 dim shared ghCompSwitches   as HWND      ' PsTextBox
 dim shared ghCompIncludes   as HWND      ' PsTextBox
-dim shared ghCompHelpfile   as HWND      ' PsTextBox
-dim shared ghCompBrowse     as HWND      ' PsButton
 dim shared ghCompRunCmd     as HWND      ' PsToggle
 dim shared ghCompBeep       as HWND      ' PsToggle
 
@@ -79,8 +76,6 @@ sub frmOptionsCompiler_Reset()
     ghCompToolchains = 0
     ghCompSwitches   = 0
     ghCompIncludes   = 0
-    ghCompHelpfile   = 0
-    ghCompBrowse     = 0
     ghCompRunCmd     = 0
     ghCompBeep       = 0
     erase gCompToolchainNames
@@ -129,8 +124,6 @@ private sub frmOptionsCompiler_TextChanged( byval hTextBox as HWND )
         gOptWork.CompilerSwitches = PsTextBox_GetText( hTextBox )
     elseif hTextBox = ghCompIncludes then
         gOptWork.CompilerIncludes = PsTextBox_GetText( hTextBox )
-    elseif hTextBox = ghCompHelpfile then
-        gOptWork.CompilerHelpfile = PsTextBox_GetText( hTextBox )
     end if
 end sub
 
@@ -143,20 +136,6 @@ private sub frmOptionsCompiler_ToggleChanged( byval hToggle as HWND, byval isChe
         gOptWork.RunViaCommandWindow = iif( isChecked, 1, 0 )
     elseif hToggle = ghCompBeep then
         gOptWork.DisableCompileBeep = iif( isChecked, 1, 0 )
-    end if
-end sub
-
-
-' ========================================================================================
-' Browse for the FreeBASIC help file. The button keeps the old id so AfxIFileOpenDialogW
-' shows the *.chm filter. Sets both the textbox (silent SetText) and staging.
-' ========================================================================================
-private sub frmOptionsCompiler_BrowseClick( byval hButton as HWND, byval id as long )
-    dim pwszName as wstring ptr = AfxIFileOpenDialogW( HWND_FRMOPTIONS, IDC_FRMOPTIONSCOMPILER_CMDFBHELPFILE )
-    if pwszName then
-        PsTextBox_SetText( ghCompHelpfile, *pwszName )
-        gOptWork.CompilerHelpfile = *pwszName
-        CoTaskMemFree( pwszName )
     end if
 end sub
 
@@ -239,16 +218,6 @@ sub frmOptionsCompiler_Build( byval hPage as HWND )
     PsTextBox_SetText( ghCompIncludes, gOptWork.CompilerIncludes )
     PsTextBox_SetChangeCallback( ghCompIncludes, @frmOptionsCompiler_TextChanged )
 
-    ghCompHelpfile = PsTextBox_Create( hPage, IDC_FRMOPTIONSCOMPILER_TXTFBHELPFILE )
-    PsTextBox_SetText( ghCompHelpfile, gOptWork.CompilerHelpfile )
-    PsTextBox_SetChangeCallback( ghCompHelpfile, @frmOptionsCompiler_TextChanged )
-
-    ' ---- browse button ---------------------------------------------------------------
-    ghCompBrowse = PsButton_Create( hPage, IDC_FRMOPTIONSCOMPILER_CMDFBHELPFILE )
-    PsButton_SetText( ghCompBrowse, "..." )
-    PsButton_SetFont( ghCompBrowse, OptionsFont_Base() )
-    PsButton_SetClickCallback( ghCompBrowse, @frmOptionsCompiler_BrowseClick )
-
     ' ---- toggles ---------------------------------------------------------------------
     ghCompRunCmd = PsToggle_Create( hPage, IDC_FRMOPTIONSCOMPILER_CHKRUNVIACOMMANDWINDOW )
     PsToggle_SetChecked( ghCompRunCmd, iif( gOptWork.RunViaCommandWindow <> 0, true, false ) )   ' silent
@@ -276,12 +245,6 @@ sub frmOptionsCompiler_ApplyTheme()
 
     OptionsTheme_ApplyTextBox( ghCompSwitches )
     OptionsTheme_ApplyTextBox( ghCompIncludes )
-    OptionsTheme_ApplyTextBox( ghCompHelpfile )
-
-    dim as PSBUTTON_COLORS bc
-    OptionsTheme_FillButton( @bc )
-    PsButton_SetColors( ghCompBrowse, @bc )
-    PsButton_Refresh( ghCompBrowse )
 
     dim as PSTOGGLE_COLORS tc
     OptionsTheme_FillToggle( @tc )
@@ -299,8 +262,6 @@ sub frmOptionsCompiler_Show( byval bShow as boolean )
     ShowWindow( ghCompToolchains, nCmd )
     ShowWindow( ghCompSwitches, nCmd )
     ShowWindow( ghCompIncludes, nCmd )
-    ShowWindow( ghCompHelpfile, nCmd )
-    ShowWindow( ghCompBrowse, nCmd )
     ShowWindow( ghCompRunCmd, nCmd )
     ShowWindow( ghCompBeep, nCmd )
 end sub
@@ -394,16 +355,6 @@ function frmOptionsCompiler_Layout( byval hPage as HWND, byval cxPanel as long )
 
     TOGGLEROW( ghCompRunCmd, LL(211) )
     TOGGLEROW( ghCompBeep, LL(262) )
-    y += sectionGap
-
-    ' ---- help file: label, then textbox + browse button on one line ------------------
-    FIELDLABEL( LL(133) & ":" )
-    dim as long browseW = AfxScaleX(COMP_BROWSEWIDTH)
-    dim as long txtW    = fullW - browseW - labelGap
-    if txtW < 0 then txtW = 0
-    SetWindowPos( ghCompHelpfile, 0, padLeft, y, txtW, fieldH, SWP_NOZORDER or SWP_NOACTIVATE )
-    SetWindowPos( ghCompBrowse, 0, contentR - browseW, y, browseW, fieldH, SWP_NOZORDER or SWP_NOACTIVATE )
-    y += fieldH
 
     function = y + AfxScaleY(OPTROW_PADBOTTOM)
 end function

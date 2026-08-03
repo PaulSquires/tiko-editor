@@ -28,13 +28,14 @@
 ' modRoutines.inc) before PsScrollPanel.bi would otherwise be seen.
 #include once "PsScrollPanel.bi"
 
-' The browse button keeps its old id so AfxIFileOpenDialogW still shows the *.chm filter
-' and "Find Help File" title (it switches on this id -- see modRoutines.inc).
+' 9213 and 9214 are RETIRED, not reused: they were the FreeBASIC help file textbox and its
+' browse button. The setting they edited was never read by anything -- the Help Center
+' replaced the .chm -- so the controls, the gConfig field and the file dialog's *.chm case
+' are all gone. Leaving the numbers vacant keeps a stale settings.ini or a stale id in some
+' other switch from landing on a live control.
 #Define IDC_FRMOPTIONSCOMPILER_LSTTOOLCHAINS          9210
 #Define IDC_FRMOPTIONSCOMPILER_TXTFBSWITCHES          9211
 #Define IDC_FRMOPTIONSCOMPILER_TXTINCLUDES            9212
-#Define IDC_FRMOPTIONSCOMPILER_TXTFBHELPFILE          9213
-#Define IDC_FRMOPTIONSCOMPILER_CMDFBHELPFILE          9214
 #Define IDC_FRMOPTIONSCOMPILER_CHKRUNVIACOMMANDWINDOW 9215
 #Define IDC_FRMOPTIONSCOMPILER_CHKDISABLECOMPILEBEEP  9216
 

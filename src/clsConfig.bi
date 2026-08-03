@@ -1,4 +1,4 @@
-'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
+﻿'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
 '    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
@@ -224,7 +224,6 @@ type clsConfig
         CompilerBuild             as DWSTRING     ' Build GUID
         CompilerSwitches          as DWSTRING
         CompilerIncludes          as DWSTRING
-        CompilerHelpfile          as DWSTRING
         RunViaCommandWindow       as long = false
         DisableCompileBeep        as long = false
         MRU(9)                    as DWSTRING

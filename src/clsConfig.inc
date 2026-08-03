@@ -396,7 +396,6 @@ function clsConfig.SaveConfigFileBody() as long
     ' drive letter.
     this.FBWINCompiler32  = ProcessToCurdriveApp(this.FBWINCompiler32)
     this.FBWINCompiler64  = ProcessToCurdriveApp(this.FBWINCompiler64)
-    this.CompilerHelpfile = ProcessToCurdriveApp(this.CompilerHelpfile)
 
     ' Iterate the optional semi colon separated list of compiler include paths
     ' Do not modify the this.CompilerIncludes directly because that will put the
@@ -420,7 +419,6 @@ function clsConfig.SaveConfigFileBody() as long
     pStream.WriteLine "CompilerBuild="         & this.CompilerBuild
     pStream.WriteLine "CompilerSwitches="      & this.CompilerSwitches
     pStream.WriteLine "CompilerIncludes="      & SaveCompilerIncludes
-    pStream.WriteLine "CompilerHelpfile="      & this.CompilerHelpfile
     pStream.WriteLine "RunViaCommandWindow="   & this.RunViaCommandWindow
     pStream.WriteLine "DisableCompileBeep="    & this.DisableCompileBeep
 
@@ -822,7 +820,6 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
             case "CompilerBuild":            this.CompilerBuild         = wData
             case "CompilerSwitches":         this.CompilerSwitches      = wData
             case "CompilerIncludes":         this.CompilerIncludes      = wData
-            case "CompilerHelpfile":         this.CompilerHelpfile      = ProcessFromCurdriveApp(wData)
             case "RunViaCommandWindow":      this.RunViaCommandWindow   = nData
             case "DisableCompileBeep":       this.DisableCompileBeep    = nData
             end select
@@ -1023,10 +1020,6 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
     if len(this.FBWINCompiler64) = 0 then
         wszText = AfxGetExePathName & "toolchains\" & gwszDefaultToolchain & "\fbc64.exe"
         if AfxFileExists(wszText) then this.FBWINCompiler64 = wszText
-    end if
-    if len(this.CompilerHelpfile) = 0 then
-        wszText = AfxGetExePathName & "settings\help\freebasic_manual.chm"
-        if AfxFileExists(wszText) then this.CompilerHelpfile = wszText
     end if
 
     ' do some checks to see if the editor font exists. It is possible that the

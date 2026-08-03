@@ -807,24 +807,9 @@ function AfxIFileOpenDialogW( _
                 end if      
             end if
 
-        case IDC_FRMOPTIONSCOMPILER_CMDFBHELPFILE 
-            rgFileTypes(1).pszName = @L(100,"Help file")
-            rgFileTypes(1).pszSpec = @wstr("*.chm")
-            rgFileTypes(2).pszName = @L(76,"All files")
-            rgFileTypes(2).pszSpec = @wstr("*.*")
-            pofd->lpVtbl->SetFileTypes(pofd, 2, @rgFileTypes(1))
-            ' Set the title of the dialog
-            hr = pofd->lpVtbl->SetTitle(pofd, L(101,"Find Help File"))
-
-            dim as DWSTRING wszDefaultFolder = AfxGetExePathName & wstr("settings\help\") 
-            dim pFolder as IShellItem ptr
-            SHCreateItemFromParsingName (wszDefaultFolder, null, @IID_IShellItem, @pFolder)
-            if pFolder then
-                hr = pofd->lpVtbl->SetFolder(pofd, pFolder)
-                if SUCCEEDED(hr) then
-                    pFolder->lpVtbl->Release(pFolder)
-                end if      
-            end if
+        ' (The IDC_FRMOPTIONSCOMPILER_CMDFBHELPFILE case is gone with the control that
+        '  raised it: a *.chm filter, a "Find Help File" title and a settings\help start
+        '  folder, for a path nothing ever opened. The Help Center replaced the .chm.)
 
     end select
     
