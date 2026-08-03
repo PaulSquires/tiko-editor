@@ -3,19 +3,19 @@
 '
 ' ONE definition of what a line in tiko's key=value files means.
 '
-' settings.ini and .tiko share a format, and three separate loops had grown their own copy
-' of the preamble that decodes it: clsConfig.LoadConfigFile, clsConfig.ProjectLoadFromFile
-' and ProjectTrust_ScanFile. THEY HAD ALREADY DRIFTED -- the third skipped neither comment
-' lines nor section headers, so a commented-out "'ProjectOther64=..." was handed to its
-' switch as a key. Harmless there by luck, since no case matched; the point is that nothing
-' would have caught it, and the next copy might not be lucky.
+' settings.ini and .tiko share a format, and separate loops had each grown their own copy
+' of the preamble that decodes it -- clsConfig.LoadConfigFile and
+' clsConfig.ProjectLoadFromFile today, and a third (a read-only .tiko scanner, since
+' removed) that HAD ALREADY DRIFTED: it skipped neither comment lines nor section headers,
+' so a commented-out "'ProjectOther64=..." was handed to its switch as a key. Harmless
+' there by luck, since no case matched; the point is that nothing would have caught it,
+' and the next copy might not be lucky.
 '
 ' Deliberately a CLASSIFIER, not a callback-driven walker. A walker would have to own the
-' loop, and each of the three does something different inside it -- one fills a config
-' object, one builds documents, one extracts three values -- so the callback would need a
-' context pointer and the control flow would move away from the code that owns it. This
-' shape leaves each loop looking exactly as it did and replaces only the part that was
-' identical.
+' loop, and each caller does something different inside it -- one fills a config object,
+' one builds documents -- so the callback would need a context pointer and the control flow
+' would move away from the code that owns it. This shape leaves each loop looking exactly
+' as it did and replaces only the part that was identical.
 '
 ' ORDER MATTERS AT THE CALL SITE and is not captured here: a line inside a NOTES block is
 ' free text and must be consumed as such BEFORE its key=value split is considered, or a

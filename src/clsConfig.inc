@@ -31,8 +31,6 @@
 ' actually change gConfig.Tools. Safe to include this early -- the header states its own
 ' contract that nothing in it may name a Ps* type, for exactly this reason.
 #include once "frmUserTools.bi"
-' Workspace trust for .tiko files -- ProjectLoadFromFile and ProjectSaveToFile both use it.
-#include once "modProjectTrust.bi"
 
 ''
 ''  CONSTRUCTOR
@@ -483,12 +481,6 @@ function clsConfig.SaveConfigFileBody() as long
         pStream.WriteLine "MRU_" & right("00" & str(i), 2) & "=" & this.MRU(i)
     next
 
-    ' Trusted project paths (modProjectTrust). Same shape as MRU_ but variable length.
-    for i as long = lbound(this.TrustedProjects) to ubound(this.TrustedProjects)
-        if len(this.TrustedProjects(i)) = 0 then continue for
-        pStream.WriteLine "TRUSTPROJ_" & right("00" & str(i), 2) & "=" & this.TrustedProjects(i)
-    next
-
     pStream.WriteLine ""
     pStream.WriteLine "[MRUPROJECTS]"
     for i as long = 0 To 9
@@ -639,7 +631,6 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
     ' are refreshed in place instead, which a hot reload could not do before.
     erase this.Builds
     erase this.Tools
-    erase this.TrustedProjects
 
     if AfxFileExists(this.ConfigFilename) = 0 then
         bNewConfigFile = true
@@ -731,15 +722,6 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
                     continue do
                 end If
             end If
-
-            if left(wKey, 10) = "TRUSTPROJ_" then
-                i = val(right(wKey,2))
-                if i >= 0 then
-                    if i > ubound(this.TrustedProjects) then redim preserve this.TrustedProjects(i)
-                    this.TrustedProjects(i) = wData
-                    continue do
-                end if
-            end if
 
             if left(wKey, 4) = "MRU_" then  ' is this an MRU entry
             i = val(right(wKey,2))
@@ -1232,12 +1214,6 @@ function clsConfig.ProjectSaveToFile() as boolean
         this.wszLastActiveProject = ""
     end if
 
-    ' A project THIS INSTALL just wrote is trusted, permanently and silently. This is what
-    ' keeps workspace trust invisible during ordinary work: everything the author creates or
-    ' edits passes through here, so the prompt is reserved for a .tiko that arrived from
-    ' somewhere else. A warning that fires on your own files is one you learn to dismiss.
-    ProjectTrust_Add( gApp.ProjectFilename )
-
     function = true   ' successful save
 end function
 
@@ -1280,16 +1256,6 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     '
     ' Nothing below this line can fail in a way that leaves the previous workspace half
     ' dismantled, because nothing below it is reachable unless the file is readable.
-    ' ---- WORKSPACE TRUST, before anything is touched -----------------------------------
-    ' A .tiko decides how the project is BUILT and RUN, not merely which files to open --
-    ' ProjectOther32/64 go straight onto the fbc command line and ProjectCommandLine becomes
-    ' ShellExecuteEx's lpParameters. Ask about one that came from elsewhere. Silent for a
-    ' project this install saved, and for any project with nothing in it that can execute;
-    ' see modProjectTrust.bi. Checked HERE, before the state below is disturbed, because by
-    ' the time the parse has run the folder tree is cleared and documents are open.
-    dim as long nTrust = ProjectTrust_Check( wszFile )
-    if nTrust = PROJTRUST_CANCEL then return false
-
     dim pStream as CTextStream  ' (utf16)
     if pStream.OpenUnicode( wszFile ) <> S_OK then return false
 
@@ -1441,14 +1407,6 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
 
     gApp.IsProjectLoading = false
 
-    ' The user chose to open the files but not to adopt what the project would build or run
-    ' with. Blank them AFTER the parse rather than skipping the keys during it, so there is
-    ' one place this is decided and the parser stays a parser.
-    if nTrust = PROJTRUST_OPEN_SAFE then
-        gApp.ProjectOther32     = ""
-        gApp.ProjectOther64     = ""
-        gApp.ProjectCommandLine = ""
-    end if
     gApp.hIconPanel = 0
     gApp.wszLastOpenFolder = ""
 
