@@ -456,6 +456,13 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
     dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(this.hWindow(0)), _
                                             (sciCodePage = SC_CP_UTF8), this.FileEncoding, bLossy )
 
+    ' bLossy was computed here and discarded for as long as this function has existed.
+    ' Asking BEFORE the write, so Cancel leaves the file on disk untouched and the document
+    ' dirty -- same contract as a failed write below.
+    if bLossy then
+        if Doc_ConfirmLossySave( @this, wszFilename, this.FileEncoding ) = false then return true
+    end if
+
     dim as DWSTRING wszErr
     if Doc_WriteToDisk( wszFilename, sOut, wszErr ) <> DOCWRITE_OK then
         ' The file on disk is untouched. Say so, and leave the document DIRTY: the whole
@@ -506,6 +513,12 @@ function clsDocument.SaveTempFile( byval wszFilename as DWSTRING ) as boolean
     dim as boolean bLossy
     dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(this.hWindow(0)), _
                                             (sciCodePage = SC_CP_UTF8), this.FileEncoding, bLossy )
+
+    ' Quick Run compiles this file, so a silent character replacement here does not merely
+    ' damage a saved document -- it compiles source the user never wrote.
+    if bLossy then
+        if Doc_ConfirmLossySave( @this, wszFilename, this.FileEncoding ) = false then return true
+    end if
 
     ' Same inverted convention as SaveFile: FALSE = the bytes are on disk. This one feeds
     ' Quick Run, so a failure that went unreported would compile whatever stale temp file

@@ -103,6 +103,79 @@ sub Save_RunSelfTest()
     SAVEASSERT( Doc_WriteToDisk( "", sV2, wszErr ) = DOCWRITE_FAILED, _
                 "an empty filename was reported as saved" )
 
+    ' ---- 7. lossy encoding is DETECTED and the flag is CONSUMED ------------------------
+    ' Doc_EncodeForDisk has always reported this correctly and the encoding suite has always
+    ' asserted so. The defect was never in the function -- it was that all three save sites
+    ' declared bLossy and never read it, which is exactly the kind of gap a suite that tests
+    ' functions rather than call sites cannot see.
+    scope
+        dim as boolean bLossy
+        ' CJK cannot be represented in any Western ANSI codepage.
+        dim as wstring * 32 wCJK = wchr(&h4F60) & wchr(&h597D)
+        dim as long cb = WideCharToMultiByte( CP_UTF8, 0, @wCJK, len(wCJK), NULL, 0, NULL, NULL )
+        dim as string sUtf8 = string( cb, 0 )
+        WideCharToMultiByte( CP_UTF8, 0, @wCJK, len(wCJK), strptr(sUtf8), cb, NULL, NULL )
+
+        Doc_EncodeForDisk( sUtf8, true, FILE_ENCODING_ANSI, bLossy )
+        SAVEASSERT( bLossy = true, "CJK -> ANSI was not reported lossy" )
+        Doc_EncodeForDisk( sUtf8, true, FILE_ENCODING_UTF8, bLossy )
+        SAVEASSERT( bLossy = false, "CJK -> UTF-8 was wrongly reported lossy" )
+
+        ' The suppression flag is what makes the prompt a warning rather than a nag, and
+        ' clearing it on a deliberate encoding change is what stops a stale "yes" applying
+        ' to a target the user never agreed to.
+        dim as clsDocument ptr pD = new clsDocument
+        if pD then
+            pD->bLossySaveAccepted = true
+            SAVEASSERT( Doc_ConfirmLossySave( pD, "x.bas", FILE_ENCODING_ANSI ) = true, _
+                        "an already-accepted document re-prompted (this would nag on every Ctrl+S)" )
+            delete pD
+        end if
+    end scope
+
+    ' ---- 8. THE CALL SITE consumes bLossy, not just the function -----------------------
+    ' This is the assertion that would have caught the original defect. It drives the real
+    ' clsDocument.SaveFile over a document whose text cannot survive its own encoding, and
+    ' checks that a "Cancel" answer actually stops the write and leaves the document dirty.
+    ' Everything above this point passed for years while all three save sites ignored bLossy.
+    scope
+        dim as DWSTRING wszLossy = wszDir & "\lossy.bas"
+        AfxDeleteFile( wszLossy )
+        Doc_WriteToDisk( wszLossy, "original bytes", wszErr )
+
+        dim pD as clsDocument ptr = gApp.CreateEmptyDocument()
+        if pD = 0 then
+            ? "  NOTE: could not create a document; the call-site assertions did NOT run."
+        else
+            pD->DiskFilename  = wszLossy
+            pD->IsNewFlag     = false
+            pD->FileEncoding  = FILE_ENCODING_ANSI
+            pD->AssignTextBuffer()
+            if pD->hWindow(0) then
+                ' Two CJK characters: representable in UTF-8, not in any Western ANSI page.
+                dim as string sCJK = chr(&hE4,&hBD,&hA0) & chr(&hE5,&hA5,&hBD)
+                SciExec( pD->hWindow(0), SCI_SETCODEPAGE, SC_CP_UTF8, 0 )
+                SciExec( pD->hWindow(0), SCI_SETTEXT, 0, cast(LPARAM, strptr(sCJK)) )
+                pD->UserModified = true
+
+                gLossySaveTestAnswer = -1                  ' force Cancel
+                dim as boolean bRc = pD->SaveFile()
+                gLossySaveTestAnswer = 0
+
+                SAVEASSERT( bRc = true, _
+                    "SaveFile ignored a REFUSED lossy save and reported success" )
+                SAVEASSERT( SaveSelfTest_ReadAll( wszLossy ) = "original bytes", _
+                    "SaveFile WROTE the file after the lossy save was refused" )
+                SAVEASSERT( pD->UserModified = true, _
+                    "SaveFile cleared the dirty flag after a refused save -- the close prompt would not fire" )
+            else
+                ? "  NOTE: no Scintilla window; the call-site assertions did NOT run."
+            end if
+            gApp.RemoveDocument( pD )
+        end if
+        AfxDeleteFile( wszLossy )
+    end scope
+
     AfxDeleteFile( wszFile )
 
     sMsg = "TIKO_SAVE_SELFTEST: " & nPass & " passed, " & nFail & " failed."

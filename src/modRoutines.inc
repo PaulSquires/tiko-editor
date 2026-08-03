@@ -656,6 +656,57 @@ end function
 
 
 ' ========================================================================================
+' Confirm a save that cannot represent every character. Returns TRUE to go ahead.
+'
+' Doc_EncodeForDisk has ALWAYS reported this, through its byref bLossy, and the encoding
+' self-test has always asserted that it reports it correctly. Every real save site declared
+' the variable and then never looked at it:
+'
+'     dim as boolean bLossy
+'     dim as string sOut = Doc_EncodeForDisk( ..., this.FileEncoding, bLossy )
+'     pStream.Write strptr(sOut), len(sOut)      ' bLossy never examined
+'
+' The only consumer was the explicit "change encoding" command, which does warn. So saving
+' an ANSI-labelled document holding CJK or emoji replaced those characters with "?"
+' silently, permanently, on every Ctrl+S -- while the suite stayed green, because it tests
+' the function that works rather than the call sites that ignore it.
+'
+' Answered once per document (pDoc->bLossySaveAccepted): a warning, not a nag. pDoc may be
+' NULL, in which case it is asked every time.
+' ========================================================================================
+function Doc_ConfirmLossySave( _
+            byval pDoc as clsDocument ptr, _
+            byval wszPath as DWSTRING, _
+            byval nEncoding as long _
+            ) as boolean
+
+    ' TEST HOOK. Zero in every normal run; the save self-test sets it to force an answer
+    ' without a modal box. It exists because the defect being guarded was in the CALL SITES,
+    ' not in this function -- and a suite that can only reach the function is blind to
+    ' exactly that, which is how the original bug survived a green encoding suite. Same idea
+    ' as PsMessageBox_LayoutForTest in the control family.
+    if gLossySaveTestAnswer <> 0 then return (gLossySaveTestAnswer > 0)
+
+    ' "pDoc <> 0", not a bare "pDoc": fbc warns 38 on mixing a pointer with a boolean in
+    ' andalso, and a warning-free build is the only signal this tree has.
+    if (pDoc <> 0) andalso pDoc->bLossySaveAccepted then return true
+
+    dim as long nAnswer = TikoMsgBox( HWND_FRMMAIN, _
+            L(684, "Some characters in this document cannot be represented in") & _
+            " " & Doc_EncodingName( nEncoding ) & "." & vbcrlf & vbcrlf & _
+            wszPath & vbcrlf & vbcrlf & _
+            L(685, "Saving will replace them and cannot be undone. Change the file's " & _
+                   "encoding first to keep them."), _
+            L(686, "Characters will be lost"), _
+            TMB_ICON_WARNING, TMB_OKCANCEL, 1 )   ' default = Cancel: this is destructive
+
+    if nAnswer <> IDOK then return false
+    if pDoc then pDoc->bLossySaveAccepted = true
+    return true
+end function
+
+
+' ========================================================================================
 ' Report a failed save to the user.
 '
 ' Split out because all three save paths must say the same thing, and because a save that
@@ -705,6 +756,10 @@ function ConvertTextBuffer( _
     ' Pure relabel: the in-memory layout already matches the target (e.g. UTF-8 -> UTF-8 BOM,
     ' or UTF-8 BOM -> UTF-16 BOM). No byte conversion, only the disk format changes -- but
     ' that IS a change (the BOM must reach disk), so report it as one when the label moved.
+    ' A deliberate encoding change invalidates any earlier "yes, lose those characters"
+    ' answer: the question was about a different target encoding.
+    pDoc->bLossySaveAccepted = false
+
     if bHaveUtf8 = bWantUtf8 then
         dim as boolean bChanged = ( pDoc->FileEncoding <> nNewEncoding )
         pDoc->FileEncoding = nNewEncoding

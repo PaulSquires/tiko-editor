@@ -323,6 +323,12 @@ function OnCommand_FileDuplicate( _
     dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(pDoc->hWindow(0)), _
                                             (sciCodePage = SC_CP_UTF8), pDoc->FileEncoding, bLossy )
 
+    if bLossy then
+        ' pDoc is the SOURCE document, so accepting here also suppresses the prompt on its
+        ' own next save -- correct: it is the same text in the same encoding.
+        if Doc_ConfirmLossySave( pDoc, wszFilename, pDoc->FileEncoding ) = false then return 0
+    end if
+
     ' The loop above guarantees wszFilename does not exist, so nothing here can overwrite a
     ' file -- but the write can still fail, and opening a duplicate that was never created
     ' put an empty tab on screen named after a file that is not there.
