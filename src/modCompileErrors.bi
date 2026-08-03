@@ -25,5 +25,9 @@ declare function ResetScintillaCursors() as long
 declare function RunEXE( byval pDocMain as clsDocument ptr, byref wszFileExe as DWSTRING, byref wszParam as DWSTRING ) as long
 declare function SetCompileStatusBarMessage(byref wszText as wstring, byval hIconCompile as long) as LRESULT
 declare function RedirConsoleToFile(byval wszExe as DWSTRING, byval wszCmdLine as DWSTRING, byref sConsoleText as string ) as long
+' Compose lpCommandLine: quoted exe as argv[0], then the switches. See its own header --
+' the first token is ALWAYS eaten by the child, so switches cannot be passed alone.
+declare function BuildChildCommandLine( byval wszExe as DWSTRING, byval wszParams as DWSTRING ) as DWSTRING
+declare sub CompileCmd_RunSelfTest()
 declare function CreateTempResourceFile() as boolean
 

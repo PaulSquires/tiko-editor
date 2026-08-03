@@ -1759,6 +1759,9 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Env-gated (TIKO_SAVE_SELFTEST=1). Touches %TEMP% and takes a real exclusive lock;
     ' needs no document window.
     Save_RunSelfTest()
+    ' Env-gated (TIKO_COMPILECMD_SELFTEST=1). Pure: it asserts the lpCommandLine STRING,
+    ' because a suite cannot launch a process -- see the suite's own header.
+    CompileCmd_RunSelfTest()
     ' Env-gated (TIKO_DEBUG_SELFTEST=1). Pure: layout arithmetic, the datatip expression
     ' walk and the localized strings. It launches nothing -- see the suite's own header
     ' for what that means it cannot reach.

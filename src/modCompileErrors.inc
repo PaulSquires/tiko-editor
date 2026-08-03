@@ -85,11 +85,54 @@ function ResetScintillaCursors() as long
 end function
 
 
+' ========================================================================================
+' Compose the lpCommandLine for a child process.
+'
+' THE FIRST TOKEN OF lpCommandLine IS argv[0] AND IS DISCARDED BY THE CHILD, ALWAYS --
+' even when lpApplicationName is supplied separately, which is how this file calls
+' CreateProcessW. Windows hands the string through verbatim and the child's own startup
+' code strips the leading program name. tiko passed the SWITCHES here with no argv[0] at
+' all, so the child ate the first one.
+'
+' Measured, not reasoned about (harness: CreateProcessW into a program that dumps every
+' argv slot):
+'
+'     cmdline = [-m "prog" mod1.o -v -w all]     ->  argv[0]=[-m]   <-- FLAG GONE
+'                                                    argv[1]=[prog]
+'     cmdline = [  -w all -O2 -c -b "x.bas"]     ->  argv[0]=[]     <-- survived, by luck
+'                                                    argv[1]=[-w]
+'
+' So the project link lost its "-m" -- the flag two forum threads were consulted about,
+' cited at its call site in modCompile.inc -- on every single build. And the module path
+' was correct ONLY because code_CompileModules happens to space-pad CompileFlags: any tidy
+' that trim()s that string would have started silently deleting the user's first build
+' flag, with nothing in the build, the warnings or the assertions to say so.
+'
+' The exe is quoted because argv[0] is parsed by the ordinary quoting rules, and a path
+' with a space in it would otherwise split and swallow the real first switch instead --
+' i.e. reintroduce the bug in a form that only shows up on some machines.
+'
+' Pure: string in, string out. That is what lets TIKO_COMPILECMD_SELFTEST assert the rule
+' without launching a compiler.
+' ========================================================================================
+function BuildChildCommandLine( _
+            byval wszExe as DWSTRING, _
+            byval wszParams as DWSTRING _
+            ) as DWSTRING
+    dim as DWSTRING wszQ = wchr(34)
+    if len( wszParams ) = 0 then return wszQ & wszExe & wszQ
+    return wszQ & wszExe & wszQ & " " & wszParams
+end function
+
+
 '' July 2017, attempted to capture STDERR output from a running FB compiled
 '' program in order to capture runtime errors. This code works okay on Windows 10
 '' but does not PRINT on Windows 7. Also, dkl posted in FB forum that FB prints
 '' to STDOUT rather than STDERR. This is too bad.
 ''
+'' Returns 0 on success, non-zero if the child could not be started. Callers currently
+'' ignore it; it is honest anyway, because the old code returned 0 from BOTH the success
+'' path and its own bail-out, so a caller that started checking would have been misled.
 ''
 function RedirConsoleToFile( _
             byval wszExe as DWSTRING, _
@@ -97,17 +140,19 @@ function RedirConsoleToFile( _
             byref sConsoleText as string _
             ) as long
 
-    ' From the MinGW "Getting Started" guide:
-    '    MinGW may have problems with paths containing spaces, and if not, usually 
-    '    other programs used with MinGW will experience problems with such paths. 
-    '    Thus, we strongly recommend that you do not install MinGW in any location 
-    '    with spaces in the path name reference; i.e. you should avoid installing 
-    '    into any subdirectory of "Program Files" or "My Documents", or the like.
-    if instr(wszExe, " ") then
-        AfxMsg( "Compile failed (CreateChildProcess)." & vbcrlf & _
-                "Please install editor into a folder without spaces." )
-        exit function
-    end if
+    ' A SPACE IN THE COMPILER PATH IS FINE, and the check that used to sit here -- which
+    ' aborted the compile and told the user to reinstall tiko somewhere without spaces --
+    ' was working around a misdiagnosis. Its own comment said "once I wrap the string in
+    ' double quotes then the call to CreateProcessW fails", which is true and is the point:
+    ' lpApplicationName must be the UNQUOTED exact path, and spaces in it have never been a
+    ' problem. The quoting rule belongs to lpCommandLine's argv[0], which this function did
+    ' not supply at all until BuildChildCommandLine above. So the restriction that kept tiko
+    ' out of "C:\Program Files" existed to dodge a bug that was somewhere else entirely.
+    '
+    ' (The MinGW guidance about spaces that was quoted here is real, but it is about the
+    '  gcc backend's own tooling, not about starting a process, and the default backend is
+    '  gas64 now.)
+    dim as DWSTRING wszFullCmd = BuildChildCommandLine( wszExe, wszCmdLine )
 
     ' Create the child process and read from its standard output
     dim ProcessInfo as PROCESS_INFORMATION
@@ -127,7 +172,8 @@ function RedirConsoleToFile( _
 
     ' Create a pipe for the child process's STDOUT.
     if CreatePipe( @hChildStdOutRead, @hChildStdOutWrite, @SecurityAttribute, byval 0 ) = false then
-        '? "error creating pipe"
+        ' Fell through to "function = 0" before, i.e. reported SUCCESS after doing nothing.
+        return 1
     else
         StartupInf.cb         = sizeof(STARTUPINFO)
         GetStartupInfo(@StartupInf )  
@@ -136,14 +182,13 @@ function RedirConsoleToFile( _
         StartupInf.dwFlags    = STARTF_USESTDHANDLES or STARTF_USESHOWWINDOW
         StartupInf.wShowWindow = SW_HIDE
         
-        ' This call to CreateProcessW will succeed in all cases except for the one
-        ' where there are spaces in wszFullExe because once I wrap the string in double
-        ' quotes then the call to CreateProcessW fails.
-
-        dim errCode as long 
+        ' lpApplicationName is the UNQUOTED exact path (quoting it is what fails);
+        ' lpCommandLine carries the QUOTED path back as argv[0] followed by the switches.
+        ' See BuildChildCommandLine above for why the switches cannot be passed alone.
+        dim errCode as long
         errCode = CreateProcessW( _
                     wszExe,  _          ' Create the child process.
-                    wszCmdLine, _       ' Command line
+                    wszFullCmd, _       ' Command line -- argv[0] + switches
                     byval 0,     _      ' Process security attributes
                     byval 0,     _      ' Primary thread security attributes
                     true,        _      ' Handles are inherited
@@ -167,13 +212,14 @@ function RedirConsoleToFile( _
             loop
             
         else
-            '? "CreateChildProcess failed"      
-            if instr( wszExe, " " ) then
-                AfxMsg( "CreateChildProcess failed. Install editor into folder without spaces." )
-            end if    
+            ' The old message here blamed spaces in the path, which was never the cause.
+            ' Report what the system actually said instead.
+            AfxMsg( "Could not start the compiler." & vbcrlf & vbcrlf & _
+                    wszExe & vbcrlf & vbcrlf & _
+                    Win32ErrorText( GetLastError() ) )
             if hChildStdOutRead  then CloseHandle( hChildStdOutRead )
             if hChildStdOutWrite then CloseHandle( hChildStdOutWrite )
-            exit function
+            return 1
         end if
             
     end if
@@ -646,3 +692,121 @@ function ParseLogForError ( _
 end function
 
 
+
+
+' ########################################################################################
+' Env-gated: TIKO_COMPILECMD_SELFTEST=1
+'
+' Asserts the ONE rule that governs BuildChildCommandLine: the child discards the first
+' token of lpCommandLine, so token 0 must be the program name and never a switch.
+'
+' This exists because the bug it guards against was completely silent. tiko passed the bare
+' switches, the child ate "-m", and the only symptom was a compiler flag quietly not
+' applying -- no warning, no error, nothing for an assertion to catch, because there was no
+' assertion and no suite for this file at all.
+'
+' A self-test cannot launch a process, so what is asserted is the STRING. That is enough
+' precisely because the OS behaviour it encodes was verified separately with a harness that
+' does launch one (results quoted in BuildChildCommandLine's header).
+' ########################################################################################
+
+' Split a command line the way the child's startup code does: whitespace separated, double
+' quotes group. Independent of the composer, so a shared bug cannot hide behind both.
+private sub CompileCmd_Tokenize( byval wszCmd as DWSTRING, tokens() as DWSTRING, byref nCount as long )
+    nCount = 0
+    dim as string s = wszCmd
+    dim as long i = 1, n = len(s)
+    dim as boolean bInQuote
+    dim as string cur
+    dim as boolean bHave
+
+    while i <= n
+        dim as string c = mid(s, i, 1)
+        if c = chr(34) then
+            bInQuote = not bInQuote
+            bHave = true
+        elseif (c = " ") andalso (bInQuote = false) then
+            if bHave then
+                tokens(nCount) = cur : nCount += 1 : cur = "" : bHave = false
+            end if
+        else
+            cur &= c : bHave = true
+        end if
+        i += 1
+    wend
+    if bHave then tokens(nCount) = cur : nCount += 1
+end sub
+
+
+sub CompileCmd_RunSelfTest()
+
+    if environ("TIKO_COMPILECMD_SELFTEST") <> "1" then exit sub
+
+    dim as long nPass = 0, nFail = 0
+    dim as string sMsg
+
+    #macro CMDASSERT( cond, msg )
+        if (cond) then
+            nPass += 1
+        else
+            nFail += 1
+            sMsg = "  FAIL: " & msg
+            ? sMsg
+        end if
+    #endmacro
+
+    ? "--- TIKO_COMPILECMD_SELFTEST ---"
+
+    dim as DWSTRING tok(0 to 63)
+    dim as long nTok
+
+    ' ---- 1. the rule itself: token 0 is the exe, never a switch -------------------------
+    dim as DWSTRING wszExe = "C:\fb\fbc64.exe"
+    dim as DWSTRING wszCmd = BuildChildCommandLine( wszExe, "-m ""prog"" mod1.o -v -w all" )
+    CompileCmd_Tokenize( wszCmd, tok(), nTok )
+    CMDASSERT( nTok = 7, "expected 7 tokens, got " & nTok )
+    CMDASSERT( tok(0) = wszExe, "token 0 is not the exe: [" & tok(0) & "]" )
+    CMDASSERT( left(tok(0), 1) <> "-", "token 0 is a SWITCH -- the child will eat it" )
+    ' Everything the caller supplied must survive, in order, one slot later.
+    CMDASSERT( tok(1) = "-m",     "the -m flag was lost (this was the shipped bug)" )
+    CMDASSERT( tok(2) = "prog",   "main module name wrong: [" & tok(2) & "]" )
+    CMDASSERT( tok(3) = "mod1.o", "object file lost" )
+    CMDASSERT( tok(6) = "all",    "trailing argument lost" )
+
+    ' ---- 2. the module path, whose leading space used to be load-bearing ----------------
+    ' code_CompileModules space-pads CompileFlags. That accident is what kept its first
+    ' switch alive. It must no longer matter -- assert BOTH spellings behave identically.
+    dim as DWSTRING wszPadded   = "  -w all -O2  -c -b ""x.bas"" -v -o ""x.o"""
+    dim as DWSTRING wszTrimmed  = trim( wszPadded )
+    dim as DWSTRING tok2(0 to 63) : dim as long nTok2
+
+    CompileCmd_Tokenize( BuildChildCommandLine( wszExe, wszPadded ),  tok(),  nTok )
+    CompileCmd_Tokenize( BuildChildCommandLine( wszExe, wszTrimmed ), tok2(), nTok2 )
+    CMDASSERT( nTok = nTok2, "padded and trimmed flags give different token counts (" & _
+                             nTok & " vs " & nTok2 & ") -- the leading space is still load-bearing" )
+    dim as boolean bSame = (nTok = nTok2)
+    if bSame then
+        for i as long = 0 to nTok - 1
+            if tok(i) <> tok2(i) then bSame = false : exit for
+        next
+    end if
+    CMDASSERT( bSame, "trimming the flags changes the child's argv -- the old silent-flag-loss bug" )
+    CMDASSERT( tok(1) = "-w", "first user switch is not argv[1]: [" & tok(1) & "]" )
+
+    ' ---- 3. a space in the compiler path must NOT split ---------------------------------
+    ' This is what the deleted "install without spaces" check was really about: an unquoted
+    ' argv[0] would break into two tokens and swallow the first real switch instead.
+    dim as DWSTRING wszSpaced = "C:\Program Files\tiko\fbc64.exe"
+    CompileCmd_Tokenize( BuildChildCommandLine( wszSpaced, "-c -v" ), tok(), nTok )
+    CMDASSERT( nTok = 3, "a path with a space produced " & nTok & " tokens, expected 3" )
+    CMDASSERT( tok(0) = wszSpaced, "spaced exe path split: [" & tok(0) & "]" )
+    CMDASSERT( tok(1) = "-c", "first switch lost to a spaced exe path: [" & tok(1) & "]" )
+
+    ' ---- 4. no parameters at all --------------------------------------------------------
+    CompileCmd_Tokenize( BuildChildCommandLine( wszExe, "" ), tok(), nTok )
+    CMDASSERT( nTok = 1, "empty params gave " & nTok & " tokens, expected 1" )
+    CMDASSERT( tok(0) = wszExe, "empty params lost the exe" )
+
+    sMsg = "TIKO_COMPILECMD_SELFTEST: " & nPass & " passed, " & nFail & " failed."
+    ? sMsg
+end sub
