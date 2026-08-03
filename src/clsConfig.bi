@@ -224,6 +224,10 @@ type clsConfig
         RunViaCommandWindow       as long = false
         DisableCompileBeep        as long = false
         MRU(9)                    as DWSTRING
+        ' Projects whose build settings the user has answered for. See modProjectTrust.bi:
+        ' a .tiko decides how the project is BUILT, so one that arrives from elsewhere is
+        ' asked about once. Variable length -- unlike MRU, which is a fixed ten.
+        TrustedProjects(any)      as DWSTRING
         MRUProject(9)             as DWSTRING
 
         declare constructor()

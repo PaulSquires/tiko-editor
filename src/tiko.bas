@@ -152,6 +152,9 @@ dim shared gTTabCtl as clsTopTabCtl
 ' write leaves the file already on disk intact -- cannot be reached without a real file.
 #include once "modSaveSelfTest.bi"
 #include once "modSaveSelfTest.inc"
+' Workspace trust. The .bi is pulled in by clsConfig.inc (which calls it); the
+' implementation goes here, after modRoutines.inc for Doc_WriteToDisk in its self-test.
+#include once "modProjectTrust.inc"
 #include once "clsApp.inc"
 #include once "clsSymbolDb.inc"
 #include once "clsScanMgr.inc"
