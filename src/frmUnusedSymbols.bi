@@ -63,6 +63,20 @@
 const as long FRMUNUSED_DEFWIDTH  = 1000
 const as long FRMUNUSED_DEFHEIGHT = 640
 
+' ------------------------------------------------------------------------------------------
+' COLLAPSE, NOT MINIMIZE.
+'
+' The minimize button does NOT hand the window to Windows. Windows would make it iconic,
+' and an OWNED window has no taskbar button to come back from - the report would simply be
+' gone. Instead the window shrinks to a labelled stub parked in the top-right of the
+' editing area, where it stays visible and one click away.
+'
+' Sizes are unscaled; the caller applies the DPI factor.
+' ------------------------------------------------------------------------------------------
+const as long FRMUNUSED_STUBWIDTH  = 280
+const as long FRMUNUSED_STUBHEIGHT = 110
+const as long FRMUNUSED_STUBMARGIN = 12     ' inset from the editing area's edges
+
 type UnusedWindowPosition
     bInitialized as boolean = false
     bMaximized   as boolean = false
@@ -97,3 +111,11 @@ declare sub frmUnusedSymbols_ComputeLayout( byval cx as long, byval cy as long, 
                                             byval nHeader as long, byval nToggles as long, _
                                             byval nStatus as long, _
                                             byref lo as FRMUNUSED_LAYOUT )
+
+' Pure: where the collapsed stub sits. Top-RIGHT of rcAnchor (the editing area, in screen
+' coords), inset by nMargin. Split out so the placement is assertable without a window -
+' getting it wrong parks the stub off-screen, where the only symptom is a vanished report.
+declare sub frmUnusedSymbols_ComputeStubRect( byref rcAnchor as RECT, _
+                                              byval cx as long, byval cy as long, _
+                                              byval nMargin as long, byref rcOut as RECT )
+declare function frmUnusedSymbols_IsCollapsed() as boolean

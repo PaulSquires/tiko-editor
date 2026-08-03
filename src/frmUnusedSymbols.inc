@@ -24,6 +24,10 @@ dim shared gUnusedToggle(IDC_FRMUNUSED_TOGGLEFIRST to IDC_FRMUNUSED_TOGGLELAST) 
 dim shared gUnusedScannedText as DWSTRING
 dim shared gUnusedPending     as boolean   ' a scan was requested; rows arrive later
 dim shared gUnusedDirtyText   as DWSTRING
+' Collapsed ("minimized") state. gUnusedRestoreRect is the window rect to come BACK to, in
+' screen coords - captured at the moment of collapse, because the stub's own rect is not it.
+dim shared gUnusedCollapsed   as boolean
+dim shared gUnusedRestoreRect as RECT
 
 declare sub frmUnusedSymbols_PositionWindows()
 
@@ -31,6 +35,53 @@ declare sub frmUnusedSymbols_PositionWindows()
 function frmUnusedSymbols_IsOpen() as boolean
     return (IsWindow(HWND_FRMUNUSED) <> 0)
 end function
+
+
+function frmUnusedSymbols_IsCollapsed() as boolean
+    return gUnusedCollapsed
+end function
+
+
+' ------------------------------------------------------------------------------------------
+' Where the collapsed stub sits. PURE.
+'
+' Top-RIGHT of the editing area, inset by the margin. Pure because the failure mode is
+' silent: a sign error parks the stub off-screen and the report simply appears to vanish,
+' with the window still perfectly alive.
+' ------------------------------------------------------------------------------------------
+sub frmUnusedSymbols_ComputeStubRect( byref rcAnchor as RECT, _
+                                      byval cx as long, byval cy as long, _
+                                      byval nMargin as long, byref rcOut as RECT )
+    dim as long x = rcAnchor.right - nMargin - cx
+    dim as long y = rcAnchor.top + nMargin
+
+    ' An editing area narrower than the stub would push it off the LEFT edge; clamp so it
+    ' stays reachable rather than sliding out of the anchor entirely.
+    if x < rcAnchor.left then x = rcAnchor.left
+    if y < rcAnchor.top then y = rcAnchor.top
+
+    SetRect( @rcOut, x, y, x + cx, y + cy )
+end sub
+
+
+' The editing area, in SCREEN coords: the active document's Scintilla. Falls back to
+' frmMain's client area when there is no document, so the stub is always placed against
+' something real.
+private sub frmUnusedSymbols_AnchorRect( byref rcOut as RECT )
+    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+    if pDoc then
+        if IsWindow( pDoc->hWndActiveScintilla ) then
+            GetWindowRect( pDoc->hWndActiveScintilla, @rcOut )
+            exit sub
+        end if
+    end if
+
+    GetClientRect( HWND_FRMMAIN, @rcOut )
+    dim as POINT pt = ( rcOut.left, rcOut.top )
+    ClientToScreen( HWND_FRMMAIN, @pt )
+    SetRect( @rcOut, pt.x, pt.y, pt.x + (rcOut.right - rcOut.left), _
+                     pt.y + (rcOut.bottom - rcOut.top) )
+end sub
 
 
 ' ------------------------------------------------------------------------------------------
@@ -318,6 +369,17 @@ private sub frmUnusedSymbols_OnPaint( byval hwnd as HWND )
     b.PaintRect( @rc )
     b.SetFont( ghFont(GUIFONT_9) )
 
+    ' COLLAPSED: the client is one centred invitation and nothing else. Returning here is
+    ' what stops the bands being drawn into a client far too small to hold them.
+    if gUnusedCollapsed then
+        b.SetForeColor( theme.panel.text.forecolor )
+        ' PaintText already forces DT_VCENTER or DT_SINGLELINE, so DT_CENTER completes the
+        ' horizontal-and-vertical centring
+        b.PaintText( L(597, "Click here to restore window"), @rc, DT_CENTER )
+        b.EndDoubleBuffer()
+        exit sub
+    end if
+
     dim as long nHeader  = pWindow->ScaleY( iif( len(gUnusedDirtyText) > 0, 46, 26 ) )
     dim as long nToggles = pWindow->ScaleY(38)
     dim as long nStatus  = pWindow->ScaleY(24)
@@ -368,14 +430,100 @@ end sub
 
 
 ' ------------------------------------------------------------------------------------------
+' Collapse to the stub, and come back. The window is never made ICONIC - see the .bi.
+' ------------------------------------------------------------------------------------------
+private sub frmUnusedSymbols_SetChildrenVisible( byval bShow as boolean )
+    dim as long nCmd = iif( bShow, SW_SHOW, SW_HIDE )
+    if IsWindow(HWND_FRMUNUSED_LIST) then ShowWindow( HWND_FRMUNUSED_LIST, nCmd )
+    for id as long = IDC_FRMUNUSED_TOGGLEFIRST to IDC_FRMUNUSED_TOGGLELAST
+        if IsWindow(gUnusedToggle(id)) then ShowWindow( gUnusedToggle(id), nCmd )
+    next
+end sub
+
+
+private sub frmUnusedSymbols_Collapse()
+    if IsWindow(HWND_FRMUNUSED) = 0 then exit sub
+    if gUnusedCollapsed then exit sub
+
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMUNUSED)
+    if pWindow = 0 then exit sub
+
+    ' remember where to come back to BEFORE moving anything
+    GetWindowRect( HWND_FRMUNUSED, @gUnusedRestoreRect )
+    gUnusedCollapsed = true
+
+    ' The children are hidden rather than left behind the stub's paint: the list would
+    ' otherwise still be there, still hit-testable, and would swallow the restore click.
+    frmUnusedSymbols_SetChildrenVisible( false )
+
+    dim as RECT rcAnchor, rcStub
+    frmUnusedSymbols_AnchorRect( rcAnchor )
+    frmUnusedSymbols_ComputeStubRect( rcAnchor, _
+        pWindow->ScaleX(FRMUNUSED_STUBWIDTH), pWindow->ScaleY(FRMUNUSED_STUBHEIGHT), _
+        pWindow->ScaleX(FRMUNUSED_STUBMARGIN), rcStub )
+
+    SetWindowPos( HWND_FRMUNUSED, 0, rcStub.left, rcStub.top, _
+                  rcStub.right - rcStub.left, rcStub.bottom - rcStub.top, SWP_NOZORDER )
+    AfxRedrawWindow( HWND_FRMUNUSED )
+end sub
+
+
+private sub frmUnusedSymbols_RestoreFromStub()
+    if IsWindow(HWND_FRMUNUSED) = 0 then exit sub
+    if gUnusedCollapsed = false then exit sub
+
+    gUnusedCollapsed = false
+    SetWindowPos( HWND_FRMUNUSED, 0, gUnusedRestoreRect.left, gUnusedRestoreRect.top, _
+                  gUnusedRestoreRect.right - gUnusedRestoreRect.left, _
+                  gUnusedRestoreRect.bottom - gUnusedRestoreRect.top, SWP_NOZORDER )
+
+    frmUnusedSymbols_SetChildrenVisible( true )
+    ' the bands are sized from the client, which has just changed
+    frmUnusedSymbols_PositionWindows()
+    AfxRedrawWindow( HWND_FRMUNUSED )
+end sub
+
+
+' ------------------------------------------------------------------------------------------
 private function frmUnusedSymbols_WndProc( byval hwnd as HWND, byval uMsg as UINT, _
                                            byval wParam as WPARAM, byval lParam as LPARAM ) as LRESULT
     select case uMsg
+        case WM_SYSCOMMAND
+            ' The minimize button never reaches Windows: an owned window has no taskbar
+            ' button, so a real minimize would put the report somewhere unreachable.
+            ' Collapse to the stub instead. Covers the caption button, Alt+Space > Minimize
+            ' and anything else that raises SC_MINIMIZE. The low four bits carry internal
+            ' state and must be masked off before comparing.
+            if (wParam and &hFFF0) = SC_MINIMIZE then
+                frmUnusedSymbols_Collapse()
+                return 0
+            end if
+
+        case WM_LBUTTONDOWN
+            ' Collapsed, the whole client IS the restore button - the children are hidden,
+            ' so nothing else can claim the click.
+            if gUnusedCollapsed then
+                frmUnusedSymbols_RestoreFromStub()
+                return 0
+            end if
+
+        case WM_SETCURSOR
+            ' say it is clickable, since the stub looks like a label
+            if gUnusedCollapsed andalso (loword(lParam) = HTCLIENT) then
+                SetCursor( LoadCursor( 0, IDC_HAND ) )
+                return true
+            end if
+
         case WM_SIZE
             ' A minimize sends WM_SIZE with a 0x0 client. Re-laying the bands out against
             ' it is pointless work on a window nobody can see, and it is how a restored
             ' window comes back with everything collapsed.
             if wParam = SIZE_MINIMIZED then return 0
+            ' collapsed: the children are hidden and the client belongs to the stub message
+            if gUnusedCollapsed then
+                AfxRedrawWindow( hwnd )
+                return 0
+            end if
             frmUnusedSymbols_PositionWindows()
             AfxRedrawWindow( hwnd )
             return 0
@@ -388,6 +536,14 @@ private function frmUnusedSymbols_WndProc( byval hwnd as HWND, byval uMsg as UIN
             return 0
 
         case WM_CLOSE
+            ' CLOSED WHILE COLLAPSED: persist nothing. The live geometry is the stub's -
+            ' a corner of the editing area, 280x110 - and saving that would reopen the
+            ' report as a stub-sized window in the corner next time.
+            if gUnusedCollapsed then
+                DestroyWindow( hwnd )
+                return 0
+            end if
+
             ' remember where the window was, the way frmDebug does
             dim as WINDOWPLACEMENT wp
             wp.length = sizeof(WINDOWPLACEMENT)
@@ -409,6 +565,7 @@ private function frmUnusedSymbols_WndProc( byval hwnd as HWND, byval uMsg as UIN
         case WM_DESTROY
             HWND_FRMUNUSED = 0
             HWND_FRMUNUSED_LIST = 0
+            gUnusedCollapsed = false
             for id as long = IDC_FRMUNUSED_TOGGLEFIRST to IDC_FRMUNUSED_TOGGLELAST
                 gUnusedToggle(id) = 0
             next
@@ -430,9 +587,9 @@ end function
 ' ------------------------------------------------------------------------------------------
 function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
     if IsWindow(HWND_FRMUNUSED) then
-        ' SetForegroundWindow does NOTHING to a minimized window, so the menu command
-        ' would silently appear to do nothing once the report had been parked.
-        if IsIconic( HWND_FRMUNUSED ) then ShowWindow( HWND_FRMUNUSED, SW_RESTORE )
+        ' Re-invoking the menu command while the report is parked should bring it back,
+        ' not just raise a stub the user then has to click as well.
+        if gUnusedCollapsed then frmUnusedSymbols_RestoreFromStub()
         SetForegroundWindow( HWND_FRMUNUSED )
         return 0
     end if
@@ -476,19 +633,14 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
     dim pParent as CWindow ptr = AfxCWindowPtr(hWndParent)
     if pParent then pWindow->DPI = pParent->DPI
 
-    ' WS_MINIMIZEBOX so the report can be parked while its findings are worked through -
-    ' it is a worklist, not a transient dialog.
-    '
-    ' WS_EX_APPWINDOW goes with it and is NOT decoration: this window is OWNED by frmMain,
-    ' and an owned window gets no taskbar button of its own, so minimizing it would put it
-    ' somewhere the user cannot click it back from. The exstyle forces the button, which is
-    ' what makes minimize reversible by ordinary means. (frmHelpCenter gets the same effect
-    ' by parenting to HWND_DESKTOP instead; that also gives up being kept above frmMain and
-    ' being destroyed with it, which this window wants.)
+    ' WS_MINIMIZEBOX gives the caption its button, but SC_MINIMIZE is intercepted and the
+    ' window collapses to a stub instead - see the .bi. No WS_EX_APPWINDOW: that was only
+    ' ever needed to give a REAL minimize somewhere to come back from, and this window
+    ' never becomes iconic, so it does not need a taskbar button of its own.
     HWND_FRMUNUSED = pWindow->Create( hWndParent, L(570, "Unused Symbols"), @frmUnusedSymbols_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_THICKFRAME or WS_CAPTION or WS_SYSMENU or WS_MINIMIZEBOX or _
         WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_CONTROLPARENT or WS_EX_APPWINDOW or WS_EX_LEFT )
+        WS_EX_CONTROLPARENT or WS_EX_LEFT )
     ' UNSCALED: SetClientSize applies the DPI factor itself, so a pre-scaled value squares it
     pWindow->SetClientSize( FRMUNUSED_DEFWIDTH, FRMUNUSED_DEFHEIGHT )
     pWindow->Center( HWND_FRMUNUSED, hWndParent )
@@ -723,22 +875,46 @@ sub frmUnusedSymbols_RunLayoutSelfTest()
         nFail += 1 : print "  FAIL the kind filters overlap each other"
     end if
 
-    ' The window must be minimizable AND restorable. WS_EX_APPWINDOW is the half that is
-    ' easy to drop as "decoration": without it an OWNED window has no taskbar button, so a
-    ' minimize would have no ordinary way back.
+    ' the caption needs the button the collapse hangs off
     if IsWindow(HWND_FRMUNUSED) then
-        dim as long nStyle = GetWindowLongPtr( HWND_FRMUNUSED, GWL_STYLE )
-        dim as long nEx    = GetWindowLongPtr( HWND_FRMUNUSED, GWL_EXSTYLE )
-        if (nStyle and WS_MINIMIZEBOX) <> 0 then
+        if (GetWindowLongPtr( HWND_FRMUNUSED, GWL_STYLE ) and WS_MINIMIZEBOX) <> 0 then
             nPass += 1
         else
             nFail += 1 : print "  FAIL the window has no minimize box"
         end if
-        if (nEx and WS_EX_APPWINDOW) <> 0 then
-            nPass += 1
-        else
-            nFail += 1 : print "  FAIL no WS_EX_APPWINDOW: minimizing would leave no way back"
-        end if
+    end if
+
+    ' ---- the collapsed stub's placement, pure ----------------------------------------
+    ' A sign error here parks the stub off-screen, where the only symptom is a report that
+    ' seems to have vanished - so it is asserted rather than eyeballed.
+    dim as RECT rcAnchor, rcStub
+    SetRect( @rcAnchor, 100, 200, 900, 800 )        ' editing area, screen coords
+    frmUnusedSymbols_ComputeStubRect( rcAnchor, 280, 110, 12, rcStub )
+
+    if (rcStub.right = rcAnchor.right - 12) andalso (rcStub.top = rcAnchor.top + 12) then
+        nPass += 1
+    else
+        nFail += 1 : print "  FAIL the stub is not inset from the anchor TOP-RIGHT: " & _
+                           str(rcStub.left) & "," & str(rcStub.top)
+    end if
+    if ((rcStub.right - rcStub.left) = 280) andalso ((rcStub.bottom - rcStub.top) = 110) then
+        nPass += 1
+    else
+        nFail += 1 : print "  FAIL the stub is not the requested size"
+    end if
+    if (rcStub.left >= rcAnchor.left) andalso (rcStub.right <= rcAnchor.right) then
+        nPass += 1
+    else
+        nFail += 1 : print "  FAIL the stub is not inside the editing area"
+    end if
+
+    ' an editing area NARROWER than the stub must not push it off the left edge
+    SetRect( @rcAnchor, 100, 200, 300, 800 )
+    frmUnusedSymbols_ComputeStubRect( rcAnchor, 280, 110, 12, rcStub )
+    if rcStub.left >= rcAnchor.left then
+        nPass += 1
+    else
+        nFail += 1 : print "  FAIL a narrow editing area pushes the stub off its left edge"
     end if
 
     ' The engine uppercases filenames; the report shows them in their original casing.
