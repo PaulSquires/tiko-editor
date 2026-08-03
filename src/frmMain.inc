@@ -1598,10 +1598,29 @@ function frmMain_WndProc( _
             next
 
         case MSG_USER_PROCESS_CHECKFORUPDATE
-            ' Check for any Tiko updated version (use a separate thread in case check hangs)
+            ' Check for a newer tiko on a separate thread, and DO NOT JOIN IT HERE.
+            '
+            ' This used to be ThreadCreate immediately followed by ThreadWait, which made
+            ' the thread pointless: the UI blocked for exactly as long as it would have
+            ' without one, and the comment saying it existed "in case check hangs" described
+            ' something that could not happen. WinHTTP's own resolve and connect timeouts
+            ' default to 60 s each and Send blocks in them, so a captive portal or a
+            ' blackholed network froze startup for a minute. (The worker now sets explicit
+            ' 5 s timeouts as well.)
+            '
+            ' The handle is kept and joined in MSG_USER_UPDATECHECK_COMPLETE -- fbc 1.10 has
+            ' no ThreadDetach, so a handle that is never waited on leaks the thread struct.
             if gConfig.CheckUpdates = false then exit function
-            dim as any ptr pThread = ThreadCreate( @DoCheckForUpdates )
-            ThreadWait( pThread )
+            if ghUpdateCheckThread = 0 then
+                ghUpdateCheckThread = ThreadCreate( @DoCheckForUpdates )
+            end if
+
+        case MSG_USER_UPDATECHECK_COMPLETE
+            ' The worker posts this as its last act, so the join below returns at once.
+            if ghUpdateCheckThread then
+                ThreadWait( ghUpdateCheckThread )
+                ghUpdateCheckThread = 0
+            end if
             frmMenuBar_PositionWindows()
 
         case MSG_USER_SHOWAUTOCOMPLETE

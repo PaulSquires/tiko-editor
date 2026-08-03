@@ -42,6 +42,10 @@ enum
     MSG_USER_SHOW_TOOLKEY
     MSG_USER_RICHEDIT_SELECTALL
     MSG_USER_PARSE_COMPLETE        ' wParam = SCAN_TIER; posted by the fbcParser scan worker
+    ' Posted by the update-check worker as its last act. The check used to be joined
+    ' immediately by its caller, which blocked startup for as long as WinHTTP took; the
+    ' thread is now genuinely asynchronous and reports back through this.
+    MSG_USER_UPDATECHECK_COMPLETE
     
     '' FILE
     IDM_FILE_START

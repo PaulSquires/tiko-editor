@@ -41,6 +41,11 @@ declare function SpawnPreviousInstance() as boolean
 ' without a second process. Returns "" for anything malformed.
 declare function SafeCopyDataString( byval pData as any ptr, byval cbData as ulong ) as DWSTRING
 declare sub CopyData_RunSelfTest()
+' Pure parse of the update server's reply -- see its definition for why it is strict.
+declare function ParseLatestVersion( byref sBody as string ) as DWSTRING
+' Handle of the in-flight update-check thread, joined when it reports back. fbc 1.10 has
+' no ThreadDetach, so it has to be waited on somewhere or the thread struct leaks.
+dim shared ghUpdateCheckThread as any ptr
 declare function ReloadDocument( byref wszFilename as wstring ) as long
 declare function GetTemporaryFilename( byref wszFolder as wstring, byref wszExtension as wstring) as string
 declare function GetFontCharSetID(byref wzCharsetName as DWSTRING ) as long
