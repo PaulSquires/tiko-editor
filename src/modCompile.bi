@@ -43,6 +43,12 @@ type COMPILE_TYPE
     pDocMain               as clsDocument ptr  ' pointer to main document to be compiler
     ObjectFilename         as DWSTRING   ' Set when compiling a Module and used afterwards to construct StatusBar message
     hCurSave               as HCURSOR    ' Cursor saved/restored during compile process
+    ' The process-wide current directory, saved on entry and restored by code_Cleanup.
+    ' code_Compile chdir's to the main file's folder because fbc is handed RELATIVE paths
+    ' (ObjFolderShort is ".\<ext>\") that the child resolves against the directory it
+    ' inherits. That chdir was never undone, so every compile permanently moved the whole
+    ' process into a user project folder.
+    wszCurDirSave          as DWSTRING
     wszStatusBarMessage    as DWSTRING   ' Success/Fail statusbar message
     ' Exit code of the LAST child compiler process. fbc returns 0 on success (warnings
     ' included) and non-zero on error -- measured, not assumed. It is the authority on
@@ -64,6 +70,10 @@ type CompileThreadParams
     hDoneEvent          as HANDLE
 end type
 
+' Allocate/teardown of the compile state. Declared (they were only defined) so the save
+' self-test can drive the real pair rather than a copy of them.
+declare function code_Initialize() as COMPILE_TYPE ptr
+declare function code_Cleanup( byval pCompile as COMPILE_TYPE ptr ) as boolean
 declare sub compile_thread( byval userdata as any ptr )
 declare function code_Compile( byval wID as long ) as boolean
 declare function AddPathsToLinkModules( byval modules as DWSTRING ) as DWSTRING

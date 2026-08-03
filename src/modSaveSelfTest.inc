@@ -2,6 +2,10 @@
 ' modSaveSelfTest.inc  -  see modSaveSelfTest.bi for the contract.
 ' ########################################################################################
 
+' For code_Initialize/code_Cleanup: section 12 drives the real pair. Safe this early --
+' modCompile.bi is types and declarations only and names no Ps* type.
+#include once "modCompile.bi"
+
 ' Read a whole file back as raw bytes, through code that is NOT the writer under test.
 private function SaveSelfTest_ReadAll( byref wszPath as wstring ) as string
     dim as HANDLE h = CreateFileW( @wszPath, GENERIC_READ, _
@@ -313,6 +317,42 @@ sub Save_RunSelfTest()
 
         ProjectFolders_Clear()
         AfxDeleteFile( wszProj )
+    end scope
+
+    ' ---- 12. a compile must leave the process where it found it ------------------------
+    ' code_Compile chdir's to the main file's folder, because fbc is handed RELATIVE paths
+    ' (ObjFolderShort is ".\<ext>\") that the child resolves against the directory it
+    ' inherits. Nothing undid that, so the editor's own working directory silently became
+    ' whichever project was last built -- deciding where every later relative path resolved,
+    ' and what a bare LoadLibrary would search.
+    '
+    ' Driven through the REAL code_Initialize/code_Cleanup pair rather than a copy of them.
+    scope
+        dim as boolean bSavedCompiling = gApp.IsCompiling
+        dim as string sBefore = curdir
+
+        gApp.IsCompiling = false
+        dim pC as COMPILE_TYPE ptr = code_Initialize()
+        if pC = 0 then
+            ? "  NOTE: code_Initialize failed; the cwd assertions did NOT run."
+        else
+            chdir wszDir                      ' stand in for the compile's own chdir
+            SAVEASSERT( curdir <> sBefore, _
+                "precondition: the directory did not actually change, so the restore below tests nothing" )
+            code_Cleanup( pC )
+            SAVEASSERT( curdir = sBefore, _
+                "a compile left the process in [" & curdir & "] instead of [" & sBefore & "]" )
+        end if
+
+        ' code_Cleanup used to dereference pCompile->hCurSave BEFORE its null check, and
+        ' code_Compile calls it with NULL on exactly the path it was written to clean up
+        ' after -- "new COMPILE_TYPE returned null". Reaching the next line proves it does
+        ' not crash on that input.
+        code_Cleanup( 0 )
+        SAVEASSERT( true, "code_Cleanup(NULL) crashed" )
+
+        chdir sBefore
+        gApp.IsCompiling = bSavedCompiling
     end scope
 
     AfxDeleteFile( wszFile )

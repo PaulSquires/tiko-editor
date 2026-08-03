@@ -44,6 +44,10 @@ function code_Initialize() as COMPILE_TYPE ptr
 
     ' Save the mouse cursor so that it can be restored after compiling.
     pCompile->hCurSave = GetCursor()
+    ' ...and the current directory, for the same reason: code_Compile chdir's away from it
+    ' and nothing used to bring it back. Saved HERE and restored in code_Cleanup so every
+    ' exit path is covered, exactly as hCurSave already was.
+    pCompile->wszCurDirSave = curdir
 
     return pCompile
 end function
@@ -54,15 +58,28 @@ end function
 ' ========================================================================================
 function code_Cleanup( byval pCompile as COMPILE_TYPE ptr ) as boolean
     gApp.IsCompiling = false
-    
+
+    ' THE NULL CHECK HAS TO COME FIRST. It used to sit below, after hCurSave had already
+    ' been dereferenced -- and code_Compile calls this with a NULL pointer on exactly one
+    ' path, the "new COMPILE_TYPE returned null" case it was written to clean up after.
+    if pCompile = 0 then
+        ResetScintillaCursors()
+        return true
+    end if
+
     ' Restore the mouse cursors
     SetCursor( pCompile->hCurSave )
     ResetScintillaCursors()
 
-    if pCompile then 
-        delete( pCompile )
-        pCompile = null
-    end if
+    ' Put the process back where it was. code_Compile chdir's to the main file's folder
+    ' because fbc is handed relative paths it resolves against the directory it inherits;
+    ' nothing undid that, so the editor's own working directory silently became whichever
+    ' project was last built -- which then decided where relative paths resolved everywhere
+    ' else, and what a bare LoadLibrary would search.
+    if len( pCompile->wszCurDirSave ) then chdir pCompile->wszCurDirSave
+
+    delete( pCompile )
+    pCompile = null
 
     return true
 end function
