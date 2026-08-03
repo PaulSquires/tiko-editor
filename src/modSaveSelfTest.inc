@@ -413,6 +413,39 @@ sub Save_RunSelfTest()
         end if
     end scope
 
+    ' ---- 14. the legacy [Notes] migration is strictly ONE-WAY -------------------------
+    ' gApp.NonProjectNotes is a migration-only field whose comment said it was removable
+    ' "once no settings.ini in the wild still carries the section" -- a condition nobody can
+    ' evaluate, which is how such fields become permanent. The condition that IS checkable
+    ' is this one: the writer must never emit the block again. If that holds, any file saved
+    ' once by a current build has already lost it, and the field is dead.
+    scope
+        dim as DWSTRING wszSavedCfg = gConfig.ConfigFilename
+        dim as DWSTRING wszOutCfg   = wszDir & "\writeprobe.ini"
+        AfxDeleteFile( wszOutCfg )
+
+        gConfig.ConfigFilename = wszOutCfg
+        gConfig.SaveConfigFile()
+        gConfig.ConfigFilename = wszSavedCfg
+
+        dim as string sWritten = SaveSelfTest_ReadAll( wszOutCfg )
+        SAVEASSERT( len(sWritten) > 0, _
+            "precondition: SaveConfigFile wrote nothing, so the scan below tests nothing" )
+        ' UTF-16LE on disk; strip the NUL bytes rather than decode, which is enough to
+        ' search for an ASCII marker.
+        dim as string sFlat
+        for iB as long = 1 to len(sWritten)
+            if asc(sWritten, iB) <> 0 then sFlat &= chr( asc(sWritten, iB) )
+        next
+        SAVEASSERT( instr( sFlat, "[Notes]" ) = 0, _
+            "SaveConfigFile still writes a [Notes] section -- the NonProjectNotes migration " & _
+            "is NOT one-way and that field can never be removed" )
+        SAVEASSERT( instr( sFlat, "NOTES-START" ) = 0, _
+            "SaveConfigFile still writes a NOTES-START block into settings.ini" )
+
+        AfxDeleteFile( wszOutCfg )
+    end scope
+
     AfxDeleteFile( wszFile )
 
     sMsg = "TIKO_SAVE_SELFTEST: " & nPass & " passed, " & nFail & " failed."

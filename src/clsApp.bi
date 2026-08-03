@@ -19,6 +19,29 @@ type clsApp
     public:
         pDocList                   as clsDocument ptr   ' Single linked list of loaded files
         pfnCreateLexerfn           as CreateLexerFn
+        ' ---- MODE FLAGS: every one of these is a SPAN, not a state ----------------------
+        ' Each is set true, something happens, and it is set false again. Two rules follow,
+        ' and both have been broken here before:
+        '
+        '   1. EVERY EXIT FROM THE SPAN MUST CLEAR IT, including early returns. LoadConfigFile
+        '      and SaveConfigFile each had an early "return true" between the set and the
+        '      clear, and because the only reader of PreventConfigLoad short-circuits on it,
+        '      ONE unreadable settings.ini killed config-change detection for the whole
+        '      session, silently. Both are wrappers around a body now, so no exit can leak.
+        '      Verified 2026-08-03: no other span here contains an early return.
+        '
+        '   2. THEY DO NOT NEST. Each is a plain boolean, so an inner clear ends an outer
+        '      span early. SuppressNotify is the one to watch -- it has seven set/clear
+        '      pairs across five files. Verified 2026-08-03: every span makes only leaf
+        '      calls (SciExec, SciMsg, SetWindowRedraw, string helpers), so none can nest
+        '      today. If a span ever grows a call that reaches another one, this must become
+        '      a counter; a boolean cannot express it.
+        '
+        ' These were NOT grouped into an APP_MODES type with paired accessors, which the
+        ' audit proposed. With rule 1 discharged and rule 2 currently unreachable, the
+        ' accessors would enforce nothing, and the grouping alone is a rename across every
+        ' call site -- churn on working code with no property gained. Revisit if a span
+        ' grows an early return or a nested call.
         PreventConfigLoad          as boolean           ' temporarily suppress messagepump checking (set during Load/Save config)
         SuppressNotify             as boolean           ' temporarily suppress Scintilla notifications
         KeepTitleBarActive         as boolean           ' a popup surface (menubar popup, Search Symbol) owns
@@ -30,11 +53,25 @@ type clsApp
         ' strip is PsTabBar -- so bDragActive, bDragTabActive and ptDragTabPrev went, along
         ' with hWndPanel and the single/double-click timer fields before them.
         IncludeFilename            as DWSTRING
-        ' MIGRATION ONLY. Loaded from settings.ini's [Notes] block, which is no longer
-        ' written, and read in exactly one place: Workspace_EstablishUntitled hands it to
-        ' ProjectNotes the first time an untitled workspace is created with no file on
-        ' disk. Nothing else may read or write it. Removable once no settings.ini in the
-        ' wild still carries the section.
+        ' MIGRATION ONLY. Loaded from settings.ini's [Notes] block and read in exactly one
+        ' place: Workspace_EstablishUntitled hands it to ProjectNotes the first time an
+        ' untitled workspace is created with no file on disk. Nothing else may read or
+        ' write it.
+        '
+        ' REMOVAL CRITERION, because "once no settings.ini in the wild still carries the
+        ' section" was not one -- it named no condition anyone could evaluate, which is how
+        ' migration-only fields become permanent.
+        '
+        ' SaveConfigFile NO LONGER EMITS THE SECTION (clsConfig.inc, and
+        ' TIKO_SAVE_SELFTEST asserts it by writing a settings.ini and scanning it). So the
+        ' migration is strictly one-way: any settings.ini that has been saved ONCE by
+        ' tiko 1.3.2 or later has already lost the block, and every ordinary session saves
+        ' on exit. The field is therefore dead for any user who has run a current build
+        ' even once.
+        '
+        ' DELETE THIS FIELD, its loader in LoadConfigFileBody, and its one reader in
+        ' frmMainProject, at the SECOND feature release after 1.3.2 -- by then a user who
+        ' skipped a release has still been migrated. Nothing else needs to be checked.
         NonProjectNotes            as DWSTRING
 '        wszPanelText               as DWSTRING             ' Current file loading or being compiled (for statusbar updating)
  '       FileLoadingCount           as long              ' Track count of files loading for statusbar display
