@@ -588,29 +588,19 @@ end function
 
 
 ' ========================================================================================
-' May a file with this extension live under this root group?
+' THERE IS NO EXTENSION RULE. Any file may be dragged into any group.
 '
-' THIS IS NOT Workspace_DeriveFileType, and the difference is the point. That function says
-' what a newly-opened file DEFAULTS to -- .inc defaults to Normal, and everything unknown
-' defaults to Normal. This says what is LEGAL, and the two deliberately disagree: an .inc is
-' perfectly legitimate as a Module, it simply is not what a fresh one becomes.
+' frmExplorer_ExtAllowedInCat used to say which extensions were LEGAL under each root group
+' (.bas under Main, .rc under Resource, .bi/.h under Header, .bas/.inc under Module, anything
+' under Normal) and the drop validator refused everything else. Removed by request: the
+' groups are how the AUTHOR chooses to organize a project, and a picker that silently refuses
+' the drop cannot explain itself -- the cursor just says no.
 '
-' Main and Resource are single-file groups (clsApp demotes any previous holder), which is
-' enforced by the drop validator rather than here -- this answers only about the extension.
-'
-' Pure, so the whole (extension x group) matrix is assertable with no window.
+' What survives is what is not about the extension: Main and Resource still hold exactly ONE
+' file, and folders still cannot enter a group that holds no folders. Workspace_DeriveFileType
+' is untouched -- it says what a NEWLY OPENED file defaults to, which was always a separate
+' question from what a drag may do.
 ' ========================================================================================
-function frmExplorer_ExtAllowedInCat( byval wszExt as DWSTRING, byval catIndex as long ) as boolean
-    dim as DWSTRING wszUp = ucase( trim(wszExt) )
-    select case catIndex
-        case CATINDEX_MAIN:     return (wszUp = ".BAS")
-        case CATINDEX_RESOURCE: return (wszUp = ".RC")
-        case CATINDEX_HEADER:   return (wszUp = ".BI") orelse (wszUp = ".H")
-        case CATINDEX_MODULE:   return (wszUp = ".BAS") orelse (wszUp = ".INC")
-        case CATINDEX_NORMAL:   return true
-        case else:              return false
-    end select
-end function
 
 
 ' ========================================================================================
@@ -690,37 +680,17 @@ function frmExplorer_CanDropCallback( byval p as PSLISTTREE_DROPINFO ptr ) as bo
     ' is known to be legal. A partial move is the failure mode worth ruling out by
     ' construction: it is silent, and it splits a selection the user thought was one thing.
     if nFolders > 0 then
-        ' A folder cannot enter a group that holds no folders, and every file in its whole
-        ' subtree must be legal at the destination -- the "refuse the whole move" rule.
+        ' A folder cannot enter a group that holds no folders. The subtree walk that used to
+        ' sit here -- every file inside the folder checked against an extension rule -- is
+        ' gone with that rule: nothing about a descendant can refuse the move now.
         if ProjectFolders_CatAllowsFolders( catDest ) = false then return false
         for i as long = 0 to nFolders - 1
             if srcFolderCats(i) = catDest then
                 if ucase(srcFolderPaths(i)) = ucase(wszDest) then return false
                 if ProjectFolders_IsDescendantOf( wszDest, srcFolderPaths(i) ) then return false
             end if
-            dim pScan as clsDocument ptr = gApp.pDocList
-            do until pScan = 0
-                if frmExplorer_CatIndexForDoc( pScan ) = srcFolderCats(i) then
-                    dim as DWSTRING wszF = pScan->docData.wszFolder
-                    dim as boolean bInside = false
-                    if ucase(wszF) = ucase(srcFolderPaths(i)) then bInside = true
-                    if ProjectFolders_IsDescendantOf( wszF, srcFolderPaths(i) ) then bInside = true
-                    if bInside then
-                        if frmExplorer_ExtAllowedInCat( AfxStrPathName("EXTN", pScan->DiskFilename), catDest ) = false then
-                            return false
-                        end if
-                    end if
-                end if
-                pScan = pScan->pDocNext
-            loop
         next
     end if
-
-    for i as long = 0 to nDocs - 1
-        if frmExplorer_ExtAllowedInCat( AfxStrPathName("EXTN", srcDocs(i)->DiskFilename), catDest ) = false then
-            return false
-        end if
-    next
 
     ' Main and Resource hold exactly ONE file. Dropping a second is refused rather than
     ' silently demoting a bystander: the incumbent IS demoted, but only when the drop names

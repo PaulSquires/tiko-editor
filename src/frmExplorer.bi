@@ -88,7 +88,6 @@ declare sub frmExplorer_RenameFolder( byval hCtl as HWND, byval row as integer )
 declare sub ShowExplorerFolderContextMenu( byval hCtl as HWND, byval row as integer )
 declare function frmExplorer_FilterMessage( byval pMsg as MSG ptr ) as boolean
 ' May a file with this extension live under this root group? Pure, so assertable.
-declare function frmExplorer_ExtAllowedInCat( byval wszExt as DWSTRING, byval catIndex as long ) as boolean
 
 ' THIS FILE MAY NAME NO Ps* TYPE. clsConfig.inc includes it, and clsConfig.inc is processed
 ' before PsListTree.bi has been seen -- so a declaration mentioning PSLISTTREE_DROPINFO here

@@ -507,39 +507,12 @@ sub frmExplorer_RunSelfTest()
             ProjectFolders_Count() = 1, "count=" & str(ProjectFolders_Count()) )
         Exp_Check( "the merged record is the surviving path", ProjectFolders_Exists( catTest, "dup" ) )
 
-        ' --- the drop legality matrix -------------------------------------------------------
-        ' Pure, so the whole (extension x group) table is assertable. Written out rather than
-        ' looped: a loop would be the same table a second time and would agree with a wrong
-        ' one just as happily.
-        Exp_Check( "Main takes a .bas", frmExplorer_ExtAllowedInCat(".bas", CATINDEX_MAIN) )
-        Exp_Check( "Main refuses a .bi", frmExplorer_ExtAllowedInCat(".bi", CATINDEX_MAIN) = false )
-        Exp_Check( "Main refuses a .rc", frmExplorer_ExtAllowedInCat(".rc", CATINDEX_MAIN) = false )
-        Exp_Check( "Resource takes a .rc", frmExplorer_ExtAllowedInCat(".rc", CATINDEX_RESOURCE) )
-        Exp_Check( "Resource refuses a .bas", frmExplorer_ExtAllowedInCat(".bas", CATINDEX_RESOURCE) = false )
-        Exp_Check( "Header takes a .bi", frmExplorer_ExtAllowedInCat(".bi", CATINDEX_HEADER) )
-        Exp_Check( "Header takes a .h", frmExplorer_ExtAllowedInCat(".h", CATINDEX_HEADER) )
-        Exp_Check( "Header refuses a .bas", frmExplorer_ExtAllowedInCat(".bas", CATINDEX_HEADER) = false )
-        Exp_Check( "Module takes a .bas", frmExplorer_ExtAllowedInCat(".bas", CATINDEX_MODULE) )
-        ' Legal by request, and the one place this predicate deliberately DISAGREES with
-        ' Workspace_DeriveFileType -- which defaults a fresh .inc to Normal. Default is not
-        ' legality, and conflating them is what would silently forbid this drop.
-        Exp_Check( "Module takes an .inc", frmExplorer_ExtAllowedInCat(".inc", CATINDEX_MODULE) )
-        Exp_Check( "Module refuses a .bi", frmExplorer_ExtAllowedInCat(".bi", CATINDEX_MODULE) = false )
-        Exp_Check( "Normal takes anything", _
-            frmExplorer_ExtAllowedInCat(".bas", CATINDEX_NORMAL) andalso _
-            frmExplorer_ExtAllowedInCat(".txt", CATINDEX_NORMAL) andalso _
-            frmExplorer_ExtAllowedInCat("", CATINDEX_NORMAL) )
-        Exp_Check( "the matrix is case-insensitive", _
-            frmExplorer_ExtAllowedInCat(".BAS", CATINDEX_MAIN) andalso _
-            frmExplorer_ExtAllowedInCat(".Bi", CATINDEX_HEADER) )
-        ' Where it MUST agree with Workspace_DeriveFileType: whatever a fresh file becomes has
-        ' to be somewhere it is allowed to be, or opening a file would put it in a group a
-        ' drag could never return it to.
-        Exp_Check( "a fresh file's default group always accepts it", _
-            frmExplorer_ExtAllowedInCat(".bi", CATINDEX_HEADER) andalso _
-            frmExplorer_ExtAllowedInCat(".rc", CATINDEX_RESOURCE) andalso _
-            frmExplorer_ExtAllowedInCat(".inc", CATINDEX_NORMAL) andalso _
-            frmExplorer_ExtAllowedInCat(".bas", CATINDEX_MAIN) )
+        ' --- the drop legality matrix is GONE --------------------------------------------------
+        ' frmExplorer_ExtAllowedInCat and the fourteen assertions over its (extension x group)
+        ' table were deleted with the rule itself: any file may now be dragged into any group.
+        ' Nothing replaces them, because "everything is allowed" has no table to assert. What
+        ' still constrains a drop -- one file in Main/Resource, no folders in either, no folder
+        ' into its own descendant -- is asserted where those rules live.
 
         ' --- moving a folder subtree ----------------------------------------------------------
         ProjectFolders_Clear()
