@@ -139,7 +139,14 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modIniParse.inc"
 #include once "clsConfig.inc"
 #include once "PsBufferPaint.inc"
+' modRoutines was a 2,250-line junk drawer. These three are PURE MOVES out of it -- see
+' each file's header. Order is load-bearing for the first two: modEncoding holds the four
+' PRIVATE conversion helpers (undeclared in any .bi), and modRoutines' own GetFileToString
+' and modCompileErrors both call into them, so they must be DEFINED first.
+#include once "modPaths.inc"
+#include once "modEncoding.inc"
 #include once "modRoutines.inc"
+#include once "modUpdateCheck.inc"
 ' The formatter engine. After clsConfig.inc (it reads gConfig's keyword list to build its
 ' casing vocabulary) and after modRoutines.inc for AfxGetExePathName. It deliberately calls
 ' NOTHING else in tiko -- no document, no window, no Scintilla.

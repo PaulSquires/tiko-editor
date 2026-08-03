@@ -13,6 +13,12 @@
 
 #pragma once
 
+' modRoutines was a junk drawer; three coherent groups were split out of it. These are
+' forwarded from here so the ~40 files that include modRoutines.bi did not have to change.
+#include once "modEncoding.bi"
+#include once "modPaths.bi"
+#include once "modUpdateCheck.bi"
+
 
 
 ' Size = 32 bytes
@@ -41,42 +47,14 @@ declare function SpawnPreviousInstance() as boolean
 ' without a second process. Returns "" for anything malformed.
 declare function SafeCopyDataString( byval pData as any ptr, byval cbData as ulong ) as DWSTRING
 declare sub CopyData_RunSelfTest()
-' Pure parse of the update server's reply -- see its definition for why it is strict.
-declare function ParseLatestVersion( byref sBody as string ) as DWSTRING
-' Handle of the in-flight update-check thread, joined when it reports back. fbc 1.10 has
-' no ThreadDetach, so it has to be waited on somewhere or the thread struct leaks.
-dim shared ghUpdateCheckThread as any ptr
 declare function ReloadDocument( byref wszFilename as wstring ) as long
 declare function GetTemporaryFilename( byref wszFolder as wstring, byref wszExtension as wstring) as string
 declare function GetFontCharSetID(byref wzCharsetName as DWSTRING ) as long
-declare function isUTF8encoded(byref s as string) as boolean
 declare function Scintilla_GetTextBytes( byval hEdit as hwnd ) as string
 declare function Scintilla_StripTrailingWhitespace( byval hEdit as hwnd ) as long
-declare function Doc_EncodeForDisk( byref sBuffer as string, byval bSourceIsUtf8 as boolean, byval nTargetEnc as long, byref bLossy as boolean ) as string
-
-' Outcome of Doc_WriteToDisk. Deliberately an explicit pair rather than a boolean: the
-' three save paths that call it used to return a bare TRUE/FALSE that conflated "the user
-' cancelled" with "the write succeeded", and had no value at all for "the write FAILED" --
-' which is exactly why a failed save used to be indistinguishable from a good one.
-const DOCWRITE_OK     = 0
-const DOCWRITE_FAILED = 1
-' Test hook for Doc_ConfirmLossySave: 0 = ask the user (always, outside a self-test),
-' >0 = answer OK, <0 = answer Cancel. See that function's header for why it exists.
-dim shared gLossySaveTestAnswer as long
-declare function Doc_ConfirmLossySave( byval pDoc as clsDocument ptr, byval wszPath as DWSTRING, byval nEncoding as long ) as boolean
-declare function Doc_WriteToDisk( byval wszPath as DWSTRING, byref sBytes as string, byref wszErr as DWSTRING ) as long
-declare sub Doc_ReportWriteFailure( byval wszPath as DWSTRING, byval wszErr as DWSTRING )
-
-declare function Doc_EncodingName( byval nEnc as long ) as DWSTRING
-declare function ConvertTextBuffer( byval pDoc as clsDocument ptr, byval nNewEncoding as long ) as boolean
 declare function GetFileToString( byref wszFilename as const wstring, byref txtBuffer as string, byval pDoc as clsDocument ptr ) as boolean
 declare function IsCurrentLineIncludeFilename() as boolean
 declare function OpenSelectedDocument( byref wszFilename as wstring, byref wszFunctionName as wstring = "", byval nLineNumber as long = -1 ) as clsDocument ptr
-declare function FilenameOriginalCase( byval wszFilename as DWSTRING ) as DWSTRING
-declare function ProcessToCurdriveProject( byval wzFilename as DWSTRING ) as DWSTRING
-declare function ProcessFromCurdriveProject( byval wzFilename as DWSTRING ) as DWSTRING
-declare function ProcessToCurdriveApp( byval wzFilename as DWSTRING ) as DWSTRING
-declare function ProcessFromCurdriveApp( byval wzFilename as DWSTRING ) as DWSTRING
 declare function AfxIFileOpenDialogW( byval hwndOwner as HWND, byval idButton as long) as wstring Ptr
 declare function AfxIFileOpenDialogMultiple( byval hwndOwner as HWND, byval idButton as long) as IShellItemArray ptr
 declare function AfxIFileSaveDialog( byval hwndOwner as HWND, byval pwszFileName as wstring Ptr, byval pwszDefExt as wstring Ptr, byval id as long = 0, byval sigdnName as SIGDN = SIGDN_FILESYSPATH ) as wstring Ptr
