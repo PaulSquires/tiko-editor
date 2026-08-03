@@ -328,6 +328,29 @@ function WinMain( _
 
     LogInit( "_debug.txt" )
 
+    ' ---- DLL SEARCH HARDENING, before anything can load a library --------------------
+    ' By default LoadLibrary with a bare name searches the CURRENT DIRECTORY and then PATH.
+    ' tiko is exposed to both: it loads Lexilla64/Scintilla64 by plain name, AfxWebView2
+    ' resolves WebView2Loader.dll by plain name at runtime, and code_Compile chdir's the
+    ' whole process into whichever project is being built.
+    '
+    ' LOAD_LIBRARY_SEARCH_DEFAULT_DIRS drops the current directory and PATH, leaving the
+    ' application directory, System32 and any explicitly added user directories -- which is
+    ' where every DLL tiko actually wants already lives (WebView2Loader.dll sits beside
+    ' tiko.exe by _copy_webview2.bat, and the application directory IS searched).
+    '
+    ' Resolved through GetProcAddress rather than called directly: a direct call would put a
+    ' static import to it in the exe, and an OS without the export would then fail to start
+    ' rather than simply skipping the hardening. This must not raise tiko's minimum Windows.
+    scope
+        dim as any ptr hK32 = GetModuleHandleW( "kernel32.dll" )
+        if hK32 then
+            dim SetDefaultDllDirs as function( byval as DWORD ) as WINBOOL
+            SetDefaultDllDirs = cast( any ptr, GetProcAddress( hK32, "SetDefaultDllDirectories" ) )
+            if SetDefaultDllDirs then SetDefaultDllDirs( LOAD_LIBRARY_SEARCH_DEFAULT_DIRS )
+        end if
+    end scope
+
     ' Load configuration files
     gConfig.LoadConfigFile()
     gConfig.LoadKeywords()
@@ -394,8 +417,12 @@ function WinMain( _
 
 
     ' Load the Scintilla code editing dll
-    dim as any ptr pLibLexilla = dylibload("Lexilla64.dll")
-    dim as any ptr pLibScintilla = dylibload("Scintilla64.dll")
+    ' BY FULL PATH, not by bare name. These live beside the exe and nowhere else, so
+    ' naming the directory removes the search entirely rather than relying on the order
+    ' being what we hardened it to above. Belt and braces, and it costs nothing.
+    dim as DWSTRING wszDllPath = AfxGetExePathName()
+    dim as any ptr pLibLexilla   = dylibload( wszDllPath & "Lexilla64.dll" )
+    dim as any ptr pLibScintilla = dylibload( wszDllPath & "Scintilla64.dll" )
 
     if (pLibLexilla = 0) orelse (pLibScintilla = 0) then
         TikoMsgBox( 0, _

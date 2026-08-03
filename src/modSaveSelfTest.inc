@@ -363,6 +363,55 @@ sub Save_RunSelfTest()
         gApp.IsCompiling = bSavedCompiling
     end scope
 
+    ' ---- 13. the current directory is NOT on the DLL search path -----------------------
+    ' By default LoadLibrary with a bare name searches the CURRENT DIRECTORY. tiko is
+    ' exposed to that -- it loads Lexilla/Scintilla by name, AfxWebView2 resolves
+    ' WebView2Loader.dll by name at runtime, and code_Compile chdir's the whole process into
+    ' whichever project is being built. WinMain now calls SetDefaultDllDirectories with
+    ' LOAD_LIBRARY_SEARCH_DEFAULT_DIRS.
+    '
+    ' Asserted by actually trying it: plant a real, loadable DLL in a directory, make that
+    ' the current directory, and ask for it BY BARE NAME. It must not be found. Copying an
+    ' existing DLL rather than fabricating one matters -- a malformed file would fail to
+    ' load for the wrong reason and the assertion would pass while proving nothing.
+    scope
+        dim as DWSTRING wszSrcDll   = AfxGetExePathName() & "Lexilla64.dll"
+        dim as DWSTRING wszPlanted  = wszDir & "\zz_hijack_probe.dll"
+
+        if AfxFileExists( wszSrcDll ) = false then
+            ? "  NOTE: no Lexilla64.dll to copy; the DLL-search assertion did NOT run."
+        else
+            AfxDeleteFile( wszPlanted )
+            CopyFileW( wszSrcDll, wszPlanted, FALSE )
+            SAVEASSERT( AfxFileExists( wszPlanted ), _
+                "precondition: the probe DLL was not planted, so the search test proves nothing" )
+
+            dim as string sCwdSave = curdir
+            chdir wszDir
+            dim as HMODULE hProbe = LoadLibraryW( "zz_hijack_probe.dll" )
+            chdir sCwdSave
+
+            SAVEASSERT( hProbe = 0, _
+                "a DLL was loaded BY BARE NAME out of the current directory -- the search path is not hardened" )
+            if hProbe then FreeLibrary( hProbe )
+            AfxDeleteFile( wszPlanted )
+        end if
+
+        ' ...AND THE APPLICATION DIRECTORY STILL IS ON IT. This is the half the hardening
+        ' could plausibly break: AfxWebView2 resolves WebView2Loader.dll by PLAIN NAME at
+        ' runtime (there is no import lib), so if LOAD_LIBRARY_SEARCH_DEFAULT_DIRS had
+        ' excluded the app directory the Help Center would have stopped working with no
+        ' build error and no failing assertion anywhere. Load it the same way it does.
+        if AfxFileExists( AfxGetExePathName() & "WebView2Loader.dll" ) = false then
+            ? "  NOTE: no WebView2Loader.dll beside the exe; that half did NOT run."
+        else
+            dim as HMODULE hWv = LoadLibraryW( "WebView2Loader.dll" )
+            SAVEASSERT( hWv <> 0, _
+                "WebView2Loader.dll no longer resolves by bare name -- DLL hardening broke the Help Center" )
+            if hWv then FreeLibrary( hWv )
+        end if
+    end scope
+
     AfxDeleteFile( wszFile )
 
     sMsg = "TIKO_SAVE_SELFTEST: " & nPass & " passed, " & nFail & " failed."
