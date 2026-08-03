@@ -31,6 +31,8 @@
 #define IDC_FRMABOUT_CMDWEBSITE     1003
 #define IDC_FRMABOUT_CMDGITHUB      1004
 #define IDC_FRMABOUT_CMDCLOSE       1005
+#define IDC_FRMABOUT_LICSEL         1006
+#define IDC_FRMABOUT_LICVSCROLL     1007
 
 ' The three pages, in tab order. Also the PsSelectBar panel indices, which is why they start
 ' at 0 and are contiguous -- frmAbout_ShowPage indexes with them directly.
@@ -39,6 +41,29 @@ enum ABOUTPAGE_ENUM
     ABOUTPAGE_CREDITS
     ABOUTPAGE_LICENSE
 end enum
+
+' ========================================================================================
+' TIKO IS DUAL-LICENSED, and the Licenses page is where that is said out loud.
+'
+' The editor is GPLv3; fbcParser and debugParser are proprietary and closed source, and
+' LICENSE-EXCEPTION.txt is the GPLv3 section 7 additional permission that makes the
+' combination redistributable by someone other than the copyright holder. A single
+' "License" page showing only the GPL notice would have been actively misleading about
+' what a user of a tiko build is allowed to do with the DLLs beside it.
+'
+' Two panels, in sub-strip order, indexed directly like ABOUTPAGE_ENUM above.
+' ========================================================================================
+enum LICPAGE_ENUM
+    LICPAGE_GPL = 0
+    LICPAGE_PROPRIETARY
+end enum
+
+' The licence files, read at display time from the exe's own directory. NOT paraphrased
+' into a string literal: a summary in the source is a second statement of the licence that
+' drifts from the file the moment either is edited, and it is the FILE that ships beside
+' the exe and governs. Read AND rendered verbatim.
+#define FRMABOUT_FILE_GPL          wstr("LICENSE")
+#define FRMABOUT_FILE_PROPRIETARY  wstr("LICENSE-PROPRIETARY.txt")
 
 ' ---- geometry, ALL UNSCALED ------------------------------------------------------------
 ' Every one of these is passed through AfxScaleX/Y at the point of use. None is ever stored
@@ -59,6 +84,10 @@ end enum
 #define FRMABOUT_BTN_H          30
 #define FRMABOUT_BTN_GAP         8
 #define FRMABOUT_BODY_PAD       16     ' body band -> the control or text inside it
+' The GPL-3 / Proprietary strip carries NO geometry constants of its own. It shares the tab
+' strip's band, so its height and vertical position come from FRMABOUT_TABS_H like the page
+' tabs do, and its width is whatever its two captions measure -- which is the whole reason a
+' right-aligned strip needs no number: it is pinned to the same right margin as the body.
 #define FRMABOUT_ROW_H          24     ' Credits list row
 #define FRMABOUT_KV_KEYW       148     ' About page: width of the key column
 #define FRMABOUT_KV_ROWH        21
