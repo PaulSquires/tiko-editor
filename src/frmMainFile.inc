@@ -319,14 +319,18 @@ function OnCommand_FileDuplicate( _
     ' Encode the full Scintilla buffer through the single shared writer (same path as SaveFile).
     dim as long sciCodePage = SciExec(pDoc->hWindow(0), SCI_GETCODEPAGE, 0, 0)   ' 0 or SC_CP_UTF8
 
-    dim pStream as CFileStream
-    if pStream.Open(wszFilename, STGM_CREATE or STGM_WRITE) = S_OK then
-        dim as boolean bLossy
-        dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(pDoc->hWindow(0)), _
-                                                (sciCodePage = SC_CP_UTF8), pDoc->FileEncoding, bLossy )
-        pStream.Write strptr(sOut), len(sOut)
+    dim as boolean bLossy
+    dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(pDoc->hWindow(0)), _
+                                            (sciCodePage = SC_CP_UTF8), pDoc->FileEncoding, bLossy )
+
+    ' The loop above guarantees wszFilename does not exist, so nothing here can overwrite a
+    ' file -- but the write can still fail, and opening a duplicate that was never created
+    ' put an empty tab on screen named after a file that is not there.
+    dim as DWSTRING wszErr
+    if Doc_WriteToDisk( wszFilename, sOut, wszErr ) <> DOCWRITE_OK then
+        Doc_ReportWriteFailure( wszFilename, wszErr )
+        return 0
     end if
-    pStream.Close
 
     ' Load the duplicate file from disk. This will display it in the top tab control
     ' and the Explorer.

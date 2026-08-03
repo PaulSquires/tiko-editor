@@ -1756,6 +1756,9 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Env-gated (TIKO_ENCODING_SELFTEST=1). Pure byte-exact + disk round-trip; needs no
     ' document window, so it is safe to run here at startup.
     Encoding_RunSelfTest()
+    ' Env-gated (TIKO_SAVE_SELFTEST=1). Touches %TEMP% and takes a real exclusive lock;
+    ' needs no document window.
+    Save_RunSelfTest()
     ' Env-gated (TIKO_DEBUG_SELFTEST=1). Pure: layout arithmetic, the datatip expression
     ' walk and the localized strings. It launches nothing -- see the suite's own header
     ' for what that means it cannot reach.

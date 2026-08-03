@@ -529,6 +529,150 @@ end function
 
 
 ' ========================================================================================
+' The system's own text for a GetLastError code. Neither AfxNova nor tiko had one of these
+' (AfxGetOleErrorInfo is for IErrorInfo, which a Win32 file API does not set), and a save
+' failure the user cannot act on is barely better than a silent one -- "the process cannot
+' access the file because it is being used by another process" tells them to close Excel.
+' ========================================================================================
+private function Win32ErrorText( byval dwErr as DWORD ) as DWSTRING
+    if dwErr = 0 then return ""
+    dim as wstring ptr pMsg = 0
+    dim as DWORD cch = FormatMessageW( _
+            FORMAT_MESSAGE_ALLOCATE_BUFFER or FORMAT_MESSAGE_FROM_SYSTEM or _
+            FORMAT_MESSAGE_IGNORE_INSERTS, _
+            0, dwErr, 0, cast(wstring ptr, @pMsg), 0, 0 )
+    if (cch = 0) orelse (pMsg = 0) then return "Windows error " & dwErr & "."
+    dim as DWSTRING wszOut = *pMsg
+    LocalFree( pMsg )
+    ' FormatMessage terminates its text with CRLF; a message box adds its own layout.
+    return rtrim( wszOut, any !" \r\n" )
+end function
+
+
+' ========================================================================================
+' Write a byte buffer to disk ATOMICALLY, and report whether it worked.
+'
+' Returns one of the DOCWRITE_* codes; wszErr receives a human-readable reason on failure
+' (already localized by the caller's standards -- it is a Win32 error string, not a phrase).
+'
+' WHY THIS EXISTS. Every save path used to do this:
+'
+'     if AfxFileExists(f) then AfxDeleteFile(f)      <-- the user's file, gone
+'     if pStream.Open(f, STGM_CREATE or STGM_WRITE) = S_OK then
+'         pStream.Write strptr(sOut), len(sOut)      <-- result discarded
+'     end if                                          <-- no else: failure invisible
+'
+' The delete happened BEFORE the write, so any failure to open -- disk full, an antivirus
+' lock, a read-only volume, a dropped network share, the file open in another process --
+' destroyed the document with nothing left to restore it from. The write's byte count was
+' thrown away, so a short write (disk full) truncated the file silently. And because the
+' caller could not tell, it went on to clear the dirty flag and send SCI_SETSAVEPOINT, so
+' the tab stopped showing modified and the close prompt never fired: the user exited
+' believing the work was saved.
+'
+' The order here is the only order that is safe: write the WHOLE new file somewhere else
+' first, verify every byte landed, and only then swap it into place in one step. Until the
+' swap succeeds the original is untouched, so every failure above leaves the user exactly
+' where they started.
+'
+' ReplaceFileW rather than delete-then-rename: it preserves the target's ACLs, its
+' alternate data streams, its creation time and its object id, which a delete throws away.
+' It requires the replacement to be on the SAME VOLUME, which is why the temp file is put
+' in the target's own directory and not in %TEMP%. MoveFileExW is the fallback for the
+' cases ReplaceFileW refuses (notably: the target does not exist yet, which is every
+' Save As and every new file).
+' ========================================================================================
+function Doc_WriteToDisk( _
+            byval wszPath as DWSTRING, _
+            byref sBytes as string, _
+            byref wszErr as DWSTRING _
+            ) as long
+
+    wszErr = ""
+    if len( wszPath ) = 0 then
+        wszErr = "No filename."
+        return DOCWRITE_FAILED
+    end if
+
+    ' The temp file MUST be a sibling of the target: ReplaceFileW and an atomic
+    ' MoveFileExW both require one volume, and %TEMP% is frequently on another.
+    dim as DWSTRING wszTemp = wszPath & ".tiko-tmp"
+    if AfxFileExists( wszTemp ) then AfxDeleteFile( wszTemp )
+
+    dim as boolean bWritten = false
+    scope
+        dim pStream as CFileStream
+        if pStream.Open( wszTemp, STGM_CREATE or STGM_WRITE ) <> S_OK then
+            wszErr = Win32ErrorText( GetLastError() )
+            if len( wszErr ) = 0 then wszErr = "Could not create the temporary file."
+            return DOCWRITE_FAILED
+        end if
+
+        ' An empty document is a legal save. CFileStream.Write rejects a null pv with
+        ' E_INVALIDARG, and STRPTR of a zero-length FB string may well be null, so the
+        ' zero-byte case must skip the call rather than "fail" on it.
+        if len( sBytes ) = 0 then
+            bWritten = true
+        else
+            dim as ulong cbWrote = pStream.Write( strptr(sBytes), len(sBytes) )
+            bWritten = ( cbWrote = culng(len(sBytes)) )
+            if bWritten = false then
+                wszErr = "Wrote " & cbWrote & " of " & len(sBytes) & " bytes (disk full?)."
+            end if
+        end if
+        ' Close releases the IStream, which is what flushes it. It has to happen before
+        ' the swap below, so the scope ends here rather than at the end of the function.
+    end scope
+
+    if bWritten = false then
+        AfxDeleteFile( wszTemp )
+        return DOCWRITE_FAILED
+    end if
+
+    ' ---- the swap ----------------------------------------------------------------------
+    dim as boolean bSwapped = false
+    if AfxFileExists( wszPath ) then
+        bSwapped = ( ReplaceFileW( wszPath, wszTemp, 0, _
+                                   REPLACEFILE_IGNORE_MERGE_ERRORS, 0, 0 ) <> 0 )
+    end if
+    if bSwapped = false then
+        ' Either the target did not exist (the common Save As / new-file case, which
+        ' ReplaceFileW refuses outright) or ReplaceFileW declined it. MoveFileExW with
+        ' REPLACE_EXISTING is still atomic on NTFS; it simply does not carry the
+        ' target's metadata across.
+        bSwapped = ( MoveFileExW( wszTemp, wszPath, _
+                                  MOVEFILE_REPLACE_EXISTING or MOVEFILE_WRITE_THROUGH ) <> 0 )
+    end if
+
+    if bSwapped = false then
+        wszErr = Win32ErrorText( GetLastError() )
+        if len( wszErr ) = 0 then wszErr = "Could not replace the existing file."
+        AfxDeleteFile( wszTemp )     ' never leave a stray .tiko-tmp behind
+        return DOCWRITE_FAILED
+    end if
+
+    return DOCWRITE_OK
+end function
+
+
+' ========================================================================================
+' Report a failed save to the user.
+'
+' Split out because all three save paths must say the same thing, and because a save that
+' fails silently is the defect this whole group of functions exists to remove.
+' ========================================================================================
+sub Doc_ReportWriteFailure( byval wszPath as DWSTRING, byval wszErr as DWSTRING )
+    TikoMsgBox( HWND_FRMMAIN, _
+                L(675, "The file could not be saved.") & vbcrlf & vbcrlf & _
+                wszPath & vbcrlf & vbcrlf & _
+                wszErr & vbcrlf & vbcrlf & _
+                L(676, "The file on disk has not been changed."), _
+                L(677, "Save failed"), _
+                TMB_ICON_NONE, TMB_OK )
+end sub
+
+
+' ========================================================================================
 ' Convert the current in-editor text buffer to the byte layout the specified encoding
 ' needs (ANSI codepage 0, or UTF-8 codepage 65001), and relabel the document.
 '

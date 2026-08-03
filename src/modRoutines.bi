@@ -44,6 +44,16 @@ declare function isUTF8encoded(byref s as string) as boolean
 declare function Scintilla_GetTextBytes( byval hEdit as hwnd ) as string
 declare function Scintilla_StripTrailingWhitespace( byval hEdit as hwnd ) as long
 declare function Doc_EncodeForDisk( byref sBuffer as string, byval bSourceIsUtf8 as boolean, byval nTargetEnc as long, byref bLossy as boolean ) as string
+
+' Outcome of Doc_WriteToDisk. Deliberately an explicit pair rather than a boolean: the
+' three save paths that call it used to return a bare TRUE/FALSE that conflated "the user
+' cancelled" with "the write succeeded", and had no value at all for "the write FAILED" --
+' which is exactly why a failed save used to be indistinguishable from a good one.
+const DOCWRITE_OK     = 0
+const DOCWRITE_FAILED = 1
+declare function Doc_WriteToDisk( byval wszPath as DWSTRING, byref sBytes as string, byref wszErr as DWSTRING ) as long
+declare sub Doc_ReportWriteFailure( byval wszPath as DWSTRING, byval wszErr as DWSTRING )
+
 declare function Doc_EncodingName( byval nEnc as long ) as DWSTRING
 declare function ConvertTextBuffer( byval pDoc as clsDocument ptr, byval nNewEncoding as long ) as boolean
 declare function GetFileToString( byref wszFilename as const wstring, byref txtBuffer as string, byval pDoc as clsDocument ptr ) as boolean

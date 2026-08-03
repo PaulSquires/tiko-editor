@@ -147,6 +147,11 @@ dim shared gTTabCtl as clsTopTabCtl
 ' and clsDocument.inc (the clsDocument type it instantiates for the disk round-trip).
 #include once "modEncodingSelfTest.bi"
 #include once "modEncodingSelfTest.inc"
+' Atomic-save self-test. After modRoutines.inc, which owns Doc_WriteToDisk. It writes to
+' %TEMP% rather than staying pure, deliberately: the contract it asserts -- that a FAILED
+' write leaves the file already on disk intact -- cannot be reached without a real file.
+#include once "modSaveSelfTest.bi"
+#include once "modSaveSelfTest.inc"
 #include once "clsApp.inc"
 #include once "clsSymbolDb.inc"
 #include once "clsScanMgr.inc"

@@ -143,7 +143,10 @@ function code_SetMainFile( byval pCompile as COMPILE_TYPE ptr ) as boolean
         pCompile->MainFilename = pCompile->MainFolder & QUICKRUNBAS
         pCompile->MainName     = AfxStrPathname("NAME", pCompile->MainFilename)
         
-        pDoc->SaveTempFile( pCompile->MainFilename )
+        ' TRUE = the temp file is NOT on disk (SaveTempFile has already told the user why).
+        ' Abandon the Quick Run rather than hand the compiler a stale file from a previous
+        ' run, which is what ignoring this used to do.
+        if pDoc->SaveTempFile( pCompile->MainFilename ) then return false
 
     else
         pCompile->MainFilename = pDoc->DiskFilename
