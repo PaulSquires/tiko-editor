@@ -467,6 +467,50 @@ function Scintilla_OnNotify( _
                                     pDoc->AutoCTriggerStartPos = nPos
                                     pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
                                     PostMessage( HWND_FRMMAIN, MSG_USER_SHOWAUTOCOMPLETE, AUTOCOMPLETE_NOTIFY_NONE, 0 )
+
+                                case else
+                                    ' BACKSPACED BACK INTO A DECLARATION CONTEXT. Typing
+                                    ' "dim p as file" then a SPACE closes the popup -- the
+                                    ' match word is read back to the first space, so the
+                                    ' space empties it and ShowAutocompleteList cancels.
+                                    ' Deleting that space used to do nothing at all, because
+                                    ' the only re-open the deletion path knew about was the
+                                    ' member list above, so the user had to retype the word
+                                    ' to get the list back. Re-open it on the word that is
+                                    ' now under the caret again.
+                                    '
+                                    ' DELIBERATELY SCOPED to the "as"/"new"/extends/
+                                    ' constructor/destructor contexts. Re-opening on any
+                                    ' trailing identifier would mean a backspace ANYWHERE
+                                    ' raises a popup, which is exactly what the "ordinary
+                                    ' typing never opens a popup" rule in SCN_CHARADDED
+                                    ' below exists to prevent.
+                                    dim as long nCol = SciExec( hEdit, SCI_GETCOLUMN, nPos + 1, 0 )
+                                    dim as string sLine = left( pDoc->GetLine(pDoc->GetCurrentLineNumber), nCol )
+                                    dim as string sWord = GetTrailingIdentifier( sLine )
+                                    if len(sWord) then
+                                        dim as string sBefore = ucase( left( sLine, len(sLine) - len(sWord) ) )
+                                        dim as boolean bDeclContext = _
+                                            (right(sBefore,  4) = " AS ")        orelse _
+                                            (right(sBefore,  5) = " NEW ")       orelse _
+                                            (right(sBefore,  9) = " EXTENDS ")   orelse _
+                                            (right(sBefore, 12) = "CONSTRUCTOR ") orelse _
+                                            (right(sBefore, 11) = "DESTRUCTOR ")
+                                        if bDeclContext then
+                                            ' Name the mode HERE, the way Ctrl+Space does:
+                                            ' the trigger chain in ShowAutocompleteList tests
+                                            ' the END of the line, which now reads "...file",
+                                            ' so nothing would match and it would fall through
+                                            ' to the bare-identifier branch and build a WORD
+                                            ' list instead of a type list.
+                                            pDoc->AutoCompleteType = AUTOCOMPLETE_DIM_AS
+                                            ' CHARDELETED, not NONE: that is what stops the
+                                            ' rebuild from blanking the match word, so the
+                                            ' list arrives already filtered on "file" rather
+                                            ' than listing every type.
+                                            PostMessage( HWND_FRMMAIN, MSG_USER_SHOWAUTOCOMPLETE, AUTOCOMPLETE_NOTIFY_CHARDELETED, 0 )
+                                        end if
+                                    end if
                             end select
                         end if
                     end if
