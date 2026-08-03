@@ -290,8 +290,11 @@ sub compile_thread( byval userdata as any ptr )
     RedirConsoleToFile( ctp->wszExe, ctp->wszCmdLine, sConsoleText, nExitCode )
     ctp->sConsoleText = sConsoleText
     ctp->nExitCode    = nExitCode
-            
-    ctp->pCompile->bCompileThreadComplete = true
+
+    ' LAST act, and it must stay last: the waiter treats this as "every field above is
+    ' written". (It then also joins the thread before reading them, because ctp is one of
+    ' its own locals.)
+    if ctp->hDoneEvent then SetEvent( ctp->hDoneEvent )
 end sub
 
 
@@ -935,6 +938,25 @@ sub CompileCmd_RunSelfTest()
     ' NOT asserted here: the launch-failure path (nExitCode = -1). It raises a modal AfxMsg,
     ' which would hang an unattended run. Its "unknown is not success" behaviour is instead
     ' guaranteed structurally -- nExitCode is initialised to -1 before anything can fail.
+
+    ' ---- 7. one build at a time ---------------------------------------------------------
+    ' code_Compile pumps messages while it waits for its worker, so F5 is live throughout a
+    ' build. Without a guard a second code_Compile ran on top of the first -- two
+    ' COMPILE_TYPEs, two threads, racing on chdir and the object folder.
+    '
+    ' The second assertion is the sensitive one. code_Cleanup clears gApp.IsCompiling, so if
+    ' the guard were missing, code_Compile would fall through, reach cleanup on some later
+    ' failure, and leave the flag FALSE. Finding it still TRUE is what proves the function
+    ' returned at the guard rather than somewhere further in.
+    scope
+        dim as boolean bSaved = gApp.IsCompiling
+        gApp.IsCompiling = true
+        dim as boolean bRc = code_Compile( IDM_COMPILE )
+        CMDASSERT( bRc = false, "code_Compile started a second build while one was running" )
+        CMDASSERT( gApp.IsCompiling = true, _
+                   "code_Compile ran past its guard (IsCompiling was cleared by cleanup)" )
+        gApp.IsCompiling = bSaved
+    end scope
 
     sMsg = "TIKO_COMPILECMD_SELFTEST: " & nPass & " passed, " & nFail & " failed."
     ? sMsg

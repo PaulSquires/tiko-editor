@@ -456,6 +456,19 @@ end function
 ' ========================================================================================
 function code_Compile( byval wID as long ) as boolean
 
+    ' ---- ONE BUILD AT A TIME -------------------------------------------------------------
+    ' This function pumps messages while it waits for the worker, so menu commands and
+    ' accelerators stay live throughout a build -- press F5 again and, without this guard,
+    ' a SECOND code_Compile ran on top of the first: two COMPILE_TYPE allocations, two
+    ' worker threads, both racing on chdir, on the object folder, and on the log fields.
+    '
+    ' gApp.IsCompiling already existed and looked like it guarded exactly this, but its only
+    ' reader was frmMain's WM_SETCURSOR -- it drove the busy CURSOR and nothing else.
+    if gApp.IsCompiling then
+        SetCompileStatusBarMessage( L(683, "A build is already running."), 0 )
+        return false
+    end if
+
     dim as DWSTRING wDQ = wchr(34) ' unicode double quotes
 
     ' Initialize the compile structure and return a pointer to be
@@ -703,13 +716,62 @@ function code_Compile( byval wID as long ) as boolean
     ctp.wszCmdLine   = wszParams
     ctp.sConsoleText = ""
 
-    pCompile->bCompileThreadComplete = false
+    ' ---- wait for the worker WITHOUT spinning --------------------------------------------
+    ' This used to be
+    '
+    '     do until pCompile->bCompileThreadComplete = true
+    '         AfxDoEvents()
+    '     loop
+    '
+    ' which burned a whole core for the entire build, on a machine that is simultaneously
+    ' running the compiler. It also read a plain boolean written by another thread with no
+    ' barrier of any kind.
+    '
+    ' A plain WaitForSingleObject would fix the CPU burn and freeze the UI: the spinner is
+    ' the whole reason the compile was put on a thread. MsgWaitForMultipleObjects is the
+    ' primitive that does both -- it sleeps until EITHER the worker finishes OR a message
+    ' arrives, so the window still paints and the spinner still turns while the process
+    ' consumes nothing.
+    '
+    ' Pumping messages here still lets the user reach menu commands mid-build. That is not
+    ' fixed by this loop and cannot be -- it is fixed by the IsCompiling guard at the top of
+    ' this function, and by frmMain refusing WM_CLOSE while a build is running.
+    dim as HANDLE hDone = CreateEvent( 0, TRUE, FALSE, 0 )   ' manual-reset: no race
+    if hDone = 0 then
+        code_Cleanup( pCompile )
+        return false
+    end if
+    ctp.hDoneEvent = hDone
+
     dim as any ptr pThread = ThreadCreate( @compile_thread, @ctp )
-    
-    do until pCompile->bCompileThreadComplete = true
-        AfxDoEvents()
-    loop    
-    
+    if pThread = 0 then
+        ' Nothing will ever signal the event, so do not wait on it.
+        CloseHandle( hDone )
+        TikoMsgBox( HWND_FRMMAIN, L(682, "Could not start the compiler thread."), _
+                    L(164, "Error"), TMB_ICON_INFO, TMB_OK )
+        code_Cleanup( pCompile )
+        return false
+    end if
+
+    do
+        dim as DWORD dwWait = MsgWaitForMultipleObjects( 1, @hDone, FALSE, INFINITE, QS_ALLINPUT )
+        if dwWait = WAIT_OBJECT_0 then exit do          ' worker finished
+        if dwWait = WAIT_OBJECT_0 + 1 then
+            AfxDoEvents()                               ' keep the UI alive
+        else
+            ' WAIT_FAILED. Do not spin on it -- fall through and join the thread, which is
+            ' still the only thing that makes ctp safe to read.
+            exit do
+        end if
+    loop
+
+    ' ThreadWait, not just the event: the worker writes into ctp, which is a LOCAL of this
+    ' function, so it must be provably finished before we read those fields or return. It
+    ' also frees the thread handle -- ThreadCreate's result was simply dropped before, so
+    ' every compile leaked one.
+    ThreadWait( pThread )
+    CloseHandle( hDone )
+
     pCompile->nLastExitCode      = ctp.nExitCode
     pCompile->wszFullCommandLine = pCompile->CompilerPath & " " & wszParams
     pCompile->wszFullLogFile = ctp.sConsoleText

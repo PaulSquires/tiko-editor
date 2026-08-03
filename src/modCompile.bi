@@ -38,7 +38,6 @@ type COMPILE_TYPE
     StartTime              as double
     EndTime                as double
     CompileID              as long       ' Type of compile (wID). Needed in case frmOutput listview later clicked on.
-    bCompileThreadComplete as boolean
     bCompile32             as boolean    ' flag indicating 32-bit compile process
     bCompile64             as boolean    ' flag indicating 64-bit compile process
     pDocMain               as clsDocument ptr  ' pointer to main document to be compiler
@@ -59,6 +58,10 @@ type CompileThreadParams
     wszCmdLine          as DWSTRING
     sConsoleText        as string 
     nExitCode           as long       ' out: the child's exit code (see COMPILE_TYPE)
+    ' Signalled by the worker as its LAST act. Replaces a bCompileThreadComplete boolean
+    ' that the UI thread polled in a spin loop -- a cross-thread read with no barrier, and
+    ' a whole core burned for the length of every build.
+    hDoneEvent          as HANDLE
 end type
 
 declare sub compile_thread( byval userdata as any ptr )

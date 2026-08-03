@@ -1251,6 +1251,18 @@ end Function
 ' ========================================================================================
 function frmMain_OnClose( byval hwnd as HWND ) as LRESULT
 
+    ' ---- REFUSE TO CLOSE WHILE A BUILD IS RUNNING ----------------------------------------
+    ' code_Compile pumps messages while it waits for its worker thread, so File > Exit and
+    ' Alt+F4 are both reachable from inside a build. Everything below then ran -- documents
+    ' closed, gScanMgr shut down, the window destroyed -- while code_Compile was still
+    ' holding its COMPILE_TYPE and a live thread writing into one of its stack locals.
+    ' Returning here leaves the editor exactly as it was; the user can exit once the build
+    ' finishes, which is seconds away.
+    if gApp.IsCompiling then
+        SetCompileStatusBarMessage( L(683, "A build is already running."), 0 )
+        return true
+    end if
+
     ' if configuration option to confirm closing editor is active then ask now.
     if gConfig.AskExit then
         if TikoMsgBox( HWND_FRMMAIN, L(217,"Are you sure you want to exit?"), L(218,"Confirm"), _
