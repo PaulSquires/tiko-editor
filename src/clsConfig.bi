@@ -117,6 +117,10 @@ type clsConfig
         UnusedKindMask            as long = 63
         UnusedSortCol             as long = 0
         UnusedSortDesc            as boolean = false
+        ' Collapse the report to its stub after a row is opened, so it gets out of the way
+        ' of the code the user just jumped to. Off by default: a window that vanishes when
+        ' you touch it is startling until you have asked for it.
+        UnusedMinimizeOnOpen      as boolean = false
         ShowOutputPanelIndex      as long = 0             ' persisted copy of the Output tab bar's
                                                           ' current panel (default: Compiler Results).
                                                           ' The bar itself owns it at runtime --

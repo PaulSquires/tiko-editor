@@ -367,6 +367,7 @@ function clsConfig.SaveConfigFileBody() as long
     pStream.WriteLine "UnusedKindMask="           & this.UnusedKindMask
     pStream.WriteLine "UnusedSortCol="            & this.UnusedSortCol
     pStream.WriteLine "UnusedSortDesc="           & this.UnusedSortDesc
+    pStream.WriteLine "UnusedMinimizeOnOpen="     & this.UnusedMinimizeOnOpen
     ' Note: the floating Output window's positions are in scaled screen coordinates (the
     ' Startup/HelpStartup convention above, NOT the unscaled one the two lines above use).
     pStream.WriteLine "OutputFloating="           & this.OutputFloating
@@ -859,6 +860,7 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
                     case "UnusedKindMask":           this.UnusedKindMask        = nData
                     case "UnusedSortCol":            this.UnusedSortCol         = nData
                     case "UnusedSortDesc":           this.UnusedSortDesc        = cbool(nData)
+                    case "UnusedMinimizeOnOpen":     this.UnusedMinimizeOnOpen  = cbool(nData)
                     ' The floating Output window. These live inside the isHotReload guard for
                     ' the same reason every other geometry key does, and for one extra: a hot
                     ' reload firing while the panel is undocked would otherwise teleport a live

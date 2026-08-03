@@ -52,6 +52,9 @@
 #define IDC_FRMUNUSED_LIST         1001
 #define IDC_FRMUNUSED_TOGGLEFIRST  1010
 #define IDC_FRMUNUSED_TOGGLELAST   1015
+' Deliberately outside the TOGGLEFIRST..TOGGLELAST range: that range IS the kind-filter
+' set, walked as a block to build the filter mask, and this checkbox is not a filter.
+#define IDC_FRMUNUSED_MINONOPEN    1020
 
 ' Segoe Fluent glyphs, defined ONCE and here, in the ESCAPE form.
 ' Never paste the character itself: these files are BOM-less, so fbc reads a pasted glyph as
@@ -119,3 +122,13 @@ declare sub frmUnusedSymbols_ComputeStubRect( byref rcAnchor as RECT, _
                                               byval cx as long, byval cy as long, _
                                               byval nMargin as long, byref rcOut as RECT )
 declare function frmUnusedSymbols_IsCollapsed() as boolean
+
+' Pure: is there room for the right-aligned caution beside the left-hand count?
+' Both are painted into the same status band, and the caution is the one that gives way -
+' the count is data, the caution is advice. Split out because the failure is ugly rather
+' than loud: the two strings overlap into an unreadable smear, and a German or Spanish
+' translation runs ~30% longer than the English this would have been eyeballed against.
+declare function frmUnusedSymbols_CautionFits( byval nBandWidth as long, _
+                                               byval nLeftWidth as long, _
+                                               byval nRightWidth as long, _
+                                               byval nGap as long ) as boolean

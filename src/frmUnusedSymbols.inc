@@ -28,8 +28,10 @@ dim shared gUnusedDirtyText   as DWSTRING
 ' screen coords - captured at the moment of collapse, because the stub's own rect is not it.
 dim shared gUnusedCollapsed   as boolean
 dim shared gUnusedRestoreRect as RECT
+dim shared gUnusedMinOnOpen   as HWND    ' "Minimize when a row is opened" 
 
 declare sub frmUnusedSymbols_PositionWindows()
+declare sub frmUnusedSymbols_Collapse()
 
 
 function frmUnusedSymbols_IsOpen() as boolean
@@ -39,6 +41,18 @@ end function
 
 function frmUnusedSymbols_IsCollapsed() as boolean
     return gUnusedCollapsed
+end function
+
+
+' ------------------------------------------------------------------------------------------
+' Does the right-aligned caution fit beside the left-hand count? PURE.
+' ------------------------------------------------------------------------------------------
+function frmUnusedSymbols_CautionFits( byval nBandWidth as long, _
+                                       byval nLeftWidth as long, _
+                                       byval nRightWidth as long, _
+                                       byval nGap as long ) as boolean
+    if nRightWidth <= 0 then return false
+    return (nLeftWidth + nGap + nRightWidth) <= nBandWidth
 end function
 
 
@@ -291,6 +305,22 @@ private sub frmUnusedSymbols_Activate( byval hCtl as HWND, byval nRow as integer
     dim as long nLine = gUnusedRows(nModel).nLine - 1
     if nLine < 0 then nLine = 0
     OpenSelectedDocument( wszFile, "", nLine )
+
+    ' Opt-in: collapse to the stub so the report is out of the way of the code just jumped
+    ' to. Read from the CONTROL, not gConfig - the control is the live state and gConfig is
+    ' only its persisted copy, the same rule the kind mask follows.
+    ' AFTER the jump, never before: collapsing first would move the window out from under
+    ' the click that is still being processed.
+    if IsWindow(gUnusedMinOnOpen) then
+        if PsCheckBox_GetChecked( gUnusedMinOnOpen ) then frmUnusedSymbols_Collapse()
+    end if
+end sub
+
+
+private sub frmUnusedSymbols_MinOnOpenChanged( byval hCheckBox as HWND, byval isChecked as boolean )
+    ' Persisted here rather than in Populate: it filters nothing, so it must not drag a
+    ' full list rebuild along with it.
+    gConfig.UnusedMinimizeOnOpen = isChecked
 end sub
 
 
@@ -348,6 +378,20 @@ sub frmUnusedSymbols_PositionWindows()
         SetWindowPos( gUnusedToggle(id), 0, x, ty, tw, th, SWP_NOZORDER )
         x += tw + pWindow->ScaleX(12)
     next
+
+    ' The behaviour switch is RIGHT-aligned, so the gap between it and the filters is
+    ' whatever is left over - that separation is what says it is not a seventh filter.
+    if IsWindow(gUnusedMinOnOpen) then
+        dim as long mw, mh
+        PsCheckBox_GetIdealSize( gUnusedMinOnOpen, mw, mh )
+        dim as long mx = rc.right - nPad - mw
+        ' A narrowed window must not slide it left THROUGH the filters: it stops where they
+        ' end. Overlapping checkboxes both paint their own background, so the collision is
+        ' not a cosmetic overlap, it is one control erased by the other.
+        if mx < x then mx = x
+        dim as long my = lo.rcToggles.top + (lo.rcToggles.bottom - lo.rcToggles.top - mh) \ 2
+        SetWindowPos( gUnusedMinOnOpen, 0, mx, my, mw, mh, SWP_NOZORDER )
+    end if
 
     if IsWindow(HWND_FRMUNUSED_LIST) then
         SetWindowPos( HWND_FRMUNUSED_LIST, 0, nPad, lo.rcList.top, _
@@ -425,6 +469,24 @@ private sub frmUnusedSymbols_OnPaint( byval hwnd as HWND )
     end if
     b.PaintText( wszStatus, @rcS, DT_LEFT )
 
+    ' --- the caution, right-aligned in the same band ---
+    ' This report is EVIDENCE, not a verdict: counts are per scan, so a proc called only
+    ' from a file this scan never reached reads as unused, and anything resolved by name at
+    ' runtime is invisible to a parser. Deleting straight off the list loses code.
+    '
+    ' Painted in the ordinary foreground rather than the warning colour the unsaved-buffer
+    ' banner uses: this line never changes, and a permanently red strip along the bottom
+    ' stops being read within a day.
+    dim as DWSTRING wszCaution = L(599, "Review before deleting - not every reference is visible to a scan.")
+    dim as long nLeftW  = getTextWidth( hwnd, wszStatus, GUIFONT_9 )
+    dim as long nRightW = getTextWidth( hwnd, wszCaution, GUIFONT_9 )
+
+    ' It gives way rather than colliding: the count is data, this is advice.
+    if frmUnusedSymbols_CautionFits( rcS.right - rcS.left, nLeftW, nRightW, _
+                                     pWindow->ScaleX(24) ) then
+        b.PaintText( wszCaution, @rcS, DT_RIGHT )
+    end if
+
     b.EndDoubleBuffer()
 end sub
 
@@ -435,13 +497,14 @@ end sub
 private sub frmUnusedSymbols_SetChildrenVisible( byval bShow as boolean )
     dim as long nCmd = iif( bShow, SW_SHOW, SW_HIDE )
     if IsWindow(HWND_FRMUNUSED_LIST) then ShowWindow( HWND_FRMUNUSED_LIST, nCmd )
+    if IsWindow(gUnusedMinOnOpen) then ShowWindow( gUnusedMinOnOpen, nCmd )
     for id as long = IDC_FRMUNUSED_TOGGLEFIRST to IDC_FRMUNUSED_TOGGLELAST
         if IsWindow(gUnusedToggle(id)) then ShowWindow( gUnusedToggle(id), nCmd )
     next
 end sub
 
 
-private sub frmUnusedSymbols_Collapse()
+sub frmUnusedSymbols_Collapse()
     if IsWindow(HWND_FRMUNUSED) = 0 then exit sub
     if gUnusedCollapsed then exit sub
 
@@ -566,6 +629,7 @@ private function frmUnusedSymbols_WndProc( byval hwnd as HWND, byval uMsg as UIN
             HWND_FRMUNUSED = 0
             HWND_FRMUNUSED_LIST = 0
             gUnusedCollapsed = false
+            gUnusedMinOnOpen = 0
             for id as long = IDC_FRMUNUSED_TOGGLEFIRST to IDC_FRMUNUSED_TOGGLELAST
                 gUnusedToggle(id) = 0
             next
@@ -582,6 +646,52 @@ private function frmUnusedSymbols_WndProc( byval hwnd as HWND, byval uMsg as UIN
 
     function = DefWindowProc( hwnd, uMsg, wParam, lParam )
 end function
+' ------------------------------------------------------------------------------------------
+' One place for the checkbox palette, so the six kind filters and the behaviour switch
+' beside them cannot drift apart.
+' ------------------------------------------------------------------------------------------
+        ' THESE WERE NEVER THEMED. Every other setter above was called and this one was
+        ' not, so the five filters rendered in PsCheckBox's library defaults -- a fixed
+        ' dark palette matching nothing in this window. tiko has no other PsCheckBox host,
+        ' which is why nothing else had to notice.
+        '
+        ' THE PANEL PALETTE, because that is what frmUnusedSymbols_OnPaint fills its own
+        ' client rect with. Getting this wrong is VISIBLE rather than subtle: a checkbox
+        ' whose BackColor differs from the surface behind it paints its whole control rect
+        ' in that colour, so the five filters read as five raised tiles on the pane instead
+        ' of as text on it. The library default and the Output palette are both wrong here
+        ' for the same reason -- neither is what this window paints.
+private sub frmUnusedSymbols_ApplyCheckBoxColors( byval h as HWND )
+    if IsWindow(h) = 0 then exit sub
+    dim as PSCHECKBOX_COLORS cc
+            cc.BackColor               = theme.panel.text.backcolor
+            cc.BackColorHot            = theme.panel.text.backcolor
+            cc.BackColorPressed        = theme.panel.text.backcolor
+            cc.BackColorDisabled       = theme.panel.text.backcolor
+            cc.ForeColor               = theme.panel.text.forecolor
+            cc.ForeColorHot            = theme.panel.texthot.forecolor
+            cc.ForeColorPressed        = theme.panel.texthot.forecolor
+            cc.ForeColorDisabled       = theme.role.clr(THROLE_FOREGROUNDDIM)
+            ' The box is ONE COMPOSITE GLYPH -- outline and tick are a single piece of ink
+            ' in a single colour -- so unchecked wants a muted outline and checked wants
+            ' the accent. There is no fill/tick split to reach for.
+            cc.BoxColor                = theme.role.clr(THROLE_FOREGROUNDDIM)
+            cc.BoxColorHot             = theme.panel.texthot.forecolor
+            cc.BoxColorPressed         = theme.panel.texthot.forecolor
+            cc.BoxColorDisabled        = theme.role.clr(THROLE_FOREGROUNDDIM)
+            ' ACCENTFORE, not ui.accent. The box glyph is INK, and ui.accent resolves to
+            ' toptabs.iconselected -- a colour picked to sit behind an icon, which reads
+            ' too dark as a stroke on this background. That is the rule CLAUDE.md states
+            ' (the accent is a fill, never a foreground) and this is what breaking it
+            ' looks like.
+            cc.BoxColorChecked         = theme.role.clr(THROLE_ACCENTFORE)
+            cc.BoxColorCheckedHot      = theme.role.clr(THROLE_ACCENTFORE)
+            cc.BoxColorCheckedPressed  = theme.role.clr(THROLE_ACCENTFORE)
+            cc.BoxColorCheckedDisabled = theme.role.clr(THROLE_FOREGROUNDDIM)
+            cc.FocusRingColor          = theme.role.clr(THROLE_ACCENTFORE)
+            PsCheckBox_SetColors( h, @cc )
+end sub
+
 
 
 ' ------------------------------------------------------------------------------------------
@@ -671,48 +781,20 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
         PsCheckBox_SetGlyphFont( h, ghFont(SYMBOLFONT_10) )
         PsCheckBox_SetChecked( h, (gConfig.UnusedKindMask and (1 shl (id - IDC_FRMUNUSED_TOGGLEFIRST))) <> 0 )
         PsCheckBox_SetCheckChangedCallback( h, @frmUnusedSymbols_ToggleChanged )
-
-        ' THESE WERE NEVER THEMED. Every other setter above was called and this one was
-        ' not, so the five filters rendered in PsCheckBox's library defaults -- a fixed
-        ' dark palette matching nothing in this window. tiko has no other PsCheckBox host,
-        ' which is why nothing else had to notice.
-        '
-        ' THE PANEL PALETTE, because that is what frmUnusedSymbols_OnPaint fills its own
-        ' client rect with. Getting this wrong is VISIBLE rather than subtle: a checkbox
-        ' whose BackColor differs from the surface behind it paints its whole control rect
-        ' in that colour, so the five filters read as five raised tiles on the pane instead
-        ' of as text on it. The library default and the Output palette are both wrong here
-        ' for the same reason -- neither is what this window paints.
-        scope
-            dim as PSCHECKBOX_COLORS cc
-            cc.BackColor               = theme.panel.text.backcolor
-            cc.BackColorHot            = theme.panel.text.backcolor
-            cc.BackColorPressed        = theme.panel.text.backcolor
-            cc.BackColorDisabled       = theme.panel.text.backcolor
-            cc.ForeColor               = theme.panel.text.forecolor
-            cc.ForeColorHot            = theme.panel.texthot.forecolor
-            cc.ForeColorPressed        = theme.panel.texthot.forecolor
-            cc.ForeColorDisabled       = theme.role.clr(THROLE_FOREGROUNDDIM)
-            ' The box is ONE COMPOSITE GLYPH -- outline and tick are a single piece of ink
-            ' in a single colour -- so unchecked wants a muted outline and checked wants
-            ' the accent. There is no fill/tick split to reach for.
-            cc.BoxColor                = theme.role.clr(THROLE_FOREGROUNDDIM)
-            cc.BoxColorHot             = theme.panel.texthot.forecolor
-            cc.BoxColorPressed         = theme.panel.texthot.forecolor
-            cc.BoxColorDisabled        = theme.role.clr(THROLE_FOREGROUNDDIM)
-            ' ACCENTFORE, not ui.accent. The box glyph is INK, and ui.accent resolves to
-            ' toptabs.iconselected -- a colour picked to sit behind an icon, which reads
-            ' too dark as a stroke on this background. That is the rule CLAUDE.md states
-            ' (the accent is a fill, never a foreground) and this is what breaking it
-            ' looks like.
-            cc.BoxColorChecked         = theme.role.clr(THROLE_ACCENTFORE)
-            cc.BoxColorCheckedHot      = theme.role.clr(THROLE_ACCENTFORE)
-            cc.BoxColorCheckedPressed  = theme.role.clr(THROLE_ACCENTFORE)
-            cc.BoxColorCheckedDisabled = theme.role.clr(THROLE_FOREGROUNDDIM)
-            cc.FocusRingColor          = theme.role.clr(THROLE_ACCENTFORE)
-            PsCheckBox_SetColors( h, @cc )
-        end scope
+        frmUnusedSymbols_ApplyCheckBoxColors( h )
     next
+
+    ' --- "minimize when a row is opened", right-aligned and apart from the filters ---
+    ' Deliberately NOT part of the TOGGLEFIRST..TOGGLELAST block: that block IS the filter
+    ' set and is walked to build the kind mask. This is a behaviour switch, and both its id
+    ' and its placement say so.
+    gUnusedMinOnOpen = PsCheckBox_Create( HWND_FRMUNUSED, IDC_FRMUNUSED_MINONOPEN )
+    PsCheckBox_SetText( gUnusedMinOnOpen, L(560, "Minimize when a row is opened") )
+    PsCheckBox_SetFont( gUnusedMinOnOpen, ghFont(GUIFONT_9) )
+    PsCheckBox_SetGlyphFont( gUnusedMinOnOpen, ghFont(SYMBOLFONT_10) )
+    PsCheckBox_SetChecked( gUnusedMinOnOpen, gConfig.UnusedMinimizeOnOpen )
+    PsCheckBox_SetCheckChangedCallback( gUnusedMinOnOpen, @frmUnusedSymbols_MinOnOpenChanged )
+    frmUnusedSymbols_ApplyCheckBoxColors( gUnusedMinOnOpen )
 
     ' --- list ---
     dim as HWND hLV = PsListTree_Create( HWND_FRMUNUSED, IDC_FRMUNUSED_LIST )
@@ -739,6 +821,7 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
     for id as long = IDC_FRMUNUSED_TOGGLEFIRST to IDC_FRMUNUSED_TOGGLELAST
         if IsWindow(gUnusedToggle(id)) then ShowWindow( gUnusedToggle(id), SW_SHOW )
     next
+    if IsWindow(gUnusedMinOnOpen) then ShowWindow( gUnusedMinOnOpen, SW_SHOW )
     ShowWindow( HWND_FRMUNUSED_LIST, SW_SHOW )
 
     ' Builds the model, positions the bands and fills the list. Skipped while a scan is
@@ -906,6 +989,81 @@ sub frmUnusedSymbols_RunLayoutSelfTest()
         nPass += 1
     else
         nFail += 1 : print "  FAIL the stub is not inside the editing area"
+    end if
+
+    ' ---- the behaviour switch is present, right-aligned, and clear of the filters ----
+    ' Two PsCheckBoxes that overlap do not merely look untidy: each paints its own
+    ' background over its whole control rect, so one erases the other.
+    if IsWindow(gUnusedMinOnOpen) then
+        dim as RECT rcMin, rcLast
+        GetWindowRect( gUnusedMinOnOpen, @rcMin )
+        if IsWindowVisible( gUnusedMinOnOpen ) andalso (rcMin.right > rcMin.left) then
+            nPass += 1
+        else
+            nFail += 1 : print "  FAIL the minimize-on-open checkbox is hidden or zero-sized"
+        end if
+
+        if IsWindow(gUnusedToggle(IDC_FRMUNUSED_TOGGLELAST)) then
+            GetWindowRect( gUnusedToggle(IDC_FRMUNUSED_TOGGLELAST), @rcLast )
+            if rcMin.left >= rcLast.right then
+                nPass += 1
+            else
+                nFail += 1 : print "  FAIL it overlaps the last kind filter"
+            end if
+        end if
+
+        ' RIGHT-ALIGNED means its right edge sits at the client's right edge, less the
+        ' padding - NOT merely "somewhere in the right half". The weaker test passed with
+        ' the control packed hard against the filters, because six filters already reach
+        ' past the midpoint; it was measuring their width, not its alignment.
+        dim as RECT rcClient
+        GetClientRect( HWND_FRMUNUSED, @rcClient )
+        dim as POINT ptTR = ( rcClient.right, rcClient.top )
+        ClientToScreen( HWND_FRMUNUSED, @ptTR )
+        dim as long nSlack = AfxScaleX(14)          ' the 8px pad, plus rounding
+        if (ptTR.x - rcMin.right) <= nSlack then
+            nPass += 1
+        else
+            nFail += 1 : print "  FAIL it is not right-aligned: " & _
+                               str(ptTR.x - rcMin.right) & "px from the right edge"
+        end if
+    end if
+
+    ' its persisted setting must round-trip through the control
+    if IsWindow(gUnusedMinOnOpen) then
+        if PsCheckBox_GetChecked( gUnusedMinOnOpen ) = gConfig.UnusedMinimizeOnOpen then
+            nPass += 1
+        else
+            nFail += 1 : print "  FAIL the checkbox does not reflect gConfig.UnusedMinimizeOnOpen"
+        end if
+    end if
+
+    ' ---- the status band's caution gives way rather than colliding ------------------
+    ' Its whole point is that it disappears instead of smearing over the count, and the
+    ' width that triggers that depends on the TRANSLATION, so it cannot be eyeballed once
+    ' in English and called done.
+    if frmUnusedSymbols_CautionFits( 1000, 120, 400, 24 ) then
+        nPass += 1
+    else
+        nFail += 1 : print "  FAIL the caution is dropped even though it fits"
+    end if
+    if frmUnusedSymbols_CautionFits( 300, 120, 400, 24 ) = false then
+        nPass += 1
+    else
+        nFail += 1 : print "  FAIL the caution would be painted over the count"
+    end if
+    ' exactly touching is a fit; one pixel more is not
+    if frmUnusedSymbols_CautionFits( 544, 120, 400, 24 ) andalso _
+       (frmUnusedSymbols_CautionFits( 543, 120, 400, 24 ) = false) then
+        nPass += 1
+    else
+        nFail += 1 : print "  FAIL the fit boundary is off by one"
+    end if
+    ' a caution that measured as nothing must not be painted
+    if frmUnusedSymbols_CautionFits( 1000, 120, 0, 24 ) = false then
+        nPass += 1
+    else
+        nFail += 1 : print "  FAIL an empty caution is still painted"
     end if
 
     ' an editing area NARROWER than the stub must not push it off the left edge
