@@ -404,8 +404,14 @@ end sub
 ' The file is deliberately NOT written here. An install launched once and closed with
 ' nothing open should not leave a file behind, and at this point there is no content to
 ' carry anyway. It gets written by the ordinary save paths.
+'
+' bRestoreFromFile says whether the backing file's CONTENT is wanted. Only STARTUP wants
+' it -- that is the session-restore of whatever was open when the app last quit untitled.
+' Every other caller is establishing a workspace to REPLACE one just closed, and reading
+' the file there resurrects the last untitled session's documents into what the user asked
+' to be an empty editor. Hence the default is false: restoring is the special case.
 ' ========================================================================================
-function Workspace_EstablishUntitled() as boolean
+function Workspace_EstablishUntitled( byval bRestoreFromFile as boolean = false ) as boolean
 
     dim as boolean bLoaded
 
@@ -414,7 +420,9 @@ function Workspace_EstablishUntitled() as boolean
     ' IsProjectNamed() reads the FILENAME, so this is presentation only.
     gApp.ProjectName     = ""
 
-    if AfxFileExists( gConfig.UntitledProjectFilename ) then
+    dim as boolean bFileExists = ( AfxFileExists( gConfig.UntitledProjectFilename ) <> 0 )
+
+    if bRestoreFromFile andalso bFileExists then
         ' Check the result. ProjectLoadFromFile assigns ProjectFilename/ProjectName BEFORE
         ' it opens the stream, so a corrupt file leaves gApp pointing at a project that was
         ' never loaded. That was rare when a project had to be opened deliberately; it is
@@ -509,8 +517,10 @@ function OnCommand_ProjectClose( byval hwnd As HWND ) As LRESULT
     ' Clear any previous info from the Output windows
     frmOutput_ResetAllControls
 
-    ' There is always a workspace, so closing one means starting the next.
-    Workspace_EstablishUntitled()
+    ' There is always a workspace, so closing one means starting the next. The next one is
+    ' EMPTY -- do not read the untitled backing file, or "New Project"/"Close" would reopen
+    ' the documents of whatever untitled session last wrote it.
+    Workspace_EstablishUntitled( false )
 
     ' Persist the released restore slot NOW rather than leaving it to app exit. Until this
     ' runs, settings.ini still names the project that was just closed, and anything that

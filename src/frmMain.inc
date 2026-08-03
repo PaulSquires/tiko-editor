@@ -289,7 +289,9 @@ function frmMain_ProcessCommandLine( byval hwnd as HWND ) as long
     ' state any more, and the files-on-the-command-line path never reached the restore
     ' call -- so without this a launch with arguments would run with no workspace at all
     ' and ProjectFilename empty, which silently defeats every save path.
-    Workspace_EstablishUntitled()
+    ' true: startup is the ONE caller that wants the untitled backing file's content read
+    ' back -- restoring what was open when the app last quit without a named project.
+    Workspace_EstablishUntitled( true )
 
     if len(AfxCommand(1)) = 0 then
         ' No files named on the command line, so the user may be wanting the previous
