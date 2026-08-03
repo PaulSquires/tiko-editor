@@ -73,18 +73,19 @@ function ProjectTrust_ScanFile( byval wszFile as DWSTRING, _
     dim as boolean bReadingNote
     do until pStream.EOS
         dim as DWSTRING wst = pStream.ReadLine
-        if len(wst) = 0 then continue do
 
-        ' The NOTES block is free text and can contain anything, including lines that look
-        ' like keys. Skip it exactly as the real parser does.
-        if left(wst, 11) = "NOTES-START" then bReadingNote = true  : continue do
-        if left(wst, 9)  = "NOTES-END"   then bReadingNote = false : continue do
+        ' The same shared decode the two real parsers use (modIniParse). This loop was
+        ' written by hand and had ALREADY drifted from them: it skipped neither comment
+        ' lines nor section headers, so a commented-out "'ProjectOther64=..." was handed to
+        ' the switch below as a key. Harmless by luck -- no case matched -- which is exactly
+        ' why nothing caught it.
+        dim as DWSTRING wKey, wData
+        dim as long nKind = Ini_ClassifyLine( wst, wKey, wData )
+        if nKind = INI_LINE_SKIP then continue do
+        if nKind = INI_LINE_NOTES_START then bReadingNote = true  : continue do
+        if nKind = INI_LINE_NOTES_END   then bReadingNote = false : continue do
         if bReadingNote then continue do
-
-        dim as long i = instr( wst, "=" )
-        if i = 0 then continue do
-        dim as DWSTRING wKey  = left( wst, i - 1 )
-        dim as DWSTRING wData = mid( wst, i + 1 )
+        if nKind <> INI_LINE_KEYVALUE then continue do
 
         select case wKey
             case "ProjectOther32":     wszOther32 = wData

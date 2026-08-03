@@ -1805,6 +1805,8 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Env-gated (TIKO_PROJTRUST_SELFTEST=1). The prompt is modal and unassertable; what is
     ' asserted is everything that decides whether it appears.
     ProjectTrust_RunSelfTest()
+    ' Env-gated (TIKO_INIPARSE_SELFTEST=1). Pure.
+    Ini_RunSelfTest()
     ' Env-gated (TIKO_DEBUG_SELFTEST=1). Pure: layout arithmetic, the datatip expression
     ' walk and the localized strings. It launches nothing -- see the suite's own header
     ' for what that means it cannot reach.

@@ -133,6 +133,10 @@ dim shared gTTabCtl as clsTopTabCtl
 ' the implementation is included at the end beside modFileWatch.inc.
 #include once "modMsgBox.bi"
 #include once "modProjectFolders.inc"
+' The shared key=value line decode. Ahead of clsConfig.inc, whose two parsers use it, and
+' declarations-and-one-pure-function only -- it names no Ps* type and no global.
+#include once "modIniParse.bi"
+#include once "modIniParse.inc"
 #include once "clsConfig.inc"
 #include once "PsBufferPaint.inc"
 #include once "modRoutines.inc"

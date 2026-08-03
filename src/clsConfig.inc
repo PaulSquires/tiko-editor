@@ -654,30 +654,20 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
         do until pStream.EOS
             wst = pStream.ReadLine
 
-            if len(wst) = 0 then continue do
-            if left(wst, 1) = "'" then continue do
-            if left(wst, 1) = "[" then continue do
-
-            if left(wst, 11) = "NOTES-START" then
-                bReadingNote = true
-                continue do
-            end if
-            if left(wst, 9) = "NOTES-END" then
-                bReadingNote = false
-                continue do
-            end if
+            ' One shared decode (modIniParse). The three loops that used to carry their
+            ' own copy of this had already drifted -- see that file's header.
+            dim as long nKind = Ini_ClassifyLine( wst, wKey, wData )
+            if nKind = INI_LINE_SKIP then continue do
+            if nKind = INI_LINE_NOTES_START then bReadingNote = true  : continue do
+            if nKind = INI_LINE_NOTES_END   then bReadingNote = false : continue do
+            ' BEFORE the key=value test, deliberately: a note containing an "=" is text,
+            ' not configuration.
             if bReadingNote then
                 gApp.NonProjectNotes = gApp.NonProjectNotes + wst + vbcrlf
                 continue do
             end IF
+            if nKind <> INI_LINE_KEYVALUE then continue do
 
-            i = instr(wst, "=")
-            if i = 0 then continue do
-
-            wKey = "": wData = "": nData = 0
-
-            wKey  = left(wst, i-1)
-            wData = mid(wst, i+1)
             nData = val(wData)
 
 
@@ -1323,28 +1313,17 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     do until pStream.EOS
         wst = pStream.ReadLine
 
-        if len(wst) = 0 then continue do
-        if left(wst, 1) = "'" then continue do
-        if left(wst, 1) = "[" then continue do
-
-        if left(wst, 11) = "NOTES-START" then
-            bReadingNote = true
-            continue do
-        end if
-        if left(wst, 9) = "NOTES-END" then
-            bReadingNote = false
-            continue do
-        end if
+        ' One shared decode (modIniParse), same as LoadConfigFileBody.
+        dim as long nKind = Ini_ClassifyLine( wst, wKey, wData )
+        if nKind = INI_LINE_SKIP then continue do
+        if nKind = INI_LINE_NOTES_START then bReadingNote = true  : continue do
+        if nKind = INI_LINE_NOTES_END   then bReadingNote = false : continue do
+        ' BEFORE the key=value test: a note containing an "=" is text, not a setting.
         if bReadingNote then
             gApp.ProjectNotes = gApp.ProjectNotes + wst + vbcrlf
             continue do
         end IF
-
-        i = instr(wst, "=")
-        if i = 0 then continue do
-
-        wKey  = left(wst, i-1)
-        wData = mid(wst, i+1)
+        if nKind <> INI_LINE_KEYVALUE then continue do
 
         select case ucase(wData)
             case "TRUE":   nData = true
