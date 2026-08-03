@@ -372,6 +372,10 @@ private function frmUnusedSymbols_WndProc( byval hwnd as HWND, byval uMsg as UIN
                                            byval wParam as WPARAM, byval lParam as LPARAM ) as LRESULT
     select case uMsg
         case WM_SIZE
+            ' A minimize sends WM_SIZE with a 0x0 client. Re-laying the bands out against
+            ' it is pointless work on a window nobody can see, and it is how a restored
+            ' window comes back with everything collapsed.
+            if wParam = SIZE_MINIMIZED then return 0
             frmUnusedSymbols_PositionWindows()
             AfxRedrawWindow( hwnd )
             return 0
@@ -389,6 +393,10 @@ private function frmUnusedSymbols_WndProc( byval hwnd as HWND, byval uMsg as UIN
             wp.length = sizeof(WINDOWPLACEMENT)
             if GetWindowPlacement( hwnd, @wp ) then
                 gUnusedPos.bInitialized = true
+                ' Closed while MINIMIZED: rcNormalPosition still holds the restored
+                ' geometry, and showCmd is SW_SHOWMINIMIZED - which this deliberately does
+                ' not persist. Reopening a window already minimized would look like the
+                ' menu command doing nothing.
                 gUnusedPos.bMaximized   = (wp.showCmd = SW_SHOWMAXIMIZED)
                 gUnusedPos.nLeft   = wp.rcNormalPosition.left
                 gUnusedPos.nTop    = wp.rcNormalPosition.top
@@ -422,6 +430,9 @@ end function
 ' ------------------------------------------------------------------------------------------
 function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
     if IsWindow(HWND_FRMUNUSED) then
+        ' SetForegroundWindow does NOTHING to a minimized window, so the menu command
+        ' would silently appear to do nothing once the report had been parked.
+        if IsIconic( HWND_FRMUNUSED ) then ShowWindow( HWND_FRMUNUSED, SW_RESTORE )
         SetForegroundWindow( HWND_FRMUNUSED )
         return 0
     end if
@@ -465,9 +476,19 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
     dim pParent as CWindow ptr = AfxCWindowPtr(hWndParent)
     if pParent then pWindow->DPI = pParent->DPI
 
+    ' WS_MINIMIZEBOX so the report can be parked while its findings are worked through -
+    ' it is a worklist, not a transient dialog.
+    '
+    ' WS_EX_APPWINDOW goes with it and is NOT decoration: this window is OWNED by frmMain,
+    ' and an owned window gets no taskbar button of its own, so minimizing it would put it
+    ' somewhere the user cannot click it back from. The exstyle forces the button, which is
+    ' what makes minimize reversible by ordinary means. (frmHelpCenter gets the same effect
+    ' by parenting to HWND_DESKTOP instead; that also gives up being kept above frmMain and
+    ' being destroyed with it, which this window wants.)
     HWND_FRMUNUSED = pWindow->Create( hWndParent, L(570, "Unused Symbols"), @frmUnusedSymbols_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_THICKFRAME or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_CONTROLPARENT or WS_EX_LEFT )
+        WS_POPUP or WS_THICKFRAME or WS_CAPTION or WS_SYSMENU or WS_MINIMIZEBOX or _
+        WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
+        WS_EX_CONTROLPARENT or WS_EX_APPWINDOW or WS_EX_LEFT )
     ' UNSCALED: SetClientSize applies the DPI factor itself, so a pre-scaled value squares it
     pWindow->SetClientSize( FRMUNUSED_DEFWIDTH, FRMUNUSED_DEFHEIGHT )
     pWindow->Center( HWND_FRMUNUSED, hWndParent )
@@ -700,6 +721,24 @@ sub frmUnusedSymbols_RunLayoutSelfTest()
         nPass += 1
     else
         nFail += 1 : print "  FAIL the kind filters overlap each other"
+    end if
+
+    ' The window must be minimizable AND restorable. WS_EX_APPWINDOW is the half that is
+    ' easy to drop as "decoration": without it an OWNED window has no taskbar button, so a
+    ' minimize would have no ordinary way back.
+    if IsWindow(HWND_FRMUNUSED) then
+        dim as long nStyle = GetWindowLongPtr( HWND_FRMUNUSED, GWL_STYLE )
+        dim as long nEx    = GetWindowLongPtr( HWND_FRMUNUSED, GWL_EXSTYLE )
+        if (nStyle and WS_MINIMIZEBOX) <> 0 then
+            nPass += 1
+        else
+            nFail += 1 : print "  FAIL the window has no minimize box"
+        end if
+        if (nEx and WS_EX_APPWINDOW) <> 0 then
+            nPass += 1
+        else
+            nFail += 1 : print "  FAIL no WS_EX_APPWINDOW: minimizing would leave no way back"
+        end if
     end if
 
     ' The engine uppercases filenames; the report shows them in their original casing.

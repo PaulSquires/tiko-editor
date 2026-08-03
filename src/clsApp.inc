@@ -274,7 +274,6 @@ end function
 function clsApp.SaveProject( byval bSaveAs as boolean = false, byref wszForcedName as wstring = "" ) as boolean
 
     dim wFilename as wstring * MAX_PATH
-    dim wText     as wstring * MAX_PATH  
     
     wFilename = this.ProjectFilename
 

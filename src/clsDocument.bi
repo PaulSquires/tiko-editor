@@ -166,7 +166,7 @@ type clsDocument
     declare function IsValidScintillaID( byval idScintilla as long ) as boolean
     declare function GetActiveScintillaPtr() as any ptr
     declare function AssignTextBuffer() as long
-    declare function LoadDiskFile( byref wszFile as wstring, byval bForceParse as boolean = true, byval bIsTemplate as boolean = false ) as long
+    declare function LoadDiskFile( byref wszFile as wstring, byval bIsTemplate as boolean = false ) as long
     declare function DestroyScintillaWindows() as long
     declare function CreateScintillaWindows() as long
     declare function CreateCodeWindow( byval hWndParent as HWnd, byval IsNewFile as boolean, byval IsTemplate as boolean = False, byref wszFileName as wstring = "") as HWnd
