@@ -125,6 +125,26 @@ function BuildChildCommandLine( _
 end function
 
 
+' ========================================================================================
+' The "-m" pair for the main module: the module NAME after -m, and the SOURCE FILE as an
+' ordinary input. Both are required and they are not the same string.
+'
+' fbc's -m only MARKS which module holds the entry point; it does not add anything to the
+' compile. So the main source must also appear as an input, with its extension -- which is
+' exactly what the long-standing comment at the call site says, and exactly what the code
+' there did not do. Pure, so the rule is assertable without running a compiler; see
+' TIKO_COMPILECMD_SELFTEST, which exists because getting this wrong produced a link failure
+' no string assertion could have predicted.
+' ========================================================================================
+function BuildMainModuleArgs( _
+            byval wszMainName as DWSTRING, _
+            byval wszMainFilename as DWSTRING _
+            ) as DWSTRING
+    dim as DWSTRING wszQ = wchr(34)
+    return "-m " & wszQ & wszMainName & wszQ & " " & wszQ & wszMainFilename & wszQ
+end function
+
+
 '' July 2017, attempted to capture STDERR output from a running FB compiled
 '' program in order to capture runtime errors. This code works okay on Windows 10
 '' but does not PRINT on Windows 7. Also, dkl posted in FB forum that FB prints
@@ -802,7 +822,29 @@ sub CompileCmd_RunSelfTest()
     CMDASSERT( tok(0) = wszSpaced, "spaced exe path split: [" & tok(0) & "]" )
     CMDASSERT( tok(1) = "-c", "first switch lost to a spaced exe path: [" & tok(1) & "]" )
 
-    ' ---- 4. no parameters at all --------------------------------------------------------
+    ' ---- 4. the -m pair -----------------------------------------------------------------
+    ' These four assertions exist because of a REAL LINK FAILURE, not a hypothetical: once
+    ' argv[0] was supplied and -m started working, the call site was still handing it a full
+    ' path WITH extension and never passing the main source as an input. fbc marked no main
+    ' module and compiled no entry point -- "undefined reference to `WinMain'". Reproduced on
+    ' a real two-module project, and each form below was built and linked to confirm it.
+    dim as DWSTRING wszMainArgs = BuildMainModuleArgs( "mainprog", "C:\proj\mainprog.bas" )
+    CompileCmd_Tokenize( BuildChildCommandLine( wszExe, wszMainArgs & " obj\helper.o" ), tok(), nTok )
+    CMDASSERT( nTok = 5, "-m pair gave " & nTok & " tokens, expected 5" )
+    CMDASSERT( tok(1) = "-m", "-m is not the first switch" )
+    ' The -m ARGUMENT must be a bare module name. A path or an extension matches no module,
+    ' which is the exact shape that failed to link.
+    ' FB does not process escapes in an unprefixed literal, so "\" IS one backslash --
+    ' writing "\\" here would search for two and pass on every real path.
+    CMDASSERT( instr( tok(2), "\" ) = 0, "-m argument carries a PATH: [" & tok(2) & "]" )
+    CMDASSERT( instr( tok(2), "." ) = 0,  "-m argument carries an EXTENSION: [" & tok(2) & "]" )
+    ' ...and the main source must ALSO be present as an input, or nothing compiles the
+    ' entry point. -m only marks; it does not add.
+    CMDASSERT( tok(3) = "C:\proj\mainprog.bas", _
+               "main source is not an input file: [" & tok(3) & "]" )
+    CMDASSERT( right( tok(3), 4 ) = ".bas", "main input lost its extension" )
+
+    ' ---- 5. no parameters at all --------------------------------------------------------
     CompileCmd_Tokenize( BuildChildCommandLine( wszExe, "" ), tok(), nTok )
     CMDASSERT( nTok = 1, "empty params gave " & nTok & " tokens, expected 1" )
     CMDASSERT( tok(0) = wszExe, "empty params lost the exe" )

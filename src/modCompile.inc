@@ -639,7 +639,28 @@ function code_Compile( byval wID as long ) as boolean
     ' - after compile option '-m', but without specified extension,
     ' - and also like any module to compile, but there with its specified extension.
     ' 2026-02-16: Do not forcibly add a -x flag because an embedded #cmdline could have been used.
-    dim as DWSTRING wszParams = "-m " + wDQ + pCompile->MainFilename + wDQ 
+    '
+    ' 2026-08-03: this line used to read
+    '
+    '     wszParams = "-m " + wDQ + pCompile->MainFilename + wDQ
+    '
+    ' which contradicts the four comment lines directly above it: MainFilename is the FULL
+    ' PATH WITH EXTENSION, and the main file appeared exactly ONCE, after -m, never as an
+    ' input. It worked only because -m was being eaten as argv[0] (see BuildChildCommandLine),
+    ' which demoted "<path>\main.bas" to an ordinary first input file -- accidentally
+    ' satisfying the second half of the rule while the -m half did nothing at all.
+    '
+    ' The moment argv[0] was supplied properly, -m started working and was handed a path
+    ' with an extension, which matches no module, so nothing was marked as the main module
+    ' AND the main source was no longer an input: "undefined reference to `WinMain'".
+    ' Measured on a real two-module project, all three forms built and linked:
+    '
+    '   -m "main.bas" helper.o                 -> undefined reference to `WinMain'
+    '   "main.bas" helper.o                    -> links (the old accident)
+    '   -m "main" "main.bas" helper.o          -> links (what the comment prescribes)
+    '
+    ' So: MainName after -m (no path, no extension), and MainFilename as a real input.
+    dim as DWSTRING wszParams = BuildMainModuleArgs( pCompile->MainName, pCompile->MainFilename )
 
     if len(pCompile->LinkModules)  then wszParams += " " + pCompile->LinkModules
     if len(pCompile->ResourceFile) then wszParams += " " + wDQ + pCompile->ResourceFile + wDQ

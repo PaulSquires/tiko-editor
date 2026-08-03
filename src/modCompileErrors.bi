@@ -28,6 +28,7 @@ declare function RedirConsoleToFile(byval wszExe as DWSTRING, byval wszCmdLine a
 ' Compose lpCommandLine: quoted exe as argv[0], then the switches. See its own header --
 ' the first token is ALWAYS eaten by the child, so switches cannot be passed alone.
 declare function BuildChildCommandLine( byval wszExe as DWSTRING, byval wszParams as DWSTRING ) as DWSTRING
+declare function BuildMainModuleArgs( byval wszMainName as DWSTRING, byval wszMainFilename as DWSTRING ) as DWSTRING
 declare sub CompileCmd_RunSelfTest()
 declare function CreateTempResourceFile() as boolean
 
