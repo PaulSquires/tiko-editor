@@ -43,3 +43,9 @@ REFACTOR_PLAN*.md
 # -- it is what regenerates that help site -- but its .pyc are per-interpreter and would
 # churn on every Python upgrade.
 __pycache__/
+
+# Point-in-time engineering audits (markdown + the PDF rendered from it). Kept on disk as
+# a record of what a review said on the day, but they are a SNAPSHOT of a tree that has
+# moved on since -- tracking them would invite them being read as current, and the status
+# pages under C:\dev\docs\status are what say where things actually stand.
+/audit/
