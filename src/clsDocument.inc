@@ -540,6 +540,14 @@ function clsDocument.GetTextRange( _
             byval cpMax as long _
             ) as string
     dim as any ptr pSci = this.GetActiveScintillaPtr()
+    if pSci = 0 then return ""
+
+    ' An empty or inverted range is not an error worth reporting, but it MUST NOT reach
+    ' Scintilla: space() of a non-positive length yields a zero-length FB string whose
+    ' STRPTR may be null, and SCI_GETTEXTRANGE would then write through it. No caller does
+    ' this today -- this is a guard, not a fix for an observed failure.
+    if cpMax <= cpMin then return ""
+
     dim p      as long
     dim buffer as string
     dim txtrg  as SCI_TEXTRANGE
@@ -781,7 +789,10 @@ function clsDocument.CenterCurrentLine() as long
     if gConfig.PositionMiddle = 0 then exit function
     dim as any ptr pSci = this.GetActiveScintillaPtr()
     dim as long numLinesOnScreen = SciMsg( pSci, SCI_LINESONSCREEN, 0, 0)
-    dim as long nMiddle = (this.GetCurrentLineNumber - (numLinesOnScreen / 2) + 1)
+    ' \ not /: FreeBASIC's / is floating point and assignment to a long ROUNDS (to even,
+    ' at that), so this was off by one for every odd line count. The same construct in
+    ' NumTabsFromSpaces was a real shipped bug -- see the auto-insert rewrite.
+    dim as long nMiddle = (this.GetCurrentLineNumber - (numLinesOnScreen \ 2) + 1)
     SciMsg( pSci, SCI_SETFIRSTVISIBLELINE, nMiddle, 0)
     function = 0
 end function

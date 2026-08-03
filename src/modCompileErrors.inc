@@ -186,8 +186,12 @@ function RedirConsoleToFile( _
 
     ' continue on with the newer CreateProcess compile approach.
     dim SecurityAttribute as SECURITY_ATTRIBUTES
-    dim hChildStdOutRead  as PHANDLE
-    dim hChildStdOutWrite as PHANDLE
+    ' HANDLE, not PHANDLE. These hold handles, not pointers to handles; the old declaration
+    ' worked only because both are pointer-width, and CreatePipe's parameters are
+    ' HANDLE ptr, which @hChildStdOutRead satisfies either way. Naming the real type is
+    ' what stops the next reader assuming an indirection that is not there.
+    dim hChildStdOutRead  as HANDLE
+    dim hChildStdOutWrite as HANDLE
     dim dwReadBytes       as long
     dim sBuffer as string * 4096
     

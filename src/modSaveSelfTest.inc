@@ -162,6 +162,14 @@ sub Save_RunSelfTest()
                 SciExec( pD->hWindow(0), SCI_SETTEXT, 0, cast(LPARAM, strptr(sCJK)) )
                 pD->UserModified = true
 
+                ' GetTextRange with an empty or inverted range: space() of a non-positive
+                ' length yields a zero-length FB string whose STRPTR is NULL (measured),
+                ' so without its guard SCI_GETTEXTRANGE writes through a null pointer.
+                ' No caller does this today -- the guard is defensive, but it is not
+                ' cosmetic, and removing it crashes rather than misbehaving.
+                SAVEASSERT( pD->GetTextRange( 5, 5 ) = "", "an empty range returned text" )
+                SAVEASSERT( pD->GetTextRange( 10, 3 ) = "", "an inverted range returned text" )
+
                 gLossySaveTestAnswer = -1                  ' force Cancel
                 dim as boolean bRc = pD->SaveFile()
                 gLossySaveTestAnswer = 0

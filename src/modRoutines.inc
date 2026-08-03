@@ -42,7 +42,8 @@ function RichEditCenterSingleLineText( byval hRichEdit as HWND ) as long
     SelectObject(hdc, hOldFont)
     ReleaseDC(hRichEdit, hdc)
 
-    dim as long topMargin = ((rc.bottom - rc.top) - tm.tmHeight) / 2
+    ' \ not /: / is floating point in FB and assigning it to a long rounds.
+    dim as long topMargin = ((rc.bottom - rc.top) - tm.tmHeight) \ 2
     if (topMargin < 0) then topMargin = 0
 
     rc.top = topMargin
@@ -2228,6 +2229,26 @@ sub CopyData_RunSelfTest()
               "a non-numeric value reached ConvertTikoVersion" )
     CDASSERT( ParseLatestVersion( "latest_version=99999999999999999999" ) = "99999999999999999999", _
               "a long numeric value was mangled rather than passed on for comparison" )
+
+    ' ---- FB integer vs floating division, which has cost this tree a real bug ----------
+    ' "/" is FLOATING POINT in FreeBASIC and assigning the result to an integer ROUNDS --
+    ' to even, at that -- where every one of these sites wants truncation. NumTabsFromSpaces
+    ' shipped that way and produced two tabs where one was meant. These assertions do not
+    ' guard any particular call site; they pin the LANGUAGE RULE, so that a future reader
+    ' who "tidies" a \ back to a / has something that fails.
+    scope
+        dim as long a1 = 3 / 2      ' 1.5 -> banker's rounding gives 2
+        dim as long a2 = 3 \ 2      ' truncates to 1
+        CDASSERT( a2 = 1, "3 \ 2 should truncate to 1, got " & a2 )
+        CDASSERT( a1 <> a2, "/ and \ agreed on 3/2 -- the rounding hazard this guards is gone, " & _
+                            "or the compiler changed (a1=" & a1 & ")" )
+        dim as long b1 = 5 / 2, b2 = 5 \ 2
+        CDASSERT( b2 = 2, "5 \ 2 should be 2, got " & b2 )
+        CDASSERT( b1 = 2, "5 / 2 rounded to " & b1 & ", expected 2 (round-half-to-even)" )
+        dim as long c1 = -3 / 2, c2 = -3 \ 2
+        CDASSERT( c2 = -1, "-3 \ 2 should truncate toward zero to -1, got " & c2 )
+        CDASSERT( c1 = -2, "-3 / 2 rounded to " & c1 & ", expected -2" )
+    end scope
 
     sMsg = "TIKO_COPYDATA_SELFTEST: " & nPass & " passed, " & nFail & " failed."
     ? sMsg

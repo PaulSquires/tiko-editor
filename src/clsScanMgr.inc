@@ -234,6 +234,16 @@ sub clsScanMgr.StartWorker()
 
     m_pThread = ThreadCreate( @ScanMgr_ThreadProc, @this )
     m_bStarted = ( m_pThread <> 0 )
+
+    ' If the thread never started, m_bStarted stays false and Shutdown() returns without
+    ' doing anything -- so the critical section and both events above would be leaked for
+    ' the life of the process, with no worker to justify them. Undo the setup instead.
+    if m_bStarted = false then
+        if m_hWakeEvent then CloseHandle( m_hWakeEvent ) : m_hWakeEvent = 0
+        if m_hExitEvent then CloseHandle( m_hExitEvent ) : m_hExitEvent = 0
+        DeleteCriticalSection( @m_cs )
+        erase m_retire
+    end if
 end sub
 
 
