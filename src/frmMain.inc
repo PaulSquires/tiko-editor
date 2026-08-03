@@ -118,9 +118,6 @@ function frmMain_SetStatusbar() as long
         wszText = " " & wszIconThemes & " "
         PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, THEMES_DIALOG_PANEL, wszText )
 
-        ' PANEL Build Configuration dialog
-        PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, BUILD_DIALOG_PANEL, wszIconAddFileButton )
-
         ' PANEL Build Configuration
         if gApp.GetDocumentCount then
             wszText = frmBuildConfig_GetSelectedBuildDescription()

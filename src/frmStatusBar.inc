@@ -43,7 +43,9 @@ sub frmStatusBar_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
     ' Display the caption text
     ' Default to using the GUI font. We use the Symbol font only for the icons
     p->b->SetFont( ghFont(GUIFONT_9) )
-    if (p->itemID = BUILD_DIALOG_PANEL) orelse (p->itemID = THEMES_DIALOG_PANEL) then
+    ' The Themes panel is a glyph, not a word, so it needs the symbol font. It is the only
+    ' one left that does -- the build "+" was the other.
+    if p->itemID = THEMES_DIALOG_PANEL then
         p->b->SetFont( ghFont(SYMBOLFONT_9) )
     end if
     p->b->PaintText( p->wszCaption, @rcText, DT_CENTER )
@@ -134,7 +136,6 @@ function frmStatusBar_TooltipCallback( byval hCtl as HWND, byval idx as integer 
     select case idx 
         case COMPILE_STATUS_PANEL:   wszTooltip = L(198,"View Output Window")
         case THEMES_DIALOG_PANEL:    wszTooltip = L(318,"Themes")
-        case BUILD_DIALOG_PANEL:     wszTooltip = L(215,"Build Configurations") & "..."
     end select
 
     return wszTooltip
@@ -163,7 +164,6 @@ function frmStatusBar_Show( byval hwndParent as HWND ) as LRESULT
     PsStatusBar_AddPanel( hCtrl, "" )
     PsStatusBar_AddPanel( hCtrl, "", IDM_VIEWOUTPUT )            ' the spring
     PsStatusBar_AddPanel( hCtrl, "", IDM_THEMES )
-    PsStatusBar_AddPanel( hCtrl, "", IDM_BUILDCONFIG )
     PsStatusBar_AddPanel( hCtrl, "", IDM_BUILDCONFIG_POPUP )
     PsStatusBar_AddPanel( hCtrl, "", IDM_SPACES )
     PsStatusBar_AddPanel( hCtrl, "", IDM_FILEENCODING )
