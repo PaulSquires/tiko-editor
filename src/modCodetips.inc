@@ -447,38 +447,139 @@ end sub
 
 
 ' ========================================================================================
+' The keyword table: gConfig.FBKeywords + gConfig.ExtraKeywords split into words ONCE.
+'
+' It used to be re-split on every popup, and that was the multi-second delay before a
+' list appeared. extra_keywords.txt is ~220 KB / 12,500 words, and the old code
+'   - ran AfxStrReplaceAny over the whole buffer to normalize CR/LF/TAB (MEASURED
+'     2026-08-03: 2.9 s -- it is three MID() passes over 220,000 characters), then
+'   - called AfxStrParse once per word. That rescans from character 1 every call, AND
+'     takes its argument byref as a CONST WSTRING, so each call also converted the whole
+'     220 KB ANSI buffer to UTF-16.
+' Together: 3.1 s to reach the 1000-item cap on "dim d as " + space, and far worse with a
+' typed prefix, where almost nothing matches, the cap is never hit and all 12,500 fields
+' are walked.
+'
+' The uppercased form and the has-parameters answer are resolved here too, so a popup
+' costs one allocation-free prefix test per word and nothing else.
+' ========================================================================================
+type AUTOC_KEYWORD
+    wszName    as DWSTRING
+    wszUp      as DWSTRING     ' uppercased, so the prefix test allocates nothing
+    bHasParams as boolean
+end type
+
+redim shared gKwCache(any) as AUTOC_KEYWORD
+dim shared gKwCacheCount as long = -1      ' -1 = never built
+dim shared gKwCacheSrcFB as string         ' the sources it was built from, for the
+dim shared gKwCacheSrcEx as string         ' rebuild test below
+
+
+' Split one whitespace-separated word list onto the end of the cache. Scans the ANSI
+' bytes directly -- the keyword files are plain ASCII word lists, and going through
+' wstring here is what made the old path quadratic.
+private sub AutoC_AppendKeywordSource( byref sSrc as string )
+    dim as long n = len(sSrc)
+    dim as long p = 0
+    while p < n
+        while p < n
+            dim as ubyte ch = sSrc[p]
+            if (ch = 32) orelse (ch = 13) orelse (ch = 10) orelse (ch = 9) then
+                p += 1
+            else
+                exit while
+            end if
+        wend
+        dim as long s = p
+        while p < n
+            dim as ubyte ch = sSrc[p]
+            if (ch = 32) orelse (ch = 13) orelse (ch = 10) orelse (ch = 9) then exit while
+            p += 1
+        wend
+        if p > s then
+            if gKwCacheCount > ubound(gKwCache) then
+                redim preserve gKwCache( 0 to (gKwCacheCount * 2) + 15 )
+            end if
+            dim as string st = mid( sSrc, s + 1, p - s )
+            gKwCache(gKwCacheCount).wszName = st
+            gKwCache(gKwCacheCount).wszUp   = ucase(st)
+            ' An FB intrinsic (LEN, MID, INSTR, ...) is a keyword that takes arguments, so
+            ' "(" should accept it just as it accepts a parsed proc. Ordinary keywords
+            ' (IF, DIM, ...) have no intrinsic calltip and answer false.
+            gKwCache(gKwCacheCount).bHasParams = CalltipHasParams( FindIntrinsicCalltip( st ) )
+            gKwCacheCount += 1
+        end if
+    wend
+end sub
+
+
+' Rebuild only when the config strings have actually changed, so an edit in
+' Options > Keywords still takes effect on the next popup with nothing to invalidate by
+' hand. The comparison is a memcmp of two 220 KB buffers -- microseconds against the
+' seconds the split itself costs.
+private sub AutoC_EnsureKeywordCache()
+    dim as boolean bSame = (gKwCacheCount >= 0)
+    if bSame then bSame = (gKwCacheSrcFB = gConfig.FBKeywords)
+    if bSame then bSame = (gKwCacheSrcEx = gConfig.ExtraKeywords)
+    if bSame then exit sub
+
+    erase gKwCache
+    redim gKwCache( 0 to 255 )
+    gKwCacheCount = 0
+    AutoC_AppendKeywordSource( gConfig.FBKeywords )
+    AutoC_AppendKeywordSource( gConfig.ExtraKeywords )
+    gKwCacheSrcFB = gConfig.FBKeywords
+    gKwCacheSrcEx = gConfig.ExtraKeywords
+end sub
+
+
+' Case-insensitive prefix test with NO temporary string: both sides are already
+' uppercase (wszUp is built that way, and wszMatchWord is uppercase everywhere it is
+' produced), so this is a straight character walk. left() would allocate a DWSTRING per
+' word, 12,500 of them per popup.
+'
+' The pointers are USHORT PTR, not WSTRING PTR. Indexing a wstring ptr does NOT yield the
+' code unit -- p[i] reads as 0 for every i, so a prefix walk written that way silently
+' matches nothing and every keyword vanishes from the popup. Verified 2026-08-03: over
+' "GETWINDOWRECT", pw[0..4] = 0,0,0,0,0 where the same buffer through a ushort ptr reads
+' 71,69,84,87,73.
+private function AutoC_HasPrefixUp( _
+            byref wszUp as DWSTRING, _
+            byref wszPrefix as DWSTRING, _
+            byval nLen as long _
+            ) as boolean
+    if len(wszUp) < nLen then return false
+    dim as ushort ptr pUp  = cast(ushort ptr, wszUp.vptr)
+    dim as ushort ptr pPre = cast(ushort ptr, wszPrefix.vptr)
+    if (pUp = 0) orelse (pPre = 0) then return false
+    for i as long = 0 to nLen - 1
+        if pUp[i] <> pPre[i] then return false
+    next
+    return true
+end function
+
+
+' ========================================================================================
 ' Append the always-available FB keywords and data types to an autocomplete list.
 ' These are the words loaded at startup from settings\keywords\freebasic_keywords.txt
 ' and extra_keywords.txt (gConfig.FBKeywords / gConfig.ExtraKeywords). They are a
 ' guaranteed baseline: the popup must never depend on these being discovered by the
-' parser in the sources or includes. Reads gConfig live, so edits made in the
-' Options keywords dialogs take effect on the next popup with no cache to invalidate.
+' parser in the sources or includes.
 ' ========================================================================================
 sub AppendKeywordsToList( _
             items() as AUTOC_ITEM, _
             byref nItems as long, _
             byref wszMatchWord as DWSTRING _
             )
-    ' Both files are plain whitespace-separated word lists; normalize CR/LF/TAB
-    ' to spaces so a single space-parse walks every word.
-    dim as string sWords = AfxStrReplaceAny( _
-            gConfig.FBKeywords & " " & gConfig.ExtraKeywords, _
-            chr(13) & chr(10) & chr(9), " " )
+    AutoC_EnsureKeywordCache()
     dim as long nLenMatchWord = len(wszMatchWord)
-    dim as long nCount = AfxStrParseCount(sWords, " ")
-    for i as long = 1 to nCount
+    for i as long = 0 to gKwCacheCount - 1
         if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit sub
-        dim as string st = AfxStrParse(sWords, i, " ")
-        if len(st) = 0 then continue for
         dim as boolean bMatch = true
-        if nLenMatchWord then bMatch = ( left(ucase(st), nLenMatchWord) = wszMatchWord )
+        if nLenMatchWord then bMatch = AutoC_HasPrefixUp( gKwCache(i).wszUp, wszMatchWord, nLenMatchWord )
         if bMatch then
-            ' An FB intrinsic (LEN, MID, INSTR, ...) is a keyword that takes arguments,
-            ' so "(" should accept it just as it accepts a parsed proc. Ordinary
-            ' keywords (IF, DIM, ...) have no intrinsic calltip and answer false.
-            dim as DWSTRING wszTip = FindIntrinsicCalltip( st )
-            AddAutocompleteItem( items(), nItems, st, "", AUTOC_KIND_KEYWORD, _
-                                 CalltipHasParams( wszTip ) )
+            AddAutocompleteItem( items(), nItems, gKwCache(i).wszName, "", _
+                                 AUTOC_KIND_KEYWORD, gKwCache(i).bHasParams )
         end if
     next
 end sub
@@ -645,9 +746,17 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
 
         case AUTOCOMPLETE_DIM_AS
 
+            ' Only things that can legally FOLLOW "as" belong here: the builtin data
+            ' types below, plus the parsed TYPE / UNION / ENUM / TYPEDEF names further
+            ' down. The FB keyword files are deliberately NOT offered - after "as", IF,
+            ' PRINT, GOSUB and the other ~10,000 words in them are noise, and they used
+            ' to fill the 1000-item cap before the type names got a chance at it.
             if bTypesOnly = false then
-                ' The standard builtin data types
+                ' The standard builtin data types. "any" and "const" are not types but
+                ' they are legal in this position ("as any ptr", "as const long"), and
+                ' they used to reach the popup only through the keyword files.
                 dim as string sStdTypes = _
+                    "any|const|" & _
                     "boolean|byte|ubyte|short|ushort|integer|uinteger|long|ulong|longint|ulongint|single|" & _
                     "double|string|wstring|zstring|true|false|DWSTRING"
                 dim as long nCount = AfxStrParseCount(sStdTypes, "|")
@@ -659,13 +768,6 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
                         AddAutocompleteItem( gAutoCBuild(), nItems, st, "", AUTOC_KIND_STDTYPE )
                     end if
                 next
-            end if
-
-            if bTypesOnly = false then
-                ' Always offer every FB keyword and data type from the keyword
-                ' files - added BEFORE the parsed symbols so the guaranteed words
-                ' can never be crowded out by the item cap in a large project.
-                AppendKeywordsToList( gAutoCBuild(), nItems, pDoc->wszMatchWord )
             end if
 
             ' All TYPE/UNION/ENUM/TYPEDEF names matching the typed prefix. For

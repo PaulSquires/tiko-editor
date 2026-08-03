@@ -2165,6 +2165,11 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         ' Escape meant to dismiss the tip.
         if Codetip_FilterMessage( @uMsg ) then continue do
 
+        ' Ctrl+Space raises the word autocomplete list. Ahead of the accelerator tables so
+        ' the combination cannot be taken by a menu binding, and ahead of dispatch so
+        ' Scintilla never sees it.
+        if handleCtrlSpaceAutoComplete(uMsg) then continue do
+
         if handleAltKeyMenuBar(uMsg) then continue do
 
         ' Close with ESC key: Find/Replace, FindInFiles, FunctionList window

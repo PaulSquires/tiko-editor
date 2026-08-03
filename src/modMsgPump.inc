@@ -121,6 +121,46 @@ function handleEscKeyModeless( byval uMsg as MSG ) as boolean
 end function
 
 
+' ========================================================================================
+' Ctrl+Space: raise the word autocomplete list on demand.
+'
+' The ONLY keyboard trigger for AUTOCOMPLETE_WORD. Ordinary typing deliberately never opens
+' a popup (see the "case else" in the SCN_CHARADDED handler in frmMainOnNotify.inc), and the
+' space key lands in AUTOCOMPLETE_DIM_AS, so before this the word list was reachable only by
+' pasting.
+'
+' The mode is named HERE rather than left to ShowAutocompleteList to infer: the elseif chain
+' that guesses a mode runs only while AutoCompleteType is NONE, and it demands two already-
+' typed characters before it will guess AUTOCOMPLETE_WORD. An explicit request should not
+' have to meet that bar, and setting the type up front makes the chain skip itself.
+'
+' Claimed rather than passed on, so TranslateMessage never runs for it and no WM_CHAR is
+' generated -- an unclaimed Ctrl+Space would otherwise reach the editor as a NUL.
+' ========================================================================================
+function handleCtrlSpaceAutoComplete( byval uMsg as MSG ) as boolean
+    if uMsg.message <> WM_KEYDOWN then return false
+    if uMsg.wParam <> VK_SPACE then return false
+    if (GetKeyState( VK_CONTROL ) and &h8000) = 0 then return false
+    ' Ctrl+Alt+Space is AltGr on several layouts and belongs to the editor.
+    if (GetKeyState( VK_MENU ) and &h8000) <> 0 then return false
+    if gConfig.AutoComplete = false then return false
+
+    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+    if pDoc = 0 then return false
+    ' Only when the keystroke is on its way to the editor itself -- the Find box and the
+    ' Notes pane are ordinary text fields and keep their Ctrl+Space.
+    if uMsg.hwnd <> pDoc->hWndActiveScintilla then return false
+
+    ' Already showing: the list is filtering itself as the user types, so there is nothing
+    ' to rebuild. Still claimed, so the key does not fall through to the editor.
+    if frmAutoComplete_IsOpen() then return true
+
+    pDoc->AutoCompleteType = AUTOCOMPLETE_WORD
+    ShowAutocompleteList()
+    return true
+end function
+
+
 function handleKeysFindReplace( byval uMsg as MSG ) as boolean
     ' For Find textbox, an ENTER will move to the next selection. A SHIFT+ENTER
     ' will move to the previous. For Replace textbox, use the same logic but 
