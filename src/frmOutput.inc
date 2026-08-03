@@ -1013,6 +1013,39 @@ function frmOutput_SetControlColors() as long
         AfxRedrawWindow( hCtl )
     next
 
+    ' The tab strip. These three DO store their colour rather than reading it live, so a
+    ' theme switch has to be pushed into them -- and until this ran they kept whichever
+    ' theme was current when frmOutput_Show built them.
+    '
+    ' What that looked like: PsSelectBar_OnPaint fills the WHOLE bar with colors.BackColor,
+    ' "which also covers the area to the right of the last panel". The tabs themselves are
+    ' drawn by frmOutput_SelectBarPaint, which reads the theme live and so was always
+    ' correct -- so switching dark -> light left the tabs light and the strip beyond the
+    ' last tab still dark. The two icon panels hid the same staleness better, because
+    ' frmOutput_ClosePaint paints each ITEM's background live; only the strip around the
+    ' items showed it.
+    if IsWindow( HWND_FRMOUTPUT_SELECTBAR ) then
+        dim as PSSELECTBAR_COLORS SelectBarColors
+        PsSelectBar_GetColors( HWND_FRMOUTPUT_SELECTBAR, @SelectBarColors )
+        SelectBarColors.BackColor = theme.output.texthot.backcolor
+        PsSelectBar_SetColors( HWND_FRMOUTPUT_SELECTBAR, @SelectBarColors )
+        AfxRedrawWindow( HWND_FRMOUTPUT_SELECTBAR )
+    end if
+
+    for i as long = 0 to 1
+        select case i
+            case 0 : hCtl = HWND_FRMOUTPUT_UNDOCK
+            case 1 : hCtl = HWND_FRMOUTPUT_CLOSE
+        end select
+        if IsWindow( hCtl ) then
+            dim as PSICONPANEL_COLORS IconPanelColors
+            PsIconPanel_GetColors( hCtl, @IconPanelColors )
+            IconPanelColors.BackColor = theme.output.texthot.backcolor
+            PsIconPanel_SetColors( hCtl, @IconPanelColors )
+            AfxRedrawWindow( hCtl )
+        end if
+    next
+
     function = 0
 end function
 
