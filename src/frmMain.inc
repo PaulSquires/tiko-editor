@@ -1561,6 +1561,10 @@ function frmMain_WndProc( _
             ' the session already restored so it is not fighting the startup document load.
             frmFindInProject_RunReplaceTest()
 
+            ' Same placement, same reasoning. It needs real documents to search and a real
+            ' message pump between the two opens -- see the harness header.
+            frmFindInProject_RunReopen()
+
             ' TIKO_FINDPROJ_AUTOEXIT=1. The Find in Project suites are the only ones that run
             ' from a POSTED message rather than from WM_CREATE, so TIKO_FORMAT_AUTOEXIT quits
             ' before either of them has run -- there is no way to reach them unattended

@@ -150,3 +150,7 @@ declare sub      frmFindInProject_RunRepro()
 ' Case and Whole Word toggles, and Ctrl+S against a TEMPORARY FILE OF ITS OWN, so the
 ' expected counts are known constants rather than whatever happens to be open.
 declare sub      frmFindInProject_RunReplaceTest()
+
+' Env-gated repro: TIKO_FINDPROJ_REOPEN=1. Search, close the tab, search again -- the second
+' open used to GPF. Unreachable from the self-test, which never reopens the tab.
+declare sub      frmFindInProject_RunReopen()

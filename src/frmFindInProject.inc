@@ -1027,7 +1027,18 @@ private sub FipSurface_Render( byval b as PsBufferPaint ptr, byref rc as RECT )
             ' needs from here -- and a row whose view could not be bound (the pool is capped)
             ' simply shows that background.
             if gFipRows(i).nKind = FIP_ROW_HEADER then
-                FipSurface_PaintHeader( b, gFipRows(i), yTop, rc )
+                ' BOUNDS, NOT FAITH -- FipPool_SciProc's rule, and for the same reason. This
+                ' is the one place a row is DEREFERENCED into the model (PaintHeader reads
+                ' groups(nGroup)), and a WM_PAINT can arrive at any moment, including one
+                ' where the model has been cleared and these rows have not yet been rebuilt.
+                ' THE WM_NCDESTROY RESET IS THE FIX; this is only a cheap guard on the one
+                ' dereference in the painter. Measured: with the reset removed and this guard
+                ' in place the reopen STILL crashes, because FipPool_Sync/FipPool_Bind index
+                ' groups() from the same rows. Do not read this line as making the reset
+                ' optional.
+                if gFipRows(i).nGroup < gFip.nGroupCount then
+                    FipSurface_PaintHeader( b, gFipRows(i), yTop, rc )
+                end if
             else
                 ' (THE DIRTY-LINE STRIPE IS GONE. It was an amber bar in the strip left of the
                 '  excerpt, one per line whose text differed from a snapshot taken when the
@@ -1345,6 +1356,19 @@ private function frmFindInProject_WndProc( _
             gFipFocusGroup = -1
             gFipHotGroup   = -1
             gFipLastEditBlock = -1
+            ' AND THE DERIVED ROW LIST, WHICH IS THE ONE THAT CRASHED. The rows are built
+            ' FROM the model and must never outlive it. OnCommand_FileClose calls
+            ' FindProject_Clear on the way in here -- which erases groups(), blocks() and
+            ' matches() and zeroes their counts -- but gFipRows is this file's own and
+            ' survived, still describing the result set that has just been thrown away. The
+            ' next Ctrl+Shift+F then created the window and SetFocusTab painted it BEFORE
+            ' frmFindInProject_Refresh had rebuilt anything, so FipSurface_Render walked
+            ' those stale rows and FipSurface_PaintHeader dereferenced groups(nGroup) in an
+            ' erased array. Measured: 1785 rows against 0 groups, GPF on the second open.
+            gFipRowCount  = 0
+            erase gFipRows
+            gFipCanvasH   = 0
+            gFipScrollTop = 0
             return 0
     end select
 
@@ -2417,6 +2441,13 @@ sub frmFindInProject_RunSelfTest()
         gFip.nBlockCount = 0, str(gFip.nBlockCount) & " blocks left" )
     frmFindInProject_Check( "close: the results window was destroyed", _
         IsWindow( HWND_FRMFINDINPROJECT ) = 0 )
+    ' (THE ROW LIST DYING WITH THE MODEL is asserted in frmFindInProject_RunReopen, not here.
+    '  The tone section above deliberately clears the model and refreshes, so gFipRowCount is
+    '  ALREADY 0 by this point and the assertion would pass without the close having done
+    '  anything at all -- measured, with the WM_NCDESTROY reset removed it stayed green.
+    '  Re-searching here to populate it was tried and rejected: it puts the dirty document the
+    '  Replace section leaves behind back into the model, and the close then raises a MODAL
+    '  save prompt that hangs an unattended run.)
     frmFindInProject_Check( "close: the tab count is back to baseline", _
         gTTabCtl.GetItemCount() = nTabsBefore, _
         str(gTTabCtl.GetItemCount()) & " vs " & str(nTabsBefore) )
@@ -3332,4 +3363,76 @@ sub frmFindInProject_RunReplaceTest()
 
     print "--- TIKO_FINDPROJ_REPLACETEST: " & str(gFipTestPass) & " passed, " & _
           str(gFipTestFail) & " failed ---"
+end sub
+
+
+' ========================================================================================
+' Env-gated repro: TIKO_FINDPROJ_REOPEN=1
+'
+' The REPORTED SEQUENCE for the second crash, driven through the real entry points: select a
+' phrase in the active document, Ctrl+Shift+F, click the tab's X, Ctrl+Shift+F again.
+'
+' IT EXISTS BECAUSE THE SELF-TEST CANNOT REACH IT. That suite opens the tab once and closes
+' it, and never reopens -- and the crash was in the WM_PAINT that SetFocusTab triggers on the
+' SECOND open, before Refresh has rebuilt anything. Nothing that does not run a real message
+' pump between the two opens can see it, which is what FipRepro_Pump is for here.
+' ========================================================================================
+sub frmFindInProject_RunReopen()
+    if environ("TIKO_FINDPROJ_REOPEN") <> "1" then exit sub
+
+    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+    if pDoc = 0 then
+        print "REOPEN: no active document -- nothing to select"
+        exit sub
+    end if
+
+    ' Select a phrase, exactly as the user's drag would: the seeded path is the one reported,
+    ' and it is what makes the reopen run a full search rather than showing an empty list.
+    dim as HWND hSci = pDoc->hWndActiveScintilla
+    dim as string sNeedle = "function"
+    SciExec( hSci, SCI_SETTARGETSTART, 0, 0 )
+    SciExec( hSci, SCI_SETTARGETEND, SciExec( hSci, SCI_GETLENGTH, 0, 0 ), 0 )
+    SciExec( hSci, SCI_SETSEARCHFLAGS, 0, 0 )
+    dim as long r = SciExec( hSci, SCI_SEARCHINTARGET, len(sNeedle), strptr(sNeedle) )
+    if r <> -1 then SciExec( hSci, SCI_SETSEL, r, r + len(sNeedle) )
+    print "REOPEN: step 0 selection = [" & str(pDoc->GetSelText) & "]"
+
+    print "REOPEN: step 1 -- Ctrl+Shift+F"
+    OnCommand_SearchFindInProject()
+    FipRepro_Pump()
+    print "REOPEN: step 1 done, tab = " & str(gTTabCtl.FindTabIndex()) & _
+          ", matches = " & str(gFip.nLiveMatches) & ", rows = " & str(gFipRowCount)
+
+    print "REOPEN: step 2 -- click the tab's X"
+    dim as long idx = gTTabCtl.FindTabIndex()
+    dim as long nRowsIn = gFipRowCount
+    if idx <> -1 then gTTabCtl.CloseTab( idx )
+    FipRepro_Pump()
+    ' THE NUMBER THIS HARNESS EXISTS FOR. Groups 0 with rows non-zero is the crash: the
+    ' second open paints those rows against the erased model. Asserted here rather than in the
+    ' self-test, which has already cleared and refreshed by the time it closes and so cannot
+    ' tell the two implementations apart.
+    print "REOPEN: step 2 done, tab = " & str(gTTabCtl.FindTabIndex()) & _
+          ", groups = " & str(gFip.nGroupCount) & ", rows = " & str(gFipRowCount)
+    if nRowsIn > 0 then
+        frmFindInProject_Check( "reopen: the derived row list died with the model", _
+            gFipRowCount = 0, str(nRowsIn) & " in, " & str(gFipRowCount) & " left" )
+    else
+        print "  NOTE: the search produced no rows -- that assertion did NOT run."
+    end if
+
+    print "REOPEN: step 3 -- Ctrl+Shift+F again"
+    OnCommand_SearchFindInProject()
+    FipRepro_Pump()
+    print "REOPEN: step 3 done, tab = " & str(gTTabCtl.FindTabIndex()) & _
+          ", matches = " & str(gFip.nLiveMatches) & ", rows = " & str(gFipRowCount)
+
+    ' And close it again, so a run of this harness leaves nothing behind.
+    idx = gTTabCtl.FindTabIndex()
+    if idx <> -1 then gTTabCtl.CloseTab( idx )
+    FipRepro_Pump()
+
+    print "--- TIKO_FINDPROJ_REOPEN: " & str(gFipTestPass) & " passed, " & _
+          str(gFipTestFail) & " failed ---"
+    print "REOPEN: completed without crashing"
 end sub
