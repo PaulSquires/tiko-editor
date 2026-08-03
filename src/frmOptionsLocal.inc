@@ -198,19 +198,22 @@ function frmOptionsLocal_LocalEditCheck() as long
         "MAXIMUM:" & wstr(nCount) & vbcrlf & vbcrlf
         pStream.WriteLine(wszTemp)
 
+        ' KEY:PHRASE AND NOTHING ELSE. Each line used to carry the English original after a
+        ' ";", padded out to column 60 -- a translator's crib sheet written into the data
+        ' file. It cost more than it gave: the English is right there in the editor's own
+        ' left column, the padding made every line 60+ characters of mostly spaces, and only
+        ' three of the six shipped files had ever been through this writer, so the set
+        ' disagreed with itself about its own format.
+        '
+        ' BOTH LOADERS STILL SPLIT ON ";" (here and in modRoutines) so a file written by an
+        ' older build still reads correctly. That is also why this was safe to remove: the
+        ' comment was never part of the value, and no phrase may contain a ";" -- a
+        ' constraint the loaders have always imposed.
         for i as long = 0 to nCount - 1
             dim as DWSTRING wszIndex = PsListTree_GetCellText( ghLocalList, i, LOCALCOL_INDEX )
             dim as long idx = val(wszIndex)
-            wszTemp = wspace(1024)
             wszPhrase = AfxStrRSet(wszIndex, 5, "0") + wstr(":") + gLocalPhrases(idx)
-            mid(wszTemp, 1) = wszPhrase
-            if len(gLangEnglish(idx)) then
-                ' Always attempt to insert the ENGLISH comment at position 60. If the local
-                ' phrase is too long then simply put the ENGLISH comment after it.
-                dim as long nPos = iif( len(wszPhrase) < 60, 60, len(wszPhrase) + 5)
-                mid(wszTemp, nPos) = "; " & gLangEnglish(idx)
-            end if
-            pStream.WriteLine rtrim(wszTemp)
+            pStream.WriteLine rtrim(wszPhrase)
         next
     end if
     pStream.Close
