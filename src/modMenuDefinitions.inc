@@ -202,6 +202,7 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_DEBUG_UNUSEDSYMBOLS: wszText = L(586,"Unused Symbols...")
 
         case IDM_HELP_CENTER: wszText = L(87,"Help Center")
+        case IDM_HELP_TIKO: wszText = L(687,"Tiko Editor Help")
         case IDM_ABOUT: wszText = L(72,"About")
 
         case else
@@ -378,6 +379,7 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_UNUSEDSYMBOLS, 0, false, false )
 
     setTopMenuItem( IDC_MENUBAR_HELP, IDM_HELP_CENTER, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_HELP, IDM_HELP_TIKO, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_HELP, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_HELP, IDM_ABOUT, 0, false, false )
     

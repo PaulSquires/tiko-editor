@@ -1976,8 +1976,13 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
 
     ' Opens the Help Center at startup so the interactive pass needs no menu driving --
     ' and so the WebView2 path gets exercised at all, which no assertion can do.
+    ' "2" opens the OTHER site (Tiko Editor Help) instead. The self-test can assert which
+    ' folder each site resolves to and nothing more: whether the pane actually renders that
+    ' folder is only visible here.
     if environ("TIKO_HELPCENTER_AUTOOPEN") = "1" then
         frmHelpCenter_Show( "" )
+    elseif environ("TIKO_HELPCENTER_AUTOOPEN") = "2" then
+        frmHelpCenter_Show( "", HELPCENTER_SITE_TIKO )
     end if
 
     ' Create the main application top tabs control

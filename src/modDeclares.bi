@@ -163,11 +163,16 @@ enum
     
     
     '' HELP
-    ' IDM_HELP_FB (the .chm through HtmlHelp) and IDM_HELP_TIKO (the RTF frmHelpViewer)
-    ' were both replaced by the one WebView2 Help Center. Nothing persists a raw IDM
-    ' number -- keybindings.ini keys on the STRING id -- so dropping the two slots is safe.
+    ' IDM_HELP_FB (the .chm through HtmlHelp) and the OLD IDM_HELP_TIKO (the RTF
+    ' frmHelpViewer) were both replaced by the one WebView2 window. Nothing persists a raw
+    ' IDM number -- keybindings.ini keys on the STRING id -- so re-using the name here for
+    ' the hand-written HTML help costs nothing, and adding a slot mid-enum is safe for the
+    ' same reason.
     IDM_HELP_START
-    IDM_HELP_CENTER, IDM_ABOUT
+    ' Two commands, ONE window: the Help Center is the generated reference (F1, searches
+    ' the selection), IDM_HELP_TIKO is tiko's own documentation. Both are
+    ' frmHelpCenter_Show with a different HELPCENTER_SITE_*.
+    IDM_HELP_CENTER, IDM_HELP_TIKO, IDM_ABOUT
     IDM_HELP_END
     
     '' OTHER

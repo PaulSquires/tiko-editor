@@ -31,4 +31,4 @@ REFACTOR_PLAN*.md
 # a filter-repo force-push that breaks every clone. Staged from C:\dev\HelpCenter\site by
 # _copy_helpcenter.bat instead. WITHOUT IT THE HELP CENTER REPORTS ITS FILES AS MISSING,
 # so a fresh clone needs that script run once.
-/settings/helpcenter/
+/settings/help/helpcenter/

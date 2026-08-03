@@ -412,6 +412,14 @@ function frmMain_OnCommand( _
             end if
             frmHelpCenter_Show( wszHelpSel )
 
+        case IDM_HELP_TIKO
+            ' tiko's OWN documentation, in the same window. No search term is passed and
+            ' none would be used: this site carries its own search (Ctrl+K or "/") rather
+            ' than the input#q the generated site puts in every page header, so the term
+            ' would have nowhere to land. It is also the wrong question -- "help on the
+            ' identifier under the caret" is what F1 is for.
+            frmHelpCenter_Show( "", HELPCENTER_SITE_TIKO )
+
         case IDM_ABOUT
             frmAbout_Show( hwnd )
             frmMain_SetFocusToCurrentCodeWindow()

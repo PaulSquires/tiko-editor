@@ -109,10 +109,30 @@ end function
 
 
 ' ========================================================================================
-' The folder the generated HelpCenter site is staged in, with a trailing backslash.
+' The folder a help site lives in, with a trailing backslash.
+'
+' BOTH SITES SIT UNDER settings\help, which is what makes that one folder the whole of
+' tiko's documentation -- the FreeBASIC .chm the generator ingests is already there. The
+' generated tree is gitignored and staged by _copy_helpcenter.bat; the tikohelp tree is
+' hand written and tracked, so the two are not interchangeable however alike they look.
 ' ========================================================================================
-function HelpCenter_RootFolder() as DWSTRING
-    function = AfxGetExePathName & "settings\helpcenter\"
+function HelpCenter_RootFolder( byval nSite as long ) as DWSTRING
+    if nSite = HELPCENTER_SITE_TIKO then
+        function = AfxGetExePathName & "settings\help\tikohelp\"
+    else
+        function = AfxGetExePathName & "settings\help\helpcenter\"
+    end if
+end function
+
+
+' The caption the window carries while a site is up. Also the caption of that site's
+' "files not found" box, so the two cannot name different things.
+function HelpCenter_SiteTitle( byval nSite as long ) as DWSTRING
+    if nSite = HELPCENTER_SITE_TIKO then
+        function = L(687,"Tiko Editor Help")
+    else
+        function = L(87,"Help Center")
+    end if
 end function
 
 
@@ -140,8 +160,8 @@ function HelpCenter_PathToFileUrl( byval wszPath as DWSTRING ) as DWSTRING
     function = "file:///" & wszWork
 end function
 
-function HelpCenter_IndexUrl() as DWSTRING
-    function = HelpCenter_PathToFileUrl( HelpCenter_RootFolder() & "index.html" )
+function HelpCenter_IndexUrl( byval nSite as long ) as DWSTRING
+    function = HelpCenter_PathToFileUrl( HelpCenter_RootFolder( nSite ) & "index.html" )
 end function
 
 
@@ -481,16 +501,49 @@ end function
 '
 ' wszSearch is already normalized by the caller (frmMainOnCommand), so it is a single
 ' line and within the length cap by the time it arrives here.
+'
+' nSite picks which of the two trees under settings\help is shown. It defaults to the
+' generated site, so every existing F1 caller is unchanged.
 ' ========================================================================================
-function frmHelpCenter_Show( byval wszSearch as DWSTRING ) as LRESULT
+function frmHelpCenter_Show( byval wszSearch as DWSTRING, byval nSite as long ) as LRESULT
 
-    ' --- already open: no navigation, just re-focus and re-search --------------------
+    ' --- the content has to be there ------------------------------------------------
+    ' AHEAD of the already-open branch, deliberately: the switch below navigates, and
+    ' handing WebView2 a file:// URL that does not exist replaces a working help window
+    ' with the browser's own error page. Checking first costs one stat per F1.
+    dim as DWSTRING wszIndex = HelpCenter_RootFolder( nSite ) & "index.html"
+    if AfxFileExists( wszIndex ) = 0 then
+        dim as DWSTRING wszMissing = L(91,"Help Center files not found.")
+        if nSite = HELPCENTER_SITE_TIKO then
+            wszMissing = L(688,"Tiko Editor Help files not found.")
+        end if
+        frmHelpCenter_ThemedMsgBox( wszMissing & !"\r\n\r\n" & wszIndex, _
+                                    HelpCenter_SiteTitle( nSite ) )
+        exit function
+    end if
+
+    ' --- already open ----------------------------------------------------------------
     ' Every page of the generated site carries the same header, search box included, so
-    ' there is nothing to navigate to even if the user has browsed deep into a docset.
+    ' asking for the site that is ALREADY up needs no navigation at all, however deep into
+    ' a docset the user has browsed. Asking for the OTHER site is a navigation -- one
+    ' window, one WebView2 environment, one placement, so the sites take turns in it.
     if IsWindow( HWND_FRMHELPCENTER ) then
         if IsIconic( HWND_FRMHELPCENTER ) then ShowWindow( HWND_FRMHELPCENTER, SW_NORMAL )
         AllowSetForegroundWindow( ASFW_ANY )
         SetForegroundWindow( HWND_FRMHELPCENTER )
+
+        if nSite <> gHelpCenter.nSite then
+            gHelpCenter.nSite   = nSite
+            ' bLoaded false again, and the query parked: the DOM of the site being left is
+            ' about to be replaced, so scripting it now would run against a page that is
+            ' going away. NavigationCompleted delivers it, exactly as on a cold open.
+            gHelpCenter.bLoaded = false
+            gHelpCenter.wszPendingQuery = wszSearch
+            AfxSetWindowText( HWND_FRMHELPCENTER, HelpCenter_SiteTitle( nSite ) )
+            if gHelpCenter.pWeb then gHelpCenter.pWeb->Navigate( HelpCenter_IndexUrl( nSite ) )
+            exit function
+        end if
+
         if gHelpCenter.bLoaded then
             frmHelpCenter_ApplySearch( wszSearch )
         else
@@ -500,18 +553,9 @@ function frmHelpCenter_Show( byval wszSearch as DWSTRING ) as LRESULT
         exit function
     end if
 
-    ' --- the content has to be there ------------------------------------------------
-    dim as DWSTRING wszIndex = HelpCenter_RootFolder() & "index.html"
-    if AfxFileExists( wszIndex ) = 0 then
-        frmHelpCenter_ThemedMsgBox( L(91,"Help Center files not found.") & _
-                                    !"\r\n\r\n" & wszIndex, _
-                                    L(87,"Help Center") )
-        exit function
-    end if
-
     dim pWindow as CWindow ptr = new CWindow
 
-    dim as DWSTRING wszText = L(87,"Help Center")
+    dim as DWSTRING wszText = HelpCenter_SiteTitle( nSite )
     HWND_FRMHELPCENTER = pWindow->Create( _
         HWND_DESKTOP, wszText, @frmHelpCenter_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_OVERLAPPEDWINDOW or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
@@ -579,7 +623,7 @@ function frmHelpCenter_Show( byval wszSearch as DWSTRING ) as LRESULT
     if environ("TIKO_HELPCENTER_TRACE") = "1" then
         dim as string sRep = "  helpcenter: IsReady=" & str(bReady) & _
                              " browser=" & gHelpCenter.pWeb->GetBrowserVersion() & _
-                             " url=" & HelpCenter_IndexUrl()
+                             " url=" & HelpCenter_IndexUrl( nSite )
         print sRep
     end if
 
@@ -606,8 +650,9 @@ function frmHelpCenter_Show( byval wszSearch as DWSTRING ) as LRESULT
     ' the only one this window actually depends on (ExecuteScript).
 
     gHelpCenter.bLoaded = false
+    gHelpCenter.nSite   = nSite
     gHelpCenter.wszPendingQuery = wszSearch
-    gHelpCenter.pWeb->Navigate( HelpCenter_IndexUrl() )
+    gHelpCenter.pWeb->Navigate( HelpCenter_IndexUrl( nSite ) )
 
     frmHelpCenter_PositionWindows()
 
@@ -742,7 +787,36 @@ sub frmHelpCenter_RunSelfTest()
     HelpCenter_Check( "url: no backslash survives", _
         instr( wszUrl, "\" ) = 0 )
     HelpCenter_Check( "url: points at the landing page", _
-        instr( wszUrl, "settings/helpcenter/index.html" ) > 0 )
+        instr( wszUrl, "settings/help/helpcenter/index.html" ) > 0 )
+
+    ' --- the two sites are two folders -------------------------------------------------
+    ' The whole of the difference between them, so it is worth pinning: the default is the
+    ' generated site (every F1 caller passes no site at all), the other one is a DIFFERENT
+    ' folder, and both live under settings\help.
+    dim as DWSTRING wszTikoUrl = HelpCenter_IndexUrl( HELPCENTER_SITE_TIKO )
+    HelpCenter_Check( "site: the default is the generated Help Center", _
+        HelpCenter_IndexUrl() = HelpCenter_IndexUrl( HELPCENTER_SITE_DOCS ) )
+    HelpCenter_Check( "site: Tiko Editor Help is a different folder", _
+        wszTikoUrl <> wszUrl )
+    HelpCenter_Check( "site: and it points at its own landing page", _
+        instr( wszTikoUrl, "settings/help/tikohelp/index.html" ) > 0 )
+    ' Both under settings\help -- the point of the move, and the thing a future edit to
+    ' either branch of RootFolder would break silently.
+    HelpCenter_Check( "site: both sites live under settings\help", _
+        (instr( HelpCenter_RootFolder( HELPCENTER_SITE_DOCS ), "settings\help\" ) > 0) andalso _
+        (instr( HelpCenter_RootFolder( HELPCENTER_SITE_TIKO ), "settings\help\" ) > 0) )
+    ' The captions differ, because the one window wears whichever it is showing. Asserted
+    ' on inequality rather than on the literals: they are localized, so a run under another
+    ' .lang would fail an assertion written against the English text.
+    HelpCenter_Check( "site: the two captions are not the same string", _
+        HelpCenter_SiteTitle( HELPCENTER_SITE_DOCS ) <> HelpCenter_SiteTitle( HELPCENTER_SITE_TIKO ) )
+    ' ...and neither is EMPTY, which is what a missing .lang id gives -- L() discards its
+    ' default, so an unlocalized caption is a blank title bar with nothing to report it.
+    HelpCenter_Check( "site: both captions are localized", _
+        (len( HelpCenter_SiteTitle( HELPCENTER_SITE_DOCS ) ) > 0) andalso _
+        (len( HelpCenter_SiteTitle( HELPCENTER_SITE_TIKO ) ) > 0) )
+    HelpCenter_Check( "site: the not-found message is localized too", _
+        (len( L(91,"") ) > 0) andalso (len( L(688,"") ) > 0) )
     ' These drive HelpCenter_PathToFileUrl -- the function IndexUrl actually calls -- on
     ' paths this machine does not have. tiko normally installs somewhere with no spaces,
     ' so an assertion against the live path alone would pass under an encoder that does

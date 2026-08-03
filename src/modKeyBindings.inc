@@ -246,6 +246,10 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
     ' existing keybindings.ini carrying "IDM_HELP_FB:F1" no longer matches any binding and
     ' is dropped, so the new default F1 applies. A user who had rebound F1 loses that once.
     frmKeyBoard_AddKeyBinding( "Help", IDM_HELP_CENTER, "IDM_HELP_CENTER", "Help Center (searches the selection, or the word under the caret)", "F1" )
+    ' NO DEFAULT KEY. F1 is the reference lookup and there is no second obvious key for
+    ' this one, so it ships menu-only -- the binding exists purely so the Keyboard
+    ' Shortcuts dialog can offer it, which is the only way a user can give it one.
+    frmKeyBoard_AddKeyBinding( "Help", IDM_HELP_TIKO, "IDM_HELP_TIKO", "Tiko Editor Help (the editor's own documentation)", "" )
 
     ' Load the keybindings settings file. This will update the gKeys array with any
     ' user defined key mappings.

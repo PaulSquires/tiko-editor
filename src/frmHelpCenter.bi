@@ -13,8 +13,14 @@
 
 ' ========================================================================================
 ' The Help Center: a WebView2 pane showing the generated HelpCenter site staged at
-' settings\helpcenter. It replaces BOTH of tiko's previous help mechanisms -- the .chm
+' settings\help\helpcenter. It replaces BOTH of tiko's previous help mechanisms -- the .chm
 ' HtmlHelp path (ShowContextHelp) and the RTF-based frmHelpViewer.
+'
+' IT SHOWS TWO SITES, NOT ONE, AND STILL ONLY EVER ONE WINDOW. The generated reference site
+' (F1) and the hand-written Tiko Editor help at settings\help\tikohelp are both static HTML
+' trees loaded through the same pane, so switching between them is a NAVIGATION rather than
+' a second window -- there is one WebView2 environment, one WINDOWPLACEMENT and one caption
+' to keep straight. gHelpCenter.nSite records which one is up.
 '
 ' The window is MODELESS and NON-OWNED (parent HWND_DESKTOP), so it stays open beside the
 ' editor and disables nothing. frmHelpViewer was tiko's only window of that shape and this
@@ -52,6 +58,13 @@
 ' declares the runtime missing. IsReady pumps messages while it waits.
 #define HELPCENTER_READYTIMEOUT            15000
 
+' The two sites this one window can show, and the ONLY thing that differs between them: a
+' folder under settings\help and a caption. Both are plain static HTML opened over file://,
+' so nothing else in this module has to branch -- see frmHelpCenter_ApplySearch, which is a
+' no-op on a site that has no search box rather than a case to add here.
+#define HELPCENTER_SITE_DOCS               0    ' settings\help\helpcenter -- generated, F1
+#define HELPCENTER_SITE_TIKO               1    ' settings\help\tikohelp   -- hand written
+
 
 type HELPCENTER_TYPE
     ' The WebView2 wrapper. Heap-allocated because the window outlives _Show; deleted in
@@ -74,6 +87,10 @@ type HELPCENTER_TYPE
     ' Set once the site has loaded at least once, so a later _Show knows it can skip the
     ' navigation and script the page directly.
     as boolean          bLoaded
+    ' Which of the two sites is loaded, HELPCENTER_SITE_*. Read by _Show to tell a re-open
+    ' (focus and re-search, no navigation) from a SWITCH (navigate, and bLoaded goes false
+    ' again) -- without it, asking for the other site would silently re-focus this one.
+    as long             nSite
 end type
 
 dim shared as HELPCENTER_TYPE gHelpCenter
@@ -85,14 +102,18 @@ declare function HelpCenter_JsQuote( byval wszText as DWSTRING ) as DWSTRING
 declare function HelpCenter_NormalizeQuery( byval wszText as DWSTRING ) as DWSTRING
 declare function HelpCenter_IsSearchableWord( byval wszWord as DWSTRING ) as boolean
 declare function HelpCenter_PathToFileUrl( byval wszPath as DWSTRING ) as DWSTRING
-declare function HelpCenter_IndexUrl() as DWSTRING
-declare function HelpCenter_RootFolder() as DWSTRING
+declare function HelpCenter_IndexUrl( byval nSite as long = HELPCENTER_SITE_DOCS ) as DWSTRING
+declare function HelpCenter_RootFolder( byval nSite as long = HELPCENTER_SITE_DOCS ) as DWSTRING
+' The window caption for a site, and the caption of its own "files not found" box. Localized,
+' so it lives here rather than being written out at the three call sites.
+declare function HelpCenter_SiteTitle( byval nSite as long ) as DWSTRING
 
 ' Forward declared: the NavigationCompleted handler calls it, and that type has to be
 ' defined above the pane it registers against.
 declare sub      frmHelpCenter_ApplySearch( byval wszQuery as DWSTRING )
 
-declare function frmHelpCenter_Show( byval wszSearch as DWSTRING ) as LRESULT
+declare function frmHelpCenter_Show( byval wszSearch as DWSTRING, _
+                                     byval nSite as long = HELPCENTER_SITE_DOCS ) as LRESULT
 declare function frmHelpCenter_FilterMessage( byval pMsg as MSG ptr ) as boolean
 declare sub      frmHelpCenter_CaptureState()
 declare sub      frmHelpCenter_RunSelfTest()
