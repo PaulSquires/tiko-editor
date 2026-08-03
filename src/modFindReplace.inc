@@ -87,33 +87,31 @@ function FindControls_Show() as long
                         cbool(pDoc->CurrentSelection.endline - pDoc->CurrentSelection.startline)
         if pDoc->CurrentSelection.isInitialized = false then isOriginalSelectionMultiline = false
         
-        ' AN EMPTY SELECTION IS NOT A SEARCH TERM. GetSelText returns "" when nothing is
-        ' selected, and that "" used to be written straight into the field -- so opening Find
-        ' with no selection SILENTLY WIPED the term you last searched for, and the caller
-        ' promptly read the now-empty box back into gFind.txtFind. Measured, not deduced:
-        ' [SENTINEL] -> [] on a plain Ctrl+F.
+        ' THE FIELD ALWAYS SHOWS THE SELECTION, INCLUDING WHEN THERE ISN'T ONE. Opening Find
+        ' with nothing selected clears the box rather than re-offering the last phrase, which
+        ' is by request: the box is a picture of the selection, so an empty selection is an
+        ' empty box and Ctrl+F is always ready to be typed into. There used to be a bSeedField
+        ' flag here that skipped the write in exactly that case; it is gone, and reinstating
+        ' it puts the old term back.
         '
-        ' bSeedField is what keeps that separate from the multi-line case, which clears the
-        ' field DELIBERATELY: searching within a selection starts with no term.
-        dim as boolean bSeedField = true
+        ' The multi-line case clears the field for a DIFFERENT reason and is kept separate:
+        ' it means "search within this selection", which starts with no term by definition.
         dim as string sFindText = pDoc->GetSelText
         if isOriginalSelectionMultiline then
             sFindText = ""
             gFind.nSelection = true
             pDoc->SetMarkerHighlight
-        elseif len(sFindText) = 0 then
-            bSeedField = false          ' nothing selected: keep whatever is already there
-        else
-            gFind.txtFind = sFindtext
         end if
+        ' One assignment for both paths, so the box and the model cannot disagree about what
+        ' is being searched for -- the multi-line branch used to clear the box and leave
+        ' gFind.txtFind holding the previous phrase.
+        gFind.txtFind = sFindText
 
-        if bSeedField then
-            dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
-            if sFindText <> AfxGetWindowText(hCtl) then
-                AfxSetWindowText( hCtl, sFindText )
-                dim as long nLen = len(sFindText)
-                Edit_SetSel( hCtl, nLen, nLen )
-            end if
+        dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
+        if sFindText <> AfxGetWindowText(hCtl) then
+            AfxSetWindowText( hCtl, sFindText )
+            dim as long nLen = len(sFindText)
+            Edit_SetSel( hCtl, nLen, nLen )
         end if
     end if
         
