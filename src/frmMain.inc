@@ -1561,6 +1561,14 @@ function frmMain_WndProc( _
             ' the session already restored so it is not fighting the startup document load.
             frmFindInProject_RunReplaceTest()
 
+            ' TIKO_FINDPROJ_AUTOEXIT=1. The Find in Project suites are the only ones that run
+            ' from a POSTED message rather than from WM_CREATE, so TIKO_FORMAT_AUTOEXIT quits
+            ' before either of them has run -- there is no way to reach them unattended
+            ' without a second hook. Same reasoning as that one, which the comment beside it
+            ' spells out: tiko's console output is BLOCK-BUFFERED when redirected, so a run
+            ' that is killed rather than exited loses every line the suites printed.
+            if environ("TIKO_FINDPROJ_AUTOEXIT") = "1" then end 0
+
             ' Same reasoning, and for the same reason it cannot live anywhere earlier:
             ' the workspace is not established until ProcessCommandLine returns.
             Workspace_RunSelfTest()

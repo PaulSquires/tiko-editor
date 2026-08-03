@@ -49,9 +49,10 @@
 '   * The sheer number of matches. Every one is recorded, indicator-filled on its document,
 '     and walked by navigation.
 '   * The COALESCING. When nearly every line matches, their context windows all touch, so a
-'     whole file collapses into ONE block spanning thousands of lines -- and each block
-'     snapshots every one of its lines for the dirty-stripe baseline. An excerpt that is the
-'     entire file is not an excerpt anyway.
+'     whole file collapses into ONE block spanning thousands of lines. A block is one entry
+'     in the results list, so that is a whole file's worth of hits behind a single row.
+'     (The per-line snapshot each block used to take is gone -- see FindProject_IsGroupDirty
+'     -- so this cap is now about the LIST rather than about the cost of building it.)
 '
 ' A capped search is reported as capped (see FindProject_WasCapped), never silently truncated.
 ' ----------------------------------------------------------------------------------------
@@ -81,11 +82,10 @@ type FINDPROJ_BLOCK
     nLineCount  as long
     nMatchFirst as long     ' index into the model's flat matches array
     nMatchCount as long
-    ' The block's lines AS THEY WERE when the search ran, in the model's flat origLines
-    ' array. This is the baseline the dirty stripe compares against, so a line that is edited
-    ' and then undone stops being dirty -- which a "was it touched" flag cannot express.
-    nOrigFirst  as long
-    nOrigCount  as long
+    ' (nOrigFirst/nOrigCount are gone. They addressed this block's lines as they were when the
+    '  search ran -- the baseline the per-line dirty stripe compared against. The stripe has
+    '  been replaced by a per-file circle on the header, which asks the document. See
+    '  FindProject_IsGroupDirty.)
 end type
 
 ' One file's worth of results. Matches and blocks live in the model's FLAT arrays and are
@@ -106,8 +106,6 @@ type FINDPROJ_MODEL
     groups(any)  as FINDPROJ_GROUP
     matches(any) as FINDPROJ_MATCH
     blocks(any)  as FINDPROJ_BLOCK
-    origLines(any) as DWSTRING     ' every block's lines as found, addressed by range
-    nOrigCount   as long
     nGroupCount  as long
     nMatchCount  as long            ' entries in matches(), dead ones included
     nBlockCount  as long
@@ -155,8 +153,7 @@ dim shared gFipUnbindDoc as FIP_UnbindDocSub
 ' watcher drives with no user action at all).
 declare sub      FindProject_OnDocumentClosing( byval pDocGone as clsDocument ptr )
 
-' A result file has just been written to disk: re-take its line snapshots, so the dirty
-' stripe means "changed since the last save" rather than "changed since the search ran".
+' A result file has just been written to disk: repaint, so its header drops the dirty circle.
 ' Called from clsDocument.SaveFile, the one place every save route converges on.
 declare sub      FindProject_OnDocumentSaved( byval pDocSaved as clsDocument ptr )
 
@@ -201,19 +198,22 @@ declare sub      FindProject_OnDocumentModified( byval pDocMod as clsDocument pt
 ' lexer, 8 is the Find bar's highlight, 9 brace matching, 10 occurrence highlight.
 #define FINDPROJ_INDICATOR  11
 
-' Is any file in the results modified? Drives the circle on the tab.
+' Is ONE result file modified? Drives the circle appended to that file's name in the results
+' header (FipSurface_PaintHeader).
+'
+' THIS IS THE DOCUMENT'S OWN ANSWER -- SCI_GETMODIFY plus clsDocument.UserModified, exactly the
+' pair the tab bar asks -- not a comparison against anything this module remembers. It replaces
+' a per-LINE test that compared each displayed line with a snapshot taken when the search ran,
+' and that whole subsystem (FINDPROJ_MODEL.origLines, the per-block nOrigFirst/nOrigCount, and
+' the re-baselining FindProject_OnDocumentSaved did) is gone with it. The old test existed to
+' drive a stripe beside individual lines of a PINNED excerpt; excerpts scroll now, so the lines
+' it pointed at are not the lines on screen, and "which file has unsaved changes" is a question
+' the document can answer for itself and cannot get wrong after a save or an undo.
+declare function FindProject_IsGroupDirty( byval nGroup as long ) as boolean
+' Is ANY file in the results modified? Drives the circle on the tab.
 declare function FindProject_AnyDirty() as boolean
 ' Save them all. FALSE when the user cancelled one, which aborts the close that asked.
 declare function FindProject_SaveAllDirty() as boolean
-' Has this line of this block been changed since the search ran? Compared against the text
-' captured at search time.
-'
-' A SCINTILLA MARKER WAS TRIED FIRST AND IS WRONG FOR THIS. A marker tracks its line as text
-' moves, which is genuinely useful -- but it is set on an edit and nothing takes it off again,
-' so undoing a change left the stripe behind. Comparing the text answers the question that is
-' actually being asked ("is this line different from what was found?") rather than "was this
-' line ever touched", and it answers it correctly after an undo.
-declare function FindProject_IsLineDirty( byval nBlock as long, byval nLineInBlock as long ) as boolean
 
 ' Paint (or clear) the match indicator over a group's document. Indicator RANGES live on the
 ' document, so this runs once per file -- but the indicator's COLOUR is per-view, which is why

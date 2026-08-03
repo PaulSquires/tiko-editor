@@ -45,11 +45,22 @@
 #define FIP_BLOCK_GAP        8      ' between one excerpt and the next
 #define FIP_INDENT          10      ' excerpts inset from the left edge
 
-' The dirty-line stripe's colour. DELIBERATELY NOT THEMED: no key in the editor palette is a
-' warning yellow, and pressing an unrelated one into service (bookmark, occurrence) would
-' make the stripe change meaning with the theme. A literal amber is honest about being a
-' fixed signal colour. COLORREF is 0x00BBGGRR, so this is R230 G180 B80.
-#define FIP_DIRTY_COLOR     &H50B4E6
+' ----------------------------------------------------------------------------------------
+' THE EXCERPT WINDOW IS A FIXED FIVE LINES TALL, AND THAT IS NOW INDEPENDENT OF ITS BLOCK.
+'
+' It used to be a PINNED window onto exactly its block's lines: the height was the block's
+' line count, the view was re-scrolled to the block's first line after every message, and the
+' caret was confined to those lines (Up on the first line and Down on the last were swallowed
+' before Scintilla saw them). That made an excerpt un-navigable -- you could only edit the
+' handful of lines the search happened to frame.
+'
+' The views SCROLL FREELY now. Each is a real second view onto the whole document, so the
+' arrow keys, PgUp/PgDn and Ctrl+Home/End all work and take the view with them; the block is
+' only where the view STARTS. What stays fixed is the height, so the list's geometry is
+' still one number per row rather than a per-block measurement, and a file whose matches
+' coalesced into a 40-line block does not get a 40-line window in the results list.
+' ----------------------------------------------------------------------------------------
+#define FIP_VIEW_LINES       5      ' document lines visible in one excerpt window
 
 ' ----------------------------------------------------------------------------------------
 ' THE VIRTUAL CANVAS.
@@ -91,8 +102,8 @@ declare function FipRows_Build( rows() as FIP_ROW, byref nRowCount as long, _
 ' takes the array so a synthetic one can be handed to it.
 declare function FipRows_FirstVisible( rows() as FIP_ROW, byval nRowCount as long, _
                                        byval nTop as long ) as long
-' Height of an excerpt showing nLineCount document lines.
-declare function FipRows_BlockHeight( byval nLineCount as long, byref m as FIP_METRICS ) as long
+' Height of an excerpt window. EVERY block gets the same one -- see FIP_VIEW_LINES.
+declare function FipRows_BlockHeight( byref m as FIP_METRICS ) as long
 
 ' Creates the window on first use, adds (or re-selects) the tab, and focuses the Find bar.
 declare function frmFindInProject_Show() as LRESULT

@@ -109,7 +109,7 @@ function OnCommand_FileOpen( _
         
         if bIsTemplate then
             pDoc = gApp.CreateEmptyDocument( true )
-            pDoc->LoadDiskFile( AllFilenames(i), true, true )
+            pDoc->LoadDiskFile( AllFilenames(i), true )
         else
             pDocSearch = gApp.GetDocumentPtrByFilename(AllFilenames(i)) 
             if pDocSearch = 0 then
@@ -446,9 +446,9 @@ function OnCommand_FileClose( _
             gTTabCtl.TabFocusLost(i)     ' puts the info strip back, closes the Find bars
 
             ' DROP THE RESULTS. Closing the tab used to leave the whole model standing, so a
-            ' later Ctrl+Shift+F reopened it showing the OLD result set -- complete with dirty
-            ' stripes computed against line snapshots taken before the files were edited and
-            ' saved. It also leaked: the model holds one document reference per result file,
+            ' later Ctrl+Shift+F reopened it showing the OLD result set, stale against files
+            ' that had since been edited and saved. It also leaked: the model holds one
+            ' document reference per result file,
             ' and nothing was giving them back.
             '
             ' BEFORE DestroyWindow, deliberately: Clear asks the surface to unbind the excerpt

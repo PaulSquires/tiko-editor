@@ -133,8 +133,6 @@ sub FindProject_Clear()
         gFip.groups(g).pSciDoc = 0
     next
 
-    erase gFip.origLines
-    gFip.nOrigCount = 0
     erase gFip.groups
     erase gFip.matches
     erase gFip.blocks
@@ -399,32 +397,12 @@ private sub FindProject_BuildBlocks( byval nGroup as long, byval nLineCount as l
             .nLineCount  = nLast - nFirst + 1
             .nMatchFirst = nMatchFirst
             .nMatchCount = nMatchCount
-            .nOrigFirst  = gFip.nOrigCount
-            .nOrigCount  = 0
         end with
 
-        ' Snapshot the block's lines AS FOUND. This is the baseline the dirty stripe compares
-        ' against; without it the stripe could only say "this line was typed in at some
-        ' point", which stays true after an undo.
-        dim as clsDocument ptr pDocSnap = gFip.groups(nGroup).pDoc
-        if pDocSnap then
-            if IsWindow( pDocSnap->hWindow(0) ) then
-                dim as long nLines = nLast - nFirst + 1
-                if (gFip.nOrigCount + nLines) > (ubound(gFip.origLines) + 1) then
-                    dim as long nCap = ubound(gFip.origLines) + 1
-                    if nCap < 256 then nCap = 256
-                    do while nCap < (gFip.nOrigCount + nLines)
-                        nCap *= 2
-                    loop
-                    redim preserve gFip.origLines(0 to nCap - 1)
-                end if
-                for ln as long = 0 to nLines - 1
-                    gFip.origLines( gFip.nOrigCount ) = pDocSnap->GetLine( nFirst + ln )
-                    gFip.nOrigCount += 1
-                next
-                gFip.blocks( gFip.nBlockCount ).nOrigCount = nLines
-            end if
-        end if
+        ' (NO PER-LINE SNAPSHOT. Every block used to capture its lines as found, one GetLine
+        '  each, to be the baseline a per-line dirty stripe compared against. The stripe is a
+        '  per-FILE circle on the header now -- FindProject_IsGroupDirty -- so the snapshot has
+        '  no consumer, and a search no longer walks the text of every block it builds.)
 
         gFip.nBlockCount += 1
         gFip.groups(nGroup).nBlockCount += 1
@@ -631,79 +609,48 @@ sub FindProject_ClearIndicators( byval nGroup as long )
 end sub
 
 
-function FindProject_IsLineDirty( byval nBlock as long, byval nLineInBlock as long ) as boolean
-    if (nBlock < 0) orelse (nBlock >= gFip.nBlockCount) then return false
-    if nLineInBlock < 0 then return false
-
-    dim as clsDocument ptr pDoc = gFip.groups( gFip.blocks(nBlock).nGroup ).pDoc
+' ========================================================================================
+' Is one result file modified? The DOCUMENT's own answer, asked twice the way the tab bar
+' asks it: SCI_GETMODIFY covers the buffer, UserModified covers the changes clsDocument makes
+' outside Scintilla's own modified flag.
+'
+' A file whose document has been closed, or which was never realized, cannot be dirty -- there
+' is nothing to have edited.
+' ========================================================================================
+function FindProject_IsGroupDirty( byval nGroup as long ) as boolean
+    if (nGroup < 0) orelse (nGroup >= gFip.nGroupCount) then return false
+    dim as clsDocument ptr pDoc = gFip.groups(nGroup).pDoc
     if pDoc = 0 then return false
     if IsWindow( pDoc->hWindow(0) ) = 0 then return false
-
-    ' Past the snapshot: the block grew, so these lines did not exist when the search ran.
-    if nLineInBlock >= gFip.blocks(nBlock).nOrigCount then return true
-
-    dim as DWSTRING wszNow = pDoc->GetLine( gFip.blocks(nBlock).nFirstLine + nLineInBlock )
-    return (wszNow <> gFip.origLines( gFip.blocks(nBlock).nOrigFirst + nLineInBlock ))
+    if SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0 then return true
+    return pDoc->UserModified
 end function
 
 
 ' ========================================================================================
-' A result file has just been written to disk. Re-take its line snapshots.
+' A result file has just been written to disk: repaint, so its header drops the dirty circle.
 '
-' THE STRIPE MEANS "UNSAVED", AND THIS IS WHAT MAKES THAT TRUE. It is derived by comparing
-' each displayed line against a captured baseline (FindProject_IsLineDirty), and until this
-' existed the baseline was captured once, when the search ran, and never again -- so the
-' yellow bar stayed lit after a save, for the rest of the result set's life. Saving a file
-' and being told it is still modified is indistinguishable from the save not happening,
-' which is exactly how it was reported.
+' THERE IS NOTHING TO RE-BASELINE ANY MORE, and that is the point. This used to re-snapshot
+' every one of the file's blocks, because the dirty signal was a per-line comparison against
+' text captured when the search ran -- so without a fresh baseline the stripe stayed lit after
+' a save, for the rest of the result set's life, which is indistinguishable from the save not
+' happening and is exactly how it was reported. The signal is FindProject_IsGroupDirty now,
+' which asks the document, so a save clears it by construction and an undo after a save brings
+' it back for the same reason.
 '
-' Re-baselining rather than clearing a flag KEEPS the undo property the comparison was
-' chosen for: undo a change made after a save and the line stops being dirty again, because
-' it once more matches what is on disk.
-'
-' New lines are APPENDED to origLines and the block re-pointed at them, rather than written
-' over the old slots: a block whose line count grew since the search has nowhere to put the
-' extra ones. The vacated slots are left where they are -- origLines only ever grows within
-' one search, and it is thrown away wholesale by FindProject_Clear.
+' A REPAINT, NOT A REBUILD -- the same rule the modify hook follows. Rebuilding hides and
+' re-binds every pooled view, which destroys the focus of whichever excerpt the caret is in,
+' and a save made from inside an excerpt is the common case here.
 ' ========================================================================================
 sub FindProject_OnDocumentSaved( byval pDocSaved as clsDocument ptr )
     if gFip.bValid = false then exit sub
     if pDocSaved = 0 then exit sub
-    if IsWindow( pDocSaved->hWindow(0) ) = 0 then exit sub
 
     dim as boolean bTouched = false
-
     for g as long = 0 to gFip.nGroupCount - 1
-        if gFip.groups(g).pDoc <> pDocSaved then continue for
-
-        dim as long b0 = gFip.groups(g).nBlockFirst
-        for b as long = b0 to b0 + gFip.groups(g).nBlockCount - 1
-            dim as long nLines = gFip.blocks(b).nLineCount
-            if nLines < 1 then continue for
-
-            if (gFip.nOrigCount + nLines) > (ubound(gFip.origLines) + 1) then
-                dim as long nCap = ubound(gFip.origLines) + 1
-                if nCap < 256 then nCap = 256
-                do while nCap < (gFip.nOrigCount + nLines)
-                    nCap *= 2
-                loop
-                redim preserve gFip.origLines(0 to nCap - 1)
-            end if
-
-            gFip.blocks(b).nOrigFirst = gFip.nOrigCount
-            for ln as long = 0 to nLines - 1
-                gFip.origLines( gFip.nOrigCount ) = _
-                    pDocSaved->GetLine( gFip.blocks(b).nFirstLine + ln )
-                gFip.nOrigCount += 1
-            next
-            gFip.blocks(b).nOrigCount = nLines
-        next
-        bTouched = true
+        if gFip.groups(g).pDoc = pDocSaved then bTouched = true: exit for
     next
 
-    ' A REPAINT, NOT A REBUILD -- the same rule the modify hook follows. Rebuilding hides and
-    ' re-binds every pooled view, which destroys the focus of whichever excerpt the caret is
-    ' in, and a save made from inside an excerpt is the common case here.
     if bTouched then
         if gFipRepaint <> 0 then gFipRepaint()
         if IsWindow( gTTabCtl.hWindow ) then AfxRedrawWindow( gTTabCtl.hWindow )
@@ -728,13 +675,11 @@ function FindProject_SaveAllDirty() as boolean
 end function
 
 
-' Any result file with unsaved changes? The Find tab shows a dot when so.
+' Any result file with unsaved changes? The Find tab shows a dot when so. Built on the
+' per-group test the headers use, so the tab's circle and a header's circle cannot disagree.
 function FindProject_AnyDirty() as boolean
     for g as long = 0 to gFip.nGroupCount - 1
-        if gFip.groups(g).pDoc = 0 then continue for
-        if IsWindow( gFip.groups(g).pDoc->hWindow(0) ) = 0 then continue for
-        if SciExec( gFip.groups(g).pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0 then return true
-        if gFip.groups(g).pDoc->UserModified then return true
+        if FindProject_IsGroupDirty( g ) then return true
     next
     return false
 end function
@@ -929,16 +874,15 @@ sub FindProject_OnDocumentModified( byval pDocMod as clsDocument ptr, _
         if IsWindow( pDocMod->hWindow(0) ) then
             nEditLine = SciExec( pDocMod->hWindow(0), SCI_LINEFROMPOSITION, nModPos, 0 )
 
-            ' (Nothing is marked here. Which lines are dirty is DERIVED at paint time by
-            '  comparing them against the text captured when the search ran -- see
-            '  FindProject_IsLineDirty -- so an edit that is undone stops being dirty by
-            '  itself. A marker set here could only ever say "this was typed in at some
-            '  point", which stays true after an undo.)
+            ' (Nothing is marked here. Whether a file is dirty is DERIVED, by asking the
+            '  document -- see FindProject_IsGroupDirty -- so an edit that is undone stops
+            '  being dirty by itself. A flag set here could only ever say "this was typed in
+            '  at some point", which stays true after an undo.)
 
-            ' The tab's dirty dot and the surface's dirty stripes are painted from live state,
-            ' so both need a repaint -- nothing else invalidates them on a keystroke made
-            ' inside an excerpt (the excerpt repaints itself, but the stripe is drawn OUTSIDE
-            ' it, on the surface).
+            ' The tab's dirty circle and the header's are painted from live state, so both
+            ' need a repaint -- nothing else invalidates them on a keystroke made inside an
+            ' excerpt (the excerpt repaints itself, but its file's header is drawn OUTSIDE it,
+            ' on the surface).
             '
             ' A REPAINT, NOT A REBUILD. Calling the model-changed callback here rebuilt the
             ' row list, which hides and re-binds every pooled view -- and hiding the focused

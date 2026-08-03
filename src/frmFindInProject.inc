@@ -56,8 +56,8 @@ dim shared gFipFocusGroup as long = -1
 dim shared gFipHotGroup   as long = -1
 ' Where that affordance was last painted, so a click can be hit-tested against it.
 dim shared gFipOpenRect   as RECT
-' Set while the pinned line is being re-asserted, so that the scroll it causes cannot come
-' back through the subclass and re-assert it again forever.
+' Set while the subclass is post-processing a message, so that the SciExec it makes -- which
+' is a SendMessage, and so re-enters this same subclass -- cannot recurse without bound.
 dim shared gFipPinning    as boolean
 ' Where the caret was when an excerpt last lost focus. Remembered by BLOCK, not by slot or
 ' row: slots are recycled and rows are rebuilt, but a block is a stable identity for as long
@@ -125,36 +125,11 @@ private sub FipPool_OpenFocusedFile()
 end sub
 
 
-' Would this keystroke take the caret out of the excerpt's own lines? Answered BEFORE the
-' key reaches Scintilla, so the answer can be "do nothing" rather than "undo it afterwards".
-private function FipPool_KeyWouldLeaveBlock( byval hwnd as HWND, byval nKey as WPARAM ) as boolean
-    for i as long = 0 to gFipPoolCount - 1
-        if gFipPool(i).hWnd <> hwnd then continue for
-        if (gFipPool(i).nRow < 0) orelse (gFipPool(i).nRow >= gFipRowCount) then return false
-        dim as long b = gFipRows( gFipPool(i).nRow ).nBlock
-        if (b < 0) orelse (b >= gFip.nBlockCount) then return false
-
-        dim as long nFirst = gFip.blocks(b).nFirstLine
-        dim as long nLast  = nFirst + gFip.blocks(b).nLineCount - 1
-        dim as long nLine  = SciExec( hwnd, SCI_LINEFROMPOSITION, _
-                                      SciExec( hwnd, SCI_GETCURRENTPOS, 0, 0 ), 0 )
-        dim as boolean bCtrl = ((GetKeyState(VK_CONTROL) and &H8000) <> 0)
-
-        select case nKey
-            case VK_UP, VK_PRIOR
-                return (nLine <= nFirst)
-            case VK_DOWN, VK_NEXT
-                return (nLine >= nLast)
-            case VK_HOME
-                ' Plain Home is start-of-line and stays put; Ctrl+Home is start-of-DOCUMENT.
-                if bCtrl then return (nLine <= nFirst)
-            case VK_END
-                if bCtrl then return (nLine >= nLast)
-        end select
-        return false
-    next
-    return false
-end function
+' (FipPool_KeyWouldLeaveBlock is gone. It answered "would this keystroke take the caret out of
+'  the excerpt's own lines?" so that Up on the first line and Down on the last could be
+'  swallowed before Scintilla saw them. That is exactly the confinement this refactor removes:
+'  an excerpt is a scrolling view onto the whole file now, so every navigation key is let
+'  through and the view follows the caret. See FIP_VIEW_LINES.)
 
 
 ' Subclass on every slot, for one reason: Scintilla consumes WM_MOUSEWHEEL itself, so a
@@ -164,6 +139,10 @@ private function FipPool_SciProc( byval hwnd as HWND, byval uMsg as UINT, _
                                   byval wParam as WPARAM, byval lParam as LPARAM ) as LRESULT
     select case uMsg
         case WM_MOUSEWHEEL
+            ' STILL ROUTED TO THE LIST, even though the view itself can scroll now. A wheel
+            ' notch inside a five-line window would move it by most of its own height, and the
+            ' gesture the user made was over the results list -- keyboard navigation is what
+            ' this refactor opened up, not the wheel.
             PsVScrollBar_HandleWheelDelta( HWND_FRMFINDINPROJECT_VSCROLL, cast(short, hiword(wParam)) )
             return 0
 
@@ -200,14 +179,9 @@ private function FipPool_SciProc( byval hwnd as HWND, byval uMsg as UINT, _
                 return 0
             end if
 
-            ' LEAVING THE BLOCK IS A NO-OP, not a clamp. Letting the key through and pulling
-            ' the caret back afterwards is what produced the reported behaviour: Up on the
-            ' first line jumped the caret to column 0, Down on the last line to end of line.
-            ' Swallowing the keystroke before Scintilla sees it means nothing moves at all,
-            ' which is what "you cannot leave the five lines" should feel like.
-            if uMsg = WM_KEYDOWN then
-                if FipPool_KeyWouldLeaveBlock( hwnd, wParam ) then return 0
-            end if
+            ' EVERY OTHER KEY IS LET THROUGH. Up, Down, PgUp, PgDn, Ctrl+Home and Ctrl+End
+            ' used to be swallowed at the edges of the block; they are Scintilla's now, and
+            ' the view scrolls with the caret like any other editor.
 
         case WM_SYSCHAR
             ' AND SWALLOW ITS CHARACTER, or the system beeps on every Alt+Enter. Claiming a
@@ -221,61 +195,35 @@ private function FipPool_SciProc( byval hwnd as HWND, byval uMsg as UINT, _
 
     dim as LRESULT lr = CallWindowProc( gFipOldSciProc, hwnd, uMsg, wParam, lParam )
 
-    ' AN EXCERPT NEVER SCROLLS. It is a fixed window onto a fixed run of lines, so typing,
-    ' arrowing or clicking must not slide it off them -- you edit within the lines you can
-    ' see. Scintilla scrolls to keep the caret visible on all sorts of messages, so rather
-    ' than trying to enumerate them the pinned line is simply re-asserted after ANY message
-    ' that moved it.
-    ' RE-ENTRANCY GUARD, AND IT IS NOT OPTIONAL. SCI_SETFIRSTVISIBLELINE makes Scintilla
-    ' scroll, which repaints and notifies, which comes straight back through this same
-    ' subclass -- where the line still looks wrong mid-scroll, so it is set again. That
-    ' recurses without bound and takes the process out with a stack overflow: measured, as a
-    ' segfault immediately after the first search.
+    ' RE-ENTRANCY GUARD, AND IT IS STILL NOT OPTIONAL EVEN THOUGH THE PINNING IT WAS WRITTEN
+    ' FOR IS GONE. SciExec is a plain SendMessage (modDeclares.bi), so the SCI_GETCURRENTPOS
+    ' below re-enters this very subclass, whose post-processing asks for the position again --
+    ' unbounded recursion and a stack overflow, exactly as the pin's own SCI_SETFIRSTVISIBLELINE
+    ' used to produce. Do not remove it along with the pinning.
     if gFipPinning then return lr
     gFipPinning = true
 
-    for i as long = 0 to gFipPoolCount - 1
-        if gFipPool(i).hWnd <> hwnd then continue for
-        ' Bounds, not faith: this runs on EVERY message a slot receives, including ones that
-        ' arrive while the row list is being rebuilt underneath it.
-        if (gFipPool(i).nRow < 0) orelse (gFipPool(i).nRow >= gFipRowCount) then exit for
-        dim as long b = gFipRows( gFipPool(i).nRow ).nBlock
-        if (b < 0) orelse (b >= gFip.nBlockCount) then exit for
-
-        dim as long nWant = gFip.blocks(b).nFirstLine
-        dim as long nLast = nWant + gFip.blocks(b).nLineCount - 1
-
-        ' REMEMBER WHERE THE CARET IS, on every message this view handles while it has focus.
-        ' Recording it only on WM_KILLFOCUS was too fragile: a tab switch hides this window's
-        ' ancestors, and whether that produces a kill-focus this subclass actually sees is not
-        ' something to depend on. Updating it continuously costs one comparison and cannot
-        ' miss.
-        if GetFocus() = hwnd then
+    ' REMEMBER WHERE THE CARET IS, on every message this view handles while it has focus.
+    ' Recording it only on WM_KILLFOCUS was too fragile: a tab switch hides this window's
+    ' ancestors, and whether that produces a kill-focus this subclass actually sees is not
+    ' something to depend on. Updating it continuously costs one comparison and cannot miss.
+    '
+    ' This is ALL that is left here. The view is no longer re-scrolled to its block, the caret
+    ' is no longer clamped to the block's lines, and the horizontal offset is no longer reset
+    ' -- see FIP_VIEW_LINES.
+    if GetFocus() = hwnd then
+        for i as long = 0 to gFipPoolCount - 1
+            if gFipPool(i).hWnd <> hwnd then continue for
+            ' Bounds, not faith: this runs on EVERY message a slot receives, including ones
+            ' that arrive while the row list is being rebuilt underneath it.
+            if (gFipPool(i).nRow < 0) orelse (gFipPool(i).nRow >= gFipRowCount) then exit for
+            dim as long b = gFipRows( gFipPool(i).nRow ).nBlock
+            if (b < 0) orelse (b >= gFip.nBlockCount) then exit for
             gFipLastEditBlock = b
             gFipLastEditPos   = SciExec( hwnd, SCI_GETCURRENTPOS, 0, 0 )
-        end if
-
-        ' CONFINE THE CARET TO THE VISIBLE LINES. Pinning the view alone is not enough: the
-        ' caret would walk out of the block on Down or Ctrl+End and then be editing lines the
-        ' user cannot see. Clamping it here means the arrow keys simply stop at the edges of
-        ' the excerpt, which is what "you edit within the five lines" has to mean.
-        dim as long nCaretLine = SciExec( hwnd, SCI_LINEFROMPOSITION, _
-                                          SciExec( hwnd, SCI_GETCURRENTPOS, 0, 0 ), 0 )
-        if nCaretLine < nWant then
-            SciExec( hwnd, SCI_GOTOPOS, SciExec( hwnd, SCI_POSITIONFROMLINE, nWant, 0 ), 0 )
-        elseif nCaretLine > nLast then
-            SciExec( hwnd, SCI_GOTOPOS, SciExec( hwnd, SCI_GETLINEENDPOSITION, nLast, 0 ), 0 )
-        end if
-
-        if SciExec( hwnd, SCI_GETFIRSTVISIBLELINE, 0, 0 ) <> nWant then
-            SciExec( hwnd, SCI_SETFIRSTVISIBLELINE, nWant, 0 )
-        end if
-        ' Horizontal too: a long line would otherwise pan out from under the block.
-        if SciExec( hwnd, SCI_GETXOFFSET, 0, 0 ) <> 0 then
-            SciExec( hwnd, SCI_SETXOFFSET, 0, 0 )
-        end if
-        exit for
-    next
+            exit for
+        next
+    end if
 
     gFipPinning = false
     return lr
@@ -332,8 +280,11 @@ private sub FipPool_Ensure( byval n as long )
         ' removes the margin-click notifications entirely rather than having to ignore them.
         SciExec( h, SCI_SETMARGINWIDTHN, 1, 0 )
         SciExec( h, SCI_SETMARGINWIDTHN, 2, 0 )
-        ' No horizontal scrolling inside a fixed 5-line window; long lines simply clip.
-        SciExec( h, SCI_SETSCROLLWIDTHTRACKING, 0, 0 )
+        ' HORIZONTAL PANNING IS ON, and the scrollbar is still off. The caret can now be
+        ' driven off the right edge of a long line, and with tracking suppressed Scintilla
+        ' would have nowhere to pan to -- the caret would simply disappear. Tracking widens
+        ' the scroll width to the longest line it has styled; End on a long line then pans.
+        SciExec( h, SCI_SETSCROLLWIDTHTRACKING, 1, 0 )
 
         gFipOldSciProc = cast( WNDPROC, SetWindowLongPtr( h, GWLP_WNDPROC, _
                                                           cast(LONG_PTR, @FipPool_SciProc) ) )
@@ -349,6 +300,7 @@ end sub
 
 ' Bind a slot to a block row and place it.
 private sub FipPool_Bind( byval i as long, byval nRow as long, byref rcView as RECT )
+    dim as boolean bNewRow = cbool( gFipPool(i).nRow <> nRow )
     dim as long g = gFipRows(nRow).nGroup
     dim as long b = gFipRows(nRow).nBlock
     dim as clsDocument ptr pDoc = gFip.groups(g).pDoc
@@ -368,14 +320,14 @@ private sub FipPool_Bind( byval i as long, byval nRow as long, byref rcView as R
         pDoc->ApplyPropertiesToView( gFipPool(i).pSciView )
         ' Re-suppress what ApplyPropertiesToView just set for a full editor.
         '
-        ' NOTE that the dirty-line stripe is NOT a margin here. The marker still exists and
-        ' still does the tracking -- Scintilla moves it with its line, which is the whole
-        ' reason for using one -- but NO view reveals it. The surface paints the stripe
-        ' itself, in the strip immediately left of this window, so it is not squeezed inside
-        ' the editable area and does not need a margin of its own. See FipSurface_Render.
+        ' (Margin 1 used to be kept clear for a dirty-line stripe the surface painted beside
+        '  this window. The dirty signal is a circle on the file's header now, so both these
+        '  margins are suppressed for the same plain reason: an excerpt has no room for, and
+        '  no use for, breakpoints or folding.)
         SciExec( gFipPool(i).hWnd, SCI_SETMARGINWIDTHN, 1, 0 )
         SciExec( gFipPool(i).hWnd, SCI_SETMARGINWIDTHN, 2, 0 )
         ' NO CURRENT-LINE HIGHLIGHT in an excerpt. A full-width band across a five-line window
+        ' -- keep reading; the reasoning below is unchanged by the views becoming scrollable.
         ' is loud, and it is drawn from the editor's own current-line colour -- which appears
         ' when the view takes focus and stays afterwards. That is what the reported
         ' "repainting problem" looked like.
@@ -399,10 +351,13 @@ private sub FipPool_Bind( byval i as long, byval nRow as long, byref rcView as R
         SciExec( gFipPool(i).hWnd, SCI_INDICSETALPHA, FINDPROJ_INDICATOR, 90 )
     end if
 
-    ' Pin the window onto the block's first line. Re-asserted on every sync, not just on a
-    ' rebind: clicking into an excerpt moves its caret, and anything that then scrolls the
-    ' caret into view would slide the block off the lines it is supposed to be showing.
-    SciExec( gFipPool(i).hWnd, SCI_SETFIRSTVISIBLELINE, gFip.blocks(b).nFirstLine, 0 )
+    ' WHERE THE VIEW STARTS -- and ONLY on a fresh binding. Re-asserting this on every sync is
+    ' what "pinned" used to mean, and doing it now would undo the user's own scrolling on the
+    ' next repaint: FipPool_Sync calls this for a slot that is merely being repositioned as
+    ' the list scrolls, not just for one being bound to a new row.
+    if bNewRow then
+        SciExec( gFipPool(i).hWnd, SCI_SETFIRSTVISIBLELINE, gFip.blocks(b).nFirstLine, 0 )
+    end if
 
     ' SWP_NOCOPYBITS: repaint the moved window rather than blitting its old pixels to the new
     ' position. Without it a view that scrolls into a different place can arrive carrying
@@ -456,8 +411,9 @@ private sub FipPool_Sync()
         rcView.left   = gFipMetrics.nIndent
         rcView.right  = rcClient.right
         rcView.top    = gFipRows(nRow).nTop - gFipScrollTop + gFipMetrics.nBlockPad
-        rcView.bottom = rcView.top + (gFip.blocks( gFipRows(nRow).nBlock ).nLineCount * _
-                                      gFipMetrics.nLineHeight)
+        ' The same fixed window for every excerpt, and the same identity FipRows_BlockHeight
+        ' builds the row from -- so a view can never be taller or shorter than its row.
+        rcView.bottom = rcView.top + (FIP_VIEW_LINES * gFipMetrics.nLineHeight)
 
         ' Already showing this row: reposition and re-pin, nothing more.
         dim as long nSlot = -1
@@ -492,9 +448,12 @@ sub frmFindInProject_ApplyTheme()
         ' even once the bind path was fixed.
         SciExec( gFipPool(i).hWnd, SCI_SETCARETLINEVISIBLE, 0, 0 )
         SciExec( gFipPool(i).hWnd, SCI_SETCARETLINEBACK, theme.editor.text.backcolor, 0 )
-        ' Re-styling can change the line height, so the pin has to be re-asserted.
-        dim as long b = gFipRows( gFipPool(i).nRow ).nBlock
-        SciExec( gFipPool(i).hWnd, SCI_SETFIRSTVISIBLELINE, gFip.blocks(b).nFirstLine, 0 )
+        ' ...and horizontal panning, which ApplyPropertiesToView has just set for a full
+        ' editor that owns a real scrollbar. Suppressing tracking here would strand the caret
+        ' off the right edge of a long line -- see FipPool_Ensure.
+        SciExec( gFipPool(i).hWnd, SCI_SETSCROLLWIDTHTRACKING, 1, 0 )
+        ' (The view is NOT re-scrolled to its block here. A theme change must not throw away
+        '  wherever the user has navigated to inside an excerpt.)
     next
 
     PsVScrollBar_SetColors( HWND_FRMFINDINPROJECT_VSCROLL, theme.editor.scrollbar.backcolor, _
@@ -526,10 +485,11 @@ end sub
 ' PURE geometry. No window, no document.
 ' ========================================================================================
 
-function FipRows_BlockHeight( byval nLineCount as long, byref m as FIP_METRICS ) as long
-    dim as long n = nLineCount
-    if n < 1 then n = 1
-    function = (n * m.nLineHeight) + (m.nBlockPad * 2)
+' EVERY EXCERPT IS THE SAME HEIGHT. It used to be the block's own line count, which made the
+' row heights vary from 5 up to FINDPROJ_MAX_BLOCK_LINES; the views scroll now, so a block is
+' where the window starts rather than what it must contain. See FIP_VIEW_LINES.
+function FipRows_BlockHeight( byref m as FIP_METRICS ) as long
+    function = (FIP_VIEW_LINES * m.nLineHeight) + (m.nBlockPad * 2)
 end function
 
 
@@ -572,7 +532,7 @@ function FipRows_Build( rows() as FIP_ROW, byref nRowCount as long, _
                     .nGroup  = g
                     .nBlock  = b
                     .nTop    = y
-                    .nHeight = FipRows_BlockHeight( gFip.blocks(b).nLineCount, m )
+                    .nHeight = FipRows_BlockHeight( m )
                 end with
                 y += rows(nRowCount).nHeight + m.nBlockGap
                 nRowCount += 1
@@ -944,8 +904,25 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
     dim as long nNameW = FipSurface_TextW( b, wszName ) + nPad
     b->PaintText( wszName, @rcText, DT_LEFT )
 
+    ' THE DIRTY CIRCLE, APPENDED TO THE FILENAME. This is where "one of these results has
+    ' unsaved changes" is said now -- it used to be an amber stripe beside each changed line,
+    ' which a scrolling excerpt can no longer point at (see FipSurface_Render). It is
+    ' DELIBERATELY the same glyph, font and meaning the tab bar already uses for a modified
+    ' document (frmTopTabs_PaintCallback), so the header and the tab cannot disagree; and it is
+    ' asked of the DOCUMENT rather than of a snapshot, so saving clears it for free.
+    dim as long nDirtyW = 0
+    if FindProject_IsGroupDirty( r.nGroup ) then
+        nDirtyW = AfxScaleX(14)
+        dim as RECT rcDot = rc
+        rcDot.left  = rcText.left + nNameW
+        rcDot.right = rcDot.left + nDirtyW
+        b->SetFont( ghFont(SYMBOLFONT_9) )
+        b->SetForeColor( theme.editor.text.forecolor )
+        b->PaintText( wszIconCompileResult, @rcDot, DT_CENTER )
+    end if
+
     dim as RECT rcCount = rc
-    rcCount.left = rcText.left + nNameW
+    rcCount.left = rcText.left + nNameW + nDirtyW
     b->SetFont( ghFont(GUIFONT_9) )
     b->SetForeColor( theme.editor.linenumbers.forecolor )
     dim as long nCountW = FipSurface_TextW( b, wszCount ) + nPad
@@ -1052,26 +1029,13 @@ private sub FipSurface_Render( byval b as PsBufferPaint ptr, byref rc as RECT )
             if gFipRows(i).nKind = FIP_ROW_HEADER then
                 FipSurface_PaintHeader( b, gFipRows(i), yTop, rc )
             else
-                ' THE DIRTY-LINE STRIPE, painted here rather than in a Scintilla margin: it
-                ' sits in the strip immediately LEFT of the excerpt window, so it costs the
-                ' editable area nothing and needs no margin, no mask and no marker definition
-                ' in any view. The marker itself is still what remembers WHICH lines -- it
-                ' rides along as text moves, which a list of line numbers of ours would not.
-                dim as long bD = gFipRows(i).nBlock
-                dim as long yLine = yTop + gFipMetrics.nBlockPad
-                for ln as long = 0 to gFip.blocks(bD).nLineCount - 1
-                    if yLine > rc.bottom then exit for
-                    if FindProject_IsLineDirty( bD, ln ) then
-                        dim as RECT rcBar
-                        rcBar.right  = gFipMetrics.nIndent
-                        rcBar.left   = rcBar.right - AfxScaleX(3)
-                        rcBar.top    = yLine
-                        rcBar.bottom = yLine + gFipMetrics.nLineHeight
-                        b->SetBackColor( FIP_DIRTY_COLOR )
-                        b->PaintRect( @rcBar )
-                    end if
-                    yLine += gFipMetrics.nLineHeight
-                next
+                ' (THE DIRTY-LINE STRIPE IS GONE. It was an amber bar in the strip left of the
+                '  excerpt, one per line whose text differed from a snapshot taken when the
+                '  search ran. A per-LINE signal only made sense while an excerpt was a fixed
+                '  window onto a fixed run of lines: the views scroll now, so the lines under
+                '  the stripe are not the lines on screen. The signal moved up to the file's
+                '  own header -- FipSurface_PaintHeader draws the same dirty circle the tab
+                '  bar uses -- and the whole snapshot subsystem behind it went with it.)
 
                 ' A hairline in the gap BELOW each excerpt, so several excerpts from one file
                 ' read as separate windows onto it rather than as one long run of code. Not
@@ -1832,18 +1796,22 @@ sub frmFindInProject_RunSelfTest()
             frmFindInProject_Check( "canvas: the canvas is at least as tall as the last row", _
                 gFipCanvasH >= nPrevEnd, str(gFipCanvasH) & " vs " & str(nPrevEnd) )
 
-            ' A block's height must be exactly its line count times the line height plus the
-            ' padding -- the identity the excerpt views will be sized against, so an error
-            ' here would misplace every one of them.
+            ' EVERY BLOCK ROW IS THE SAME HEIGHT, and it is FIP_VIEW_LINES lines plus the
+            ' padding -- the identity the excerpt views are sized against, so an error here
+            ' would misplace every one of them. It used to be the block's own line count;
+            ' asserting the constant rather than the formula is what makes a block that spans
+            ' 40 lines still get a five-line window.
             dim as long nBadHeight = 0
+            dim as long nWant = FipRows_BlockHeight( gFipMetrics )
             for i as long = 0 to gFipRowCount - 1
                 if gFipRows(i).nKind <> FIP_ROW_BLOCK then continue for
-                dim as long nWant = FipRows_BlockHeight( gFip.blocks( gFipRows(i).nBlock ).nLineCount, _
-                                                         gFipMetrics )
                 if gFipRows(i).nHeight <> nWant then nBadHeight += 1
             next
-            frmFindInProject_Check( "canvas: every block height matches the line-count formula", _
+            frmFindInProject_Check( "canvas: every block row is the fixed excerpt height", _
                 nBadHeight = 0, str(nBadHeight) & " wrong" )
+            frmFindInProject_Check( "canvas: and that height is FIP_VIEW_LINES lines plus padding", _
+                nWant = (FIP_VIEW_LINES * gFipMetrics.nLineHeight) + (gFipMetrics.nBlockPad * 2), _
+                str(nWant) )
 
             ' The line height came from Scintilla, not from a guess -- so the painted
             ' placeholder and the real excerpt views agree about how tall a line is.
@@ -1957,8 +1925,11 @@ sub frmFindInProject_RunSelfTest()
                 dim as long bb = gFipRows( gFipPool(i).nRow ).nBlock
                 ' Bound to the RIGHT document...
                 if gFipPool(i).pSciDoc <> gFip.groups(gg).pSciDoc then nBadDoc += 1
-                ' ...and pinned to the block's first line. Getting this wrong shows the wrong
-                ' five lines, which looks like a search bug rather than a view bug.
+                ' ...and STARTING at the block's first line. This is no longer a pin -- the
+                ' view scrolls freely from here -- but it is still where a freshly bound one
+                ' has to open, and getting it wrong shows the wrong five lines, which looks
+                ' like a search bug rather than a view bug. Nothing has navigated yet at this
+                ' point in the run; the section that does is further down.
                 if SciExec( gFipPool(i).hWnd, SCI_GETFIRSTVISIBLELINE, 0, 0 ) <> _
                    gFip.blocks(bb).nFirstLine then nBadLine += 1
             next
@@ -1967,7 +1938,7 @@ sub frmFindInProject_RunSelfTest()
                 nBound > 0, str(nBound) & " bound of " & str(gFipPoolCount) )
             frmFindInProject_Check( "pool: every bound view holds its group's document", _
                 nBadDoc = 0, str(nBadDoc) & " wrong" )
-            frmFindInProject_Check( "pool: every bound view is pinned to its block's line", _
+            frmFindInProject_Check( "pool: every bound view opens on its block's first line", _
                 nBadLine = 0, str(nBadLine) & " wrong" )
             frmFindInProject_Check( "pool: no more views exist than blocks on screen", _
                 gFipPoolCount <= FIP_POOL_MAX, str(gFipPoolCount) )
@@ -1983,9 +1954,10 @@ sub frmFindInProject_RunSelfTest()
             for i as long = 0 to gFipPoolCount - 1
                 if gFipPool(i).hWnd = 0 then continue for
                 if SciExec( gFipPool(i).hWnd, SCI_GETMODEVENTMASK, 0, 0 ) <> 0 then nNoisy += 1
-                ' Folding has no meaning in a five-line excerpt. Margin 1 is NOT checked for
-                ' zero any more -- it carries the dirty-line stripe now, which is why this
-                ' assertion had to change rather than the code.
+                ' Folding has no meaning in a five-line excerpt. Margin 1 (the symbol margin)
+                ' is checked too: it was left out while it carried the dirty-line stripe, and
+                ' that stripe is a header circle now.
+                if SciExec( gFipPool(i).hWnd, SCI_GETMARGINWIDTHN, 1, 0 ) <> 0 then nMargins += 1
                 if SciExec( gFipPool(i).hWnd, SCI_GETMARGINWIDTHN, 2, 0 ) <> 0 then nMargins += 1
             next
             frmFindInProject_Check( "pool: every view has its modification events silenced", _
@@ -2063,9 +2035,11 @@ sub frmFindInProject_RunSelfTest()
             frmFindInProject_Check( "foldall: the state reads back as not-all-collapsed", _
                 frmFindInProject_AllCollapsed() = false )
 
-            ' ---- the dirty-line marker ------------------------------------------------------
-            ' An edit made through an excerpt marks its line, and the mark is a Scintilla
-            ' MARKER so it rides along when lines move rather than needing remapping of ours.
+            ' ---- the dirty circle on the file's header ---------------------------------------
+            ' PER FILE, NOT PER LINE. This replaced a stripe drawn beside each line whose text
+            ' differed from a snapshot taken when the search ran; the excerpts scroll now, so
+            ' the lines that stripe pointed at are not the lines on screen. The signal is the
+            ' document's own modified state, which is also what the tab bar reads.
             for i as long = 0 to gFipPoolCount - 1
                 if gFipPool(i).nRow = -1 then continue for
                 dim as long gg2 = gFipRows( gFipPool(i).nRow ).nGroup
@@ -2074,25 +2048,36 @@ sub frmFindInProject_RunSelfTest()
                 if pD2 = 0 then continue for
 
                 dim as long nLn = gFip.blocks(bb2).nFirstLine
-                frmFindInProject_Check( "dirty: an untouched line is not dirty", _
-                    FindProject_IsLineDirty( bb2, 0 ) = false )
+                frmFindInProject_Check( "dirty: an untouched file shows no circle", _
+                    FindProject_IsGroupDirty( gg2 ) = false )
+                ' The tab's circle and the header's must agree -- one is built on the other,
+                ' and this is what would catch them being re-separated.
+                frmFindInProject_Check( "dirty: and neither does the tab", _
+                    FindProject_AnyDirty() = false )
 
-                ' Type into the line for real, then take it back. THE UNDO IS THE POINT: a
-                ' flag set on edit would still be set here, which is exactly the bug this
-                ' replaced. Comparing against the text captured at search time is what makes
-                ' "no longer different" mean "no longer dirty".
+                ' Type into the file for real, then take it back. THE UNDO IS THE POINT: a
+                ' flag set on edit would still be set here, which is exactly the bug the
+                ' per-line comparison was written for. Asking the DOCUMENT keeps that property
+                ' -- Scintilla clears SCI_GETMODIFY itself when the buffer returns to its save
+                ' point -- without this module remembering anything.
                 dim as HWND hD2 = pD2->hWindow(0)
                 SciExec( hD2, SCI_BEGINUNDOACTION, 0, 0 )
                 SciExec( hD2, SCI_INSERTTEXT, _
                          SciExec( hD2, SCI_POSITIONFROMLINE, nLn, 0 ), @"zz" )
                 SciExec( hD2, SCI_ENDUNDOACTION, 0, 0 )
-                frmFindInProject_Check( "dirty: an edited line IS dirty", _
-                    FindProject_IsLineDirty( bb2, 0 ) = true )
+                frmFindInProject_Check( "dirty: an edited file DOES show the circle", _
+                    FindProject_IsGroupDirty( gg2 ) = true )
+                frmFindInProject_Check( "dirty: and so does the tab", _
+                    FindProject_AnyDirty() = true )
 
                 SciExec( hD2, SCI_UNDO, 0, 0 )
                 frmFindInProject_Check( "dirty: undoing the edit clears it again", _
-                    FindProject_IsLineDirty( bb2, 0 ) = false )
+                    FindProject_IsGroupDirty( gg2 ) = false )
                 SciExec( hD2, SCI_SETSAVEPOINT, 0, 0 )
+                ' A group whose document has gone cannot be dirty, and an out-of-range one is
+                ' answered rather than indexed -- this is called from a PAINT callback.
+                frmFindInProject_Check( "dirty: an out-of-range group is not dirty", _
+                    FindProject_IsGroupDirty( gFip.nGroupCount ) = false )
 
                 ' ---- the Edit menu can reach an excerpt ------------------------------------
                 ' This is what makes Ctrl+Z work in an excerpt: without it every Edit command
@@ -2135,55 +2120,110 @@ sub frmFindInProject_RunSelfTest()
                 exit for
             next
 
-            ' ---- the excerpt views do not scroll --------------------------------------------
-            ' Moving the caret to the end of the document must NOT slide the view off its
-            ' block: an excerpt is a fixed window onto a fixed run of lines, and you edit
-            ' within the lines you can see.
+            ' ---- the excerpt views SCROLL, and the caret can leave the block -----------------
+            ' THIS SECTION IS THE INVERSE OF THE ONE IT REPLACED. An excerpt used to be a
+            ' PINNED window onto exactly its block's lines: Up on the first line and Down on
+            ' the last were swallowed before Scintilla saw them, and the view was re-scrolled
+            ' back after any message that moved it -- so the assertions here asserted that
+            ' nothing moved. That is the confinement this refactor removed, so an assertion
+            ' that still passes on it would be asserting the bug.
+            '
+            ' PREFER A SLOT WHOSE BLOCK DOES NOT START AT LINE 0, and this is not cosmetic:
+            ' taking the first bound slot picked one whose block began at the top of its file,
+            ' where Up has nowhere to go and the whole leaves-the-block half of this section
+            ' is skipped by its own guard. Measured -- the A/B that put the pin back turned
+            ' two assertions red and could not reach that one at all.
+            dim as long nScrollSlot = -1
             for i as long = 0 to gFipPoolCount - 1
                 if gFipPool(i).nRow = -1 then continue for
-                dim as long bb = gFipRows( gFipPool(i).nRow ).nBlock
-                dim as long nPinned = gFip.blocks(bb).nFirstLine
-                dim as long nLastLine = nPinned + gFip.blocks(bb).nLineCount - 1
-                SendMessage( gFipPool(i).hWnd, WM_KEYDOWN, VK_END, 0 )
-                SendMessage( gFipPool(i).hWnd, WM_KEYDOWN, VK_NEXT, 0 )
-                frmFindInProject_Check( "noscroll: the view stayed pinned after caret keys", _
-                    SciExec( gFipPool(i).hWnd, SCI_GETFIRSTVISIBLELINE, 0, 0 ) = nPinned, _
-                    str(SciExec( gFipPool(i).hWnd, SCI_GETFIRSTVISIBLELINE, 0, 0 )) & _
-                    " vs " & str(nPinned) )
-
-                ' LEAVING THE BLOCK IS A NO-OP. Park the caret on the first line, press Up,
-                ' and NOTHING may move -- not the line, and not the column either. Clamping
-                ' after the fact (which is what this replaced) left the caret at column 0,
-                ' so the position, not just the line, is what has to be compared.
-                SciExec( gFipPool(i).hWnd, SCI_GOTOPOS, _
-                         SciExec( gFipPool(i).hWnd, SCI_GETLINEENDPOSITION, nPinned, 0 ), 0 )
-                dim as long nPosBefore = SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 )
-                SendMessage( gFipPool(i).hWnd, WM_KEYDOWN, VK_UP, 0 )
-                frmFindInProject_Check( "noscroll: Up on the first line does nothing at all", _
-                    SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 ) = nPosBefore, _
-                    str(SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 )) & _
-                    " vs " & str(nPosBefore) )
-
-                SciExec( gFipPool(i).hWnd, SCI_GOTOPOS, _
-                         SciExec( gFipPool(i).hWnd, SCI_POSITIONFROMLINE, nLastLine, 0 ), 0 )
-                nPosBefore = SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 )
-                SendMessage( gFipPool(i).hWnd, WM_KEYDOWN, VK_DOWN, 0 )
-                frmFindInProject_Check( "noscroll: Down on the last line does nothing at all", _
-                    SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 ) = nPosBefore, _
-                    str(SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 )) & _
-                    " vs " & str(nPosBefore) )
-
-                ' ...but a move INSIDE the block is untouched. Without this, "does nothing"
-                ' would also pass if the subclass ate every arrow key.
-                if gFip.blocks(bb).nLineCount > 1 then
-                    SciExec( gFipPool(i).hWnd, SCI_GOTOPOS, _
-                             SciExec( gFipPool(i).hWnd, SCI_POSITIONFROMLINE, nPinned, 0 ), 0 )
-                    nPosBefore = SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 )
-                    SendMessage( gFipPool(i).hWnd, WM_KEYDOWN, VK_DOWN, 0 )
-                    frmFindInProject_Check( "noscroll: Down INSIDE the block still moves", _
-                        SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 ) <> nPosBefore, _
-                        str(SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 )) )
+                if nScrollSlot = -1 then nScrollSlot = i
+                if gFip.blocks( gFipRows( gFipPool(i).nRow ).nBlock ).nFirstLine > 0 then
+                    nScrollSlot = i
+                    exit for
                 end if
+            next
+
+            for i as long = nScrollSlot to nScrollSlot
+                if i < 0 then exit for
+                if gFipPool(i).nRow = -1 then continue for
+                dim as long bb = gFipRows( gFipPool(i).nRow ).nBlock
+                dim as HWND hSlotView = gFipPool(i).hWnd
+                dim as long nBlkFirst = gFip.blocks(bb).nFirstLine
+                dim as long nBlkLast  = nBlkFirst + gFip.blocks(bb).nLineCount - 1
+                dim as long nDocLast  = SciExec( hSlotView, SCI_GETLINECOUNT, 0, 0 ) - 1
+
+                ' THE WINDOW IS FIVE LINES WHATEVER THE BLOCK SPANS -- which is the other half
+                ' of the change, and the half no keystroke can demonstrate. Coalescing can run
+                ' a block to FINDPROJ_MAX_BLOCK_LINES, and under the old height formula that
+                ' was a 40-line window in the results list.
+                dim as RECT rcEx
+                GetClientRect( hSlotView, @rcEx )
+                dim as long nLinesShown = (rcEx.bottom - rcEx.top) \ gFipMetrics.nLineHeight
+                frmFindInProject_Check( "scroll: the excerpt window is FIP_VIEW_LINES tall", _
+                    nLinesShown = FIP_VIEW_LINES, _
+                    str(nLinesShown) & " vs " & str(FIP_VIEW_LINES) & _
+                    " (block spans " & str(gFip.blocks(bb).nLineCount) & ")" )
+
+                ' UP ON THE BLOCK'S FIRST LINE NOW MOVES. Still guarded: the slot chosen above
+                ' prefers a block away from the top of its file, but a result set in which
+                ' EVERY block starts at line 0 is legal. It says so out loud rather than
+                ' passing quietly, because a silently skipped assertion is indistinguishable
+                ' from a passing one in the totals.
+                if nBlkFirst = 0 then
+                    print "  NOTE: every visible block starts at line 0 -- " & _
+                          "the leaves-the-block-upwards assertions did NOT run."
+                end if
+                if nBlkFirst > 0 then
+                    SciExec( hSlotView, SCI_GOTOPOS, SciExec( hSlotView, SCI_POSITIONFROMLINE, nBlkFirst, 0 ), 0 )
+                    SendMessage( hSlotView, WM_KEYDOWN, VK_UP, 0 )
+                    dim as long nAfter = SciExec( hSlotView, SCI_LINEFROMPOSITION, _
+                                                  SciExec( hSlotView, SCI_GETCURRENTPOS, 0, 0 ), 0 )
+                    frmFindInProject_Check( "scroll: Up on the block's first line leaves the block", _
+                        nAfter = nBlkFirst - 1, str(nAfter) & " vs " & str(nBlkFirst - 1) )
+                    ' AND THE VIEW WENT WITH IT. Letting the caret move without scrolling
+                    ' would park it off the top of a five-line window, which is worse than
+                    ' not moving at all -- and is what dropping SCI_SETSCROLLWIDTHTRACKING's
+                    ' vertical equivalent would look like.
+                    frmFindInProject_Check( "scroll: and the view followed the caret up", _
+                        SciExec( hSlotView, SCI_GETFIRSTVISIBLELINE, 0, 0 ) <= nAfter, _
+                        str(SciExec( hSlotView, SCI_GETFIRSTVISIBLELINE, 0, 0 )) & " vs " & str(nAfter) )
+                end if
+
+                ' The far end of the file, which the caret clamp used to make unreachable.
+                if nDocLast > nBlkLast then
+                    SciExec( hSlotView, SCI_DOCUMENTEND, 0, 0 )
+                    dim as long nEndLn = SciExec( hSlotView, SCI_LINEFROMPOSITION, _
+                                                  SciExec( hSlotView, SCI_GETCURRENTPOS, 0, 0 ), 0 )
+                    frmFindInProject_Check( "scroll: the caret reaches the end of the document", _
+                        nEndLn = nDocLast, str(nEndLn) & " vs " & str(nDocLast) )
+                    dim as long nTopLn = SciExec( hSlotView, SCI_GETFIRSTVISIBLELINE, 0, 0 )
+                    frmFindInProject_Check( "scroll: and it is inside the visible window", _
+                        (nEndLn >= nTopLn) andalso (nEndLn < (nTopLn + FIP_VIEW_LINES)), _
+                        str(nEndLn) & " not in " & str(nTopLn) & ".." & _
+                        str(nTopLn + FIP_VIEW_LINES - 1) )
+                    ' ...which is only possible because the view is no longer held at the
+                    ' block. Asserted separately: the two above would both pass on a document
+                    ' whose end happens to fall inside the block's own window.
+                    frmFindInProject_Check( "scroll: which means the view left the block", _
+                        nTopLn <> nBlkFirst, str(nTopLn) & " vs " & str(nBlkFirst) )
+                end if
+
+                ' ...and an ordinary move still works. Without this, everything above would
+                ' also pass if the subclass had gone back to eating arrow keys.
+                if nDocLast > 0 then
+                    SciExec( hSlotView, SCI_DOCUMENTSTART, 0, 0 )
+                    dim as long nPosBefore = SciExec( hSlotView, SCI_GETCURRENTPOS, 0, 0 )
+                    SendMessage( hSlotView, WM_KEYDOWN, VK_DOWN, 0 )
+                    frmFindInProject_Check( "scroll: Down still moves the caret", _
+                        SciExec( hSlotView, SCI_GETCURRENTPOS, 0, 0 ) <> nPosBefore, _
+                        str(SciExec( hSlotView, SCI_GETCURRENTPOS, 0, 0 )) )
+                end if
+
+                ' Horizontal panning is what lets End on a long line stay visible. Tracking
+                ' off is the state the pinned view shipped with, and the caret would simply
+                ' vanish off the right edge.
+                frmFindInProject_Check( "scroll: horizontal scroll-width tracking is on", _
+                    SciExec( hSlotView, SCI_GETSCROLLWIDTHTRACKING, 0, 0 ) <> 0 )
                 exit for
             next
 
@@ -2366,13 +2406,13 @@ sub frmFindInProject_RunSelfTest()
         gTTabCtl.FindTabIndex() = -1, str(gTTabCtl.FindTabIndex()) )
 
     ' CLOSING DROPS THE RESULTS. It did not, and the symptom was silent: reopening with
-    ' Ctrl+Shift+F showed the previous result set, complete with dirty stripes computed
-    ' against line snapshots taken before those files were edited and saved. It also leaked
-    ' one document reference per result file, which nothing was giving back.
+    ' Ctrl+Shift+F showed the previous result set, stale against files that had since been
+    ' edited and saved. It also leaked one document reference per result file, which nothing
+    ' was giving back.
     frmFindInProject_Check( "close: the result model was cleared", _
         gFip.bValid = false, str(gFip.nGroupCount) & " groups left" )
-    frmFindInProject_Check( "close: no line snapshots survive", _
-        gFip.nOrigCount = 0, str(gFip.nOrigCount) )
+    frmFindInProject_Check( "close: no group reads as dirty once the model is empty", _
+        FindProject_AnyDirty() = false )
     frmFindInProject_Check( "close: no document reference is still held", _
         gFip.nBlockCount = 0, str(gFip.nBlockCount) & " blocks left" )
     frmFindInProject_Check( "close: the results window was destroyed", _
@@ -2513,8 +2553,7 @@ private sub FipBar_RevealCurrent()
     AfxRedrawWindow( HWND_FRMFINDINPROJECT_SURFACE )
 
     ' Select the match inside its excerpt view, so "next" is visible rather than merely
-    ' scrolled to. The pin is re-asserted afterwards because setting a selection scrolls the
-    ' caret into view and would otherwise slide the block off its lines.
+    ' scrolled to.
     ' THE EDITING CARET MOVES WITH THE NAVIGATION, not just the scroll position: after F3 the
     ' match is where you are, so typing continues there.
     '
@@ -2532,7 +2571,14 @@ private sub FipBar_RevealCurrent()
         if gFipPool(i).nRow <> nRow then continue for
         SciExec( gFipPool(i).hWnd, SCI_SETSEL, gFip.matches(gFipCurrent).nStart, _
                  gFip.matches(gFipCurrent).nStart + gFip.matches(gFipCurrent).nLen )
+        ' PUT THE VIEW BACK ON ITS BLOCK, THEN LET SCINTILLA CORRECT IT. Setting the first
+        ' visible line alone was enough while an excerpt was a five-line window onto exactly
+        ' five lines; a block can span up to FINDPROJ_MAX_BLOCK_LINES, so the match being
+        ' navigated to is often below the five that start at the block. SCI_SCROLLCARET
+        ' scrolls only when it has to, so a match inside those five keeps the block's own
+        ' framing and one further down brings the window to it.
         SciExec( gFipPool(i).hWnd, SCI_SETFIRSTVISIBLELINE, gFip.blocks(b).nFirstLine, 0 )
+        SciExec( gFipPool(i).hWnd, SCI_SCROLLCARET, 0, 0 )
         if bFocusInPool then SetFocus( gFipPool(i).hWnd )
         exit for
     next
@@ -2740,14 +2786,13 @@ sub frmFindInProject_RunRepro()
     print "REPRO: step 4 survived"
 
     ' A very short phrase, which is a plausible "good search text" and produces an enormous
-    ' result set -- the case that stresses every array's growth and the per-block line
-    ' snapshots hardest.
+    ' result set -- the case that stresses every array's growth hardest.
     print "REPRO: step 5 -- a one-character phrase (huge result set)"
     AfxSetWindowText( hCtl, "e" )
     frmFindInProject_BarAction( IDM_FINDNEXT )
     FipRepro_Pump()
     print "REPRO: step 5 searched, matches = " & str(gFip.nLiveMatches) & _
-          ", blocks = " & str(gFip.nBlockCount) & ", snapshot lines = " & str(gFip.nOrigCount)
+          ", blocks = " & str(gFip.nBlockCount)
     ' NOTE on the tone count here: it is legitimately 1 when the viewport happens to sit
     ' wholly inside one excerpt, because that area is covered by a Scintilla child and the
     ' surface paints only its own background behind it. Checked, not assumed.
@@ -2813,7 +2858,7 @@ end function
 ' WM_COMMAND to frmMain), not by calling the model directly.
 '
 ' IT WRITES ITS OWN TEMPORARY FILE and searches for a token that cannot occur anywhere
-' else ("Qzalpha"). Two reasons, and the second is not optional: the expected counts have
+' else ("Wbeta"). Two reasons, and the second is not optional: the expected counts have
 ' to be KNOWN CONSTANTS rather than whatever happens to be open, and a Replace All is
 ' PROJECT-WIDE -- a phrase that also matched the user's own open documents would rewrite
 ' their buffers as a side effect of running the test.
@@ -3003,9 +3048,9 @@ sub frmFindInProject_RunReplaceTest()
         print "  FAIL: could not create " & str(wszFile)
         exit sub
     end if
-    print #f, "' Qzalpha qzalpha QZALPHA QzalphaBeta qzalpha2"
-    print #f, "dim Qzalpha as long"
-    print #f, "print ""qzalpha"""
+    print #f, "' Wbeta Wbeta Wbeta WbetaBeta Wbeta2"
+    print #f, "dim Wbeta as long"
+    print #f, "print ""Wbeta"""
     close #f
 
     dim as wstring * MAX_PATH wszOpen = wszFile
@@ -3018,18 +3063,18 @@ sub frmFindInProject_RunReplaceTest()
 
     dim as string sOrig = pT->GetText()
     frmFindInProject_Check( "setup: the file loaded with 7 occurrences of the token", _
-        FipRT_Count( ucase(sOrig), "QZALPHA" ) = 7, str(FipRT_Count( ucase(sOrig), "QZALPHA" )) )
+        FipRT_Count( ucase(sOrig), "Wbeta" ) = 7, str(FipRT_Count( ucase(sOrig), "Wbeta" )) )
 
     ' ---- the four flag combinations, at the model level ---------------------------------
     ' Directly, so the toggle assertions below are comparing the click's answer against a
     ' number this harness has already established independently.
-    FindProject_Search( "Qzalpha", false, false )
+    FindProject_Search( "Wbeta", false, false )
     dim as long nCI = FipRT_GroupLive( pT )
-    FindProject_Search( "Qzalpha", true, false )
+    FindProject_Search( "Wbeta", true, false )
     dim as long nCS = FipRT_GroupLive( pT )
-    FindProject_Search( "Qzalpha", false, true )
+    FindProject_Search( "Wbeta", false, true )
     dim as long nWW = FipRT_GroupLive( pT )
-    FindProject_Search( "Qzalpha", true, true )
+    FindProject_Search( "Wbeta", true, true )
     dim as long nCSWW = FipRT_GroupLive( pT )
 
     frmFindInProject_Check( "flags: case-insensitive, any part of a word = 7", nCI = 7, str(nCI) )
@@ -3047,7 +3092,7 @@ sub frmFindInProject_RunReplaceTest()
     if IsWindow( hFind ) = 0 then
         print "  FAIL: the Find bar has no find field"
     else
-        AfxSetWindowText( hFind, "Qzalpha" )
+        AfxSetWindowText( hFind, "Wbeta" )
         FipBar_RunSearch()
         FipRepro_Pump()
         frmFindInProject_Check( "bar: a search through the bar finds all 7", _
@@ -3096,7 +3141,7 @@ sub frmFindInProject_RunReplaceTest()
             AfxSetWindowText( hRep, "Wbeta" )
 
             ' Re-run so gFipCurrent lands on the first match of a known result set.
-            AfxSetWindowText( hFind, "Qzalpha" )
+            AfxSetWindowText( hFind, "Wbeta" )
             FipBar_RunSearch()
             FipRepro_Pump()
             dim as long nBefore = FipRT_GroupLive( pT )
@@ -3125,11 +3170,11 @@ sub frmFindInProject_RunReplaceTest()
                 FipRT_Count( sAfter2, "Wbeta" ) = nLeft + 1, _
                 str(FipRT_Count( sAfter2, "Wbeta" )) & " vs " & str(nLeft + 1) )
             ' THE ONE THAT CATCHES A CASE-BLIND REPLACE. Replace All ran with both flags OFF,
-            ' so all 7 spellings had to go -- including the ones inside QzalphaBeta and
-            ' qzalpha2, which are matches only because Whole Word is off.
+            ' so all 7 spellings had to go -- including the ones inside WbetaBeta and
+            ' Wbeta2, which are matches only because Whole Word is off.
             frmFindInProject_Check( "replace all: not one spelling of the token survives", _
-                FipRT_Count( ucase(sAfter2), "QZALPHA" ) = 0, _
-                str(FipRT_Count( ucase(sAfter2), "QZALPHA" )) & " left" )
+                FipRT_Count( ucase(sAfter2), "Wbeta" ) = 0, _
+                str(FipRT_Count( ucase(sAfter2), "Wbeta" )) & " left" )
 
             ' ---- CTRL+S -----------------------------------------------------------------
             ' Two separate questions, and they fail differently.
@@ -3197,23 +3242,17 @@ sub frmFindInProject_RunReplaceTest()
                 frmFindInProject_Check( "ctrl+s: the replacement reached the file on disk", _
                     FipRT_Count( sDisk, "Wbeta" ) > 0, str(FipRT_Count( sDisk, "Wbeta" )) )
                 frmFindInProject_Check( "ctrl+s: the old token is gone from the file on disk", _
-                    FipRT_Count( ucase(sDisk), "QZALPHA" ) = 0, _
-                    str(FipRT_Count( ucase(sDisk), "QZALPHA" )) & " left" )
+                    FipRT_Count( ucase(sDisk), "Wbeta" ) = 0, _
+                    str(FipRT_Count( ucase(sDisk), "Wbeta" )) & " left" )
 
-                ' THE YELLOW BAR. It is the dirty-line stripe, and it is computed against the
-                ' text captured WHEN THE SEARCH RAN -- not against the save point. Asserted
-                ' rather than assumed, because "Save clears the stripe" is what was reported
-                ' as the expected behaviour and this is where the two definitions meet.
-                dim as long nStriped = 0
-                for b as long = 0 to gFip.nBlockCount - 1
-                    if gFip.blocks(b).nGroup <> FipRT_GroupOf( pT ) then continue for
-                    for ln as long = 0 to gFip.blocks(b).nLineCount - 1
-                        if FindProject_IsLineDirty( b, ln ) then nStriped += 1
-                    next
-                next
-                print "  STRIPE: " & str(nStriped) & " lines still striped after saving"
-                frmFindInProject_Check( "ctrl+s: saving clears the dirty stripe", _
-                    nStriped = 0, str(nStriped) & " lines still striped" )
+                ' THE CIRCLE ON THE FILE'S HEADER. It was a per-line amber stripe compared
+                ' against text captured WHEN THE SEARCH RAN, which is a different definition
+                ' of "dirty" from the save point and had to be re-baselined by hand on every
+                ' save. It is the document's own modified state now, so this asserts what was
+                ' reported as the expected behaviour -- save and the mark goes -- rather than
+                ' the re-baselining that used to have to make it true.
+                frmFindInProject_Check( "ctrl+s: saving clears the file's dirty circle", _
+                    FindProject_IsGroupDirty( FipRT_GroupOf( pT ) ) = false )
 
                 ' (3) And the KEYSTROKE, not the command. Everything above went in as a
                 '     WM_COMMAND, which skips the whole question the report is about.

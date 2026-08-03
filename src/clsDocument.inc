@@ -255,8 +255,7 @@ end function
 ''
 function clsDocument.LoadDiskFile( _
             byref wszFile as wstring, _
-            byval bForceParse as boolean = true, _
-            byval bIsTemplate as boolean = false _
+                        byval bIsTemplate as boolean = false _
             ) as long
     ' if a disk file was specified then open it and load it into the editor
     if len(wszFile) = 0 then exit function   
@@ -487,7 +486,7 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
     this.UserModified = false
     SciMsg( pSci, SCI_SETSAVEPOINT, 0, 0)
 
-    ' Re-baseline any Find in Project results on this file, so their dirty stripes clear.
+    ' Repaint any Find in Project results on this file, so its dirty circle clears.
     ' HERE rather than in OnCommand_FileSave: this is the single point every save route
     ' converges on -- Save, Save As, Save All, the close prompt, and FindProject's own
     ' SaveAllDirty, which never goes through the command handler at all.
