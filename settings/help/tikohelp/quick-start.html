@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base="">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Install Tiko, learn the interface, and work through editing, searching, building, running and debugging a program — in about 25 minutes.">
+<meta name="generator" content="Tiko Help build.py">
+<title>Quick Start — Tiko Editor Help</title>
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231f6feb'/><text x='16' y='22' font-family='monospace' font-size='16' font-weight='bold' fill='white' text-anchor='middle'>tk</text></svg>">
+<script>(function(){try{var t=localStorage.getItem('tiko-help-theme');
+if(!t)t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip-link" href="#content">Skip to main content</a>
+
+<header class="site-header">
+  <button class="icon-btn" id="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg></button>
+  <a class="brand" href="index.html">
+    <span class="brand-mark" aria-hidden="true">tk</span>
+    <span>Tiko Editor</span>
+    <span class="brand-sub">Documentation</span>
+  </a>
+  <span class="header-spacer"></span>
+  <button class="search-launcher" id="search-launcher" type="button" aria-label="Search documentation">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="6"/><path d="M13.5 13.5L17 17"/></svg><span class="sl-label">Search docs</span><kbd>Ctrl K</kbd>
+  </button>
+  <button class="icon-btn" id="theme-toggle" type="button" aria-label="Switch theme" title="Switch theme"><svg class="icon-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="3.6"/><path d="M10 1.5v2M10 16.5v2M18.5 10h-2M3.5 10h-2M15.9 4.1l-1.4 1.4M5.5 14.5l-1.4 1.4M15.9 15.9l-1.4-1.4M5.5 5.5L4.1 4.1"/></svg><svg class="icon-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 12.4A7 7 0 017.6 3.5a7 7 0 108.9 8.9z"/></svg></button>
+</header>
+
+<div class="nav-scrim" id="nav-scrim"></div>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+<nav class="nav-tree" aria-label="Documentation sections">
+<ul>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="welcome" aria-expanded="true" aria-controls="navsec-welcome"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5L10 3l7 5.5V16a1 1 0 01-1 1h-3.5v-5h-5v5H4a1 1 0 01-1-1z"/></svg><span>Welcome</span></button>
+<div class="nav-section-body" id="navsec-welcome"><ul>
+<li><a href="index.html">Tiko Editor Documentation</a></li>
+<li><a href="what-is-tiko.html">What is Tiko?</a></li>
+<li><a href="quick-start.html" aria-current="page">Quick Start</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="ui" aria-expanded="false" aria-controls="navsec-ui"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="2"/><path d="M2.5 7.5h15M6.5 3.5v4"/></svg><span>User Interface</span></button>
+<div class="nav-section-body" id="navsec-ui"><ul>
+<li><a href="main-window.html">The main window</a></li>
+<li><a href="menu-bar.html">Menu bar</a></li>
+<li><a href="toolbar.html">Toolbar and icon strip</a></li>
+<li><a href="side-panels.html">Side panels</a></li>
+<li><a href="output-panel.html">Output panel</a></li>
+<li><a href="tabs-and-splits.html">Tabs and split views</a></li>
+<li><a href="status-bar.html">Status bar</a></li>
+<li><a href="context-menus.html">Context menus</a></li>
+<li><a href="dialogs.html">Dialog boxes</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="editing" aria-expanded="false" aria-controls="navsec-editing"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.2 3.3l3.5 3.5L7.5 16H4v-3.5z"/><path d="M11.5 5l3.5 3.5"/></svg><span>Editing Text</span></button>
+<div class="nav-section-body" id="navsec-editing"><ul>
+<li><a href="editing-basics.html">Editing basics</a></li>
+<li><a href="multiple-selections.html">Multiple selections and column mode</a></li>
+<li><a href="indentation.html">Indentation</a></li>
+<li><a href="encoding.html">Encoding and line endings</a></li>
+<li><a href="view-options.html">Display and view options</a></li>
+<li><a href="code-folding.html">Code folding</a></li>
+<li><a href="bookmarks.html">Bookmarks</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="searching" aria-expanded="false" aria-controls="navsec-searching"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M12.7 12.7L17 17"/></svg><span>Searching</span></button>
+<div class="nav-section-body" id="navsec-searching"><ul>
+<li><a href="find-replace.html">Find and Replace</a></li>
+<li><a href="find-in-project.html">Find in Project</a></li>
+<li><a href="regular-expressions.html">Regular expressions</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="navigation" aria-expanded="false" aria-controls="navsec-navigation"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M13.2 6.8l-1.7 4.7-4.7 1.7 1.7-4.7z"/></svg><span>Navigation</span></button>
+<div class="nav-section-body" id="navsec-navigation"><ul>
+<li><a href="navigation.html">Navigation</a></li>
+<li><a href="symbol-navigation.html">Symbols and the function list</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="productivity" aria-expanded="false" aria-controls="navsec-productivity"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M11 2.5L4.5 11H9l-.5 6.5L15.5 9H11z"/></svg><span>Editing Productivity</span></button>
+<div class="nav-section-body" id="navsec-productivity"><ul>
+<li><a href="autocomplete.html">Autocomplete and code tips</a></li>
+<li><a href="line-operations.html">Line and block operations</a></li>
+<li><a href="syntax-highlighting.html">Syntax highlighting</a></li>
+<li><a href="brace-matching.html">Brace matching and occurrence highlighting</a></li>
+<li><a href="code-formatting.html">Code formatting</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="projects" aria-expanded="false" aria-controls="navsec-projects"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 5.5A1.5 1.5 0 014 4h3.6l1.5 2H16a1.5 1.5 0 011.5 1.5v7A1.5 1.5 0 0116 16H4a1.5 1.5 0 01-1.5-1.5z"/></svg><span>Projects</span></button>
+<div class="nav-section-body" id="navsec-projects"><ul>
+<li><a href="projects-overview.html">Projects and workspaces</a></li>
+<li><a href="project-explorer.html">Project Explorer</a></li>
+<li><a href="project-files.html">Adding and removing files</a></li>
+<li><a href="project-options.html">Project options</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="building" aria-expanded="false" aria-controls="navsec-building"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.8 2.8a4 4 0 00-5 5L3 12.6V17h4.4l4.8-4.8a4 4 0 005-5L14.5 9.5 11 9l-.5-3.5z"/></svg><span>Building Programs</span></button>
+<div class="nav-section-body" id="navsec-building"><ul>
+<li><a href="compiler-setup.html">Compiler setup</a></li>
+<li><a href="building.html">Building and running</a></li>
+<li><a href="build-configurations.html">Build configurations</a></li>
+<li><a href="compiler-errors.html">Compiler errors and warnings</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="debugging" aria-expanded="false" aria-controls="navsec-debugging"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="6" y="6.5" width="8" height="9" rx="4"/><path d="M6 10H2.5M17.5 10H14M6.5 13.5l-3 2M13.5 13.5l3 2M6.5 7l-3-2M13.5 7l3-2M8 5.5a2 2 0 014 0"/></svg><span>Debugging</span></button>
+<div class="nav-section-body" id="navsec-debugging"><ul>
+<li><a href="debugging.html">Debugging</a></li>
+<li><a href="breakpoints.html">Breakpoints</a></li>
+<li><a href="watches.html">Watches and the call stack</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="customize" aria-expanded="false" aria-controls="navsec-customize"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3 6h9M15 6h2M3 14h3M9 14h8"/><circle cx="13" cy="6" r="2"/><circle cx="7" cy="14" r="2"/></svg><span>Customization</span></button>
+<div class="nav-section-body" id="navsec-customize"><ul>
+<li><a href="themes.html">Themes</a></li>
+<li><a href="theme-editor.html">The theme editor</a></li>
+<li><a href="editor-appearance.html">Fonts and editor appearance</a></li>
+<li><a href="keyboard-customization.html">Customizing keyboard shortcuts</a></li>
+<li><a href="user-tools.html">User tools</a></li>
+<li><a href="localization.html">Localization</a></li>
+<li><a href="settings-files.html">Settings and configuration files</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="reference" aria-expanded="false" aria-controls="navsec-reference"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M7 5.5h10M7 10h10M7 14.5h10M3.5 5.5h.01M3.5 10h.01M3.5 14.5h.01"/></svg><span>Reference</span></button>
+<div class="nav-section-body" id="navsec-reference"><ul>
+<li><a href="keyboard-shortcuts.html">Keyboard shortcuts</a></li>
+<li><a href="menu-reference.html">Menu reference</a></li>
+<li><a href="command-reference.html">Command reference</a></li>
+<li><a href="configuration-reference.html">Configuration reference</a></li>
+<li><a href="dialog-reference.html">Dialog reference</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="tutorial" aria-expanded="false" aria-controls="navsec-tutorial"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3l8 4-8 4-8-4z"/><path d="M5 9v4.2c0 1.3 2.2 2.3 5 2.3s5-1 5-2.3V9"/></svg><span>Tutorial</span></button>
+<div class="nav-section-body" id="navsec-tutorial"><ul>
+<li><a href="tutorial.html">Tutorial</a></li>
+<li><a href="lesson-01.html">Lesson 1 — Opening Tiko</a></li>
+<li><a href="lesson-02.html">Lesson 2 — Creating your first file</a></li>
+<li><a href="lesson-03.html">Lesson 3 — Editing text</a></li>
+<li><a href="lesson-04.html">Lesson 4 — Searching</a></li>
+<li><a href="lesson-05.html">Lesson 5 — Projects</a></li>
+<li><a href="lesson-06.html">Lesson 6 — Building a program</a></li>
+<li><a href="lesson-07.html">Lesson 7 — Debugging</a></li>
+<li><a href="lesson-08.html">Lesson 8 — Customization</a></li>
+<li><a href="lesson-09.html">Lesson 9 — Productivity shortcuts</a></li>
+<li><a href="lesson-10.html">Lesson 10 — Advanced editing</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="appendix" aria-expanded="false" aria-controls="navsec-appendix"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M8 7.8a2.1 2.1 0 113 1.9c-.6.4-1 .8-1 1.6M10 14.4v.1"/></svg><span>Help and Reference</span></button>
+<div class="nav-section-body" id="navsec-appendix"><ul>
+<li><a href="faq.html">Frequently asked questions</a></li>
+<li><a href="tips-and-tricks.html">Tips and tricks</a></li>
+<li><a href="troubleshooting.html">Troubleshooting</a></li>
+<li><a href="glossary.html">Glossary</a></li>
+<li><a href="doc-index.html">Index</a></li>
+</ul></div></li>
+</ul></nav>
+  </aside>
+
+  <div class="main-col">
+    <main class="content" id="content">
+<nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="index.html">Home</a></li><li><a href="index.html">Welcome</a></li><li><span aria-current="page">Quick Start</span></li></ol></nav>
+      <h1>Quick Start</h1>
+<p class="page-summary">Install Tiko, learn the interface, and work through editing, searching, building, running and debugging a program — in about 25 minutes.</p>
+<div class="callout note"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 9v5M10 6.2v.1"/></svg><div class="callout-body"><span class="callout-title">Note</span><p>This walkthrough takes 20–30 minutes and touches every part of the editor you will use daily. If you would rather learn in smaller pieces with exercises, take the <a href="tutorial.html">ten-lesson tutorial</a> instead — it covers the same ground more slowly.</p></div></div><h2 id="1-install-and-launch">1. Install and launch</h2><p>Tiko does not use an installer. Unpack the distribution into any folder you can write to and run <code>tiko.exe</code> from there.</p><ol class="steps">
+  <li>Unpack the archive into a folder — for example <code>C:\tiko</code>. Avoid <code>C:\Program Files</code>: Tiko writes its settings beside the executable, and that location is protected.</li>
+  <li>Double-click <code>tiko.exe</code>.</li>
+  <li>The main window opens with an empty untitled workspace.</li>
+</ol><div class="callout warning"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3L1.8 16.5h16.4L10 3z"/><path d="M10 8v4M10 14.5v.1"/></svg><div class="callout-body"><span class="callout-title">Warning</span><p>Run <code>tiko.exe</code> from the folder you unpacked, not from a copy you moved elsewhere on its own. Tiko finds its themes, settings and keyword files relative to its own location, so a stray copy starts with no theme and no configuration.</p></div></div><h2 id="2-get-your-bearings">2. Get your bearings</h2><p>The window has five regions. Spend a moment locating each one.</p><figure><div class="fig-frame"><svg viewBox="0 0 800 380" xmlns="http://www.w3.org/2000/svg" role="img">
+<style>
+  .dg-bg { fill: var(--c-bg-sunken); }
+  .dg-box { fill: var(--c-surface); stroke: var(--c-border-strong); stroke-width: 1.5; }
+  .dg-accent { fill: var(--c-accent-soft); stroke: var(--c-accent); stroke-width: 1.5; }
+  .dg-t { fill: var(--c-text); font-family: var(--font-sans); font-size: 13px; }
+  .dg-s { fill: var(--c-text-mute); font-family: var(--font-sans); font-size: 11px; }
+  .dg-n { fill: var(--c-accent-ink); font-family: var(--font-sans); font-size: 12px; font-weight: 700; }
+  .dg-c { fill: var(--c-accent); }
+</style>
+<rect x="0" y="0" width="800" height="380" class="dg-bg"/>
+<rect x="20" y="18" width="760" height="30" class="dg-accent"/>
+<text x="34" y="38" class="dg-t">File  Edit  Search  View  Project  Compile  Debug  Help</text>
+<circle cx="742" cy="33" r="11" class="dg-c"/><text x="738" y="38" class="dg-n">1</text>
+
+<rect x="20" y="56" width="46" height="266" class="dg-box"/>
+<text x="26" y="80" class="dg-s">icons</text>
+<circle cx="43" cy="110" r="11" class="dg-c"/><text x="39" y="115" class="dg-n">2</text>
+
+<rect x="72" y="56" width="176" height="266" class="dg-box"/>
+<text x="86" y="78" class="dg-t">Explorer</text>
+<text x="86" y="98" class="dg-s">project files</text>
+<text x="86" y="116" class="dg-s">functions</text>
+<text x="86" y="134" class="dg-s">bookmarks</text>
+<circle cx="230" cy="72" r="11" class="dg-c"/><text x="226" y="77" class="dg-n">3</text>
+
+<rect x="254" y="56" width="526" height="34" class="dg-box"/>
+<text x="268" y="78" class="dg-t">main.bas  ×    utils.bi  ×</text>
+<circle cx="762" cy="72" r="11" class="dg-c"/><text x="758" y="77" class="dg-n">4</text>
+
+<rect x="254" y="96" width="526" height="140" class="dg-box"/>
+<text x="268" y="120" class="dg-s">1</text><text x="292" y="120" class="dg-t">' editor surface</text>
+<text x="268" y="142" class="dg-s">2</text><text x="292" y="142" class="dg-t">Print "Hello, world!"</text>
+<text x="268" y="164" class="dg-s">3</text><text x="292" y="164" class="dg-t">Sleep</text>
+<circle cx="762" cy="112" r="11" class="dg-c"/><text x="758" y="117" class="dg-n">5</text>
+
+<rect x="254" y="244" width="526" height="78" class="dg-box"/>
+<text x="268" y="266" class="dg-t">Compiler  Search results  TODO  Notes</text>
+<text x="268" y="290" class="dg-s">Build succeeded.</text>
+<circle cx="762" cy="260" r="11" class="dg-c"/><text x="758" y="265" class="dg-n">6</text>
+
+<rect x="20" y="330" width="760" height="28" class="dg-box"/>
+<text x="34" y="349" class="dg-s">Ln 2, Col 24    INS    UTF-8    CRLF    FreeBASIC</text>
+<circle cx="742" cy="344" r="11" class="dg-c"/><text x="738" y="349" class="dg-n">7</text>
+</svg></div><figcaption>The Tiko main window. <strong>1</strong> Menu bar · <strong>2</strong> Panel icon strip · <strong>3</strong> Side panel (Explorer, Functions, Bookmarks) · <strong>4</strong> Document tabs · <strong>5</strong> Editor surface · <strong>6</strong> Output panel · <strong>7</strong> Status bar.</figcaption></figure><div class="callout tip"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 15h5M8 17.5h4M10 2.5a5 5 0 00-3 9v1.5h6V11.5a5 5 0 00-3-9z"/></svg><div class="callout-body"><span class="callout-title">Tip</span><p>Two shortcuts worth learning immediately: <kbd>Ctrl</kbd> + <kbd>B</kbd> toggles the side panel and <kbd>Ctrl</kbd> + <kbd>F9</kbd> toggles the Output panel. Both give the editor the whole window when you need room.</p></div></div><h2 id="3-create-your-first-file">3. Create your first file</h2><ol class="steps">
+  <li>Choose <span class="ui path">File<span class="sep">›</span>New</span> or press <kbd>Ctrl</kbd> + <kbd>N</kbd>. A new untitled document opens in a new tab.</li>
+  <li>Type the short program below. Notice that keywords colour themselves as you type, and that pressing <kbd>Enter</kbd> after <code>For</code> automatically indents the next line.</li>
+</ol><div class="code-block numbered" data-lang="fb"><div class="code-head"><span class="code-lang">fb</span><span class="code-title">hello.bas</span><button class="copy-btn" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 3.5h-7a1 1 0 00-1 1v7"/></svg><span class="copy-label">Copy</span></button></div><pre><code>' hello.bas - a first FreeBASIC program
+Dim As Integer i
+
+For i = 1 To 5
+    Print "Line "; i
+Next i
+
+Print "Press any key to finish."
+Sleep</code></pre></div><h2 id="4-save-and-save-as">4. Save, and Save As</h2><ol class="steps">
+  <li>Press <kbd>Ctrl</kbd> + <kbd>S</kbd>. Because the file has never been saved, the Save As dialog opens.</li>
+  <li>Choose a folder, name the file <code>hello.bas</code>, and save. The tab caption changes from <em>Untitled</em> to the file name.</li>
+  <li>Type another line, then press <kbd>Ctrl</kbd> + <kbd>S</kbd> again. This time it saves silently — no dialog.</li>
+  <li>To write a copy under a different name, use <span class="ui path">File<span class="sep">›</span>Save As…</span>. The editor then continues editing the <em>new</em> file, not the original.</li>
+</ol><div class="callout note"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 9v5M10 6.2v.1"/></svg><div class="callout-body"><span class="callout-title">Note</span><p>An asterisk or modified marker on a tab means the file has unsaved changes. <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> saves every modified document at once.</p></div></div><h2 id="5-reopen-recent-work">5. Reopen recent work</h2><p>Tiko keeps two separate recent lists, and the distinction matters:</p><ul>
+  <li><span class="ui path">File<span class="sep">›</span>Open Recent</span> — individual files you have opened.</li>
+  <li><span class="ui path">Project<span class="sep">›</span>Recent Projects</span> — whole workspaces, restoring every file that was open.</li>
+</ul><p>Each list ends with <strong>Clear this list</strong> if you want to reset it. Tiko also reopens your last workspace automatically when it starts, so in normal use you rarely need either list.</p><h2 id="6-edit-undo-clipboard-selection">6. Edit: undo, clipboard, selection</h2><p>The basics behave exactly as they do in every Windows editor:</p><div class="table-wrap"><table><thead><tr><th class="col-key">Action</th><th>Shortcut</th><th>Notes</th></tr></thead><tbody><tr><td class="col-key">Undo</td><td><kbd>Ctrl</kbd> + <kbd>Z</kbd></td><td>Unlimited within a session.</td></tr><tr><td class="col-key">Redo</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd></td><td>Reapplies what Undo removed.</td></tr><tr><td class="col-key">Cut</td><td><kbd>Ctrl</kbd> + <kbd>X</kbd></td><td>With no selection, acts on the whole line.</td></tr><tr><td class="col-key">Copy</td><td><kbd>Ctrl</kbd> + <kbd>C</kbd></td><td></td></tr><tr><td class="col-key">Paste</td><td><kbd>Ctrl</kbd> + <kbd>V</kbd></td><td></td></tr><tr><td class="col-key">Select all</td><td><kbd>Ctrl</kbd> + <kbd>A</kbd></td><td></td></tr><tr><td class="col-key">Select the current line</td><td><kbd>Ctrl</kbd> + <kbd>L</kbd></td><td>Repeat to extend downward.</td></tr><tr><td class="col-key">Delete the current line</td><td><kbd>Ctrl</kbd> + <kbd>Y</kbd></td><td>No selection needed.</td></tr><tr><td class="col-key">Duplicate the current line</td><td><kbd>Ctrl</kbd> + <kbd>D</kbd></td><td></td></tr><tr><td class="col-key">Move the line up or down</td><td><kbd>Alt</kbd> + <kbd>↑</kbd> / <kbd>Alt</kbd> + <kbd>↓</kbd></td><td>Moves the selection if there is one.</td></tr></tbody></table></div><h3 id="selecting-text">Selecting text</h3><ul>
+  <li><strong>Drag</strong> with the mouse, or hold <kbd>Shift</kbd> and use the arrow keys.</li>
+  <li><strong>Double-click</strong> selects a word; <strong>triple-click</strong> selects a line.</li>
+  <li><strong>Column (rectangular) selection:</strong> hold <kbd>Alt</kbd> while dragging, or hold <kbd>Alt</kbd> + <kbd>Shift</kbd> and use the arrow keys. Typing then edits every selected line at once.</li>
+  <li><strong>Multiple selections:</strong> hold <kbd>Ctrl</kbd> and drag or click to add further selections, then type to edit them all together.</li>
+</ul><div class="callout tip"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 15h5M8 17.5h4M10 2.5a5 5 0 00-3 9v1.5h6V11.5a5 5 0 00-3-9z"/></svg><div class="callout-body"><span class="callout-title">Tip</span><p>Column mode is the quickest way to add the same prefix to a run of lines — select the zero-width column down the left edge and type once.</p></div></div><h2 id="7-search-and-replace">7. Search and replace</h2><ol class="steps">
+  <li>Press <kbd>Ctrl</kbd> + <kbd>F</kbd> to open Find. Type <code>Print</code>.</li>
+  <li>Press <kbd>F3</kbd> to jump to the next match and <kbd>Shift</kbd> + <kbd>F3</kbd> for the previous one — these work even after the Find bar has closed.</li>
+  <li>Press <kbd>Ctrl</kbd> + <kbd>H</kbd> for Replace. Enter what to find and what to put in its place, then use <strong>Replace</strong> for one match at a time or <strong>Replace All</strong> for every match.</li>
+  <li>Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> for <strong>Find in Project</strong> to search every file in the workspace at once. Results collect in the Output panel; click one to jump straight to it.</li>
+</ol><div class="callout note"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 9v5M10 6.2v.1"/></svg><div class="callout-body"><span class="callout-title">Note</span><p>Find offers case-sensitive, whole-word and regular-expression matching. See <a href="regular-expressions.html">Regular expressions</a> for the syntax.</p></div></div><h2 id="8-jump-around-the-file">8. Jump around the file</h2><div class="table-wrap"><table><thead><tr><th class="col-key">Goal</th><th>How</th></tr></thead><tbody><tr><td class="col-key">Go to a specific line</td><td>Use the line number box or the Goto command — see <a href="navigation.html">Navigation</a>.</td></tr><tr><td class="col-key">Go to a symbol anywhere in the project</td><td><kbd>Ctrl</kbd> + <kbd>P</kbd> opens Search Symbol; start typing a procedure or type name.</td></tr><tr><td class="col-key">Jump to a definition</td><td>Put the caret on a name and press <kbd>F12</kbd>.</td></tr><tr><td class="col-key">Come back again</td><td><kbd>Alt</kbd> + <kbd>←</kbd> goes back, <kbd>Alt</kbd> + <kbd>→</kbd> goes forward.</td></tr><tr><td class="col-key">Next / previous procedure</td><td><kbd>Ctrl</kbd> + <kbd>PgDn</kbd> / <kbd>Ctrl</kbd> + <kbd>PgUp</kbd></td></tr><tr><td class="col-key">Toggle a bookmark</td><td><kbd>Ctrl</kbd> + <kbd>F2</kbd>; <kbd>F2</kbd> and <kbd>Shift</kbd> + <kbd>F2</kbd> cycle through them.</td></tr><tr><td class="col-key">See every procedure in the file</td><td><kbd>F4</kbd> opens the function list.</td></tr></tbody></table></div><h2 id="9-point-tiko-at-your-compiler">9. Point Tiko at your compiler</h2><p>Before you can build anything, Tiko needs to know where your FreeBASIC compiler is.</p><ol class="steps">
+  <li>Open <span class="ui path">File<span class="sep">›</span>Settings<span class="sep">›</span>Options…</span>.</li>
+  <li>Select the <strong>Compiler</strong> page.</li>
+  <li>Browse to the folder containing <code>fbc.exe</code> (or the specific compiler executable, depending on how your toolchain is laid out).</li>
+  <li>Choose <strong>OK</strong>.</li>
+</ol><div class="callout warning"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3L1.8 16.5h16.4L10 3z"/><path d="M10 8v4M10 14.5v.1"/></svg><div class="callout-body"><span class="callout-title">Warning</span><p>If the compiler path is wrong, builds fail immediately with a message about the compiler not being found rather than any error in your code. See <a href="troubleshooting.html">Troubleshooting</a> if that happens.</p></div></div><div class="callout todo"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2.5"/><path d="M6.8 10.2l2.2 2.2 4.2-4.6"/></svg><div class="callout-body"><span class="callout-title">TODO — verify compiler page fields</span><p>Confirm the exact field names and layout of the Compiler options page against the shipping build, and replace the placeholder screenshot below with a real capture.</p></div></div><figure><div class="placeholder-fig"><svg class="ph-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M3 16.5l4.5-4 3.5 3 3.5-3.5L21 17"/></svg><div><span class="ph-title">Options ▸ Compiler</span><span class="ph-hint">Screenshot of the compiler configuration page</span></div></div><figcaption><strong>Placeholder.</strong> Replace with a capture of <span class='ui path'>File<span class='sep'>›</span>Settings<span class='sep'>›</span>Options…<span class='sep'>›</span>Compiler</span>.</figcaption></figure><h2 id="10-build-and-run">10. Build and run</h2><p>With a compiler configured, the whole cycle is three keys:</p><div class="table-wrap"><table><thead><tr><th class="col-key">Command</th><th>Shortcut</th><th>What it does</th></tr></thead><tbody><tr><td class="col-key">Build and Execute</td><td><kbd>F5</kbd></td><td>Compiles, and runs the result if the compile succeeded. The command you will use most.</td></tr><tr><td class="col-key">Compile</td><td><kbd>Ctrl</kbd> + <kbd>F5</kbd></td><td>Compiles without running.</td></tr><tr><td class="col-key">Rebuild All</td><td><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>F5</kbd></td><td>Rebuilds everything from scratch.</td></tr><tr><td class="col-key">Quick Run</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F5</kbd></td><td>Compiles and runs the current file on its own, ignoring the project.</td></tr><tr><td class="col-key">Run Executable</td><td><kbd>Shift</kbd> + <kbd>F5</kbd></td><td>Runs the last successful build without recompiling.</td></tr><tr><td class="col-key">Compile Module</td><td><kbd>Ctrl</kbd> + <kbd>F7</kbd></td><td>Compiles only the current module.</td></tr></tbody></table></div><ol class="steps">
+  <li>Press <kbd>F5</kbd>.</li>
+  <li>The Output panel opens on its <strong>Compiler</strong> tab and shows the build.</li>
+  <li>If the build succeeds, your program runs.</li>
+  <li>If it fails, each error appears as a line in the panel. <strong>Click an error</strong> to jump straight to the file and line that caused it.</li>
+</ol><div class="callout tip"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 15h5M8 17.5h4M10 2.5a5 5 0 00-3 9v1.5h6V11.5a5 5 0 00-3-9z"/></svg><div class="callout-body"><span class="callout-title">Tip</span><p>Quick Run (<kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F5</kbd>) is ideal for a scratch file — it builds and runs just that file with no project set-up at all.</p></div></div><h2 id="11-debug">11. Debug</h2><p>Tiko has a real source-level debugger built in, not just a console window.</p><ol class="steps">
+  <li>Click in the margin beside a line, or press <kbd>F9</kbd>, to set a breakpoint. A marker appears in the margin.</li>
+  <li>Press <kbd>F6</kbd> to start debugging. The program runs until it reaches your breakpoint and then stops, with the current line marked.</li>
+  <li>Step through the code: <kbd>F11</kbd> steps into calls, <kbd>F10</kbd> steps over them, <kbd>Shift</kbd> + <kbd>F11</kbd> steps out of the current procedure.</li>
+  <li>Hover the mouse over a variable to see its value, or read the debugger panes — globals, locals, the call stack and your watch expressions.</li>
+  <li>Press <kbd>Shift</kbd> + <kbd>F6</kbd> to stop debugging.</li>
+</ol><div class="callout note"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 9v5M10 6.2v.1"/></svg><div class="callout-body"><span class="callout-title">Note</span><p>Debugging needs a build that carries debug information. Tiko selects an appropriate debug build automatically. See <a href="debugging.html">Debugging</a> for the full story.</p></div></div><h2 id="12-make-it-yours">12. Make it yours</h2><p>Two quick customizations before you finish:</p><h3 id="pick-a-theme">Pick a theme</h3><ol class="steps">
+  <li>Open <span class="ui path">File<span class="sep">›</span>Settings<span class="sep">›</span>Themes…</span> (or press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd>).</li>
+  <li>Choose from the fourteen bundled themes — light and dark variants of several families.</li>
+  <li>Apply, and the whole interface changes with it.</li>
+</ol><h3 id="set-the-editor-font">Set the editor font</h3><ol class="steps">
+  <li>Open <span class="ui path">File<span class="sep">›</span>Settings<span class="sep">›</span>Options…</span>.</li>
+  <li>On the editor page, choose the font name, size and character set. The default is Consolas at 11 point.</li>
+  <li>Choose <strong>OK</strong>.</li>
+</ol><div class="callout tip"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 15h5M8 17.5h4M10 2.5a5 5 0 00-3 9v1.5h6V11.5a5 5 0 00-3-9z"/></svg><div class="callout-body"><span class="callout-title">Tip</span><kbd>Ctrl</kbd> + <kbd>+</kbd> and <kbd>Ctrl</kbd> + <kbd>-</kbd> zoom the editor text temporarily without changing the configured font size; <kbd>Ctrl</kbd> + <kbd>0</kbd> resets the zoom.</div></div><h2 id="13-close-down">13. Close down</h2><ul>
+  <li><kbd>Ctrl</kbd> + <kbd>W</kbd> closes the current document; <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>W</kbd> closes them all.</li>
+  <li><kbd>Alt</kbd> + <kbd>F4</kbd> exits Tiko. You are prompted to save anything modified.</li>
+  <li>Your workspace — which files were open, and the window layout — is restored the next time you start.</li>
+</ul><h2 id="what-now">What now?</h2><div class="card-grid"><a class="card" href="tutorial.html"><svg class="card-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3l8 4-8 4-8-4z"/><path d="M5 9v4.2c0 1.3 2.2 2.3 5 2.3s5-1 5-2.3V9"/></svg><h3>Take the full tutorial</h3><p>Ten lessons with exercises, from first file to advanced editing.</p></a><a class="card" href="main-window.html"><svg class="card-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="2"/><path d="M2.5 7.5h15M6.5 3.5v4"/></svg><h3>Learn the interface properly</h3><p>Every panel, tab, dialog and status field explained.</p></a><a class="card" href="keyboard-shortcuts.html"><svg class="card-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="5" width="17" height="10" rx="2"/><path d="M5 8h.01M8 8h.01M11 8h.01M14 8h.01M5 11h.01M15 11h.01M7.5 11h5"/></svg><h3>Learn the shortcuts</h3><p>The complete list, grouped by category and ready to print.</p></a><a class="card" href="tips-and-tricks.html"><svg class="card-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M11 2.5L4.5 11H9l-.5 6.5L15.5 9H11z"/></svg><h3>Pick up power-user habits</h3><p>Workflows and hidden features that repay the time.</p></a></div>
+<nav class="pager" aria-label="Page navigation"><a class="prev" href="what-is-tiko.html" rel="prev"><span class="dir">← Previous</span><span class="ttl">What is Tiko?</span></a><a class="next" href="main-window.html" rel="next"><span class="dir">Next →</span><span class="ttl">The main window</span></a></nav>
+      <footer class="site-footer">
+        <span>Tiko Editor documentation</span>
+        <span>·</span>
+        <a href="index.html">Home</a>
+        <a href="doc-index.html">Index</a>
+        <a href="glossary.html">Glossary</a>
+        <a href="faq.html">FAQ</a>
+      </footer>
+    </main>
+
+    <aside class="toc" id="page-toc" aria-label="On this page"></aside>
+  </div>
+</div>
+
+<button class="back-to-top" id="back-to-top" type="button" aria-label="Back to top" title="Back to top"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 16V5M5 10l5-5 5 5"/></svg></button>
+
+<div class="search-overlay" id="search-overlay" role="dialog" aria-modal="true" aria-label="Search documentation">
+  <div class="search-panel">
+    <div class="search-inputrow">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="6"/><path d="M13.5 13.5L17 17"/></svg>
+      <input type="search" id="search-input" placeholder="Search the documentation…" autocomplete="off" spellcheck="false" aria-label="Search query">
+      <button class="icon-btn" id="search-close" type="button" aria-label="Close search"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button>
+    </div>
+    <ul class="search-results" id="search-results"></ul>
+    <div class="search-foot">
+      <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+      <span><kbd>Enter</kbd> open</span>
+      <span><kbd>Esc</kbd> close</span>
+    </div>
+  </div>
+</div>
+
+<script src="assets/search-index.js"></script>
+<script src="assets/script.js"></script>
+</body>
+</html>

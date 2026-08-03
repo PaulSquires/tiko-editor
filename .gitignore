@@ -32,3 +32,14 @@ REFACTOR_PLAN*.md
 # _copy_helpcenter.bat instead. WITHOUT IT THE HELP CENTER REPORTS ITS FILES AS MISSING,
 # so a fresh clone needs that script run once.
 /settings/help/helpcenter/
+
+# That claim was FALSE for the whole life of the rule above: an ignore entry does nothing
+# to files that are ALREADY TRACKED, and settings\helpcenter had been committed before it
+# was written -- ~31,770 blobs, which is why moving the tree surfaced as a mass deletion
+# rather than as nothing at all. Same trap as REFACTOR_PLAN.md. It only bites once, but
+# check with `git ls-files --error-unmatch <path>` before trusting a rule like this one.
+
+# Bytecode beside settings\help\tikohelp\tools\build.py. The generator's SOURCE is tracked
+# -- it is what regenerates that help site -- but its .pyc are per-interpreter and would
+# churn on every Python upgrade.
+__pycache__/

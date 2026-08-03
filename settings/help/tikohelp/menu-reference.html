@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base="">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Every menu and every command it holds, with shortcuts, descriptions and the submenus that rebuild themselves.">
+<meta name="generator" content="Tiko Help build.py">
+<title>Menu reference — Tiko Editor Help</title>
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231f6feb'/><text x='16' y='22' font-family='monospace' font-size='16' font-weight='bold' fill='white' text-anchor='middle'>tk</text></svg>">
+<script>(function(){try{var t=localStorage.getItem('tiko-help-theme');
+if(!t)t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip-link" href="#content">Skip to main content</a>
+
+<header class="site-header">
+  <button class="icon-btn" id="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg></button>
+  <a class="brand" href="index.html">
+    <span class="brand-mark" aria-hidden="true">tk</span>
+    <span>Tiko Editor</span>
+    <span class="brand-sub">Documentation</span>
+  </a>
+  <span class="header-spacer"></span>
+  <button class="search-launcher" id="search-launcher" type="button" aria-label="Search documentation">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="6"/><path d="M13.5 13.5L17 17"/></svg><span class="sl-label">Search docs</span><kbd>Ctrl K</kbd>
+  </button>
+  <button class="icon-btn" id="theme-toggle" type="button" aria-label="Switch theme" title="Switch theme"><svg class="icon-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="3.6"/><path d="M10 1.5v2M10 16.5v2M18.5 10h-2M3.5 10h-2M15.9 4.1l-1.4 1.4M5.5 14.5l-1.4 1.4M15.9 15.9l-1.4-1.4M5.5 5.5L4.1 4.1"/></svg><svg class="icon-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 12.4A7 7 0 017.6 3.5a7 7 0 108.9 8.9z"/></svg></button>
+</header>
+
+<div class="nav-scrim" id="nav-scrim"></div>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+<nav class="nav-tree" aria-label="Documentation sections">
+<ul>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="welcome" aria-expanded="false" aria-controls="navsec-welcome"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5L10 3l7 5.5V16a1 1 0 01-1 1h-3.5v-5h-5v5H4a1 1 0 01-1-1z"/></svg><span>Welcome</span></button>
+<div class="nav-section-body" id="navsec-welcome"><ul>
+<li><a href="index.html">Tiko Editor Documentation</a></li>
+<li><a href="what-is-tiko.html">What is Tiko?</a></li>
+<li><a href="quick-start.html">Quick Start</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="ui" aria-expanded="false" aria-controls="navsec-ui"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="2"/><path d="M2.5 7.5h15M6.5 3.5v4"/></svg><span>User Interface</span></button>
+<div class="nav-section-body" id="navsec-ui"><ul>
+<li><a href="main-window.html">The main window</a></li>
+<li><a href="menu-bar.html">Menu bar</a></li>
+<li><a href="toolbar.html">Toolbar and icon strip</a></li>
+<li><a href="side-panels.html">Side panels</a></li>
+<li><a href="output-panel.html">Output panel</a></li>
+<li><a href="tabs-and-splits.html">Tabs and split views</a></li>
+<li><a href="status-bar.html">Status bar</a></li>
+<li><a href="context-menus.html">Context menus</a></li>
+<li><a href="dialogs.html">Dialog boxes</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="editing" aria-expanded="false" aria-controls="navsec-editing"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.2 3.3l3.5 3.5L7.5 16H4v-3.5z"/><path d="M11.5 5l3.5 3.5"/></svg><span>Editing Text</span></button>
+<div class="nav-section-body" id="navsec-editing"><ul>
+<li><a href="editing-basics.html">Editing basics</a></li>
+<li><a href="multiple-selections.html">Multiple selections and column mode</a></li>
+<li><a href="indentation.html">Indentation</a></li>
+<li><a href="encoding.html">Encoding and line endings</a></li>
+<li><a href="view-options.html">Display and view options</a></li>
+<li><a href="code-folding.html">Code folding</a></li>
+<li><a href="bookmarks.html">Bookmarks</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="searching" aria-expanded="false" aria-controls="navsec-searching"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M12.7 12.7L17 17"/></svg><span>Searching</span></button>
+<div class="nav-section-body" id="navsec-searching"><ul>
+<li><a href="find-replace.html">Find and Replace</a></li>
+<li><a href="find-in-project.html">Find in Project</a></li>
+<li><a href="regular-expressions.html">Regular expressions</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="navigation" aria-expanded="false" aria-controls="navsec-navigation"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M13.2 6.8l-1.7 4.7-4.7 1.7 1.7-4.7z"/></svg><span>Navigation</span></button>
+<div class="nav-section-body" id="navsec-navigation"><ul>
+<li><a href="navigation.html">Navigation</a></li>
+<li><a href="symbol-navigation.html">Symbols and the function list</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="productivity" aria-expanded="false" aria-controls="navsec-productivity"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M11 2.5L4.5 11H9l-.5 6.5L15.5 9H11z"/></svg><span>Editing Productivity</span></button>
+<div class="nav-section-body" id="navsec-productivity"><ul>
+<li><a href="autocomplete.html">Autocomplete and code tips</a></li>
+<li><a href="line-operations.html">Line and block operations</a></li>
+<li><a href="syntax-highlighting.html">Syntax highlighting</a></li>
+<li><a href="brace-matching.html">Brace matching and occurrence highlighting</a></li>
+<li><a href="code-formatting.html">Code formatting</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="projects" aria-expanded="false" aria-controls="navsec-projects"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 5.5A1.5 1.5 0 014 4h3.6l1.5 2H16a1.5 1.5 0 011.5 1.5v7A1.5 1.5 0 0116 16H4a1.5 1.5 0 01-1.5-1.5z"/></svg><span>Projects</span></button>
+<div class="nav-section-body" id="navsec-projects"><ul>
+<li><a href="projects-overview.html">Projects and workspaces</a></li>
+<li><a href="project-explorer.html">Project Explorer</a></li>
+<li><a href="project-files.html">Adding and removing files</a></li>
+<li><a href="project-options.html">Project options</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="building" aria-expanded="false" aria-controls="navsec-building"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.8 2.8a4 4 0 00-5 5L3 12.6V17h4.4l4.8-4.8a4 4 0 005-5L14.5 9.5 11 9l-.5-3.5z"/></svg><span>Building Programs</span></button>
+<div class="nav-section-body" id="navsec-building"><ul>
+<li><a href="compiler-setup.html">Compiler setup</a></li>
+<li><a href="building.html">Building and running</a></li>
+<li><a href="build-configurations.html">Build configurations</a></li>
+<li><a href="compiler-errors.html">Compiler errors and warnings</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="debugging" aria-expanded="false" aria-controls="navsec-debugging"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="6" y="6.5" width="8" height="9" rx="4"/><path d="M6 10H2.5M17.5 10H14M6.5 13.5l-3 2M13.5 13.5l3 2M6.5 7l-3-2M13.5 7l3-2M8 5.5a2 2 0 014 0"/></svg><span>Debugging</span></button>
+<div class="nav-section-body" id="navsec-debugging"><ul>
+<li><a href="debugging.html">Debugging</a></li>
+<li><a href="breakpoints.html">Breakpoints</a></li>
+<li><a href="watches.html">Watches and the call stack</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="customize" aria-expanded="false" aria-controls="navsec-customize"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3 6h9M15 6h2M3 14h3M9 14h8"/><circle cx="13" cy="6" r="2"/><circle cx="7" cy="14" r="2"/></svg><span>Customization</span></button>
+<div class="nav-section-body" id="navsec-customize"><ul>
+<li><a href="themes.html">Themes</a></li>
+<li><a href="theme-editor.html">The theme editor</a></li>
+<li><a href="editor-appearance.html">Fonts and editor appearance</a></li>
+<li><a href="keyboard-customization.html">Customizing keyboard shortcuts</a></li>
+<li><a href="user-tools.html">User tools</a></li>
+<li><a href="localization.html">Localization</a></li>
+<li><a href="settings-files.html">Settings and configuration files</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="reference" aria-expanded="true" aria-controls="navsec-reference"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M7 5.5h10M7 10h10M7 14.5h10M3.5 5.5h.01M3.5 10h.01M3.5 14.5h.01"/></svg><span>Reference</span></button>
+<div class="nav-section-body" id="navsec-reference"><ul>
+<li><a href="keyboard-shortcuts.html">Keyboard shortcuts</a></li>
+<li><a href="menu-reference.html" aria-current="page">Menu reference</a></li>
+<li><a href="command-reference.html">Command reference</a></li>
+<li><a href="configuration-reference.html">Configuration reference</a></li>
+<li><a href="dialog-reference.html">Dialog reference</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="tutorial" aria-expanded="false" aria-controls="navsec-tutorial"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3l8 4-8 4-8-4z"/><path d="M5 9v4.2c0 1.3 2.2 2.3 5 2.3s5-1 5-2.3V9"/></svg><span>Tutorial</span></button>
+<div class="nav-section-body" id="navsec-tutorial"><ul>
+<li><a href="tutorial.html">Tutorial</a></li>
+<li><a href="lesson-01.html">Lesson 1 — Opening Tiko</a></li>
+<li><a href="lesson-02.html">Lesson 2 — Creating your first file</a></li>
+<li><a href="lesson-03.html">Lesson 3 — Editing text</a></li>
+<li><a href="lesson-04.html">Lesson 4 — Searching</a></li>
+<li><a href="lesson-05.html">Lesson 5 — Projects</a></li>
+<li><a href="lesson-06.html">Lesson 6 — Building a program</a></li>
+<li><a href="lesson-07.html">Lesson 7 — Debugging</a></li>
+<li><a href="lesson-08.html">Lesson 8 — Customization</a></li>
+<li><a href="lesson-09.html">Lesson 9 — Productivity shortcuts</a></li>
+<li><a href="lesson-10.html">Lesson 10 — Advanced editing</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="appendix" aria-expanded="false" aria-controls="navsec-appendix"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M8 7.8a2.1 2.1 0 113 1.9c-.6.4-1 .8-1 1.6M10 14.4v.1"/></svg><span>Help and Reference</span></button>
+<div class="nav-section-body" id="navsec-appendix"><ul>
+<li><a href="faq.html">Frequently asked questions</a></li>
+<li><a href="tips-and-tricks.html">Tips and tricks</a></li>
+<li><a href="troubleshooting.html">Troubleshooting</a></li>
+<li><a href="glossary.html">Glossary</a></li>
+<li><a href="doc-index.html">Index</a></li>
+</ul></div></li>
+</ul></nav>
+  </aside>
+
+  <div class="main-col">
+    <main class="content" id="content">
+<nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="index.html">Home</a></li><li><a href="keyboard-shortcuts.html">Reference</a></li><li><span aria-current="page">Menu reference</span></li></ol></nav>
+      <h1>Menu reference</h1>
+<p class="page-summary">Every menu and every command it holds, with shortcuts, descriptions and the submenus that rebuild themselves.</p>
+<p>Every command on every menu, with its keyboard shortcut and a description. Commands whose names end in an ellipsis open a dialog.</p><h2 id="file-menu">File menu</h2><p>Document lifecycle — creating, opening, saving and closing — plus the settings dialogs, user tools and Exit.</p><div class="table-wrap"><table><thead><tr><th>Command</th><th>Shortcut</th><th>Description</th></tr></thead><tbody><tr><td>New</td><td><kbd>Ctrl</kbd> + <kbd>N</kbd></td><td>Create a new, empty document.</td></tr><tr><td>Open…</td><td><kbd>Ctrl</kbd> + <kbd>O</kbd></td><td>Open one or more existing files.</td></tr><tr><td>Open File As Template…</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Open a file's contents as a new untitled document, leaving the original untouched.</td></tr><tr><td>Close</td><td><kbd>Ctrl</kbd> + <kbd>W</kbd></td><td>Close the active document. It stays in the project.</td></tr><tr><td>Close All</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>W</kbd></td><td>Close every open document.</td></tr><tr><td>Save</td><td><kbd>Ctrl</kbd> + <kbd>S</kbd></td><td>Save the active document. Prompts for a name if it has never been saved.</td></tr><tr><td>Save As…</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Save under a new name and continue editing the new file.</td></tr><tr><td>Save All</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd></td><td>Save every modified document.</td></tr><tr><td>Rename…</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Rename the file on disk and update the project.</td></tr><tr><td>Duplicate</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Create a copy of the file and add it to the project.</td></tr><tr><td>Options…</td><td><kbd>Ctrl</kbd> + <kbd>,</kbd></td><td>Open the main options dialog.</td></tr><tr><td>Themes…</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd></td><td>Choose and edit colour themes.</td></tr><tr><td>Keyboard Shortcuts…</td><td><kbd>Ctrl</kbd> + <kbd>K</kbd></td><td>Remap any command.</td></tr><tr><td>Build Configurations…</td><td><kbd>F7</kbd></td><td>Manage named sets of compiler switches.</td></tr><tr><td>User Tools…</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Define external programs to run from the menu.</td></tr><tr><td>Exit</td><td><kbd>Alt</kbd> + <kbd>F4</kbd></td><td>Close Tiko, prompting to save modified documents.</td></tr></tbody></table></div><h2 id="edit-menu">Edit menu</h2><p>Undo and redo, the clipboard, line operations, commenting, selection and the Format submenu.</p><div class="table-wrap"><table><thead><tr><th>Command</th><th>Shortcut</th><th>Description</th></tr></thead><tbody><tr><td>Undo</td><td><kbd>Ctrl</kbd> + <kbd>Z</kbd></td><td>Undo the last change.</td></tr><tr><td>Redo</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd></td><td>Reapply an undone change.</td></tr><tr><td>Cut</td><td><kbd>Ctrl</kbd> + <kbd>X</kbd></td><td>Cut the selection, or the whole line if nothing is selected.</td></tr><tr><td>Copy</td><td><kbd>Ctrl</kbd> + <kbd>C</kbd></td><td>Copy the selection, or the whole line if nothing is selected.</td></tr><tr><td>Paste</td><td><kbd>Ctrl</kbd> + <kbd>V</kbd></td><td>Paste the clipboard as plain text.</td></tr><tr><td>Delete Line</td><td><kbd>Ctrl</kbd> + <kbd>Y</kbd></td><td>Delete the current line.</td></tr><tr><td>Duplicate Line</td><td><kbd>Ctrl</kbd> + <kbd>D</kbd></td><td>Insert a copy of the current line below it.</td></tr><tr><td>Move Line Up</td><td><kbd>Alt</kbd> + <kbd>Up</kbd></td><td>Swap the current line or selection with the line above.</td></tr><tr><td>Move Line Down</td><td><kbd>Alt</kbd> + <kbd>Down</kbd></td><td>Swap the current line or selection with the line below.</td></tr><tr><td>Comment Block</td><td><kbd>Ctrl</kbd> + <kbd>/</kbd></td><td>Comment out the selected lines.</td></tr><tr><td>UnComment Block</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>/</kbd></td><td>Remove comment marks from the selected lines.</td></tr><tr><td>Select Line</td><td><kbd>Ctrl</kbd> + <kbd>L</kbd></td><td>Select the whole current line.</td></tr><tr><td>Select All</td><td><kbd>Ctrl</kbd> + <kbd>A</kbd></td><td>Select the entire document.</td></tr><tr><td>Indent Block</td><td><kbd>Tab</kbd></td><td>Indent every line of a multi-line selection.</td></tr><tr><td>UnIndent Block</td><td><kbd>Shift</kbd> + <kbd>Tab</kbd></td><td>Remove one indent level from every selected line.</td></tr><tr><td>Insert File</td><td><kbd>Ctrl</kbd> + <kbd>I</kbd></td><td>Insert another file's contents at the caret.</td></tr><tr><td>Uppercase</td><td><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>U</kbd></td><td>Convert the selection to upper case.</td></tr><tr><td>Lowercase</td><td><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>L</kbd></td><td>Convert the selection to lower case.</td></tr><tr><td>Mixed case</td><td><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>X</kbd></td><td>Convert the selection to mixed case.</td></tr><tr><td>New Line Below</td><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td><td>Open a new line below the current one from anywhere on it.</td></tr><tr><td>Focus Editor</td><td><kbd>Ctrl</kbd> + <kbd>`</kbd></td><td>Return keyboard focus to the editing window.</td></tr><tr><td>Format Document</td><td><kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>F</kbd></td><td>Reformat the whole active file.</td></tr><tr><td>Format Selection</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Reformat only the selected lines.</td></tr><tr><td>Format All Open Documents</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Reformat every open document.</td></tr><tr><td>Format Project…</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Reformat every file in the workspace.</td></tr><tr><td>Format Options…</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Configure the formatter, with a live preview.</td></tr></tbody></table></div><h2 id="search-menu">Search menu</h2><p>Finding text, jumping to definitions and symbols, navigation history, procedure navigation and bookmarks.</p><div class="table-wrap"><table><thead><tr><th>Command</th><th>Shortcut</th><th>Description</th></tr></thead><tbody><tr><td>Search Symbol…</td><td><kbd>Ctrl</kbd> + <kbd>P</kbd></td><td>Filter every symbol in the project and jump to one.</td></tr><tr><td>Find…</td><td><kbd>Ctrl</kbd> + <kbd>F</kbd></td><td>Search within the active document.</td></tr><tr><td>Find Next</td><td><kbd>F3</kbd></td><td>Repeat the last search forwards.</td></tr><tr><td>Find Previous</td><td><kbd>Shift</kbd> + <kbd>F3</kbd></td><td>Repeat the last search backwards.</td></tr><tr><td>Find in Project…</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd></td><td>Search every file in the workspace.</td></tr><tr><td>Replace…</td><td><kbd>Ctrl</kbd> + <kbd>H</kbd></td><td>Find and replace within the active document.</td></tr><tr><td>Goto Definition</td><td><kbd>F12</kbd></td><td>Jump to where the symbol under the caret is defined.</td></tr><tr><td>Go Back</td><td><kbd>Alt</kbd> + <kbd>Left</kbd></td><td>Return to the previous position in the navigation history.</td></tr><tr><td>Go Forward</td><td><kbd>Alt</kbd> + <kbd>Right</kbd></td><td>Move forward again in the navigation history.</td></tr><tr><td>Next Function</td><td><kbd>Ctrl</kbd> + <kbd>PgDn</kbd></td><td>Jump to the next procedure in the file.</td></tr><tr><td>Previous Function</td><td><kbd>Ctrl</kbd> + <kbd>PgUp</kbd></td><td>Jump to the previous procedure.</td></tr><tr><td>Toggle Bookmark</td><td><kbd>Ctrl</kbd> + <kbd>F2</kbd></td><td>Set or clear a bookmark on the current line.</td></tr><tr><td>Next Bookmark</td><td><kbd>F2</kbd></td><td>Jump to the next bookmark.</td></tr><tr><td>Previous Bookmark</td><td><kbd>Shift</kbd> + <kbd>F2</kbd></td><td>Jump to the previous bookmark.</td></tr><tr><td>Clear Bookmarks</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F2</kbd></td><td>Remove every bookmark.</td></tr><tr><td>Goto Header File</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>H</kbd></td><td>Switch to the matching header file.</td></tr><tr><td>Goto Code File</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd></td><td>Switch to the matching source file.</td></tr><tr><td>Goto Main File</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd></td><td>Switch to the project's main module.</td></tr><tr><td>Goto Resource File</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd></td><td>Switch to the project's resource script.</td></tr><tr><td>Next Tab</td><td><kbd>Ctrl</kbd> + <kbd>Tab</kbd></td><td>Activate the next open document.</td></tr><tr><td>Previous Tab</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Tab</kbd></td><td>Activate the previous open document.</td></tr></tbody></table></div><h2 id="view-menu">View menu</h2><p>What is visible and how it is displayed: panels, zoom, editor splitting, folding and window layout.</p><div class="table-wrap"><table><thead><tr><th>Command</th><th>Shortcut</th><th>Description</th></tr></thead><tbody><tr><td>View Side Panel</td><td><kbd>Ctrl</kbd> + <kbd>B</kbd></td><td>Show or hide the side panel and its icon strip.</td></tr><tr><td>View Explorer Window</td><td><kbd>Ctrl</kbd> + <kbd>F4</kbd></td><td>Show the project Explorer.</td></tr><tr><td>View Output Window</td><td><kbd>Ctrl</kbd> + <kbd>F9</kbd></td><td>Show or hide the Output panel.</td></tr><tr><td>View Function List</td><td><kbd>F4</kbd></td><td>Show the function list for the active document.</td></tr><tr><td>View Bookmarks List</td><td><kbd>Shift</kbd> + <kbd>F4</kbd></td><td>Show every bookmark in the side panel.</td></tr><tr><td>Zoom In</td><td><kbd>Ctrl</kbd> + <kbd></kbd> + <kbd></kbd></td><td>Increase the displayed text size.</td></tr><tr><td>Zoom Out</td><td><kbd>Ctrl</kbd> + <kbd>-</kbd></td><td>Decrease the displayed text size.</td></tr><tr><td>Zoom Reset</td><td><kbd>Ctrl</kbd> + <kbd>0</kbd></td><td>Return to the configured font size.</td></tr><tr><td>Toggle Split Editor Left/Right</td><td><kbd>Ctrl</kbd> + <kbd>\</kbd></td><td>Split the editor into two side-by-side views of the same file.</td></tr><tr><td>Toggle Split Editor Top/Bottom</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>\</kbd></td><td>Split the editor horizontally.</td></tr><tr><td>Toggle Current Fold Point</td><td><kbd>F8</kbd></td><td>Collapse or expand the block at the caret.</td></tr><tr><td>Toggle Current And All Below</td><td><kbd>Ctrl</kbd> + <kbd>F8</kbd></td><td>Fold the current block and everything in it.</td></tr><tr><td>Fold All</td><td><kbd>Shift</kbd> + <kbd>F8</kbd></td><td>Collapse every block in the document.</td></tr><tr><td>Unfold All</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F8</kbd></td><td>Expand every block.</td></tr><tr><td>Move Explorer Window</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Dock the side panel on the other side.</td></tr><tr><td>Restore Main Window Size</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Return the main window to its default size.</td></tr><tr><td>Notes</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Show the workspace notes tab.</td></tr><tr><td>TODO</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Show the collected TODO comments.</td></tr><tr><td>Explorer: Expand All</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Expand every node in the Explorer.</td></tr><tr><td>Explorer: Collapse All</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Collapse every node in the Explorer.</td></tr><tr><td>Functions: Expand All</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Expand every node in the function list.</td></tr><tr><td>Functions: Collapse All</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Collapse every node in the function list.</td></tr><tr><td>Bookmarks: Expand All</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Expand every node in the bookmarks list.</td></tr><tr><td>Bookmarks: Collapse All</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Collapse every node in the bookmarks list.</td></tr><tr><td>Close Side Panel</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Close the side panel.</td></tr></tbody></table></div><h2 id="project-menu">Project menu</h2><p>Creating, opening, saving and closing projects, and adding files to them.</p><div class="table-wrap"><table><thead><tr><th>Command</th><th>Shortcut</th><th>Description</th></tr></thead><tbody><tr><td>New Project…</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Close the workspace and start a fresh untitled one.</td></tr><tr><td>Open Project…</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Open a saved project file.</td></tr><tr><td>Close Project</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Close the workspace and its files.</td></tr><tr><td>Save Project</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Write the project file.</td></tr><tr><td>Save Project As…</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Save the project under a new name — also how an untitled workspace is named.</td></tr><tr><td>Add Files to Project…</td><td><kbd>Ctrl</kbd> + <kbd>F11</kbd></td><td>Add existing files to the workspace.</td></tr><tr><td>Project Options…</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Edit this project's options.</td></tr></tbody></table></div><h2 id="compile-menu">Compile menu</h2><p>Every way of building and running your program.</p><div class="table-wrap"><table><thead><tr><th>Command</th><th>Shortcut</th><th>Description</th></tr></thead><tbody><tr><td>Build And Execute</td><td><kbd>F5</kbd></td><td>Compile, then run if the compile succeeded.</td></tr><tr><td>Compile</td><td><kbd>Ctrl</kbd> + <kbd>F5</kbd></td><td>Compile without running.</td></tr><tr><td>Rebuild All</td><td><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>F5</kbd></td><td>Rebuild everything from scratch.</td></tr><tr><td>Compile Module</td><td><kbd>Ctrl</kbd> + <kbd>F7</kbd></td><td>Compile only the current module.</td></tr><tr><td>Quick Run</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F5</kbd></td><td>Compile and run the current file alone, ignoring the project.</td></tr><tr><td>Run Executable</td><td><kbd>Shift</kbd> + <kbd>F5</kbd></td><td>Run the last successful build without recompiling.</td></tr><tr><td>Command Line…</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Show the compiler command line Tiko will use.</td></tr></tbody></table></div><h2 id="debug-menu">Debug menu</h2><p>Starting and controlling a debugging session, stepping, and breakpoints.</p><div class="table-wrap"><table><thead><tr><th>Command</th><th>Shortcut</th><th>Description</th></tr></thead><tbody><tr><td>Start / Continue Debugging</td><td><kbd>F6</kbd></td><td>Start a debugging session, or resume a stopped one.</td></tr><tr><td>Break</td><td><kbd>Ctrl</kbd> + <kbd>F6</kbd></td><td>Interrupt the running program at the next source line.</td></tr><tr><td>Stop Debugging</td><td><kbd>Shift</kbd> + <kbd>F6</kbd></td><td>End the session and terminate the program.</td></tr><tr><td>Step</td><td><kbd>F11</kbd></td><td>Execute one line, entering any procedure it calls.</td></tr><tr><td>Step Over</td><td><kbd>F10</kbd></td><td>Execute one line without stopping inside calls.</td></tr><tr><td>Step Out</td><td><kbd>Shift</kbd> + <kbd>F11</kbd></td><td>Run until the current procedure returns.</td></tr><tr><td>Run to Cursor</td><td><kbd>Ctrl</kbd> + <kbd>F10</kbd></td><td>Resume and stop at the line holding the caret.</td></tr><tr><td>Toggle Breakpoint</td><td><kbd>F9</kbd></td><td>Set or clear a breakpoint on the current line.</td></tr><tr><td>Delete All Breakpoints</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F9</kbd></td><td>Remove every breakpoint.</td></tr><tr><td>Unused Symbols…</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Report declared symbols the parser found no use of.</td></tr></tbody></table></div><h2 id="help-menu">Help menu</h2><p>The Help Center and version information.</p><div class="table-wrap"><table><thead><tr><th>Command</th><th>Shortcut</th><th>Description</th></tr></thead><tbody><tr><td>Help Center</td><td><kbd>F1</kbd></td><td>Open the Help Center, searching for the selection or the word under the caret.</td></tr><tr><td>About</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Show version, credits and licence information.</td></tr></tbody></table></div><h3 id="submenus">Submenus</h3><div class="table-wrap"><table><thead><tr><th>Submenu</th><th>On</th><th>Contains</th></tr></thead><tbody><tr><td>Open Recent</td><td>File</td><td>The ten most recently opened files, then <strong>Clear this list</strong>.</td></tr><tr><td>Settings</td><td>File</td><td>Options…, Themes…, Build Configurations…, Keyboard Shortcuts…</td></tr><tr><td>User Tools</td><td>File</td><td>Your defined external tools, then <strong>User Tools…</strong> to manage them.</td></tr><tr><td>Format</td><td>Edit</td><td>Format Document, Format Selection, Format All Open Documents, Format Project…, Format Options…</td></tr><tr><td>Recent Projects</td><td>Project</td><td>The ten most recently opened projects, then <strong>Clear this list</strong>.</td></tr></tbody></table></div><h2 id="commands-with-no-menu-item">Commands with no menu item</h2><p>Some commands are reachable only by keyboard shortcut. They still appear in the Keyboard Shortcuts dialog and can be rebound.</p><div class="table-wrap"><table><thead><tr><th>Command</th><th>Shortcut</th><th>Description</th></tr></thead><tbody><tr><td>Indent Block</td><td><kbd>Tab</kbd></td><td>Indent every line of a multi-line selection.</td></tr><tr><td>UnIndent Block</td><td><kbd>Shift</kbd> + <kbd>Tab</kbd></td><td>Remove one indent level from every selected line.</td></tr><tr><td>Insert File</td><td><kbd>Ctrl</kbd> + <kbd>I</kbd></td><td>Insert another file's contents at the caret.</td></tr><tr><td>Uppercase</td><td><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>U</kbd></td><td>Convert the selection to upper case.</td></tr><tr><td>Lowercase</td><td><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>L</kbd></td><td>Convert the selection to lower case.</td></tr><tr><td>Mixed case</td><td><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>X</kbd></td><td>Convert the selection to mixed case.</td></tr><tr><td>New Line Below</td><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td><td>Open a new line below the current one from anywhere on it.</td></tr><tr><td>Focus Editor</td><td><kbd>Ctrl</kbd> + <kbd>`</kbd></td><td>Return keyboard focus to the editing window.</td></tr><tr><td>Goto Header File</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>H</kbd></td><td>Switch to the matching header file.</td></tr><tr><td>Goto Code File</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd></td><td>Switch to the matching source file.</td></tr><tr><td>Goto Main File</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd></td><td>Switch to the project's main module.</td></tr><tr><td>Goto Resource File</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd></td><td>Switch to the project's resource script.</td></tr><tr><td>Next Tab</td><td><kbd>Ctrl</kbd> + <kbd>Tab</kbd></td><td>Activate the next open document.</td></tr><tr><td>Previous Tab</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Tab</kbd></td><td>Activate the previous open document.</td></tr><tr><td>Explorer: Expand All</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Expand every node in the Explorer.</td></tr><tr><td>Explorer: Collapse All</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Collapse every node in the Explorer.</td></tr><tr><td>Functions: Expand All</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Expand every node in the function list.</td></tr><tr><td>Functions: Collapse All</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Collapse every node in the function list.</td></tr><tr><td>Bookmarks: Expand All</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Expand every node in the bookmarks list.</td></tr><tr><td>Bookmarks: Collapse All</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Collapse every node in the bookmarks list.</td></tr><tr><td>Close Side Panel</td><td><span style="color:var(--c-text-mute)">—</span></td><td>Close the side panel.</td></tr></tbody></table></div><h2 id="related-topics">Related topics</h2><ul>
+  <li><a href="command-reference.html">Command reference</a> — the same commands with their identifiers.</li>
+  <li><a href="keyboard-shortcuts.html">Keyboard shortcuts</a></li>
+  <li><a href="menu-bar.html">Menu bar</a></li>
+</ul>
+<nav class="pager" aria-label="Page navigation"><a class="prev" href="keyboard-shortcuts.html" rel="prev"><span class="dir">← Previous</span><span class="ttl">Keyboard shortcuts</span></a><a class="next" href="command-reference.html" rel="next"><span class="dir">Next →</span><span class="ttl">Command reference</span></a></nav>
+      <footer class="site-footer">
+        <span>Tiko Editor documentation</span>
+        <span>·</span>
+        <a href="index.html">Home</a>
+        <a href="doc-index.html">Index</a>
+        <a href="glossary.html">Glossary</a>
+        <a href="faq.html">FAQ</a>
+      </footer>
+    </main>
+
+    <aside class="toc" id="page-toc" aria-label="On this page"></aside>
+  </div>
+</div>
+
+<button class="back-to-top" id="back-to-top" type="button" aria-label="Back to top" title="Back to top"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 16V5M5 10l5-5 5 5"/></svg></button>
+
+<div class="search-overlay" id="search-overlay" role="dialog" aria-modal="true" aria-label="Search documentation">
+  <div class="search-panel">
+    <div class="search-inputrow">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="6"/><path d="M13.5 13.5L17 17"/></svg>
+      <input type="search" id="search-input" placeholder="Search the documentation…" autocomplete="off" spellcheck="false" aria-label="Search query">
+      <button class="icon-btn" id="search-close" type="button" aria-label="Close search"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button>
+    </div>
+    <ul class="search-results" id="search-results"></ul>
+    <div class="search-foot">
+      <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+      <span><kbd>Enter</kbd> open</span>
+      <span><kbd>Esc</kbd> close</span>
+    </div>
+  </div>
+</div>
+
+<script src="assets/search-index.js"></script>
+<script src="assets/script.js"></script>
+</body>
+</html>

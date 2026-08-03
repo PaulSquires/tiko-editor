@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base="">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Choose a theme and font, enable the display aids you like, and remap a keyboard shortcut.">
+<meta name="generator" content="Tiko Help build.py">
+<title>Lesson 8 — Customization — Tiko Editor Help</title>
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231f6feb'/><text x='16' y='22' font-family='monospace' font-size='16' font-weight='bold' fill='white' text-anchor='middle'>tk</text></svg>">
+<script>(function(){try{var t=localStorage.getItem('tiko-help-theme');
+if(!t)t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip-link" href="#content">Skip to main content</a>
+
+<header class="site-header">
+  <button class="icon-btn" id="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg></button>
+  <a class="brand" href="index.html">
+    <span class="brand-mark" aria-hidden="true">tk</span>
+    <span>Tiko Editor</span>
+    <span class="brand-sub">Documentation</span>
+  </a>
+  <span class="header-spacer"></span>
+  <button class="search-launcher" id="search-launcher" type="button" aria-label="Search documentation">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="6"/><path d="M13.5 13.5L17 17"/></svg><span class="sl-label">Search docs</span><kbd>Ctrl K</kbd>
+  </button>
+  <button class="icon-btn" id="theme-toggle" type="button" aria-label="Switch theme" title="Switch theme"><svg class="icon-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="3.6"/><path d="M10 1.5v2M10 16.5v2M18.5 10h-2M3.5 10h-2M15.9 4.1l-1.4 1.4M5.5 14.5l-1.4 1.4M15.9 15.9l-1.4-1.4M5.5 5.5L4.1 4.1"/></svg><svg class="icon-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 12.4A7 7 0 017.6 3.5a7 7 0 108.9 8.9z"/></svg></button>
+</header>
+
+<div class="nav-scrim" id="nav-scrim"></div>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+<nav class="nav-tree" aria-label="Documentation sections">
+<ul>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="welcome" aria-expanded="false" aria-controls="navsec-welcome"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5L10 3l7 5.5V16a1 1 0 01-1 1h-3.5v-5h-5v5H4a1 1 0 01-1-1z"/></svg><span>Welcome</span></button>
+<div class="nav-section-body" id="navsec-welcome"><ul>
+<li><a href="index.html">Tiko Editor Documentation</a></li>
+<li><a href="what-is-tiko.html">What is Tiko?</a></li>
+<li><a href="quick-start.html">Quick Start</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="ui" aria-expanded="false" aria-controls="navsec-ui"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="2"/><path d="M2.5 7.5h15M6.5 3.5v4"/></svg><span>User Interface</span></button>
+<div class="nav-section-body" id="navsec-ui"><ul>
+<li><a href="main-window.html">The main window</a></li>
+<li><a href="menu-bar.html">Menu bar</a></li>
+<li><a href="toolbar.html">Toolbar and icon strip</a></li>
+<li><a href="side-panels.html">Side panels</a></li>
+<li><a href="output-panel.html">Output panel</a></li>
+<li><a href="tabs-and-splits.html">Tabs and split views</a></li>
+<li><a href="status-bar.html">Status bar</a></li>
+<li><a href="context-menus.html">Context menus</a></li>
+<li><a href="dialogs.html">Dialog boxes</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="editing" aria-expanded="false" aria-controls="navsec-editing"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.2 3.3l3.5 3.5L7.5 16H4v-3.5z"/><path d="M11.5 5l3.5 3.5"/></svg><span>Editing Text</span></button>
+<div class="nav-section-body" id="navsec-editing"><ul>
+<li><a href="editing-basics.html">Editing basics</a></li>
+<li><a href="multiple-selections.html">Multiple selections and column mode</a></li>
+<li><a href="indentation.html">Indentation</a></li>
+<li><a href="encoding.html">Encoding and line endings</a></li>
+<li><a href="view-options.html">Display and view options</a></li>
+<li><a href="code-folding.html">Code folding</a></li>
+<li><a href="bookmarks.html">Bookmarks</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="searching" aria-expanded="false" aria-controls="navsec-searching"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M12.7 12.7L17 17"/></svg><span>Searching</span></button>
+<div class="nav-section-body" id="navsec-searching"><ul>
+<li><a href="find-replace.html">Find and Replace</a></li>
+<li><a href="find-in-project.html">Find in Project</a></li>
+<li><a href="regular-expressions.html">Regular expressions</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="navigation" aria-expanded="false" aria-controls="navsec-navigation"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M13.2 6.8l-1.7 4.7-4.7 1.7 1.7-4.7z"/></svg><span>Navigation</span></button>
+<div class="nav-section-body" id="navsec-navigation"><ul>
+<li><a href="navigation.html">Navigation</a></li>
+<li><a href="symbol-navigation.html">Symbols and the function list</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="productivity" aria-expanded="false" aria-controls="navsec-productivity"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M11 2.5L4.5 11H9l-.5 6.5L15.5 9H11z"/></svg><span>Editing Productivity</span></button>
+<div class="nav-section-body" id="navsec-productivity"><ul>
+<li><a href="autocomplete.html">Autocomplete and code tips</a></li>
+<li><a href="line-operations.html">Line and block operations</a></li>
+<li><a href="syntax-highlighting.html">Syntax highlighting</a></li>
+<li><a href="brace-matching.html">Brace matching and occurrence highlighting</a></li>
+<li><a href="code-formatting.html">Code formatting</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="projects" aria-expanded="false" aria-controls="navsec-projects"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 5.5A1.5 1.5 0 014 4h3.6l1.5 2H16a1.5 1.5 0 011.5 1.5v7A1.5 1.5 0 0116 16H4a1.5 1.5 0 01-1.5-1.5z"/></svg><span>Projects</span></button>
+<div class="nav-section-body" id="navsec-projects"><ul>
+<li><a href="projects-overview.html">Projects and workspaces</a></li>
+<li><a href="project-explorer.html">Project Explorer</a></li>
+<li><a href="project-files.html">Adding and removing files</a></li>
+<li><a href="project-options.html">Project options</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="building" aria-expanded="false" aria-controls="navsec-building"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.8 2.8a4 4 0 00-5 5L3 12.6V17h4.4l4.8-4.8a4 4 0 005-5L14.5 9.5 11 9l-.5-3.5z"/></svg><span>Building Programs</span></button>
+<div class="nav-section-body" id="navsec-building"><ul>
+<li><a href="compiler-setup.html">Compiler setup</a></li>
+<li><a href="building.html">Building and running</a></li>
+<li><a href="build-configurations.html">Build configurations</a></li>
+<li><a href="compiler-errors.html">Compiler errors and warnings</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="debugging" aria-expanded="false" aria-controls="navsec-debugging"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="6" y="6.5" width="8" height="9" rx="4"/><path d="M6 10H2.5M17.5 10H14M6.5 13.5l-3 2M13.5 13.5l3 2M6.5 7l-3-2M13.5 7l3-2M8 5.5a2 2 0 014 0"/></svg><span>Debugging</span></button>
+<div class="nav-section-body" id="navsec-debugging"><ul>
+<li><a href="debugging.html">Debugging</a></li>
+<li><a href="breakpoints.html">Breakpoints</a></li>
+<li><a href="watches.html">Watches and the call stack</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="customize" aria-expanded="false" aria-controls="navsec-customize"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3 6h9M15 6h2M3 14h3M9 14h8"/><circle cx="13" cy="6" r="2"/><circle cx="7" cy="14" r="2"/></svg><span>Customization</span></button>
+<div class="nav-section-body" id="navsec-customize"><ul>
+<li><a href="themes.html">Themes</a></li>
+<li><a href="theme-editor.html">The theme editor</a></li>
+<li><a href="editor-appearance.html">Fonts and editor appearance</a></li>
+<li><a href="keyboard-customization.html">Customizing keyboard shortcuts</a></li>
+<li><a href="user-tools.html">User tools</a></li>
+<li><a href="localization.html">Localization</a></li>
+<li><a href="settings-files.html">Settings and configuration files</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="reference" aria-expanded="false" aria-controls="navsec-reference"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M7 5.5h10M7 10h10M7 14.5h10M3.5 5.5h.01M3.5 10h.01M3.5 14.5h.01"/></svg><span>Reference</span></button>
+<div class="nav-section-body" id="navsec-reference"><ul>
+<li><a href="keyboard-shortcuts.html">Keyboard shortcuts</a></li>
+<li><a href="menu-reference.html">Menu reference</a></li>
+<li><a href="command-reference.html">Command reference</a></li>
+<li><a href="configuration-reference.html">Configuration reference</a></li>
+<li><a href="dialog-reference.html">Dialog reference</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="tutorial" aria-expanded="true" aria-controls="navsec-tutorial"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3l8 4-8 4-8-4z"/><path d="M5 9v4.2c0 1.3 2.2 2.3 5 2.3s5-1 5-2.3V9"/></svg><span>Tutorial</span></button>
+<div class="nav-section-body" id="navsec-tutorial"><ul>
+<li><a href="tutorial.html">Tutorial</a></li>
+<li><a href="lesson-01.html">Lesson 1 — Opening Tiko</a></li>
+<li><a href="lesson-02.html">Lesson 2 — Creating your first file</a></li>
+<li><a href="lesson-03.html">Lesson 3 — Editing text</a></li>
+<li><a href="lesson-04.html">Lesson 4 — Searching</a></li>
+<li><a href="lesson-05.html">Lesson 5 — Projects</a></li>
+<li><a href="lesson-06.html">Lesson 6 — Building a program</a></li>
+<li><a href="lesson-07.html">Lesson 7 — Debugging</a></li>
+<li><a href="lesson-08.html" aria-current="page">Lesson 8 — Customization</a></li>
+<li><a href="lesson-09.html">Lesson 9 — Productivity shortcuts</a></li>
+<li><a href="lesson-10.html">Lesson 10 — Advanced editing</a></li>
+</ul></div></li>
+<li class="nav-section">
+<button class="nav-section-btn" type="button" data-section="appendix" aria-expanded="false" aria-controls="navsec-appendix"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M8 7.8a2.1 2.1 0 113 1.9c-.6.4-1 .8-1 1.6M10 14.4v.1"/></svg><span>Help and Reference</span></button>
+<div class="nav-section-body" id="navsec-appendix"><ul>
+<li><a href="faq.html">Frequently asked questions</a></li>
+<li><a href="tips-and-tricks.html">Tips and tricks</a></li>
+<li><a href="troubleshooting.html">Troubleshooting</a></li>
+<li><a href="glossary.html">Glossary</a></li>
+<li><a href="doc-index.html">Index</a></li>
+</ul></div></li>
+</ul></nav>
+  </aside>
+
+  <div class="main-col">
+    <main class="content" id="content">
+<nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="index.html">Home</a></li><li><a href="tutorial.html">Tutorial</a></li><li><span aria-current="page">Lesson 8 — Customization</span></li></ol></nav>
+      <h1>Lesson 8 — Customization</h1>
+<p class="page-summary">Choose a theme and font, enable the display aids you like, and remap a keyboard shortcut.</p>
+<div class="lesson-meta"><span class="lm-item"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><circle cx="10" cy="10" r="3.6"/><circle cx="10" cy="10" r=".8" fill="currentColor"/></svg><span><strong>Goal:</strong> Choose a theme and font, enable the display aids you like, and remap a keyboard shortcut.</span></span><span class="lm-item"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 5.8V10l2.8 2"/></svg><span><strong>Time:</strong> 15 minutes</span></span><span class="lm-item"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5A1.5 1.5 0 014.5 3H9v14H4.5A1.5 1.5 0 013 15.5z"/><path d="M17 4.5A1.5 1.5 0 0015.5 3H11v14h4.5a1.5 1.5 0 001.5-1.5z"/></svg><span><strong>Before you start:</strong> Lessons 1–3. No compiler needed.</span></span></div><h2 id="what-you-will-learn">What you will learn</h2><ul>
+  <li>Switching themes and what a theme covers.</li>
+  <li>Setting the editor font, size and line spacing.</li>
+  <li>Why zoom and font size are different things.</li>
+  <li>Remapping and resetting a keyboard shortcut.</li>
+  <li>Which files hold your configuration.</li>
+</ul><h2 id="try-the-themes">Try the themes</h2><ol class="steps">
+  <li>Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd>, or choose <span class="ui path">File<span class="sep">›</span>Settings<span class="sep">›</span>Themes…</span>.</li>
+  <li>Try several themes — a dark one, a light one, a high-contrast one.</li>
+  <li>Settle on one you like and choose <strong>OK</strong>.</li>
+</ol><p>Notice that the whole application changed, not just the code area: the menus, panels, tabs and status bar all follow the theme.</p><h2 id="set-the-font">Set the font</h2><ol class="steps">
+  <li>Open <span class="ui path">File<span class="sep">›</span>Settings<span class="sep">›</span>Options…</span> and go to the font settings.</li>
+  <li>Change the size from 11 to 13. Choose <strong>OK</strong> and see the difference.</li>
+  <li>Try a different monospaced font if you have one installed.</li>
+  <li>Set <strong>extra line spacing</strong> to 3 and see how much easier dense code is to read.</li>
+</ol><div class="callout important"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M10 2.2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L2.2 7.9l5.4-.8z"/></svg><div class="callout-body"><span class="callout-title">Important</span><p>Use a <strong>monospaced</strong> font. Column selection, indent guides and the right-edge marker all assume every character is the same width.</p></div></div><h2 id="zoom-is-not-the-font-size">Zoom is not the font size</h2><ol class="steps">
+  <li>Press <kbd>Ctrl</kbd> + <kbd>+</kbd> three times, then <kbd>Ctrl</kbd> + <kbd>-</kbd> three times.</li>
+  <li>Press <kbd>Ctrl</kbd> + <kbd>0</kbd> to reset.</li>
+</ol><p>Zoom is temporary and per-session; the font setting is permanent. Use zoom when you want a quick overview or need to read something closely, and the font setting for how you work all day.</p><h2 id="turn-on-the-display-aids">Turn on the display aids</h2><p>Open the options dialog and enable these, then look at your code:</p><div class="table-wrap"><table><thead><tr><th class="col-key">Option</th><th>What you will see</th></tr></thead><tbody><tr><td class="col-key">Indent guides</td><td>Faint vertical lines at each indent level.</td></tr><tr><td class="col-key">Highlight current line</td><td>The caret's line tinted.</td></tr><tr><td class="col-key">Right edge</td><td>A vertical line at column 80.</td></tr><tr><td class="col-key">Brace highlight</td><td>Matching parentheses highlighted as you move past them.</td></tr><tr><td class="col-key">Occurrence highlight</td><td>Every other use of the word under the caret marked.</td></tr></tbody></table></div><p>Keep the ones that help and turn off the ones that distract. There is no wrong answer.</p><h2 id="remap-a-shortcut">Remap a shortcut</h2><ol class="steps">
+  <li>Press <kbd>Ctrl</kbd> + <kbd>K</kbd> to open the Keyboard Shortcuts dialog.</li>
+  <li>Type <code>duplicate</code> in the filter box to find Duplicate Line.</li>
+  <li>Select it and choose <strong>Modify</strong>.</li>
+  <li>Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd> in the capture field.</li>
+  <li>Choose <strong>OK</strong>, then <strong>OK</strong> again.</li>
+  <li>Test it in the editor. Then reopen the dialog, select the command and choose <strong>Reset</strong> to restore <kbd>Ctrl</kbd> + <kbd>D</kbd>.</li>
+</ol><div class="callout note"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 9v5M10 6.2v.1"/></svg><div class="callout-body"><span class="callout-title">Note</span><p>Try assigning a keystroke that is already in use — <kbd>Ctrl</kbd> + <kbd>S</kbd>, say. The dialog refuses it and tells you why, rather than silently taking it from the other command.</p></div></div><h2 id="see-where-it-is-all-stored">See where it is all stored</h2><ol class="steps">
+  <li>Close Tiko.</li>
+  <li>Open <code>settings\settings.ini</code> in Notepad and find <code>EditorFontsize</code> and <code>Theme</code>. Those are the changes you just made.</li>
+  <li>Open <code>settings\keybindings.ini</code>. If you left a remapping in place, it is the only thing in there — Tiko stores overrides, not defaults.</li>
+  <li>Close both without saving, and start Tiko again.</li>
+</ol><div class="callout tip"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 15h5M8 17.5h4M10 2.5a5 5 0 00-3 9v1.5h6V11.5a5 5 0 00-3-9z"/></svg><div class="callout-body"><span class="callout-title">Tip</span><p>Copy the <code>settings</code> folder to another machine and your entire setup goes with it — theme, shortcuts, preferences and all.</p></div></div><h2 id="expected-result">Expected result</h2><p>Tiko looks the way you want, you have remapped and reset a shortcut, and you know which files hold your configuration.</p><h2 id="common-mistakes">Common mistakes</h2><div class="table-wrap"><table><thead><tr><th>Symptom</th><th>Cause and fix</th></tr></thead><tbody><tr><td>Code no longer lines up after changing font.</td><td>You chose a proportional font. Pick a monospaced one.</td></tr><tr><td>A remapped shortcut does nothing.</td><td>You closed the dialog with Cancel, which discards every change. Use OK.</td></tr><tr><td>A keystroke was refused.</td><td>Another command already owns it. Choose a different one, or rebind the other command first.</td></tr><tr><td>Hand-edited settings.ini and the changes vanished.</td><td>Tiko rewrites the file when it exits. Close Tiko before editing it.</td></tr></tbody></table></div><h2 id="review">Review</h2><ul>
+  <li>Themes cover the whole application, not just the editor.</li>
+  <li>Zoom is temporary; the font setting is permanent.</li>
+  <li>Every command can be remapped, and conflicts are refused rather than silently resolved.</li>
+  <li>Everything is stored in the <code>settings</code> folder beside <code>tiko.exe</code>.</li>
+</ul><h2 id="practice">Practice</h2><ol class="steps">
+  <li>Try every bundled theme and keep the one you like best.</li>
+  <li>Give Format Document (currently <kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>F</kbd>) a shortcut you find easier, then reset it.</li>
+  <li>Back up your <code>settings</code> folder somewhere safe.</li>
+</ol><h2 id="whats-next">What's next?</h2><p>In <a href="lesson-09.html">Lesson 9</a> you learn the navigation and productivity features that make day-to-day work fast.</p>
+<nav class="pager" aria-label="Page navigation"><a class="prev" href="lesson-07.html" rel="prev"><span class="dir">← Previous</span><span class="ttl">Lesson 7 — Debugging</span></a><a class="next" href="lesson-09.html" rel="next"><span class="dir">Next →</span><span class="ttl">Lesson 9 — Productivity shortcuts</span></a></nav>
+      <footer class="site-footer">
+        <span>Tiko Editor documentation</span>
+        <span>·</span>
+        <a href="index.html">Home</a>
+        <a href="doc-index.html">Index</a>
+        <a href="glossary.html">Glossary</a>
+        <a href="faq.html">FAQ</a>
+      </footer>
+    </main>
+
+    <aside class="toc" id="page-toc" aria-label="On this page"></aside>
+  </div>
+</div>
+
+<button class="back-to-top" id="back-to-top" type="button" aria-label="Back to top" title="Back to top"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 16V5M5 10l5-5 5 5"/></svg></button>
+
+<div class="search-overlay" id="search-overlay" role="dialog" aria-modal="true" aria-label="Search documentation">
+  <div class="search-panel">
+    <div class="search-inputrow">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="6"/><path d="M13.5 13.5L17 17"/></svg>
+      <input type="search" id="search-input" placeholder="Search the documentation…" autocomplete="off" spellcheck="false" aria-label="Search query">
+      <button class="icon-btn" id="search-close" type="button" aria-label="Close search"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button>
+    </div>
+    <ul class="search-results" id="search-results"></ul>
+    <div class="search-foot">
+      <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+      <span><kbd>Enter</kbd> open</span>
+      <span><kbd>Esc</kbd> close</span>
+    </div>
+  </div>
+</div>
+
+<script src="assets/search-index.js"></script>
+<script src="assets/script.js"></script>
+</body>
+</html>
