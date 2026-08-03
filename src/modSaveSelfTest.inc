@@ -270,6 +270,51 @@ sub Save_RunSelfTest()
         gConfig.LoadConfigFile( true )     ' restore the real configuration
     end scope
 
+    ' ---- 11. a FAILED project open must not dismantle the current workspace ------------
+    ' ProjectLoadFromFile used to overwrite ProjectFilename and ProjectName, blank
+    ' ProjectNotes and run ProjectFolders_Clear() BEFORE opening the stream -- and its
+    ' "return false" left all of that in place. A .tiko that exists but cannot be opened
+    ' (held by another process, a share that dropped, permissions) destroyed the folder tree
+    ' of the workspace the user still had open, pointed the app at a project it had failed
+    ' to read, and left the WAIT cursor up because the restore at the end was never reached.
+    scope
+        dim as DWSTRING wszProj = wszDir & "\locked.tiko"
+        Doc_WriteToDisk( wszProj, "ProjectBuild=x", wszErr )
+
+        ' State the failed open must leave alone.
+        dim as DWSTRING wszKeepFile = gApp.ProjectFilename
+        dim as DWSTRING wszKeepName = gApp.ProjectName
+        ' CATINDEX_NORMAL, not 0: ProjectFolders_CatAllowsFolders refuses CATINDEX_FILES, so
+        ' adding there silently does nothing -- which made the count assertion below VACUOUS
+        ' (0 = 0) and left it green under the A/B. The precondition is asserted so it cannot
+        ' go quiet again.
+        ProjectFolders_Add( CATINDEX_NORMAL, "SentinelFolder" )
+        dim as long nFoldersBefore = ProjectFolders_Count()
+        SAVEASSERT( nFoldersBefore > 0, _
+            "precondition: the sentinel folder was not added, so the clear-check below tests nothing" )
+
+        dim as HANDLE hPLock = CreateFileW( wszProj, GENERIC_READ or GENERIC_WRITE, _
+                                            0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 )
+        if hPLock = INVALID_HANDLE_VALUE then
+            ? "  NOTE: could not lock a .tiko; the project-open assertions did NOT run."
+        else
+            dim as boolean bOpened = gConfig.ProjectLoadFromFile( wszProj )
+            CloseHandle( hPLock )
+
+            SAVEASSERT( bOpened = false, "an unopenable .tiko reported a successful open" )
+            SAVEASSERT( ProjectFolders_Count() = nFoldersBefore, _
+                "a FAILED project open CLEARED the folder tree of the workspace still open (" & _
+                ProjectFolders_Count() & " vs " & nFoldersBefore & ")" )
+            SAVEASSERT( gApp.ProjectFilename = wszKeepFile, _
+                "a FAILED project open overwrote ProjectFilename with [" & gApp.ProjectFilename & "]" )
+            SAVEASSERT( gApp.ProjectName = wszKeepName, _
+                "a FAILED project open overwrote ProjectName with [" & gApp.ProjectName & "]" )
+        end if
+
+        ProjectFolders_Clear()
+        AfxDeleteFile( wszProj )
+    end scope
+
     AfxDeleteFile( wszFile )
 
     sMsg = "TIKO_SAVE_SELFTEST: " & nPass & " passed, " & nFail & " failed."

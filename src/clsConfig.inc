@@ -1254,6 +1254,21 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
 
     if AfxFileExists(wszFile) = 0 then exit function
 
+    ' OPEN AND VALIDATE BEFORE TOUCHING ANY GLOBAL STATE.
+    '
+    ' This used to sit twenty lines further down, AFTER ProjectFilename and ProjectName had
+    ' been overwritten, ProjectNotes blanked and ProjectFolders_Clear() run -- and its
+    ' "return false" then left all of that in place. A .tiko that exists but cannot be
+    ' opened (held by another process, on a share that just dropped, permissions) therefore
+    ' destroyed the folder tree of the workspace the user still had open, pointed the app at
+    ' a project it had failed to read, and returned with the WAIT cursor still up because
+    ' the restore at the end was never reached.
+    '
+    ' Nothing below this line can fail in a way that leaves the previous workspace half
+    ' dismantled, because nothing below it is reachable unless the file is readable.
+    dim pStream as CTextStream  ' (utf16)
+    if pStream.OpenUnicode( wszFile ) <> S_OK then return false
+
     dim as HCURSOR hCurSave = GetCursor()
     SetCursor( LoadCursor(0, IDC_WAIT) )
 
@@ -1265,9 +1280,6 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     ' this the previous project's folders would survive into this one and be written back out
     ' to its .tiko on the next save.
     ProjectFolders_Clear()
-
-    dim pStream as CTextStream  ' (utf16)
-    if pStream.OpenUnicode(gApp.ProjectFilename) <> S_OK then return false
 
     ' Variable length array to hold sequence of all project files
     dim docData(any) as PROJECT_FILELOAD_DATA
