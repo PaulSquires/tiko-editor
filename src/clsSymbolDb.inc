@@ -530,28 +530,68 @@ function clsSymbolDb.EnumMembers( byval refType as SYMBOLREF, results() as SYMBO
     function = cnt
 end function
 
+' USER FILES FIRST, then the toolchain's. SYMDB_MAX_ENUM is a hard stop, and symbols
+' are walked in DECLARATION order -- which for any real project means windows.bi, then
+' the framework, then the project's own code dead last. A bare "dim p as " (no prefix
+' typed) matches EVERY type in the scan: tiko's own project produces 14,457 of them, so
+' the 8,192 stop was reached inside the toolchain headers and the project's own types
+' were never returned at all. tiko's FINDREPLACE_TYPE sits at record 14,177 -- the popup
+' could not show it because this function never handed it over.
+'
+' Splitting the walk by origin makes the stop truncate toolchain symbols instead of the
+' user's. It also fixes the popup's own AUTOCOMPLETE_MAX_ITEMS cap for free, since
+' results arrive in the order the caller appends them.
 function clsSymbolDb.EnumPrefix( byref wszPrefix as const wstring, byval kindMask as long, results() as SYMBOLREF ) as long
     dim as long cnt = 0
     redim results( 0 to 127 )
     dim as long plen = len( wszPrefix )
-    for pass as long = 0 to 1
-        dim as PARSERESULTSET ptr pRSet
-        if pass = 0 then pRSet = m_pBuffer else pRSet = m_pProject
-        if pRSet = 0 then continue for
-        if pRSet->pResult = 0 then continue for
-        dim as long n = pRSet->pResult->symbolCount
-        for i as long = 0 to n - 1
-            if cnt >= SYMDB_MAX_ENUM then exit for
-            dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[i]
-            if (kindMask and (1 shl pSym->kind)) = 0 then continue for
-            if this.FileContributes( pRSet, pSym->fileIndex ) = false then continue for
-            dim as wstring ptr pName = @pRSet->pResult->stringPool[ pSym->nameOffset ]
-            if SymDb_NamePrefixW( pName, @wszPrefix, plen ) then
-                if cnt > ubound(results) then redim preserve results( 0 to cnt * 2 + 1 )
-                results(cnt).pRSet = pRSet
-                results(cnt).idx = i
-                cnt += 1
+    dim as DWSTRING wszInc = this.ToolchainIncludeRoot()
+    dim as long nIncLen = len( wszInc )
+
+    for origin as long = 0 to 1
+        ' Without a derivable toolchain root nothing can be classified, so origin 0
+        ' enumerates everything in scan order and there is no second round.
+        if (origin = 1) andalso (nIncLen = 0) then exit for
+        dim as boolean bWantToolchain = (origin = 1)
+
+        for pass as long = 0 to 1
+            dim as PARSERESULTSET ptr pRSet
+            if pass = 0 then pRSet = m_pBuffer else pRSet = m_pProject
+            if pRSet = 0 then continue for
+            if pRSet->pResult = 0 then continue for
+
+            ' precompute per-file "is a toolchain file" once (same idiom as
+            ' EnumAllProcsTypes) rather than re-testing the path per symbol
+            dim as long fc = pRSet->pResult->fileCount
+            redim as boolean bTool( 0 to iif(fc > 0, fc - 1, 0) )
+            if nIncLen then
+                for i as long = 0 to fc - 1
+                    dim as DWSTRING wszF = *cast(wstring ptr, @pRSet->pResult->stringPool[ pRSet->pResult->fileOffsets[i] ])
+                    bTool(i) = ( ucase( left( wszF, nIncLen ) ) = wszInc )
+                next
             end if
+
+            dim as long n = pRSet->pResult->symbolCount
+            for i as long = 0 to n - 1
+                if cnt >= SYMDB_MAX_ENUM then exit for
+                dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[i]
+                if (kindMask and (1 shl pSym->kind)) = 0 then continue for
+                if this.FileContributes( pRSet, pSym->fileIndex ) = false then continue for
+                if nIncLen then
+                    ' A symbol with no file cannot be classified - treat it as the
+                    ' user's, so it is offered rather than dropped by both rounds.
+                    dim as boolean bIsToolchain = false
+                    if pSym->fileIndex >= 0 then bIsToolchain = bTool( pSym->fileIndex )
+                    if bIsToolchain <> bWantToolchain then continue for
+                end if
+                dim as wstring ptr pName = @pRSet->pResult->stringPool[ pSym->nameOffset ]
+                if SymDb_NamePrefixW( pName, @wszPrefix, plen ) then
+                    if cnt > ubound(results) then redim preserve results( 0 to cnt * 2 + 1 )
+                    results(cnt).pRSet = pRSet
+                    results(cnt).idx = i
+                    cnt += 1
+                end if
+            next
         next
     next
     function = cnt

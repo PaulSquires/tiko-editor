@@ -773,12 +773,14 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
             ' All TYPE/UNION/ENUM/TYPEDEF names matching the typed prefix. For
             ' CONSTRUCTOR/DESTRUCTOR completion (bTypesNotPreloaded) only offer
             ' types defined outside the toolchain include folder.
+            '
+            ' EnumPrefix returns user-file symbols ahead of the toolchain's, so the
+            ' AUTOCOMPLETE_MAX_ITEMS cap below truncates toolchain types rather than the
+            ' project's own. Do not re-order here - that policy lives in one place.
             dim rs() as SYMBOLREF
             dim as long n = gSymDb.EnumPrefix( pDoc->wszMatchWord, SYMMASK_TYPE, rs() )
             dim as DWSTRING wszIncPath
-            if bTypesNotPreloaded andalso (len(gConfig.FBWINCompiler64) > 0) then
-                wszIncPath = ucase( AfxStrPathname( "PATH", ProcessFromCurdriveApp( gConfig.FBWINCompiler64 ) ) & "inc" )
-            end if
+            if bTypesNotPreloaded then wszIncPath = gSymDb.ToolchainIncludeRoot()
             for i as long = 0 to n - 1
                 if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit for
                 if len(wszIncPath) then
