@@ -173,7 +173,7 @@ function PsIconPanel_SetGlyph( byval hIconPanel as HWND, byval idx as long, byva
     dim as PSICONPANEL_ITEM ptr pit = pIcon->GetItem(idx)
     pit->wszGlyph = Glyph
     ' Glyph OR image: setting an actual glyph frees any image on this item.
-    if (len( Glyph ) > 0) andalso (pit->pImage <> 0) then
+    if (PsLen( Glyph ) > 0) andalso (pit->pImage <> 0) then
         delete pit->pImage : pit->pImage = 0
     end if
     PsIconPanel_InvalidateItem( pIcon, idx )
@@ -190,7 +190,7 @@ function PsIconPanel_SetImage( byval hIconPanel as HWND, byval idx as long, byva
     if pIcon->IsValidItem(idx) = false then return false
     dim as PSICONPANEL_ITEM ptr pit = pIcon->GetItem(idx)
 
-    if len( Path ) = 0 then
+    if PsLen( Path ) = 0 then
         ' Removal SUCCEEDS. It used to return FALSE, which a caller could not tell apart from
         ' a load that failed -- so "did that do what I asked" had no answer on this path.
         if pit->pImage then delete pit->pImage : pit->pImage = 0
@@ -628,7 +628,7 @@ private function PsIconPanel_ResolveTooltipText( byval pIcon as PSICONPANEL ptr,
     if pIcon = null then return ""
     if pIcon->IsValidItem(idx) = false then return ""
     dim as DWSTRING wszText = pIcon->items(idx).wszTooltip
-    if len(wszText) then return wszText
+    if PsLen(wszText) then return wszText
     if pIcon->TooltipCallback then return pIcon->TooltipCallback( pIcon->hWin, idx )
     return ""
 end function

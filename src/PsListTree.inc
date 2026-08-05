@@ -2836,7 +2836,7 @@ function PsListTree_BeginEditInternal( byval pList as PSLISTTREE ptr, byval row 
     if pList->bEditSelectAll then
         PsTextBox_SelectAll( pList->hEdit )          ' ready to overtype (explorer rename)
     else
-        dim as integer nLen = len( wszCur )
+        dim as integer nLen = PsLen( wszCur )
         PsTextBox_SetSel( pList->hEdit, nLen, nLen ) ' caret at the end, nothing selected
     end if
     return true

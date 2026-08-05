@@ -447,13 +447,13 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
         wst = pStream.ReadLine
 
         wst = trim(AfxStrExtract( 1, wst, "#"))     ' remove comments
-        If Len(wst) = 0 Then Continue Do
+        If PsLen(wst) = 0 Then Continue Do
 
         keyValue = trim(AfxStrParse(wst, 1, ":"))
         keyData = trim(AfxStrParse(wst, 2, ":"))
         
         ' is this a replaceable parameter
-        if left(wst, 1) = "%" then
+        if PsLeft(wst, 1) = "%" then
             ' Kept in a dynamic table now rather than a fixed dim(100), so there is no bound
             ' to overrun -- and, more to the point, so the definitions survive the parse and
             ' the writer can put them back.
@@ -467,7 +467,7 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
         ' if keyData is a replaceable parameter then substitute it now, REMEMBERING which
         ' macro it was so the value can be written back as %NAME rather than flattened.
         dim as DWSTRING wszMacroUsed
-        if left(keyData, 1) = "%" then
+        if PsLeft(keyData, 1) = "%" then
             for i as long = lbound(gThemeMacros) to ubound(gThemeMacros)
                 if gThemeMacros(i).name = keyData then
                     wszMacroUsed = keyData
@@ -477,7 +477,7 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
             next
             ' An unresolved %NAME is a typo or a forward reference (macros must be declared
             ' before use). Say so rather than letting val() quietly read it as 0,0,0 black.
-            if len(wszMacroUsed) = 0 then
+            if PsLen(wszMacroUsed) = 0 then
                 redim preserve gThemeParseWarnings(ubound(gThemeParseWarnings) + 1)
                 gThemeParseWarnings(ubound(gThemeParseWarnings)) = "undefined macro: " & keyData
             end if
@@ -1496,7 +1496,7 @@ private function Theme_ColorFromText( byval wszText as DWSTRING, _
     clr = 0
     nAlpha = -1
 
-    dim as string s = trim( wszText )
+    dim as string s = PsTrim( wszText )
     if len(s) = 0 then return false
     if AfxStrParseCount( s, "," ) < 3 then return false
 
@@ -2036,7 +2036,7 @@ end sub
 function LoadThemeFile() as boolean
 
     dim as DWSTRING wszPath = Theme_ResolvePath( gConfig.ThemeShortFilename )
-    if len(wszPath) = 0 then return true
+    if PsLen(wszPath) = 0 then return true
 
     ' Reads gConfig after Theme_ResolvePath, which may have rewritten ThemeShortFilename when
     ' it fell back to the backup copy.

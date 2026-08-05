@@ -149,7 +149,7 @@ end function
 ' the originals are pristine.
 ' ========================================================================================
 function frmThemes_IsProtectedTheme( byval wszShortFilename as DWSTRING ) as boolean
-    return (lcase(left(wszShortFilename, 8)) = "default_")
+    return (lcase(PsLeft(wszShortFilename, 8)) = "default_")
 end function
 
 
@@ -1778,7 +1778,7 @@ function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPan
                 dim as SIZE sz
                 for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
                     dim as wstring * 64 wsz = gThemeKeys(i).keyValue
-                    if GetTextExtentPoint32W( hdc, @wsz, len(wsz), @sz ) then
+                    if GetTextExtentPoint32W( hdc, @wsz, PsLen(wsz), @sz ) then
                         if sz.cx > widest then
                             widest  = sz.cx
                             sWidest = gThemeKeys(i).keyValue

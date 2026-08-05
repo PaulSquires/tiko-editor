@@ -159,14 +159,14 @@ function clsTopTabCtl.GetTabIndexFromFilename( byval wszName as DWSTRING ) as lo
     ' Returns -1 if not found, otherwise zero based index of tab.
     dim as long nCount = this.GetItemCount()
     if nCount = 0 then return -1 
-    if len(wszName) = 0 then return -1
+    if PsLen(wszName) = 0 then return -1
     
     dim as clsDocument ptr pDoc
     
     for i as integer = 0 to nCount - 1
         pDoc = this.GetpDoc(i)
         if pDoc then
-            if ucase(pDoc->DiskFilename) = ucase(wszName) then return i
+            if ucase(pDoc->DiskFilename) = PsUCase(wszName) then return i
         end if   
     next
 

@@ -30,21 +30,21 @@ function ProjectFolders_Normalize( byval wszPath as DWSTRING ) as DWSTRING
     dim as DWSTRING wszOut, wszSeg
     dim as long nLen
 
-    wszPath = trim(wszPath)
-    nLen = len(wszPath)
+    wszPath = PsTrim(wszPath)
+    nLen = PsLen(wszPath)
     if nLen = 0 then return ""
 
     ' Walk segment by segment rather than pattern-replacing: it collapses runs of
     ' separators and drops empty segments in one pass, so "//a///b//" needs no cleanup after.
     for i as long = 1 to nLen + 1
-        dim as DWSTRING wszCh = iif( i > nLen, DWSTRING(PROJECTFOLDER_SEP), mid(wszPath, i, 1) )
+        dim as DWSTRING wszCh = iif( i > nLen, DWSTRING(PROJECTFOLDER_SEP), PsMid(wszPath, i, 1) )
         dim as boolean bIsSep = false
         if wszCh = PROJECTFOLDER_SEP then bIsSep = true
         if wszCh = "\" then bIsSep = true
         if bIsSep then
             wszSeg = trim(wszSeg)
             if len(wszSeg) then
-                if len(wszOut) then wszOut = wszOut + PROJECTFOLDER_SEP
+                if PsLen(wszOut) then wszOut = wszOut + PROJECTFOLDER_SEP
                 wszOut = wszOut + wszSeg
             end if
             wszSeg = ""
@@ -62,9 +62,9 @@ end function
 ' ========================================================================================
 function ProjectFolders_ParentPath( byval wszPath as DWSTRING ) as DWSTRING
     wszPath = ProjectFolders_Normalize( wszPath )
-    dim as long nPos = instrrev( wszPath, PROJECTFOLDER_SEP )
+    dim as long nPos = PsInStrRev( wszPath, PROJECTFOLDER_SEP )
     if nPos = 0 then return ""
-    return left( wszPath, nPos - 1 )
+    return PsLeft( wszPath, nPos - 1 )
 end function
 
 
@@ -73,9 +73,9 @@ end function
 ' ========================================================================================
 function ProjectFolders_LeafName( byval wszPath as DWSTRING ) as DWSTRING
     wszPath = ProjectFolders_Normalize( wszPath )
-    dim as long nPos = instrrev( wszPath, PROJECTFOLDER_SEP )
+    dim as long nPos = PsInStrRev( wszPath, PROJECTFOLDER_SEP )
     if nPos = 0 then return wszPath
-    return mid( wszPath, nPos + 1 )
+    return PsMid( wszPath, nPos + 1 )
 end function
 
 
@@ -84,10 +84,10 @@ end function
 ' ========================================================================================
 function ProjectFolders_Depth( byval wszPath as DWSTRING ) as long
     wszPath = ProjectFolders_Normalize( wszPath )
-    if len(wszPath) = 0 then return 0
+    if PsLen(wszPath) = 0 then return 0
     dim as long nCount = 1
-    for i as long = 1 to len(wszPath)
-        if mid(wszPath, i, 1) = PROJECTFOLDER_SEP then nCount += 1
+    for i as long = 1 to PsLen(wszPath)
+        if PsMid(wszPath, i, 1) = PROJECTFOLDER_SEP then nCount += 1
     next
     return nCount
 end function
@@ -100,8 +100,8 @@ end function
 function ProjectFolders_Combine( byval wszParent as DWSTRING, byval wszLeaf as DWSTRING ) as DWSTRING
     wszParent = ProjectFolders_Normalize( wszParent )
     wszLeaf   = ProjectFolders_Normalize( wszLeaf )
-    if len(wszParent) = 0 then return wszLeaf
-    if len(wszLeaf) = 0 then return wszParent
+    if PsLen(wszParent) = 0 then return wszLeaf
+    if PsLen(wszLeaf) = 0 then return wszParent
     return wszParent + PROJECTFOLDER_SEP + wszLeaf
 end function
 
@@ -124,13 +124,13 @@ function ProjectFolders_IsDescendantOf( byval wszPath as DWSTRING, byval wszAnce
     wszPath     = ProjectFolders_Normalize( wszPath )
     wszAncestor = ProjectFolders_Normalize( wszAncestor )
 
-    if len(wszPath) = 0 then return false
-    if len(wszAncestor) = 0 then return true
-    if ucase(wszPath) = ucase(wszAncestor) then return false
+    if PsLen(wszPath) = 0 then return false
+    if PsLen(wszAncestor) = 0 then return true
+    if PsUCase(wszPath) = PsUCase(wszAncestor) then return false
 
-    dim as DWSTRING wszPrefix = ucase(wszAncestor) + PROJECTFOLDER_SEP
-    if len(wszPath) <= len(wszPrefix) then return false
-    if left( ucase(wszPath), len(wszPrefix) ) = wszPrefix then return true
+    dim as DWSTRING wszPrefix = PsUCase(wszAncestor) + PROJECTFOLDER_SEP
+    if PsLen(wszPath) <= PsLen(wszPrefix) then return false
+    if left( PsUCase(wszPath), PsLen(wszPrefix) ) = wszPrefix then return true
     return false
 end function
 
@@ -143,10 +143,10 @@ end function
 ' question mark in it is never used to open anything.
 ' ========================================================================================
 function ProjectFolders_IsValidName( byval wszName as DWSTRING ) as boolean
-    wszName = trim(wszName)
-    if len(wszName) = 0 then return false
-    if instr( wszName, PROJECTFOLDER_SEP ) > 0 then return false
-    if instr( wszName, "\" ) > 0 then return false
+    wszName = PsTrim(wszName)
+    if PsLen(wszName) = 0 then return false
+    if PsInStr( wszName, PROJECTFOLDER_SEP ) > 0 then return false
+    if PsInStr( wszName, "\" ) > 0 then return false
     return true
 end function
 
@@ -189,8 +189,8 @@ end function
 ' ========================================================================================
 function ProjectFolders_Find( byval catIndex as long, byval wszPath as DWSTRING ) as long
     wszPath = ProjectFolders_Normalize( wszPath )
-    if len(wszPath) = 0 then return -1
-    dim as DWSTRING wszWanted = ucase(wszPath)
+    if PsLen(wszPath) = 0 then return -1
+    dim as DWSTRING wszWanted = PsUCase(wszPath)
     for i as long = lbound(gProjectFolders) to ubound(gProjectFolders)
         if gProjectFolders(i).catIndex = catIndex then
             if ucase(gProjectFolders(i).wszPath) = wszWanted then return i
@@ -221,7 +221,7 @@ function ProjectFolders_Add( byval catIndex as long, byval wszPath as DWSTRING )
     if ProjectFolders_CatAllowsFolders( catIndex ) = false then return -1
 
     wszPath = ProjectFolders_Normalize( wszPath )
-    if len(wszPath) = 0 then return -1
+    if PsLen(wszPath) = 0 then return -1
 
     dim as long nExisting = ProjectFolders_Find( catIndex, wszPath )
     if nExisting >= 0 then return nExisting
@@ -229,7 +229,7 @@ function ProjectFolders_Add( byval catIndex as long, byval wszPath as DWSTRING )
     ' Ancestors first, so the table is never in a state where a child is present and its
     ' parent is not. The recursion is bounded by the path's depth.
     dim as DWSTRING wszParent = ProjectFolders_ParentPath( wszPath )
-    if len(wszParent) then ProjectFolders_Add( catIndex, wszParent )
+    if PsLen(wszParent) then ProjectFolders_Add( catIndex, wszParent )
 
     dim as long ub = ubound(gProjectFolders) + 1
     redim preserve gProjectFolders(ub)
@@ -285,12 +285,12 @@ function ProjectFolders_RebasePath( byval wszPath as DWSTRING, byval wszOld as D
     wszOld  = ProjectFolders_Normalize( wszOld )
     wszNew  = ProjectFolders_Normalize( wszNew )
 
-    if len(wszOld) = 0 then return wszPath
-    if ucase(wszPath) = ucase(wszOld) then return wszNew
+    if PsLen(wszOld) = 0 then return wszPath
+    if PsUCase(wszPath) = PsUCase(wszOld) then return wszNew
     if ProjectFolders_IsDescendantOf( wszPath, wszOld ) then
         ' +2 skips the ancestor and the separator that follows it. IsDescendantOf has
         ' already guaranteed that separator is really there.
-        return ProjectFolders_Combine( wszNew, mid( wszPath, len(wszOld) + 2 ) )
+        return ProjectFolders_Combine( wszNew, PsMid( wszPath, PsLen(wszOld) + 2 ) )
     end if
     return wszPath
 end function
@@ -314,7 +314,7 @@ function ProjectFolders_Rebase( byval catIndex as long, byval wszOldPath as DWST
                                 byval wszNewPath as DWSTRING ) as boolean
     wszOldPath = ProjectFolders_Normalize( wszOldPath )
     wszNewPath = ProjectFolders_Normalize( wszNewPath )
-    if len(wszOldPath) = 0 then return false
+    if PsLen(wszOldPath) = 0 then return false
     if ProjectFolders_Find( catIndex, wszOldPath ) < 0 then return false
 
     ' Documents first, while the old paths are still in the table to be recognised.
@@ -387,14 +387,14 @@ function ProjectFolders_MoveFolder( byval catFrom as long, byval wszPath as DWST
     wszPath      = ProjectFolders_Normalize( wszPath )
     wszNewParent = ProjectFolders_Normalize( wszNewParent )
 
-    if len(wszPath) = 0 then return false
+    if PsLen(wszPath) = 0 then return false
     if ProjectFolders_CatAllowsFolders( catTo ) = false then return false
     if ProjectFolders_Find( catFrom, wszPath ) < 0 then return false
 
     ' Into itself or into its own descendant -- only meaningful within one group, since a
     ' path under another category is a different folder however alike it reads.
     if catFrom = catTo then
-        if ucase(wszNewParent) = ucase(wszPath) then return false
+        if PsUCase(wszNewParent) = PsUCase(wszPath) then return false
         if ProjectFolders_IsDescendantOf( wszNewParent, wszPath ) then return false
     end if
 
@@ -402,7 +402,7 @@ function ProjectFolders_MoveFolder( byval catFrom as long, byval wszPath as DWST
 
     ' A same-group move that changes nothing is a no-op rather than a failure: dropping a
     ' folder back where it already sits is a legitimate gesture with no effect.
-    if (catFrom = catTo) andalso (ucase(wszNewPath) = ucase(wszPath)) then return true
+    if (catFrom = catTo) andalso (PsUCase(wszNewPath) = PsUCase(wszPath)) then return true
 
     ' Documents first, while their folders still name the source paths.
     dim pDoc as clsDocument ptr = gApp.pDocList
@@ -411,7 +411,7 @@ function ProjectFolders_MoveFolder( byval catFrom as long, byval wszPath as DWST
             if len(pDoc->docData.wszFolder) then
                 dim as DWSTRING wszWas = pDoc->docData.wszFolder
                 dim as boolean bInSubtree = false
-                if ucase(wszWas) = ucase(wszPath) then bInSubtree = true
+                if PsUCase(wszWas) = PsUCase(wszPath) then bInSubtree = true
                 if ProjectFolders_IsDescendantOf( wszWas, wszPath ) then bInSubtree = true
                 if bInSubtree then
                     pDoc->docData.wszFolder = ProjectFolders_RebasePath( wszWas, wszPath, wszNewPath )
@@ -427,7 +427,7 @@ function ProjectFolders_MoveFolder( byval catFrom as long, byval wszPath as DWST
         if gProjectFolders(i).catIndex <> catFrom then continue for
         dim as DWSTRING wszWas = gProjectFolders(i).wszPath
         dim as boolean bMine = false
-        if ucase(wszWas) = ucase(wszPath) then bMine = true
+        if PsUCase(wszWas) = PsUCase(wszPath) then bMine = true
         if ProjectFolders_IsDescendantOf( wszWas, wszPath ) then bMine = true
         if bMine = false then continue for
         gProjectFolders(i).wszPath  = ProjectFolders_RebasePath( wszWas, wszPath, wszNewPath )
@@ -436,7 +436,7 @@ function ProjectFolders_MoveFolder( byval catFrom as long, byval wszPath as DWST
 
     ' Any ancestor the destination needs but does not have -- dropping into a group's top
     ' level needs none, but a path can arrive ahead of its parent when groups differ.
-    if len(wszNewParent) then ProjectFolders_Add( catTo, wszNewParent )
+    if PsLen(wszNewParent) then ProjectFolders_Add( catTo, wszNewParent )
 
     ' Sweep duplicates created by a collision at the destination. Backwards, so removal's
     ' compaction cannot skip an entry.

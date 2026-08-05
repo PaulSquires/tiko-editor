@@ -163,7 +163,7 @@ private function Win32ErrorText( byval dwErr as DWORD ) as DWSTRING
     dim as DWSTRING wszOut = *pMsg
     LocalFree( pMsg )
     ' FormatMessage terminates its text with CRLF; a message box adds its own layout.
-    return rtrim( wszOut, any !" \r\n" )
+    return RTrim( wszOut, any !" \r\n" )
 end function
 
 
@@ -207,7 +207,7 @@ function Doc_WriteToDisk( _
             ) as long
 
     wszErr = ""
-    if len( wszPath ) = 0 then
+    if PsLen( wszPath ) = 0 then
         wszErr = "No filename."
         return DOCWRITE_FAILED
     end if
@@ -222,7 +222,7 @@ function Doc_WriteToDisk( _
         dim pStream as CFileStream
         if pStream.Open( wszTemp, STGM_CREATE or STGM_WRITE ) <> S_OK then
             wszErr = Win32ErrorText( GetLastError() )
-            if len( wszErr ) = 0 then wszErr = "Could not create the temporary file."
+            if PsLen( wszErr ) = 0 then wszErr = "Could not create the temporary file."
             return DOCWRITE_FAILED
         end if
 
@@ -264,7 +264,7 @@ function Doc_WriteToDisk( _
 
     if bSwapped = false then
         wszErr = Win32ErrorText( GetLastError() )
-        if len( wszErr ) = 0 then wszErr = "Could not replace the existing file."
+        if PsLen( wszErr ) = 0 then wszErr = "Could not replace the existing file."
         AfxDeleteFile( wszTemp )     ' never leave a stray .tiko-tmp behind
         return DOCWRITE_FAILED
     end if

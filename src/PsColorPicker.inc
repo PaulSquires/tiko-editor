@@ -710,7 +710,7 @@ private function PsColorPicker_CaretX( _
     if nPrefix > 0 then
         dim as DWSTRING wszPrefix = left( pClr->wszEdit, nPrefix )
         dim as SIZE sz
-        if GetTextExtentPoint32W( hDC, wszPrefix.vptr, len( wszPrefix ), @sz ) then
+        if GetTextExtentPoint32W( hDC, wszPrefix.vptr, PsLen( wszPrefix ), @sz ) then
             nOut += sz.cx
         end if
     end if

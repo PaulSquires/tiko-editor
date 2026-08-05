@@ -184,16 +184,16 @@ sub frmKeyboard_RunSelfTest()
         if pStream.Open( wszTmp ) = S_OK then
             do until pStream.EOS
                 dim as DWSTRING wst = trim(pStream.ReadLine)
-                if len(wst) = 0 then continue do
-                if instr( wst, ":" ) = 0 then continue do
+                if PsLen(wst) = 0 then continue do
+                if PsInStr( wst, ":" ) = 0 then continue do
                 nRead += 1
 
                 dim as DWSTRING wszMsg = AfxStrParse(wst, 1, ":")
                 dim as boolean bDisabled = false
-                dim as long p = instr(wszMsg, "(DISABLED)")
+                dim as long p = PsInStr(wszMsg, "(DISABLED)")
                 if p then
                     bDisabled = true
-                    wszMsg = left(wszMsg, p - 1)
+                    wszMsg = PsLeft(wszMsg, p - 1)
                 end if
                 dim as DWSTRING wszUser = trim(AfxStrParse(wst, 2, ":"))
 
@@ -246,7 +246,7 @@ function frmKeyboard_CheckForKeyConflict ( _
             byval nSkipIndex as long _
             ) as DWSTRING
 
-    if len(wszKeys) = 0 then return ""
+    if PsLen(wszKeys) = 0 then return ""
 
     for i as long = lbound(gKeysWork) to ubound(gKeysWork)
         if i = nSkipIndex then continue for
@@ -273,7 +273,7 @@ sub frmKeyboard_RescanConflicts()
 
     for i as long = lbound(gKeysWork) to ubound(gKeysWork)
         dim as DWSTRING wszI = frmKeyboard_EffectiveKeys(i)
-        if len(wszI) = 0 then continue for
+        if PsLen(wszI) = 0 then continue for
         for j as long = i + 1 to ubound(gKeysWork)
             if wszI = frmKeyboard_EffectiveKeys(j) then
                 gKeysConflict(i) = true
@@ -293,7 +293,7 @@ function frmKeyboard_DefaultKeysDisplay( byval idx as long ) as DWSTRING
     if (idx < lbound(gKeysWork)) orelse (idx > ubound(gKeysWork)) then return ""
     dim as DWSTRING wsz = gKeysWork(idx).wszDefaultKeys
     if gKeysWork(idx).bDefaultDisabled then
-        if len(wsz) = 0 then
+        if PsLen(wsz) = 0 then
             wsz = L(328,"(disabled)")
         else
             wsz = wsz & " " & L(328,"(disabled)")

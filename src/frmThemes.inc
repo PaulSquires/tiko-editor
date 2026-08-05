@@ -105,7 +105,7 @@ end function
 private function frmThemes_TextW( byval hdc as HDC, byval hFont as HFONT, byval wsz as DWSTRING ) as long
     dim as HGDIOBJ hOld = SelectObject( hdc, hFont )
     dim as SIZE sz
-    GetTextExtentPoint32W( hdc, wsz, len(wsz), @sz )
+    GetTextExtentPoint32W( hdc, wsz, PsLen(wsz), @sz )
     SelectObject( hdc, hOld )
     return sz.cx
 end function
@@ -682,7 +682,7 @@ private sub frmThemes_CloneClick( byval hButton as HWND, byval id as long )
     if lcase( AfxStrPathname( "EXTN", wszClone ) ) <> "theme" then
         wszClone = AfxStrPathname( "NAME", wszClone ) & ".theme"
     end if
-    if ucase(wszClone) = ucase(wszSrc) then exit sub    ' would clobber the source
+    if PsUCase(wszClone) = PsUCase(wszSrc) then exit sub    ' would clobber the source
 
     dim as DWSTRING wszDest = wszFolder & wszClone
 
@@ -723,7 +723,7 @@ private sub frmThemes_DeleteClick( byval hButton as HWND, byval id as long )
         exit sub
     end if
 
-    dim as boolean bWasActive = (ucase(wszFile) = ucase(gConfig.ThemeShortFilename))
+    dim as boolean bWasActive = (PsUCase(wszFile) = ucase(gConfig.ThemeShortFilename))
     AfxDeleteFile( frmThemes_ThemesFolder() & wszFile )
     frmThemes_EnsureThemeExists()
 

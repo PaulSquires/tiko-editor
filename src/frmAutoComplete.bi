@@ -67,7 +67,7 @@
 ' One candidate. Every field is a SNAPSHOT taken during the build -- see rule 2 above.
 type AUTOC_ITEM
     wszName    as DWSTRING     ' the text inserted on commit, in its original casing
-    wszSort    as DWSTRING     ' ucase(wszName); the key for filtering, sorting and dedupe
+    wszSort    as DWSTRING     ' PsUCase(wszName); the key for filtering, sorting and dedupe
     wszDetail  as DWSTRING     ' dimmed right-aligned hint (type text / return type); may be ""
     nKind      as long         ' FBCP_KIND_* or one of the AUTOC_KIND_* pseudo-kinds
     ' A callable that takes at least one caller-supplied parameter. Decided at BUILD

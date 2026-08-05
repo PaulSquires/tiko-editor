@@ -258,7 +258,7 @@ function clsDocument.LoadDiskFile( _
                         byval bIsTemplate as boolean = false _
             ) as long
     ' if a disk file was specified then open it and load it into the editor
-    if len(wszFile) = 0 then exit function   
+    if PsLen(wszFile) = 0 then exit function   
     if AfxFileExists(wszFile) = 0 then exit function
         
     ' this will be an UTF-8 encoded string
@@ -555,8 +555,8 @@ function clsDocument.GetTextRange( _
     buffer = space(cpMax - cpMin + 1)
     txtrg.lpstrText = strptr(buffer)
     SciMsg(pSci, SCI_GETTEXTRANGE, 0, cast(LPARAM, @txtrg))
-    p = instr(buffer, chr(0))
-    if p then buffer = left(buffer, p - 1)
+    p = PsInStr(buffer, chr(0))
+    if p then buffer = PsLeft(buffer, p - 1)
     function = buffer
 end function
 
@@ -714,7 +714,7 @@ function clsDocument.GetLine( byval nLine as long ) as string
     if nLen < 1 then exit function
     buffer = space(nLen)
     SciMsg( pSci, SCI_GETLINE, nLine, cast(LPARAM, strptr(buffer)))
-    function = rtrim(buffer, any chr(13,10))
+    function = RTrim(buffer, any chr(13,10))
 end function
 
 ''
@@ -926,8 +926,8 @@ function clsDocument.GetCurrentFunctionName( _
             elseif p2 > p1 then
                 st = mid( sFuncParams, p1, p2 - p1 )
             end if
-            st = trim( st, any "( )" )
-            if len( st ) then
+            st = Trim( st, any "( )" )
+            if PsLen( st ) then
                 nGetSet = ClassProperty.Setter
             else   
                 nGetSet = ClassProperty.Getter
@@ -1941,8 +1941,8 @@ function clsDocument.GetWord( byval curPos as long = -1 ) as string
         ' Text range
         buffer = this.GetTextRange(x, y)
         ' Remove the $NUL
-        p = instr(buffer, chr(0))
-        if p then buffer = left(buffer, p - 1)
+        p = PsInStr(buffer, chr(0))
+        if p then buffer = PsLeft(buffer, p - 1)
     end if
     buffer = AfxStrRemoveAny( buffer, chr(13, 10, 34) & "()%," )
     function = buffer
@@ -1966,7 +1966,7 @@ function clsDocument.GetMarkers( byval MarkerType as long ) as string
         end if
     next
 
-    function = rtrim(buffer, ",")
+    function = PsRTrim(buffer, ",")
 
 end function
 
@@ -2033,7 +2033,7 @@ function clsDocument.GetFoldPoints() as string
         end if
     next
 
-    function = rtrim(buffer, ",")
+    function = PsRTrim(buffer, ",")
 
 end function
 
@@ -2111,11 +2111,11 @@ function clsDocument.CompileDirectives( Directives() as COMPILE_DIRECTIVES ) as 
     for i = 0 to nLines - 1
         st = ltrim(this.GetLine(i))
             
-        if left(st, 1) <> "'" then continue for  ' must start with a comment character
-        st = ltrim(mid(st, 2))
+        if PsLeft(st, 1) <> "'" then continue for  ' must start with a comment character
+        st = ltrim(PsMid(st, 2))
 
-        if len(st) < 10 then continue for
-        st_ucase = ucase(st)
+        if PsLen(st) < 10 then continue for
+        st_ucase = PsUCase(st)
         
         ub = ubound(Directives)
         
@@ -2132,7 +2132,7 @@ function clsDocument.CompileDirectives( Directives() as COMPILE_DIRECTIVES ) as 
         if left(st_ucase, 10) = "#RESOURCE " then
             redim preserve Directives(ub+1)
             Directives(ub+1).DirectiveFlag = IDM_RESOURCE
-            st = mid(st, 11)
+            st = PsMid(st, 11)
             Directives(ub+1).DirectiveText = AfxStrExtract(st, chr(34), chr(34))
         end if
         
@@ -2140,7 +2140,7 @@ function clsDocument.CompileDirectives( Directives() as COMPILE_DIRECTIVES ) as 
         if left(st_ucase, 12) = "#LINKMODULES" then
             redim preserve Directives(ub+1)
             Directives(ub+1).DirectiveFlag = IDM_LINKMODULES
-            Directives(ub+1).DirectiveText = mid(st, 13)
+            Directives(ub+1).DirectiveText = PsMid(st, 13)
         end if
             
     next

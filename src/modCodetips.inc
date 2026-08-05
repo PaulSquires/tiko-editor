@@ -61,7 +61,7 @@ function MaskStringCharacters( byval st as string) as string
     ' quote characters.
     dim as long i 
     dim as boolean binstring = false
-    for i = 0 to len(st) - 1
+    for i = 0 to PsLen(st) - 1
         if st[i] = 34 then binstring = not(binstring)
         if binstring then  
             if st[i] <> 34 then st[i] = 35   ' # symbol
@@ -312,7 +312,7 @@ function ShowCodetip( _
         ' FB intrinsic fallback (LEN, MID, ...): the identifier before the "("
         dim as long nParenCol = SciExec(hEdit, SCI_GETCOLUMN, curPos-1, 0)
         dim as string sName = GetTrailingIdentifier( left(pDoc->GetLine(pDoc->GetCurrentLineNumber), nParenCol) )
-        if len(sName) then codeTip = FindIntrinsicCalltip( sName )
+        if PsLen(sName) then codeTip = FindIntrinsicCalltip( sName )
     end if
 
     if len(codeTip) then
@@ -353,9 +353,9 @@ sub AddAutocompleteItem( _
             byval bHasParams as boolean = false _
             )
     if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit sub
-    if len(rtrim(wszName)) = 0 then exit sub
+    if len(PsRTrim(wszName)) = 0 then exit sub
 
-    dim as DWSTRING wszSort = ucase(wszName)
+    dim as DWSTRING wszSort = PsUCase(wszName)
     for i as long = 0 to nItems - 1
         if items(i).wszSort = wszSort then exit sub
     next
@@ -378,11 +378,11 @@ end sub
 ' gSymDb.ProcHasParams.
 ' ========================================================================================
 function CalltipHasParams( byref wszCalltip as DWSTRING ) as boolean
-    dim as long p = instr( wszCalltip, "(" )
+    dim as long p = PsInStr( wszCalltip, "(" )
     if p = 0 then return false
-    dim as long q = instrrev( wszCalltip, ")" )
+    dim as long q = PsInStrRev( wszCalltip, ")" )
     if q <= p then return false
-    return ( len(trim(mid( wszCalltip, p + 1, q - p - 1 ))) > 0 )
+    return ( len(trim(PsMid( wszCalltip, p + 1, q - p - 1 ))) > 0 )
 end function
 
 
@@ -502,7 +502,7 @@ private sub AutoC_AppendKeywordSource( byref sSrc as string )
             end if
             dim as string st = mid( sSrc, s + 1, p - s )
             gKwCache(gKwCacheCount).wszName = st
-            gKwCache(gKwCacheCount).wszUp   = ucase(st)
+            gKwCache(gKwCacheCount).wszUp   = PsUCase(st)
             ' An FB intrinsic (LEN, MID, INSTR, ...) is a keyword that takes arguments, so
             ' "(" should accept it just as it accepts a parsed proc. Ordinary keywords
             ' (IF, DIM, ...) have no intrinsic calltip and answer false.
@@ -548,7 +548,7 @@ private function AutoC_HasPrefixUp( _
             byref wszPrefix as DWSTRING, _
             byval nLen as long _
             ) as boolean
-    if len(wszUp) < nLen then return false
+    if PsLen(wszUp) < nLen then return false
     dim as ushort ptr pUp  = cast(ushort ptr, wszUp.vptr)
     dim as ushort ptr pPre = cast(ushort ptr, wszPrefix.vptr)
     if (pUp = 0) orelse (pPre = 0) then return false
@@ -572,7 +572,7 @@ sub AppendKeywordsToList( _
             byref wszMatchWord as DWSTRING _
             )
     AutoC_EnsureKeywordCache()
-    dim as long nLenMatchWord = len(wszMatchWord)
+    dim as long nLenMatchWord = PsLen(wszMatchWord)
     for i as long = 0 to gKwCacheCount - 1
         if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit sub
         dim as boolean bMatch = true
@@ -763,7 +763,7 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
                 for i as long = 1 to nCount
                     st = AfxStrParse(sStdTypes, i, "|")
                     dim as boolean bMatch = true
-                    if nLenMatchWord then bMatch = ( left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord )
+                    if nLenMatchWord then bMatch = ( left(PsUCase(st), nLenMatchWord) = pDoc->wszMatchWord )
                     if bMatch then
                         AddAutocompleteItem( gAutoCBuild(), nItems, st, "", AUTOC_KIND_STDTYPE )
                     end if
@@ -783,10 +783,10 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
             if bTypesNotPreloaded then wszIncPath = gSymDb.ToolchainIncludeRoot()
             for i as long = 0 to n - 1
                 if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit for
-                if len(wszIncPath) then
+                if PsLen(wszIncPath) then
                     dim as wstring ptr pFile = gSymDb.SymFile( rs(i) )
                     if pFile = 0 then continue for
-                    if ucase(left(*pFile, len(wszIncPath))) = wszIncPath then continue for
+                    if ucase(left(*pFile, PsLen(wszIncPath))) = wszIncPath then continue for
                 end if
                 AddAutocompleteSymbol( gAutoCBuild(), nItems, rs(i) )
             next
@@ -839,7 +839,7 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
                 if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit for
                 st = *gSymDb.SymName( rs(i) )
                 dim as boolean bMatch = true
-                if nLenMatchWord then bMatch = ( left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord )
+                if nLenMatchWord then bMatch = ( left(PsUCase(st), nLenMatchWord) = pDoc->wszMatchWord )
                 if bMatch then
                     AddAutocompleteSymbol( gAutoCBuild(), nItems, rs(i) )
                 end if
@@ -866,7 +866,7 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
             dim as long n = gSymDb.EnumLocalsInScope( wszDocFile, nCaretLine, rs() )
             for i as long = 0 to n - 1
                 st = *gSymDb.SymName( rs(i) )
-                dim as boolean bMatch = ( left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord )
+                dim as boolean bMatch = ( left(PsUCase(st), nLenMatchWord) = pDoc->wszMatchWord )
                 if bMatch then
                     AddAutocompleteSymbol( gAutoCBuild(), nItems, rs(i) )
                 end if
@@ -938,7 +938,7 @@ function RefreshAutocompleteMatchWord( byval pDoc as clsDocument ptr ) as long
         next
     end if
 
-    ' The commit path derives the word's start as AutoCStartPos - len(wszMatchWord), so
+    ' The commit path derives the word's start as AutoCStartPos - PsLen(wszMatchWord), so
     ' the two must be updated together or the replacement range drifts left one character
     ' per keystroke. The old rebuild-every-key path got this for free.
     pDoc->AutoCStartPos = curPos

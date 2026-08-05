@@ -8,22 +8,22 @@ function Ini_ClassifyLine( byval wszLine as DWSTRING, _
     wszKey = ""
     wszValue = ""
 
-    if len( wszLine ) = 0 then return INI_LINE_SKIP
-    if left( wszLine, 1 ) = "'" then return INI_LINE_SKIP
-    if left( wszLine, 1 ) = "[" then return INI_LINE_SKIP
+    if PsLen( wszLine ) = 0 then return INI_LINE_SKIP
+    if PsLeft( wszLine, 1 ) = "'" then return INI_LINE_SKIP
+    if PsLeft( wszLine, 1 ) = "[" then return INI_LINE_SKIP
 
     ' Prefix matches, not equality, exactly as all three loops did -- the markers have
     ' never carried a value and a trailing anything has always been tolerated.
-    if left( wszLine, 11 ) = "NOTES-START" then return INI_LINE_NOTES_START
-    if left( wszLine, 9 )  = "NOTES-END"   then return INI_LINE_NOTES_END
+    if PsLeft( wszLine, 11 ) = "NOTES-START" then return INI_LINE_NOTES_START
+    if PsLeft( wszLine, 9 )  = "NOTES-END"   then return INI_LINE_NOTES_END
 
-    dim as long i = instr( wszLine, "=" )
+    dim as long i = PsInStr( wszLine, "=" )
     if i = 0 then return INI_LINE_OTHER
 
     ' The FIRST "=" splits. A value may contain more of them -- a compiler switch or a run
     ' argument routinely does -- and splitting on the last would truncate it.
-    wszKey   = left( wszLine, i - 1 )
-    wszValue = mid( wszLine, i + 1 )
+    wszKey   = PsLeft( wszLine, i - 1 )
+    wszValue = PsMid( wszLine, i + 1 )
     return INI_LINE_KEYVALUE
 end function
 
@@ -77,7 +77,7 @@ sub Ini_RunSelfTest()
 
     ' An empty value is legal and common -- it is what "no compiler switches" looks like.
     INIASSERT( Ini_ClassifyLine( "Key=", k, v ) = INI_LINE_KEYVALUE, "an empty value was not a key=value" )
-    INIASSERT( len(v) = 0, "an empty value came back as [" & v & "]" )
+    INIASSERT( PsLen(v) = 0, "an empty value came back as [" & v & "]" )
 
     INIASSERT( Ini_ClassifyLine( "no equals here", k, v ) = INI_LINE_OTHER, _
                "a line with no = was not reported as free text" )
@@ -86,7 +86,7 @@ sub Ini_RunSelfTest()
     ' after a SKIP picks up the previous line's key.
     k = "stale" : v = "stale"
     Ini_ClassifyLine( "[Section]", k, v )
-    INIASSERT( (len(k) = 0) andalso (len(v) = 0), _
+    INIASSERT( (PsLen(k) = 0) andalso (PsLen(v) = 0), _
                "a skipped line left stale key/value behind: [" & k & "]=[" & v & "]" )
 
     ' ---- EQUIVALENCE WITH THE CODE THIS REPLACED, over the REAL files ------------------
@@ -110,24 +110,24 @@ sub Ini_RunSelfTest()
                         ' --- the ORIGINAL preamble, verbatim ---
                         dim as long oKind
                         dim as DWSTRING oKey, oVal
-                        if len(wl) = 0 then
+                        if PsLen(wl) = 0 then
                             oKind = INI_LINE_SKIP
-                        elseif left(wl, 1) = "'" then
+                        elseif PsLeft(wl, 1) = "'" then
                             oKind = INI_LINE_SKIP
-                        elseif left(wl, 1) = "[" then
+                        elseif PsLeft(wl, 1) = "[" then
                             oKind = INI_LINE_SKIP
-                        elseif left(wl, 11) = "NOTES-START" then
+                        elseif PsLeft(wl, 11) = "NOTES-START" then
                             oKind = INI_LINE_NOTES_START
-                        elseif left(wl, 9) = "NOTES-END" then
+                        elseif PsLeft(wl, 9) = "NOTES-END" then
                             oKind = INI_LINE_NOTES_END
                         else
-                            dim as long ii = instr(wl, "=")
+                            dim as long ii = PsInStr(wl, "=")
                             if ii = 0 then
                                 oKind = INI_LINE_OTHER
                             else
                                 oKind = INI_LINE_KEYVALUE
-                                oKey  = left(wl, ii-1)
-                                oVal  = mid(wl, ii+1)
+                                oKey  = PsLeft(wl, ii-1)
+                                oVal  = PsMid(wl, ii+1)
                             end if
                         end if
 
@@ -141,7 +141,7 @@ sub Ini_RunSelfTest()
                         end if
                         if bSame = false then
                             nDisagree += 1
-                            if len(wszFirstBad) = 0 then wszFirstBad = wl
+                            if PsLen(wszFirstBad) = 0 then wszFirstBad = wl
                         end if
                     loop
                     pS.Close

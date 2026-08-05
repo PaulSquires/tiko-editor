@@ -658,8 +658,8 @@ sub frmOutputFloat_RunSelfTest()
     ' `string` parameter prints with its nulls interleaved.
     dim as DWSTRING wszLogBack = PsTextBox_GetText( hLog0 )
     frmOutput_Check( "survive: the compiler-log TEXT came back", _
-        instr( wszLogBack, "tiko-outputfloat-selftest-sentinel" ) > 0, _
-        "len=" & str(len(wszLogBack)) )
+        PsInStr( wszLogBack, "tiko-outputfloat-selftest-sentinel" ) > 0, _
+        "len=" & str(PsLen(wszLogBack)) )
     ' The Notes box, by contrast, is re-seeded from the global on every layout pass -- so
     ' this asserts the RE-SEED, which is what correct behaviour looks like here, and records
     ' why the survival probe above is not pointed at it.

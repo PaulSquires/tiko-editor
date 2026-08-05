@@ -531,7 +531,7 @@ function FindProject_Search( byval wszPhrase as DWSTRING, _
                              byval bMatchCase as boolean, _
                              byval bWholeWord as boolean ) as long
     FindProject_Clear()
-    if len(wszPhrase) = 0 then return 0
+    if PsLen(wszPhrase) = 0 then return 0
 
     gFip.wszPhrase  = wszPhrase
     gFip.bMatchCase = bMatchCase

@@ -116,15 +116,15 @@ function clsConfig.LoadCodetipsFB() as boolean
 
     do until pStream.EOS
         wst = pStream.ReadLine
-        wst = trim(wst)
-        if len(wst) = 0 then continue do
+        wst = PsTrim(wst)
+        if PsLen(wst) = 0 then continue do
 
-        i = instr(wst, "=")
+        i = PsInStr(wst, "=")
         if i then
             redim preserve gFBIntrinsics( 0 to nIntrinsic )
-            gFBIntrinsics(nIntrinsic).wszName    = left(wst, i-1)
-            gFBIntrinsics(nIntrinsic).wszNameUp  = ucase( left(wst, i-1) )
-            gFBIntrinsics(nIntrinsic).wszCalltip = mid(wst, i+1)
+            gFBIntrinsics(nIntrinsic).wszName    = PsLeft(wst, i-1)
+            gFBIntrinsics(nIntrinsic).wszNameUp  = ucase( PsLeft(wst, i-1) )
+            gFBIntrinsics(nIntrinsic).wszCalltip = PsMid(wst, i+1)
             nIntrinsic += 1
         end if
     loop
@@ -178,7 +178,7 @@ end function
 ' Search the gFontNames() array to see if the font name exists
 ' ========================================================================================
 function isFontNameExist( byval wszFontName as DWSTRING ) as boolean
-    wszFontName = ucase(wszFontName)
+    wszFontName = PsUCase(wszFontName)
     for i as long = lbound(gFontnames) to ubound(gFontNames)
         if wszFontName = ucase(gFontNames(i)) then return true
     next
@@ -407,7 +407,7 @@ function clsConfig.SaveConfigFileBody() as long
     dim as long numpaths = AfxStrParseCount(allIncludes, ";")
     for i as long = 1 to numpaths
         includePath = trim(AfxStrParse(allIncludes, i, ";"))
-        if len(includePath) then
+        if PsLen(includePath) then
             includePath = ProcessToCurdriveApp(includePath)
             SaveCompilerIncludes = SaveCompilerIncludes + includePath + ";"
         end if
@@ -668,8 +668,8 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
             ' array already covered was silently dropped: a duplicate key, a
             ' non-ascending index in a hand-edited file, and -- for Tools, which is now
             ' erased above but was not -- EVERY entry on every reload after the first.
-            if left(wKey, 9) = "CATEGORY_" then  ' is this a CATEGORY entry
-            i = val(right(wKey,2))
+            if PsLeft(wKey, 9) = "CATEGORY_" then  ' is this a CATEGORY entry
+            i = val(PsRight(wKey,2))
             if i >= 0 then
                 if i > ubound(this.Cat) then redim preserve this.Cat(i)
                 ' trim() is not cosmetic. idFileType is compared against the FILETYPE_*
@@ -682,8 +682,8 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
             end if
             end if
 
-            if left(wKey, 9) = "USERTOOL_" then  ' is this a User Tool entry
-            i = val(right(wKey,2))
+            if PsLeft(wKey, 9) = "USERTOOL_" then  ' is this a User Tool entry
+            i = val(PsRight(wKey,2))
                 if i >= 0 then
                     if i > ubound(this.Tools) then redim preserve this.Tools(i)
                     this.Tools(i).wszDescription   = AfxStrParse(wData, 1, "|-|")
@@ -703,8 +703,8 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
                 end If
             end If
 
-            if left(wKey, 6) = "BUILD_" then  ' is this a BUILD entry
-            i = val(right(wKey,2))
+            if PsLeft(wKey, 6) = "BUILD_" then  ' is this a BUILD entry
+            i = val(PsRight(wKey,2))
                 if i >= 0 then
                     if i > ubound(this.Builds) then redim preserve this.Builds(i)
                     this.Builds(i).id             = AfxStrParse(wData, 1, "|-|")
@@ -722,16 +722,16 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
                 end If
             end If
 
-            if left(wKey, 4) = "MRU_" then  ' is this an MRU entry
-            i = val(right(wKey,2))
+            if PsLeft(wKey, 4) = "MRU_" then  ' is this an MRU entry
+            i = val(PsRight(wKey,2))
                 if (i >= 0) And (i <= 9) then
                     this.MRU(i) = ProcessFromCurdriveApp(wData)
                     continue do
                 end If
             end If
 
-            if left(wKey, 11) = "MRUPROJECT_" then  ' is this an MRU Project entry
-            i = val(right(wKey,2))
+            if PsLeft(wKey, 11) = "MRUPROJECT_" then  ' is this an MRU Project entry
+            i = val(PsRight(wKey,2))
                 if (i >= 0) And (i <= 9) then
                     this.MRUProject(i) = ProcessFromCurdriveApp(wData)
                     continue do
@@ -899,7 +899,7 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
     dim as long numpaths = AfxStrParseCount(allIncludes, ";")
     for i as long = 1 to numpaths
         includePath = trim(AfxStrParse(allIncludes, i, ";"))
-        if len(includePath) then
+        if PsLen(includePath) then
             includePath = ProcessFromCurdriveApp(includePath)
             this.CompilerIncludes = this.CompilerIncludes + includePath + ";"
         end if
@@ -1085,7 +1085,7 @@ function clsConfig.ProjectSaveToFile() as boolean
             wszText = pDoc->DiskFilename
             if bRelativize then
                 cwzRelative = AfxPathRelativePathTo( gApp.ProjectFilename, FILE_ATTRIBUTE_NORMAL, wszText, FILE_ATTRIBUTE_NORMAL)
-                if len(cwzRelative) then
+                if PsLen(cwzRelative) then
                     if AfxPathIsRelative(cwzRelative) then wszText = cwzRelative
                 end if
             end if
@@ -1124,7 +1124,7 @@ function clsConfig.ProjectSaveToFile() as boolean
                     ' and AfxPathIsRelative("") is TRUE. Without the guard wszText becomes ""
                     ' and the document is written as "File=", i.e. SILENTLY DROPPED from the
                     ' project. The tabbed loop above has always had this guard; this one did not.
-                    if len(cwzRelative) then
+                    if PsLen(cwzRelative) then
                         if AfxPathIsRelative(cwzRelative) then wszText = cwzRelative
                     end if
                 end if

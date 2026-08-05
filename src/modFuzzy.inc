@@ -90,12 +90,12 @@ function fuzzy_has_match( byval needle as DWSTRING, byval haystack as DWSTRING )
 	'' Case-insensitive, order-preserving subsequence test. Lowercasing
 	'' both strings once and scanning with Instr replaces the original
 	'' strcasechr()-based pointer walk.
-	dim as DWSTRING lneedle = lcase(needle)
-	dim as DWSTRING lhaystack = lcase(haystack)
+	dim as DWSTRING lneedle = PsLCase(needle)
+	dim as DWSTRING lhaystack = PsLCase(haystack)
 	dim as integer hpos = 1
 
-	for i as integer = 1 to len(lneedle)
-		hpos = instr(hpos, lhaystack, mid(lneedle, i, 1))
+	for i as integer = 1 to PsLen(lneedle)
+		hpos = instr(hpos, lhaystack, PsMid(lneedle, i, 1))
 		if hpos = 0 then return false
 		hpos += 1
 	next
@@ -106,7 +106,7 @@ private sub fuzzy_precompute_bonus( byref haystack as DWSTRING, match_bonus() as
 	'' Which positions are beginning of words
 	dim as ubyte last_ch = asc("/")
 	dim as ubyte ch
-	dim as integer hlen = len(haystack)
+	dim as integer hlen = PsLen(haystack)
 
 	redim match_bonus(hlen - 1)
 
@@ -118,13 +118,13 @@ private sub fuzzy_precompute_bonus( byref haystack as DWSTRING, match_bonus() as
 end sub
 
 private sub fuzzy_setup_match_struct( byref m as fuzzy_match_struct, byref needle as DWSTRING, byref haystack as DWSTRING )
-	m.needle_len = len(needle)
-	m.haystack_len = len(haystack)
+	m.needle_len = PsLen(needle)
+	m.haystack_len = PsLen(haystack)
 
 	if m.needle_len > m.haystack_len then exit sub
 
-	m.lower_needle = lcase(needle)
-	m.lower_haystack = lcase(haystack)
+	m.lower_needle = PsLCase(needle)
+	m.lower_haystack = PsLCase(haystack)
 
 	fuzzy_precompute_bonus( haystack, m.match_bonus() )
 end sub
@@ -177,7 +177,7 @@ private sub fuzzy_match_row( byref m as fuzzy_match_struct, byval row as integer
 end sub
 
 function fuzzy_match( byval needle as DWSTRING, byval haystack as DWSTRING ) as score_t
-	if len(needle) = 0 then return SCORE_MIN
+	if PsLen(needle) = 0 then return SCORE_MIN
 
     static bonus_initialized as boolean = false
     if bonus_initialized = false then
@@ -218,7 +218,7 @@ function fuzzy_match( byval needle as DWSTRING, byval haystack as DWSTRING ) as 
 end function
 
 function fuzzy_match_positions( byval needle as DWSTRING, byval haystack as DWSTRING, positions() as uinteger ) as score_t
-	if len(needle) = 0 then return SCORE_MIN
+	if PsLen(needle) = 0 then return SCORE_MIN
 
     static bonus_initialized as boolean = false
     if bonus_initialized = false then

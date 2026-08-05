@@ -33,7 +33,7 @@ function getMenuAccelText( byval idMenu as long ) As DWSTRING
         end if
     next
     
-    if len(wszAccel) then wszAccel = chr(9) & wszAccel
+    if PsLen(wszAccel) then wszAccel = chr(9) & wszAccel
     return wszAccel
 end function
 
@@ -79,7 +79,7 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_USERTOOLSBASE to IDM_USERTOOLSBASE + ubound(gConfig.Tools)
             dim as DWSTRING wszText = gConfig.Tools(idMenu - IDM_USERTOOLSBASE).wszDescription
             dim as DWSTRING wszShortcut = createToolsMenuShortcut(idMenu - IDM_USERTOOLSBASE)
-            if len(wszShortcut) then wszText = wszText & chr(9) & wszShortcut
+            if PsLen(wszShortcut) then wszText = wszText & chr(9) & wszShortcut
             return wszText
         case IDM_USERTOOLSLIST: return L(11,"(Empty)")
         case IDM_SETTINGS: return L(224,"Settings")

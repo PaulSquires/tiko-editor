@@ -161,13 +161,13 @@ function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval
     wszWorkingFolder = gConfig.Tools(nToolNum).wszWorkingFolder
 
 
-    if len(wszWorkingFolder) then
+    if PsLen(wszWorkingFolder) then
         ' Convert relative path to absolute path if needed.
         if AfxPathIsRelative(wszWorkingFolder) then
             wszWorkingFolder = AfxPathCombine(AfxGetExePathName, wszWorkingFolder)
         end if
         if AfxPathIsDirectory(wszWorkingFolder) = false then
-            wszWorkingFolder = left(AfxGetExePathName, 1) + mid(wszWorkingFolder, 2)
+            wszWorkingFolder = left(AfxGetExePathName, 1) + PsMid(wszWorkingFolder, 2)
         end if
         chdir gConfig.Tools(nToolNum).wszWorkingFolder
     end if
@@ -180,7 +180,7 @@ function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval
         wszCommand = AfxPathCombine(AfxGetExePathName, wszCommand)
     end if
     if AfxPathFileExists(wszCommand) = false then
-        wszCommand = left(AfxGetExePathName, 1) + mid(wszCommand, 2)
+        wszCommand = left(AfxGetExePathName, 1) + PsMid(wszCommand, 2)
     end if
     wszCommand = wchr(34) + wszCommand + wchr(34)
 
@@ -227,7 +227,7 @@ function createToolsMenuShortcut( byval nCtrlID as long ) as DWSTRING
     if gConfig.Tools(nCtrlID).IsCtrl then wszShortcut = "Ctrl+"
     if gConfig.Tools(nCtrlID).IsShift then wszShortcut = wszShortcut + "Shift+"
     if gConfig.Tools(nCtrlID).IsAlt then wszShortcut = wszShortcut + "Alt+"
-    wszShortcut = trim(wszShortcut + ucase(trim(gConfig.Tools(nCtrlID).wszKey)), any " +")
+    wszShortcut = Trim(wszShortcut + ucase(trim(gConfig.Tools(nCtrlID).wszKey)), any " +")
 
     return wszShortcut
 end function
@@ -294,8 +294,8 @@ function frmUserTools_ShortcutText( byval idx as long ) as DWSTRING
     dim as DWSTRING wszKey = trim(gToolsWork(idx).wszKey)
     ' "None" is the pick-list AFFORDANCE the previous dialog persisted, not a key. Treated as
     ' no shortcut here, and NOT as a dead one -- see frmUserTools_ShortcutIsDead.
-    if len(wszKey) = 0 then return ""
-    if ucase(wszKey) = "NONE" then return ""
+    if PsLen(wszKey) = 0 then return ""
+    if PsUCase(wszKey) = "NONE" then return ""
 
     dim as DWSTRING wsz
     if gToolsWork(idx).IsCtrl  then wsz = wsz & "Ctrl+"
@@ -323,8 +323,8 @@ end function
 function frmUserTools_ShortcutIsDead( byval idx as long ) as boolean
     if (idx < lbound(gToolsWork)) orelse (idx > ubound(gToolsWork)) then return false
     dim as DWSTRING wszKey = trim(gToolsWork(idx).wszKey)
-    if len(wszKey) = 0 then return false
-    if ucase(wszKey) = "NONE" then return false
+    if PsLen(wszKey) = 0 then return false
+    if PsUCase(wszKey) = "NONE" then return false
     return iif( KeyBindings_PickListKeyToValue( wszKey ) = 0, true, false )
 end function
 
@@ -344,8 +344,8 @@ end function
 private function frmUserTools_ShortcutClash( byval idx as long ) as DWSTRING
     if (idx < lbound(gToolsWork)) orelse (idx > ubound(gToolsWork)) then return ""
     dim as DWSTRING wszKey = trim(gToolsWork(idx).wszKey)
-    if len(wszKey) = 0 then return ""
-    if ucase(wszKey) = "NONE" then return ""
+    if PsLen(wszKey) = 0 then return ""
+    if PsUCase(wszKey) = "NONE" then return ""
     return frmAssignKey_ClashText( wszKey, _
                                      iif( gToolsWork(idx).IsCtrl  <> 0, true, false ), _
                                      iif( gToolsWork(idx).IsAlt   <> 0, true, false ), _
@@ -448,7 +448,7 @@ private sub frmUserTools_ListPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
                 ' A tool with no name is a legal state -- Add creates one, and the user names
                 ' it afterwards. Show a placeholder rather than a blank row that looks like a
                 ' rendering fault, and dim it so it does not read as the tool's actual name.
-                if len(wszCell) = 0 then
+                if PsLen(wszCell) = 0 then
                     wszCell = L(342,"(untitled)")
                     if p->isSelected = false then clr = theme.topmenu.textdisabled.forecolor
                 end if
@@ -789,7 +789,7 @@ private sub frmUserTools_ButtonClick( byval hButton as HWND, byval id as long )
         case IDC_FRMUSERTOOLS_CMDBROWSEFOLDER
             if gUTCurrent < 0 then exit sub
             dim as DWSTRING wszFolder = AfxBrowseForFolder( HWND_FRMUSERTOOLS, L(228,"Working Folder"), curdir )
-            if len(wszFolder) then
+            if PsLen(wszFolder) then
                 PsTextBox_SetText( ghUTFolder, wszFolder )
                 gToolsWork(gUTCurrent).wszWorkingFolder = wszFolder
             end if
@@ -962,7 +962,7 @@ private function frmUserTools_OnPaint( byval hwnd as HWND ) as LRESULT
 
     dim as DWSTRING wszShortcut = frmUserTools_ShortcutText( gUTCurrent )
     dim as COLORREF clrShortcut = theme.ui.field.forecolor
-    if len(wszShortcut) = 0 then
+    if PsLen(wszShortcut) = 0 then
         wszShortcut = L(343,"(none)")
         clrShortcut = theme.topmenu.textdisabled.forecolor
     elseif frmUserTools_ShortcutIsDead( gUTCurrent ) then
@@ -976,7 +976,7 @@ private function frmUserTools_OnPaint( byval hwnd as HWND ) as LRESULT
         ' will not let one be created, so this only ever shows for a binding that pre-dates the
         ' check -- but that is exactly the case nothing else would report.
         dim as DWSTRING wszOwner = frmUserTools_ShortcutClash( gUTCurrent )
-        if len(wszOwner) then
+        if PsLen(wszOwner) then
             wszShortcut = wszShortcut & "   " & wszOwner
             clrShortcut = theme.compile.iconfail
         end if
@@ -1372,29 +1372,29 @@ sub frmUserTools_RunSelfTest()
             wszEff = gKeys(i).wszDefaultKeys
         end if
         ' A single-modifier binding, so the parts are unambiguous to reconstruct below.
-        if left(ucase(wszEff),5) = "CTRL+" then
-            if instr(mid(ucase(wszEff),6), "+") = 0 then
-                wszLiveKeys  = mid(wszEff, 6)
+        if left(PsUCase(wszEff),5) = "CTRL+" then
+            if instr(mid(PsUCase(wszEff),6), "+") = 0 then
+                wszLiveKeys  = PsMid(wszEff, 6)
                 wszLiveOwner = gKeys(i).wszDescription
                 exit for
             end if
         end if
     next
 
-    UTASSERT( len(wszLiveKeys) > 0, "found a live Ctrl+<key> editor binding to test against" )
-    if len(wszLiveKeys) then
+    UTASSERT( PsLen(wszLiveKeys) > 0, "found a live Ctrl+<key> editor binding to test against" )
+    if PsLen(wszLiveKeys) then
         ' It clashes...
         dim as DWSTRING wszHit = frmAssignKey_ClashText( wszLiveKeys, true, false, false, _
                                                          ASSIGNKEY_DOMAIN_NONE, -1 )
-        UTASSERT( len(wszHit) > 0, "Ctrl+" & wszLiveKeys & " is reported as taken by an editor command" )
-        UTASSERT( instr(wszHit, wszLiveOwner) > 0, "the clash names the command that owns it" )
+        UTASSERT( PsLen(wszHit) > 0, "Ctrl+" & wszLiveKeys & " is reported as taken by an editor command" )
+        UTASSERT( PsInStr(wszHit, wszLiveOwner) > 0, "the clash names the command that owns it" )
 
         ' ...and the SAME KEY WITHOUT THE MODIFIER DOES NOT. This is the assertion that stops
         ' the one above passing for the wrong reason: a clash test that ignored the modifiers
         ' entirely -- comparing bare key names -- would report a hit here too.
         dim as DWSTRING wszFree = frmAssignKey_ClashText( wszLiveKeys, false, true, true, _
                                                           ASSIGNKEY_DOMAIN_NONE, -1 )
-        UTASSERT( len(wszFree) = 0, "Alt+Shift+" & wszLiveKeys & " is NOT reported as taken" )
+        UTASSERT( PsLen(wszFree) = 0, "Alt+Shift+" & wszLiveKeys & " is NOT reported as taken" )
     end if
 
     ' TOOL VERSUS TOOL, and the skip-self rule. Two staging rows carrying the identical
@@ -1455,9 +1455,9 @@ sub frmUserTools_RunSelfTest()
                 wszXKey = wszTry : exit for
             end if
         next
-        UTASSERT( len(wszXKey) > 0, "found an unbound keystroke to test cross-domain routing with" )
+        UTASSERT( PsLen(wszXKey) > 0, "found an unbound keystroke to test cross-domain routing with" )
 
-        if len(wszXKey) then
+        if PsLen(wszXKey) then
             ' A committed BUILD holding it is seen by a TOOLS-domain query, whose tools half
             ' reads the (empty) staging array and whose builds half reads gConfig.
             redim gConfig.Builds(0)

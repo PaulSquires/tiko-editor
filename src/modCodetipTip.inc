@@ -146,7 +146,7 @@ function Codetip_Show( byval pDoc as clsDocument ptr, byval wszText as DWSTRING,
                        byval nAnchorPos as long ) as boolean
     if ghCodetip = 0 then return false
     if pDoc = 0 then return false
-    if len( wszText ) = 0 then return false
+    if PsLen( wszText ) = 0 then return false
 
     dim as HWND hEdit = pDoc->hWndActiveScintilla
     dim as RECT rcAnchor

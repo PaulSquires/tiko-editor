@@ -402,7 +402,7 @@ function frmMain_OnCommand( _
             dim as DWSTRING wszHelpSel
             if pDocHelp then
                 wszHelpSel = HelpCenter_NormalizeQuery( pDocHelp->GetSelText() )
-                if len( wszHelpSel ) = 0 then
+                if PsLen( wszHelpSel ) = 0 then
                     ' The fallback is filtered, the selection is not -- see
                     ' HelpCenter_IsSearchableWord. GetWord walks punctuation when the
                     ' caret is not in a word, and searching for "'" reads as broken.

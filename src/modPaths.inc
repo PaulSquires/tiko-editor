@@ -34,7 +34,7 @@ function AfxFilenameOriginalCase( byval filename as DWSTRING ) as DWSTRING
 
     if (result > 0) andalso (result < bufSize) then
         ' Good data returned but still need to remove the mapping characters
-        if left(buffer, 4) = "\\?\" then buffer = mid(buffer, 5)
+        if PsLeft(buffer, 4) = "\\?\" then buffer = PsMid(buffer, 5)
     else
         ' error: could not retrieve path. 
     end if
@@ -65,9 +65,9 @@ function FilenameOriginalCase( byval wszFilename as DWSTRING ) as DWSTRING
     CloseHandle( hFile )
 
     if (result > 0) andalso (result < bufSize) then
-        buffer = left( buffer, result )      ' drop the unwritten buffer tail
+        buffer = PsLeft( buffer, result )      ' drop the unwritten buffer tail
         ' Good data returned but still need to remove the mapping characters
-        if left( buffer, 4 ) = "\\?\" then buffer = mid( buffer, 5 )
+        if PsLeft( buffer, 4 ) = "\\?\" then buffer = PsMid( buffer, 5 )
         return buffer
     end if
 
@@ -87,12 +87,12 @@ function ProcessToCurdriveApp( byval wszFilename as DWSTRING ) as DWSTRING
     ' drive letter.
     dim as DWSTRING wszText = AfxGetExePathName
 
-    dim wszCurDrive as DWSTRING = lcase(left(wszText, 3))  ' eg. D:\
+    dim wszCurDrive as DWSTRING = lcase(PsLeft(wszText, 3))  ' eg. D:\
 
     ' if the incoming filename is a relative file name then the following test
     ' will have no effect.
-    if lcase(left(wszFilename, 3)) = wszCurDrive then 
-        wszFilename = wstr("{CURDRIVE}") & mid(wszFilename, 2)
+    if lcase(PsLeft(wszFilename, 3)) = wszCurDrive then 
+        wszFilename = wstr("{CURDRIVE}") & PsMid(wszFilename, 2)
     end if
 
     return wszFilename
@@ -110,8 +110,8 @@ function ProcessFromCurdriveApp( byval wszFilename as DWSTRING ) as DWSTRING
     ' drive letter.
     dim as DWSTRING wszText = AfxGetExePathName
 
-    if ucase(left(wszFilename, 10)) = wstr("{CURDRIVE}") then 
-        wszFilename = left(wszText, 1) & mid(wszFilename, 11)
+    if ucase(PsLeft(wszFilename, 10)) = wstr("{CURDRIVE}") then 
+        wszFilename = PsLeft(wszText, 1) & PsMid(wszFilename, 11)
     end if
 
     return wszFilename
@@ -129,12 +129,12 @@ function ProcessToCurdriveProject( byval wszFilename as DWSTRING ) as DWSTRING
     ' drive letter.
     dim wszText as DWSTRING = gApp.ProjectFilename
 
-    dim wszCurDrive as DWSTRING = lcase(left(wszText, 3))  ' eg. D:\
+    dim wszCurDrive as DWSTRING = lcase(PsLeft(wszText, 3))  ' eg. D:\
 
     ' if the incoming filename is a relative file name then the following test
     ' will have no effect.
-    if lcase(left(wszFilename, 3)) = wszCurDrive then 
-        wszFilename = wstr("{CURDRIVE}") & mid(wszFilename, 2)
+    if lcase(PsLeft(wszFilename, 3)) = wszCurDrive then 
+        wszFilename = wstr("{CURDRIVE}") & PsMid(wszFilename, 2)
     end if
 
     return wszFilename
@@ -152,8 +152,8 @@ function ProcessFromCurdriveProject( byval wszFilename as DWSTRING ) as DWSTRING
     ' drive letter.
     dim wszText as DWSTRING = gApp.ProjectFilename
     
-    if ucase(left(wszFilename, 10)) = wstr("{CURDRIVE}") then 
-        wszFilename = left(wszText, 1) & mid(wszFilename, 11)
+    if ucase(PsLeft(wszFilename, 10)) = wstr("{CURDRIVE}") then 
+        wszFilename = PsLeft(wszText, 1) & PsMid(wszFilename, 11)
     end if
 
     return wszFilename

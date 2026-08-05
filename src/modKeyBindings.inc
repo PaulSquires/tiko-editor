@@ -260,11 +260,11 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
     if pStream.Open( wszFilename ) = S_OK then
         do until pStream.EOS
             dim as DWSTRING wst = pStream.ReadLine
-            wst = trim(wst)
-            if len(wst) = 0 then continue Do
+            wst = PsTrim(wst)
+            if PsLen(wst) = 0 then continue Do
 
             ' Each keybinding entry has fields separated by a colon
-            if instr( wst, ":" ) = 0 then continue do
+            if PsInStr( wst, ":" ) = 0 then continue do
 
             dim as DWSTRING wszMsgString = AfxStrParse(wst, 1, ":")
 
@@ -272,10 +272,10 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
             ' default key combination should be disabled.
             dim as boolean bDisabled = false
             dim as long i
-            i = instr(wszMsgString, "(DISABLED)")
+            i = PsInStr(wszMsgString, "(DISABLED)")
             if i then
                 bDisabled = true
-                wszMsgString = left(wszMsgString, i-1 )
+                wszMsgString = PsLeft(wszMsgString, i-1 )
             end if
 
             dim as DWSTRING wszUserKeys = trim(AfxStrParse(wst, 2, ":"))
@@ -297,7 +297,7 @@ end function
 ' Convert a virtual key string (Ctrl, Alt, Shift) to virtual key value
 ' ========================================================================================
 function frmKeyboard_VirtKeyToValue( byval wszString as DWSTRING ) as long
-    select case ucase(wszString)
+    select case PsUCase(wszString)
         case "CTRL":  return FCONTROL
         case "ALT":   return FALT
         case "SHIFT": return FSHIFT
@@ -329,7 +329,7 @@ end function
 ' shortcut string, and is kept only so a hand-edited keybindings.ini still loads.
 ' ========================================================================================
 function frmKeyboard_AccelKeyToValue( byval wszString as DWSTRING ) as long
-    select case ucase(wszString)
+    select case PsUCase(wszString)
         case "BACKSPACE": return VK_BACK
         case "TAB": return VK_TAB
         case "ENTER": return VK_RETURN
@@ -561,7 +561,7 @@ end function
 ' ========================================================================================
 function KeyBindings_FindCommandForKeys( byval wszKeys as DWSTRING ) as DWSTRING
 
-    if len(wszKeys) = 0 then return ""
+    if PsLen(wszKeys) = 0 then return ""
 
     for i as long = lbound(gKeys) to ubound(gKeys)
 
@@ -576,8 +576,8 @@ function KeyBindings_FindCommandForKeys( byval wszKeys as DWSTRING ) as DWSTRING
             wszEff = gKeys(i).wszDefaultKeys
         end if
 
-        if len(wszEff) = 0 then continue for
-        if ucase(wszEff) = ucase(wszKeys) then return gKeys(i).wszDescription
+        if PsLen(wszEff) = 0 then continue for
+        if PsUCase(wszEff) = PsUCase(wszKeys) then return gKeys(i).wszDescription
 
     next
 
@@ -586,18 +586,18 @@ end function
 
 
 function KeyBindings_PickListKeyToValue( byval wszString as DWSTRING ) as long
-    dim as DWSTRING wszName = trim(wszString)
-    if len(wszName) = 0 then return 0
+    dim as DWSTRING wszName = PsTrim(wszString)
+    if PsLen(wszName) = 0 then return 0
 
     ' The affordance, not a key. TEST 7 asserts the vocabulary holds nothing by this name,
     ' so this cannot shadow a real entry.
-    if ucase(wszName) = "NONE" then return 0
+    if PsUCase(wszName) = "NONE" then return 0
 
     KeyBindings_EnsureKeyNames()
 
     ' Stored text is whatever the combobox held; the callers used to normalise with
     ' ucase(trim(...)), and their existing config files may carry either spelling.
-    dim as DWSTRING wszUpper = ucase(wszName)
+    dim as DWSTRING wszUpper = PsUCase(wszName)
 
     for i as long = lbound(gKeyNames) to ubound(gKeyNames)
         if ucase(gKeyNames(i).wszName) = wszUpper then
@@ -747,7 +747,7 @@ sub KeyBindings_RunSelfTest()
         dim as string sMsg   = gKeys(i).wszMsgString
         dim as string sKeys  = gKeys(i).wszDefaultKeys
         dim as string sCanon = wszCanon
-        KBASSERT( (len(wszCanon) > 0) andalso (ucase(wszCanon) = ucase(wszFinal)), _
+        KBASSERT( (PsLen(wszCanon) > 0) andalso (PsUCase(wszCanon) = PsUCase(wszFinal)), _
                   sMsg & " default """ & sKeys & """ final key is not canonical (got """ & _
                   sCanon & """)" )
 
@@ -903,7 +903,7 @@ function frmKeyboard_BuildAcceleratorTable() as long
         end if
 
         ' No need to proceed further if no User defined shortcut and Default keys disabled
-        if len(wszKeys) = 0 then continue for
+        if PsLen(wszKeys) = 0 then continue for
 
         ' convert the key combination into something that AddAcelerator can understand
         ' F5

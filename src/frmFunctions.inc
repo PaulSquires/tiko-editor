@@ -53,7 +53,7 @@ function frmFunctions_SelectItemData( byval pDoc as clsDocument ptr ) as boolean
     dim as HWND hCtrl = HWND_FRMFUNCTIONS
 
     dim as DWSTRING wszFile = pDoc->DiskFilename
-    if len( wszFile ) = 0 then return false
+    if PsLen( wszFile ) = 0 then return false
 
     ' If the currently selected item already belongs to this file then simply exit
     dim as integer nCurSel = PsListTree_GetCurSel(hCtrl)
@@ -309,10 +309,10 @@ function QuickSortFuncs( a() as FUNCTION_NODE_TYPE, lo as long, hi as long ) as 
     
     if lo < hi then
         i = lo : j = hi
-        pivot = ucase( a( (lo+hi)/2 ).wszFunctionName )
+        pivot = PsUCase( a( (lo+hi)/2 ).wszFunctionName )
         do
-            while ucase(a(i).wszFunctionName) < pivot and i < hi: i += 1: wend
-            while ucase(a(j).wszFunctionName) > Pivot and j > lo: j -= 1: wend
+            while PsUCase(a(i).wszFunctionName) < pivot and i < hi: i += 1: wend
+            while PsUCase(a(j).wszFunctionName) > Pivot and j > lo: j -= 1: wend
             if i <= j then swap a(i), a(j): i += 1: j -= 1
         loop while i <= j
         if lo < j then QuickSortFuncs( a(), lo, j )

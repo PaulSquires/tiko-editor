@@ -75,7 +75,7 @@ private sub Workspace_Check( byref wszName as wstring, byval bCond as boolean, b
         gWorkspaceTestFail += 1
         sLine = "FAIL  " & str(wszName)
     end if
-    if len(wszDetail) then sLine = sLine & "   [" & str(wszDetail) & "]"
+    if PsLen(wszDetail) then sLine = sLine & "   [" & str(wszDetail) & "]"
     ' Build a `string` first -- printing a DWSTRING, or a `string & wstring` concat,
     ' interleaves nulls.
     print sLine
@@ -84,8 +84,8 @@ end sub
 private function Workspace_TestUntitledNotInMRU() as boolean
     for i as long = 0 to 9
         dim as DWSTRING wszEntry = ProcessFromCurdriveApp( gConfig.MRUProject(i) )
-        if len(wszEntry) = 0 then continue for
-        if ucase(wszEntry) = ucase(gConfig.UntitledProjectFilename) then return false
+        if PsLen(wszEntry) = 0 then continue for
+        if PsUCase(wszEntry) = ucase(gConfig.UntitledProjectFilename) then return false
     next
     return true
 end function
@@ -143,14 +143,14 @@ sub Workspace_RunSelfTest()
     ' workspace is entirely self-consistent, so all of it passed while startup silently
     ' ignored the user's last project. (Cause: establish writes wszLastActiveProject, and
     ' the restore decision used to read that same field afterwards.)
-    dim as boolean bHasTarget   = ( len(gWorkspaceRestoreTarget) > 0 )
-    dim as boolean bNotUntitled = ( ucase(gWorkspaceRestoreTarget) <> ucase(gConfig.UntitledProjectFilename) )
+    dim as boolean bHasTarget   = ( PsLen(gWorkspaceRestoreTarget) > 0 )
+    dim as boolean bNotUntitled = ( PsUCase(gWorkspaceRestoreTarget) <> ucase(gConfig.UntitledProjectFilename) )
     dim as boolean bRestoreOn   = ( gConfig.RestoreSession <> 0 )
     dim as boolean bTargetOnDisk = ( AfxFileExists(gWorkspaceRestoreTarget) <> 0 )
     dim as boolean bWantedNamed = bHasTarget andalso bNotUntitled
     if bRestoreOn andalso bWantedNamed andalso bTargetOnDisk then
         Workspace_Check( "a restorable named project was actually restored", _
-            ucase(gApp.ProjectFilename) = ucase(gWorkspaceRestoreTarget), _
+            ucase(gApp.ProjectFilename) = PsUCase(gWorkspaceRestoreTarget), _
             "wanted=" & gWorkspaceRestoreTarget & " got=" & gApp.ProjectFilename )
     else
         ' Say so rather than passing quietly -- a vacuous pass here reads as coverage.
@@ -378,7 +378,7 @@ sub Workspace_RunSelfTest()
             Workspace_Check( "promotion makes the workspace named", _
                 gApp.IsProjectNamed() )
             Workspace_Check( "promotion repoints the restore slot to the new project", _
-                ucase(gConfig.wszLastActiveProject) = ucase(wszScratch), _
+                ucase(gConfig.wszLastActiveProject) = PsUCase(wszScratch), _
                 "slot=" & gConfig.wszLastActiveProject )
             Workspace_Check( "promotion retires the untitled workspace file", _
                 AfxFileExists( gConfig.UntitledProjectFilename ) = 0 )

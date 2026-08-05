@@ -209,9 +209,9 @@ function frmMain_RestoreWorkspace( byref wszLastProject as const wstring ) as lo
     ' it, because an untitled workspace is perfectly self-consistent.
     if gConfig.RestoreSession = 0 then return 0
 
-    dim as boolean bIsNamed = ( ucase(wszLastProject) <> ucase(gConfig.UntitledProjectFilename) )
+    dim as boolean bIsNamed = ( PsUCase(wszLastProject) <> ucase(gConfig.UntitledProjectFilename) )
     if bIsNamed = false then return 0
-    if len(wszLastProject) = 0 then return 0
+    if PsLen(wszLastProject) = 0 then return 0
     if AfxFileExists( wszLastProject ) = 0 then return 0
 
     frmMain_OpenProjectSafely( HWND_FRMMAIN, wszLastProject )
@@ -327,14 +327,14 @@ function frmMain_ProcessCommandLine( byval hwnd as HWND ) as long
     dim as long i = 1
     do
         wszArg = AfxCommand(i)
-        if len(wszArg) = 0 then exit do
+        if PsLen(wszArg) = 0 then exit do
         
         ' Remove any double quotes from the argument.
         wszPath = AfxStrRemove( wszArg, wchr(34) )
         
         ' if no path exists for the file then add the current folder
         wszPath = AfxStrPathname( "PATH", wszArg )
-        if len(wszPath) = 0 then wszArg = AfxGetExePathName & wszArg 
+        if PsLen(wszPath) = 0 then wszArg = AfxGetExePathName & wszArg 
         
         dim as integer ub = ubound(wszFiles) + 1
         redim preserve wszFiles(ub)
@@ -383,7 +383,7 @@ function frmMain_HighlightWord( _
     SciMsg( pSci, SCI_SETINDICATORCURRENT, 10, 0)
     SciMsg( pSci, SCI_INDICATORCLEARRANGE, 0, nLength)
 
-    if len(ltrim(text)) = 0 then exit function
+    if len(PsLTrim(text)) = 0 then exit function
 
     '// Update indicator appearance
     SciMsg( pSci, SCI_INDICSETSTYLE, NUM, INDIC_STRAIGHTBOX )
@@ -398,14 +398,14 @@ function frmMain_HighlightWord( _
 	dim as long startPos = 0
     dim as long r
     do 
-        r = SciMsg( pSci, SCI_SEARCHINTARGET, len(text), cast(LPARAM, strptr(text)))
+        r = SciMsg( pSci, SCI_SEARCHINTARGET, PsLen(text), cast(LPARAM, strptr(text)))
         if r = -1 then exit do
         
         numfound = numfound + 1
 		
 		SciMsg( pSci, SCI_SETINDICATORVALUE, NUM, 0 )
-        SciMsg( pSci, SCI_INDICATORFILLRANGE, r, len(text))
-        startPos = r + len(text)
+        SciMsg( pSci, SCI_INDICATORFILLRANGE, r, PsLen(text))
+        startPos = r + PsLen(text)
         
         ' Adjust the searching positions
         SciMsg( pSci, SCI_SETTARGETSTART, startPos, 0)
@@ -1492,7 +1492,7 @@ function frmMain_WndProc( _
                 if pDataToGet->dwData = IDM_COPYDATA_COMMANDLINE then  
                     dim as DWSTRING wszCommandLine = _
                             SafeCopyDataString( pDataToGet->lpData, pDataToGet->cbData )
-                    if len( wszCommandLine ) = 0 then return 0
+                    if PsLen( wszCommandLine ) = 0 then return 0
 
                     dim as integer numfiles = AfxStrParseCount(wszCommandLine, ";")
                     dim wszFiles(numfiles) as DWSTRING
@@ -1914,7 +1914,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' 0x0; that is what happened last time.
     scope
         dim as DWSTRING wszAutoRun = environ("TIKO_DEBUG_AUTORUN")
-        if len(wszAutoRun) then frmDebug_Show( HWND_FRMMAIN, wszAutoRun, "" )
+        if PsLen(wszAutoRun) then frmDebug_Show( HWND_FRMMAIN, wszAutoRun, "" )
     end scope
 
     ' And the Project Options dialog. FALSE, i.e. the EDIT path rather than the new-project

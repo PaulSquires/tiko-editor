@@ -1785,15 +1785,15 @@ sub PsComboBox_RunSelfTest( byval hWndParent as HWND )
     PsComboBox_SetCurSel( h, -1 )
     dim as boolean bPH = false
     dim as DWSTRING wszShown = pC->DisplayText( bPH )
-    sD = "len=" & str(len(wszShown)) & " isPlaceholder=" & str(bPH)
+    sD = "len=" & str(PsLen(wszShown)) & " isPlaceholder=" & str(bPH)
     CBOTest_Check( "no selection, no placeholder draws nothing", _
-                   (len(wszShown) = 0) andalso (bPH = false), sD )
+                   (PsLen(wszShown) = 0) andalso (bPH = false), sD )
 
     PsComboBox_SetPlaceholderText( h, "Choose..." )
     wszShown = pC->DisplayText( bPH )
-    sD = "len=" & str(len(wszShown)) & " isPlaceholder=" & str(bPH)
+    sD = "len=" & str(PsLen(wszShown)) & " isPlaceholder=" & str(bPH)
     CBOTest_Check( "no selection with placeholder draws it", _
-                   (len(wszShown) > 0) andalso (bPH = true), sD )
+                   (PsLen(wszShown) > 0) andalso (bPH = true), sD )
 
     dim as long wWithPH, hWithPH
     PsComboBox_GetIdealSize( h, wWithPH, hWithPH )

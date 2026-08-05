@@ -66,7 +66,7 @@ function GetThemeDescription( byval wszFilename as DWSTRING ) as string
     do until pStream.EOS
         wst = pStream.ReadLine
         wst = trim(AfxStrExtract( 1, wst, "#"))     ' remove comments
-        if len(wst) = 0 then continue Do
+        if PsLen(wst) = 0 then continue Do
         keyValue = trim(AfxStrParse(wst, 1, ":"))
         keyData = trim(AfxStrParse(wst, 2, ":"))
         if keyValue = "general.description" then
@@ -91,7 +91,7 @@ private function frmOptionsColors_EnumFontProc( _
     dim as DWSTRING nm = lf.lfFaceName
     ' Skip the "@Name" vertical-writing faces; the old owner-drawn combo showed them, but
     ' they are never wanted as an editor font and only clutter the list.
-    if (len(nm) = 0) orelse (left(nm, 1) = "@") then return 1
+    if (PsLen(nm) = 0) orelse (PsLeft(nm, 1) = "@") then return 1
     dim as long idx = ubound(gColorFontNames) + 1
     redim preserve gColorFontNames(idx) as DWSTRING
     gColorFontNames(idx) = nm
@@ -104,7 +104,7 @@ end function
 ' ========================================================================================
 private sub frmOptionsColors_FillSizes( byval hCombo as HWND, byval wszFont as DWSTRING )
     PsComboBox_Clear( hCombo )
-    select case ucase(wszFont)
+    select case PsUCase(wszFont)
         case "FIXEDSYS"
             PsComboBox_AddItem( hCombo, "9" )
         case "TERMINAL"
@@ -256,7 +256,7 @@ private function frmOptionsColors_LoadFonts() as long
     ' Insertion sort (case-insensitive). A few hundred names, once per dialog session.
     for i as long = lbound(gColorFontNames) + 1 to ubound(gColorFontNames)
         dim as DWSTRING key = gColorFontNames(i)
-        dim as DWSTRING keyU = ucase(key)
+        dim as DWSTRING keyU = PsUCase(key)
         dim as long j = i - 1
         do while (j >= lbound(gColorFontNames)) andalso (ucase(gColorFontNames(j)) > keyU)
             gColorFontNames(j+1) = gColorFontNames(j)
@@ -272,7 +272,7 @@ private function frmOptionsColors_LoadFonts() as long
     PsListTree_BeginUpdate( ghColorFonts )
     PsListTree_Clear( ghColorFonts )
     for i as long = lbound(gColorFontNames) to ubound(gColorFontNames)
-        if ucase(gColorFontNames(i)) = ucase(wszPrev) then continue for   ' drop duplicate
+        if ucase(gColorFontNames(i)) = PsUCase(wszPrev) then continue for   ' drop duplicate
         dim as long r = PsListTree_AddString( ghColorFonts, gColorFontNames(i) )
         if ucase(gColorFontNames(i)) = wszWanted then idxMatch = r
         wszPrev = gColorFontNames(i)

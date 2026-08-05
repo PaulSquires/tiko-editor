@@ -181,7 +181,7 @@ gBuildOptions(25).wszText = "Preserve generated intermediate *.asm / *.c / *.ll 
 ' characters itself. It also removes the last reason this file needed a two-pass split.
 private function BuildOpts_Split( byval wszOptions as DWSTRING, tok() as DWSTRING ) as long
     erase tok
-    dim as long nLen = len(wszOptions)
+    dim as long nLen = PsLen(wszOptions)
     if nLen = 0 then return 0
     dim as wstring ptr p = wszOptions.sptr
     if p = 0 then return 0
@@ -464,9 +464,9 @@ private function frmBuildConfig_ComposeShortcut( byval wszKey as DWSTRING, _
                                                  byval nCtrl as long, _
                                                  byval nShift as long, _
                                                  byval nAlt as long ) as DWSTRING
-    dim as DWSTRING wsz = trim(wszKey)
-    if len(wsz) = 0 then return ""
-    if ucase(wsz) = "NONE" then return ""
+    dim as DWSTRING wsz = PsTrim(wszKey)
+    if PsLen(wsz) = 0 then return ""
+    if PsUCase(wsz) = "NONE" then return ""
 
     dim as DWSTRING wszOut
     if nCtrl  then wszOut = wszOut & "Ctrl+"
@@ -505,8 +505,8 @@ end function
 private function frmBuildConfig_ShortcutIsDead( byval idx as long ) as boolean
     if (idx < lbound(gBuildsWork)) orelse (idx > ubound(gBuildsWork)) then return false
     dim as DWSTRING wszKey = trim(gBuildsWork(idx).wszKey)
-    if len(wszKey) = 0 then return false
-    if ucase(wszKey) = "NONE" then return false
+    if PsLen(wszKey) = 0 then return false
+    if PsUCase(wszKey) = "NONE" then return false
     return iif( KeyBindings_PickListKeyToValue( wszKey ) = 0, true, false )
 end function
 
@@ -523,8 +523,8 @@ end function
 private function frmBuildConfig_ShortcutClash( byval idx as long ) as DWSTRING
     if (idx < lbound(gBuildsWork)) orelse (idx > ubound(gBuildsWork)) then return ""
     dim as DWSTRING wszKey = trim(gBuildsWork(idx).wszKey)
-    if len(wszKey) = 0 then return ""
-    if ucase(wszKey) = "NONE" then return ""
+    if PsLen(wszKey) = 0 then return ""
+    if PsUCase(wszKey) = "NONE" then return ""
     return frmAssignKey_ClashText( wszKey, _
                                    iif( gBuildsWork(idx).IsCtrl  <> 0, true, false ), _
                                    iif( gBuildsWork(idx).IsAlt   <> 0, true, false ), _
@@ -572,10 +572,10 @@ end sub
 private sub frmBuildConfig_SanitizeWork()
     for i as long = lbound(gBuildsWork) to ubound(gBuildsWork)
         dim as DWSTRING wszKey = trim(gBuildsWork(i).wszKey)
-        if len(wszKey) = 0 then continue for
+        if PsLen(wszKey) = 0 then continue for
         ' "None" is the legacy affordance the old dialog wrote on every selection change. It
         ' is not a key and never was, so it is normalised away here too.
-        dim as boolean bDrop = (ucase(wszKey) = "NONE")
+        dim as boolean bDrop = (PsUCase(wszKey) = "NONE")
         if bDrop = false then bDrop = frmBuildConfig_ShortcutIsDead( i )
         if bDrop = false then bDrop = iif( len( frmBuildConfig_ShortcutClash( i ) ) > 0, true, false )
         if bDrop then
@@ -829,7 +829,7 @@ private sub frmBuildConfig_LoadDetail( byval nIdx as long )
         PsComboBox_SetCurSel( ghBCTarget, iif( gBuildsWork(nIdx).Is64bit <> 0, BUILDTARGET_64, BUILDTARGET_32 ) )
 
         dim as DWSTRING wszSC = frmBuildConfig_ShortcutText( nIdx )
-        if len(wszSC) = 0 then wszSC = L(343,"(none)")
+        if PsLen(wszSC) = 0 then wszSC = L(343,"(none)")
         PsButton_SetText( ghBCShortcut, wszSC )
     else
         gBCCurrent = -1
@@ -861,7 +861,7 @@ private sub frmBuildConfig_BuildList( byval nSelectIdx as long = -2 )
 
     for i as long = lbound(gBuildsWork) to ubound(gBuildsWork)
         dim as DWSTRING wszDesc = gBuildsWork(i).wszDescription
-        if len(wszDesc) = 0 then wszDesc = L(342,"(untitled)")
+        if PsLen(wszDesc) = 0 then wszDesc = L(342,"(untitled)")
         dim as long row = PsListTree_AddString( HWND_FRMBUILDCONFIG_LIST, wszDesc, i )
         dim as DWSTRING wszDef
         if gBuildsWork(i).IsDefault <> 0 then wszDef = L(357,"Default")
@@ -888,7 +888,7 @@ private sub frmBuildConfig_RefreshRow( byval idx as long )
     if HWND_FRMBUILDCONFIG_LIST = 0 then exit sub
     if (idx < lbound(gBuildsWork)) orelse (idx > ubound(gBuildsWork)) then exit sub
     dim as DWSTRING wszDesc = gBuildsWork(idx).wszDescription
-    if len(wszDesc) = 0 then wszDesc = L(342,"(untitled)")
+    if PsLen(wszDesc) = 0 then wszDesc = L(342,"(untitled)")
     dim as DWSTRING wszDef
     if gBuildsWork(idx).IsDefault <> 0 then wszDef = L(357,"Default")
     PsListTree_SetText( HWND_FRMBUILDCONFIG_LIST, idx, wszDesc )
@@ -1022,7 +1022,7 @@ private sub frmBuildConfig_DoAssign()
     gAssignKeyIndex  = -1
 
     dim as DWSTRING wszSC = frmBuildConfig_ShortcutText( idx )
-    if len(wszSC) = 0 then wszSC = L(343,"(none)")
+    if PsLen(wszSC) = 0 then wszSC = L(343,"(none)")
     PsButton_SetText( ghBCShortcut, wszSC )
 
     frmBuildConfig_RefreshRow( idx )
@@ -1222,7 +1222,7 @@ private function frmBuildConfig_OnPaint( byval hwnd as HWND ) as LRESULT
         ' checkbox. Wrapped, not single-lined: PaintTextEx, because PaintText forces
         ' DT_SINGLELINE and structurally cannot wrap.
         dim as DWSTRING wszOpts = gBuildsWork(gBCCurrent).wszOptions
-        if len(trim(wszOpts)) = 0 then
+        if len(PsTrim(wszOpts)) = 0 then
             buffer.SetFont( ghFont(GUIFONT_11) )
             buffer.SetForeColor( theme.topmenu.textdisabled.forecolor )
             buffer.PaintText( L(343,"(none)"), @rcTxt, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
@@ -1786,7 +1786,7 @@ private sub frmBuildConfig_RunLayoutSelfTest()
                 scope
                     dim as DWSTRING wszL = (_text_)
                     dim as SIZEL sz
-                    GetTextExtentPoint32( hDC, wszL.sptr, len(wszL), @sz )
+                    GetTextExtentPoint32( hDC, wszL.sptr, PsLen(wszL), @sz )
                     dim as long avail = gBCRowLabelRect(_row_).right - gBCRowLabelRect(_row_).left
                     LAYASSERT( avail >= sz.cx, _
                                "the label """ & wszL & """ fits (" & str(sz.cx) & _

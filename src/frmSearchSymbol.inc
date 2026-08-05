@@ -70,7 +70,7 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
             gSymbols(nextEl).wszFilename = arrFiles(f)
             gSymbols(nextEl).nLineNumber = -1
             gSymbols(nextEl).isEnum      = false
-            gSymbols(nextEl).clrMask     = WSTRING( len(wszFilename), 48 )    ' "0"
+            gSymbols(nextEl).clrMask     = WSTRING( PsLen(wszFilename), 48 )    ' "0"
             for i as long = lbound(positions) to ubound(positions)
                 gSymbols(nextEl).clrMask[ positions(i) ] = 49   '  "1"
             next
@@ -109,7 +109,7 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
                 if nLineNum = 0 then nLineNum = gSymDb.SymLine( rs(s) )
                 gSymbols(nextEl).nLineNumber = iif( nLineNum > 0, nLineNum - 1, 0 )
                 gSymbols(nextEl).isEnum      = ( nKind = FBCP_KIND_ENUM )
-                gSymbols(nextEl).clrMask     = WSTRING( len(wszName), 48 )  ' "0"
+                gSymbols(nextEl).clrMask     = WSTRING( PsLen(wszName), 48 )  ' "0"
                 for i as long = lbound(positions) to ubound(positions)
                     gSymbols(nextEl).clrMask[ positions(i) ] = 49  ' "1"
                 next
@@ -358,7 +358,7 @@ sub frmSearchSymbol_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
         dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )        
         dim as HDC hDC = GetDC(hList)
 
-        dim as long nLen = len(wszCaption)
+        dim as long nLen = PsLen(wszCaption)
         
         for i as integer = 0 to nLen - 1
             ' Default to normal forecolor and font

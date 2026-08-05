@@ -84,12 +84,12 @@ end function
 ' First meaningful identifier of a type-text ("const Widget ptr" -> "Widget").
 private function SymDb_ExtractBaseType( byref wszTypeText as const wstring ) as DWSTRING
     dim as DWSTRING wszT = trim( wszTypeText )
-    if len( wszT ) = 0 then return ""
+    if PsLen( wszT ) = 0 then return ""
     dim as long cnt = AfxStrParseCount( wszT, " " )
     for i as long = 1 to cnt
         dim as DWSTRING tok = trim( AfxStrParse( wszT, i, " " ) )
-        if len( tok ) = 0 then continue for
-        if ucase( tok ) = "CONST" then continue for
+        if PsLen( tok ) = 0 then continue for
+        if PsUCase( tok ) = "CONST" then continue for
         return tok
     next
     return ""
@@ -227,7 +227,7 @@ sub clsSymbolDb.InstallProjectTodos( byval pNew as PARSERESULTSET ptr )
     dim as long fc = pNew->pResult->fileCount
     for i as long = 0 to fc - 1
         dim as wstring ptr pFile = @pNew->pResult->stringPool[ pNew->pResult->fileOffsets[i] ]
-        if len( wszBufRoot ) > 0 then
+        if PsLen( wszBufRoot ) > 0 then
             if SymDb_FileNameEq( *pFile, wszBufRoot ) then continue for
         end if
 
@@ -373,7 +373,7 @@ function clsSymbolDb.FindType( byref wszName as const wstring ) as SYMBOLREF
         dim as wstring ptr pType = this.SymTypeText(r)
         if pType = 0 then exit do
         dim as DWSTRING wszBase = SymDb_ExtractBaseType( *pType )
-        if len( wszBase ) = 0 then exit do
+        if PsLen( wszBase ) = 0 then exit do
         dim as SYMBOLREF r2 = this.FindByKindMask( wszBase, SYMMASK_TYPE )
         if r2.IsValid = false then exit do
         if (r2.idx = r.idx) andalso (r2.pRSet = r.pRSet) then exit do   ' self-alias
@@ -392,13 +392,13 @@ function clsSymbolDb.GetTypeBase( byval refType as SYMBOLREF ) as SYMBOLREF
     dim as wstring ptr pBase = this.SymTypeText( refType )   ' EXTENDS base name for a TYPE/UNION
     if pBase = 0 then return miss
     dim as DWSTRING wszBase = SymDb_ExtractBaseType( *pBase )
-    if len( wszBase ) = 0 then return miss
+    if PsLen( wszBase ) = 0 then return miss
     return this.FindType( wszBase )
 end function
 
 function clsSymbolDb.ResolveTypeText( byref wszTypeText as const wstring ) as SYMBOLREF
     dim as DWSTRING wszBase = SymDb_ExtractBaseType( wszTypeText )
-    if len( wszBase ) = 0 then
+    if PsLen( wszBase ) = 0 then
         dim as SYMBOLREF miss
         miss.idx = -1
         return miss
@@ -544,9 +544,9 @@ end function
 function clsSymbolDb.EnumPrefix( byref wszPrefix as const wstring, byval kindMask as long, results() as SYMBOLREF ) as long
     dim as long cnt = 0
     redim results( 0 to 127 )
-    dim as long plen = len( wszPrefix )
+    dim as long plen = PsLen( wszPrefix )
     dim as DWSTRING wszInc = this.ToolchainIncludeRoot()
-    dim as long nIncLen = len( wszInc )
+    dim as long nIncLen = PsLen( wszInc )
 
     for origin as long = 0 to 1
         ' Without a derivable toolchain root nothing can be classified, so origin 0
@@ -567,7 +567,7 @@ function clsSymbolDb.EnumPrefix( byref wszPrefix as const wstring, byval kindMas
             if nIncLen then
                 for i as long = 0 to fc - 1
                     dim as DWSTRING wszF = *cast(wstring ptr, @pRSet->pResult->stringPool[ pRSet->pResult->fileOffsets[i] ])
-                    bTool(i) = ( ucase( left( wszF, nIncLen ) ) = wszInc )
+                    bTool(i) = ( ucase( PsLeft( wszF, nIncLen ) ) = wszInc )
                 next
             end if
 
@@ -671,8 +671,8 @@ function clsSymbolDb.EnumUserFiles( results() as DWSTRING ) as long
         for i as long = 0 to fc - 1
             if this.FileContributes( pRSet, i ) = false then continue for
             dim as DWSTRING wszF = *cast(wstring ptr, @pRSet->pResult->stringPool[ pRSet->pResult->fileOffsets[i] ])
-            if len( wszInc ) then
-                if ucase( left( wszF, len( wszInc ) ) ) = wszInc then continue for
+            if PsLen( wszInc ) then
+                if ucase( PsLeft( wszF, PsLen( wszInc ) ) ) = wszInc then continue for
             end if
             dim as boolean bDup = false
             for j as long = 0 to cnt - 1
@@ -711,9 +711,9 @@ function clsSymbolDb.EnumAllProcsTypes( results() as SYMBOLREF, byval bUserFiles
         redim as boolean bUserFile( 0 to iif(fc > 0, fc - 1, 0) )
         for i as long = 0 to fc - 1
             bUserFile(i) = true
-            if bUserFilesOnly andalso (len( wszInc ) > 0) then
+            if bUserFilesOnly andalso (PsLen( wszInc ) > 0) then
                 dim as DWSTRING wszF = *cast(wstring ptr, @pRSet->pResult->stringPool[ pRSet->pResult->fileOffsets[i] ])
-                if ucase( left( wszF, len( wszInc ) ) ) = wszInc then bUserFile(i) = false
+                if ucase( PsLeft( wszF, PsLen( wszInc ) ) ) = wszInc then bUserFile(i) = false
             end if
         next
 
@@ -958,7 +958,7 @@ end sub
 function FindIntrinsicCalltip( byref wszName as const wstring ) as DWSTRING
     dim as long hi = ubound( gFBIntrinsics )
     if hi < 0 then return ""
-    dim as DWSTRING wszUp = ucase( wszName )
+    dim as DWSTRING wszUp = PsUCase( wszName )
     dim as long lo = 0
     do while lo <= hi
         dim as long mid_ = (lo + hi) \ 2

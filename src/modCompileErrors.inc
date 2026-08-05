@@ -33,7 +33,7 @@ function SetCompileStatusBarMessage( _
             byref wszText as wstring, _
             byval hIconCompile as long _
             ) as LRESULT
-    dim as boolean bIsSpinner = iif( left(wszText, 1) = "#", true, false )
+    dim as boolean bIsSpinner = iif( PsLeft(wszText, 1) = "#", true, false )
             
     dim as DWSTRING wszPanelText = wszText
     
@@ -45,7 +45,7 @@ function SetCompileStatusBarMessage( _
             SetTimer(HWND_FRMMAIN, gApp.SpinnerTimerID, 80, null)   ' 80 ms
         end if
         gApp.bShowSpinner = true
-        wszPanelText = mid(wszText, 2)
+        wszPanelText = PsMid(wszText, 2)
         
     else
         ' Current message does not include the Spinner so if a spinner is
@@ -262,7 +262,7 @@ function RunEXE( _
         dim pStream as CTextStream
         if pStream.Create(wszBatchFile) = S_OK then
             pStream.WriteLine "@echo off"
-            pStream.WriteLine left(wszPath, 2)     ' ensure on correct drive
+            pStream.WriteLine PsLeft(wszPath, 2)     ' ensure on correct drive
             pStream.WriteLine "cd " & chr(34) & wszPath & chr(34)   ' change to correct folder
             pStream.WriteLine chr(34) & wszFileExe & chr(34) & " " & wszParam
             pStream.WriteLine "pause"
@@ -411,7 +411,7 @@ function ParseLogForError ( _
     for nextLine = 1 to NumLines                   
     
         wst = trim(AfxStrParse(wsLogSt, nextLine, vbCrLf))                 
-        wst_ucase = ucase(wst)
+        wst_ucase = PsUCase(wst)
         
         ' Deal with the situation where we might be trying to compile a 64-bit application
         ' from a 32-bit operating system.
@@ -477,11 +477,11 @@ function ParseLogForError ( _
         ' to find the true OutputFilename never happens and will still be set to the default for the project
         ' which is most likely an EXE based on the Main file name.
         if left(wst_ucase, 9) = "LINKING: " then 
-            i = instr(wst, " -o ")
+            i = PsInStr(wst, " -o ")
             if i then
-                wszTemp = mid(wst, i + 4)
-                i = instr(wszTemp, wDQ & " ")
-                if i then pCompile->OutputFilename = AfxStrRemove(left(wszTemp, i), wDQ)
+                wszTemp = PsMid(wst, i + 4)
+                i = PsInStr(wszTemp, wDQ & " ")
+                if i then pCompile->OutputFilename = AfxStrRemove(PsLeft(wszTemp, i), wDQ)
                 ' if pCompile->OutputFilename is a relative filename then convert it to full filename.
                 pCompile->OutputFilename = AfxStrReplace( pCompile->OutputFilename, "/", "\" )
                 if AfxPathIsRelative( pCompile->OutputFilename ) then 
@@ -508,7 +508,7 @@ function ParseLogForError ( _
 
         if bReadingCompileOutput then
 
-            if len(wst) = 0 then continue for
+            if PsLen(wst) = 0 then continue for
 
             ' Check for any compiler warnings
             Error_Start = 0
@@ -528,14 +528,14 @@ function ParseLogForError ( _
                 ' opening parenthesis.
                 ' 2018-08-29: Code updated to handle case of embedded parenthesis in file name
                 Parenthesis_end   = Error_Start
-                Parenthesis_Start = instrrev(wst, "(", Parenthesis_End)
+                Parenthesis_Start = PsInStrRev(wst, "(", Parenthesis_End)
                 
                 if (Parenthesis_Start < Parenthesis_End) andalso _
                     (Parenthesis_end <= Error_Start) then
             
-                    wst1 = left(wst, Parenthesis_Start-1)   ' filename
-                    wst2 = mid( wst, Parenthesis_Start + 1, Parenthesis_end - Parenthesis_Start - 1)  ' line# 
-                    wst3 = mid( wst, Error_Start + 1)  ' error message
+                    wst1 = PsLeft(wst, Parenthesis_Start-1)   ' filename
+                    wst2 = PsMid( wst, Parenthesis_Start + 1, Parenthesis_end - Parenthesis_Start - 1)  ' line# 
+                    wst3 = PsMid( wst, Error_Start + 1)  ' error message
 
                     wszText = "" & chr(9) & wst2 & chr(9) & wst1 & chr(9) & wst3
                     ListBox_AddTabbedRow( hLV, wszText )
@@ -782,7 +782,7 @@ sub CompileCmd_RunSelfTest()
     CompileCmd_Tokenize( wszCmd, tok(), nTok )
     CMDASSERT( nTok = 7, "expected 7 tokens, got " & nTok )
     CMDASSERT( tok(0) = wszExe, "token 0 is not the exe: [" & tok(0) & "]" )
-    CMDASSERT( left(tok(0), 1) <> "-", "token 0 is a SWITCH -- the child will eat it" )
+    CMDASSERT( PsLeft(tok(0), 1) <> "-", "token 0 is a SWITCH -- the child will eat it" )
     ' Everything the caller supplied must survive, in order, one slot later.
     CMDASSERT( tok(1) = "-m",     "the -m flag was lost (this was the shipped bug)" )
     CMDASSERT( tok(2) = "prog",   "main module name wrong: [" & tok(2) & "]" )
@@ -793,7 +793,7 @@ sub CompileCmd_RunSelfTest()
     ' code_CompileModules space-pads CompileFlags. That accident is what kept its first
     ' switch alive. It must no longer matter -- assert BOTH spellings behave identically.
     dim as DWSTRING wszPadded   = "  -w all -O2  -c -b ""x.bas"" -v -o ""x.o"""
-    dim as DWSTRING wszTrimmed  = trim( wszPadded )
+    dim as DWSTRING wszTrimmed  = PsTrim( wszPadded )
     dim as DWSTRING tok2(0 to 63) : dim as long nTok2
 
     CompileCmd_Tokenize( BuildChildCommandLine( wszExe, wszPadded ),  tok(),  nTok )
@@ -832,13 +832,13 @@ sub CompileCmd_RunSelfTest()
     ' which is the exact shape that failed to link.
     ' FB does not process escapes in an unprefixed literal, so "\" IS one backslash --
     ' writing "\\" here would search for two and pass on every real path.
-    CMDASSERT( instr( tok(2), "\" ) = 0, "-m argument carries a PATH: [" & tok(2) & "]" )
-    CMDASSERT( instr( tok(2), "." ) = 0,  "-m argument carries an EXTENSION: [" & tok(2) & "]" )
+    CMDASSERT( PsInStr( tok(2), "\" ) = 0, "-m argument carries a PATH: [" & tok(2) & "]" )
+    CMDASSERT( PsInStr( tok(2), "." ) = 0,  "-m argument carries an EXTENSION: [" & tok(2) & "]" )
     ' ...and the main source must ALSO be present as an input, or nothing compiles the
     ' entry point. -m only marks; it does not add.
     CMDASSERT( tok(3) = "C:\proj\mainprog.bas", _
                "main source is not an input file: [" & tok(3) & "]" )
-    CMDASSERT( right( tok(3), 4 ) = ".bas", "main input lost its extension" )
+    CMDASSERT( PsRight( tok(3), 4 ) = ".bas", "main input lost its extension" )
 
     ' ---- 5. no parameters at all --------------------------------------------------------
     CompileCmd_Tokenize( BuildChildCommandLine( wszExe, "" ), tok(), nTok )
@@ -854,7 +854,7 @@ sub CompileCmd_RunSelfTest()
     ' cmd.exe by FULL PATH, because RedirConsoleToFile passes lpApplicationName, which does
     ' NOT search PATH -- a bare "cmd.exe" would fail to launch and prove nothing.
     dim as DWSTRING wszCmdExe = environ("COMSPEC")
-    if len( wszCmdExe ) = 0 then wszCmdExe = "C:\Windows\System32\cmd.exe"
+    if PsLen( wszCmdExe ) = 0 then wszCmdExe = "C:\Windows\System32\cmd.exe"
 
     if AfxFileExists( wszCmdExe ) = false then
         ? "  NOTE: no COMSPEC; the exit-code assertions did NOT run."

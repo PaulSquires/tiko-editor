@@ -308,7 +308,7 @@ function FindReplace_NextSelection( _
     dim as hwnd hEdit = pDoc->hWndActiveScintilla
 
     dim txtFind as string = gFind.txtFind
-    lenFind = len(txtFind)
+    lenFind = PsLen(txtFind)
 
     ' Are we searching a selection or the whole document
     if (pDoc->CurrentSelection.isInitialized = true) andalso (gFind.nSelection = true) then   
@@ -407,17 +407,17 @@ function FindReplace_HighlightSearches() as long
         endPos = SciExec( hEdit, SCI_GETLENGTH, 0, 0)
     end if
 
-    if len(txtFind) then
+    if PsLen(txtFind) then
         gFind.foundCount = 0
         do
             SciExec( hEdit, SCI_SETTARGETSTART, startPos, 0)
             SciExec( hEdit, SCI_SETTARGETEND, endPos, 0)
-            r = SciExec( hEdit, SCI_SEARCHINTARGET, len(txtFind), strptr(txtFind))
+            r = SciExec( hEdit, SCI_SEARCHINTARGET, PsLen(txtFind), strptr(txtFind))
 
             if r = -1 then exit do
             
             SciExec( hEdit, SCI_SETINDICATORVALUE, 8, 0 )
-            SciExec( hEdit, SCI_INDICATORFILLRANGE, r, len(txtFind))
+            SciExec( hEdit, SCI_INDICATORFILLRANGE, r, PsLen(txtFind))
             
             gFind.foundCount += 1
 
@@ -457,7 +457,7 @@ function FindReplace_DoReplace( _
     dim as HWND   hWndReplace = GetDlgItem(HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE)
     dim as string txtFind     = str(AfxGetWindowText(hWndFind))
     dim as string txtReplace  = str(AfxGetWindowText(hWndReplace))
-    dim as long   lenFind     = len(txtFind)
+    dim as long   lenFind     = PsLen(txtFind)
 
     if lenFind = 0 then exit function
     
@@ -487,7 +487,7 @@ function FindReplace_DoReplace( _
             
             SciExec( hEdit, SCI_SETTARGETSTART, startPos, 0)
             SciExec( hEdit, SCI_SETTARGETEND, endPos, 0)
-            r = SciExec( hEdit, SCI_SEARCHINTARGET, len(txtFind), strptr(txtFind))
+            r = SciExec( hEdit, SCI_SEARCHINTARGET, PsLen(txtFind), strptr(txtFind))
             if r = -1 then exit do
             dim as zstring * MAX_PATH sSelText
             SciExec( hEdit, SCI_GETTARGETTEXT, 0, @sSelText )
@@ -496,15 +496,15 @@ function FindReplace_DoReplace( _
             if gFind.nPreserve then
                 dim as string sReplaceText
                 if isUpperCaseString( sSelText ) then
-                    sReplaceText = ucase(txtReplace)
+                    sReplaceText = PsUCase(txtReplace)
                 elseif isLowerCaseString( sSelText ) then
-                    sReplaceText = lcase(txtReplace)
+                    sReplaceText = PsLCase(txtReplace)
                 else
                     sReplaceText = txtReplace
                 end if
                 SciExec( hEdit, SCI_REPLACETARGET, len(sReplaceText), strptr(sReplaceText) )
             else            
-                SciExec( hEdit, SCI_REPLACETARGET, len(txtReplace), strptr(txtReplace) )
+                SciExec( hEdit, SCI_REPLACETARGET, PsLen(txtReplace), strptr(txtReplace) )
             end if
             
             ' Move start position after the replaced text
@@ -520,7 +520,7 @@ function FindReplace_DoReplace( _
     else   
         ' Need to ensure that the current cursor/selection is actually the find
         ' phrase that we want to replace. if not, then move to the closest selection.
-        if ucase(pDoc->GetSelText) <> ucase(txtFind) then
+        if ucase(pDoc->GetSelText) <> PsUCase(txtFind) then
             startPos = SendMessage( hEdit, SCI_GETCURRENTPOS, 0, 0) 
             FindReplace_NextSelection(startPos, fMoveNext, true)
             exit function
@@ -532,15 +532,15 @@ function FindReplace_DoReplace( _
             dim as string sSelText = pDoc->GetSelText
             dim as string sReplaceText
             if isUpperCaseString( sSelText ) then
-                sReplaceText = ucase(txtReplace)
+                sReplaceText = PsUCase(txtReplace)
             elseif isLowerCaseString( sSelText ) then
-                sReplaceText = lcase(txtReplace)
+                sReplaceText = PsLCase(txtReplace)
             else
                 sReplaceText = txtReplace
             end if
             SciExec( hEdit, SCI_REPLACETARGET, len(sReplaceText), strptr(sReplaceText) )
         else            
-            SciExec( hEdit, SCI_REPLACETARGET, len(txtReplace), strptr(txtReplace) )
+            SciExec( hEdit, SCI_REPLACETARGET, PsLen(txtReplace), strptr(txtReplace) )
         end if
         startPos = SendMessage( hEdit, SCI_GETCURRENTPOS, 0, 0) 
         FindReplace_NextSelection(startPos, fMoveNext, true)

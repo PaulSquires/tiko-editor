@@ -68,7 +68,7 @@ private sub PsTextBox_ShowContextMenu( byval pTextBox as PSTEXTBOX ptr )
     dim as HWND hPopup = pTextBox->hContextMenu
     dim as boolean bReadOnly = ( (GetWindowLongPtr(hWin, GWL_STYLE) and ES_READONLY) <> 0 )
     dim as DWSTRING wszSelText = RichEdit_GetSelText( hWin )
-    dim as boolean bHasSel = (len(wszSelText) > 0)
+    dim as boolean bHasSel = (PsLen(wszSelText) > 0)
 
     PsPopupMenu_Clear( hPopup )
 
@@ -232,7 +232,7 @@ private sub PsTextBox_ApplyParaFormat( byval pTextBox as PSTEXTBOX ptr )
     ' Every write below is ours, so the ChangeCallback must not hear about any of it.
     pTextBox->bInternalChange = true
 
-    if len(wszSaved) > 0 then
+    if PsLen(wszSaved) > 0 then
         SendMessage( pTextBox->hRichEdit, WM_SETTEXT, 0, cast(LPARAM, @wstr("")) )
     end if
 
@@ -245,7 +245,7 @@ private sub PsTextBox_ApplyParaFormat( byval pTextBox as PSTEXTBOX ptr )
                      TM_PLAINTEXT or TM_MULTILEVELUNDO or TM_MULTICODEPAGE, 0 )
     end if
 
-    if len(wszSaved) > 0 then
+    if PsLen(wszSaved) > 0 then
         SendMessage( pTextBox->hRichEdit, WM_SETTEXT, 0, cast(LPARAM, wszSaved.vptr) )
         SendMessage( pTextBox->hRichEdit, EM_SETSEL, cast(WPARAM, dwStart), cast(LPARAM, dwEnd) )
     end if
@@ -351,8 +351,8 @@ end function
 ' ========================================================================================
 private function PsTextBox_IsValidNumericText( byval pTextBox as PSTEXTBOX ptr, byref wszText as DWSTRING ) as boolean
     dim as integer periodAt = 0
-    for i as integer = 1 to len(wszText)
-        select case asc(mid(wszText, i, 1))
+    for i as integer = 1 to PsLen(wszText)
+        select case asc(PsMid(wszText, i, 1))
             case asc("0") to asc("9")
             case asc("-")
                 if i <> 1 then return false
@@ -365,7 +365,7 @@ private function PsTextBox_IsValidNumericText( byval pTextBox as PSTEXTBOX ptr, 
         end select
     next
     if periodAt > 0 then
-        if (len(wszText) - periodAt) > pTextBox->nDecimalPlaces then return false
+        if (PsLen(wszText) - periodAt) > pTextBox->nDecimalPlaces then return false
     end if
     return true
 end function
@@ -971,7 +971,7 @@ sub PsTextBox_SetMenuText( byval hTextBoxControl as HWND, byval CutText as DWSTR
     pTextBox->wszMenuCut = CutText
     pTextBox->wszMenuCopy = CopyText
     pTextBox->wszMenuPaste = PasteText
-    if len(SelectAllText) > 0 then pTextBox->wszMenuSelectAll = SelectAllText
+    if PsLen(SelectAllText) > 0 then pTextBox->wszMenuSelectAll = SelectAllText
 end sub
 
 
@@ -1121,27 +1121,27 @@ function PsTextBoxRichEdit_SubclassProc ( _
                     SendMessage( hWin, EM_GETSEL, cast(WPARAM, @dwStart), cast(LPARAM, @dwEnd) )
                     dim as DWSTRING wszText = RichEdit_GetText( hWin )
                     if dwEnd > dwStart then
-                        wszText = left(wszText, dwStart) & mid(wszText, dwEnd + 1)
+                        wszText = PsLeft(wszText, dwStart) & PsMid(wszText, dwEnd + 1)
                     end if
 
                     select case _wParam
                         case asc("0") to asc("9")
                             ' Nothing may land in front of an existing leading minus.
-                            if (dwStart = 0) andalso (left(wszText, 1) = "-") then return 0
+                            if (dwStart = 0) andalso (PsLeft(wszText, 1) = "-") then return 0
                             ' In the fractional part, respect the decimal-places limit.
-                            dim as integer foundat = instr( wszText, "." )
+                            dim as integer foundat = PsInStr( wszText, "." )
                             if (foundat > 0) andalso (dwStart >= foundat) then
-                                if len(mid(wszText, foundat + 1)) >= pTextBox->nDecimalPlaces then return 0
+                                if len(PsMid(wszText, foundat + 1)) >= pTextBox->nDecimalPlaces then return 0
                             end if
                         case asc(".")
                             if pTextBox->nDecimalPlaces = 0 then return 0
-                            if instr( wszText, "." ) > 0 then return 0
-                            if (dwStart = 0) andalso (left(wszText, 1) = "-") then return 0
+                            if PsInStr( wszText, "." ) > 0 then return 0
+                            if (dwStart = 0) andalso (PsLeft(wszText, 1) = "-") then return 0
                             ' Everything right of the caret becomes the fractional part.
-                            if (len(wszText) - dwStart) > pTextBox->nDecimalPlaces then return 0
+                            if (PsLen(wszText) - dwStart) > pTextBox->nDecimalPlaces then return 0
                         case asc("-")
                             if dwStart <> 0 then return 0
-                            if instr( wszText, "-" ) > 0 then return 0
+                            if PsInStr( wszText, "-" ) > 0 then return 0
                         case else
                             return 0
                     end select
@@ -1155,13 +1155,13 @@ function PsTextBoxRichEdit_SubclassProc ( _
                 dim as DWSTRING wszClip = AfxGetClipboardText()
                 ' A single-line control keeps only the first pasted line; mirror that
                 ' before validating.
-                dim as integer nEol = instr( wszClip, wchr(13) )
-                if nEol = 0 then nEol = instr( wszClip, wchr(10) )
-                if nEol > 0 then wszClip = left( wszClip, nEol - 1 )
+                dim as integer nEol = PsInStr( wszClip, wchr(13) )
+                if nEol = 0 then nEol = PsInStr( wszClip, wchr(10) )
+                if nEol > 0 then wszClip = PsLeft( wszClip, nEol - 1 )
                 dim as DWORD dwStart, dwEnd
                 SendMessage( hWin, EM_GETSEL, cast(WPARAM, @dwStart), cast(LPARAM, @dwEnd) )
                 dim as DWSTRING wszText = RichEdit_GetText( hWin )
-                dim as DWSTRING wszProspective = left(wszText, dwStart) & wszClip & mid(wszText, dwEnd + 1)
+                dim as DWSTRING wszProspective = PsLeft(wszText, dwStart) & wszClip & PsMid(wszText, dwEnd + 1)
                 if PsTextBox_IsValidNumericText( pTextBox, wszProspective ) = false then return 0
             end if
 
@@ -1234,7 +1234,7 @@ function PsTextBoxRichEdit_SubclassProc ( _
             if (uMsg = WM_KILLFOCUS) andalso (pTextBox <> null) then
                 if pTextBox->bNumericOnly then
                     dim as DWSTRING wszText = RichEdit_GetText( hWin )
-                    if (len(wszText) > 0) orelse (pTextBox->bZeroWhenEmpty = true) then
+                    if (PsLen(wszText) > 0) orelse (pTextBox->bZeroWhenEmpty = true) then
                         dim as DWSTRING wszFormatted = _
                             PsTextBox_FormatNumeric( val(wszText), pTextBox->nDecimalPlaces, false )
                         if wszFormatted <> wszText then

@@ -235,7 +235,7 @@ function code_AddPathsToLinkModules( byval pCompile as COMPILE_TYPE ptr ) as lon
         ' Remove any enclosing double quotes from the filename
         modulename = AfxStrRemove(modulename, chr(34))
 
-        if len(modulename) = 0 then continue for
+        if PsLen(modulename) = 0 then continue for
 
         ' (1) Current folder
         wszTemp = wszCurrentFolder & modulename
@@ -253,7 +253,7 @@ function code_AddPathsToLinkModules( byval pCompile as COMPILE_TYPE ptr ) as lon
             includePath = rtrim(AfxStrParse(gConfig.CompilerIncludes, i, ";"))
             ' Remove any enclosing double quotes from the includepath
             includePath = AfxStrRemove(includePath, chr(34)) & "\"   ' ensure trailing backslash
-            if len(includePath) then 
+            if PsLen(includePath) then 
             wszTemp = includePath & modulename
             if AfxFileExists(wszTemp) then
                 wszResult = wszResult & chr(34) & wszTemp & chr(34) & " "
@@ -576,7 +576,7 @@ function code_Compile( byval wID as long ) as boolean
     dim as long numpaths = AfxStrParseCount(gConfig.CompilerIncludes, ";")
     for i as long = 1 to numpaths
         includePath = rtrim(AfxStrParse(gConfig.CompilerIncludes, i, ";"))
-        if len(includePath) then 
+        if PsLen(includePath) then 
             pCompile->CompileIncludes += " -i " + wDQ + includePath + wDQ
         end if
     next

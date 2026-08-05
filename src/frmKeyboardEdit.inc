@@ -88,7 +88,7 @@ private function frmKeyboardEdit_TextWidthPx( byval hwnd as HWND, _
 
     dim as HFONT oldFont
     if hFont then oldFont = SelectObject( hDC, hFont )
-    GetTextExtentPoint32( hDC, wszText.sptr, len(wszText), @sz )
+    GetTextExtentPoint32( hDC, wszText.sptr, PsLen(wszText), @sz )
     if hFont then SelectObject( hDC, oldFont )
 
     ReleaseDC( hwnd, hDC )
@@ -153,7 +153,7 @@ function frmKeyboardEdit_BuildKeyString( byval vk as long, _
                                          byval bShift as boolean ) as DWSTRING
 
     dim as DWSTRING wszName = KeyBindings_VKToName( vk )
-    if len(wszName) = 0 then return ""
+    if PsLen(wszName) = 0 then return ""
 
     dim as DWSTRING wszKeys
     if bCtrl  then wszKeys = wszKeys & "Ctrl+"
@@ -183,7 +183,7 @@ function frmKeyboardEdit_AcceptCapture( byval vk as long, _
     ' press and none can be written into keybindings.ini. Storing one would produce a
     ' binding that saves and displays perfectly and never fires.
     dim as DWSTRING wszName = KeyBindings_VKToName( vk )
-    if len(wszName) = 0 then
+    if PsLen(wszName) = 0 then
         wszWhy = L(335,"That key cannot be used as a shortcut.")
         return false
     end if
@@ -230,7 +230,7 @@ private sub frmKeyboardEdit_RefreshViews()
             if i = nCount then
                 wszKey = wszPart
             else
-                select case ucase(wszPart)
+                select case PsUCase(wszPart)
                     case "CTRL":  bCtrl  = true
                     case "ALT":   bAlt   = true
                     case "SHIFT": bShift = true
@@ -246,10 +246,10 @@ private sub frmKeyboardEdit_RefreshViews()
 
     ' Row 0 of the picker is "None"; the vocabulary follows in gKeyNames() order.
     dim as long nSel = 0
-    if len(wszKey) then
+    if PsLen(wszKey) then
         KeyBindings_EnsureKeyNames()
         for i as long = lbound(gKeyNames) to ubound(gKeyNames)
-            if ucase(gKeyNames(i).wszName) = ucase(wszKey) then
+            if ucase(gKeyNames(i).wszName) = PsUCase(wszKey) then
                 nSel = i + 1
                 exit for
             end if
@@ -463,7 +463,7 @@ private function frmKeyboardEdit_CaptureProc( _
 
             dim as DWSTRING wszShow = gEditKeys
             dim as COLORREF clr = theme.ui.field.forecolor
-            dim as boolean bWaiting = (len(wszShow) = 0)
+            dim as boolean bWaiting = (PsLen(wszShow) = 0)
             if bWaiting then
                 wszShow = L(332,"Press the new shortcut")
                 clr = theme.panel.text.forecolor
@@ -624,7 +624,7 @@ private function frmKeyboardEdit_OnPaint( byval hwnd as HWND ) as LRESULT
     ' above an empty shortcut field, and there is nothing to say which of the two is the
     ' default and which is what the user is about to set.
     dim as DWSTRING wszDef = gKeysEdit.wszDefaultKeys
-    if len(wszDef) = 0 then wszDef = L(337,"(no default)")
+    if PsLen(wszDef) = 0 then wszDef = L(337,"(no default)")
     rcT.top = y : rcT.bottom = y + rowH
     rcT.right = rc.right - mx - AfxScaleX(210)
     buffer.SetForeColor( theme.panel.text.forecolor )
@@ -679,8 +679,8 @@ private function frmKeyboardEdit_OnPaint( byval hwnd as HWND ) as LRESULT
     rcT.top = y : rcT.bottom = y + rowH
 
     dim as DWSTRING wszMsg = gEditWhy
-    if len(wszMsg) = 0 then wszMsg = frmKeyboard_CheckForKeyConflict( gEditKeys, gEditIndex )
-    if len(wszMsg) then
+    if PsLen(wszMsg) = 0 then wszMsg = frmKeyboard_CheckForKeyConflict( gEditKeys, gEditIndex )
+    if PsLen(wszMsg) then
         buffer.SetForeColor( theme.compile.iconfail )
         buffer.SetFont( ghFont(GUIFONT_11) )
         buffer.PaintText( wszMsg, @rcT, DT_LEFT or DT_END_ELLIPSIS )
@@ -859,7 +859,7 @@ sub frmKeyboardEdit_RunSelfTest()
     ' ---- RULE 1: a key with no name in the vocabulary is refused. ----
     KEASSERT( frmKeyboardEdit_AcceptCapture( &h2C, true, false, false, wszWhy ) = false, _
               "Ctrl+PrintScreen should be refused (no name in the vocabulary)" )
-    KEASSERT( len(wszWhy) > 0, "a refused capture must say why" )
+    KEASSERT( PsLen(wszWhy) > 0, "a refused capture must say why" )
     KEASSERT( frmKeyboardEdit_AcceptCapture( &h7C, true, false, false, wszWhy ) = false, _
               "Ctrl+F13 should be refused" )
     KEASSERT( frmKeyboardEdit_AcceptCapture( &h5B, false, false, false, wszWhy ) = false, _
@@ -868,13 +868,13 @@ sub frmKeyboardEdit_RunSelfTest()
     ' ---- RULE 2: a BARE letter or digit is refused; with any modifier it is accepted. ----
     KEASSERT( frmKeyboardEdit_AcceptCapture( asc("D"), false, false, false, wszWhy ) = false, _
               "a bare D should be refused" )
-    KEASSERT( len(wszWhy) > 0, "a refused bare letter must say why" )
+    KEASSERT( PsLen(wszWhy) > 0, "a refused bare letter must say why" )
     KEASSERT( frmKeyboardEdit_AcceptCapture( asc("7"), false, false, false, wszWhy ) = false, _
               "a bare 7 should be refused" )
     KEASSERT( frmKeyboardEdit_AcceptCapture( asc("D"), true,  false, false, wszWhy ), "Ctrl+D should be accepted" )
     KEASSERT( frmKeyboardEdit_AcceptCapture( asc("D"), false, true,  false, wszWhy ), "Alt+D should be accepted" )
     KEASSERT( frmKeyboardEdit_AcceptCapture( asc("D"), false, false, true,  wszWhy ), "Shift+D should be accepted" )
-    KEASSERT( len(wszWhy) = 0, "an accepted capture must not leave a reason set" )
+    KEASSERT( PsLen(wszWhy) = 0, "an accepted capture must not leave a reason set" )
 
     ' ---- RULE 3: bare function and navigation keys ARE accepted. ----
     ' Every one of these is a shipped bare default in this editor, so refusing them would

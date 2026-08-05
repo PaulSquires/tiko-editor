@@ -115,7 +115,7 @@ private sub frmTopTabsInfo_IconPaint( byval p as PSICONPANEL_PAINTINFO ptr )
 
     dim as DWSTRING wszGlyph = p->wszGlyph
     if p->itemID = TTITIP_GOTOHEADER then wszGlyph = frmTopTabsInfo_GotoGlyph()
-    if len(wszGlyph) = 0 then exit sub
+    if PsLen(wszGlyph) = 0 then exit sub
 
     p->b->SetFont( ghFont( iif( p->itemID = TTITIP_FIND, SYMBOLFONT_10, GUIFONT_10 ) ) )
     p->b->SetForeColor( theme.toptabs.texthot.forecolor )

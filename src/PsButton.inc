@@ -800,7 +800,7 @@ sub PsButton_SetGlyphLeft( byval hButton as HWND, byval Glyph as DWSTRING )
     if pBtn = 0 then exit sub
     pBtn->wszGlyphLeft = Glyph
     ' Glyph OR image: setting an actual glyph frees any image on this side.
-    if (len( Glyph ) > 0) andalso (pBtn->pImageLeft <> 0) then
+    if (PsLen( Glyph ) > 0) andalso (pBtn->pImageLeft <> 0) then
         delete pBtn->pImageLeft : pBtn->pImageLeft = 0
     end if
     pBtn->Refresh()
@@ -818,7 +818,7 @@ sub PsButton_SetGlyphRight( byval hButton as HWND, byval Glyph as DWSTRING )
     dim as PSBUTTON ptr pBtn = GetButtonPointer(hButton)
     if pBtn = 0 then exit sub
     pBtn->wszGlyphRight = Glyph
-    if (len( Glyph ) > 0) andalso (pBtn->pImageRight <> 0) then
+    if (PsLen( Glyph ) > 0) andalso (pBtn->pImageRight <> 0) then
         delete pBtn->pImageRight : pBtn->pImageRight = 0
     end if
     pBtn->Refresh()
@@ -834,7 +834,7 @@ function PsButton_SetImageLeft( byval hButton as HWND, byval Path as DWSTRING ) 
     dim as PSBUTTON ptr pBtn = GetButtonPointer(hButton)
     if pBtn = 0 then return 0
 
-    if len( Path ) = 0 then
+    if PsLen( Path ) = 0 then
         if pBtn->pImageLeft then delete pBtn->pImageLeft : pBtn->pImageLeft = 0
         pBtn->Refresh()
         PsButton_ApplyAutoSize( pBtn )
@@ -857,7 +857,7 @@ function PsButton_SetImageRight( byval hButton as HWND, byval Path as DWSTRING )
     dim as PSBUTTON ptr pBtn = GetButtonPointer(hButton)
     if pBtn = 0 then return 0
 
-    if len( Path ) = 0 then
+    if PsLen( Path ) = 0 then
         if pBtn->pImageRight then delete pBtn->pImageRight : pBtn->pImageRight = 0
         pBtn->Refresh()
         PsButton_ApplyAutoSize( pBtn )

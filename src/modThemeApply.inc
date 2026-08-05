@@ -489,7 +489,7 @@ end sub
 function Theme_PreviewFile( byval wszShortFilename as DWSTRING ) as boolean
 
     dim as DWSTRING wszPath = Theme_ResolvePath( wszShortFilename )
-    if len(wszPath) = 0 then return true
+    if PsLen(wszPath) = 0 then return true
     if Theme_ParseFile( wszPath ) then return true
 
     gThemeCurrentShortFilename = wszShortFilename
@@ -776,7 +776,7 @@ sub Theme_RunSelfTest()
     ' -- 13. A fork name is new, and never collides with what is already on disk. ---------
     dim as DWSTRING wszFork = frmThemes_MakeForkName( "default_dark.theme" )
     THASSERT( wszFork <> "default_dark.theme", "fork name must differ from its source" )
-    THASSERT( instr( wszFork, "_custom" ) > 0, "fork name should be recognisable" )
+    THASSERT( PsInStr( wszFork, "_custom" ) > 0, "fork name should be recognisable" )
     THASSERT( AfxFileExists( AfxGetExePathName & "settings\themes\" & wszFork ) = 0, _
               "MakeForkName returned a filename that already exists" )
     THASSERT( frmThemes_IsProtectedTheme( wszFork ) = false, _

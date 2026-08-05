@@ -89,7 +89,7 @@ function UpdateMRUList( byref wzFilename as wstring ) as long
     for i = 0 To 9
         wzFile = gConfig.MRU(i)
         wzFile = ProcessFromCurdriveApp(wzFile)
-        if ucase(wzFile) = ucase(wzFilename) then
+        if ucase(wzFile) = PsUCase(wzFilename) then
             idxExistsAt = i:  exit for
         end if   
     next
@@ -140,7 +140,7 @@ function UpdateMRUProjectList( byval wszFilename as DWSTRING ) as long
     ' also for an available entry to put the filename in.
     for i = 0 To 9
         gConfig.MRUProject(i) = ProcessFromCurdriveApp(gConfig.MRUProject(i))
-        if ucase(gConfig.MRUProject(i)) = ucase(wszFilename) then
+        if ucase(gConfig.MRUProject(i)) = PsUCase(wszFilename) then
             idxExistsAt = i:  exit For
         end if   
     next

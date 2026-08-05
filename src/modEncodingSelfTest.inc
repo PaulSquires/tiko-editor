@@ -5,7 +5,7 @@
 ' Independent oracle: raw Win32 UTF-16 -> UTF-8 (distinct code from modRoutines' private
 ' helpers, so a shared bug cannot hide behind both). Length-explicit.
 private function EncSelfTest_WideToUtf8( byref w as wstring ) as string
-    dim as long n = len(w)
+    dim as long n = PsLen(w)
     if n = 0 then return ""
     dim as long u8 = WideCharToMultiByte( CP_UTF8, 0, @w, n, NULL, 0, NULL, NULL )
     if u8 <= 0 then return ""

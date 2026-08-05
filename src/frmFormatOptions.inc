@@ -1099,7 +1099,7 @@ sub frmFormatOptions_RunSelfTest( byval bLayoutHalf as boolean )
         for i as long = 0 to gFmtRowCount - 1
             dim as DWSTRING wszLabel = L( gFmtRows(i).nLabelID, "" )
             dim as SIZE sz
-            GetTextExtentPoint32W( hdcM, wszLabel, len(wszLabel), @sz )
+            GetTextExtentPoint32W( hdcM, wszLabel, PsLen(wszLabel), @sz )
             dim as long nHave = gFmtRows(i).rcLabel.right - gFmtRows(i).rcLabel.left
             if sz.cx > nHave then
                 bFits = false

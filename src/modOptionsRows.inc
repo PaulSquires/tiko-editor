@@ -261,17 +261,17 @@ end sub
 ' case-insensitive so a later match against the on-disk folder still succeeds.
 ' ========================================================================================
 private function OptionsWork_ToolchainFromPath( byval wszPath as DWSTRING ) as DWSTRING
-    if len(wszPath) = 0 then return ""
+    if PsLen(wszPath) = 0 then return ""
     ' The folder is the directory name immediately containing the exe.
     dim as DWSTRING wszDir = AfxStrPathname( "PATH", wszPath )   ' ...\Toolchains\<folder>\
     ' Strip the trailing backslash, then take the final path segment.
     dim as DWSTRING w = wszDir
-    do while (len(w) > 0) andalso (right(w, 1) = "\")
-        w = left(w, len(w) - 1)
+    do while (PsLen(w) > 0) andalso (PsRight(w, 1) = "\")
+        w = PsLeft(w, PsLen(w) - 1)
     loop
-    dim as long nSlash = instrrev( w, "\" )
+    dim as long nSlash = PsInStrRev( w, "\" )
     if nSlash = 0 then return ""
-    return mid( w, nSlash + 1 )
+    return PsMid( w, nSlash + 1 )
 end function
 
 

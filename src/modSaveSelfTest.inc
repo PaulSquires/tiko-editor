@@ -91,7 +91,7 @@ sub Save_RunSelfTest()
         CloseHandle( hLock )
 
         SAVEASSERT( rc = DOCWRITE_FAILED, "a locked target was reported as a SUCCESSFUL save" )
-        SAVEASSERT( len(wszErr) > 0, "failure returned no reason for the user" )
+        SAVEASSERT( PsLen(wszErr) > 0, "failure returned no reason for the user" )
         sBack = SaveSelfTest_ReadAll( wszFile )
         SAVEASSERT( sBack = sV2, "THE ORIGINAL FILE WAS DAMAGED by a failed save" )
         SAVEASSERT( len(sBack) > 0, "THE ORIGINAL FILE WAS DESTROYED by a failed save" )
@@ -102,7 +102,7 @@ sub Save_RunSelfTest()
     dim as DWSTRING wszBadPath = wszDir & "\no_such_subfolder\doc.bas"
     SAVEASSERT( Doc_WriteToDisk( wszBadPath, sV2, wszErr ) = DOCWRITE_FAILED, _
                 "a path in a non-existent folder was reported as saved" )
-    SAVEASSERT( len(wszErr) > 0, "missing-folder failure returned no reason" )
+    SAVEASSERT( PsLen(wszErr) > 0, "missing-folder failure returned no reason" )
 
     ' ---- 6. an empty path is refused ----------------------------------------------------
     SAVEASSERT( Doc_WriteToDisk( "", sV2, wszErr ) = DOCWRITE_FAILED, _

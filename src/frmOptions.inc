@@ -1118,7 +1118,7 @@ private sub frmOptions_BuildNavList( byval hList as HWND )
     #macro NAVITEM( wszTitle, nPage )
         scope
             dim as DWSTRING wszT = (wszTitle)
-            if (len(sFilter) = 0) orelse (instr( lcase(wszT), sFilter ) > 0) then
+            if (len(sFilter) = 0) orelse (instr( PsLCase(wszT), sFilter ) > 0) then
                 PsListTree_AddString( hList, wszT, (nPage) )
             end if
         end scope

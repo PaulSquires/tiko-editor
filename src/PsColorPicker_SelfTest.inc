@@ -900,7 +900,7 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
                 dim as DWSTRING wszName
                 if PsColorPicker_GridNameAt( pClr, i, wszName ) = false then
                     nBadName += 1
-                elseif len( wszName ) = 0 then
+                elseif PsLen( wszName ) = 0 then
                     nBadName += 1
                 end if
             next

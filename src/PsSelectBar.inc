@@ -479,7 +479,7 @@ private function PsSelectBar_ResolveTooltipText( byval pSel as PSSELECTBAR ptr, 
     if pSel = null then return ""
     if pSel->IsValidPanel(idx) = false then return ""
     dim as DWSTRING wszText = pSel->panels(idx).wszTooltip
-    if len(wszText) then return wszText
+    if PsLen(wszText) then return wszText
     if pSel->TooltipCallback then return pSel->TooltipCallback( pSel->hWin, idx )
     return ""
 end function

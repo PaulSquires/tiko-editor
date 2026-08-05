@@ -68,7 +68,7 @@ function BuildChildCommandLine( _
             byval wszParams as DWSTRING _
             ) as DWSTRING
     dim as DWSTRING wszQ = wchr(34)
-    if len( wszParams ) = 0 then return wszQ & wszExe & wszQ
+    if PsLen( wszParams ) = 0 then return wszQ & wszExe & wszQ
     return wszQ & wszExe & wszQ & " " & wszParams
 end function
 

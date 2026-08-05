@@ -122,7 +122,7 @@ end sub
 ' REMOVES the arrow whenever the debugger stops twice on the same line -- which is exactly
 ' what a loop body does on every iteration.
 private sub frmDebug_ShowExecutionPoint( byval wszFile as DWSTRING, byval nLine1Based as long )
-    if len(wszFile) = 0 then exit sub
+    if PsLen(wszFile) = 0 then exit sub
     if nLine1Based <= 0 then exit sub
 
     frmDebug_ClearExecutionMarkers()
@@ -190,8 +190,8 @@ private function frmDebug_ValSlot( arr() as FRMDEBUG_VALSLOT, byval wszKey as DW
     ' FNV-1a over the key, then linear probing. A full table simply stops recording, which
     ' degrades to "nothing looks changed" rather than to a wrong highlight.
     dim as ulongint h = 14695981039346656037ull
-    for i as long = 1 to len(wszKey)
-        h = (h xor cast(ulongint, asc(mid(wszKey, i, 1)))) * 1099511628211ull
+    for i as long = 1 to PsLen(wszKey)
+        h = (h xor cast(ulongint, asc(PsMid(wszKey, i, 1)))) * 1099511628211ull
     next
     dim as long idx = cast(long, h and cast(ulongint, FRMDEBUG_VALSLOTS - 1))
     for probe as long = 0 to FRMDEBUG_VALSLOTS - 1
@@ -205,7 +205,7 @@ end function
 ' Has this row's value changed since the previous stop? A key never seen before is NOT a
 ' change -- a variable coming into scope for the first time has not changed, it has appeared.
 private function frmDebug_ValueChanged( byval wszKey as DWSTRING, byval wszVal as DWSTRING ) as boolean
-    if len(wszKey) = 0 then return false
+    if PsLen(wszKey) = 0 then return false
 
     dim as boolean bChanged = false
     dim as long kPrev = frmDebug_ValSlot( gDbgValPrev(), wszKey )
@@ -545,8 +545,8 @@ end sub
 ' groups must stay in index order, and a UDT's fields in declaration order.
 ' ------------------------------------------------------------------------------------------
 function frmDebug_SortLess( byval wszA as DWSTRING, byval wszB as DWSTRING, byval bDesc as boolean ) as boolean
-    dim as DWSTRING a = ucase(wszA)
-    dim as DWSTRING b = ucase(wszB)
+    dim as DWSTRING a = PsUCase(wszA)
+    dim as DWSTRING b = PsUCase(wszB)
     if a = b then return false
     if bDesc then return (a > b)
     return (a < b)
@@ -778,10 +778,10 @@ end sub
 ' removed without a menu; anything else replaces or appends.
 private function frmDebug_EndLabelEdit( byval hListControl as HWND, byval row as integer, _
                                         byval newText as DWSTRING ) as boolean
-    dim as DWSTRING wszNew = trim(newText)
+    dim as DWSTRING wszNew = PsTrim(newText)
 
     if (row >= 0) andalso (row < gDbgWatchCount) then
-        if len(wszNew) = 0 then
+        if PsLen(wszNew) = 0 then
             for k as long = row to gDbgWatchCount - 2
                 gDbgWatch(k) = gDbgWatch(k + 1)
             next
@@ -789,7 +789,7 @@ private function frmDebug_EndLabelEdit( byval hListControl as HWND, byval row as
         else
             gDbgWatch(row) = wszNew
         end if
-    elseif len(wszNew) then
+    elseif PsLen(wszNew) then
         if gDbgWatchCount < FRMDEBUG_MAXWATCH then
             gDbgWatch(gDbgWatchCount) = wszNew
             gDbgWatchCount += 1
@@ -1861,9 +1861,9 @@ end sub
 ' the text prefixed with a tab, because its caller is a menu string.
 private function frmDebug_TipFor( byval wszCaption as DWSTRING, byval idmCommand as long ) as DWSTRING
     dim as DWSTRING wszKeys = getMenuAccelText( idmCommand )
-    if len(wszKeys) = 0 then return wszCaption
-    if left(wszKeys, 1) = chr(9) then wszKeys = mid(wszKeys, 2)
-    if len(wszKeys) = 0 then return wszCaption
+    if PsLen(wszKeys) = 0 then return wszCaption
+    if PsLeft(wszKeys, 1) = chr(9) then wszKeys = PsMid(wszKeys, 2)
+    if PsLen(wszKeys) = 0 then return wszCaption
     return wszCaption & "  (" & wszKeys & ")"
 end function
 
@@ -1968,14 +1968,14 @@ function frmDebug_PosToPct( byval nPos as long, byval nFrom as long, byval nTo a
 end function
 
 function frmDebug_ExprFromLine( byval wszLine as DWSTRING, byval col as long ) as DWSTRING
-    if (col < 1) orelse (col > len(wszLine)) then return ""
+    if (col < 1) orelse (col > PsLen(wszLine)) then return ""
 
     #macro ISIDCH( c )
         ( ((c) >= 48 andalso (c) <= 57) orelse ((c) >= 65 andalso (c) <= 90) orelse _
           ((c) >= 97 andalso (c) <= 122) orelse (c) = 95 )
     #endmacro
 
-    dim as long ch = asc(mid(wszLine, col, 1))
+    dim as long ch = asc(PsMid(wszLine, col, 1))
     if ISIDCH(ch) = 0 then return ""
 
     ' Walk left through identifier characters AND dots, so the dotted path comes with it --
@@ -1983,7 +1983,7 @@ function frmDebug_ExprFromLine( byval wszLine as DWSTRING, byval col as long ) a
     ' field name resolves to nothing.
     dim as long loPos = col
     do while loPos > 1
-        dim as long c2 = asc(mid(wszLine, loPos - 1, 1))
+        dim as long c2 = asc(PsMid(wszLine, loPos - 1, 1))
         if ISIDCH(c2) orelse (c2 = 46) then
             loPos -= 1
         else
@@ -1993,8 +1993,8 @@ function frmDebug_ExprFromLine( byval wszLine as DWSTRING, byval col as long ) a
     ' Walk right through identifier characters ONLY: a trailing dot is an incomplete path,
     ' and the member after it is not what the cursor is on.
     dim as long hiPos = col
-    do while hiPos < len(wszLine)
-        dim as long c2 = asc(mid(wszLine, hiPos + 1, 1))
+    do while hiPos < PsLen(wszLine)
+        dim as long c2 = asc(PsMid(wszLine, hiPos + 1, 1))
         if ISIDCH(c2) then
             hiPos += 1
         else
@@ -2002,10 +2002,10 @@ function frmDebug_ExprFromLine( byval wszLine as DWSTRING, byval col as long ) a
         end if
     loop
 
-    dim as DWSTRING wszExpr = mid(wszLine, loPos, hiPos - loPos + 1)
+    dim as DWSTRING wszExpr = PsMid(wszLine, loPos, hiPos - loPos + 1)
     ' A leading dot means the walk started inside a path whose head is off this line.
-    do while (len(wszExpr) > 0) andalso (left(wszExpr, 1) = ".")
-        wszExpr = mid(wszExpr, 2)
+    do while (PsLen(wszExpr) > 0) andalso (PsLeft(wszExpr, 1) = ".")
+        wszExpr = PsMid(wszExpr, 2)
     loop
     return wszExpr
 end function
@@ -2041,7 +2041,7 @@ end sub
 
 sub frmDebug_HideDataTip()
     if IsWindow(gDbgDataTip) = 0 then exit sub
-    if len(gDbgDataTipExpr) = 0 then exit sub
+    if PsLen(gDbgDataTipExpr) = 0 then exit sub
     PsTooltip_Hide( gDbgDataTip )
     gDbgDataTipExpr = ""
 end sub
@@ -2068,10 +2068,10 @@ private function frmDebug_ExprAt( byval hEdit as HWND, byval nPos as long ) as D
     pBuf[nLen] = 0
     dim as DWSTRING wszLine = *pBuf
     deallocate pBuf
-    if len(wszLine) = 0 then return ""
+    if PsLen(wszLine) = 0 then return ""
 
     dim as long col = nPos - nStart + 1        ' 1-based index into the line
-    if col > len(wszLine) then col = len(wszLine)
+    if col > PsLen(wszLine) then col = PsLen(wszLine)
     if col < 1 then return ""
 
     return frmDebug_ExprFromLine( wszLine, col )
@@ -2085,7 +2085,7 @@ sub frmDebug_ShowDataTip( byval hEdit as HWND, byval nPos as long )
     if hEdit = 0 then exit sub
 
     dim as DWSTRING wszExpr = frmDebug_ExprAt( hEdit, nPos )
-    if len(wszExpr) = 0 then
+    if PsLen(wszExpr) = 0 then
         frmDebug_HideDataTip()
         exit sub
     end if
@@ -2219,7 +2219,7 @@ end function
 private sub frmDebug_CreateButton( byval id as long, byval wszText as DWSTRING, byval wszGlyph as DWSTRING )
     dim as HWND h = PsButton_Create( HWND_FRMDEBUG, id )
     PsButton_SetText( h, wszText )
-    if len(wszGlyph) then PsButton_SetGlyphLeft( h, wszGlyph )
+    if PsLen(wszGlyph) then PsButton_SetGlyphLeft( h, wszGlyph )
     PsButton_SetFont( h, ghFont(GUIFONT_9) )
     PsButton_SetGlyphFont( h, ghFont(SYMBOLFONT_9) )
     PsButton_SetClickCallback( h, @frmDebug_ButtonClick )
@@ -2581,7 +2581,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
                 dim as long n = AfxStrParseCount( wszBps, "," )
                 for i as long = 1 to n
                     dim as DWSTRING wszOne = AfxStrParse( wszBps, i, "," )
-                    if len(trim(wszOne)) = 0 then continue for
+                    if len(PsTrim(wszOne)) = 0 then continue for
                     ' Editor lines are 0-based; the engine's are 1-based. That boundary is
                     ' stated once, here, because the old gdb path converted it in four
                     ' places and got one of them wrong.

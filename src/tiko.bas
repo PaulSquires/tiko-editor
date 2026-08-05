@@ -40,6 +40,9 @@
 
 using AfxNova
 
+'' Phase 7a scaffolding -- see the header. Deleted when the DWSTRING swap lands.
+#include once "PsCompat.bi"
+
 
 #define APPNAME             wstr("Tiko Editor")
 #define APPNAMESHORT        wstr("Tiko")
@@ -473,7 +476,7 @@ function WinMain( _
 
     
     ' Unload the font file
-    if len(wszFontFile) then RemoveFontResource(wszFontFile)
+    if PsLen(wszFontFile) then RemoveFontResource(wszFontFile)
 
     ' Shut GDI+ down. frmMain_Show has returned, so every window is destroyed and every
     ' PsBufferPaint that painted into one has run its destructor -- no CGp* object can

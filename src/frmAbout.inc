@@ -70,7 +70,7 @@ private function frmAbout_LicenseText( byval nWhich as long ) as DWSTRING
         if pStream.Open( wszPath ) = S_OK then
             dim as DWSTRING wszText = pStream.ReadAll
             pStream.Close
-            if len(wszText) > 0 then return wszText
+            if PsLen(wszText) > 0 then return wszText
         end if
     end if
 
@@ -1006,10 +1006,10 @@ private sub frmAbout_RunLayoutSelfTest( byval hwnd as HWND )
 
         dim as DWSTRING wszTextG = frmAbout_LicenseText( LICPAGE_GPL )
         dim as DWSTRING wszTextP = frmAbout_LicenseText( LICPAGE_PROPRIETARY )
-        ABOUTASSERT( len(wszTextG) > 1000, _
-                     "the GPL text is only " & str(len(wszTextG)) & " chars -- the fallback?" )
-        ABOUTASSERT( len(wszTextP) > 1000, _
-                     "the proprietary text is only " & str(len(wszTextP)) & " chars -- the fallback?" )
+        ABOUTASSERT( PsLen(wszTextG) > 1000, _
+                     "the GPL text is only " & str(PsLen(wszTextG)) & " chars -- the fallback?" )
+        ABOUTASSERT( PsLen(wszTextP) > 1000, _
+                     "the proprietary text is only " & str(PsLen(wszTextP)) & " chars -- the fallback?" )
         ' The two panels must not be showing the same document. Both files existing does not
         ' establish that the reader is keyed on the panel: an ignored parameter would pass
         ' every assertion above.

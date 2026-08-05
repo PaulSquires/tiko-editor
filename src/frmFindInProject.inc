@@ -946,7 +946,7 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
 
         b->SetFont( ghFont(GUIFONT_9) )
         dim as long nKeyW = 0
-        if len(wszKey) then nKeyW = FipSurface_TextW( b, wszKey ) + nPad*2
+        if PsLen(wszKey) then nKeyW = FipSurface_TextW( b, wszKey ) + nPad*2
         dim as long nOpenW = FipSurface_TextW( b, wszOpen )
         nOpenLeft = rcCard.right - nPad - nKeyW - nOpenW - nPad
 
@@ -964,7 +964,7 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
         b->SetBackColor( theme.editor.text.backcolor )
         b->PaintText( wszOpen, @rcLbl, DT_LEFT )
 
-        if len(wszKey) then
+        if PsLen(wszKey) then
             dim as RECT rcKey = rcOpen
             rcKey.right -= nPad
             b->SetForeColor( theme.editor.linenumbers.forecolor )
@@ -976,7 +976,7 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
         gFipOpenRect = rcOpen
     end if
 
-    if len(wszDir) then
+    if PsLen(wszDir) then
         dim as RECT rcDir = rc
         rcDir.left = rcCount.left + nCountW
         ' Stop the path before the Open File affordance rather than letting it run under it.
@@ -2512,7 +2512,7 @@ private sub FipBar_UpdateStatus()
         ' flag because PsTabBar sizes each tab from its caption -- an ellipsis applied only at
         ' paint time would leave the tab as wide as the untruncated text.
         dim as long nMaxChars = 32
-        if len(wszCap) > nMaxChars then wszCap = left(wszCap, nMaxChars - 1) & "..."
+        if PsLen(wszCap) > nMaxChars then wszCap = PsLeft(wszCap, nMaxChars - 1) & "..."
 
         if PsTabBar_GetText( gTTabCtl.hWindow, idx ) <> wszCap then
             PsTabBar_SetText( gTTabCtl.hWindow, idx, wszCap )
@@ -2530,7 +2530,7 @@ private sub FipBar_UpdateStatus()
         if hdcM then
             dim as HGDIOBJ hOldFont = SelectObject( hdcM, ghFont(GUIFONT_10) )
             dim as SIZE sz
-            GetTextExtentPoint32( hdcM, wszCap.sptr, len(wszCap), @sz )
+            GetTextExtentPoint32( hdcM, wszCap.sptr, PsLen(wszCap), @sz )
             SelectObject( hdcM, hOldFont )
             ReleaseDC( gTTabCtl.hWindow, hdcM )
             ' text + the magnifier + what the control reserves for its own close/padding. No
@@ -2650,7 +2650,7 @@ private sub FipBar_RunSearch()
     dim as DWSTRING wszPhrase = AfxGetWindowText( hCtl )
     gFind.txtFind = wszPhrase
 
-    if len(wszPhrase) = 0 then
+    if PsLen(wszPhrase) = 0 then
         FindProject_Clear()
         gFipLastQuery = ""
         gFipCurrent = -1
@@ -3049,8 +3049,8 @@ sub frmFindInProject_RunReplaceTest()
 
     ' ---- the temporary file -------------------------------------------------------------
     dim as DWSTRING wszTemp = environ("TEMP")
-    if len(wszTemp) = 0 then wszTemp = "C:\"
-    if right(wszTemp, 1) <> "\" then wszTemp = wszTemp & "\"
+    if PsLen(wszTemp) = 0 then wszTemp = "C:\"
+    if PsRight(wszTemp, 1) <> "\" then wszTemp = wszTemp & "\"
     dim as DWSTRING wszFile = wszTemp & "tiko_fip_replacetest.bas"
 
     ' A DOCUMENT ALREADY OPEN ON THIS PATH WINS OVER THE BYTES ON DISK, so it has to go

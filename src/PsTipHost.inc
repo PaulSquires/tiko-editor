@@ -241,7 +241,7 @@ end function
 sub PsTipHost_TrackShow( byval pHost as PSTIPHOST ptr, byval ptScreen as POINT, _
                          byval rcAnchorScreen as RECT, byval wszText as DWSTRING )
     if pHost = 0 then exit sub
-    if len(wszText) = 0 then
+    if PsLen(wszText) = 0 then
         PsTipHost_TrackHide( pHost )
         exit sub
     end if

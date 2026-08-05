@@ -134,7 +134,7 @@ private sub frmAutoComplete_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     ' clipped short of it and the two can never overlap on a narrow popup.
     dim as long nDetailWidth = 0
     dim as DWSTRING wszDetail = gAutoCItems(nItem).wszDetail
-    if len(wszDetail) then
+    if PsLen(wszDetail) then
         dim as RECT rcDetail = p->rc
         rcDetail.right -= nPadRight
         rcDetail.left = rcGlyph.right
@@ -403,7 +403,7 @@ function frmAutoComplete_ReFilter( byval pDoc as clsDocument ptr ) as boolean
     ' ShowAutocompleteList), and wszSort is the uppercased name, so this is a plain
     ' case-insensitive prefix test with no per-row ucase().
     dim as DWSTRING wszMatch = ucase( pDoc->wszMatchWord )
-    dim as long nLen = len( wszMatch )
+    dim as long nLen = PsLen( wszMatch )
 
     redim gAutoCVisible( 0 to gAutoCCount - 1 ) as long
     gAutoCVisCount = 0
@@ -489,7 +489,7 @@ end function
 ' Insert the highlighted candidate.
 '
 ' This is the old SCN_AUTOCSELECTION handler: the replacement range is the word the user
-' has typed so far, which starts len(wszMatchWord) characters before the position the
+' has typed so far, which starts PsLen(wszMatchWord) characters before the position the
 ' popup opened at -- NOT wherever the caret happens to be now.
 ' ========================================================================================
 function frmAutoComplete_Commit( byval pDoc as clsDocument ptr ) as boolean
@@ -515,7 +515,7 @@ function frmAutoComplete_Commit( byval pDoc as clsDocument ptr ) as boolean
     dim as long nPos          = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0 )
     dim as long nLenMatchWord = len( pDoc->wszMatchWord )
 
-    if ucase(wszText) <> ucase(pDoc->wszMatchWord) then
+    if PsUCase(wszText) <> ucase(pDoc->wszMatchWord) then
         dim as string sText = wszText
         SciExec( hEdit, SCI_SETSEL, nStartPos - nLenMatchWord, nPos )
         SciExec( hEdit, SCI_REPLACESEL, 0, cast(LPARAM, strptr(sText)) )

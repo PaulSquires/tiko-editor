@@ -27,7 +27,7 @@ function frmPanelMenu_FormatTooltip( byval id as integer ) as DWSTRING
     dim as DWSTRING wszCaption = rtrim(AfxStrParse(wszTooltip, 1, wchr(9)), "...")
     dim as DWSTRING wszShortcut = AfxStrParse(wszTooltip, 2, wchr(9))
     
-    if len(wszShortcut) then wszShortcut = " (" & wszShortcut & ")"
+    if PsLen(wszShortcut) then wszShortcut = " (" & wszShortcut & ")"
     
     return wszCaption & wszShortcut
 end function

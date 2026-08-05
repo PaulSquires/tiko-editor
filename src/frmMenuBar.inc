@@ -449,7 +449,7 @@ function frmMenuBar_PositionWindows() as LRESULT
     ' something to say.
     if IsWindow( HWND_FRMMAIN_MENUBARUPDATE ) then
         dim as DWSTRING wszText = getMenuText( IDC_MENUBAR_UPDATE )
-        if len( wszText ) then
+        if PsLen( wszText ) then
             dim as long nPadding = 12
             dim as long nWidth = pWindow->ScaleX( getTextWidth( HWND_FRMMAIN, wszText, GUIFONT_10 ) + nPadding )
             dim as long nLeft = (rc.right - rc.left) - nWidth - pWindow->ScaleX( nPadding )

@@ -27,7 +27,7 @@ end sub
 ' DereferenceLine, F12 and the TODO store use it as the document's DB identity.)
 function ScanMgr_GetRootName( byval pDoc as clsDocument ptr ) as DWSTRING
     dim as DWSTRING wszFile = pDoc->DiskFilename
-    if instr( wszFile, "\" ) > 0 then return wszFile
+    if PsInStr( wszFile, "\" ) > 0 then return wszFile
     return AfxGetExePathName & "UNTITLED-" & hex( cast( ulong_ptr, pDoc ) ) & ".BAS"
 end function
 
@@ -210,7 +210,7 @@ end sub
 ' assumed to be FB code.
 private function ScanMgr_IsScannable( byval pDoc as clsDocument ptr ) as boolean
     dim as DWSTRING wszFile = pDoc->DiskFilename
-    if instr( wszFile, "\" ) = 0 then return true
+    if PsInStr( wszFile, "\" ) = 0 then return true
     dim as string sExt = lcase( AfxStrPathname( "EXTN", wszFile ) )
     select case sExt
         case ".bas", ".bi", ".inc"
@@ -270,11 +270,11 @@ private function clsScanMgr.BuildRequest( _
     for i as long = 1 to numPaths
         dim as DWSTRING wszP = trim( AfxStrParse( gConfig.CompilerIncludes, i, ";" ) )
         wszP = ProcessFromCurdriveApp( AfxStrRemove( wszP, chr(34) ) )
-        if len( wszP ) then wszPaths = wszPaths & ";" & wszP
+        if PsLen( wszP ) then wszPaths = wszPaths & ";" & wszP
     next
 
     dim as DWSTRING wszCompiler = ProcessFromCurdriveApp( gConfig.FBWINCompiler64 )
-    if len( wszCompiler ) then
+    if PsLen( wszCompiler ) then
         wszPaths = wszPaths & ";" & AfxStrPathname( "PATH", wszCompiler ) & "inc"
         pReq->sIncPrefix = ucase( AfxStrPathname( "PATH", wszCompiler ) & "inc" )
     end if
@@ -308,12 +308,12 @@ sub clsScanMgr.RequestProjectScan( byref wszRootOverride as const wstring = "" )
     if m_bShutdown then exit sub
 
     dim as DWSTRING wszFile = wszRootOverride
-    if len( wszFile ) = 0 then
+    if PsLen( wszFile ) = 0 then
         dim as clsDocument ptr pDoc = gApp.GetMainDocumentPtr()
         if pDoc = 0 then exit sub
         wszFile = pDoc->DiskFilename
     end if
-    if instr( wszFile, "\" ) = 0 then exit sub    ' never saved - nothing on disk to scan
+    if PsInStr( wszFile, "\" ) = 0 then exit sub    ' never saved - nothing on disk to scan
 
     this.EnqueueRequest( this.BuildRequest( ScanTierProject, wszFile ) )
 end sub
@@ -434,7 +434,7 @@ sub clsScanMgr.WorkerLoop()
             dim as long cntPaths = 0
             for i as long = 1 to numPaths
                 dim as DWSTRING wszP = trim( AfxStrParse( pReq->sIncludePaths, i, ";" ) )
-                if len( wszP ) then
+                if PsLen( wszP ) then
                     wszPaths( cntPaths ) = wszP
                     pPaths( cntPaths ) = @wszPaths( cntPaths )
                     cntPaths += 1

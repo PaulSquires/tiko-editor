@@ -45,7 +45,7 @@ end function
 
 ' Case-insensitive text compare: -1 / 0 / +1.
 private function UnusedSymbols_CmpText( byref a as const wstring, byref b as const wstring ) as long
-    dim as DWSTRING ua = ucase( a ), ub = ucase( b )
+    dim as DWSTRING ua = PsUCase( a ), ub = PsUCase( b )
     if ua < ub then return -1
     if ua > ub then return 1
     function = 0
@@ -195,9 +195,9 @@ private function UnusedSymbols_IsUnknown( byval refSym as SYMBOLREF, byval nFlag
     if (nFlags and FBCP_SYMBFLAG_EXPORT) <> 0 then return true
 
     ' implicitly invoked, never called by name
-    dim as DWSTRING wszUp = ucase( wszName )
+    dim as DWSTRING wszUp = PsUCase( wszName )
     if wszUp = "CONSTRUCTOR" orelse wszUp = "DESTRUCTOR" then return true
-    if left( wszUp, 8 ) = "OPERATOR" then return true
+    if PsLeft( wszUp, 8 ) = "OPERATOR" then return true
 
     function = false
 end function
@@ -229,10 +229,10 @@ function UnusedSymbols_Build( byval nTier as long, rows() as UNUSEDROW, _
     redim as boolean bUserFile( 0 to iif( fc > 0, fc - 1, 0 ) )
     for i as long = 0 to fc - 1
         bUserFile(i) = true
-        if len( wszInc ) > 0 then
+        if PsLen( wszInc ) > 0 then
             dim as DWSTRING wszF = *cast( wstring ptr, _
                 @pRSet->pResult->stringPool[ pRSet->pResult->fileOffsets[i] ] )
-            if ucase( left( wszF, len( wszInc ) ) ) = wszInc then bUserFile(i) = false
+            if ucase( PsLeft( wszF, PsLen( wszInc ) ) ) = wszInc then bUserFile(i) = false
         end if
     next
 
@@ -286,7 +286,7 @@ function UnusedSymbols_Build( byval nTier as long, rows() as UNUSEDROW, _
     do until pDoc = 0
         if pDoc->hWindow(0) then
             if SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0 then
-                if len( wszDirtyFiles ) > 0 then wszDirtyFiles = wszDirtyFiles & ", "
+                if PsLen( wszDirtyFiles ) > 0 then wszDirtyFiles = wszDirtyFiles & ", "
                 wszDirtyFiles = wszDirtyFiles & AfxStrPathname( "NAMEX", pDoc->DiskFilename )
             end if
         end if

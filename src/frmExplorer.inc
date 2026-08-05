@@ -531,7 +531,7 @@ sub frmExplorer_DeleteFolder( byval hCtl as HWND, byval row as integer )
     dim as long catIndex
     dim as DWSTRING wszPath = frmExplorer_FolderPathFromRow( hCtl, row, catIndex )
     if catIndex < 0 then exit sub
-    if len(wszPath) = 0 then exit sub
+    if PsLen(wszPath) = 0 then exit sub
 
     ' Dissolving IS rebasing onto the parent: descendants lose one level, documents follow,
     ' and the folder's own record maps onto its parent and is dropped as a duplicate. One
@@ -662,7 +662,7 @@ function frmExplorer_CanDropCallback( byval p as PSLISTTREE_DROPINFO ptr ) as bo
             case EXPKIND_FOLDER
                 dim as long catSrc
                 dim as DWSTRING wszSrc = frmExplorer_FolderPathFromRow( hCtl, row, catSrc )
-                if len(wszSrc) then
+                if PsLen(wszSrc) then
                     dim as long ub = ubound(srcFolderPaths) + 1
                     redim preserve srcFolderPaths(ub)
                     redim preserve srcFolderCats(ub)
@@ -686,7 +686,7 @@ function frmExplorer_CanDropCallback( byval p as PSLISTTREE_DROPINFO ptr ) as bo
         if ProjectFolders_CatAllowsFolders( catDest ) = false then return false
         for i as long = 0 to nFolders - 1
             if srcFolderCats(i) = catDest then
-                if ucase(srcFolderPaths(i)) = ucase(wszDest) then return false
+                if ucase(srcFolderPaths(i)) = PsUCase(wszDest) then return false
                 if ProjectFolders_IsDescendantOf( wszDest, srcFolderPaths(i) ) then return false
             end if
         next
@@ -712,7 +712,7 @@ function frmExplorer_CanDropCallback( byval p as PSLISTTREE_DROPINFO ptr ) as bo
                 if frmExplorer_CatIndexForDoc( pScan ) = srcFolderCats(i) then
                     dim as DWSTRING wszF = pScan->docData.wszFolder
                     dim as boolean bInside = false
-                    if ucase(wszF) = ucase(srcFolderPaths(i)) then bInside = true
+                    if PsUCase(wszF) = ucase(srcFolderPaths(i)) then bInside = true
                     if ProjectFolders_IsDescendantOf( wszF, srcFolderPaths(i) ) then bInside = true
                     if bInside then
                         dim as long ub = ubound(moved) + 1
@@ -770,13 +770,13 @@ function frmExplorer_EndLabelEditCallback( byval hCtl as HWND, byval row as inte
     dim as long catIndex
     dim as DWSTRING wszOld = frmExplorer_FolderPathFromRow( hCtl, row, catIndex )
     if catIndex < 0 then return false
-    if len(wszOld) = 0 then return false
+    if PsLen(wszOld) = 0 then return false
 
-    dim as DWSTRING wszName = trim(newText)
+    dim as DWSTRING wszName = PsTrim(newText)
     if ProjectFolders_IsValidName( wszName ) = false then return false
 
     ' Unchanged apart from case is not a rename, and must not be refused as a self-collision.
-    if ucase(wszName) = ucase( ProjectFolders_LeafName( wszOld ) ) then return true
+    if PsUCase(wszName) = ucase( ProjectFolders_LeafName( wszOld ) ) then return true
 
     dim as DWSTRING wszNew = ProjectFolders_Combine( ProjectFolders_ParentPath( wszOld ), wszName )
     if ProjectFolders_Exists( catIndex, wszNew ) then return false
@@ -1138,7 +1138,7 @@ sub frmExplorer_AddFolderLevel( byval hCtrl as HWND, byval catIndex as long, _
     redim nFolders(any) as long
     for i as long = lbound(gProjectFolders) to ubound(gProjectFolders)
         if gProjectFolders(i).catIndex <> catIndex then continue for
-        if ucase( ProjectFolders_ParentPath( gProjectFolders(i).wszPath ) ) <> ucase( wszParentPath ) then continue for
+        if ucase( ProjectFolders_ParentPath( gProjectFolders(i).wszPath ) ) <> PsUCase( wszParentPath ) then continue for
         dim as long ub = ubound(nFolders) + 1
         redim preserve nFolders(ub)
         nFolders(ub) = i
@@ -1171,7 +1171,7 @@ sub frmExplorer_AddFolderLevel( byval hCtrl as HWND, byval catIndex as long, _
     dim pDoc as clsDocument ptr = gApp.pDocList
     do until pDoc = 0
         if pDoc->ProjectFiletype = gConfig.Cat(catIndex).idFileType then
-            if ucase( pDoc->docData.wszFolder ) = ucase( wszParentPath ) then
+            if ucase( pDoc->docData.wszFolder ) = PsUCase( wszParentPath ) then
                 dim as long ub = ubound(pDocs) + 1
                 redim preserve pDocs(ub)
                 pDocs(ub) = pDoc

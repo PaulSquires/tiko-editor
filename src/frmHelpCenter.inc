@@ -175,14 +175,14 @@ end function
 ' ========================================================================================
 function HelpCenter_NormalizeQuery( byval wszText as DWSTRING ) as DWSTRING
     dim as DWSTRING wszWork = wszText
-    if len( wszWork ) = 0 then
+    if PsLen( wszWork ) = 0 then
         function = ""
         exit function
     end if
 
     ' First line only. Handle CR, LF and CRLF by cutting at whichever arrives first.
-    dim as long nCR = instr( wszWork, wchr(13) )
-    dim as long nLF = instr( wszWork, wchr(10) )
+    dim as long nCR = PsInStr( wszWork, wchr(13) )
+    dim as long nLF = PsInStr( wszWork, wchr(10) )
     dim as long nCut = 0
     if (nCR > 0) andalso (nLF > 0) then
         nCut = iif( nCR < nLF, nCR, nLF )
@@ -191,14 +191,14 @@ function HelpCenter_NormalizeQuery( byval wszText as DWSTRING ) as DWSTRING
     elseif nLF > 0 then
         nCut = nLF
     end if
-    if nCut > 0 then wszWork = left( wszWork, nCut - 1 )
+    if nCut > 0 then wszWork = PsLeft( wszWork, nCut - 1 )
 
     ' A tab inside the remaining line is whitespace to a search box, not a separator.
     wszWork = AfxStrReplace( wszWork, wchr(9), " " )
-    wszWork = trim( wszWork )
+    wszWork = PsTrim( wszWork )
 
-    if len( wszWork ) > HELPCENTER_MAXQUERY then
-        wszWork = left( wszWork, HELPCENTER_MAXQUERY )
+    if PsLen( wszWork ) > HELPCENTER_MAXQUERY then
+        wszWork = PsLeft( wszWork, HELPCENTER_MAXQUERY )
     end if
 
     function = wszWork
@@ -219,10 +219,10 @@ end function
 ' to look up. A pure digit run is not.
 ' ========================================================================================
 function HelpCenter_IsSearchableWord( byval wszWord as DWSTRING ) as boolean
-    dim as long nLen = len( wszWord )
+    dim as long nLen = PsLen( wszWord )
     if nLen = 0 then return false
     for i as long = 1 to nLen
-        dim as ulong c = asc( mid( wszWord, i, 1 ) )
+        dim as ulong c = asc( PsMid( wszWord, i, 1 ) )
         dim as boolean bUpper = (c >= 65) andalso (c <= 90)
         dim as boolean bLower = (c >= 97) andalso (c <= 122)
         ' Anything above ASCII is treated as a letter: accented and CJK identifiers are
@@ -288,7 +288,7 @@ sub frmHelpCenter_ApplySearch( byval wszQuery as DWSTRING )
 
     dim as DWSTRING wszJS = "(function(){var i=document.getElementById('q');if(!i)return;"
 
-    if len( wszQuery ) > 0 then
+    if PsLen( wszQuery ) > 0 then
         wszJS = wszJS & "i.value=" & HelpCenter_JsQuote( wszQuery ) & ";" & _
                         "i.dispatchEvent(new Event('input',{bubbles:true}));"
     end if
@@ -783,11 +783,11 @@ sub frmHelpCenter_RunSelfTest()
     ' --- HelpCenter_IndexUrl -----------------------------------------------------------
     dim as DWSTRING wszUrl = HelpCenter_IndexUrl()
     HelpCenter_Check( "url: has the file scheme", _
-        left( wszUrl, 8 ) = "file:///" )
+        PsLeft( wszUrl, 8 ) = "file:///" )
     HelpCenter_Check( "url: no backslash survives", _
-        instr( wszUrl, "\" ) = 0 )
+        PsInStr( wszUrl, "\" ) = 0 )
     HelpCenter_Check( "url: points at the landing page", _
-        instr( wszUrl, "settings/help/helpcenter/index.html" ) > 0 )
+        PsInStr( wszUrl, "settings/help/helpcenter/index.html" ) > 0 )
 
     ' --- the two sites are two folders -------------------------------------------------
     ' The whole of the difference between them, so it is worth pinning: the default is the
@@ -799,7 +799,7 @@ sub frmHelpCenter_RunSelfTest()
     HelpCenter_Check( "site: Tiko Editor Help is a different folder", _
         wszTikoUrl <> wszUrl )
     HelpCenter_Check( "site: and it points at its own landing page", _
-        instr( wszTikoUrl, "settings/help/tikohelp/index.html" ) > 0 )
+        PsInStr( wszTikoUrl, "settings/help/tikohelp/index.html" ) > 0 )
     ' Both under settings\help -- the point of the move, and the thing a future edit to
     ' either branch of RootFolder would break silently.
     HelpCenter_Check( "site: both sites live under settings\help", _

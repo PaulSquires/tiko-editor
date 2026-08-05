@@ -175,7 +175,7 @@ function frmOptionsLocal_LocalEditCheck() as long
     if ucase(trim(AfxStrPathname( "NAMEX", wszFilename ))) = "ENGLISH.LANG" then exit function
     ' No edit target, no write. Defensive: an empty name would leave wszFileName pointing at
     ' the languages FOLDER, and the first thing below it does is AfxDeleteFile.
-    if len(wszLocalName) = 0 then exit function
+    if PsLen(wszLocalName) = 0 then exit function
     if ghLocalList = 0 then exit function
 
     dim as long nCount = PsListTree_GetCount( ghLocalList )
@@ -213,7 +213,7 @@ function frmOptionsLocal_LocalEditCheck() as long
             dim as DWSTRING wszIndex = PsListTree_GetCellText( ghLocalList, i, LOCALCOL_INDEX )
             dim as long idx = val(wszIndex)
             wszPhrase = AfxStrRSet(wszIndex, 5, "0") + wstr(":") + gLocalPhrases(idx)
-            pStream.WriteLine rtrim(wszPhrase)
+            pStream.WriteLine PsRTrim(wszPhrase)
         next
     end if
     pStream.Close
@@ -255,23 +255,23 @@ function frmOptionsLocal_LoadLocalizationFile( byref wszFilename as wstring ) as
     do until pStream.EOS
         wst = pStream.ReadLine
 
-        if len(wst) = 0 then continue do
-        if left(wst, 1) = "'" then continue do
+        if PsLen(wst) = 0 then continue do
+        if PsLeft(wst, 1) = "'" then continue do
 
-        i = instr(wst, ":")
+        i = PsInStr(wst, ":")
         if i = 0 then continue do
 
         wKey = "": wData = "": nData = 0
 
-        wKey  = left(wst, i-1)
-        wData = mid(wst, i+1)    ' MID causes problems with Chinese data so ** is used.
+        wKey  = PsLeft(wst, i-1)
+        wData = PsMid(wst, i+1)    ' MID causes problems with Chinese data so ** is used.
 
         nKey  = val(wKey)
         nData = val(wData)
 
         ' MAXIMUM for a non-English file does not redimension gLocalPhrases -- that array is
         ' always sized to the main ENGLISH array.
-        if ucase(wKey) <> "MAXIMUM" then
+        if PsUCase(wKey) <> "MAXIMUM" then
             if (nKey >= lbound(gLocalPhrases)) andalso (nKey <= ubound(gLocalPhrases)) then
                 ' Use ** so cyrillic gets converted correctly; FB intrinsics (RTRIM) convert
                 ' those incorrectly through CBSTR / DWSTRING.
@@ -311,13 +311,13 @@ private function frmOptionsLocal_PrettyName( byval wszFilename as DWSTRING ) as 
     dim as DWSTRING wszOut = ""
     dim as boolean bStart = true
 
-    for i as long = 1 to len(wszName)
-        dim as DWSTRING wszCh = mid(wszName, i, 1)
+    for i as long = 1 to PsLen(wszName)
+        dim as DWSTRING wszCh = PsMid(wszName, i, 1)
         if wszCh = "_" then
             wszOut += " "
             bStart = true
         else
-            wszOut += iif( bStart, ucase(wszCh), lcase(wszCh) )
+            wszOut += iif( bStart, PsUCase(wszCh), PsLCase(wszCh) )
             bStart = false
         end if
     next
@@ -358,7 +358,7 @@ private function frmOptionsLocal_LoadLanguages() as long
                     PsListTree_SetCellText( ghLocalLanguages, idx, 1, wszFile )
                     redim preserve gLocalLangFiles(idx) as DWSTRING
                     gLocalLangFiles(idx) = wszFile
-                    if ucase(gLocalCurrentFile) = ucase(wszFile) then idxMatch = idx
+                    if ucase(gLocalCurrentFile) = PsUCase(wszFile) then idxMatch = idx
                 end if
             end if
         loop while FindNextFile( hSearch, @WFD )
@@ -387,9 +387,9 @@ end function
 ' The languages-list row carrying a given filename, or -1. Used after a reload to put the
 ' highlight back on a file the row indices have moved under.
 private function frmOptionsLocal_RowForFile( byval wszFile as DWSTRING ) as long
-    if len(wszFile) = 0 then return -1
+    if PsLen(wszFile) = 0 then return -1
     for i as long = lbound(gLocalLangFiles) to ubound(gLocalLangFiles)
-        if ucase(gLocalLangFiles(i)) = ucase(wszFile) then return i
+        if ucase(gLocalLangFiles(i)) = PsUCase(wszFile) then return i
     next
     return -1
 end function
@@ -491,8 +491,8 @@ sub frmOptionsLocal_DisableEnglish()
     if gLocalBuilt = false then exit sub
 
     dim as DWSTRING wszSelected = frmOptionsLocal_SelectedFile()
-    dim as boolean bEnglish = iif( ucase(wszSelected) = "ENGLISH.LANG", true, false )
-    dim as boolean bHaveSel = iif( len(wszSelected) > 0, true, false )
+    dim as boolean bEnglish = iif( PsUCase(wszSelected) = "ENGLISH.LANG", true, false )
+    dim as boolean bHaveSel = iif( PsLen(wszSelected) > 0, true, false )
 
     ' Select and New are always available; Select needs something highlighted to select.
     PsButton_SetEnabled( ghLocalSelect, bHaveSel )
@@ -601,7 +601,7 @@ private sub frmOptionsLocal_SelectClick( byval hButton as HWND, byval id as long
     frmOptionsLocal_LocalEditCheck
 
     dim as DWSTRING wszFile = frmOptionsLocal_SelectedFile()
-    if len(wszFile) = 0 then exit sub
+    if PsLen(wszFile) = 0 then exit sub
 
     dim as DWSTRING wszFull = AfxGetExePathName & wstr("settings\languages\") & wszFile
     frmOptionsLocal_LoadLocalizationFile( wszFull )
@@ -641,7 +641,7 @@ end sub
 
 private sub frmOptionsLocal_EditClick( byval hButton as HWND, byval id as long )
     dim as DWSTRING wszFile = frmOptionsLocal_SelectedFile()
-    if len(wszFile) = 0 then exit sub
+    if PsLen(wszFile) = 0 then exit sub
 
     dim as DWSTRING wszLanguage = AfxGetExePathName & wstr("settings\languages\") & wszFile
     frmOptionsLocal_LoadLocalizationFile( wszLanguage )
@@ -687,8 +687,8 @@ end sub
 
 private sub frmOptionsLocal_DeleteClick( byval hButton as HWND, byval id as long )
     dim as DWSTRING wszFile = frmOptionsLocal_SelectedFile()
-    if len(wszFile) = 0 then exit sub
-    if ucase(wszFile) = "ENGLISH.LANG" then exit sub
+    if PsLen(wszFile) = 0 then exit sub
+    if PsUCase(wszFile) = "ENGLISH.LANG" then exit sub
 
     ' Was MB_YESNOCANCEL; OK/Cancel is behaviourally identical here (No and Cancel both abort)
     ' and, unlike PsMessageBox's English-only Yes/No preset, stays localized.
@@ -703,7 +703,7 @@ private sub frmOptionsLocal_DeleteClick( byval hButton as HWND, byval id as long
     PsListTree_SetCurSel( ghLocalList, -1 )
     ' Falls back to English only when the file just deleted WAS the selection -- deleting some
     ' other language has no business changing which one the editor runs in.
-    if ucase(gLocalCurrentFile) = ucase(wszFile) then gLocalCurrentFile = wstr("english.lang")
+    if ucase(gLocalCurrentFile) = PsUCase(wszFile) then gLocalCurrentFile = wstr("english.lang")
     gLocalEditFile    = ""
     gLocalTransLabel  = wstr("english")
     gLocalPhrasesEdit = false

@@ -143,10 +143,10 @@ end function
 ''
 ''
 function clsApp.GetDocumentPtrByFilename( Byref wszName as wstring ) as clsDocument ptr
-    if len(wszName) = 0 then return 0
+    if PsLen(wszName) = 0 then return 0
     dim pDoc as clsDocument ptr = this.pDocList
     do until pDoc = 0
-        if ucase(pDoc->DiskFilename) = ucase(wszName) then return pDoc
+        if ucase(pDoc->DiskFilename) = PsUCase(wszName) then return pDoc
         pDoc = pDoc->pDocNext
     loop
     function = 0

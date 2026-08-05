@@ -29,7 +29,7 @@
 ' ========================================================================================
 private function MsgBox_Word( byval nId as long, byval wszFallback as DWSTRING ) as DWSTRING
     dim as DWSTRING wsz = LL(nId)
-    if len(wsz) = 0 then return wszFallback
+    if PsLen(wsz) = 0 then return wszFallback
     return wsz
 end function
 

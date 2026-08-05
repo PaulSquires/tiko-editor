@@ -120,10 +120,10 @@ sub DoCheckForUpdates( byval param as any ptr )
     ' The reply is a handful of bytes. A larger one is not this file, and there is no reason
     ' to hand an unbounded remote string to the parser.
     const MAX_VERSION_REPLY = 4096
-    if len(st) > MAX_VERSION_REPLY then st = left( st, MAX_VERSION_REPLY )
+    if PsLen(st) > MAX_VERSION_REPLY then st = PsLeft( st, MAX_VERSION_REPLY )
 
     wszLatestVersion = ParseLatestVersion( st )
-    if len(wszLatestVersion) = 0 then exit sub
+    if PsLen(wszLatestVersion) = 0 then exit sub
     
     ' Check the installed vs. available version numbers   
     dim as long latestVersion = ConvertTikoVersion(wszLatestVersion)

@@ -1335,8 +1335,8 @@ sub PsNumericUpDown_GetIdealSize( byval hCtrl as HWND, byref nWidth as long, byr
     dim as DWSTRING wszMax = NUD_FormatValue( pNud->nMax, pNud->nDecimalPlaces )
 
     dim as SIZE szMin, szMax
-    GetTextExtentPoint32W( hdc, wszMin.vptr, len(wszMin), @szMin )
-    GetTextExtentPoint32W( hdc, wszMax.vptr, len(wszMax), @szMax )
+    GetTextExtentPoint32W( hdc, wszMin.vptr, PsLen(wszMin), @szMin )
+    GetTextExtentPoint32W( hdc, wszMax.vptr, PsLen(wszMax), @szMax )
     dim as long textW = szMin.cx
     if szMax.cx > textW then textW = szMax.cx
 

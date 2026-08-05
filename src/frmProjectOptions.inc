@@ -89,7 +89,7 @@ function frmProjectOptions_CreateResourceManifest() as Long
         end if
     end if
 
-    if len(wszFilesMissing) then
+    if PsLen(wszFilesMissing) then
         ' Parented to the Project Options dialog, which is up and modal at the one call site
         ' (frmProjectOptions_SaveProjectOptions) -- a box owned by a disabled ancestor comes up
         ' behind it. This was MessageBox(0), i.e. ownerless, which the Win32 box got away with.

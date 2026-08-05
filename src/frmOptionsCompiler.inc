@@ -168,14 +168,14 @@ private function frmOptionsCompiler_LoadToolchains() as long
                     ' The old page warned when the compiler path contains a space (the fbc
                     ' invocation would break) -- keep the warning on the display text only.
                     ' Hard-coded English, exactly as the old page had it (not localized).
-                    if instr( ucase(wszPath & wszFolder & "\fbc32.exe"), " " ) then
+                    if instr( PsUCase(wszPath & wszFolder & "\fbc32.exe"), " " ) then
                         wszDisplay = wszDisplay & "   (Warning: File path contains spaces)"
                     end if
 
                     idx = PsListTree_AddString( ghCompToolchains, wszDisplay )
                     redim preserve gCompToolchainNames(idx) as DWSTRING
                     gCompToolchainNames(idx) = wszFolder
-                    if ucase(wszFolder) = wszWanted then idxMatch = idx
+                    if PsUCase(wszFolder) = wszWanted then idxMatch = idx
                 end if
             end if
         loop while FindNextFile( hSearch, @WFD )

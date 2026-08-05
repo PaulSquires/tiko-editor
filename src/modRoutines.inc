@@ -186,24 +186,24 @@ function SpawnPreviousInstance() as boolean
         dim as long i = 1
         do
             wszArg = AfxCommand(i)
-            if len(wszArg) = 0 then exit do
+            if PsLen(wszArg) = 0 then exit do
             
             ' Remove any double quotes from the argument.
             wszPath = AfxStrRemove( wszArg, wchr(34) )
             
             ' if no path exists for the file then add the current folder
             wszPath = AfxStrPathname( "PATH", wszArg )
-            if len(wszPath) = 0 then wszArg = AfxGetExePathName & wszArg 
+            if PsLen(wszPath) = 0 then wszArg = AfxGetExePathName & wszArg 
             
             wszSendString = wszSendString & _
-                            iif(len(wszSendString), ";", "") & _
+                            iif(PsLen(wszSendString), ";", "") & _
                             wszArg
             i += 1
         loop
         
         dim as COPYDATASTRUCT cds
         cds.dwData = IDM_COPYDATA_COMMANDLINE
-        cds.cbData = (len(wszSendString) + 1) * 2  ' unicode
+        cds.cbData = (PsLen(wszSendString) + 1) * 2  ' unicode
         cds.lpData = wszSendString.vptr
         SendMessage(hWindow, WM_COPYDATA, 0, cast(LPARAM, @cds))
         return true
@@ -316,7 +316,7 @@ function getTextWidth( _
     
     SaveDC(hDC)
     if _hFont then oldFont = SelectObject(hDC, _hFont)
-    GetTextExtentpoint32( hDC, @wszText, len(wszText), @size )
+    GetTextExtentpoint32( hDC, @wszText, PsLen(wszText), @size )
     SelectObject(hDC, oldFont)
     RestoreDC(hDC, -1)
     
@@ -353,7 +353,7 @@ end function
 ' ========================================================================================
 function GetFontCharSetID(byref wzCharsetName as DWSTRING ) as long
 
-    if len(wzCharsetName) = 0 then return SC_CHARSET_DEFAULT
+    if PsLen(wzCharsetName) = 0 then return SC_CHARSET_DEFAULT
     
     select case wzCharsetName
         case "Default"       : function = SC_CHARSET_DEFAULT
@@ -659,7 +659,7 @@ function OpenSelectedDocument( _
     NavHistory_RecordJump()
 
     ' if incoming FunctionName then search for its filename and line number.
-    if len( wszFunctionName ) andalso (nLineNumber = -1) then
+    if PsLen( wszFunctionName ) andalso (nLineNumber = -1) then
         dim as SYMBOLREF refProc = gSymDb.FindProc( wszFunctionName )
         if refProc.IsValid then
             dim as wstring ptr pFile = gSymDb.SymFile( refProc )
@@ -933,7 +933,7 @@ function AfxIFileSaveDialog( _
     
     ' Add extensions if it does not already exist as part of the filename
     wszFilename = AfxStrPathname( "NAMEX", *pwszFileName )
-    if len(wszFilename) then 
+    if PsLen(wszFilename) then 
         if AfxStrPathname( "EXTN", wszFilename ) = "" then
             if len(*pwszDefExt) then
             wszFilename = wszFilename & "." & *pwszDefExt
@@ -1094,21 +1094,21 @@ function LoadLocalizationFile( _
     do until pStream.EOS
         wst = pStream.ReadLine
         
-        if len(wst) = 0 then continue Do
-        if left(wst, 1) = "'" then continue Do
+        if PsLen(wst) = 0 then continue Do
+        if PsLeft(wst, 1) = "'" then continue Do
         
-        i = instr(wst, ":")
+        i = PsInStr(wst, ":")
         if i = 0 then continue Do
         
         wKey = "": wData = "": nData = 0
 
-        wKey  = left(wst, i-1)
+        wKey  = PsLeft(wst, i-1)
         wData = mid(**wst, i+1)    ' MID causes problems with Chinese data so ** is used.
         
         nKey  = val(wKey)
         nData = val(wData)
 
-        if ucase(wKey) = "MAXIMUM" then
+        if PsUCase(wKey) = "MAXIMUM" then
             ' resize the global dynamic array
             if IsEnglish then
                 redim gLangEnglish(nData) as wstring * MAX_PATH
@@ -1213,7 +1213,7 @@ end function
 
 function IsProcessRunning( byval wszExeFileName as DWSTRING ) as boolean
     wszExeFileName = AfxStrPathname("NAMEX", wszExeFileName)
-    if ucase(wszExeFileName) = "TIKO.EXE" then return false
+    if PsUCase(wszExeFileName) = "TIKO.EXE" then return false
     dim as dword pid = findprocessid( wszExeFileName )
     dim as HANDLE hprocess = OpenProcess(SYNCHRONIZE, FALSE, pid)
     dim as boolean bExists = iif( hprocess = 0, false, true )
@@ -1253,36 +1253,36 @@ function GetRunExecutableFilename() as DWSTRING
         if gConfig.Builds(idxBuild).Is64bit then
             wszOptions = wszOptions + " " + gApp.ProjectOther64
         end if
-        wszOptions = " " + ucase(wszOptions) + " "
+        wszOptions = " " + PsUCase(wszOptions) + " "
         
-        if instr(wszOptions, wstr(" -DLL "))   then return ""
-        if instr(wszOptions, wstr(" -DYLIB ")) then return ""
-        if instr(wszOptions, wstr(" -LIB "))   then return ""
+        if PsInStr(wszOptions, wstr(" -DLL "))   then return ""
+        if PsInStr(wszOptions, wstr(" -DYLIB ")) then return ""
+        if PsInStr(wszOptions, wstr(" -LIB "))   then return ""
         
     end if
     
     ' Need to check the compiler options to see if the -x switch is used. That switch specifically
     ' names the output file.
-    dim y as long = instr(wszOptions, wstr(" -X "))
+    dim y as long = PsInStr(wszOptions, wstr(" -X "))
     if y then
         y = y + 4  ' skip over the switch itself
-        for i as long = y to len(wszOptions)
+        for i as long = y to PsLen(wszOptions)
             ' iterate to the beginning of the next switch or end of the string
             ' skip over spaces that are part of a filename string
             if wszOptions[i-1] = 34 then bInstring = not bInstring  ' double quotes
             if bInstring then continue for
             if wszOptions[i-1] = 45 then  ' dash   
-                wszFilename = mid(wszOptions, y, i-y-1)
+                wszFilename = PsMid(wszOptions, y, i-y-1)
                 exit for
             end if   
         next
         ' There was no other switch so we made it to the end of the string
-        if len(wszFilename) = 0 then wszFilename = mid(wszOptions, y)
+        if PsLen(wszFilename) = 0 then wszFilename = PsMid(wszOptions, y)
     end if
     
     ' Has a filename been determined yet? if it has then it possibly does not have
     ' a path assigned to it so we should add one.
-    if len(wszFilename) then
+    if PsLen(wszFilename) then
         if len(AfxStrPathname("PATH", wszFilename)) = 0 then
             wszFilename = AfxStrPathname("PATH", pDocMain->DiskFilename) + wszFilename
         end if
@@ -1344,7 +1344,7 @@ sub CopyData_RunSelfTest()
                   "cbData=1 (half a code unit) still returned text" )
 
         ' ---- the normal case: sender includes the terminator, as SpawnPreviousInstance does
-        CDASSERT( SafeCopyDataString( @w, (len(w) + 1) * 2 ) = "hello", _
+        CDASSERT( SafeCopyDataString( @w, (PsLen(w) + 1) * 2 ) = "hello", _
                   "a well-formed payload did not round-trip" )
 
         ' ---- cbData SHORTER than the string: the declared length wins, not the terminator
@@ -1372,11 +1372,11 @@ sub CopyData_RunSelfTest()
             next
 
             dim as DWSTRING wszGot = SafeCopyDataString( p, N * 2 )
-            CDASSERT( len( wszGot ) = N, _
-                      "unterminated payload returned " & len(wszGot) & " chars, expected " & N & _
+            CDASSERT( PsLen( wszGot ) = N, _
+                      "unterminated payload returned " & PsLen(wszGot) & " chars, expected " & N & _
                       " -- the reader ran past cbData" )
             CDASSERT( wszGot = "ABCDEFGH", "unterminated payload returned [" & wszGot & "]" )
-            CDASSERT( instr( wszGot, "Z" ) = 0, _
+            CDASSERT( PsInStr( wszGot, "Z" ) = 0, _
                       "the guard pattern was consumed: the reader overran the declared length" )
             deallocate( p )
         end if

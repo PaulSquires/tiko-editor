@@ -69,7 +69,7 @@ private function frmAssignKey_TextWidthPx( byval hwnd as HWND, _
 
     dim as HFONT oldFont
     if hFont then oldFont = SelectObject( hDC, hFont )
-    GetTextExtentPoint32( hDC, wszText.sptr, len(wszText), @sz )
+    GetTextExtentPoint32( hDC, wszText.sptr, PsLen(wszText), @sz )
     if hFont then SelectObject( hDC, oldFont )
 
     ReleaseDC( hwnd, hDC )
@@ -139,7 +139,7 @@ private function AssignKey_PartsMatch( byval wszStoredKey as DWSTRING, _
                                        byval bCtrl as boolean, _
                                        byval bAlt as boolean, _
                                        byval bShift as boolean ) as boolean
-    if ucase(trim(wszStoredKey)) <> wszCandidateUpper then return false
+    if ucase(PsTrim(wszStoredKey)) <> wszCandidateUpper then return false
     if (nStoredCtrl  <> 0) <> bCtrl  then return false
     if (nStoredAlt   <> 0) <> bAlt   then return false
     if (nStoredShift <> 0) <> bShift then return false
@@ -149,7 +149,7 @@ end function
 
 private function AssignKey_OwnerText( byval wszDescription as DWSTRING ) as DWSTRING
     dim as DWSTRING wszWho = wszDescription
-    if len(wszWho) = 0 then wszWho = L(342,"(untitled)")
+    if PsLen(wszWho) = 0 then wszWho = L(342,"(untitled)")
     return L(355,"Already used by") & ": " & wszWho
 end function
 
@@ -161,7 +161,7 @@ function frmAssignKey_ClashText( byval wszKey as DWSTRING, _
                                    byval nDomain as long, _
                                    byval nSkipIndex as long ) as DWSTRING
 
-    if len(wszKey) = 0 then return ""
+    if PsLen(wszKey) = 0 then return ""
 
     dim as long vk = KeyBindings_PickListKeyToValue( wszKey )
     if vk = 0 then return ""
@@ -169,9 +169,9 @@ function frmAssignKey_ClashText( byval wszKey as DWSTRING, _
     ' --- 1. the editor's commands ---
     dim as DWSTRING wszCanonical = frmKeyboardEdit_BuildKeyString( vk, bCtrl, bAlt, bShift )
     dim as DWSTRING wszCmd = KeyBindings_FindCommandForKeys( wszCanonical )
-    if len(wszCmd) then return L(355,"Already used by") & ": " & wszCmd
+    if PsLen(wszCmd) then return L(355,"Already used by") & ": " & wszCmd
 
-    dim as DWSTRING wszUpper = ucase(wszKey)
+    dim as DWSTRING wszUpper = PsUCase(wszKey)
 
     ' --- 2. the user tools ---
     if nDomain = ASSIGNKEY_DOMAIN_TOOLS then
@@ -448,7 +448,7 @@ private function frmAssignKey_CaptureProc( _
                 dim as DWSTRING wszOwner = frmAssignKey_ClashText( KeyBindings_VKToName( vk ), _
                                                                      bCtrl, bAlt, bShift, _
                                                                      gAssignKeyDomain, gAssignKeyIndex )
-                if len(wszOwner) then
+                if PsLen(wszOwner) then
                     bAccept = false
                     wszWhy  = wszOwner
                 end if
@@ -518,7 +518,7 @@ private function frmAssignKey_CaptureProc( _
 
             dim as DWSTRING wszShow = frmAssignKey_Compose()
             dim as COLORREF clr = theme.ui.field.forecolor
-            dim as boolean bWaiting = (len(wszShow) = 0)
+            dim as boolean bWaiting = (PsLen(wszShow) = 0)
             if bWaiting then
                 wszShow = L(332,"Press the new shortcut")
                 clr = theme.panel.text.forecolor
@@ -667,7 +667,7 @@ private function frmAssignKey_OnPaint( byval hwnd as HWND ) as LRESULT
     buffer.SetForeColor( theme.panel.texthot.forecolor )
     buffer.SetFont( ghFont(GUIFONTBOLD_11) )
     dim as DWSTRING wszWho = gAssignKeyCaption
-    if len(wszWho) = 0 then wszWho = L(342,"(untitled)")
+    if PsLen(wszWho) = 0 then wszWho = L(342,"(untitled)")
     buffer.PaintText( wszWho, @rcT, DT_LEFT or DT_END_ELLIPSIS )
     y += rowH
 
@@ -702,8 +702,8 @@ private function frmAssignKey_OnPaint( byval hwnd as HWND ) as LRESULT
     rcT.top = y : rcT.bottom = y + rowH
 
     dim as DWSTRING wszMsg = gTKWhy
-    if len(wszMsg) = 0 then wszMsg = frmAssignKey_CurrentClash()
-    if len(wszMsg) then
+    if PsLen(wszMsg) = 0 then wszMsg = frmAssignKey_CurrentClash()
+    if PsLen(wszMsg) then
         buffer.SetForeColor( theme.compile.iconfail )
         buffer.SetFont( ghFont(GUIFONT_11) )
         buffer.PaintText( wszMsg, @rcT, DT_LEFT or DT_END_ELLIPSIS )

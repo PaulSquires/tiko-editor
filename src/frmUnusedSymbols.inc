@@ -191,7 +191,7 @@ private function frmUnusedSymbols_RootFile() as DWSTRING
     ' a relative or forward-slashed path is on disk and has no backslash, and a
     ' path-shaped test would reject it.
     dim as DWSTRING wszFile = pDoc->DiskFilename
-    if len( wszFile ) = 0 then return ""
+    if PsLen( wszFile ) = 0 then return ""
     if pDoc->IsNewFlag then return ""             ' never saved
     if AfxFileExists( wszFile ) = false then return ""
     return wszFile
@@ -707,7 +707,7 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
     ' What should this report cover? With no project open that is the active document, so
     ' the window works on loose files instead of refusing.
     dim as DWSTRING wszRoot = frmUnusedSymbols_RootFile()
-    if len( wszRoot ) = 0 then
+    if PsLen( wszRoot ) = 0 then
         ' nothing scannable at all: no document open, or the only one has never been saved
         TikoMsgBox( hWndParent, L(420, "Open or save a source file first"), L(214, "Confirm"), _
                     TMB_ICON_INFO, TMB_OK )

@@ -679,7 +679,7 @@ sub PsMessageBox_SetGlyph( byval hMsgBox as HWND, byval Glyph as DWSTRING )
     dim as PSMESSAGEBOX ptr pBox = GetMessageBoxPointer(hMsgBox)
     if pBox = 0 then exit sub
     pBox->wszGlyph       = Glyph
-    pBox->bGlyphOverride = (len( Glyph ) > 0)
+    pBox->bGlyphOverride = (PsLen( Glyph ) > 0)
     pBox->Refresh()
 end sub
 
