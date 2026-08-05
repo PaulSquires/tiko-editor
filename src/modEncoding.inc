@@ -130,6 +130,22 @@ end function
 
 
 ' ========================================================================================
+' tiko's FILE_ENCODING_* to PsCore's PsEncodingId. The two lists were written years and a
+' project apart and agree one for one, which is why this is a Select Case and not a design.
+' ========================================================================================
+private function Doc_EncToPs( byval nEnc as long ) as PsC.PsEncodingId
+    select case nEnc
+        case FILE_ENCODING_ANSI      : return PsC.PSENC_ANSI
+        case FILE_ENCODING_UTF8      : return PsC.PSENC_UTF8
+        case FILE_ENCODING_UTF8_BOM  : return PsC.PSENC_UTF8_BOM
+        case FILE_ENCODING_UTF16_BOM : return PsC.PSENC_UTF16LE_BOM
+    end select
+    ' Same fallback the old code had: an unknown target writes UTF-8.
+    return PsC.PSENC_UTF8
+end function
+
+
+' ========================================================================================
 ' Produce the exact bytes to write to disk for a document, BOM included.
 '
 '   sBuffer       - the raw Scintilla bytes (from Scintilla_GetTextBytes)
@@ -142,30 +158,34 @@ end function
 ' clsDocument.SaveFile / SaveTempFile and frmMainFile's duplicate-file path all share; it
 ' is also what the Tier-A self-test drives directly.
 '
-' ---- STILL ON THE WIN32 PRIMITIVES, AND HERE IS WHY -------------------------------------
+' ---- NOW ON PsEncoding, THROUGH PsC.DWSTRING --------------------------------------------
 '
-' This was rewritten onto PsEncDecode/PsEncEncode and reverted, because the encoding
-' self-test failed 14 assertions -- "embedded NUL truncated: length 0 <> 5" among them.
+' The first attempt at this used AfxNova's DWSTRING as the intermediate and failed 14
+' assertions in the encoding self-test -- "embedded NUL truncated: length 0 <> 5" among
+' them. A document may legitimately contain a NUL, and AfxNova's conversions stop at one.
 '
-' The intermediate representation is the whole problem. The wide payload BytesToWide
-' produces is a RAW UTF-16 BYTE BUFFER whose length is carried separately in nWide, and it
-' may legitimately contain NUL code units: a document with an embedded NUL is a document,
-' and the self-test asserts so. Routing it through AfxNova's DWSTRING loses that -- its
-' conversions are NUL-terminated -- so the buffer came back empty or truncated.
+' PsCore's DWSTRING does not: "length is authoritative, not the terminator" is rule 1 of
+' its header, written after exactly this class of bug. It is reached here as PsC.DWSTRING,
+' because the unqualified name still means AfxNova's for tiko's other 1631 sites -- see
+' the namespace note in tiko.bas.
 '
-' PsCore's DWSTRING does NOT have that problem: "length is authoritative, not the
-' terminator" is rule 1 of its header, written after exactly this class of bug. So the
-' port is correct in the destination and wrong only in the shim, and the right move is to
-' wait for the type swap rather than to fake it with the type that cannot do it.
+' There is no second length to get wrong any more. The comment that used to live here
+' warned that the wide buffer's LENGTH IN CHARACTERS had once been handed to a BYTE-count
+' parameter, truncating every UTF-16 save in half; PsEncEncode returns the finished byte
+' string, BOM included, so the three cases that used to concatenate one by hand are gone
+' with it.
 '
-' The ANSI codepage question waits with it. PsEncoding is CP-1252 always, where this is
-' CP_ACP; identical on a Western Windows install, different on a Shift-JIS or GBK machine.
-' That is the documented price of determinism -- Linux has no CP_ACP to ask -- and it
-' deserves its own commit rather than a footnote in this one.
+' ---- AND ONE BEHAVIOUR CHANGES ----------------------------------------------------------
 '
-' Note the UTF-16 case below: the wide buffer's byte length is code-units * 2. Passing the
-' CHARACTER count to a byte-count parameter is what once truncated every UTF-16 save in
-' half, which is the other reason this function keeps its two separate lengths in view.
+' ANSI was CP_ACP -- whatever codepage the machine is set to. PsEncoding is CP-1252,
+' always, on both platforms. On a Western Windows install the two are the same mapping and
+' nothing moves. On a Shift-JIS or GBK machine an ANSI save now writes CP-1252 and reports
+' more characters as lossy than it used to.
+'
+' That is deliberate and it is the price of determinism: Linux has no CP_ACP to ask, and a
+' locale-dependent conversion means one document saves differently on two computers, which
+' is the property this whole port exists to remove. UTF-8 and UTF-16 -- the default and the
+' overwhelming majority of real files -- are untouched.
 ' ========================================================================================
 function Doc_EncodeForDisk( _
             byref sBuffer as string, _
@@ -175,26 +195,13 @@ function Doc_EncodeForDisk( _
             ) as string
 
     bLossy = false
-    dim as long nWide
-    dim as string sWide = BytesToWide( sBuffer, iif(bSourceIsUtf8, CP_UTF8, CP_ACP), nWide )
 
-    select case nTargetEnc
-        case FILE_ENCODING_ANSI
-            return WideToAnsi( sWide, nWide, bLossy )
+    ' The in-editor buffer carries no BOM -- it is Scintilla's text, not a file -- so it
+    ' decodes as the plain form of whichever layout SCI_GETCODEPAGE reports.
+    dim as PsC.DWSTRING dwsText = PsC.PsEncDecode( sBuffer, _
+            iif(bSourceIsUtf8, PsC.PSENC_UTF8, PsC.PSENC_ANSI) )
 
-        case FILE_ENCODING_UTF8
-            return WideToUtf8( sWide, nWide )
-
-        case FILE_ENCODING_UTF8_BOM
-            return chr(&HEF, &HBB, &HBF) & WideToUtf8( sWide, nWide )
-
-        case FILE_ENCODING_UTF16_BOM
-            ' FF FE (little-endian BOM) + the wide payload, byte length = code-units * 2.
-            return chr(&HFF, &HFE) & left( sWide, nWide * 2 )
-
-        case else
-            return WideToUtf8( sWide, nWide )
-    end select
+    return PsC.PsEncEncode( dwsText, Doc_EncToPs( nTargetEnc ), bLossy )
 end function
 
 
@@ -353,17 +360,17 @@ function ConvertTextBuffer( _
 
     ' Decode the current buffer to UTF-16, then re-encode to the wanted layout.
     dim as string sBuffer = Scintilla_GetTextBytes( hEdit )
-    dim as long nWide
-    dim as string sWide = BytesToWide( sBuffer, iif(bHaveUtf8, CP_UTF8, CP_ACP), nWide )
+    dim as PsC.DWSTRING dwsText = PsC.PsEncDecode( sBuffer, _
+            iif(bHaveUtf8, PsC.PSENC_UTF8, PsC.PSENC_ANSI) )
 
     dim as string sNew
     dim as long nNewCodePage
+    dim as boolean bLossy
     if bWantUtf8 then
-        sNew = WideToUtf8( sWide, nWide )
+        sNew = PsC.PsEncEncode( dwsText, PsC.PSENC_UTF8, bLossy )
         nNewCodePage = SC_CP_UTF8
     else
-        dim as boolean bLossy
-        sNew = WideToAnsi( sWide, nWide, bLossy )
+        sNew = PsC.PsEncEncode( dwsText, PsC.PSENC_ANSI, bLossy )
         if bLossy then
             ' Converting to ANSI will destroy characters outside the system ANSI codepage,
             ' and SetText empties the undo buffer, so there is no going back. Confirm first.

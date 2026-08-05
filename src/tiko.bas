@@ -43,6 +43,23 @@ using AfxNova
 '' Phase 7a scaffolding -- see the header. Deleted when the DWSTRING swap lands.
 #include once "PsCompat.bi"
 
+' ----------------------------------------------------------------------------------------
+' PsCore, UNDER A NAMESPACE. AfxNova and PsCore both declare a type called DWSTRING, and
+' the unqualified name can only mean one of them -- which is why the full swap is 1008
+' errors and belongs with the shell conversion.
+'
+' A namespace makes both available at once: `DWSTRING` stays AfxNova's for tiko's 1631
+' existing sites, and `PsC.DWSTRING` is PsCore's, for code that needs what PsCore's has
+' and AfxNova's does not. The encoder needs exactly that -- a string whose LENGTH is
+' authoritative rather than its terminator, so an embedded NUL survives the round trip.
+'
+' This is scaffolding of the same kind as PsCompat.bi. When the type swap lands, the
+' namespace comes off and the PsC. prefixes go with it.
+' ----------------------------------------------------------------------------------------
+namespace PsC
+    #include once "core/PsEncoding.inc"
+end namespace
+
 
 #define APPNAME             wstr("Tiko Editor")
 #define APPNAMESHORT        wstr("Tiko")
