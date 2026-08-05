@@ -5,4 +5,5 @@ cd src
 ..\toolchains\FreeBASIC-1.10.1-winlibs-gcc-9.3.0\fbc64.exe -gen gas64 -x ..\_check_app_layer.exe _check_app_layer.bas
 if errorlevel 1 exit /b 1
 cd ..
-_check_app_layer.exe
+rem ".\" is required: cmd does not search the current directory for an exe.
+.\_check_app_layer.exe

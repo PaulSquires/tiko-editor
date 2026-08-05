@@ -17,9 +17,10 @@ const DOCWRITE_FAILED = 1
 ' Test hook for Doc_ConfirmLossySave: 0 = ask the user (always, outside a self-test),
 ' >0 = answer OK, <0 = answer Cancel. See that function's header for why it exists.
 dim shared gLossySaveTestAnswer as long
-declare function Doc_ConfirmLossySave( byval pDoc as clsDocument ptr, byval wszPath as DWSTRING, byval nEncoding as long ) as boolean
 declare function Doc_WriteToDisk( byval wszPath as DWSTRING, byref sBytes as string, byref wszErr as DWSTRING ) as long
-declare sub Doc_ReportWriteFailure( byval wszPath as DWSTRING, byval wszErr as DWSTRING )
+' Doc_ConfirmLossySave and Doc_ReportWriteFailure are declared in
+' modEncodingUi.bi now -- they put a window in front of the user, and this file
+' is in app\, which may not know what a window is.
 
 declare function Doc_EncodingName( byval nEnc as long ) as DWSTRING
 declare function ConvertTextBuffer( byval pDoc as clsDocument ptr, byval nNewEncoding as long ) as boolean

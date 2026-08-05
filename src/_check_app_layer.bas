@@ -38,14 +38,32 @@
 #include once "dir.bi"
 
 '' The Win32 and AfxNova vocabulary. Whole words only.
+''
 '' zstring, not string: fbc cannot initialise a var-len string array in its
-'' declaration ("Var-len strings cannot be initialized").
-dim shared as zstring * 20 g_banned(...) = { _
+'' declaration ("Var-len strings cannot be initialized"). Nor can it take a
+'' comment inside the initialiser's line continuations, which is why all of
+'' this is up here.
+''
+'' THIS LIST IS A SAMPLE OF THE WIN32 SURFACE, AND BEHAVES LIKE ONE. The first
+'' version of it passed 28 files, two of which call MultiByteToWideChar,
+'' WideCharToMultiByte or SciExec -- none of which it knew about. A checker is
+'' only as good as its vocabulary. Widen it whenever something slips through,
+'' and read a green run as evidence rather than as proof.
+''
+'' SciExec is tiko's own Scintilla wrapper rather than Win32, but it takes an
+'' HWND and so ties a file to the editor window -- the same dependency by
+'' another name.
+dim shared as zstring * 24 g_banned(...) = { _
     "HWND", "HDC", "HMENU", "HBITMAP", "HICON", "HFONT", "HBRUSH", "HPEN", _
     "HINSTANCE", "WPARAM", "LPARAM", "LRESULT", "CWindow", "SendMessage", _
     "PostMessage", "InvalidateRect", "CreateWindowEx", "DefWindowProc", _
     "GetStockObject", "SelectObject", "BeginPaint", "DrawText", "SetTimer", _
-    "KillTimer", "CoCreateInstance", "MessageBoxW", "IsWindowVisible" }
+    "KillTimer", "CoCreateInstance", "MessageBoxW", "IsWindowVisible", _
+    "MultiByteToWideChar", "WideCharToMultiByte", "FormatMessageW", _
+    "CreateFileW", "WriteFile", "ReadFile", "CloseHandle", "GetLastError", _
+    "DWORD", "LPWSTR", "LPCWSTR", "LPSTR", "HGLOBAL", "GlobalAlloc", _
+    "GlobalLock", "CP_UTF8", "CP_ACP", "IDOK", "IDCANCEL", "IDYES", "IDNO", _
+    "SciExec" }
 
 dim shared as long g_nBad
 

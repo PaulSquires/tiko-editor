@@ -1,6 +1,6 @@
 # `src/app/` — the layer that does not know it is on Windows
 
-28 files, 4,933 lines. What Phase 8 carries to Linux unchanged: the symbol
+26 files, ~4,100 lines. What Phase 8 carries to Linux unchanged: the symbol
 database, encoding conversion, the ini parser, project folders, the fuzzy
 matcher, the build service, navigation history, unused-symbol analysis, the
 menu and theme *definitions*, and the debugParser/fbcParser integration.
@@ -20,16 +20,44 @@ stripped, and caught what a token-level regex could not:
 | file | why it stayed behind |
 | --- | --- |
 | `clsTopTabCtl.inc` | `AfxRedrawWindow`, `IsWindowVisible`, `HWND_FRMMAIN_FIND` — the last is one token, so `\bHWND\b` never matched it |
-| `modEncoding.inc` | `MessageBoxW` and an `as hwnd` local — it asks the user about encoding conflicts |
+| `modEncoding.inc` | `MessageBoxW`, an `as hwnd` local, and — found later — `MultiByteToWideChar`, `WideCharToMultiByte`, `FormatMessageW`, `CreateFileW`, `GetLastError` |
 | `modThemeTypes.bi` | `#include "AfxNova/DWSTRING.bi"` |
 
 `modThemeTypes.bi` is the interesting one: its *only* dependency is the DWSTRING
 include. It becomes portable for free when the type swap lands, and is the
 natural first file to re-test then.
 
-`modEncoding.inc` is 476 lines of genuinely portable conversion with three user
-prompts in it. Splitting the prompts out is a small, worthwhile job and is not
-this commit.
+### The prompts came out of `modEncoding.inc`
+
+`modEncodingUi.bi`/`.inc` now own the three questions the encoding code asks:
+`Doc_ConfirmLossySave`, `Doc_ReportWriteFailure`, and `Doc_ConfirmAnsiConversion`
+— the last extracted from inside `ConvertTextBuffer`, where a single function
+both decided *whether* to ask and owned *what asking looked like*.
+
+The dependency now runs one way: logic names a question, UI answers it. The
+`.bi` is included before `modEncoding.inc` precisely because the logic calls
+into it, which makes the direction visible in the include order.
+
+**This did NOT make `modEncoding.inc` portable, and it was never going to.**
+What remains calls `MultiByteToWideChar`, `WideCharToMultiByte`,
+`FormatMessageW`, `CreateFileW` and `GetLastError`. Those need `PsEncoding` and
+`PsFile` rather than a move — rewriting the save path is a bigger and riskier
+job than separating the dialogs from it, and this makes that job possible to do
+on its own.
+
+### The ratchet's vocabulary was incomplete, and two more files came back
+
+The first version of the banned list was a hand-written sample of the Win32
+surface, and it behaved like one: it passed 28 files, two of which call
+`MultiByteToWideChar`, `WideCharToMultiByte` or `SciExec`.
+
+    modEncodingSelfTest.inc   tests the Win32-based conversions directly
+    modUnusedSymbols.inc      SciExec — tiko's own Scintilla wrapper, but it
+                              takes an HWND, which is the same dependency
+                              under another name
+
+Both moved back; the list is wider now. It is still a sample. Widen it whenever
+something slips through, and read a green run as evidence rather than proof.
 
 ## Why the checker is a program
 

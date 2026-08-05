@@ -147,7 +147,12 @@ dim shared gTTabCtl as clsTopTabCtl
 ' PRIVATE conversion helpers (undeclared in any .bi), and modRoutines' own GetFileToString
 ' and modCompileErrors both call into them, so they must be DEFINED first.
 #include once "modPaths.inc"
+' The encoding conversion logic, then the dialogs it asks through. The .bi comes
+' first because modEncoding.inc CALLS one of them: the logic decides whether to
+' ask, the UI decides what asking looks like.
+#include once "modEncodingUi.bi"
 #include once "modEncoding.inc"
+#include once "modEncodingUi.inc"
 #include once "modRoutines.inc"
 #include once "modUpdateCheck.inc"
 ' The formatter engine. After clsConfig.inc (it reads gConfig's keyword list to build its
@@ -160,7 +165,7 @@ dim shared gTTabCtl as clsTopTabCtl
 ' Encoding conversion self-test. After modRoutines.inc (Doc_EncodeForDisk/GetFileToString)
 ' and clsDocument.inc (the clsDocument type it instantiates for the disk round-trip).
 #include once "app/modEncodingSelfTest.bi"
-#include once "app/modEncodingSelfTest.inc"
+#include once "modEncodingSelfTest.inc"
 ' Atomic-save self-test. After modRoutines.inc, which owns Doc_WriteToDisk. It writes to
 ' %TEMP% rather than staying pure, deliberately: the contract it asserts -- that a FAILED
 ' write leaves the file already on disk intact -- cannot be reached without a real file.
@@ -172,7 +177,7 @@ dim shared gTTabCtl as clsTopTabCtl
 ' After clsSymbolDb.inc (it reads the reference counts through gSymDb's
 ' accessors) and after modRoutines.inc, whose OpenSelectedDocument the window
 ' drives. The MODEL only; the window comes in with the frm* block.
-#include once "app/modUnusedSymbols.inc"
+#include once "modUnusedSymbols.inc"
 #include once "clsTopTabCtl.inc"
 #include once "modAutoInsert.inc"
 ' Build state and the command-line composers. Ahead of modCompile.inc and
