@@ -612,8 +612,8 @@ function ParseLogForError ( _
                 L(155, "Errors")   & " " & NumErrors   & "  " & _
                 L(154, "Warnings") & " " & NumWarnings & _
                 "  [" & _
-                AfxLocalDateStr( "yyyy-MM-dd" ) & "  " & _
-                AfxLocalTimeStr( "hh:mm:ss" ) & _
+                PsLocalDateStr() & "  " & _
+                PsLocalTimeStr() & _
                 "]"
         pCompile->wszOutputMsg = L(188,"Failed Compile")  & " (" & wszIconCompileMsg & ")" & vbcrlf
         pCompile->wszStatusBarMessage = wszIconCompileMsg
@@ -687,8 +687,8 @@ function ParseLogForError ( _
                                     str(nFileSize) & " " & L(160,"bytes") & ")" & vbcrlf & _
             L(158,"Compile Time:")       & " " & wszElapsedTime & _
                                     " " & wszTimeUnits & " (" & _
-                                    AfxLocalDateStr( "yyyy-MM-dd" ) & " " & _
-                                    AfxLocalTimeStr( "hh:mm:ss" ) & ")" & vbcrlf
+                                    PsLocalDateStr() & " " & _
+                                    PsLocalTimeStr() & ")" & vbcrlf
     end if
 
 

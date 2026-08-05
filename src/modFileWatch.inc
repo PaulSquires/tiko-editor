@@ -25,12 +25,26 @@ dim shared as boolean gFileWatchBusy
 
 
 ' ========================================================================================
-' Exact-enough equality for two file times, using the same AfxFileTimeToVariantTime the
-' original inline check used. Kept as one function so the "has it changed" test and the
+' Equality for two file times. Kept as one function so the "has it changed" test and the
 ' "has it settled" test cannot drift apart.
+'
+' NOW EXACT, AND THEREFORE STRICTER. This used to convert BOTH SIDES through
+' AfxFileTimeToVariantTime and compare the doubles -- carried over from the original inline
+' check rather than chosen, and lossy: a VARIANT time counts DAYS as a double, so two file
+' times under about a millisecond apart compared EQUAL.
+'
+' A PsFileTime is 100-nanosecond ticks as a plain longint, so this is now a direct integer
+' comparison. That is the right direction: an mtime comes from the filesystem and does not
+' drift, so two reads of an unmodified file give identical ticks, and the only thing the
+' coarsening could ever have hidden is a real sub-millisecond change.
+'
+' ON LINUX, PsFileWriteTime has ONE-SECOND resolution -- fbc's FileDateTime is all there is
+' short of hand-declaring struct stat. Two writes inside the same second will compare equal
+' here. Not introduced by this change and not fixable at this layer; recorded so it is not
+' rediscovered as a mysterious missed reload.
 ' ========================================================================================
-private function FileWatch_SameTime( byref ft1 as FILETIME, byref ft2 as FILETIME ) as boolean
-    return (AfxFileTimeToVariantTime(ft1) = AfxFileTimeToVariantTime(ft2))
+private function FileWatch_SameTime( byval ft1 as PsFileTime, byval ft2 as PsFileTime ) as boolean
+    return (ft1 = ft2)
 end function
 
 
@@ -266,7 +280,7 @@ function FileWatch_ScanChanged( byval bRequireSettled as boolean ) as long
             pDoc = pDocNext: continue do
         end if
 
-        dim as FILETIME ft = AfxGetFileLastWriteTime( pDoc->DiskFilename )
+        dim as PsFileTime ft = PsFileWriteTime( pDoc->DiskFilename )
 
         ' Every rule is in FileWatch_Decide. This loop only gathers the five facts it needs and
         ' carries out the verdict.
@@ -288,7 +302,7 @@ function FileWatch_ScanChanged( byval bRequireSettled as boolean ) as long
 
             case FW_ACTION_RELOAD
                 FileWatch_ReloadInPlace( pDoc )
-                pDoc->DateFileTime = AfxGetFileLastWriteTime( pDoc->DiskFilename )
+                pDoc->DateFileTime = PsFileWriteTime( pDoc->DiskFilename )
                 pDoc->WatchPendingTime = pDoc->DateFileTime
 
             case FW_ACTION_ASK
@@ -307,7 +321,7 @@ function FileWatch_ScanChanged( byval bRequireSettled as boolean ) as long
 
                 ' Accept the disk time either way, so a declined reload is not asked about
                 ' again on every tick.
-                pDoc->DateFileTime = AfxGetFileLastWriteTime( pDoc->DiskFilename )
+                pDoc->DateFileTime = PsFileWriteTime( pDoc->DiskFilename )
                 pDoc->WatchPendingTime = pDoc->DateFileTime
         end select
 

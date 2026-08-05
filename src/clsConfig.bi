@@ -75,7 +75,7 @@ type clsConfig
         ' own. Owned by Workspace_EstablishUntitled; IsProjectNamed compares against it.
         UntitledProjectFilename   as DWSTRING
 
-        DateFileTime              as FILETIME
+        DateFileTime              as PsFileTime
         
         SettingsVersion           as DWSTRING
         Tools(any)                as TYPE_TOOLS

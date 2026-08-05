@@ -393,17 +393,17 @@ function code_CompileModules( byval pCompile as COMPILE_TYPE ptr ) as boolean
                 ' link to the existing object file.
                 dim as boolean bRebuildModule = false
                
-                dim as FILETIME ft1 = AfxGetFileLastWriteTime(pDoc->DiskFilename) ' source file
-                dim as FILETIME ft2 = AfxGetFileLastWriteTime(pCompile->ObjectFilename)  ' object file
+                dim as PsFileTime ft1 = PsFileWriteTime(pDoc->DiskFilename) ' source file
+                dim as PsFileTime ft2 = PsFileWriteTime(pCompile->ObjectFilename)  ' object file
 
-                if (AfxFileTimeToVariantTime(ft1) > AfxFileTimeToVariantTime(ft2)) then bRebuildModule = true
+                if (ft1 > ft2) then bRebuildModule = true
                 
                 ' If rebuild is false then we still need to check any embedded #include files that
                 ' may have changed since the document was parsed.
                 dim pDocInclude as clsDocument ptr = pDoc->pDocIncludeList
                 do until pDocInclude = null
-                    ft1 = AfxGetFileLastWriteTime(pDocInclude->DiskFilename) ' current include file datetime
-                    if AfxFileTimeToVariantTime(ft1) > AfxFileTimeToVariantTime(pDocInclude->DateFileTime) then 
+                    ft1 = PsFileWriteTime(pDocInclude->DiskFilename) ' current include file datetime
+                    if ft1 > pDocInclude->DateFileTime then 
                         bRebuildModule = true
                     end if    
                     pDocInclude->DateFileTime = ft1

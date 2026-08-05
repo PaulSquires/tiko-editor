@@ -293,3 +293,52 @@ end function
 private function PsDirCreate(byref w as const wstring) as boolean
     return AfxCreateDirectory(w)
 end function
+
+'' ===========================================================================
+'' File times.
+''
+'' NOT A SUBSTITUTION, which is why they are on their own commit.
+''
+'' AfxGetFileLastWriteTime returns a Win32 FILETIME -- a struct of two ULONGs.
+'' PsFileWriteTime returns a plain longint of the same 100-nanosecond ticks
+'' since 1601, so the VALUE is identical and only the container changes. That
+'' is what lets the comparisons below lose a layer.
+''
+'' tiko compared file times by converting BOTH SIDES through
+'' AfxFileTimeToVariantTime and comparing the doubles. modFileWatch.inc says
+'' that was carried over from the original inline check rather than chosen --
+'' and it is lossy: a VARIANT time is a double count of DAYS, so two FILETIMEs
+'' under about a millisecond apart compare EQUAL.
+''
+'' A longint comparison is exact, and therefore STRICTER. That is the right
+'' direction here: a file's mtime comes from the filesystem and does not drift,
+'' so two reads of an unmodified file give the same ticks, and the only thing
+'' the coarsening could ever have hidden is a real sub-millisecond change.
+''
+'' BUT NOTE THE PLATFORM ASYMMETRY IT WALKS INTO. PsFileWriteTime has full
+'' precision on Windows and ONE-SECOND resolution on Linux, because fbc's
+'' FileDateTime is all there is short of hand-declaring struct stat. So on
+'' Linux the "is the source newer than the object" test in modCompile.inc
+'' cannot distinguish an edit from the compile that followed it in the same
+'' second, and would leave a stale object. That is a Phase 8 problem, it is not
+'' introduced here, and it is written down so it is not discovered by someone
+'' wondering why their build did not pick up a change.
+'' ===========================================================================
+
+type PsFileTime as longint
+
+private function PsFileWriteTime(byref w as wstring) as PsFileTime
+    dim as FILETIME ft = AfxGetFileLastWriteTime(w)
+    '' Same ticks, one container. FILETIME is 4-byte aligned so it is assembled
+    '' rather than reinterpreted -- see the note in PsFile.inc's PS_FIND_DATAW.
+    return clngint((culngint(ft.dwHighDateTime) shl 32) or culngint(ft.dwLowDateTime))
+end function
+
+'' The four call sites pass exactly these masks, which is what PsCore's
+'' argument-free versions already produce.
+private function PsLocalDateStr() as DWSTRING
+    return AfxLocalDateStr("yyyy-MM-dd")
+end function
+private function PsLocalTimeStr() as DWSTRING
+    return AfxLocalTimeStr("hh:mm:ss")
+end function

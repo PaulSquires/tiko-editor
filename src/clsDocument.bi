@@ -121,12 +121,12 @@ type clsDocument
     ' Code document related
     ProjectFiletype       as DWSTRING = FILETYPE_UNDEFINED
     DiskFilename          as wstring * MAX_PATH
-    DateFileTime          as FILETIME
+    DateFileTime          as PsFileTime
     ' The disk time modFileWatch has SEEN but not acted on yet. Its whole job is to make the
     ' watcher wait for a writer to finish: a difference has to be observed twice with the same
     ' time before the file is re-read. Owned by modFileWatch alone -- nothing else may write
     ' it, and it is meaningless unless gConfig.DetectExternalFileChanges is on.
-    WatchPendingTime      as FILETIME
+    WatchPendingTime      as PsFileTime
     bHasFunctions         as boolean = false    ' FunctionList to determine if click will display the File
     FileEncoding          as long = FILE_ENCODING_UTF8   ' new files always UTF8 encoded by default (no BOM)
     ' The user has already been told, for THIS document, that saving it in its current

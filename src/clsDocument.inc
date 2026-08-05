@@ -265,7 +265,7 @@ function clsDocument.LoadDiskFile( _
     dim sText as string  
 
     if GetFileToString(wszFile, sText, @this) = false then
-        this.DateFileTime = AfxGetFileLastWriteTime( wszFile )
+        this.DateFileTime = PsFileWriteTime( wszFile )
     end if
 
     this.TextBuffer = sText 
@@ -472,7 +472,7 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
     end if
 
     this.DiskFilename = wszFilename
-    this.DateFileTime = AfxGetFileLastWriteTime( wszFilename )
+    this.DateFileTime = PsFileWriteTime( wszFilename )
     
     ' if this was a new document then it needs to be saved to Recent File list.
     if this.IsNewFlag then
@@ -2211,7 +2211,7 @@ function clsDocument.AddIncludeFromParse( byval sLine as string ) as boolean
     dim as clsDocument ptr pDoc = this.AddNewIncludeDocument()
     if pDoc then
         pDoc->DiskFilename = sFilename
-        pDoc->DateFileTime = AfxGetFileLastWriteTime(pDoc->DiskFilename)
+        pDoc->DateFileTime = PsFileWriteTime(pDoc->DiskFilename)
     end if
 
     function = 0

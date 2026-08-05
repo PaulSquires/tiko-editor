@@ -496,7 +496,7 @@ function clsConfig.SaveConfigFileBody() as long
 
     ' Save the last write time so that it can be checked in the message loop
     ' in order to detect external changes to it.
-    this.DateFileTime = AfxGetFileLastWriteTime( this.ConfigFilename )
+    this.DateFileTime = PsFileWriteTime( this.ConfigFilename )
 
     ' (The wrapper clears gApp.PreventConfigLoad; it is deliberately not touched here.)
     function = 0
@@ -1029,7 +1029,7 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
 
     ' Save the last write time so that it can be checked in the message loop
     ' in order to detect external changes to it.
-    this.DateFileTime = AfxGetFileLastWriteTime( this.ConfigFilename )
+    this.DateFileTime = PsFileWriteTime( this.ConfigFilename )
 
     ' (The wrapper clears gApp.PreventConfigLoad; it is deliberately not touched here.)
     function = 0
@@ -1435,11 +1435,11 @@ function clsConfig.ReloadConfigFileTest() as boolean
     if gApp.IsShutdown = true then return false
     if gApp.PreventConfigLoad = true then return false
 
-    dim as FILETIME ft
+    dim as PsFileTime ft
 
     ' Compare the disk file date time to the value currently stored in static variable.
-    ft = AfxGetFileLastWriteTime(this.ConfigFilename)
-    if AfxFileTimeToVariantTime(ft) <> AfxFileTimeToVariantTime(this.DateFileTime) then
+    ft = PsFileWriteTime(this.ConfigFilename)
+    if ft <> this.DateFileTime then
         this.LoadConfigFile(true)  ' this function also updates the _DateFileTime value
         ' Apply the newly saved options to all open Scintilla windows
         dim pDoc as clsDocument ptr = gApp.pDocList
