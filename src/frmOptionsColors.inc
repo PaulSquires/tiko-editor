@@ -56,7 +56,7 @@ dim shared gColorBuilt as boolean
 ' ========================================================================================
 function GetThemeDescription( byval wszFilename as DWSTRING ) as string
     ' default to the theme description being the filename
-    function = AfxGetFileName(wszFilename)
+    function = PsPathName(wszFilename)
 
     dim pStream as CTextStream
     if pStream.Open(wszFilename) <> S_OK then exit function  'error

@@ -401,21 +401,21 @@ end sub
 ''
 function Theme_ResolvePath( byval wszShortFilename as DWSTRING ) as DWSTRING
 
-    dim as DWSTRING wszFilename = AfxGetExePathName & "settings\themes\" & wszShortFilename
-    if AfxFileExists(wszFilename) = 0 then
+    dim as DWSTRING wszFilename = PsExePath & "settings\themes\" & wszShortFilename
+    if PsFileExists(wszFilename) = 0 then
         ' default to the visual studio dark theme
-        wszFilename = AfxGetExePathName & "settings\themes\default_dark.theme"
-        if AfxFileExists(wszFilename) = 0 then
+        wszFilename = PsExePath & "settings\themes\default_dark.theme"
+        if PsFileExists(wszFilename) = 0 then
             ' If the theme still does not exist then most likely the Themes folder is
             ' missing or the theme was renamed. Use the backup version in the settings folder.
-            wszFilename = AfxGetExePathName & "settings\backup_default_dark.theme"
+            wszFilename = PsExePath & "settings\backup_default_dark.theme"
             ' Attempt to copy the file for next time
-            dim as DWSTRING wszThemeDirFilename = AfxGetExePathName & "settings\themes\default_dark.theme"
-            if AfxCopyFile( wszFilename, wszThemeDirFilename ) then
+            dim as DWSTRING wszThemeDirFilename = PsExePath & "settings\themes\default_dark.theme"
+            if PsFileCopy( wszFilename, wszThemeDirFilename ) then
             gConfig.ThemeShortFilename = "default_dark.theme"
             end if
         end if
-        if AfxFileExists(wszFilename) = 0 then return ""
+        if PsFileExists(wszFilename) = 0 then return ""
     end if
 
     return wszFilename
@@ -2054,7 +2054,7 @@ function LoadThemeFile() as boolean
     Theme_ApplyDarkCaption( HWND_FRMMAIN )
 
     if environ("TIKO_THEME_TRACE") = "1" then
-        Theme_DumpGlobals( AfxGetExePathName & "theme_dump.txt" )
+        Theme_DumpGlobals( PsExePath & "theme_dump.txt" )
     end if
 
     return false

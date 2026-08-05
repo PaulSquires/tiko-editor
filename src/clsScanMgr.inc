@@ -28,7 +28,7 @@ end sub
 function ScanMgr_GetRootName( byval pDoc as clsDocument ptr ) as DWSTRING
     dim as DWSTRING wszFile = pDoc->DiskFilename
     if PsInStr( wszFile, "\" ) > 0 then return wszFile
-    return AfxGetExePathName & "UNTITLED-" & hex( cast( ulong_ptr, pDoc ) ) & ".BAS"
+    return PsExePath & "UNTITLED-" & hex( cast( ulong_ptr, pDoc ) ) & ".BAS"
 end function
 
 
@@ -211,7 +211,7 @@ end sub
 private function ScanMgr_IsScannable( byval pDoc as clsDocument ptr ) as boolean
     dim as DWSTRING wszFile = pDoc->DiskFilename
     if PsInStr( wszFile, "\" ) = 0 then return true
-    dim as string sExt = lcase( AfxStrPathname( "EXTN", wszFile ) )
+    dim as string sExt = lcase( PsPathExt(wszFile ) )
     select case sExt
         case ".bas", ".bi", ".inc"
             return true
@@ -264,7 +264,7 @@ private function clsScanMgr.BuildRequest( _
     ' moment (SaveConfigFile converts the LIVE gConfig values as a side effect
     ' of saving) - always expand via ProcessFromCurdriveApp before use, the
     ' same way modCompile does before every compile.
-    dim as DWSTRING wszPaths = AfxStrPathname( "PATH", wszRootFile )
+    dim as DWSTRING wszPaths = PsPathDirWithSep(wszRootFile )
 
     dim as long numPaths = PsStrParseCount( gConfig.CompilerIncludes, ";" )
     for i as long = 1 to numPaths
@@ -275,8 +275,8 @@ private function clsScanMgr.BuildRequest( _
 
     dim as DWSTRING wszCompiler = ProcessFromCurdriveApp( gConfig.FBWINCompiler64 )
     if PsLen( wszCompiler ) then
-        wszPaths = wszPaths & ";" & AfxStrPathname( "PATH", wszCompiler ) & "inc"
-        pReq->sIncPrefix = ucase( AfxStrPathname( "PATH", wszCompiler ) & "inc" )
+        wszPaths = wszPaths & ";" & PsPathDirWithSep(wszCompiler ) & "inc"
+        pReq->sIncPrefix = ucase( PsPathDirWithSep(wszCompiler ) & "inc" )
     end if
 
     pReq->sIncludePaths = wszPaths

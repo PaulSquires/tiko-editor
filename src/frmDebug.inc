@@ -150,7 +150,7 @@ private sub frmDebug_FillCallStack( byval frameCount as long )
         if debugparser_get_frame( i, @fr ) <> DBGP_OK then continue for
 
         dim as DWSTRING wszFile
-        if len(fr.wszSrcPath) then wszFile = AfxStrPathname( "NAMEX", fr.wszSrcPath )
+        if len(fr.wszSrcPath) then wszFile = PsPathName(fr.wszSrcPath )
         dim as DWSTRING wszLine
         if fr.lineNum > 0 then wszLine = wstr(str(fr.lineNum))
 
@@ -867,7 +867,7 @@ private sub frmDebug_OnStopped()
 
     dim as DWSTRING wszWhere
     if len(si.wszSrcPath) then
-        wszWhere = AfxStrPathname( "NAMEX", si.wszSrcPath ) & ":" & str(si.lineNum)
+        wszWhere = PsPathName(si.wszSrcPath ) & ":" & str(si.lineNum)
         frmDebug_ShowExecutionPoint( si.wszSrcPath, si.lineNum )
     else
         wszWhere = "&h" & hex(si.addr)

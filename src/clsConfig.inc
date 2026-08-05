@@ -36,7 +36,7 @@
 ''  CONSTRUCTOR
 ''
 constructor clsConfig
-    dim as DWSTRING exe_path = AfxGetExePathName
+    dim as DWSTRING exe_path = PsExePath
     ConfigFilename            = exe_path & "settings\settings.ini"
     FBKeywordsFilename        = exe_path & "settings\keywords\freebasic_keywords.txt"
     WinApiKeywordsFilename    = exe_path & "settings\keywords\winapi_keywords.txt"
@@ -49,16 +49,16 @@ end constructor
 ''
 ''
 function clsConfig.LoadKeywords() as long
-    if AfxFileExists(this.FBKeywordsFilename) = false then
+    if PsFileExists(this.FBKeywordsFilename) = false then
         ' The FB keywords file does not exist. Try copying the "default" keywords over
         ' to the main file that the user can modify.
-        if AfxFileExists(this.FBKeywordsDefaultFilename) then
-            if AfxCopyFile( this.FBKeywordsDefaultFilename.sptr, this.FBKeywordsFilename.sptr, true ) = false then
+        if PsFileExists(this.FBKeywordsDefaultFilename) then
+            if PsFileCopy( this.FBKeywordsDefaultFilename, this.FBKeywordsFilename, true ) = false then
                 exit function
             end if
         end if
     end if
-    if AfxFileExists(this.FBKeywordsFilename) = false then exit function
+    if PsFileExists(this.FBKeywordsFilename) = false then exit function
 
     dim pStream as CTextStream
     if pStream.Open(this.FBKeywordsFilename) = S_OK then
@@ -633,7 +633,7 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
     ' A MISSING config file needs no branch of its own any more. Its only consumer was the
     ' default-Tools seeding below, which is gone -- everything else here defaults through
     ' the field initialisers in clsConfig.bi.
-    if AfxFileExists(this.ConfigFilename) <> 0 then
+    if PsFileExists(this.ConfigFilename) <> 0 then
         dim pStream as CTextStream   '(utf16)
         ' The wrapper owns gApp.PreventConfigLoad, so this early return can no longer
         ' strand it -- which is exactly what it used to do.
@@ -1014,12 +1014,12 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
     ' Attempt to fill in any missing compiler paths and help files
     dim as DWSTRING wszText
     if len(this.FBWINCompiler32) = 0 then
-        wszText = AfxGetExePathName & "toolchains\" & gwszDefaultToolchain & "\fbc32.exe"
-        if AfxFileExists(wszText) then this.FBWINCompiler32 = wszText
+        wszText = PsExePath & "toolchains\" & gwszDefaultToolchain & "\fbc32.exe"
+        if PsFileExists(wszText) then this.FBWINCompiler32 = wszText
     end if
     if len(this.FBWINCompiler64) = 0 then
-        wszText = AfxGetExePathName & "toolchains\" & gwszDefaultToolchain & "\fbc64.exe"
-        if AfxFileExists(wszText) then this.FBWINCompiler64 = wszText
+        wszText = PsExePath & "toolchains\" & gwszDefaultToolchain & "\fbc64.exe"
+        if PsFileExists(wszText) then this.FBWINCompiler64 = wszText
     end if
 
     ' do some checks to see if the editor font exists. It is possible that the
@@ -1084,9 +1084,9 @@ function clsConfig.ProjectSaveToFile() as boolean
             pDoc->SetDocInfo()
             wszText = pDoc->DiskFilename
             if bRelativize then
-                cwzRelative = AfxPathRelativePathTo( gApp.ProjectFilename, FILE_ATTRIBUTE_NORMAL, wszText, FILE_ATTRIBUTE_NORMAL)
+                cwzRelative = PsPathRelativeTo( wszText, PsPathDirWithSep(gApp.ProjectFilename) )
                 if PsLen(cwzRelative) then
-                    if AfxPathIsRelative(cwzRelative) then wszText = cwzRelative
+                    if PsPathIsRelative(cwzRelative) then wszText = cwzRelative
                 end if
             end if
             wszText = ProcessToCurdriveProject(wszText)
@@ -1118,14 +1118,14 @@ function clsConfig.ProjectSaveToFile() as boolean
             if gTTabCtl.GetTabIndexByDocumentPtr(pDoc) = -1 then
                 wszText = pDoc->DiskFilename
                 if bRelativize then
-                    cwzRelative = AfxPathRelativePathTo( gApp.ProjectFilename, FILE_ATTRIBUTE_NORMAL, wszText, FILE_ATTRIBUTE_NORMAL)
-                    ' The len() test is NOT optional. AfxPathRelativePathTo returns "" when
+                    cwzRelative = PsPathRelativeTo( wszText, PsPathDirWithSep(gApp.ProjectFilename) )
+                    ' The len() test is NOT optional. PsPathRelativeTo returns "" when
                     ' PathRelativePathToW fails -- a file on another volume, most obviously --
-                    ' and AfxPathIsRelative("") is TRUE. Without the guard wszText becomes ""
+                    ' and PsPathIsRelative("") is TRUE. Without the guard wszText becomes ""
                     ' and the document is written as "File=", i.e. SILENTLY DROPPED from the
                     ' project. The tabbed loop above has always had this guard; this one did not.
                     if PsLen(cwzRelative) then
-                        if AfxPathIsRelative(cwzRelative) then wszText = cwzRelative
+                        if PsPathIsRelative(cwzRelative) then wszText = cwzRelative
                     end if
                 end if
                 wszText = ProcessToCurdriveProject(wszText)
@@ -1216,7 +1216,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     dim as boolean bLoadInTab
     dim as boolean bReadingNote
 
-    if AfxFileExists(wszFile) = 0 then exit function
+    if PsFileExists(wszFile) = 0 then exit function
 
     ' OPEN AND VALIDATE BEFORE TOUCHING ANY GLOBAL STATE.
     '
@@ -1237,7 +1237,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     SetCursor( LoadCursor(0, IDC_WAIT) )
 
     gApp.ProjectFilename = wszFile
-    gApp.ProjectName = AfxStrPathname( "NAMEX", gApp.ProjectFilename )
+    gApp.ProjectName = PsPathName(gApp.ProjectFilename )
     gApp.ProjectNotes = ""
 
     ' Folders belong to the workspace being opened, not to the one being left behind. Without
@@ -1306,10 +1306,10 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
 
             case "FileEnd":
             ' if this is a relative filename then convert it back.
-            if AfxPathIsRelative(wszFilename) then
-                wszFilename = AfxPathCombine( AfxStrPathName("PATH", gApp.ProjectFilename), wszFilename)
+            if PsPathIsRelative(wszFilename) then
+                wszFilename = PsPathJoin( PsPathDirWithSep(gApp.ProjectFilename), wszFilename)
             end if
-            if AfxFileExists(wszFilename) then
+            if PsFileExists(wszFilename) then
 
                 nFileIndex = nFileIndex + 1
                 if nFileIndex > ubound(docData) then
@@ -1341,7 +1341,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
                 sBookmarks  = "": sBreakPoints = "": sFoldPoints = ""
                 bLoadInTab    = false
             end if
-            ' Reset OUTSIDE the AfxFileExists guard, unlike the block above. That block sits
+            ' Reset OUTSIDE the PsFileExists guard, unlike the block above. That block sits
             ' inside it, so a record naming a file that no longer exists leaves its state
             ' standing and the NEXT record inherits it -- a pre-existing bug, left alone
             ' here, but deliberately not joined: a missing file must not be able to hand its
@@ -1357,7 +1357,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     ' Load/Display all of the project files
     for i as long = lbound(docData) to ubound(docData)
 
-        if AfxFileExists( docData(i).wszFilename ) = false then continue for
+        if PsFileExists( docData(i).wszFilename ) = false then continue for
 
         pDoc = gApp.CreateEmptyDocument()
         pDoc->LoadDiskFile( docData(i).wszFilename )

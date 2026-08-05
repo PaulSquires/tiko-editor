@@ -175,7 +175,7 @@ end function
 '
 ' WHY THIS EXISTS. Every save path used to do this:
 '
-'     if AfxFileExists(f) then AfxDeleteFile(f)      <-- the user's file, gone
+'     if PsFileExists(f) then PsFileDelete(f)      <-- the user's file, gone
 '     if pStream.Open(f, STGM_CREATE or STGM_WRITE) = S_OK then
 '         pStream.Write strptr(sOut), len(sOut)      <-- result discarded
 '     end if                                          <-- no else: failure invisible
@@ -215,7 +215,7 @@ function Doc_WriteToDisk( _
     ' The temp file MUST be a sibling of the target: ReplaceFileW and an atomic
     ' MoveFileExW both require one volume, and %TEMP% is frequently on another.
     dim as DWSTRING wszTemp = wszPath & ".tiko-tmp"
-    if AfxFileExists( wszTemp ) then AfxDeleteFile( wszTemp )
+    if PsFileExists( wszTemp ) then PsFileDelete( wszTemp )
 
     dim as boolean bWritten = false
     scope
@@ -243,13 +243,13 @@ function Doc_WriteToDisk( _
     end scope
 
     if bWritten = false then
-        AfxDeleteFile( wszTemp )
+        PsFileDelete( wszTemp )
         return DOCWRITE_FAILED
     end if
 
     ' ---- the swap ----------------------------------------------------------------------
     dim as boolean bSwapped = false
-    if AfxFileExists( wszPath ) then
+    if PsFileExists( wszPath ) then
         bSwapped = ( ReplaceFileW( wszPath, wszTemp, 0, _
                                    REPLACEFILE_IGNORE_MERGE_ERRORS, 0, 0 ) <> 0 )
     end if
@@ -265,7 +265,7 @@ function Doc_WriteToDisk( _
     if bSwapped = false then
         wszErr = Win32ErrorText( GetLastError() )
         if PsLen( wszErr ) = 0 then wszErr = "Could not replace the existing file."
-        AfxDeleteFile( wszTemp )     ' never leave a stray .tiko-tmp behind
+        PsFileDelete( wszTemp )     ' never leave a stray .tiko-tmp behind
         return DOCWRITE_FAILED
     end if
 

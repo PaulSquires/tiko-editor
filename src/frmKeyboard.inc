@@ -57,7 +57,7 @@ sub frmKeyboard_CommitWork()
     end if
 
     ' 1. DISK FIRST.
-    frmKeyboard_SaveKeyBindings( AfxGetExePathName & "settings\keybindings.ini" )
+    frmKeyboard_SaveKeyBindings( PsExePath & "settings\keybindings.ini" )
 
     ' 2. Then rebuild, which re-reads what step 1 just wrote.
     frmKeyboard_BuildAcceleratorTable()

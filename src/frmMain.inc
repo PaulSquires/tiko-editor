@@ -212,7 +212,7 @@ function frmMain_RestoreWorkspace( byref wszLastProject as const wstring ) as lo
     dim as boolean bIsNamed = ( PsUCase(wszLastProject) <> ucase(gConfig.UntitledProjectFilename) )
     if bIsNamed = false then return 0
     if PsLen(wszLastProject) = 0 then return 0
-    if AfxFileExists( wszLastProject ) = 0 then return 0
+    if PsFileExists( wszLastProject ) = 0 then return 0
 
     frmMain_OpenProjectSafely( HWND_FRMMAIN, wszLastProject )
 
@@ -234,10 +234,10 @@ function frmMain_ProcessFilesArray( _
     
     for i as integer = lbound(wszFiles) to ubound(wszFiles)
         wszArg = wszFiles(i)
-        if AfxFileExists(wszArg) = 0 then continue for
+        if PsFileExists(wszArg) = 0 then continue for
 
         ' We have a valid filename so determine what type it is.
-        wszExt = AfxStrPathname( "EXTN", wszArg )
+        wszExt = PsPathExt(wszArg )
         wszExt = lcase(wszExt)
         
         select case wszExt
@@ -333,8 +333,8 @@ function frmMain_ProcessCommandLine( byval hwnd as HWND ) as long
         wszPath = PsStrRemove( wszArg, wchr(34) )
         
         ' if no path exists for the file then add the current folder
-        wszPath = AfxStrPathname( "PATH", wszArg )
-        if PsLen(wszPath) = 0 then wszArg = AfxGetExePathName & wszArg 
+        wszPath = PsPathDirWithSep(wszArg )
+        if PsLen(wszPath) = 0 then wszArg = PsExePath & wszArg 
         
         dim as integer ub = ubound(wszFiles) + 1
         redim preserve wszFiles(ub)
@@ -1101,8 +1101,8 @@ function frmMain_OnCreate( _
             ) as boolean
 
     ' delete any previous temporary quick run files should they exist
-    gApp.wszQuickRunFilename = AfxGetExePathName & QUICKRUNEXE
-    AfxDeleteFile( gApp.wszQuickRunFilename )
+    gApp.wszQuickRunFilename = PsExePath & QUICKRUNEXE
+    PsFileDelete( gApp.wszQuickRunFilename )
 
     ' Enable drag and drop files
     DragAcceptFiles hwnd, CTRUE
@@ -1336,7 +1336,7 @@ function frmMain_OnDestroy( byval hwnd as HWND ) as LRESULT
     ' delete any temporary quick run files should they exist
     ' filename set in compile process and could be different location than the
     ' default filename as tested for in wm_create.
-    if AfxFileExists(gApp.wszQuickRunFilename) then AfxDeleteFile( gApp.wszQuickRunFilename )
+    if PsFileExists(gApp.wszQuickRunFilename) then PsFileDelete( gApp.wszQuickRunFilename )
     
     if gApp.SpinnerTimerID <> 0 then
         KillTimer( HWND_FRMMAIN, gApp.SpinnerTimerID )

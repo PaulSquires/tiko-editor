@@ -102,7 +102,7 @@ sub Ini_RunSelfTest()
         #macro CHECK_FILE( wszPath )
             scope
                 dim pS as CTextStream
-                if AfxFileExists( wszPath ) andalso (pS.OpenUnicode( wszPath ) = S_OK) then
+                if PsFileExists( wszPath ) andalso (pS.OpenUnicode( wszPath ) = S_OK) then
                     do until pS.EOS
                         dim as DWSTRING wl = pS.ReadLine
                         nLines += 1

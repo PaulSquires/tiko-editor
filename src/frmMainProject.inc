@@ -146,7 +146,7 @@ sub Workspace_RunSelfTest()
     dim as boolean bHasTarget   = ( PsLen(gWorkspaceRestoreTarget) > 0 )
     dim as boolean bNotUntitled = ( PsUCase(gWorkspaceRestoreTarget) <> ucase(gConfig.UntitledProjectFilename) )
     dim as boolean bRestoreOn   = ( gConfig.RestoreSession <> 0 )
-    dim as boolean bTargetOnDisk = ( AfxFileExists(gWorkspaceRestoreTarget) <> 0 )
+    dim as boolean bTargetOnDisk = ( PsFileExists(gWorkspaceRestoreTarget) <> 0 )
     dim as boolean bWantedNamed = bHasTarget andalso bNotUntitled
     if bRestoreOn andalso bWantedNamed andalso bTargetOnDisk then
         Workspace_Check( "a restorable named project was actually restored", _
@@ -367,25 +367,25 @@ sub Workspace_RunSelfTest()
         if gApp.IsProjectNamed() then
             print "NOTE  promotion test skipped: the workspace is already named"
         else
-            dim as DWSTRING wszScratch = AfxGetExePathName & "_workspace_selftest.tiko"
-            if AfxFileExists( wszScratch ) then AfxDeleteFile( wszScratch )
+            dim as DWSTRING wszScratch = PsExePath & "_workspace_selftest.tiko"
+            if PsFileExists( wszScratch ) then PsFileDelete( wszScratch )
 
             dim as boolean bPromoted = gApp.SaveProject( true, wszScratch )
 
             Workspace_Check( "promotion reports success", bPromoted )
             Workspace_Check( "promotion writes the named file", _
-                AfxFileExists( wszScratch ) <> 0 )
+                PsFileExists( wszScratch ) <> 0 )
             Workspace_Check( "promotion makes the workspace named", _
                 gApp.IsProjectNamed() )
             Workspace_Check( "promotion repoints the restore slot to the new project", _
                 ucase(gConfig.wszLastActiveProject) = PsUCase(wszScratch), _
                 "slot=" & gConfig.wszLastActiveProject )
             Workspace_Check( "promotion retires the untitled workspace file", _
-                AfxFileExists( gConfig.UntitledProjectFilename ) = 0 )
+                PsFileExists( gConfig.UntitledProjectFilename ) = 0 )
             Workspace_Check( "promotion removes the Explorer's promote row", _
                 frmExplorer_KindFromRow( HWND_FRMEXPLORER, 0 ) <> EXPKIND_PROMOTE )
 
-            AfxDeleteFile( wszScratch )
+            PsFileDelete( wszScratch )
         end if
     end if
 
@@ -420,7 +420,7 @@ function Workspace_EstablishUntitled( byval bRestoreFromFile as boolean = false 
     ' IsProjectNamed() reads the FILENAME, so this is presentation only.
     gApp.ProjectName     = ""
 
-    dim as boolean bFileExists = ( AfxFileExists( gConfig.UntitledProjectFilename ) <> 0 )
+    dim as boolean bFileExists = ( PsFileExists( gConfig.UntitledProjectFilename ) <> 0 )
 
     if bRestoreFromFile andalso bFileExists then
         ' Check the result. ProjectLoadFromFile assigns ProjectFilename/ProjectName BEFORE

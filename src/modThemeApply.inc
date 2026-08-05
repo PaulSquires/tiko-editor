@@ -531,7 +531,7 @@ private sub Theme_TraceLine( byval sText as string )
         bOn = (environ("TIKO_THEME_TRACE") = "1")
     end if
     if bOn = false then exit sub
-    dim as string sPath = AfxGetExePathName & "theme_trace.log"
+    dim as string sPath = PsExePath & "theme_trace.log"
     dim as long f = freefile
     if open( sPath for append as #f ) <> 0 then exit sub
     print #f, sText
@@ -702,7 +702,7 @@ sub Theme_RunSelfTest()
     Theme_DiscardSnapshot()
 
     ' -- 10. A written theme parses back to the same values. -----------------------------
-    dim as DWSTRING wszTmp = AfxGetExePathName & "_theme_selftest.tmp"
+    dim as DWSTRING wszTmp = PsExePath & "_theme_selftest.tmp"
     dim as long nk = Theme_FindEntry( "editor.keyword" )
     dim as long np = Theme_FindEntry( "panel.text" )
     if (nk >= 0) andalso (np >= 0) then
@@ -777,7 +777,7 @@ sub Theme_RunSelfTest()
     dim as DWSTRING wszFork = frmThemes_MakeForkName( "default_dark.theme" )
     THASSERT( wszFork <> "default_dark.theme", "fork name must differ from its source" )
     THASSERT( PsInStr( wszFork, "_custom" ) > 0, "fork name should be recognisable" )
-    THASSERT( AfxFileExists( AfxGetExePathName & "settings\themes\" & wszFork ) = 0, _
+    THASSERT( PsFileExists( PsExePath & "settings\themes\" & wszFork ) = 0, _
               "MakeForkName returned a filename that already exists" )
     THASSERT( frmThemes_IsProtectedTheme( wszFork ) = false, _
               "a fork of a built-in must NOT itself be protected, or it could never be saved" )
@@ -786,7 +786,7 @@ sub Theme_RunSelfTest()
     '    The shipped dark theme must still read as dark once round-tripped through the
     '    writer, which derives the key from the editor background's luminance rather than
     '    from the filename.
-    dim as DWSTRING wszTmp2 = AfxGetExePathName & "_theme_selftest2.tmp"
+    dim as DWSTRING wszTmp2 = PsExePath & "_theme_selftest2.tmp"
     Theme_Snapshot()
     if Theme_WriteFile( wszTmp2, "Appearance Probe" ) = false then
         if Theme_ParseFile( wszTmp2 ) = false then
@@ -932,7 +932,7 @@ sub Theme_RunSelfTest()
 
     ' -- 20b. AN OLD MACRO-BEARING THEME STILL LOADS. ------------------------------------
     scope
-        dim as string sTmp = *AfxGetExePathName() & "_theme_macrocompat.tmp"
+        dim as string sTmp = *PsExePath() & "_theme_macrocompat.tmp"
         dim as long f = freefile
         if open( sTmp for output encoding "utf-8" as #f ) = 0 then
             print #f, "general.description: legacy macros"
@@ -1354,7 +1354,7 @@ sub Theme_RunSelfTest()
         '      authored colour from an inherited one and would flatten the whole palette
         '      into hard-coded literals on the first save.
         scope
-            dim as string sTmp = *AfxGetExePathName() & "_theme_roletest.tmp"
+            dim as string sTmp = *PsExePath() & "_theme_roletest.tmp"
 
             ' A theme with ONE authored key and everything else inherited.
             erase gTheme

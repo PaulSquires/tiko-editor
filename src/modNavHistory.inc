@@ -499,7 +499,7 @@ sub NavHistory_RunSelfTest()
     ' NavHistory_RecordJump and by nothing else.
     '
     ' The target file deliberately does not exist -- OpenSelectedDocument bails at its
-    ' AfxFileExists test, AFTER the RecordJump we are testing for, so this needs no window
+    ' PsFileExists test, AFTER the RecordJump we are testing for, so this needs no window
     ' and opens nothing.
     NavHistory_Clear()
     NavHistory_AppendEntry( Nav_MakeEntry( "C:\__tiko_navhistory_selftest_no_such_file__.bas", 1 ) )

@@ -200,7 +200,7 @@ private sub frmMenuBar_RebuildMRUFiles( byval hPopup as HWND )
     for i as long = 0 to 9
         ' if the file no longer exists then remove it from the MRU list
         gConfig.MRU(i) = ProcessFromCurdriveApp( gConfig.MRU(i) )
-        if AfxFileExists( gConfig.MRU(i) ) = 0 then
+        if PsFileExists( gConfig.MRU(i) ) = 0 then
             gConfig.MRU(i) = ""
         else
             hasFiles = true
@@ -220,7 +220,7 @@ private sub frmMenuBar_RebuildMRUProjects( byval hPopup as HWND )
     dim as boolean hasFiles = false
     for i as long = 0 to 9
         gConfig.MRUPROJECT(i) = ProcessFromCurdriveApp( gConfig.MRUPROJECT(i) )
-        if AfxFileExists( gConfig.MRUPROJECT(i) ) = 0 then
+        if PsFileExists( gConfig.MRUPROJECT(i) ) = 0 then
             gConfig.MRUPROJECT(i) = ""
         else
             hasFiles = true

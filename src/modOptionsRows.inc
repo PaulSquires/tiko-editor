@@ -263,7 +263,7 @@ end sub
 private function OptionsWork_ToolchainFromPath( byval wszPath as DWSTRING ) as DWSTRING
     if PsLen(wszPath) = 0 then return ""
     ' The folder is the directory name immediately containing the exe.
-    dim as DWSTRING wszDir = AfxStrPathname( "PATH", wszPath )   ' ...\Toolchains\<folder>\
+    dim as DWSTRING wszDir = PsPathDirWithSep(wszPath )   ' ...\Toolchains\<folder>\
     ' Strip the trailing backslash, then take the final path segment.
     dim as DWSTRING w = wszDir
     do while (PsLen(w) > 0) andalso (PsRight(w, 1) = "\")
@@ -384,7 +384,7 @@ sub OptionsWork_Commit()
     ' stored path had no toolchains segment), and the existing paths are left untouched --
     ' the same thing the old page did when its listbox had no selection.
     if len(gOptWork.CompilerToolchain) > 0 then
-        dim as DWSTRING wszBase = AfxGetExePathName + "Toolchains\" + gOptWork.CompilerToolchain
+        dim as DWSTRING wszBase = PsExePath + "Toolchains\" + gOptWork.CompilerToolchain
         gConfig.FBWINCompiler32 = wszBase + "\fbc32.exe"
         gConfig.FBWINCompiler64 = wszBase + "\fbc64.exe"
     end if

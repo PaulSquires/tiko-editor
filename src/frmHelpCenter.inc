@@ -118,9 +118,9 @@ end function
 ' ========================================================================================
 function HelpCenter_RootFolder( byval nSite as long ) as DWSTRING
     if nSite = HELPCENTER_SITE_TIKO then
-        function = AfxGetExePathName & "settings\help\tikohelp\"
+        function = PsExePath & "settings\help\tikohelp\"
     else
-        function = AfxGetExePathName & "settings\help\helpcenter\"
+        function = PsExePath & "settings\help\helpcenter\"
     end if
 end function
 
@@ -512,7 +512,7 @@ function frmHelpCenter_Show( byval wszSearch as DWSTRING, byval nSite as long ) 
     ' handing WebView2 a file:// URL that does not exist replaces a working help window
     ' with the browser's own error page. Checking first costs one stat per F1.
     dim as DWSTRING wszIndex = HelpCenter_RootFolder( nSite ) & "index.html"
-    if AfxFileExists( wszIndex ) = 0 then
+    if PsFileExists( wszIndex ) = 0 then
         dim as DWSTRING wszMissing = L(90,"Help Center files not found.")
         if nSite = HELPCENTER_SITE_TIKO then
             wszMissing = L(520,"Tiko Editor Help files not found.")
@@ -610,7 +610,7 @@ function frmHelpCenter_Show( byval wszSearch as DWSTRING, byval nSite as long ) 
     ' --- the pane --------------------------------------------------------------------
     ' An isolated profile beside the exe rather than the default {exe}.exe.WebView2, so
     ' the cache and cookies are somewhere we name and can delete.
-    dim as DWSTRING wszUserData = AfxGetExePathName & "settings\webview2"
+    dim as DWSTRING wszUserData = PsExePath & "settings\webview2"
     gHelpCenter.pWeb = new CWebView2( gHelpCenter.hWebHost, wszUserData )
 
     ' IsReady pumps messages while it waits for the environment AND the controller. A

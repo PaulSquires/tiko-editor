@@ -170,13 +170,13 @@ function frmThemes_MakeForkName( byval wszShortFilename as DWSTRING ) as DWSTRIN
     if lcase(left(sBase, 8)) = "default_" then sBase = mid(sBase, 9)
     if len(sBase) = 0 then sBase = "theme"
 
-    dim as DWSTRING wszDir = AfxGetExePathName & "settings\themes\"
+    dim as DWSTRING wszDir = PsExePath & "settings\themes\"
 
     for i as long = 1 to 99
         dim as string sSuffix = "_custom"
         if i > 1 then sSuffix &= str(i)
         dim as DWSTRING wszCandidate = sBase & sSuffix & ".theme"
-        if AfxFileExists( wszDir & wszCandidate ) = 0 then return wszCandidate
+        if PsFileExists( wszDir & wszCandidate ) = 0 then return wszCandidate
     next
 
     ' 99 forks of one theme. Give up gracefully rather than looping forever.
@@ -567,7 +567,7 @@ private function frmThemes_EnsureForked() as boolean
     if frmThemes_ThemedMsgBox( wszMsg, L(318, "Themes"), _
                                 TMB_ICON_QUESTION, TMB_OKCANCEL ) <> IDOK then return false
 
-    dim as DWSTRING wszPath = AfxGetExePathName & "settings\themes\" & wszFork
+    dim as DWSTRING wszPath = PsExePath & "settings\themes\" & wszFork
     dim as DWSTRING wszDesc = theme.general.description & " (custom)"
 
     if Theme_WriteFile( wszPath, wszDesc ) then
@@ -613,7 +613,7 @@ function frmThemes_SaveThemeFile() as boolean
     if frmThemes_EnsureForked() = false then return false   ' declined the fork -> do not save
     if bUserDesc then theme.general.description = wszUserDesc
 
-    dim as DWSTRING wszPath = AfxGetExePathName & "settings\themes\" & gThemesWorkFile
+    dim as DWSTRING wszPath = PsExePath & "settings\themes\" & gThemesWorkFile
     if Theme_WriteFile( wszPath, theme.general.description ) then
         frmThemes_ThemedMsgBox( L(289,"The new theme file could not be written."), _
                                 L(318,"Themes"), TMB_ICON_ERROR, TMB_OK )

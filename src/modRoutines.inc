@@ -192,8 +192,8 @@ function SpawnPreviousInstance() as boolean
             wszPath = PsStrRemove( wszArg, wchr(34) )
             
             ' if no path exists for the file then add the current folder
-            wszPath = AfxStrPathname( "PATH", wszArg )
-            if PsLen(wszPath) = 0 then wszArg = AfxGetExePathName & wszArg 
+            wszPath = PsPathDirWithSep(wszArg )
+            if PsLen(wszPath) = 0 then wszArg = PsExePath & wszArg 
             
             wszSendString = wszSendString & _
                             iif(PsLen(wszSendString), ";", "") & _
@@ -339,7 +339,7 @@ function GetTemporaryFilename( _
     if GetTempFileName( @wszFolder, "TMP", 0, @wszTempFilename ) then
         ' Delete the temp file that gets created b/c we will create it ourselves based on the 
         ' returned filename.
-        AfxDeleteFile( wszTempFilename )
+        PsFileDelete( wszTempFilename )
         if len(wszExtension) then 
             wszTempFilename = left(wszTempFilename, len(wszTempFilename) -  3) & wszExtension
         end if
@@ -475,7 +475,7 @@ function GetFileToString( _
             ) as boolean
     
     if pDoc = 0 then return true
-    if AfxFileExists(wszFilename) = false then return true
+    if PsFileExists(wszFilename) = false then return true
     
     ' Load the entire file into a string
     dim dwCount as DWORD, dwFileSize as DWORD, dwHighSize as DWORD, dwBytesRead as DWORD
@@ -563,28 +563,28 @@ function CompleteIncludeFilename( byval pDoc as clsDocument ptr, byval sFilename
     if gConfig.Builds(idxBuild).Is32bit then wszCompilerPath = gConfig.FBWINcompiler32
     if gConfig.Builds(idxBuild).Is64bit then wszCompilerPath = gConfig.FBWINcompiler64
     wszCompilerPath = ProcessFromCurdriveApp(wszCompilerPath)
-    wszCompilerPath = AfxStrPathname( "PATH", wszCompilerPath ) & "inc"
+    wszCompilerPath = PsPathDirWithSep(wszCompilerPath ) & "inc"
 
     ' Convert relative path to absolute path if needed.
-    if AfxPathIsRelative(wszCompilerPath) then
-        wszCompilerPath = AfxPathCombine(AfxGetExePathName, wszCompilerPath)
+    if PsPathIsRelative(wszCompilerPath) then
+        wszCompilerPath = PsPathJoin(PsExePath, wszCompilerPath)
     end if
 
     ' remove any comments at the end of the line
     i = instr(sFilename, "'")
     if i then sFilename = left(sFilename, i-1)
     sFilename = trim(sFilename, any chr(32,34))  ' remove spaces and double quotes
-    wszPath = AfxStrPathname( "PATH", pDoc->DiskFilename )
+    wszPath = PsPathDirWithSep(pDoc->DiskFilename )
 
-    if AfxFileExists(wszPath & sFilename) then 
+    if PsFileExists(wszPath & sFilename) then 
         wszCompleteFilename = wszPath & sFilename
-    elseif AfxFileExists(sFilename) then 
+    elseif PsFileExists(sFilename) then 
         wszCompleteFilename = sFilename
-    elseif AfxFileExists(AfxGetCurDir & "\" & sFilename) then 
-        wszCompleteFilename = AfxGetCurDir & "\" & sFilename
-    elseif AfxFileExists(AfxGetExePathName & sFilename) then 
-        wszCompleteFilename = AfxGetExePathName & sFilename
-    elseif AfxFileExists(str(wszCompilerPath) & "\" & sFilename) then 
+    elseif PsFileExists(PsCurDir & "\" & sFilename) then 
+        wszCompleteFilename = PsCurDir & "\" & sFilename
+    elseif PsFileExists(PsExePath & sFilename) then 
+        wszCompleteFilename = PsExePath & sFilename
+    elseif PsFileExists(str(wszCompilerPath) & "\" & sFilename) then 
         wszCompleteFilename = str(wszCompilerPath) & "\" & sFilename
     else
         ' Iterate the optional semi colon separated list of compiler include paths
@@ -592,7 +592,7 @@ function CompleteIncludeFilename( byval pDoc as clsDocument ptr, byval sFilename
         dim as long numpaths = PsStrParseCount(gConfig.CompilerIncludes, ";")
         for i as long = 1 to numpaths
             includePath = rtrim(PsStrParse(gConfig.CompilerIncludes, i, ";")) & "\" & sFilename
-            if AfxFileExists(includePath) then
+            if PsFileExists(includePath) then
                 wszCompleteFilename = includePath
                 exit for
             end if
@@ -630,7 +630,7 @@ function IsCurrentLineIncludeFilename() as boolean
         gApp.IncludeFilename = CompleteIncludeFilename( pDoc, sFilename )
     end if
     
-    function = AfxFileExists( gApp.IncludeFilename ) 
+    function = PsFileExists( gApp.IncludeFilename ) 
 
 end function
 
@@ -685,7 +685,7 @@ function OpenSelectedDocument( _
     pDoc = gApp.GetDocumentPtrByFilename( wszOpenName )
 
     if pDoc = 0 then
-        if AfxFileExists(wszOpenName) = false then exit function
+        if PsFileExists(wszOpenName) = false then exit function
         pDoc = gApp.CreateEmptyDocument()
         pDoc->LoadDiskFile( wszOpenName )
     end if
@@ -780,7 +780,7 @@ function AfxIFileOpenDialogW( _
             ' Set the title of the dialog
             hr = pofd->lpVtbl->SetTitle(pofd, L(99,"Open Localization File"))
     
-            dim as DWSTRING wszDefaultFolder = AfxGetExePathName & wstr("settings\languages\") 
+            dim as DWSTRING wszDefaultFolder = PsExePath & wstr("settings\languages\") 
             dim pFolder as IShellItem ptr
             SHCreateItemFromParsingName (wszDefaultFolder, null, @IID_IShellItem, @pFolder)
             if pFolder then
@@ -797,7 +797,7 @@ function AfxIFileOpenDialogW( _
             ' Set the title of the dialog
             hr = pofd->lpVtbl->SetTitle(pofd, L(4,"Open File"))
     
-            dim as DWSTRING wszDefaultFolder = AfxGetExePathName & wstr("settings\tools\") 
+            dim as DWSTRING wszDefaultFolder = PsExePath & wstr("settings\tools\") 
             dim pFolder as IShellItem ptr
             SHCreateItemFromParsingName (wszDefaultFolder, null, @IID_IShellItem, @pFolder)
             if pFolder then
@@ -875,10 +875,10 @@ function AfxIFileOpenDialogMultiple( _
     ' Set the default folder to display in the open dialog
     dim wszDefaultFolder as wstring * MAX_PATH
     if gApp.wszLastOpenFolder = "" then 
-        if AfxFileExists( gApp.ProjectFilename ) then 
-            wszDefaultFolder = AfxStrPathName( "PATH", gApp.ProjectFilename )
+        if PsFileExists( gApp.ProjectFilename ) then 
+            wszDefaultFolder = PsPathDirWithSep(gApp.ProjectFilename )
         else
-            wszDefaultFolder = AfxGetCurDir
+            wszDefaultFolder = PsCurDir
         end if
     else
         wszDefaultFolder = gApp.wszLastOpenFolder
@@ -932,25 +932,25 @@ function AfxIFileSaveDialog( _
     dim as DWSTRING wszFilename, wszFilePath 
     
     ' Add extensions if it does not already exist as part of the filename
-    wszFilename = AfxStrPathname( "NAMEX", *pwszFileName )
+    wszFilename = PsPathName(*pwszFileName )
     if PsLen(wszFilename) then 
-        if AfxStrPathname( "EXTN", wszFilename ) = "" then
+        if PsPathExt(wszFilename ) = "" then
             if len(*pwszDefExt) then
             wszFilename = wszFilename & "." & *pwszDefExt
             end if   
         end if   
     end if
     
-    if AfxFileExists( *pwszFileName ) then
-        wszFilePath = AfxStrPathName( "PATH", *pwszFileName )
+    if PsFileExists( *pwszFileName ) then
+        wszFilePath = PsPathDirWithSep(*pwszFileName )
     else   
         ' Set the default folder to save the file
         if gApp.wszLastOpenFolder then 
             wszFilePath = gApp.wszLastOpenFolder
         else
             ' New file being saved try to default to the project folder
-            if AfxFileExists( gApp.ProjectFilename ) then
-                wszFilePath = AfxStrPathname( "PATH", gApp.ProjectFilename )
+            if PsFileExists( gApp.ProjectFilename ) then
+                wszFilePath = PsPathDirWithSep(gApp.ProjectFilename )
             end if
         end if
         gApp.wszLastOpenFolder = wszFilePath
@@ -982,7 +982,7 @@ function AfxIFileSaveDialog( _
             psfd->lpVtbl->SetFileTypes(psfd, 2, @rgFileTypes(1))
             psfd->lpVtbl->SetTitle(psfd, L(8,"Save As..."))
 
-            dim as DWSTRING wszDefaultFolder = AfxGetExePathName & wstr("settings\languages\") 
+            dim as DWSTRING wszDefaultFolder = PsExePath & wstr("settings\languages\") 
             dim pFolder as IShellItem ptr
             SHCreateItemFromParsingName (wszDefaultFolder, null, @IID_IShellItem, @pFolder)
             if pFolder then
@@ -1000,7 +1000,7 @@ function AfxIFileSaveDialog( _
             psfd->lpVtbl->SetFileTypes(psfd, 2, @rgFileTypes(1))
             psfd->lpVtbl->SetTitle(psfd, L(8,"Save As..."))
 
-            dim as DWSTRING wszDefaultFolder = AfxGetExePathName & wstr("settings\themes\")
+            dim as DWSTRING wszDefaultFolder = PsExePath & wstr("settings\themes\")
             dim pFolder as IShellItem ptr
             SHCreateItemFromParsingName (wszDefaultFolder, null, @IID_IShellItem, @pFolder)
             if pFolder then
@@ -1081,7 +1081,7 @@ function LoadLocalizationFile( _
 
     ' default that the file failed to load
     function = false
-    if AfxFileExists( wszFileName ) = 0 then exit function
+    if PsFileExists( wszFileName ) = 0 then exit function
 
     dim as BSTRING wst, wKey, wData
     dim nKey  as long
@@ -1212,7 +1212,7 @@ function findprocessid( byval processname as wstring ptr ) as dword
 end function
 
 function IsProcessRunning( byval wszExeFileName as DWSTRING ) as boolean
-    wszExeFileName = AfxStrPathname("NAMEX", wszExeFileName)
+    wszExeFileName = PsPathName(wszExeFileName)
     if PsUCase(wszExeFileName) = "TIKO.EXE" then return false
     dim as dword pid = findprocessid( wszExeFileName )
     dim as HANDLE hprocess = OpenProcess(SYNCHRONIZE, FALSE, pid)
@@ -1283,13 +1283,13 @@ function GetRunExecutableFilename() as DWSTRING
     ' Has a filename been determined yet? if it has then it possibly does not have
     ' a path assigned to it so we should add one.
     if PsLen(wszFilename) then
-        if len(AfxStrPathname("PATH", wszFilename)) = 0 then
-            wszFilename = AfxStrPathname("PATH", pDocMain->DiskFilename) + wszFilename
+        if len(PsPathDirWithSep(wszFilename)) = 0 then
+            wszFilename = PsPathDirWithSep(pDocMain->DiskFilename) + wszFilename
         end if
     else
         ' Default 
-        wszFilename = AfxStrPathname("PATH", pDocMain->DiskFilename) + _
-                    AfxStrPathname("NAME", pDocMain->DiskFilename) + _
+        wszFilename = PsPathDirWithSep(pDocMain->DiskFilename) + _
+                    PsPathStem(pDocMain->DiskFilename) + _
                     wstr(".exe")
     end if
 

@@ -151,7 +151,7 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modRoutines.inc"
 #include once "modUpdateCheck.inc"
 ' The formatter engine. After clsConfig.inc (it reads gConfig's keyword list to build its
-' casing vocabulary) and after modRoutines.inc for AfxGetExePathName. It deliberately calls
+' casing vocabulary) and after modRoutines.inc for PsExePath. It deliberately calls
 ' NOTHING else in tiko -- no document, no window, no Scintilla.
 #include once "modFormat.inc"
 ' After modRoutines.inc: NavHistory_Goto drives OpenSelectedDocument.
@@ -377,7 +377,7 @@ function WinMain( _
     ' any non-english localization file will have missing entries filled by the
     ' english version.
     dim as DWSTRING wszLocalizationFile
-    wszLocalizationFile = AfxGetExePathName + wstr("settings\languages\english.lang")
+    wszLocalizationFile = PsExePath + wstr("settings\languages\english.lang")
     if LoadLocalizationFile(wszLocalizationFile, true) = false Then
         ' TMB_ICON_NONE, and it is not a style choice: SegoeFluentIcons.ttf is loaded further
         ' down (and one of these boxes is the report that it could not be), so a glyph here
@@ -393,7 +393,7 @@ function WinMain( _
     
     
     ' Load the selected localization file
-    wszLocalizationFile = AfxGetExePathName + "settings\languages\" + gConfig.LocalizationFile
+    wszLocalizationFile = PsExePath + "settings\languages\" + gConfig.LocalizationFile
     if LoadLocalizationFile(wszLocalizationFile, false) = false then
         TikoMsgBox( 0, _
                     "Localization file could not be loaded." + vbcrlf + _
@@ -406,7 +406,7 @@ function WinMain( _
     ' Load the Segoe Fluent Icons ttf file that is used for displaying the various
     ' icons used within the editor.
     dim as DWSTRING wszFontFile 
-    wszFontFile = AfxGetExePathName + "SegoeFluentIcons.ttf"
+    wszFontFile = PsExePath + "SegoeFluentIcons.ttf"
     if AddFontResourceEx(wszFontFile.vptr, FR_PRIVATE, NULL) = 0 then
         TikoMsgBox( 0, _
                     "Unable to load application font 'SegoeFluentIcons.ttf'. Aborting application." , _
@@ -437,7 +437,7 @@ function WinMain( _
     ' BY FULL PATH, not by bare name. These live beside the exe and nowhere else, so
     ' naming the directory removes the search entirely rather than relying on the order
     ' being what we hardened it to above. Belt and braces, and it costs nothing.
-    dim as DWSTRING wszDllPath = AfxGetExePathName()
+    dim as DWSTRING wszDllPath = PsExePath()
     dim as any ptr pLibLexilla   = dylibload( wszDllPath & "Lexilla64.dll" )
     dim as any ptr pLibScintilla = dylibload( wszDllPath & "Scintilla64.dll" )
 

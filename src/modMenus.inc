@@ -313,7 +313,7 @@ function frmMain_CompileTopMenuStates() as long
     
     ' Determine if an executable exists based on the current active file or project
     dim as DWSTRING wszRunFile = GetRunExecutableFilename()
-    if AfxFileExists(wszRunFile) then EnableTopMenuItem( IDM_RUNEXE, true )
+    if PsFileExists(wszRunFile) then EnableTopMenuItem( IDM_RUNEXE, true )
     
     function = 0
 end function

@@ -287,10 +287,10 @@ function QuickSortFilenames( arrFiles() as DWSTRING, lo as long, hi as long ) as
 
     if lo < hi then
         i = lo : j = hi
-        pivot = ucase( AfxStrPathName( "NAMEX", arrFiles( (lo+hi)/2 ) ) )
+        pivot = ucase( PsPathName(arrFiles( (lo+hi)/2 ) ) )
         do
-            while ucase(AfxStrPathName("NAMEX", arrFiles(i))) < pivot and i < hi: i += 1: wend
-            while ucase(AfxStrPathName("NAMEX", arrFiles(j))) > Pivot and j > lo: j -= 1: wend
+            while ucase(PsPathName(arrFiles(i))) < pivot and i < hi: i += 1: wend
+            while ucase(PsPathName(arrFiles(j))) > Pivot and j > lo: j -= 1: wend
             if i <= j then swap arrFiles(i), arrFiles(j): i += 1: j -= 1
         loop while i <= j
         if lo < j then QuickSortFilenames( arrFiles(), lo, j )
@@ -397,7 +397,7 @@ function LoadFilesAndFunctions() as long
     dim rs() as SYMBOLREF
 
     for i as long = 0 to nFiles - 1
-        wszText = AfxStrPathName( "NAMEX", gFuncPanelFiles(i) )
+        wszText = PsPathName(gFuncPanelFiles(i) )
         PsListTree_AddHeader( hCtrl, wszText, i, 0 )
 
         dim as long nProcs = gSymDb.EnumProcsInFile( gFuncPanelFiles(i), rs() )

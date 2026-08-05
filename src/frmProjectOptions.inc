@@ -63,29 +63,29 @@ dim shared gPOLayout as PROJECTOPTIONS_LAYOUT
 ' ========================================================================================
 function frmProjectOptions_CreateResourceManifest() as Long
 
-    dim as DWSTRING wszProjectPath      = AfxStrPathname("PATH", gApp.ProjectFilename)
+    dim as DWSTRING wszProjectPath      = PsPathDirWithSep(gApp.ProjectFilename)
     dim as DWSTRING wszManifest         = wszProjectPath + "manifest.xml"
     dim as DWSTRING wszResource         = wszProjectPath + "resource.rc"
-    dim as DWSTRING wszManifestTemplate = AfxGetExePathName + "settings\backup_manifest.xml"
-    dim as DWSTRING wszResourceTemplate = AfxGetExePathName + "settings\backup_resource.rc"
+    dim as DWSTRING wszManifestTemplate = PsExePath + "settings\backup_manifest.xml"
+    dim as DWSTRING wszResourceTemplate = PsExePath + "settings\backup_resource.rc"
 
     dim as DWSTRING wszFilesMissing
 
-    if AfxFileExists(wszManifest) = false then
-        if AfxFileExists(wszManifestTemplate) = false then
+    if PsFileExists(wszManifest) = false then
+        if PsFileExists(wszManifestTemplate) = false then
             wszFilesMissing = wszFilesMissing & _
-                            space(5) & "- " & AfxStrPathname( "NAMEX", wszManifestTemplate ) & vbcrlf
+                            space(5) & "- " & PsPathName(wszManifestTemplate ) & vbcrlf
         else
-            AfxCopyFile( wszManifestTemplate, wszManifest, true )
+            PsFileCopy( wszManifestTemplate, wszManifest, true )
         end if
     end if
 
-    if AfxFileExists(wszResource) = false then
-        if AfxFileExists(wszResourceTemplate) = false then
+    if PsFileExists(wszResource) = false then
+        if PsFileExists(wszResourceTemplate) = false then
             wszFilesMissing = wszFilesMissing & _
-                            space(5) & "- " & AfxStrPathname( "NAMEX", wszResourceTemplate ) & vbcrlf
+                            space(5) & "- " & PsPathName(wszResourceTemplate ) & vbcrlf
         else
-            AfxCopyFile( wszResourceTemplate, wszResource, true )
+            PsFileCopy( wszResourceTemplate, wszResource, true )
         end if
     end if
 
@@ -162,7 +162,7 @@ end sub
 private sub frmProjectOptions_CommitWork()
 
     gApp.ProjectFilename = gPOWork.ProjectPath
-    gApp.ProjectName     = AfxStrPathname( "NAMEX", gApp.ProjectFilename )
+    gApp.ProjectName     = PsPathName(gApp.ProjectFilename )
 
     gApp.ProjectOther32     = gPOWork.Other32
     gApp.ProjectOther64     = gPOWork.Other64

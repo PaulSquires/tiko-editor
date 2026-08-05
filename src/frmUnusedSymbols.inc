@@ -193,7 +193,7 @@ private function frmUnusedSymbols_RootFile() as DWSTRING
     dim as DWSTRING wszFile = pDoc->DiskFilename
     if PsLen( wszFile ) = 0 then return ""
     if pDoc->IsNewFlag then return ""             ' never saved
-    if AfxFileExists( wszFile ) = false then return ""
+    if PsFileExists( wszFile ) = false then return ""
     return wszFile
 end function
 

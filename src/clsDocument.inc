@@ -259,7 +259,7 @@ function clsDocument.LoadDiskFile( _
             ) as long
     ' if a disk file was specified then open it and load it into the editor
     if PsLen(wszFile) = 0 then exit function   
-    if AfxFileExists(wszFile) = 0 then exit function
+    if PsFileExists(wszFile) = 0 then exit function
         
     ' this will be an UTF-8 encoded string
     dim sText as string  
@@ -402,7 +402,7 @@ end function
 '
 ' The three lines that used to sit here --
 '
-'     if AfxFileExists(wszFilename) then AfxDeleteFile(wszFilename)
+'     if PsFileExists(wszFilename) then PsFileDelete(wszFilename)
 '     ... pStream.Write ...            (result discarded)
 '     this.UserModified = false        (unconditional)
 '
@@ -1049,7 +1049,7 @@ function clsDocument.BlockComment( byval flagBlock as boolean ) as long
     dim blockChars as string = "'"
     
     ' If this is a resource file then use different block characters
-    if lcase(AfxStrPathname( "EXTN", this.DiskFilename)) = ".rc" then
+    if lcase(PsPathExt(this.DiskFilename)) = ".rc" then
         blockChars = "//"
     end if
     
@@ -1694,7 +1694,7 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
 
         ''
         ''  APPLY ALL LANGUAGE SPECIFIC SYNTAX COLORING
-        wFileExt = AfxStrPathname( "EXTN", this.DiskFilename )
+        wFileExt = PsPathExt(this.DiskFilename )
         wFileExt = ucase(wFileExt)
 
         if cbool(wFileExt = ".BAS") orelse cbool(wFileExt = ".INC") _
@@ -1892,7 +1892,7 @@ function clsDocument.ApplyProperties() as long
     end if   
     
     ' if this is a read-only file then set the flag so that the document can not be edited.
-    if AfxIsReadOnlyFile( this.DiskFilename ) then
+    if PsFileIsReadOnly( this.DiskFilename ) then
         SciMsg( pSci(0), SCI_SETREADONLY, 1, 0)
     else
         SciMsg( pSci(0), SCI_SETREADONLY, 0, 0)
@@ -2203,7 +2203,7 @@ function clsDocument.AddIncludeFromParse( byval sLine as string ) as boolean
     if len(sFilename) = 0 then return false
     
     sFilename = CompleteIncludeFilename( @this, sFilename )
-    if AfxFileExists(sFilename) = false then return false
+    if PsFileExists(sFilename) = false then return false
     
     ' At this point, the filename exists so save it to our list of include files
     ' for this document that will have its filetime check durign compile to 

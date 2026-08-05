@@ -95,7 +95,7 @@ end function
 ' The themes folder.
 ' ========================================================================================
 private function frmThemes_ThemesFolder() as DWSTRING
-    return AfxGetExePathName & "settings\themes\"
+    return PsExePath & "settings\themes\"
 end function
 
 
@@ -141,7 +141,7 @@ private sub frmThemes_EnsureThemeExists()
     end if
 
     if nCount = 0 then
-        AfxCopyFile( AfxGetExePathName & "settings\backup_default_dark.theme", _
+        PsFileCopy( PsExePath & "settings\backup_default_dark.theme", _
                      wszFolder & "default_dark.theme", false )
     end if
 end sub
@@ -677,17 +677,17 @@ private sub frmThemes_CloneClick( byval hButton as HWND, byval id as long )
 
     ' A theme MUST live in settings\themes\, so take the chosen NAME (ignoring any folder the
     ' user browsed to) and force the .theme extension.
-    dim as DWSTRING wszClone = AfxStrPathname( "NAMEX", *pwszName )
+    dim as DWSTRING wszClone = PsPathName(*pwszName )
     CoTaskMemFree( pwszName )
-    if lcase( AfxStrPathname( "EXTN", wszClone ) ) <> "theme" then
-        wszClone = AfxStrPathname( "NAME", wszClone ) & ".theme"
+    if lcase( PsPathExt(wszClone ) ) <> "theme" then
+        wszClone = PsPathStem(wszClone ) & ".theme"
     end if
     if PsUCase(wszClone) = PsUCase(wszSrc) then exit sub    ' would clobber the source
 
     dim as DWSTRING wszDest = wszFolder & wszClone
 
     ' bFailIfExists = false: the Save-As dialog already confirmed any overwrite.
-    if AfxCopyFile( wszFolder & wszSrc, wszDest, false ) = false then
+    if PsFileCopy( wszFolder & wszSrc, wszDest, false ) = false then
         frmThemes_ThemedMsgBox( L(289,"The new theme file could not be written."), _
                                 L(318,"Themes"), TMB_ICON_ERROR, TMB_OK )
         exit sub
@@ -724,7 +724,7 @@ private sub frmThemes_DeleteClick( byval hButton as HWND, byval id as long )
     end if
 
     dim as boolean bWasActive = (PsUCase(wszFile) = ucase(gConfig.ThemeShortFilename))
-    AfxDeleteFile( frmThemes_ThemesFolder() & wszFile )
+    PsFileDelete( frmThemes_ThemesFolder() & wszFile )
     frmThemes_EnsureThemeExists()
 
     ' Reload and pick a survivor near where the deleted row was.

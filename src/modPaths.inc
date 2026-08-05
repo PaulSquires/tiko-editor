@@ -85,7 +85,7 @@ function ProcessToCurdriveApp( byval wszFilename as DWSTRING ) as DWSTRING
     ' {CURDRIVE} for the drive letter. This allows you to easily run the editor
     ' on different media (eg. thumb drive) that may be assigned a different
     ' drive letter.
-    dim as DWSTRING wszText = AfxGetExePathName
+    dim as DWSTRING wszText = PsExePath
 
     dim wszCurDrive as DWSTRING = lcase(PsLeft(wszText, 3))  ' eg. D:\
 
@@ -108,7 +108,7 @@ function ProcessFromCurdriveApp( byval wszFilename as DWSTRING ) as DWSTRING
     ' {CURDRIVE} for the drive letter. This allows you to easily run the editor
     ' on different media (eg. thumb drive) that may be assigned a different
     ' drive letter.
-    dim as DWSTRING wszText = AfxGetExePathName
+    dim as DWSTRING wszText = PsExePath
 
     if ucase(PsLeft(wszFilename, 10)) = wstr("{CURDRIVE}") then 
         wszFilename = PsLeft(wszText, 1) & PsMid(wszFilename, 11)

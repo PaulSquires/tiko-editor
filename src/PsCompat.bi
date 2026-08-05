@@ -206,3 +206,90 @@ private function PsStrParseCountAny(byref w as const wstring, byref sDelim as co
     next
     return nCount
 end function
+
+'' ===========================================================================
+'' The file and path replacements.
+''
+'' AfxStrPathName's four modes map ONE FOR ONE onto PsPath, but only after
+'' reading its source rather than its name -- three of the four are not what a
+'' reasonable guess would give:
+''
+''   "PATH"  -> PsPathDirWithSep   the directory INCLUDING its trailing
+''                                 separator. PsPathDir excludes it, and the
+''                                 34 sites here all concatenate a filename on.
+''   "NAME"  -> PsPathStem         the name WITHOUT its extension, despite the
+''                                 mode being called NAME.
+''   "NAMEX" -> PsPathName         the name WITH its extension.
+''   "EXTN"  -> PsPathExt          the extension INCLUDING its dot.
+''
+'' Two of those -- the separator and the dot -- are the exact "changes answers,
+'' not builds" hazard this whole phase is sequenced around.
+''
+'' The parameters below are NON-const wstring, unlike the string family above.
+'' AfxStrPathName and its neighbours declare their path argument as plain
+'' `BYREF ... AS WSTRING`, and a const reference will not bind to it.
+''
+'' The ones taking a POINTER (AfxFileExists, AfxDeleteFile and friends) do take
+'' const, and they have to: several tiko call sites hold their path as
+'' `byref ... as const wstring` and would not compile otherwise.
+'' ===========================================================================
+
+private function PsPathDirWithSep(byref w as wstring) as DWSTRING
+    return AfxStrPathName("PATH", w)
+end function
+private function PsPathStem(byref w as wstring) as DWSTRING
+    return AfxStrPathName("NAME", w)
+end function
+private function PsPathName(byref w as wstring) as DWSTRING
+    return AfxStrPathName("NAMEX", w)
+end function
+private function PsPathExt(byref w as wstring) as DWSTRING
+    return AfxStrPathName("EXTN", w)
+end function
+
+private function PsExePath() as DWSTRING
+    return AfxGetExePathName()
+end function
+private function PsFileExists(byref w as const wstring) as boolean
+    return AfxFileExists(w)
+end function
+private function PsFileDelete(byref w as const wstring) as boolean
+    return AfxDeleteFile(w)
+end function
+private function PsPathIsRelative(byref w as const wstring) as boolean
+    return AfxPathIsRelative(w)
+end function
+private function PsPathJoin(byref a as const wstring, byref b as const wstring) as DWSTRING
+    return AfxPathCombine(a, b)
+end function
+private function PsFileCopy(byref a as wstring, byref b as wstring, _
+                            byval bFailIfExists as boolean = false) as boolean
+    return AfxCopyFile(a, b, bFailIfExists)
+end function
+private function PsPathRelativeTo(byref sPath as wstring, _
+                                  byref sBaseDir as wstring) as DWSTRING
+    return AfxPathRelativePathTo(sBaseDir, FILE_ATTRIBUTE_DIRECTORY, sPath, 0)
+end function
+private function PsCurDir() as DWSTRING
+    return AfxGetCurDir()
+end function
+private function PsFileRename(byref a as const wstring, byref b as const wstring) as boolean
+    return AfxRenameFile(a, b)
+end function
+private function PsFileSize(byref w as wstring) as longint
+    return AfxGetFileSize(w)
+end function
+'' NO PsFileRealCase FORWARDER. AfxFilenameOriginalCase is TIKO'S OWN function
+'' (modPaths.inc), not AfxNova's -- a pure move made during an earlier cleanup,
+'' and it is declared after this file is included. Its two call sites map onto
+'' PsFileRealCase at the type swap, where the whole of modPaths.inc gets
+'' revisited anyway.
+private function PsFileIsDir(byref w as const wstring) as boolean
+    return AfxPathIsDirectory(w)
+end function
+private function PsFileIsReadOnly(byref w as wstring) as boolean
+    return AfxIsReadOnlyFile(w)
+end function
+private function PsDirCreate(byref w as const wstring) as boolean
+    return AfxCreateDirectory(w)
+end function

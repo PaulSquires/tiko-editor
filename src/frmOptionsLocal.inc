@@ -135,7 +135,7 @@ sub frmOptionsLocal_SeedFromConfig()
     gLocalCurrentFile = gConfig.LocalizationFile
     gLocalEditFile    = ""
     gLocalSelectedEdited = false
-    gLocalTransLabel  = AfxStrPathName( "NAME", gConfig.LocalizationFile )
+    gLocalTransLabel  = PsPathStem(gConfig.LocalizationFile )
     gLocalPhrasesEdit = false
     gLocalShowEdit    = false
 end sub
@@ -168,25 +168,25 @@ function frmOptionsLocal_LocalEditCheck() as long
     if gLocalPhrasesEdit = false then exit function
 
     dim as DWSTRING wszLocalName = gLocalEditFile
-    dim as DWSTRING wszFileName = AfxGetExePathName + wstr("settings\languages\" + wszLocalName)
+    dim as DWSTRING wszFileName = PsExePath + wstr("settings\languages\" + wszLocalName)
     dim as DWSTRING wszTemp, wszPhrase
 
     ' Never write over the English reference file.
-    if ucase(trim(AfxStrPathname( "NAMEX", wszFilename ))) = "ENGLISH.LANG" then exit function
+    if ucase(trim(PsPathName(wszFilename ))) = "ENGLISH.LANG" then exit function
     ' No edit target, no write. Defensive: an empty name would leave wszFileName pointing at
-    ' the languages FOLDER, and the first thing below it does is AfxDeleteFile.
+    ' the languages FOLDER, and the first thing below it does is PsFileDelete.
     if PsLen(wszLocalName) = 0 then exit function
     if ghLocalList = 0 then exit function
 
     dim as long nCount = PsListTree_GetCount( ghLocalList )
 
-    AfxDeleteFile(wszFileName)
+    PsFileDelete(wszFileName)
 
     dim pStream as CTextStream
     if pStream.OpenForOutputW(wszFilename, true) = S_OK then
 
         wszTemp = _
-        "' Localization file for " & ucase(AfxStrPathName("NAME", wszLocalName)) & " language" & vbcrlf & _
+        "' Localization file for " & ucase(PsPathStem(wszLocalName)) & " language" & vbcrlf & _
         "'" & vbcrlf & _
         "' The first element to exist must be called MAXIMUM and needs to be set to" & vbcrlf & _
         "' the value of the last key in this file." & vbcrlf & _
@@ -242,7 +242,7 @@ end sub
 ' ========================================================================================
 function frmOptionsLocal_LoadLocalizationFile( byref wszFilename as wstring ) as long
 
-    if AfxFileExists( wszFileName ) = 0 then exit function
+    if PsFileExists( wszFileName ) = 0 then exit function
 
     dim as BSTRING wst, wKey, wData
     dim as long nKey, nData, i
@@ -307,7 +307,7 @@ end function
 ' the filename, and every file operation goes through that.
 ' ========================================================================================
 private function frmOptionsLocal_PrettyName( byval wszFilename as DWSTRING ) as DWSTRING
-    dim as DWSTRING wszName = AfxStrPathName( "NAME", wszFilename )
+    dim as DWSTRING wszName = PsPathStem(wszFilename )
     dim as DWSTRING wszOut = ""
     dim as boolean bStart = true
 
@@ -340,7 +340,7 @@ private function frmOptionsLocal_LoadLanguages() as long
     dim as long idxMatch = -1
     dim hSearch as HANDLE
     dim WFD as WIN32_FIND_DATAW
-    dim as DWSTRING wszPath = AfxGetExePathName + "settings\languages\"
+    dim as DWSTRING wszPath = PsExePath + "settings\languages\"
 
     hSearch = FindFirstFile( wszPath + "*", @WFD )
     if hSearch <> INVALID_HANDLE_VALUE then
@@ -351,7 +351,7 @@ private function frmOptionsLocal_LoadLanguages() as long
             ' also returns names that merely START with .lang -- the same reason frmThemes and
             ' frmOptionsCompiler filter in code.
             dim as boolean bDir = ((WFD.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY) <> 0)
-            dim as boolean bLang = (ucase(AfxStrPathName( "EXTN", wszFile )) = ".LANG")
+            dim as boolean bLang = (ucase(PsPathExt(wszFile )) = ".LANG")
             if (bDir = false) andalso (bLang = true) then
                 dim as long idx = PsListTree_AddString( ghLocalLanguages, frmOptionsLocal_PrettyName( wszFile ) )
                 if idx >= 0 then
@@ -603,11 +603,11 @@ private sub frmOptionsLocal_SelectClick( byval hButton as HWND, byval id as long
     dim as DWSTRING wszFile = frmOptionsLocal_SelectedFile()
     if PsLen(wszFile) = 0 then exit sub
 
-    dim as DWSTRING wszFull = AfxGetExePathName & wstr("settings\languages\") & wszFile
+    dim as DWSTRING wszFull = PsExePath & wstr("settings\languages\") & wszFile
     frmOptionsLocal_LoadLocalizationFile( wszFull )
     gLocalPhrasesEdit = false
     gLocalCurrentFile = wszFile          ' THE one place a user choice becomes the selection
-    gLocalTransLabel  = AfxStrPathName( "NAME", wszFile )
+    gLocalTransLabel  = PsPathStem(wszFile )
     frmOptionsLocal_MarkActiveRow()      ' the marker follows it
     PsListTree_SetCurSel( ghLocalList, -1 )
     frmOptionsLocal_DisableEnglish()
@@ -626,8 +626,8 @@ private sub frmOptionsLocal_NewClick( byval hButton as HWND, byval id as long )
         ' Opens the new file for EDITING. It does not become the selected language -- same
         ' rule as Edit: a brand-new, empty translation is the last thing to switch the
         ' application into. Select it afterwards if that is what you want.
-        gLocalEditFile    = AfxStrPathname( "NAMEX", *pwszName )
-        gLocalTransLabel  = AfxStrPathName( "NAME", *pwszName )
+        gLocalEditFile    = PsPathName(*pwszName )
+        gLocalTransLabel  = PsPathStem(*pwszName )
         gLocalPhrasesEdit = true
         ' NO list reload here. The Save-As dialog picked a NAME; nothing has been written yet,
         ' so a reload at this point finds the same files as before and the new one appears to
@@ -643,13 +643,13 @@ private sub frmOptionsLocal_EditClick( byval hButton as HWND, byval id as long )
     dim as DWSTRING wszFile = frmOptionsLocal_SelectedFile()
     if PsLen(wszFile) = 0 then exit sub
 
-    dim as DWSTRING wszLanguage = AfxGetExePathName & wstr("settings\languages\") & wszFile
+    dim as DWSTRING wszLanguage = PsExePath & wstr("settings\languages\") & wszFile
     frmOptionsLocal_LoadLocalizationFile( wszLanguage )
     ' EDITING ONLY. This deliberately does NOT touch gLocalCurrentFile: opening French to fix
     ' a typo used to switch the whole application into French on OK, because one variable was
     ' doing both jobs. Double-click and ENTER route through this same handler.
     gLocalEditFile    = wszFile
-    gLocalTransLabel  = AfxStrPathName( "NAME", wszLanguage )
+    gLocalTransLabel  = PsPathStem(wszLanguage )
     gLocalPhrasesEdit = true
     frmOptionsLocal_FillTranslationColumn()
     frmOptionsLocal_DisableEnglish()
@@ -697,9 +697,9 @@ private sub frmOptionsLocal_DeleteClick( byval hButton as HWND, byval id as long
         exit sub
     end if
 
-    dim as DWSTRING wszFileName = AfxGetExePathName + wstr("settings\languages\") + wszFile
+    dim as DWSTRING wszFileName = PsExePath + wstr("settings\languages\") + wszFile
     frmOptionsLocal_ClearGlobalArray()
-    AfxDeleteFile( wszFileName )
+    PsFileDelete( wszFileName )
     PsListTree_SetCurSel( ghLocalList, -1 )
     ' Falls back to English only when the file just deleted WAS the selection -- deleting some
     ' other language has no business changing which one the editor runs in.

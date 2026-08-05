@@ -342,7 +342,7 @@ function frmTopTabsInfo_WndProc( _
                 ' GetpDoc returns null when no tab is selected (i = -1)
                 dim as clsDocument ptr pDocTab = gTTabCtl.GetpDoc(i)
                 if pDocTab then
-                    dim as DWSTRING wszMainFolder = AfxStrPathname("PATH", pDoc->DiskFilename)
+                    dim as DWSTRING wszMainFolder = PsPathDirWithSep(pDoc->DiskFilename)
                     wszFilename = PsStrRemove( pDocTab->DiskFilename, wszMainFolder )
                 end if
             end if

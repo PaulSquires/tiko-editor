@@ -46,20 +46,20 @@ sub Save_RunSelfTest()
     ? "--- TIKO_SAVE_SELFTEST ---"
 
     dim as DWSTRING wszDir  = environ("TEMP") & "\tiko_savetest"
-    AfxCreateDirectory( wszDir )
+    PsDirCreate( wszDir )
     dim as DWSTRING wszFile = wszDir & "\doc.bas"
     dim as DWSTRING wszTmp  = wszFile & ".tiko-tmp"
     dim as DWSTRING wszErr
     dim as string sBack
 
     ' ---- 1. happy path -----------------------------------------------------------------
-    AfxDeleteFile( wszFile )
+    PsFileDelete( wszFile )
     dim as string sV1 = "print ""version one""" & chr(13,10)
     SAVEASSERT( Doc_WriteToDisk( wszFile, sV1, wszErr ) = DOCWRITE_OK, _
                 "create of a new file failed: " & wszErr )
     sBack = SaveSelfTest_ReadAll( wszFile )
     SAVEASSERT( sBack = sV1, "new file bytes differ (got " & len(sBack) & " of " & len(sV1) & ")" )
-    SAVEASSERT( AfxFileExists( wszTmp ) = false, "temp file left behind after a successful create" )
+    SAVEASSERT( PsFileExists( wszTmp ) = false, "temp file left behind after a successful create" )
 
     ' ---- 2. overwrite an existing file --------------------------------------------------
     dim as string sV2 = "print ""version two, which is a good deal longer""" & chr(13,10)
@@ -68,7 +68,7 @@ sub Save_RunSelfTest()
     sBack = SaveSelfTest_ReadAll( wszFile )
     SAVEASSERT( sBack = sV2, "overwritten bytes differ" )
     SAVEASSERT( len(sBack) = len(sV2), "overwrite left a stale tail (old file was shorter/longer)" )
-    SAVEASSERT( AfxFileExists( wszTmp ) = false, "temp file left behind after a successful overwrite" )
+    SAVEASSERT( PsFileExists( wszTmp ) = false, "temp file left behind after a successful overwrite" )
 
     ' ---- 3. an empty document is a legal save -------------------------------------------
     ' CFileStream.Write rejects a null pv with E_INVALIDARG and STRPTR of a zero-length FB
@@ -95,7 +95,7 @@ sub Save_RunSelfTest()
         sBack = SaveSelfTest_ReadAll( wszFile )
         SAVEASSERT( sBack = sV2, "THE ORIGINAL FILE WAS DAMAGED by a failed save" )
         SAVEASSERT( len(sBack) > 0, "THE ORIGINAL FILE WAS DESTROYED by a failed save" )
-        SAVEASSERT( AfxFileExists( wszTmp ) = false, "a failed save left a stray .tiko-tmp behind" )
+        SAVEASSERT( PsFileExists( wszTmp ) = false, "a failed save left a stray .tiko-tmp behind" )
     end if
 
     ' ---- 5. an unwritable directory is a failure, not a crash --------------------------
@@ -145,7 +145,7 @@ sub Save_RunSelfTest()
     ' Everything above this point passed for years while all three save sites ignored bLossy.
     scope
         dim as DWSTRING wszLossy = wszDir & "\lossy.bas"
-        AfxDeleteFile( wszLossy )
+        PsFileDelete( wszLossy )
         Doc_WriteToDisk( wszLossy, "original bytes", wszErr )
 
         dim pD as clsDocument ptr = gApp.CreateEmptyDocument()
@@ -186,7 +186,7 @@ sub Save_RunSelfTest()
             end if
             gApp.RemoveDocument( pD )
         end if
-        AfxDeleteFile( wszLossy )
+        PsFileDelete( wszLossy )
     end scope
 
     ' ---- 9. a failed config load/save must not strand PreventConfigLoad ----------------
@@ -226,7 +226,7 @@ sub Save_RunSelfTest()
             SAVEASSERT( gApp.PreventConfigLoad = false, _
                 "a FAILED LoadConfigFile left PreventConfigLoad latched -- config-change detection is dead for the session" )
         end if
-        AfxDeleteFile( gConfig.ConfigFilename )
+        PsFileDelete( gConfig.ConfigFilename )
 
         gConfig.ConfigFilename = wszSavedCfg
         gApp.PreventConfigLoad = bSavedFlag
@@ -278,7 +278,7 @@ sub Save_RunSelfTest()
             "second load left a stale value: [" & wszSecond0 & "]" )
 
         gConfig.ConfigFilename = wszSavedCfg
-        AfxDeleteFile( wszCfg )
+        PsFileDelete( wszCfg )
         erase gConfig.Tools
         gConfig.LoadConfigFile( true )     ' restore the real configuration
     end scope
@@ -325,7 +325,7 @@ sub Save_RunSelfTest()
         end if
 
         ProjectFolders_Clear()
-        AfxDeleteFile( wszProj )
+        PsFileDelete( wszProj )
     end scope
 
     ' ---- 12. a compile must leave the process where it found it ------------------------
@@ -376,15 +376,15 @@ sub Save_RunSelfTest()
     ' existing DLL rather than fabricating one matters -- a malformed file would fail to
     ' load for the wrong reason and the assertion would pass while proving nothing.
     scope
-        dim as DWSTRING wszSrcDll   = AfxGetExePathName() & "Lexilla64.dll"
+        dim as DWSTRING wszSrcDll   = PsExePath() & "Lexilla64.dll"
         dim as DWSTRING wszPlanted  = wszDir & "\zz_hijack_probe.dll"
 
-        if AfxFileExists( wszSrcDll ) = false then
+        if PsFileExists( wszSrcDll ) = false then
             ? "  NOTE: no Lexilla64.dll to copy; the DLL-search assertion did NOT run."
         else
-            AfxDeleteFile( wszPlanted )
+            PsFileDelete( wszPlanted )
             CopyFileW( wszSrcDll, wszPlanted, FALSE )
-            SAVEASSERT( AfxFileExists( wszPlanted ), _
+            SAVEASSERT( PsFileExists( wszPlanted ), _
                 "precondition: the probe DLL was not planted, so the search test proves nothing" )
 
             dim as string sCwdSave = curdir
@@ -395,7 +395,7 @@ sub Save_RunSelfTest()
             SAVEASSERT( hProbe = 0, _
                 "a DLL was loaded BY BARE NAME out of the current directory -- the search path is not hardened" )
             if hProbe then FreeLibrary( hProbe )
-            AfxDeleteFile( wszPlanted )
+            PsFileDelete( wszPlanted )
         end if
 
         ' ...AND THE APPLICATION DIRECTORY STILL IS ON IT. This is the half the hardening
@@ -403,7 +403,7 @@ sub Save_RunSelfTest()
         ' runtime (there is no import lib), so if LOAD_LIBRARY_SEARCH_DEFAULT_DIRS had
         ' excluded the app directory the Help Center would have stopped working with no
         ' build error and no failing assertion anywhere. Load it the same way it does.
-        if AfxFileExists( AfxGetExePathName() & "WebView2Loader.dll" ) = false then
+        if PsFileExists( PsExePath() & "WebView2Loader.dll" ) = false then
             ? "  NOTE: no WebView2Loader.dll beside the exe; that half did NOT run."
         else
             dim as HMODULE hWv = LoadLibraryW( "WebView2Loader.dll" )
@@ -422,7 +422,7 @@ sub Save_RunSelfTest()
     scope
         dim as DWSTRING wszSavedCfg = gConfig.ConfigFilename
         dim as DWSTRING wszOutCfg   = wszDir & "\writeprobe.ini"
-        AfxDeleteFile( wszOutCfg )
+        PsFileDelete( wszOutCfg )
 
         gConfig.ConfigFilename = wszOutCfg
         gConfig.SaveConfigFile()
@@ -443,10 +443,10 @@ sub Save_RunSelfTest()
         SAVEASSERT( instr( sFlat, "NOTES-START" ) = 0, _
             "SaveConfigFile still writes a NOTES-START block into settings.ini" )
 
-        AfxDeleteFile( wszOutCfg )
+        PsFileDelete( wszOutCfg )
     end scope
 
-    AfxDeleteFile( wszFile )
+    PsFileDelete( wszFile )
 
     sMsg = "TIKO_SAVE_SELFTEST: " & nPass & " passed, " & nFail & " failed."
     ? sMsg

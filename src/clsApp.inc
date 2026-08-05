@@ -189,8 +189,8 @@ function clsApp.GetHeaderDocumentPtr( byval pDocIn as clsDocument ptr ) as clsDo
     dim pDoc as clsDocument ptr
     
     dim as DWSTRING wszFilename = _
-                    AfxStrPathname( "PATH", pDocIn->Diskfilename ) & _
-                    AfxStrPathname( "NAME", pDocIn->Diskfilename ) & ".bi"
+                    PsPathDirWithSep(pDocIn->Diskfilename ) & _
+                    PsPathStem(pDocIn->Diskfilename ) & ".bi"
     pDoc = this.GetDocumentPtrByFilename( wszFilename )
     
     if pDoc <> 0 then
@@ -213,13 +213,13 @@ function clsApp.GetSourceDocumentPtr( byval pDocIn as clsDocument ptr ) as clsDo
     dim as DWSTRING wszFilename
     dim pDoc as clsDocument ptr
     
-    wszFilename = AfxStrPathname( "PATH", pDocIn->Diskfilename ) & _
-                    AfxStrPathname( "NAME", pDocIn->Diskfilename ) & ".bas"
+    wszFilename = PsPathDirWithSep(pDocIn->Diskfilename ) & _
+                    PsPathStem(pDocIn->Diskfilename ) & ".bas"
     pDoc = this.GetDocumentPtrByFilename( wszFilename )
     
     if pDoc = 0 then
-        wszFilename = AfxStrPathname( "PATH", pDocIn->Diskfilename ) & _
-                    AfxStrPathname( "NAME", pDocIn->Diskfilename ) & ".inc"
+        wszFilename = PsPathDirWithSep(pDocIn->Diskfilename ) & _
+                    PsPathStem(pDocIn->Diskfilename ) & ".inc"
         pDoc = this.GetDocumentPtrByFilename( wszFilename )
     end if
     
@@ -311,7 +311,7 @@ function clsApp.SaveProject( byval bSaveAs as boolean = false, byref wszForcedNa
     ' the delete bought nothing -- and if the subsequent Create failed it had already
     ' destroyed the user's project with no way back.
     this.ProjectFilename = wFilename
-    this.ProjectName = AfxStrPathname( "NAMEX", wFilename )
+    this.ProjectName = PsPathName(wFilename )
     if len(wFilename) = 0 then return false
 
     ' Do not create the untitled workspace's file until it actually holds something. An
@@ -326,8 +326,8 @@ function clsApp.SaveProject( byval bSaveAs as boolean = false, byref wszForcedNa
     ' next launch faithfully restored every file the user had just closed.
     if this.IsProjectNamed() = false then
         if this.GetDocumentCount() = 0 then
-            if AfxFileExists( gConfig.UntitledProjectFilename ) then
-                AfxDeleteFile( gConfig.UntitledProjectFilename )
+            if PsFileExists( gConfig.UntitledProjectFilename ) then
+                PsFileDelete( gConfig.UntitledProjectFilename )
             end if
             return true
         end if
@@ -352,8 +352,8 @@ function clsApp.SaveProject( byval bSaveAs as boolean = false, byref wszForcedNa
         ' Project > Close re-establishes the OLD loose-file set, and -- worse -- that stale
         ' file is what a restore would find if the slot above were ever missed again.
         if bWasUntitled then
-            if AfxFileExists( gConfig.UntitledProjectFilename ) then
-                AfxDeleteFile( gConfig.UntitledProjectFilename )
+            if PsFileExists( gConfig.UntitledProjectFilename ) then
+                PsFileDelete( gConfig.UntitledProjectFilename )
             end if
         end if
     end if
@@ -404,7 +404,7 @@ function clsApp.ProjectSetFileType( _
     
     dim wzFileExt as wstring * MAX_PATH 
 
-    wzFileExt = AfxStrPathname( "EXTN",  pDoc->DiskFilename )
+    wzFileExt = PsPathExt(pDoc->DiskFilename )
     
     ' Determine if the document already exists in the project. If it does not then
     ' make a determination of a default file type for this new file being added to the project.

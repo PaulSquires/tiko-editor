@@ -109,7 +109,7 @@ function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval
         ' there is no name to substitute. <M> falls back to the active document when no
         ' Main is designated, matching every other main-doc consumer.
         if gApp.IsProjectNamed() then
-            wszProjectName = AfxStrPathname("NAMEX", gApp.ProjectFilename)
+            wszProjectName = PsPathName(gApp.ProjectFilename)
         end if
         pDocMain = gApp.GetMainDocumentPtr()
         if pDocMain = 0 then pDocMain = pDocCurrent
@@ -126,18 +126,18 @@ function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval
         if (idxBuild > -1) andalso (pDocMain <> 0) then
             if pCompile <> null then wszExeName = pCompile->OutputFilename
             if len(wszExeName) = 0 then
-                wszExeName = AfxStrPathname("PATH", pDocMain->DiskFilename) + _
-                                AfxStrPathname("NAME", pDocMain->DiskFilename) + _
+                wszExeName = PsPathDirWithSep(pDocMain->DiskFilename) + _
+                                PsPathStem(pDocMain->DiskFilename) + _
                                 ".exe"
                 if instr(ucase(gConfig.Builds(idxBuild).wszOptions), " -DLL") orelse _
                     instr(ucase(gConfig.Builds(idxBuild).wszOptions), " -DYLIB") then
-                    wszExeName = AfxStrPathname("PATH", pDocMain->DiskFilename) + _
-                                AfxStrPathname("NAME", pDocMain->DiskFilename) + _
+                    wszExeName = PsPathDirWithSep(pDocMain->DiskFilename) + _
+                                PsPathStem(pDocMain->DiskFilename) + _
                                 ".dll"
                 end if
                 if instr(ucase(gConfig.Builds(idxBuild).wszOptions), " -LIB") then
-                    wszExeName = AfxStrPathname("PATH", pDocMain->DiskFilename) + _
-                                AfxStrPathname("NAME", pDocMain->DiskFilename) + _
+                    wszExeName = PsPathDirWithSep(pDocMain->DiskFilename) + _
+                                PsPathStem(pDocMain->DiskFilename) + _
                                 ".a"
                 end if
             end if
@@ -163,11 +163,11 @@ function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval
 
     if PsLen(wszWorkingFolder) then
         ' Convert relative path to absolute path if needed.
-        if AfxPathIsRelative(wszWorkingFolder) then
-            wszWorkingFolder = AfxPathCombine(AfxGetExePathName, wszWorkingFolder)
+        if PsPathIsRelative(wszWorkingFolder) then
+            wszWorkingFolder = PsPathJoin(PsExePath, wszWorkingFolder)
         end if
-        if AfxPathIsDirectory(wszWorkingFolder) = false then
-            wszWorkingFolder = left(AfxGetExePathName, 1) + PsMid(wszWorkingFolder, 2)
+        if PsFileIsDir(wszWorkingFolder) = false then
+            wszWorkingFolder = left(PsExePath, 1) + PsMid(wszWorkingFolder, 2)
         end if
         chdir gConfig.Tools(nToolNum).wszWorkingFolder
     end if
@@ -176,11 +176,11 @@ function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval
     ' but use the current drive.
     wszCommand = gConfig.Tools(nToolNum).wszCommand
     ' Convert relative path to absolute path if needed.
-    if AfxPathIsRelative(wszCommand) then
-        wszCommand = AfxPathCombine(AfxGetExePathName, wszCommand)
+    if PsPathIsRelative(wszCommand) then
+        wszCommand = PsPathJoin(PsExePath, wszCommand)
     end if
-    if AfxPathFileExists(wszCommand) = false then
-        wszCommand = left(AfxGetExePathName, 1) + PsMid(wszCommand, 2)
+    if PsFileExists(wszCommand) = false then
+        wszCommand = left(PsExePath, 1) + PsMid(wszCommand, 2)
     end if
     wszCommand = wchr(34) + wszCommand + wchr(34)
 

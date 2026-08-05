@@ -250,7 +250,7 @@ function RunEXE( _
             byref wszParam as DWSTRING _
             ) as long
                             
-    dim as DWSTRING wszPath = AfxStrPathname("PATH", wszFileExe)
+    dim as DWSTRING wszPath = PsPathDirWithSep(wszFileExe)
     dim as DWSTRING wszBatchFile = RUNBATCHFILE
     
     ' if option is specified to launch command window prior to running the
@@ -258,7 +258,7 @@ function RunEXE( _
     ' This allows being able to see any runtime errors that might be thrown.
     ' Otherwise, simple shell to the program.
     if gConfig.RunViaCommandWindow then
-        AfxDeleteFile( wszBatchFile )
+        PsFileDelete( wszBatchFile )
         dim pStream as CTextStream
         if pStream.Create(wszBatchFile) = S_OK then
             pStream.WriteLine "@echo off"
@@ -484,8 +484,8 @@ function ParseLogForError ( _
                 if i then pCompile->OutputFilename = PsStrRemove(PsLeft(wszTemp, i), wDQ)
                 ' if pCompile->OutputFilename is a relative filename then convert it to full filename.
                 pCompile->OutputFilename = PsStrReplace( pCompile->OutputFilename, "/", "\" )
-                if AfxPathIsRelative( pCompile->OutputFilename ) then 
-                    pCompile->OutputFilename = AfxPathCombine( pCompile->MainFolder, pCompile->OutputFilename )
+                if PsPathIsRelative( pCompile->OutputFilename ) then 
+                    pCompile->OutputFilename = PsPathJoin( pCompile->MainFolder, pCompile->OutputFilename )
                 end if
             end if      
         end if
@@ -599,7 +599,7 @@ function ParseLogForError ( _
     ' if the EXE/DLL/Object output file was never created then throw an error
     if fCompilingObjFiles = false then
         if (NumWarnings = 0) andalso (NumErrors = 0) then
-            if AfxGetFileSize(pCompile->OutputFilename) = 0 then 
+            if PsFileSize(pCompile->OutputFilename) = 0 then 
                 NumErrors += 1
             end if
         end if
@@ -648,11 +648,11 @@ function ParseLogForError ( _
 
     if (NumErrors = 0) andalso (bAllowSuccessMessage = true) then 
         ' we are not compiling modules
-        dim as long nFileSize = AfxGetFileSize(pCompile->OutputFilename)
+        dim as long nFileSize = PsFileSize(pCompile->OutputFilename)
         wszIconCompileMsg = _
                 L(155, "Errors") & " " & NumErrors & "  " & _
                 L(154, "Warnings") & " " & NumWarnings & _
-                "  [ " & AfxStrPathname("NAMEX", pCompile->OutputFilename) & "  " & _
+                "  [ " & PsPathName(pCompile->OutputFilename) & "  " & _
                 rtrim(AfxStrFormatKBSize(nFileSize)) & " (" & _
                 wstr(nFileSize) & " " & L(160,"bytes") & ") ]"
         pCompile->wszStatusBarMessage = wszIconCompileMsg         
@@ -856,7 +856,7 @@ sub CompileCmd_RunSelfTest()
     dim as DWSTRING wszCmdExe = environ("COMSPEC")
     if PsLen( wszCmdExe ) = 0 then wszCmdExe = "C:\Windows\System32\cmd.exe"
 
-    if AfxFileExists( wszCmdExe ) = false then
+    if PsFileExists( wszCmdExe ) = false then
         ? "  NOTE: no COMSPEC; the exit-code assertions did NOT run."
     else
         dim as string sOut

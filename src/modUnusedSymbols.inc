@@ -287,7 +287,7 @@ function UnusedSymbols_Build( byval nTier as long, rows() as UNUSEDROW, _
         if pDoc->hWindow(0) then
             if SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0 then
                 if PsLen( wszDirtyFiles ) > 0 then wszDirtyFiles = wszDirtyFiles & ", "
-                wszDirtyFiles = wszDirtyFiles & AfxStrPathname( "NAMEX", pDoc->DiskFilename )
+                wszDirtyFiles = wszDirtyFiles & PsPathName(pDoc->DiskFilename )
             end if
         end if
         pDoc = pDoc->pDocNext

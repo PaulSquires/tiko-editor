@@ -59,7 +59,7 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     if nFiles > 0 then QuickSortFilenames( arrFiles(), 0, nFiles - 1 )
     for f as long = 0 to nFiles - 1
         dim positions(any) as uinteger
-        wszFilename = AfxStrPathName( "NAMEX", arrFiles(f) )
+        wszFilename = PsPathName(arrFiles(f) )
         result = fuzzy_match_positions( wszNeedle, wszFilename, positions() )
         if (result > min_score) orelse (bLoadAll = true) then
             if gSymbolsCount + 1 > MAX_SYMBOL_SEARCH then exit for

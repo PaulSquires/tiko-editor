@@ -221,7 +221,7 @@ function LoadBookmarksFiles() as long
         end if
 
         if len(sBookmarks) then
-            dim as DWSTRING wszText = AfxStrPathName( "NAMEX", pDoc->DiskFilename )
+            dim as DWSTRING wszText = PsPathName(pDoc->DiskFilename )
             PsListTree_AddHeader( hCtrl, wszText, cast(integer, pDoc), 0 )
 
             dim as integer nCount = PsStrParseCount( sBookmarks, "," )

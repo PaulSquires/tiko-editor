@@ -107,12 +107,12 @@ function code_SetCompilerPath( byval pCompile as COMPILE_TYPE ptr ) as boolean
     pCompile->CompileFlags = gConfig.Builds(idxBuild).wszOptions
 
     ' Convert relative path to absolute path if needed.
-    if AfxPathIsRelative(pCompile->CompilerPath) then
-        pCompile->CompilerPath = AfxPathCombine(AfxGetExePathName, pCompile->CompilerPath)
+    if PsPathIsRelative(pCompile->CompilerPath) then
+        pCompile->CompilerPath = PsPathJoin(PsExePath, pCompile->CompilerPath)
     end if
 
     ' Check to see if the compiler exists
-    if AfxFileExists(pCompile->CompilerPath) = false then 
+    if PsFileExists(pCompile->CompilerPath) = false then 
         dim as DWSTRING wszMsg = _
             L(163,"Invalid defined compiler path.") & vbcrlf & _
             "Path: " & pCompile->CompilerPath
@@ -150,14 +150,14 @@ function code_SetMainFile( byval pCompile as COMPILE_TYPE ptr ) as boolean
     ' if this is a QuickRun then we need to copy the current source code to a temporary bas file
     ' and compile that bas file instead. 
     if pCompile->CompileID = IDM_QUICKRUN then  
-        if AfxFileExists(pDoc->DiskFilename) then
-            pCompile->MainFolder = AfxStrPathname("PATH", pDoc->DiskFilename)
+        if PsFileExists(pDoc->DiskFilename) then
+            pCompile->MainFolder = PsPathDirWithSep(pDoc->DiskFilename)
         else    
-            pCompile->MainFolder = AfxGetExePathName()
+            pCompile->MainFolder = PsExePath()
         end if
 
         pCompile->MainFilename = pCompile->MainFolder & QUICKRUNBAS
-        pCompile->MainName     = AfxStrPathname("NAME", pCompile->MainFilename)
+        pCompile->MainName     = PsPathStem(pCompile->MainFilename)
         
         ' TRUE = the temp file is NOT on disk (SaveTempFile has already told the user why).
         ' Abandon the Quick Run rather than hand the compiler a stale file from a previous
@@ -166,8 +166,8 @@ function code_SetMainFile( byval pCompile as COMPILE_TYPE ptr ) as boolean
 
     else
         pCompile->MainFilename = pDoc->DiskFilename
-        pCompile->MainName     = AfxStrPathname("NAME", pDoc->DiskFilename)
-        pCompile->MainFolder   = AfxStrPathname("PATH", pDoc->DiskFilename)
+        pCompile->MainName     = PsPathStem(pDoc->DiskFilename)
+        pCompile->MainFolder   = PsPathDirWithSep(pDoc->DiskFilename)
     end if
 
     ' Need to determine the output filename in order to search for any existing running process.
@@ -224,8 +224,8 @@ function code_AddPathsToLinkModules( byval pCompile as COMPILE_TYPE ptr ) as lon
     dim as DWSTRING wszResult  ' the final fully path qualified list of space separated module filenames
     dim as DWSTRING wszTemp
     
-    dim as DWSTRING wszCurrentFolder = AfxStrPathname("PATH", pCompile->MainFilename)
-    dim as DWSTRING wszCompilerIncFolder = AfxStrPathname("PATH", pCompile->CompilerPath) & "inc\"
+    dim as DWSTRING wszCurrentFolder = PsPathDirWithSep(pCompile->MainFilename)
+    dim as DWSTRING wszCompilerIncFolder = PsPathDirWithSep(pCompile->CompilerPath) & "inc\"
     
     dim as DWSTRING wszLinkModules = PsStrShrink(pCompile->LinkModules)  
     
@@ -239,7 +239,7 @@ function code_AddPathsToLinkModules( byval pCompile as COMPILE_TYPE ptr ) as lon
 
         ' (1) Current folder
         wszTemp = wszCurrentFolder & modulename
-        if AfxFileExists(wszTemp) then
+        if PsFileExists(wszTemp) then
             wszResult = wszResult & chr(34) & wszTemp & chr(34) & " "
             continue for
         end if
@@ -255,7 +255,7 @@ function code_AddPathsToLinkModules( byval pCompile as COMPILE_TYPE ptr ) as lon
             includePath = PsStrRemove(includePath, chr(34)) & "\"   ' ensure trailing backslash
             if PsLen(includePath) then 
             wszTemp = includePath & modulename
-            if AfxFileExists(wszTemp) then
+            if PsFileExists(wszTemp) then
                 wszResult = wszResult & chr(34) & wszTemp & chr(34) & " "
                 continue for: continue for
             end if
@@ -264,7 +264,7 @@ function code_AddPathsToLinkModules( byval pCompile as COMPILE_TYPE ptr ) as lon
     
         ' (3) \inc folder for the selected compiler toolchain
         wszTemp = wszCompilerIncFolder & modulename
-        if AfxFileExists(wszTemp) then
+        if PsFileExists(wszTemp) then
             wszResult = wszResult & chr(34) & wszTemp & chr(34) & " "
             continue for
         end if
@@ -338,7 +338,7 @@ function code_CompileModules( byval pCompile as COMPILE_TYPE ptr ) as boolean
     ' Look for the "_debug_active.txt" filename.
     dim as DWSTRING wszDebugFilename = pCompile->ObjFolder & "_debug_active.txt"
     dim as boolean bForceRebuild = false
-    dim as boolean bDebugFileExists = AfxFileExists( wszDebugFilename )
+    dim as boolean bDebugFileExists = PsFileExists( wszDebugFilename )
 
     ' if only compiling this one module (null if all)
     dim pDocModule as clsDocument ptr
@@ -360,7 +360,7 @@ function code_CompileModules( byval pCompile as COMPILE_TYPE ptr ) as boolean
         ' Release builds
         if bDebugFileExists then bForceRebuild = true
         ' Remove the existing debug check filename
-        AfxDeleteFile( wszDebugFilename )
+        PsFileDelete( wszDebugFilename )
     end if
 
     pCompile->CompileFlags = " " & pCompile->CompileFlags & " "
@@ -386,7 +386,7 @@ function code_CompileModules( byval pCompile as COMPILE_TYPE ptr ) as boolean
             if bBypass = false then
                 ' Get the base name of the file for constructing the object filename
                 pCompile->ObjectFilename = _
-                    pCompile->ObjFolderShort & AfxStrPathname("NAME", pDoc->DiskFilename) & pCompile->ObjID
+                    pCompile->ObjFolderShort & PsPathStem(pDoc->DiskFilename) & pCompile->ObjID
 
                 ' Compare the source code file datetime to the object. if the source code
                 ' date time is greater then we need to recompile it, otherwise we will simply
@@ -418,7 +418,7 @@ function code_CompileModules( byval pCompile as COMPILE_TYPE ptr ) as boolean
                     if (nFileCount mod 5) = 0 then AfxDoEvents
                     
                     ' Prepend with # so that spinner shows
-                    dim as DWSTRING wst = L(164, "Compiling") + "... " + AfxStrPathname("NAMEX", pDoc->DiskFilename) 
+                    dim as DWSTRING wst = L(164, "Compiling") + "... " + PsPathName(pDoc->DiskFilename) 
                     SetCompileStatusBarMessage( wst, 0 )
                     
                     dim as DWSTRING wszCommand = pCompile->CompilerPath
@@ -629,7 +629,7 @@ function code_Compile( byval wID as long ) as boolean
     ' Need to test if the resulting application to be compiled is actually running
     ' in memory. This would cause the compile to fail.
     if IsProcessRunning( pCompile->OutputFilename ) then
-        AfxDeleteFile( pCompile->OutputFilename )
+        PsFileDelete( pCompile->OutputFilename )
         SetCompileStatusBarMessage( "", 0 )
         TikoMsgBox( HWND_FRMMAIN, L(161,"Program running") & "...", L(162,"Error"), _
                         TMB_ICON_INFO, TMB_OK )
@@ -708,20 +708,20 @@ function code_Compile( byval wID as long ) as boolean
         if pDocMod->ProjectFileType = FILETYPE_MODULE then
             ' Get the base name of the file for constructing the object filename
             wszParams += _
-                " " + pCompile->ObjFolderShort + AfxStrPathname("NAME", pDocMod->DiskFilename) + pCompile->ObjID
+                " " + pCompile->ObjFolderShort + PsPathStem(pDocMod->DiskFilename) + pCompile->ObjID
         end if
         pDocMod = pDocMod->pDocNext
     loop
     
 
     ' Attempt to delete any existing output file so it will not exist should the compile fail.
-    if AfxFileExists( pCompile->OutputFilename ) then
-        AfxDeleteFile( pCompile->OutputFilename )
+    if PsFileExists( pCompile->OutputFilename ) then
+        PsFileDelete( pCompile->OutputFilename )
     end if
 
 
     ' Prepend with # so that spinner shows
-    dim as DWSTRING wst = "#" + L(164, "Compiling") + "... " + AfxStrPathname("NAMEX", pCompile->MainFilename) 
+    dim as DWSTRING wst = "#" + L(164, "Compiling") + "... " + PsPathName(pCompile->MainFilename) 
     SetCompileStatusBarMessage( wst, 0 )
     SetCursor( LoadCursor(0, IDC_WAIT) )
 
@@ -798,14 +798,14 @@ function code_Compile( byval wID as long ) as boolean
 
     ' if this was a QuickRun then delete the temporary code file that was created.
     if pCompile->CompileID = IDM_QUICKRUN then 
-        AfxDeleteFile( pCompile->MainFilename )
+        PsFileDelete( pCompile->MainFilename )
     end if    
     
 
     ' if pCompile->OutputFilename is a relative filename then convert it to full filename.
     pCompile->OutputFilename = PsStrReplace( pCompile->OutputFilename, "/", "\" )
-    if AfxPathIsRelative( pCompile->OutputFilename ) then 
-        pCompile->OutputFilename = AfxPathCombine( pCompile->MainFolder, pCompile->OutputFilename )
+    if PsPathIsRelative( pCompile->OutputFilename ) then 
+        pCompile->OutputFilename = PsPathJoin( pCompile->MainFolder, pCompile->OutputFilename )
     end if
 
     ' Check our compiler logfile to determine if any errors exist.

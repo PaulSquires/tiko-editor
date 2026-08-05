@@ -262,7 +262,7 @@ function FileWatch_ScanChanged( byval bRequireSettled as boolean ) as long
         ' A file that has gone missing is not a file that changed. Leave it entirely alone --
         ' the activation sweep owns that case, and a build writing via delete+rename passes
         ' through exactly this state.
-        if AfxFileExists( pDoc->DiskFilename ) = false then
+        if PsFileExists( pDoc->DiskFilename ) = false then
             pDoc = pDocNext: continue do
         end if
 
@@ -342,7 +342,7 @@ function FileWatch_ScanMissing() as long
             pDoc = pDocNext: continue do
         end if
 
-        if AfxFileExists( pDoc->DiskFilename ) = false then
+        if PsFileExists( pDoc->DiskFilename ) = false then
             ' Ensure that the file is open and displayed
             OpenSelectedDocument( pDoc->DiskFilename )
             FileWatch_ReportMissing( pDoc )

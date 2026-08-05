@@ -156,7 +156,7 @@ private function frmOptionsCompiler_LoadToolchains() as long
 
     dim hSearch as HANDLE
     dim WFD as WIN32_FIND_DATAW
-    dim as DWSTRING wszPath = AfxGetExePathName + "toolchains\"
+    dim as DWSTRING wszPath = PsExePath + "toolchains\"
 
     hSearch = FindFirstFile( wszPath + "*", @WFD )
     if hSearch <> INVALID_HANDLE_VALUE then

@@ -99,7 +99,7 @@ function OnCommand_FileOpen( _
         ' Save the folder where this file was opened from into the gApp.wszLastOpenFolder
         ' variable so that subsequent uses of the File Open dialog will default to this folder.
         if i = lbound(AllFilenames) then 
-            gApp.wszLastOpenFolder = AfxStrPathName( "PATH", AllFilenames(i) )
+            gApp.wszLastOpenFolder = PsPathDirWithSep(AllFilenames(i) )
         end if
 
         ' Test to see if the file is already loaded in the editor. if it is, then
@@ -271,9 +271,9 @@ function OnCommand_FileRename( _
         end if
         ' If we are trying to rename and overwrite an existing file (we would have already gotten
         ' the popup message warning to replace the file), then we need to delete that file first 
-        ' otherwise the AfxRenameFile will fail.
-        if AfxFileExists(wszFilename) then AfxDeleteFile(wszFilename)
-        if AfxRenameFile( wszFilename_original, wszFilename ) then
+        ' otherwise the PsFileRename will fail.
+        if PsFileExists(wszFilename) then PsFileDelete(wszFilename)
+        if PsFileRename( wszFilename_original, wszFilename ) then
             pDoc->DiskFilename = wszFilename
         end if    
 
@@ -309,11 +309,11 @@ function OnCommand_FileDuplicate( _
     do
         nextFileNum += 1
         wszFilename = _
-            AfxStrPathName( "PATH", pDoc->DiskFilename ) & _
-            AfxStrPathName( "NAME", pDoc->DiskFilename ) & _
+            PsPathDirWithSep(pDoc->DiskFilename ) & _
+            PsPathStem(pDoc->DiskFilename ) & _
              "-" & str(nextFileNum) & _
-            AfxStrPathName( "EXTN", pDoc->DiskFilename )
-        if AfxFileExists( wszFilename ) = false then exit do
+            PsPathExt(pDoc->DiskFilename )
+        if PsFileExists( wszFilename ) = false then exit do
     loop    
     
     ' Encode the full Scintilla buffer through the single shared writer (same path as SaveFile).

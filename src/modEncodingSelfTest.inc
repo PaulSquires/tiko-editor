@@ -139,7 +139,7 @@ sub Encoding_RunSelfTest()
                 ENCASSERT( sRecovered = expectRecovered, _
                     encName & ": recovered buffer differs (len " & str(len(sRecovered)) & _
                     " vs " & str(len(expectRecovered)) & ") -- truncation/corruption on round-trip" )
-                AfxDeleteFile( sPath )
+                PsFileDelete( sPath )
             end if
         end scope
     #endmacro

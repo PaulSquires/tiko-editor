@@ -63,9 +63,9 @@ private function frmAbout_LicenseText( byval nWhich as long ) as DWSTRING
 
     dim as DWSTRING wszFile = iif( nWhich = LICPAGE_PROPRIETARY, _
                                    FRMABOUT_FILE_PROPRIETARY, FRMABOUT_FILE_GPL )
-    dim as DWSTRING wszPath = AfxGetExePathName & wszFile
+    dim as DWSTRING wszPath = PsExePath & wszFile
 
-    if AfxFileExists( wszPath ) then
+    if PsFileExists( wszPath ) then
         dim pStream as CTextStream
         if pStream.Open( wszPath ) = S_OK then
             dim as DWSTRING wszText = pStream.ReadAll
@@ -476,7 +476,7 @@ private sub frmAbout_PaintAboutPage( byval pb as PsBufferPaint ptr, byval rcBody
     dim as DWSTRING wszKey(2), wszVal(2)
     wszKey(0) = L(365,"Build date")      : wszVal(0) = __DATE_ISO__
     wszKey(1) = L(366,"Copyright")       : wszVal(1) = APPCOPYRIGHT
-    wszKey(2) = L(367,"Settings folder") : wszVal(2) = AfxGetExePathName & "settings"
+    wszKey(2) = L(367,"Settings folder") : wszVal(2) = PsExePath & "settings"
 
     for i as long = 0 to 2
         dim as RECT rcRow
@@ -999,10 +999,10 @@ private sub frmAbout_RunLayoutSelfTest( byval hwnd as HWND )
     ' and useless as evidence, because the dialog then looks fine while showing no licence
     ' at all. This is the assertion that can tell the difference.
     scope
-        dim as DWSTRING wszG = AfxGetExePathName & FRMABOUT_FILE_GPL
-        dim as DWSTRING wszP = AfxGetExePathName & FRMABOUT_FILE_PROPRIETARY
-        ABOUTASSERT( AfxFileExists( wszG ) <> 0, "LICENSE is not beside the executable" )
-        ABOUTASSERT( AfxFileExists( wszP ) <> 0, "LICENSE-PROPRIETARY.txt is not beside the executable" )
+        dim as DWSTRING wszG = PsExePath & FRMABOUT_FILE_GPL
+        dim as DWSTRING wszP = PsExePath & FRMABOUT_FILE_PROPRIETARY
+        ABOUTASSERT( PsFileExists( wszG ) <> 0, "LICENSE is not beside the executable" )
+        ABOUTASSERT( PsFileExists( wszP ) <> 0, "LICENSE-PROPRIETARY.txt is not beside the executable" )
 
         dim as DWSTRING wszTextG = frmAbout_LicenseText( LICPAGE_GPL )
         dim as DWSTRING wszTextP = frmAbout_LicenseText( LICPAGE_PROPRIETARY )

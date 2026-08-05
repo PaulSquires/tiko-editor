@@ -70,7 +70,7 @@ end function
 ' MSG_USER_PROCESS_CHECKFORUPDATE handler in frmMain, which no longer joins it immediately.
 '
 ' The reply is parsed IN MEMORY. It used to be written to
-' AfxGetExePathName & "tiko_version.txt" and read back, which was wrong three ways: the
+' PsExePath & "tiko_version.txt" and read back, which was wrong three ways: the
 ' program directory is not writable on a correctly installed copy, so the check simply
 ' failed there; the name was fixed and predictable, created with no exclusive-create, in a
 ' directory an attacker who can write to it controls; and the whole round trip existed to
@@ -132,7 +132,7 @@ sub DoCheckForUpdates( byval param as any ptr )
 'print "wszLatestVersion = "; wszLatestVersion
 'print "latestVersion: "; latestVersion, "installedVersion: "; installedVersion
 
-    ' (The two AfxDeleteFile calls that used to be here -- the same path, deleted twice --
+    ' (The two PsFileDelete calls that used to be here -- the same path, deleted twice --
     '  went with the temporary file. Nothing is written now.)
 
     if installedVersion < latestVersion then

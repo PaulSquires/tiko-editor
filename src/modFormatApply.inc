@@ -84,7 +84,7 @@ function Format_IsFormattableDocument( byval pDoc as clsDocument ptr ) as long
 
     if pDoc->IsNewFlag then return true
 
-    dim as string sExt = ucase( AfxStrPathname( "EXTN", pDoc->DiskFilename ) )
+    dim as string sExt = ucase( PsPathExt(pDoc->DiskFilename ) )
     select case sExt
         case ".BAS", ".INC", ".BI"
             return true

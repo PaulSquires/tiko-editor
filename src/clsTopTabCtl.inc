@@ -410,7 +410,7 @@ function clsTopTabCtl.SetTabText( byval idx as long ) as long
     if pDoc then
         ' Set the text that displays on the tab
         dim as DWSTRING wszOldText = this.GetTabText( idx )
-        dim as DWSTRING wszNewText = AfxStrPathname( "NAMEX", pDoc->DiskFilename )
+        dim as DWSTRING wszNewText = PsPathName(pDoc->DiskFilename )
             
         ' We only update the text if it has changed in order to prevent flicker.
         if wszNewText <> wszOldText then

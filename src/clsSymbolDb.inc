@@ -658,7 +658,7 @@ end function
 function clsSymbolDb.EnumUserFiles( results() as DWSTRING ) as long
     dim as DWSTRING wszInc
     if len( gConfig.FBWINCompiler64 ) then
-        wszInc = ucase( AfxStrPathname( "PATH", ProcessFromCurdriveApp( gConfig.FBWINCompiler64 ) ) & "inc" )
+        wszInc = ucase( PsPathDirWithSep(ProcessFromCurdriveApp( gConfig.FBWINCompiler64 ) ) & "inc" )
     end if
     dim as long cnt = 0
     redim results( 0 to 63 )
@@ -697,7 +697,7 @@ function clsSymbolDb.EnumAllProcsTypes( results() as SYMBOLREF, byval bUserFiles
     dim as long wantMask = SYMMASK_PROC or SYMMASK_TYPE
     dim as DWSTRING wszInc
     if bUserFilesOnly andalso (len( gConfig.FBWINCompiler64 ) > 0) then
-        wszInc = ucase( AfxStrPathname( "PATH", ProcessFromCurdriveApp( gConfig.FBWINCompiler64 ) ) & "inc" )
+        wszInc = ucase( PsPathDirWithSep(ProcessFromCurdriveApp( gConfig.FBWINCompiler64 ) ) & "inc" )
     end if
 
     for pass as long = 0 to 1
@@ -812,7 +812,7 @@ end function
 
 function clsSymbolDb.ToolchainIncludeRoot() as DWSTRING
     if len( gConfig.FBWINCompiler64 ) = 0 then return ""
-    return ucase( AfxStrPathname( "PATH", ProcessFromCurdriveApp( gConfig.FBWINCompiler64 ) ) & "inc" )
+    return ucase( PsPathDirWithSep(ProcessFromCurdriveApp( gConfig.FBWINCompiler64 ) ) & "inc" )
 end function
 
 function clsSymbolDb.SymLine( byval r as SYMBOLREF ) as long

@@ -891,8 +891,8 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
 
     ' Name, then the match count, then the directory in the dimmer line-number colour. Drawn
     ' in that order because the count must not be pushed off the right by a long path.
-    dim as DWSTRING wszName  = AfxStrPathname( "NAMEX", gFip.groups(r.nGroup).wszFile )
-    dim as DWSTRING wszDir   = AfxStrPathname( "PATH",  gFip.groups(r.nGroup).wszFile )
+    dim as DWSTRING wszName  = PsPathName(gFip.groups(r.nGroup).wszFile )
+    dim as DWSTRING wszDir   = PsPathDirWithSep(gFip.groups(r.nGroup).wszFile )
     dim as DWSTRING wszCount = "(" & str( gFip.groups(r.nGroup).nMatchCount ) & ")"
 
     dim as RECT rcText = rc
