@@ -365,3 +365,44 @@ end function
 private function PsText(byref w as const wstring) as string
     return str(w)
 end function
+
+'' ===========================================================================
+'' PsEncoding and the safe writer.
+''
+'' Same rule as everything above: these forward to the Win32 implementation the
+'' save path already used, so THIS COMMIT CHANGES NOTHING and the encoding and
+'' save self-tests stay able to attribute any movement to a mistake.
+''
+'' What it changes is the VOCABULARY of the WRITER: Doc_WriteToDisk no longer
+'' names CFileStream, ReplaceFileW or MoveFileExW -- it names PsFileWriteAll and
+'' PsFileReplace, which is what it will still name once those are PsCore's own.
+''
+'' ---- THE ENCODER IS NOT HERE, AND THAT IS A FINDING ----------------------
+''
+'' PsEncDecode/PsEncEncode shims were written, and reverted: the encoding
+'' self-test failed 14 assertions, "embedded NUL truncated" among them.
+''
+'' The wide payload BytesToWide produces is a RAW UTF-16 BYTE BUFFER whose
+'' length travels separately, and it may legitimately contain NUL code units.
+'' Routing it through AfxNova's DWSTRING loses everything past the first one,
+'' because its conversions are NUL-terminated.
+''
+'' PsCore's DWSTRING does not have that problem -- "length is authoritative,
+'' not the terminator" is rule 1 of its header. So the destination is right and
+'' only the shim is wrong, and the encoder waits for the type swap rather than
+'' being faked with the type that cannot carry it.
+'' ===========================================================================
+
+'' The functions themselves live in modEncoding.inc, beside the Win32
+'' primitives they wrap -- they cannot be here, because this file is included
+'' before those primitives are declared.
+
+'' Strict UTF-8 validation. tiko spelled this as MultiByteToWideChar with
+'' MB_ERR_INVALID_CHARS, which is a validator wearing a converter's clothes --
+'' it allocated nothing and threw the result away, and only the success flag
+'' was ever read. PsEncIsValidUtf8 says what it is.
+private function PsEncIsValidUtf8(byref sBytes as string) as boolean
+    if len(sBytes) = 0 then return false
+    return (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, _
+                                strptr(sBytes), len(sBytes), NULL, 0) <> 0)
+end function

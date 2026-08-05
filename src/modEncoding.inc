@@ -96,6 +96,39 @@ function Doc_EncodingName( byval nEnc as long ) as DWSTRING
 end function
 
 
+' ---------------------------------------------------------------------------
+' The writer. PsFileWriteAll verifies EVERY byte landed -- a short write is a
+' full disk, and reporting success for one is how a truncated file reaches the
+' user looking saved.
+' ---------------------------------------------------------------------------
+private function PsFileWriteAll(byref wszPath as wstring, byref sBytes as string) as boolean
+    dim pStream as CFileStream
+    if pStream.Open(wszPath, STGM_CREATE or STGM_WRITE) <> S_OK then return false
+
+    ' An empty document is a legal save. CFileStream.Write rejects a null pv
+    ' with E_INVALIDARG, and STRPTR of a zero-length string may well be null,
+    ' so the zero-byte case skips the call rather than failing on it.
+    if len(sBytes) = 0 then return true
+
+    dim as ulong cbWrote = pStream.Write(strptr(sBytes), len(sBytes))
+    return (cbWrote = culng(len(sBytes)))
+end function
+
+' Atomic replace. ReplaceFileW first, because it carries the destination's
+' ACLs, alternate data streams, creation time and object id across; it refuses
+' a destination that does not exist, which is every Save As and every new file,
+' hence the MoveFileExW fallback rather than an error.
+private function PsFileReplace(byref wszFrom as wstring, byref wszTo as wstring) as boolean
+    if AfxFileExists(wszTo) then
+        if ReplaceFileW(wszTo, wszFrom, 0, REPLACEFILE_IGNORE_MERGE_ERRORS, 0, 0) <> 0 then
+            return true
+        end if
+    end if
+    return (MoveFileExW(wszFrom, wszTo, _
+                        MOVEFILE_REPLACE_EXISTING or MOVEFILE_WRITE_THROUGH) <> 0)
+end function
+
+
 ' ========================================================================================
 ' Produce the exact bytes to write to disk for a document, BOM included.
 '
@@ -109,10 +142,30 @@ end function
 ' clsDocument.SaveFile / SaveTempFile and frmMainFile's duplicate-file path all share; it
 ' is also what the Tier-A self-test drives directly.
 '
-' Note UTF-16 does NOT go through DWSTRING: the wide buffer BytesToWide produced already IS
-' the UTF-16LE payload, and its byte length is code-units * 2. The old code handed
-' DWSTRING.m_BufferLen (a COUNT OF UTF-16 CHARACTERS) to CFileStream.Write's BYTE-count
-' parameter, writing exactly half the file and truncating every UTF-16 save mid-character.
+' ---- STILL ON THE WIN32 PRIMITIVES, AND HERE IS WHY -------------------------------------
+'
+' This was rewritten onto PsEncDecode/PsEncEncode and reverted, because the encoding
+' self-test failed 14 assertions -- "embedded NUL truncated: length 0 <> 5" among them.
+'
+' The intermediate representation is the whole problem. The wide payload BytesToWide
+' produces is a RAW UTF-16 BYTE BUFFER whose length is carried separately in nWide, and it
+' may legitimately contain NUL code units: a document with an embedded NUL is a document,
+' and the self-test asserts so. Routing it through AfxNova's DWSTRING loses that -- its
+' conversions are NUL-terminated -- so the buffer came back empty or truncated.
+'
+' PsCore's DWSTRING does NOT have that problem: "length is authoritative, not the
+' terminator" is rule 1 of its header, written after exactly this class of bug. So the
+' port is correct in the destination and wrong only in the shim, and the right move is to
+' wait for the type swap rather than to fake it with the type that cannot do it.
+'
+' The ANSI codepage question waits with it. PsEncoding is CP-1252 always, where this is
+' CP_ACP; identical on a Western Windows install, different on a Shift-JIS or GBK machine.
+' That is the documented price of determinism -- Linux has no CP_ACP to ask -- and it
+' deserves its own commit rather than a footnote in this one.
+'
+' Note the UTF-16 case below: the wide buffer's byte length is code-units * 2. Passing the
+' CHARACTER count to a byte-count parameter is what once truncated every UTF-16 save in
+' half, which is the other reason this function keeps its two separate lengths in view.
 ' ========================================================================================
 function Doc_EncodeForDisk( _
             byref sBuffer as string, _
@@ -142,7 +195,6 @@ function Doc_EncodeForDisk( _
         case else
             return WideToUtf8( sWide, nWide )
     end select
-
 end function
 
 
@@ -193,12 +245,16 @@ end function
 ' swap succeeds the original is untouched, so every failure above leaves the user exactly
 ' where they started.
 '
-' ReplaceFileW rather than delete-then-rename: it preserves the target's ACLs, its
-' alternate data streams, its creation time and its object id, which a delete throws away.
-' It requires the replacement to be on the SAME VOLUME, which is why the temp file is put
-' in the target's own directory and not in %TEMP%. MoveFileExW is the fallback for the
-' cases ReplaceFileW refuses (notably: the target does not exist yet, which is every
-' Save As and every new file).
+' NOW WRITTEN IN PsCore's VOCABULARY. The order and the guarantees are unchanged -- this
+' function was already correct, and porting it was never about fixing it. What changed is
+' that it no longer NAMES CreateFileW, ReplaceFileW or MoveFileExW: it says PsFileWriteAll
+' and PsFileReplace, which is what it will still say once those are PsCore's own
+' implementations rather than the shims in PsCompat.bi.
+'
+' PsFileReplace keeps the same two-step preference for the same reason the Win32 code had
+' it: a replace carries the target's ACLs, alternate data streams, creation time and
+' object id across, and refuses outright when the target does not exist -- which is every
+' Save As and every new file, hence the atomic-move fallback.
 ' ========================================================================================
 function Doc_WriteToDisk( _
             byval wszPath as DWSTRING, _
@@ -212,57 +268,26 @@ function Doc_WriteToDisk( _
         return DOCWRITE_FAILED
     end if
 
-    ' The temp file MUST be a sibling of the target: ReplaceFileW and an atomic
-    ' MoveFileExW both require one volume, and %TEMP% is frequently on another.
+    ' The temp file MUST be a sibling of the target: an atomic replace requires one
+    ' volume, and %TEMP% is frequently on another.
     dim as DWSTRING wszTemp = wszPath & ".tiko-tmp"
     if PsFileExists( wszTemp ) then PsFileDelete( wszTemp )
 
-    dim as boolean bWritten = false
-    scope
-        dim pStream as CFileStream
-        if pStream.Open( wszTemp, STGM_CREATE or STGM_WRITE ) <> S_OK then
-            wszErr = Win32ErrorText( GetLastError() )
-            if PsLen( wszErr ) = 0 then wszErr = "Could not create the temporary file."
-            return DOCWRITE_FAILED
-        end if
-
-        ' An empty document is a legal save. CFileStream.Write rejects a null pv with
-        ' E_INVALIDARG, and STRPTR of a zero-length FB string may well be null, so the
-        ' zero-byte case must skip the call rather than "fail" on it.
-        if len( sBytes ) = 0 then
-            bWritten = true
-        else
-            dim as ulong cbWrote = pStream.Write( strptr(sBytes), len(sBytes) )
-            bWritten = ( cbWrote = culng(len(sBytes)) )
-            if bWritten = false then
-                wszErr = "Wrote " & cbWrote & " of " & len(sBytes) & " bytes (disk full?)."
-            end if
-        end if
-        ' Close releases the IStream, which is what flushes it. It has to happen before
-        ' the swap below, so the scope ends here rather than at the end of the function.
-    end scope
-
-    if bWritten = false then
+    ' PsFileWriteAll verifies that EVERY byte landed. A short write is a full disk, and
+    ' reporting success for one is how a truncated file reaches the user looking saved.
+    if PsFileWriteAll( wszTemp, sBytes ) = false then
+        wszErr = Win32ErrorText( GetLastError() )
+        if PsLen( wszErr ) = 0 then wszErr = "Could not write the temporary file."
         PsFileDelete( wszTemp )
         return DOCWRITE_FAILED
     end if
 
     ' ---- the swap ----------------------------------------------------------------------
-    dim as boolean bSwapped = false
-    if PsFileExists( wszPath ) then
-        bSwapped = ( ReplaceFileW( wszPath, wszTemp, 0, _
-                                   REPLACEFILE_IGNORE_MERGE_ERRORS, 0, 0 ) <> 0 )
-    end if
-    if bSwapped = false then
-        ' Either the target did not exist (the common Save As / new-file case, which
-        ' ReplaceFileW refuses outright) or ReplaceFileW declined it. MoveFileExW with
-        ' REPLACE_EXISTING is still atomic on NTFS; it simply does not carry the
-        ' target's metadata across.
-        bSwapped = ( MoveFileExW( wszTemp, wszPath, _
-                                  MOVEFILE_REPLACE_EXISTING or MOVEFILE_WRITE_THROUGH ) <> 0 )
-    end if
-
-    if bSwapped = false then
+    ' Until this succeeds the original is untouched, so every failure above leaves the user
+    ' exactly where they started. PsFileReplace prefers a replace that carries the target's
+    ' ACLs, streams, creation time and object id across, and falls back to an atomic move
+    ' for the case a replace refuses -- the target not existing, which is every Save As.
+    if PsFileReplace( wszTemp, wszPath ) = false then
         wszErr = Win32ErrorText( GetLastError() )
         if PsLen( wszErr ) = 0 then wszErr = "Could not replace the existing file."
         PsFileDelete( wszTemp )     ' never leave a stray .tiko-tmp behind
@@ -394,13 +419,5 @@ function isUTF8encoded( byref s as string ) as boolean
         if asc(s,1)=&hEF and asc(s,2)=&hBB and asc(s,3)=&hBF then return true
     end if
 
-    dim as long wlen = MultiByteToWideChar( _
-        CP_UTF8, _
-        MB_ERR_INVALID_CHARS, _   ' strict validation
-        strptr(s), _
-        len(s), _
-        NULL, _
-        0)
-
-    return (wlen <> 0)
+    return PsEncIsValidUtf8( s )
 end function
