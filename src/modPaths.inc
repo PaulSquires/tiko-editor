@@ -87,11 +87,11 @@ function ProcessToCurdriveApp( byval wszFilename as DWSTRING ) as DWSTRING
     ' drive letter.
     dim as DWSTRING wszText = PsExePath
 
-    dim wszCurDrive as DWSTRING = lcase(PsLeft(wszText, 3))  ' eg. D:\
+    dim wszCurDrive as DWSTRING = PsLCase(PsLeft(wszText, 3))  ' eg. D:\
 
     ' if the incoming filename is a relative file name then the following test
     ' will have no effect.
-    if lcase(PsLeft(wszFilename, 3)) = wszCurDrive then 
+    if PsLCase(PsLeft(wszFilename, 3)) = wszCurDrive then 
         wszFilename = wstr("{CURDRIVE}") & PsMid(wszFilename, 2)
     end if
 
@@ -110,7 +110,7 @@ function ProcessFromCurdriveApp( byval wszFilename as DWSTRING ) as DWSTRING
     ' drive letter.
     dim as DWSTRING wszText = PsExePath
 
-    if ucase(PsLeft(wszFilename, 10)) = wstr("{CURDRIVE}") then 
+    if PsUCase(PsLeft(wszFilename, 10)) = wstr("{CURDRIVE}") then 
         wszFilename = PsLeft(wszText, 1) & PsMid(wszFilename, 11)
     end if
 
@@ -129,11 +129,11 @@ function ProcessToCurdriveProject( byval wszFilename as DWSTRING ) as DWSTRING
     ' drive letter.
     dim wszText as DWSTRING = gApp.ProjectFilename
 
-    dim wszCurDrive as DWSTRING = lcase(PsLeft(wszText, 3))  ' eg. D:\
+    dim wszCurDrive as DWSTRING = PsLCase(PsLeft(wszText, 3))  ' eg. D:\
 
     ' if the incoming filename is a relative file name then the following test
     ' will have no effect.
-    if lcase(PsLeft(wszFilename, 3)) = wszCurDrive then 
+    if PsLCase(PsLeft(wszFilename, 3)) = wszCurDrive then 
         wszFilename = wstr("{CURDRIVE}") & PsMid(wszFilename, 2)
     end if
 
@@ -152,7 +152,7 @@ function ProcessFromCurdriveProject( byval wszFilename as DWSTRING ) as DWSTRING
     ' drive letter.
     dim wszText as DWSTRING = gApp.ProjectFilename
     
-    if ucase(PsLeft(wszFilename, 10)) = wstr("{CURDRIVE}") then 
+    if PsUCase(PsLeft(wszFilename, 10)) = wstr("{CURDRIVE}") then 
         wszFilename = PsLeft(wszText, 1) & PsMid(wszFilename, 11)
     end if
 

@@ -78,7 +78,7 @@ end function
 ' ========================================================================================
 function NavHistory_AppendEntry( byref e as NAVHISTORY_ENTRY ) as boolean
 
-    if len(e.wszFilename) = 0 then exit function
+    if PsLen(e.wszFilename) = 0 then exit function
 
     ' A new navigation kills whatever we could previously have gone Forward to.
     if gNavCursor < ubound(gNavEntries) then
@@ -93,7 +93,7 @@ function NavHistory_AppendEntry( byref e as NAVHISTORY_ENTRY ) as boolean
     ' repeated Find Next presses, or three edits on one line, filling the history with
     ' near-identical entries.
     if gNavCursor >= 0 then
-        dim as boolean bSameFile = ( ucase(gNavEntries(gNavCursor).wszFilename) = ucase(e.wszFilename) )
+        dim as boolean bSameFile = ( PsUCase(gNavEntries(gNavCursor).wszFilename) = PsUCase(e.wszFilename) )
         if bSameFile andalso ( gNavEntries(gNavCursor).nLine = e.nLine ) then
             gNavEntries(gNavCursor) = e
             exit function
@@ -200,7 +200,7 @@ sub NavHistory_RefreshCurrent()
     dim as NAVHISTORY_ENTRY e
     if NavHistory_CaptureLive( e ) = false then exit sub
 
-    if ucase(gNavEntries(gNavCursor).wszFilename) = ucase(e.wszFilename) then
+    if PsUCase(gNavEntries(gNavCursor).wszFilename) = PsUCase(e.wszFilename) then
         gNavEntries(gNavCursor) = e
     end if
 end sub
@@ -264,7 +264,7 @@ sub NavHistory_NoteEdit( byval pDoc as clsDocument ptr )
 
     ' Moved to a different edit location: the previous one is now history.
     if gNavPendingActive then
-        dim as boolean bSameFile = ( ucase(gNavPending.wszFilename) = ucase(pDoc->DiskFilename) )
+        dim as boolean bSameFile = ( PsUCase(gNavPending.wszFilename) = ucase(pDoc->DiskFilename) )
         if ( bSameFile = false ) orelse ( gNavPending.nLine <> nLine ) then
             NavHistory_FlushPendingEdit()
         end if
@@ -294,7 +294,7 @@ sub NavHistory_CheckPendingEdit( byval pDoc as clsDocument ptr )
     dim as long nPosition = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0 )
     dim as long nLine     = SciExec( hEdit, SCI_LINEFROMPOSITION, nPosition, 0 )
 
-    dim as boolean bSameFile = ( ucase(gNavPending.wszFilename) = ucase(pDoc->DiskFilename) )
+    dim as boolean bSameFile = ( PsUCase(gNavPending.wszFilename) = ucase(pDoc->DiskFilename) )
     if ( bSameFile = false ) orelse ( gNavPending.nLine <> nLine ) then
         NavHistory_FlushPendingEdit()
     end if

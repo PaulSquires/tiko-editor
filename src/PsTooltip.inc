@@ -454,7 +454,7 @@ sub PSTOOLTIP.LayoutTooltip()
 
     dim as RECT rcCalc
     dim as long nTextW = 0, nTextH = 0
-    if len( this.wszTipBuf ) then
+    if PsLen( this.wszTipBuf ) then
         SetRect( @rcCalc, 0, 0, nWrapW, 0 )
         DrawText( hDC, this.wszTipBuf.vptr, -1, cast(lpRect, @rcCalc), dwFlags or DT_CALCRECT )
         nTextW = rcCalc.right - rcCalc.left
@@ -462,7 +462,7 @@ sub PSTOOLTIP.LayoutTooltip()
     end if
 
     dim as long nTitleW = 0, nTitleH = 0
-    if len( this.wszTitle ) then
+    if PsLen( this.wszTitle ) then
         SelectObject( hDC, hTitleUse )
         SetRect( @rcCalc, 0, 0, 0, 0 )
         DrawText( hDC, this.wszTitle.vptr, -1, cast(lpRect, @rcCalc), _
@@ -478,7 +478,7 @@ sub PSTOOLTIP.LayoutTooltip()
     ' space the icon gets, so a glyph that is missing from the font (or is a different size
     ' from the last one) cannot move the layout underneath the text.
     dim as long nGlyphW = 0, nGlyphH = 0
-    if len( this.wszGlyph ) then
+    if PsLen( this.wszGlyph ) then
         nGlyphW = this.nGlyphCell
         nGlyphH = this.nGlyphCell
     end if
@@ -595,7 +595,7 @@ end sub
 ' ========================================================================================
 private function TIP_ResolveText( byval pTip as PSTOOLTIP ptr ) as DWSTRING
     if pTip = 0 then return ""
-    if len( pTip->wszText ) then
+    if PsLen( pTip->wszText ) then
         dim as DWSTRING wszOut = pTip->wszText
         return wszOut
     end if
@@ -614,7 +614,7 @@ end function
 ' answer comes back empty.
 private function TIP_HasText( byval pTip as PSTOOLTIP ptr ) as boolean
     if pTip = 0 then return false
-    if len( pTip->wszText ) then return true
+    if PsLen( pTip->wszText ) then return true
     if pTip->TooltipCallback then return true
     return false
 end function
@@ -680,7 +680,7 @@ private sub TIP_DefaultRender( byval pTip as PSTOOLTIP ptr, byval p as PSTOOLTIP
     dim as HFONT hGlyphUse = pTip->hGlyphFont
     if hGlyphUse = 0 then hGlyphUse = hTextUse
 
-    if len( p->wszGlyph ) then
+    if PsLen( p->wszGlyph ) then
         if IsRectEmpty( @p->rcGlyph ) = 0 then
             b->SetFont( hGlyphUse )
             b->SetForeColor( pTip->colors.GlyphColor )
@@ -688,7 +688,7 @@ private sub TIP_DefaultRender( byval pTip as PSTOOLTIP ptr, byval p as PSTOOLTIP
         end if
     end if
 
-    if len( p->wszTitle ) then
+    if PsLen( p->wszTitle ) then
         if IsRectEmpty( @p->rcTitle ) = 0 then
             b->SetFont( hTitleUse )
             b->SetForeColor( pTip->colors.TitleColor )
@@ -696,7 +696,7 @@ private sub TIP_DefaultRender( byval pTip as PSTOOLTIP ptr, byval p as PSTOOLTIP
         end if
     end if
 
-    if len( p->wszText ) then
+    if PsLen( p->wszText ) then
         if IsRectEmpty( @p->rcText ) = 0 then
             b->SetFont( hTextUse )
             b->SetForeColor( pTip->colors.ForeColor )
@@ -872,7 +872,7 @@ function TIP_ShowCore( byval pTip as PSTOOLTIP ptr, byval rcAnchor as RECT, byva
     ' Pull the text NOW -- this is the one place the host callback runs, and it runs only when
     ' a tip is genuinely about to appear.
     pTip->wszTipBuf = TIP_ResolveText( pTip )
-    if len( pTip->wszTipBuf ) = 0 then
+    if PsLen( pTip->wszTipBuf ) = 0 then
         if pTip->bVisible then TIP_HideCore( pTip, false )
         return false
     end if
@@ -1705,7 +1705,7 @@ function PsTooltip_GetSystemFont( byref info as PSTOOLTIP_SYSTEMFONT ) as boolea
     ' partial fill on the failure path would hand back a face with no size (or a size with no
     ' face) to a caller that only checked the return value -- and the fallback it was about to
     ' choose is exactly what it should get instead.
-    if len( got.wszFaceName ) = 0 then return false
+    if PsLen( got.wszFaceName ) = 0 then return false
     if got.pointSize <= 0 then return false
 
     info = got
@@ -1793,7 +1793,7 @@ sub PsTooltip_GetIdealSize( byval hTooltip as HWND, byref nW as long, byref nH a
     if pTip = 0 then exit sub
     ' Force the pending layout. An assertion that reads DERIVED state must force the
     ' derivation first, or it reads the previous text's numbers (Learnings.md, PsDatePicker).
-    if len( pTip->wszTipBuf ) = 0 then pTip->wszTipBuf = TIP_ResolveText( pTip )
+    if PsLen( pTip->wszTipBuf ) = 0 then pTip->wszTipBuf = TIP_ResolveText( pTip )
     if pTip->bLayoutDirty then pTip->LayoutTooltip()
     nW = pTip->nIdealW
     nH = pTip->nIdealH

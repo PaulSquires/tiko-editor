@@ -100,7 +100,7 @@ function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval
     if gConfig.Tools(nToolNum).IsMinimized then nWndStyle = SW_SHOWMINNOACTIVE
 
     ' Prepare the command line based on any substitute parameters
-    if len(gConfig.Tools(nToolNum).wszParameters) then
+    if PsLen(gConfig.Tools(nToolNum).wszParameters) then
 
         pDocCurrent = gTTabCtl.GetActiveDocumentPtr()
 
@@ -129,13 +129,13 @@ function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval
                 wszExeName = PsPathDirWithSep(pDocMain->DiskFilename) + _
                                 PsPathStem(pDocMain->DiskFilename) + _
                                 ".exe"
-                if instr(ucase(gConfig.Builds(idxBuild).wszOptions), " -DLL") orelse _
-                    instr(ucase(gConfig.Builds(idxBuild).wszOptions), " -DYLIB") then
+                if instr(PsUCase(gConfig.Builds(idxBuild).wszOptions), " -DLL") orelse _
+                    instr(PsUCase(gConfig.Builds(idxBuild).wszOptions), " -DYLIB") then
                     wszExeName = PsPathDirWithSep(pDocMain->DiskFilename) + _
                                 PsPathStem(pDocMain->DiskFilename) + _
                                 ".dll"
                 end if
-                if instr(ucase(gConfig.Builds(idxBuild).wszOptions), " -LIB") then
+                if instr(PsUCase(gConfig.Builds(idxBuild).wszOptions), " -LIB") then
                     wszExeName = PsPathDirWithSep(pDocMain->DiskFilename) + _
                                 PsPathStem(pDocMain->DiskFilename) + _
                                 ".a"
@@ -227,7 +227,7 @@ function createToolsMenuShortcut( byval nCtrlID as long ) as DWSTRING
     if gConfig.Tools(nCtrlID).IsCtrl then wszShortcut = "Ctrl+"
     if gConfig.Tools(nCtrlID).IsShift then wszShortcut = wszShortcut + "Shift+"
     if gConfig.Tools(nCtrlID).IsAlt then wszShortcut = wszShortcut + "Alt+"
-    wszShortcut = Trim(wszShortcut + ucase(trim(gConfig.Tools(nCtrlID).wszKey)), any " +")
+    wszShortcut = Trim(wszShortcut + ucase(PsTrim(gConfig.Tools(nCtrlID).wszKey)), any " +")
 
     return wszShortcut
 end function
@@ -291,7 +291,7 @@ end Function
 function frmUserTools_ShortcutText( byval idx as long ) as DWSTRING
     if (idx < lbound(gToolsWork)) orelse (idx > ubound(gToolsWork)) then return ""
 
-    dim as DWSTRING wszKey = trim(gToolsWork(idx).wszKey)
+    dim as DWSTRING wszKey = PsTrim(gToolsWork(idx).wszKey)
     ' "None" is the pick-list AFFORDANCE the previous dialog persisted, not a key. Treated as
     ' no shortcut here, and NOT as a dead one -- see frmUserTools_ShortcutIsDead.
     if PsLen(wszKey) = 0 then return ""
@@ -322,7 +322,7 @@ end function
 ' ========================================================================================
 function frmUserTools_ShortcutIsDead( byval idx as long ) as boolean
     if (idx < lbound(gToolsWork)) orelse (idx > ubound(gToolsWork)) then return false
-    dim as DWSTRING wszKey = trim(gToolsWork(idx).wszKey)
+    dim as DWSTRING wszKey = PsTrim(gToolsWork(idx).wszKey)
     if PsLen(wszKey) = 0 then return false
     if PsUCase(wszKey) = "NONE" then return false
     return iif( KeyBindings_PickListKeyToValue( wszKey ) = 0, true, false )
@@ -343,7 +343,7 @@ end function
 ' ========================================================================================
 private function frmUserTools_ShortcutClash( byval idx as long ) as DWSTRING
     if (idx < lbound(gToolsWork)) orelse (idx > ubound(gToolsWork)) then return ""
-    dim as DWSTRING wszKey = trim(gToolsWork(idx).wszKey)
+    dim as DWSTRING wszKey = PsTrim(gToolsWork(idx).wszKey)
     if PsLen(wszKey) = 0 then return ""
     if PsUCase(wszKey) = "NONE" then return ""
     return frmAssignKey_ClashText( wszKey, _
@@ -1366,14 +1366,14 @@ sub frmUserTools_RunSelfTest()
     dim as DWSTRING wszLiveKeys, wszLiveOwner
     for i as long = lbound(gKeys) to ubound(gKeys)
         dim as DWSTRING wszEff
-        if len(gKeys(i).wszUserKeys) then
+        if PsLen(gKeys(i).wszUserKeys) then
             wszEff = gKeys(i).wszUserKeys
         elseif gKeys(i).bDefaultDisabled = false then
             wszEff = gKeys(i).wszDefaultKeys
         end if
         ' A single-modifier binding, so the parts are unambiguous to reconstruct below.
-        if left(PsUCase(wszEff),5) = "CTRL+" then
-            if instr(mid(PsUCase(wszEff),6), "+") = 0 then
+        if PsLeft(PsUCase(wszEff),5) = "CTRL+" then
+            if PsInStr(PsMid(PsUCase(wszEff),6), "+") = 0 then
                 wszLiveKeys  = PsMid(wszEff, 6)
                 wszLiveOwner = gKeys(i).wszDescription
                 exit for

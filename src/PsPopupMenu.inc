@@ -56,13 +56,13 @@ sub PSPOPUPMENU.LayoutItems()
     for i as long = 0 to this.itemCount - 1
         if this.items(i).isSeparator then continue for
         dim as SIZE sz
-        dim as long nChars = len( this.items(i).wszCaption )
+        dim as long nChars = PsLen( this.items(i).wszCaption )
         if nChars > 0 then
             if GetTextExtentPoint32W( hDC, this.items(i).wszCaption.vptr, nChars, @sz ) then
                 if sz.cx > maxCaptionW then maxCaptionW = sz.cx
             end if
         end if
-        nChars = len( this.items(i).wszAccel )
+        nChars = PsLen( this.items(i).wszAccel )
         if nChars > 0 then
             bHasAccel = true
             if GetTextExtentPoint32W( hDC, this.items(i).wszAccel.vptr, nChars, @sz ) then
@@ -548,7 +548,7 @@ private sub PM_DefaultPaintItem( byval pThis as PSPOPUPMENU ptr, byval p as PSPO
 
     b->SetFont( pThis->hTextFont )
     b->PaintText( p->wszCaption, @p->rcText, DT_LEFT )
-    if len( p->wszAccel ) then b->PaintText( p->wszAccel, @p->rcText, DT_RIGHT )
+    if PsLen( p->wszAccel ) then b->PaintText( p->wszAccel, @p->rcText, DT_RIGHT )
 
     if p->hasSubMenu then
         b->SetFont( hGlyphUse )

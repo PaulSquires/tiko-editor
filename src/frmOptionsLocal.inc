@@ -172,7 +172,7 @@ function frmOptionsLocal_LocalEditCheck() as long
     dim as DWSTRING wszTemp, wszPhrase
 
     ' Never write over the English reference file.
-    if ucase(trim(PsPathName(wszFilename ))) = "ENGLISH.LANG" then exit function
+    if ucase(PsTrim(PsPathName(wszFilename ))) = "ENGLISH.LANG" then exit function
     ' No edit target, no write. Defensive: an empty name would leave wszFileName pointing at
     ' the languages FOLDER, and the first thing below it does is PsFileDelete.
     if PsLen(wszLocalName) = 0 then exit function
@@ -186,7 +186,7 @@ function frmOptionsLocal_LocalEditCheck() as long
     if pStream.OpenForOutputW(wszFilename, true) = S_OK then
 
         wszTemp = _
-        "' Localization file for " & ucase(PsPathStem(wszLocalName)) & " language" & vbcrlf & _
+        "' Localization file for " & PsUCase(PsPathStem(wszLocalName)) & " language" & vbcrlf & _
         "'" & vbcrlf & _
         "' The first element to exist must be called MAXIMUM and needs to be set to" & vbcrlf & _
         "' the value of the last key in this file." & vbcrlf & _
@@ -351,7 +351,7 @@ private function frmOptionsLocal_LoadLanguages() as long
             ' also returns names that merely START with .lang -- the same reason frmThemes and
             ' frmOptionsCompiler filter in code.
             dim as boolean bDir = ((WFD.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY) <> 0)
-            dim as boolean bLang = (ucase(PsPathExt(wszFile )) = ".LANG")
+            dim as boolean bLang = (PsUCase(PsPathExt(wszFile )) = ".LANG")
             if (bDir = false) andalso (bLang = true) then
                 dim as long idx = PsListTree_AddString( ghLocalLanguages, frmOptionsLocal_PrettyName( wszFile ) )
                 if idx >= 0 then

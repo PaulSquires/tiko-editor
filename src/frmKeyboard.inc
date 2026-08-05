@@ -195,7 +195,7 @@ sub frmKeyboard_RunSelfTest()
                     bDisabled = true
                     wszMsg = PsLeft(wszMsg, p - 1)
                 end if
-                dim as DWSTRING wszUser = trim(PsStrParse(wst, 2, ":"))
+                dim as DWSTRING wszUser = PsTrim(PsStrParse(wst, 2, ":"))
 
                 for i as long = lbound(gKeys) to ubound(gKeys)
                     if gKeys(i).wszMsgString = wszMsg then
@@ -232,7 +232,7 @@ end sub
 ' ========================================================================================
 private function frmKeyboard_EffectiveKeys( byval idx as long ) as DWSTRING
     if (idx < lbound(gKeysWork)) orelse (idx > ubound(gKeysWork)) then return ""
-    if len(gKeysWork(idx).wszUserKeys) then return gKeysWork(idx).wszUserKeys
+    if PsLen(gKeysWork(idx).wszUserKeys) then return gKeysWork(idx).wszUserKeys
     if gKeysWork(idx).bDefaultDisabled then return ""
     return gKeysWork(idx).wszDefaultKeys
 end function
@@ -311,10 +311,10 @@ private function frmKeyboard_RowMatchesFilter( byval idx as long ) as boolean
     if len(gKeysFilter) = 0 then return true
 
     dim as DWSTRING wszNeedle = ucase(gKeysFilter)
-    if instr( ucase(gKeysWork(idx).wszCategory), wszNeedle ) then return true
-    if instr( ucase(gKeysWork(idx).wszDescription), wszNeedle ) then return true
+    if instr( PsUCase(gKeysWork(idx).wszCategory), wszNeedle ) then return true
+    if instr( PsUCase(gKeysWork(idx).wszDescription), wszNeedle ) then return true
     if instr( ucase(frmKeyboard_DefaultKeysDisplay(idx)), wszNeedle ) then return true
-    if instr( ucase(gKeysWork(idx).wszUserKeys), wszNeedle ) then return true
+    if instr( PsUCase(gKeysWork(idx).wszUserKeys), wszNeedle ) then return true
 
     return false
 end function
@@ -366,7 +366,7 @@ private sub frmKeyboard_ListPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
     end if
     ' Hoisted into a boolean of its own: len() yields a long, and andalso-ing that with a
     ' boolean is fbc warning 38.
-    dim as boolean bHasUserKeys = (len(gKeysWork(idx).wszUserKeys) > 0)
+    dim as boolean bHasUserKeys = (PsLen(gKeysWork(idx).wszUserKeys) > 0)
 
     for i as integer = 0 to p->columnCount - 1
         dim as RECT rcText = p->cells[i].rc

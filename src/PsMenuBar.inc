@@ -54,7 +54,7 @@ sub PSMENUBAR.LayoutItems()
     dim as long x = rcClient.left
     for i as long = 0 to this.itemCount - 1
         dim as long textW = 0
-        dim as long nChars = len( this.items(i).wszText )
+        dim as long nChars = PsLen( this.items(i).wszText )
         if nChars > 0 then
             dim as SIZE sz
             if GetTextExtentPoint32W( hDC, this.items(i).wszText.vptr, nChars, @sz ) then

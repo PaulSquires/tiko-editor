@@ -130,7 +130,7 @@ function ProjectFolders_IsDescendantOf( byval wszPath as DWSTRING, byval wszAnce
 
     dim as DWSTRING wszPrefix = PsUCase(wszAncestor) + PROJECTFOLDER_SEP
     if PsLen(wszPath) <= PsLen(wszPrefix) then return false
-    if left( PsUCase(wszPath), PsLen(wszPrefix) ) = wszPrefix then return true
+    if PsLeft( PsUCase(wszPath), PsLen(wszPrefix) ) = wszPrefix then return true
     return false
 end function
 
@@ -193,7 +193,7 @@ function ProjectFolders_Find( byval catIndex as long, byval wszPath as DWSTRING 
     dim as DWSTRING wszWanted = PsUCase(wszPath)
     for i as long = lbound(gProjectFolders) to ubound(gProjectFolders)
         if gProjectFolders(i).catIndex = catIndex then
-            if ucase(gProjectFolders(i).wszPath) = wszWanted then return i
+            if PsUCase(gProjectFolders(i).wszPath) = wszWanted then return i
         end if
     next
     return -1
@@ -321,7 +321,7 @@ function ProjectFolders_Rebase( byval catIndex as long, byval wszOldPath as DWST
     dim pDoc as clsDocument ptr = gApp.pDocList
     do until pDoc = 0
         if pDoc->ProjectFiletype = gConfig.Cat(catIndex).idFileType then
-            if len(pDoc->docData.wszFolder) then
+            if PsLen(pDoc->docData.wszFolder) then
                 pDoc->docData.wszFolder = _
                     ProjectFolders_RebasePath( pDoc->docData.wszFolder, wszOldPath, wszNewPath )
             end if
@@ -344,11 +344,11 @@ function ProjectFolders_Rebase( byval catIndex as long, byval wszOldPath as DWST
     for i as long = ubound(gProjectFolders) to lbound(gProjectFolders) step -1
         if gProjectFolders(i).catIndex <> catIndex then continue for
         dim as boolean bDrop = false
-        if len(gProjectFolders(i).wszPath) = 0 then bDrop = true
+        if PsLen(gProjectFolders(i).wszPath) = 0 then bDrop = true
         if bDrop = false then
             for j as long = lbound(gProjectFolders) to i - 1
                 if gProjectFolders(j).catIndex <> catIndex then continue for
-                if ucase(gProjectFolders(j).wszPath) = ucase(gProjectFolders(i).wszPath) then
+                if PsUCase(gProjectFolders(j).wszPath) = PsUCase(gProjectFolders(i).wszPath) then
                     bDrop = true
                     exit for
                 end if
@@ -408,7 +408,7 @@ function ProjectFolders_MoveFolder( byval catFrom as long, byval wszPath as DWST
     dim pDoc as clsDocument ptr = gApp.pDocList
     do until pDoc = 0
         if pDoc->ProjectFiletype = gConfig.Cat(catFrom).idFileType then
-            if len(pDoc->docData.wszFolder) then
+            if PsLen(pDoc->docData.wszFolder) then
                 dim as DWSTRING wszWas = pDoc->docData.wszFolder
                 dim as boolean bInSubtree = false
                 if PsUCase(wszWas) = PsUCase(wszPath) then bInSubtree = true
@@ -442,11 +442,11 @@ function ProjectFolders_MoveFolder( byval catFrom as long, byval wszPath as DWST
     ' compaction cannot skip an entry.
     for i as long = ubound(gProjectFolders) to lbound(gProjectFolders) step -1
         dim as boolean bDrop = false
-        if len(gProjectFolders(i).wszPath) = 0 then bDrop = true
+        if PsLen(gProjectFolders(i).wszPath) = 0 then bDrop = true
         if bDrop = false then
             for j as long = lbound(gProjectFolders) to i - 1
                 if gProjectFolders(j).catIndex <> gProjectFolders(i).catIndex then continue for
-                if ucase(gProjectFolders(j).wszPath) = ucase(gProjectFolders(i).wszPath) then
+                if PsUCase(gProjectFolders(j).wszPath) = PsUCase(gProjectFolders(i).wszPath) then
                     bDrop = true
                     exit for
                 end if

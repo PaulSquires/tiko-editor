@@ -185,7 +185,7 @@ private function frmThemes_LoadThemes() as long
                 idx = ListBox_AddTabbedRow( ghThemesList, wszRow )
                 redim preserve gThemeFilenames(idx) as DWSTRING
                 gThemeFilenames(idx) = WFD.cFileName
-                if ucase(gConfig.ThemeShortFilename) = ucase(WFD.cFileName) then idxActive = idx
+                if PsUCase(gConfig.ThemeShortFilename) = ucase(WFD.cFileName) then idxActive = idx
             end if
         loop while FindNextFile( hSearch, @WFD )
         FindClose( hSearch )
@@ -207,7 +207,7 @@ private sub frmThemes_MarkActiveRow()
     if ghThemesList = 0 then exit sub
     PsListTree_BeginUpdate( ghThemesList )
     for i as long = lbound(gThemeFilenames) to ubound(gThemeFilenames)
-        dim as boolean bActive = (ucase(gThemeFilenames(i)) = ucase(gConfig.ThemeShortFilename))
+        dim as boolean bActive = (ucase(gThemeFilenames(i)) = PsUCase(gConfig.ThemeShortFilename))
         dim as DWSTRING wszMark = ""
         if bActive then wszMark = L(324,"Active")
         PsListTree_SetCellText( ghThemesList, i, THEMECOL_ACTIVE, wszMark )
@@ -679,7 +679,7 @@ private sub frmThemes_CloneClick( byval hButton as HWND, byval id as long )
     ' user browsed to) and force the .theme extension.
     dim as DWSTRING wszClone = PsPathName(*pwszName )
     CoTaskMemFree( pwszName )
-    if lcase( PsPathExt(wszClone ) ) <> "theme" then
+    if PsLCase( PsPathExt(wszClone ) ) <> "theme" then
         wszClone = PsPathStem(wszClone ) & ".theme"
     end if
     if PsUCase(wszClone) = PsUCase(wszSrc) then exit sub    ' would clobber the source
@@ -723,7 +723,7 @@ private sub frmThemes_DeleteClick( byval hButton as HWND, byval id as long )
         exit sub
     end if
 
-    dim as boolean bWasActive = (PsUCase(wszFile) = ucase(gConfig.ThemeShortFilename))
+    dim as boolean bWasActive = (PsUCase(wszFile) = PsUCase(gConfig.ThemeShortFilename))
     PsFileDelete( frmThemes_ThemesFolder() & wszFile )
     frmThemes_EnsureThemeExists()
 

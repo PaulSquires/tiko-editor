@@ -261,8 +261,8 @@ end function
 ''  Filenames are compared case-insensitively because Windows paths are.
 ''
 function clsApp.IsProjectNamed() as boolean
-    dim as boolean bHasFile  = ( len(this.ProjectFilename) > 0 )
-    dim as boolean bUntitled = ( ucase(this.ProjectFilename) = ucase(gConfig.UntitledProjectFilename) )
+    dim as boolean bHasFile  = ( PsLen(this.ProjectFilename) > 0 )
+    dim as boolean bUntitled = ( PsUCase(this.ProjectFilename) = PsUCase(gConfig.UntitledProjectFilename) )
     if bHasFile = false then return false
     if bUntitled then return false
     return true

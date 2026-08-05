@@ -347,19 +347,19 @@ end function
 ' len() checks because the layout, the painter and the ideal-size arithmetic must all agree
 ' about which parts exist, and three copies of `len(x) > 0` is three places to disagree.
 function PSBUTTON.HasText() as boolean
-    return (len( this.wszText ) > 0)
+    return (PsLen( this.wszText ) > 0)
 end function
 
 ' An icon cell is present when the side carries EITHER a glyph OR a valid image. Layout, painter
 ' and ideal-size arithmetic all read these, so the image has to count here or its cell is never
 ' reserved and PaintImage draws into an empty rect.
 function PSBUTTON.HasIconLeft() as boolean
-    if len( this.wszGlyphLeft ) > 0 then return true
+    if PsLen( this.wszGlyphLeft ) > 0 then return true
     return (this.pImageLeft <> 0) andalso (this.pImageLeft->IsValid() <> 0)
 end function
 
 function PSBUTTON.HasIconRight() as boolean
-    if len( this.wszGlyphRight ) > 0 then return true
+    if PsLen( this.wszGlyphRight ) > 0 then return true
     return (this.pImageRight <> 0) andalso (this.pImageRight->IsValid() <> 0)
 end function
 
@@ -457,7 +457,7 @@ sub PSBUTTON.LayoutButton()
 
     if bText then
         dim as SIZE sz
-        if GetTextExtentPoint32W( hDC, this.wszText.vptr, len( this.wszText ), @sz ) then
+        if GetTextExtentPoint32W( hDC, this.wszText.vptr, PsLen( this.wszText ), @sz ) then
             this.nTextWidth = sz.cx
         end if
     end if

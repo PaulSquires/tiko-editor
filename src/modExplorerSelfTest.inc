@@ -210,7 +210,7 @@ sub frmExplorer_RunSelfTest()
                 case EXPKIND_FOLDER
                     dim as long fi = PsListTree_GetItemData( HWND_FRMEXPLORER, i )
                     if (fi >= lbound(gProjectFolders)) andalso (fi <= ubound(gProjectFolders)) then
-                        select case ucase( gProjectFolders(fi).wszPath )
+                        select case PsUCase( gProjectFolders(fi).wszPath )
                             case "ALPHA":      nRowAlpha = i
                             case "ZETA":       nRowZeta  = i
                             case "ALPHA/DEEP": nRowDeep  = i
@@ -266,7 +266,7 @@ sub frmExplorer_RunSelfTest()
                 PsListTree_GetCount( HWND_FRMEXPLORER ) = nRowsBefore, _
                 "before=" & str(nRowsBefore) & " after=" & str(PsListTree_GetCount( HWND_FRMEXPLORER )) )
             Exp_Check( "an unresolvable folder is cleared from the document", _
-                len(pDocAny->docData.wszFolder) = 0, "folder=" & pDocAny->docData.wszFolder )
+                PsLen(pDocAny->docData.wszFolder) = 0, "folder=" & pDocAny->docData.wszFolder )
         else
             print "  NOTE  folder normalization not exercised: the workspace has no documents"
         end if

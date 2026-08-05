@@ -158,7 +158,7 @@ function frmOptions_SaveEditorOptions() as long
     ' for "the strings this session is using have changed" and stopped being one when editing
     ' and selecting became separate actions. Creating a new language, or fixing a typo in one
     ' the editor is not running in, changes nothing about this session and must not claim it does.
-    dim as boolean bLangSwitched = (ucase(gLocalCurrentFile) <> ucase(gConfig.LocalizationFile))
+    dim as boolean bLangSwitched = (ucase(gLocalCurrentFile) <> PsUCase(gConfig.LocalizationFile))
     if bLangSwitched orelse (gLocalSelectedEdited = true) then
         bChangesNextRun = true
     end if
@@ -1118,7 +1118,7 @@ private sub frmOptions_BuildNavList( byval hList as HWND )
     #macro NAVITEM( wszTitle, nPage )
         scope
             dim as DWSTRING wszT = (wszTitle)
-            if (len(sFilter) = 0) orelse (instr( PsLCase(wszT), sFilter ) > 0) then
+            if (len(sFilter) = 0) orelse (PsInStr( PsLCase(wszT), sFilter ) > 0) then
                 PsListTree_AddString( hList, wszT, (nPage) )
             end if
         end scope

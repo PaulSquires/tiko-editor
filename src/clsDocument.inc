@@ -817,7 +817,7 @@ function clsDocument.IsFunctionLine( byval lineNum as long ) as long
     ' trim and remove double spaces and replace TABs with single space
     dim as string lineText = this.GetLine( lineNum )
     if len( lineText ) < 4 then exit function
-    lineText = ltrim(ucase( PsStrShrink(lineText, chr(32,9)) ))
+    lineText = PsLTrim(PsUCase( PsStrShrink(lineText, chr(32,9)) ))
     if len( lineText ) < 4 then exit function
         
     if left( lineText, 9 ) = "FUNCTION " then
@@ -904,7 +904,7 @@ function clsDocument.GetCurrentFunctionName( _
         elseif position > 0 then
             ' We found a valid SUB/function line so process it
             ' trim and remove double spaces and replace TABs with single space
-            lineText = ltrim(ucase( PsStrShrink(this.GetLine(i), chr(32,9)) ))
+            lineText = PsLTrim(PsUCase( PsStrShrink(this.GetLine(i), chr(32,9)) ))
             funcName = ltrim(mid(lineText, position))
             funcName = PsStrParseAny( funcName, 1, " (" )
             
@@ -1049,7 +1049,7 @@ function clsDocument.BlockComment( byval flagBlock as boolean ) as long
     dim blockChars as string = "'"
     
     ' If this is a resource file then use different block characters
-    if lcase(PsPathExt(this.DiskFilename)) = ".rc" then
+    if PsLCase(PsPathExt(this.DiskFilename)) = ".rc" then
         blockChars = "//"
     end if
     
@@ -1486,9 +1486,9 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
         ryRatio = pWindow->ryRatio
     end if
 
-    strFontName = str(gConfig.EditorFontname)
-    nFontSize   = val(gConfig.EditorFontsize)
-    nFontExtraSpace = val(gConfig.FontExtraSpace)
+    strFontName = PsText(gConfig.EditorFontname)
+    nFontSize   = PsVal(gConfig.EditorFontsize)
+    nFontExtraSpace = PsVal(gConfig.FontExtraSpace)
 
     select case gConfig.KeywordCase
         case 0:  nFontcase = SC_CASE_LOWER
@@ -1615,8 +1615,8 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
             
         ''
         ''  TAB WIDTH 
-        SciMsg( pSciView, SCI_SETTABWIDTH, val(gConfig.TabSize), 0 )
-        SciMsg( pSciView, SCI_SETINDENT, val(gConfig.TabSize), 0 )
+        SciMsg( pSciView, SCI_SETTABWIDTH, PsVal(gConfig.TabSize), 0 )
+        SciMsg( pSciView, SCI_SETINDENT, PsVal(gConfig.TabSize), 0 )
     
         ''
         ''  INDENTATION GUIDES
@@ -1675,7 +1675,7 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
     
         '' RIGHT EDGE COLUMN
         SciMsg( pSciView, SCI_SETEDGEMODE, iif(gConfig.RightEdge, EDGE_LINE, EDGE_NONE), 0 )
-        SciMsg( pSciView, SCI_SETEDGECOLUMN, val(gConfig.RightEdgePosition), 0 )
+        SciMsg( pSciView, SCI_SETEDGECOLUMN, PsVal(gConfig.RightEdgePosition), 0 )
         ' SCI_SETEDGECOLOUR was never sent anywhere, so the right-margin guide drew in
         ' Scintilla's built-in #C0C0C0 in every theme -- a light grey line down a dark
         ' editor. It has a key now.
@@ -1898,9 +1898,9 @@ function clsDocument.ApplyProperties() as long
         SciMsg( pSci(0), SCI_SETREADONLY, 0, 0)
     end if
 
-    strFontName = str(gConfig.EditorFontname)
-    nFontSize   = val(gConfig.EditorFontsize)
-    nFontExtraSpace = val(gConfig.FontExtraSpace)
+    strFontName = PsText(gConfig.EditorFontname)
+    nFontSize   = PsVal(gConfig.EditorFontsize)
+    nFontExtraSpace = PsVal(gConfig.FontExtraSpace)
     
     select case gConfig.KeywordCase
         case 0:  nFontcase = SC_CASE_LOWER
@@ -1995,7 +1995,7 @@ function clsDocument.SetMarkers( byval sMarkers as string, byval MarkerType as l
     dim as long nLine
     
     for i as long = 1 to nCount
-        nLine = val( PsStrParse(sMarkers, i, ",") )
+        nLine = PsVal( PsStrParse(sMarkers, i, ",") )
         SciMsg( pSci, SCI_MARKERADD, nLine, MarkerType )
     next
 
@@ -2050,7 +2050,7 @@ function clsDocument.SetFoldPoints( byval sFoldPoints as string ) as long
     dim as long nLine
     
     for i as long = 1 to nCount
-        nLine = val( PsStrParse(sFoldPoints, i, ",") )
+        nLine = PsVal( PsStrParse(sFoldPoints, i, ",") )
         SciMsg( pSci, SCI_FOLDLINE, nLine, SC_FOLDACTION_CONTRACT) 
     next
 
@@ -2112,7 +2112,7 @@ function clsDocument.CompileDirectives( Directives() as COMPILE_DIRECTIVES ) as 
         st = ltrim(this.GetLine(i))
             
         if PsLeft(st, 1) <> "'" then continue for  ' must start with a comment character
-        st = ltrim(PsMid(st, 2))
+        st = PsLTrim(PsMid(st, 2))
 
         if PsLen(st) < 10 then continue for
         st_ucase = PsUCase(st)

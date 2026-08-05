@@ -278,7 +278,7 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
                 wszMsgString = PsLeft(wszMsgString, i-1 )
             end if
 
-            dim as DWSTRING wszUserKeys = trim(PsStrParse(wst, 2, ":"))
+            dim as DWSTRING wszUserKeys = PsTrim(PsStrParse(wst, 2, ":"))
 
             frmKeyBoard_AddKeyBinding_User( wszMsgString, wszUserKeys, bDisabled )
         Loop
@@ -570,7 +570,7 @@ function KeyBindings_FindCommandForKeys( byval wszKeys as DWSTRING ) as DWSTRING
         ' here rather than shared with frmKeyboard_EffectiveKeys, which is private to the
         ' dialog and reads gKeysWork().
         dim as DWSTRING wszEff
-        if len(gKeys(i).wszUserKeys) then
+        if PsLen(gKeys(i).wszUserKeys) then
             wszEff = gKeys(i).wszUserKeys
         elseif gKeys(i).bDefaultDisabled = false then
             wszEff = gKeys(i).wszDefaultKeys
@@ -600,7 +600,7 @@ function KeyBindings_PickListKeyToValue( byval wszString as DWSTRING ) as long
     dim as DWSTRING wszUpper = PsUCase(wszName)
 
     for i as long = lbound(gKeyNames) to ubound(gKeyNames)
-        if ucase(gKeyNames(i).wszName) = wszUpper then
+        if PsUCase(gKeyNames(i).wszName) = wszUpper then
             return frmKeyboard_AccelKeyToValue( gKeyNames(i).wszName )
         end if
     next
@@ -694,7 +694,7 @@ sub KeyBindings_RunSelfTest()
     for i as long = lbound(gKeyNames) to ubound(gKeyNames)
         for j as long = i + 1 to ubound(gKeyNames)
             dim as string sName = gKeyNames(i).wszName
-            KBASSERT( ucase(gKeyNames(i).wszName) <> ucase(gKeyNames(j).wszName), _
+            KBASSERT( PsUCase(gKeyNames(i).wszName) <> PsUCase(gKeyNames(j).wszName), _
                       "duplicate vocabulary name """ & sName & """" )
         next
     next
@@ -738,7 +738,7 @@ sub KeyBindings_RunSelfTest()
     ' against whatever the search returned; this compares the search's answer against a
     ' string the search never saw -- the one an author typed into the defaults table.
     for i as long = lbound(gKeys) to ubound(gKeys)
-        if len(gKeys(i).wszDefaultKeys) = 0 then continue for
+        if PsLen(gKeys(i).wszDefaultKeys) = 0 then continue for
 
         dim as long nCount = PsStrParseCount( gKeys(i).wszDefaultKeys, "+" )
         dim as DWSTRING wszFinal = PsStrParse( gKeys(i).wszDefaultKeys, nCount, "+" )
@@ -798,7 +798,7 @@ sub KeyBindings_RunSelfTest()
         ' "None" is prepended by AddShortcutsToComboBox as an affordance meaning "no key at
         ' all". If it were ever also a vocabulary entry, PickListKeyToValue's early return
         ' would shadow it and that key would become unbindable.
-        KBASSERT( ucase(gKeyNames(i).wszName) <> "NONE", _
+        KBASSERT( PsUCase(gKeyNames(i).wszName) <> "NONE", _
                   "vocabulary must not contain a key named ""None"" -- it is the affordance" )
     next
 
@@ -893,7 +893,7 @@ function frmKeyboard_BuildAcceleratorTable() as long
         dim as DWSTRING wszKeys = gKeys(i).wszDefaultKeys
 
         ' wszUserKeys will override the wszDefaultKeys entry
-        if len(gKeys(i).wszUserKeys) then
+        if PsLen(gKeys(i).wszUserKeys) then
             wszKeys = gKeys(i).wszUserKeys
         else
             ' Only create the default keyboard short if it has not been disabled

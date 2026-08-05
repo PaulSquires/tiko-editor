@@ -147,7 +147,7 @@ function OnCommand_SearchFindDialog() as LRESULT
     ' SCI_SETSEL( startPos, startPos ) with startPos = anchor - 1, so running it on an empty
     ' term would nudge the caret one character left every time Ctrl+F was pressed.
     dim as boolean bHasDoc  = cbool( pDoc <> 0 )
-    dim as boolean bHasTerm = cbool( len(gFind.txtFind) > 0 )
+    dim as boolean bHasTerm = cbool( PsLen(gFind.txtFind) > 0 )
     If bHasDoc andalso bHasTerm Then
         FindReplace_HighlightSearches()
         dim as hwnd hEdit = pDoc->hWndActiveScintilla

@@ -154,7 +154,7 @@ function frmSearchSymbol_GotoSymbol( byval idx as long ) as long
     
     if (idx < 0) orelse (idx > gSymbolsCount) then return 0
 
-    if len( gSymbols(idx).wszFilename ) then
+    if PsLen( gSymbols(idx).wszFilename ) then
         if gSymbols(idx).nLineNumber >= 0 then
             OpenSelectedDocument( gSymbols(idx).wszFilename, "", gSymbols(idx).nLineNumber )
         else

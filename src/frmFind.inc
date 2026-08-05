@@ -108,7 +108,7 @@ sub frmFind_ApplyErrorState( byval bForce as boolean = false )
     ' Hoisted to booleans: mixing these into one andalso chain is warning 38.
     dim as boolean bOnTab     = frmFindInProject_IsActive()
     dim as boolean bSearched  = gFip.bValid
-    dim as boolean bHadPhrase = cbool( len(gFip.wszPhrase) > 0 )
+    dim as boolean bHadPhrase = cbool( PsLen(gFip.wszPhrase) > 0 )
     dim as boolean bNoHits    = cbool( gFip.nLiveMatches = 0 )
     ' AND THE FIELD STILL HOLDS THE PHRASE THAT FAILED. The red reports the outcome of a
     ' SEARCH, so the moment the user edits the text it is describing something that has not

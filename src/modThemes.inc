@@ -449,8 +449,8 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
         wst = trim(AfxStrExtract( 1, wst, "#"))     ' remove comments
         If PsLen(wst) = 0 Then Continue Do
 
-        keyValue = trim(PsStrParse(wst, 1, ":"))
-        keyData = trim(PsStrParse(wst, 2, ":"))
+        keyValue = PsTrim(PsStrParse(wst, 1, ":"))
+        keyData = PsTrim(PsStrParse(wst, 2, ":"))
         
         ' is this a replaceable parameter
         if PsLeft(wst, 1) = "%" then
@@ -503,15 +503,15 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
         ' means opaque. The component COUNT is what distinguishes the two -- val("") is 0,
         ' i.e. fully transparent, which is the exact opposite of what "r,g,b" means.
         dim as long r, g, b, clr
-        r = val(PsStrParse(keyData, 1, ","))
-        g = val(PsStrParse(keyData, 2, ","))
-        b = val(PsStrParse(keyData, 3, ","))
+        r = PsVal(PsStrParse(keyData, 1, ","))
+        g = PsVal(PsStrParse(keyData, 2, ","))
+        b = PsVal(PsStrParse(keyData, 3, ","))
         clr = BGR(r, g, b)
 
         dim as long nAlpha = 255
         dim as boolean bHasAlpha = false
         if PsStrParseCount(keyData, ",") >= 4 then
-            nAlpha = val(PsStrParse(keyData, 4, ","))
+            nAlpha = PsVal(PsStrParse(keyData, 4, ","))
             if nAlpha < 0 then nAlpha = 0
             if nAlpha > 255 then nAlpha = 255
             bHasAlpha = true
@@ -1233,7 +1233,7 @@ function Theme_IsDark() as boolean
     ' Prefer an explicit declaration by the theme itself.
     dim as long n = Theme_FindEntry( "general.appearance" )
     if n >= 0 then
-        dim as string s = lcase(trim(gTheme(n).keyData))
+        dim as string s = lcase(PsTrim(gTheme(n).keyData))
         if s = "light" then return false
         if s = "dark" then return true
     end if
@@ -1500,9 +1500,9 @@ private function Theme_ColorFromText( byval wszText as DWSTRING, _
     if len(s) = 0 then return false
     if PsStrParseCount( s, "," ) < 3 then return false
 
-    dim as long r = val( PsStrParse( s, 1, "," ) )
-    dim as long g = val( PsStrParse( s, 2, "," ) )
-    dim as long b = val( PsStrParse( s, 3, "," ) )
+    dim as long r = PsVal( PsStrParse( s, 1, "," ) )
+    dim as long g = PsVal( PsStrParse( s, 2, "," ) )
+    dim as long b = PsVal( PsStrParse( s, 3, "," ) )
     if r < 0 then r = 0
     if r > 255 then r = 255
     if g < 0 then g = 0
@@ -1512,7 +1512,7 @@ private function Theme_ColorFromText( byval wszText as DWSTRING, _
     clr = BGR( r, g, b )
 
     if PsStrParseCount( s, "," ) >= 4 then
-        nAlpha = val( PsStrParse( s, 4, "," ) )
+        nAlpha = PsVal( PsStrParse( s, 4, "," ) )
         if nAlpha < 0 then nAlpha = 0
         if nAlpha > 255 then nAlpha = 255
     end if
@@ -1739,7 +1739,7 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
     dim as long nVer = Theme_FindEntry( "general.version" )
     dim as string sVer = "1.0.0"
     if nVer >= 0 then
-        if len(gTheme(nVer).keyData) > 0 then sVer = Theme_SanitizeText( gTheme(nVer).keyData )
+        if PsLen(gTheme(nVer).keyData) > 0 then sVer = Theme_SanitizeText( gTheme(nVer).keyData )
     end if
     sLine = "general.version: " & sVer
     print #f, sLine

@@ -254,7 +254,7 @@ function FindReplace_UpdateResultsFromCaret() as long
     if pDoc = 0 then exit function
 
     dim as HWND hEdit = pDoc->hWndActiveScintilla
-    dim as long lenFind = len(gFind.txtFind)
+    dim as long lenFind = PsLen(gFind.txtFind)
     dim as long endPos
 
     ' Same "selection or whole document" question FindReplace_NextSelection asks.

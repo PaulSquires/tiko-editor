@@ -279,13 +279,13 @@ private function AutoC_Layout( byval pDoc as clsDocument ptr ) as boolean
     for i as long = 0 to nMeasure - 1
         dim as long nItem = gAutoCVisible(i)
         dim as SIZE sz
-        dim as long nChars = len( gAutoCItems(nItem).wszName )
+        dim as long nChars = PsLen( gAutoCItems(nItem).wszName )
         if nChars > 0 then
             if GetTextExtentPoint32W( hDC, gAutoCItems(nItem).wszName.vptr, nChars, @sz ) then
                 if sz.cx > maxNameW then maxNameW = sz.cx
             end if
         end if
-        nChars = len( gAutoCItems(nItem).wszDetail )
+        nChars = PsLen( gAutoCItems(nItem).wszDetail )
         if nChars > 0 then
             if GetTextExtentPoint32W( hDC, gAutoCItems(nItem).wszDetail.vptr, nChars, @sz ) then
                 if sz.cx > maxDetailW then maxDetailW = sz.cx
@@ -330,7 +330,7 @@ private function AutoC_Layout( byval pDoc as clsDocument ptr ) as boolean
 
     ' Anchor on the START of the word being completed, not the caret: as the user types
     ' the popup then stays put instead of walking right one character at a time.
-    dim as long nAnchorPos = pDoc->AutoCStartPos - len( pDoc->wszMatchWord )
+    dim as long nAnchorPos = pDoc->AutoCStartPos - PsLen( pDoc->wszMatchWord )
     if nAnchorPos < 0 then nAnchorPos = 0
 
     dim as POINT pt
@@ -402,14 +402,14 @@ function frmAutoComplete_ReFilter( byval pDoc as clsDocument ptr ) as boolean
     ' wszMatchWord is already uppercase everywhere it is produced (see
     ' ShowAutocompleteList), and wszSort is the uppercased name, so this is a plain
     ' case-insensitive prefix test with no per-row ucase().
-    dim as DWSTRING wszMatch = ucase( pDoc->wszMatchWord )
+    dim as DWSTRING wszMatch = PsUCase( pDoc->wszMatchWord )
     dim as long nLen = PsLen( wszMatch )
 
     redim gAutoCVisible( 0 to gAutoCCount - 1 ) as long
     gAutoCVisCount = 0
     for i as long = 0 to gAutoCCount - 1
         dim as boolean bMatch = true
-        if nLen then bMatch = ( left( gAutoCItems(i).wszSort, nLen ) = wszMatch )
+        if nLen then bMatch = ( PsLeft( gAutoCItems(i).wszSort, nLen ) = wszMatch )
         if bMatch then
             gAutoCVisible( gAutoCVisCount ) = i
             gAutoCVisCount += 1
@@ -513,9 +513,9 @@ function frmAutoComplete_Commit( byval pDoc as clsDocument ptr ) as boolean
 
     dim as long nStartPos     = pDoc->AutoCStartPos
     dim as long nPos          = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0 )
-    dim as long nLenMatchWord = len( pDoc->wszMatchWord )
+    dim as long nLenMatchWord = PsLen( pDoc->wszMatchWord )
 
-    if PsUCase(wszText) <> ucase(pDoc->wszMatchWord) then
+    if PsUCase(wszText) <> PsUCase(pDoc->wszMatchWord) then
         dim as string sText = wszText
         SciExec( hEdit, SCI_SETSEL, nStartPos - nLenMatchWord, nPos )
         SciExec( hEdit, SCI_REPLACESEL, 0, cast(LPARAM, strptr(sText)) )

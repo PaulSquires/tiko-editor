@@ -492,7 +492,7 @@ private sub PsColorPicker_ApplyColor( _
         case CLR_FIELD_B : pClr->wszEdit = str( (clng(clr) shr 16) and &hFF )
         case CLR_FIELD_A : pClr->wszEdit = str( clng(nAlpha) )
         end select
-        if pClr->nCaret > len( pClr->wszEdit ) then pClr->nCaret = len( pClr->wszEdit )
+        if pClr->nCaret > PsLen( pClr->wszEdit ) then pClr->nCaret = PsLen( pClr->wszEdit )
         ' The value moved underneath the caret, so what is in the field is a fresh seed again and
         ' the next keystroke should replace it -- not append to a number the user never typed.
         pClr->bEditFresh = true
@@ -574,7 +574,7 @@ private sub PsColorPicker_BeginEdit( _
     pClr->wszEdit = PsColorPicker_FieldText( pClr, nField )
     pClr->nFocusField = nSaved
 
-    pClr->nCaret = len( pClr->wszEdit )
+    pClr->nCaret = PsLen( pClr->wszEdit )
     pClr->bEditFresh = true          ' the next typed character replaces the seed -- see the field
     pClr->bCaretOn = true
     if pClr->caretTimerOn = false then
@@ -600,7 +600,7 @@ private sub PsColorPicker_CommitField( byval pClr as PSCOLORPICKER ptr )
     dim as ubyte    nANew  = pClr->nAlphaCurrent
     dim as boolean  bValid = false
 
-    dim as string s = trim( pClr->wszEdit )
+    dim as string s = PsTrim( pClr->wszEdit )
     if len( s ) > 0 then
         dim as long v = clng( valint( s ) )
         if v < 0 then v = 0
@@ -706,9 +706,9 @@ private function PsColorPicker_CaretX( _
 
     dim as long nOut = rc.left + nInset
     dim as long nPrefix = pClr->nCaret
-    if nPrefix > len( pClr->wszEdit ) then nPrefix = len( pClr->wszEdit )
+    if nPrefix > PsLen( pClr->wszEdit ) then nPrefix = PsLen( pClr->wszEdit )
     if nPrefix > 0 then
-        dim as DWSTRING wszPrefix = left( pClr->wszEdit, nPrefix )
+        dim as DWSTRING wszPrefix = PsLeft( pClr->wszEdit, nPrefix )
         dim as SIZE sz
         if GetTextExtentPoint32W( hDC, wszPrefix.vptr, PsLen( wszPrefix ), @sz ) then
             nOut += sz.cx
@@ -1760,7 +1760,7 @@ function PsColorPicker_WndProc( _
                 pClr->bEditFresh = false
             end select
 
-            dim as long nLen = len( pClr->wszEdit )
+            dim as long nLen = PsLen( pClr->wszEdit )
             select case wParam
             case VK_LEFT
                 if pClr->nCaret > 0 then pClr->nCaret -= 1
@@ -1784,7 +1784,7 @@ function PsColorPicker_WndProc( _
                 return 0
             case VK_BACK
                 if pClr->nCaret > 0 then
-                    pClr->wszEdit = left( pClr->wszEdit, pClr->nCaret - 1 ) & mid( pClr->wszEdit, pClr->nCaret + 1 )
+                    pClr->wszEdit = PsLeft( pClr->wszEdit, pClr->nCaret - 1 ) & PsMid( pClr->wszEdit, pClr->nCaret + 1 )
                     pClr->nCaret -= 1
                 end if
                 pClr->bCaretOn = true
@@ -1792,7 +1792,7 @@ function PsColorPicker_WndProc( _
                 return 0
             case VK_DELETE
                 if pClr->nCaret < nLen then
-                    pClr->wszEdit = left( pClr->wszEdit, pClr->nCaret ) & mid( pClr->wszEdit, pClr->nCaret + 2 )
+                    pClr->wszEdit = PsLeft( pClr->wszEdit, pClr->nCaret ) & PsMid( pClr->wszEdit, pClr->nCaret + 2 )
                 end if
                 pClr->bCaretOn = true
                 InvalidateRect( hwnd, NULL, FALSE )
@@ -1896,9 +1896,9 @@ function PsColorPicker_WndProc( _
             pClr->bEditFresh = false
         end if
 
-        if len( pClr->wszEdit ) >= PsColorPicker_FieldMaxLen( pClr->nFocusField ) then return 0
+        if PsLen( pClr->wszEdit ) >= PsColorPicker_FieldMaxLen( pClr->nFocusField ) then return 0
 
-        pClr->wszEdit = left( pClr->wszEdit, pClr->nCaret ) & chr( ch ) & mid( pClr->wszEdit, pClr->nCaret + 1 )
+        pClr->wszEdit = PsLeft( pClr->wszEdit, pClr->nCaret ) & chr( ch ) & PsMid( pClr->wszEdit, pClr->nCaret + 1 )
         pClr->nCaret += 1
         pClr->bCaretOn = true
         InvalidateRect( hwnd, NULL, FALSE )

@@ -52,7 +52,7 @@ end function
 ' pop a tip that repeats what the user is looking at.
 private function PsCheckBox_ResolveTooltipText( byval pChk as PSCHECKBOX ptr ) as DWSTRING
     if pChk = 0 then return ""
-    if len( pChk->wszTooltip ) then
+    if PsLen( pChk->wszTooltip ) then
         dim as DWSTRING wszOut = pChk->wszTooltip
         return wszOut
     end if
@@ -587,7 +587,7 @@ function PsCheckBox_WndProc( _
         if nMax <= 0 then return 0
         dim as ushort ptr pDst = cast( ushort ptr, lParam )
         if pDst = 0 then return 0
-        dim as long nLen = len( pChk->wszText )
+        dim as long nLen = PsLen( pChk->wszText )
         if nLen > (nMax - 1) then nLen = nMax - 1
         if nLen > 0 then
             dim as ushort ptr pSrc = cast( ushort ptr, pChk->wszText.vptr )
@@ -606,7 +606,7 @@ function PsCheckBox_WndProc( _
         ' Required, not optional: GetWindowText asks this first and allocates from the answer, so
         ' without it a caller gets an empty string no matter what WM_GETTEXT would have said.
         if pChk = 0 then exit select
-        return len( pChk->wszText )
+        return PsLen( pChk->wszText )
 
     case WM_NOTIFY
         ' The tooltip asks for its text on demand; supply it.

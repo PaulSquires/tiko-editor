@@ -249,7 +249,7 @@ private sub frmKeyboardEdit_RefreshViews()
     if PsLen(wszKey) then
         KeyBindings_EnsureKeyNames()
         for i as long = lbound(gKeyNames) to ubound(gKeyNames)
-            if ucase(gKeyNames(i).wszName) = PsUCase(wszKey) then
+            if PsUCase(gKeyNames(i).wszName) = PsUCase(wszKey) then
                 nSel = i + 1
                 exit for
             end if

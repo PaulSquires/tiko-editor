@@ -87,7 +87,7 @@ private function SymDb_ExtractBaseType( byref wszTypeText as const wstring ) as 
     if PsLen( wszT ) = 0 then return ""
     dim as long cnt = PsStrParseCount( wszT, " " )
     for i as long = 1 to cnt
-        dim as DWSTRING tok = trim( PsStrParse( wszT, i, " " ) )
+        dim as DWSTRING tok = PsTrim( PsStrParse( wszT, i, " " ) )
         if PsLen( tok ) = 0 then continue for
         if PsUCase( tok ) = "CONST" then continue for
         return tok
@@ -567,7 +567,7 @@ function clsSymbolDb.EnumPrefix( byref wszPrefix as const wstring, byval kindMas
             if nIncLen then
                 for i as long = 0 to fc - 1
                     dim as DWSTRING wszF = *cast(wstring ptr, @pRSet->pResult->stringPool[ pRSet->pResult->fileOffsets[i] ])
-                    bTool(i) = ( ucase( PsLeft( wszF, nIncLen ) ) = wszInc )
+                    bTool(i) = ( PsUCase( PsLeft( wszF, nIncLen ) ) = wszInc )
                 next
             end if
 
@@ -657,8 +657,8 @@ end function
 
 function clsSymbolDb.EnumUserFiles( results() as DWSTRING ) as long
     dim as DWSTRING wszInc
-    if len( gConfig.FBWINCompiler64 ) then
-        wszInc = ucase( PsPathDirWithSep(ProcessFromCurdriveApp( gConfig.FBWINCompiler64 ) ) & "inc" )
+    if PsLen( gConfig.FBWINCompiler64 ) then
+        wszInc = PsUCase( PsPathDirWithSep(ProcessFromCurdriveApp( gConfig.FBWINCompiler64 ) ) & "inc" )
     end if
     dim as long cnt = 0
     redim results( 0 to 63 )
@@ -672,7 +672,7 @@ function clsSymbolDb.EnumUserFiles( results() as DWSTRING ) as long
             if this.FileContributes( pRSet, i ) = false then continue for
             dim as DWSTRING wszF = *cast(wstring ptr, @pRSet->pResult->stringPool[ pRSet->pResult->fileOffsets[i] ])
             if PsLen( wszInc ) then
-                if ucase( PsLeft( wszF, PsLen( wszInc ) ) ) = wszInc then continue for
+                if PsUCase( PsLeft( wszF, PsLen( wszInc ) ) ) = wszInc then continue for
             end if
             dim as boolean bDup = false
             for j as long = 0 to cnt - 1
@@ -696,8 +696,8 @@ function clsSymbolDb.EnumAllProcsTypes( results() as SYMBOLREF, byval bUserFiles
     redim results( 0 to 255 )
     dim as long wantMask = SYMMASK_PROC or SYMMASK_TYPE
     dim as DWSTRING wszInc
-    if bUserFilesOnly andalso (len( gConfig.FBWINCompiler64 ) > 0) then
-        wszInc = ucase( PsPathDirWithSep(ProcessFromCurdriveApp( gConfig.FBWINCompiler64 ) ) & "inc" )
+    if bUserFilesOnly andalso (PsLen( gConfig.FBWINCompiler64 ) > 0) then
+        wszInc = PsUCase( PsPathDirWithSep(ProcessFromCurdriveApp( gConfig.FBWINCompiler64 ) ) & "inc" )
     end if
 
     for pass as long = 0 to 1
@@ -713,7 +713,7 @@ function clsSymbolDb.EnumAllProcsTypes( results() as SYMBOLREF, byval bUserFiles
             bUserFile(i) = true
             if bUserFilesOnly andalso (PsLen( wszInc ) > 0) then
                 dim as DWSTRING wszF = *cast(wstring ptr, @pRSet->pResult->stringPool[ pRSet->pResult->fileOffsets[i] ])
-                if ucase( PsLeft( wszF, PsLen( wszInc ) ) ) = wszInc then bUserFile(i) = false
+                if PsUCase( PsLeft( wszF, PsLen( wszInc ) ) ) = wszInc then bUserFile(i) = false
             end if
         next
 
@@ -811,8 +811,8 @@ function clsSymbolDb.SymRefLine( byval r as SYMBOLREF ) as long
 end function
 
 function clsSymbolDb.ToolchainIncludeRoot() as DWSTRING
-    if len( gConfig.FBWINCompiler64 ) = 0 then return ""
-    return ucase( PsPathDirWithSep(ProcessFromCurdriveApp( gConfig.FBWINCompiler64 ) ) & "inc" )
+    if PsLen( gConfig.FBWINCompiler64 ) = 0 then return ""
+    return PsUCase( PsPathDirWithSep(ProcessFromCurdriveApp( gConfig.FBWINCompiler64 ) ) & "inc" )
 end function
 
 function clsSymbolDb.SymLine( byval r as SYMBOLREF ) as long

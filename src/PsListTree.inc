@@ -1374,7 +1374,7 @@ private sub PsListTree_ShiftCellColumns( byval pList as PSLISTTREE ptr, byval id
             if idx = 0 then
                 ' New first column: old column 0 (Text) becomes column 1. A row storing
                 ' nothing at all needs no gap -- every cell reads "" either way.
-                dim as boolean hasData = (nCells > 0) orelse (len(pList->rows(r).Text) > 0)
+                dim as boolean hasData = (nCells > 0) orelse (PsLen(pList->rows(r).Text) > 0)
                 if hasData then
                     pList->rows(r).EnsureCells( nCells + 1 )
                     for c as integer = nCells to 1 step -1

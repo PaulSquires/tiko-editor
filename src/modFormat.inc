@@ -711,7 +711,7 @@ function FMT_TokensMatch( byref sBefore as string, _
         if tokA(ia).kind = FMTTOK_STRING then
             if tokA(ia).text <> tokB(ib).text then return false
         else
-            if lcase(tokA(ia).text) <> lcase(tokB(ib).text) then return false
+            if PsLCase(tokA(ia).text) <> PsLCase(tokB(ib).text) then return false
         end if
 
         ia += 1
@@ -810,9 +810,9 @@ private function FMT_ClassifyLine( tokens() as FMTTOKEN, _
         if nSig = -1 then nSig = i
         if (k = FMTTOK_WORD) andalso (nWords < 3) then
             nWords += 1
-            if nWords = 1 then sW1 = lcase(tokens(i).text)
-            if nWords = 2 then sW2 = lcase(tokens(i).text)
-            if nWords = 3 then sW3 = lcase(tokens(i).text)
+            if nWords = 1 then sW1 = PsLCase(tokens(i).text)
+            if nWords = 2 then sW2 = PsLCase(tokens(i).text)
+            if nWords = 3 then sW3 = PsLCase(tokens(i).text)
         end if
     next
 
@@ -828,7 +828,7 @@ private function FMT_ClassifyLine( tokens() as FMTTOKEN, _
         dim as long k = tokens(i).kind
         if (k = FMTTOK_WS) orelse (k = FMTTOK_COMMENT) orelse (k = FMTTOK_MLCOMMENT) then continue for
         if k = FMTTOK_CONT then continue for
-        if k = FMTTOK_WORD then sLastWord = lcase(tokens(i).text)
+        if k = FMTTOK_WORD then sLastWord = PsLCase(tokens(i).text)
         exit for
     next
 
@@ -1316,7 +1316,7 @@ function Format_TextAtDepth( byref sText as string, _
                         exit for
                     next
                     if nSig >= 0 then
-                        select case lcase(tokens(nSig).text)
+                        select case PsLCase(tokens(nSig).text)
                             case "sub", "function", "type", "property", "operator", _
                                  "constructor", "destructor", "public", "private", "static"
                                 bIsProc = true

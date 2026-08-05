@@ -203,8 +203,8 @@ function frmOutput_UpdateToDoListview() as long
         wszText = _
             "" & chr(9) & _
             ltrim(wstr(gTodoItems(i).nLineNum)) & chr(9) & _
-            ltrim(gTodoItems(i).wszFile) & chr(9) & _
-            ltrim(gTodoItems(i).wszText)
+            PsLTrim(gTodoItems(i).wszFile) & chr(9) & _
+            PsLTrim(gTodoItems(i).wszText)
         ListBox_AddTabbedRow( hLV, wszText )
     next
 

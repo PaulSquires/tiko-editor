@@ -139,7 +139,7 @@ private function AssignKey_PartsMatch( byval wszStoredKey as DWSTRING, _
                                        byval bCtrl as boolean, _
                                        byval bAlt as boolean, _
                                        byval bShift as boolean ) as boolean
-    if ucase(PsTrim(wszStoredKey)) <> wszCandidateUpper then return false
+    if PsUCase(PsTrim(wszStoredKey)) <> wszCandidateUpper then return false
     if (nStoredCtrl  <> 0) <> bCtrl  then return false
     if (nStoredAlt   <> 0) <> bAlt   then return false
     if (nStoredShift <> 0) <> bShift then return false
@@ -276,7 +276,7 @@ private sub frmAssignKey_RefreshViews()
     if len(gTKKey) then
         KeyBindings_EnsureKeyNames()
         for i as long = lbound(gKeyNames) to ubound(gKeyNames)
-            if ucase(gKeyNames(i).wszName) = ucase(gTKKey) then
+            if PsUCase(gKeyNames(i).wszName) = ucase(gTKKey) then
                 nSel = i + 1
                 exit for
             end if

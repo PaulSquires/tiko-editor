@@ -504,7 +504,7 @@ end function
 ' ========================================================================================
 private function frmBuildConfig_ShortcutIsDead( byval idx as long ) as boolean
     if (idx < lbound(gBuildsWork)) orelse (idx > ubound(gBuildsWork)) then return false
-    dim as DWSTRING wszKey = trim(gBuildsWork(idx).wszKey)
+    dim as DWSTRING wszKey = PsTrim(gBuildsWork(idx).wszKey)
     if PsLen(wszKey) = 0 then return false
     if PsUCase(wszKey) = "NONE" then return false
     return iif( KeyBindings_PickListKeyToValue( wszKey ) = 0, true, false )
@@ -522,7 +522,7 @@ end function
 ' ========================================================================================
 private function frmBuildConfig_ShortcutClash( byval idx as long ) as DWSTRING
     if (idx < lbound(gBuildsWork)) orelse (idx > ubound(gBuildsWork)) then return ""
-    dim as DWSTRING wszKey = trim(gBuildsWork(idx).wszKey)
+    dim as DWSTRING wszKey = PsTrim(gBuildsWork(idx).wszKey)
     if PsLen(wszKey) = 0 then return ""
     if PsUCase(wszKey) = "NONE" then return ""
     return frmAssignKey_ClashText( wszKey, _
@@ -571,7 +571,7 @@ end sub
 ' ========================================================================================
 private sub frmBuildConfig_SanitizeWork()
     for i as long = lbound(gBuildsWork) to ubound(gBuildsWork)
-        dim as DWSTRING wszKey = trim(gBuildsWork(i).wszKey)
+        dim as DWSTRING wszKey = PsTrim(gBuildsWork(i).wszKey)
         if PsLen(wszKey) = 0 then continue for
         ' "None" is the legacy affordance the old dialog wrote on every selection change. It
         ' is not a key and never was, so it is normalised away here too.
@@ -1222,7 +1222,7 @@ private function frmBuildConfig_OnPaint( byval hwnd as HWND ) as LRESULT
         ' checkbox. Wrapped, not single-lined: PaintTextEx, because PaintText forces
         ' DT_SINGLELINE and structurally cannot wrap.
         dim as DWSTRING wszOpts = gBuildsWork(gBCCurrent).wszOptions
-        if len(PsTrim(wszOpts)) = 0 then
+        if PsLen(PsTrim(wszOpts)) = 0 then
             buffer.SetFont( ghFont(GUIFONT_11) )
             buffer.SetForeColor( theme.topmenu.textdisabled.forecolor )
             buffer.PaintText( L(343,"(none)"), @rcTxt, DT_LEFT or DT_VCENTER or DT_SINGLELINE )

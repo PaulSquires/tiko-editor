@@ -591,7 +591,7 @@ function CompleteIncludeFilename( byval pDoc as clsDocument ptr, byval sFilename
         dim as DWSTRING includePath
         dim as long numpaths = PsStrParseCount(gConfig.CompilerIncludes, ";")
         for i as long = 1 to numpaths
-            includePath = rtrim(PsStrParse(gConfig.CompilerIncludes, i, ";")) & "\" & sFilename
+            includePath = PsRTrim(PsStrParse(gConfig.CompilerIncludes, i, ";")) & "\" & sFilename
             if PsFileExists(includePath) then
                 wszCompleteFilename = includePath
                 exit for
@@ -1283,7 +1283,7 @@ function GetRunExecutableFilename() as DWSTRING
     ' Has a filename been determined yet? if it has then it possibly does not have
     ' a path assigned to it so we should add one.
     if PsLen(wszFilename) then
-        if len(PsPathDirWithSep(wszFilename)) = 0 then
+        if PsLen(PsPathDirWithSep(wszFilename)) = 0 then
             wszFilename = PsPathDirWithSep(pDocMain->DiskFilename) + wszFilename
         end if
     else

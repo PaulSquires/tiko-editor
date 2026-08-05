@@ -1342,7 +1342,7 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
         ' Length. Four digits typed into a fresh field: the first replaces the seed, and the
         ' fourth is refused.
         CLRTest_TypeString( h, "1234" )
-        dim as boolean bLen3 = ((len(pClr->wszEdit) = 3) andalso (pClr->wszEdit = "123"))
+        dim as boolean bLen3 = ((PsLen(pClr->wszEdit) = 3) andalso (pClr->wszEdit = "123"))
         CLRTest_Check( "a numeric field stops at three characters", bLen3, "'" & pClr->wszEdit & "'" )
     end scope
 
@@ -1362,7 +1362,7 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
 
         CLRTest_Key( h, VK_END )
         CLRTest_Check( "End moves the caret past the last character", _
-                       (pClr->nCaret = len(pClr->wszEdit)), str(pClr->nCaret) )
+                       (pClr->nCaret = PsLen(pClr->wszEdit)), str(pClr->nCaret) )
 
         ' Insertion happens AT the caret, not at the end. A field that always appended would pass
         ' every test above and still be wrong.

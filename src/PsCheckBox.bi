@@ -360,7 +360,7 @@ end function
 ' layout, the painter and the ideal-size arithmetic must all agree about it, and three copies of
 ' `len(x) > 0` is three places to disagree.
 function PSCHECKBOX.HasText() as boolean
-    return (len( this.wszText ) > 0)
+    return (PsLen( this.wszText ) > 0)
 end function
 
 ' Which glyph does the current state call for? ONE place, so the painter, the PAINTINFO handed
@@ -471,7 +471,7 @@ sub PSCHECKBOX.LayoutCheckBox()
 
     if bText then
         dim as SIZE sz
-        if GetTextExtentPoint32W( hDC, this.wszText.vptr, len( this.wszText ), @sz ) then
+        if GetTextExtentPoint32W( hDC, this.wszText.vptr, PsLen( this.wszText ), @sz ) then
             this.nTextWidth = sz.cx
         end if
     end if

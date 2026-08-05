@@ -152,7 +152,7 @@ private function frmOptionsCompiler_LoadToolchains() as long
 
     dim as long idxMatch = -1
     dim as long idx = 0
-    dim as DWSTRING wszWanted = ucase( gOptWork.CompilerToolchain )
+    dim as DWSTRING wszWanted = PsUCase( gOptWork.CompilerToolchain )
 
     dim hSearch as HANDLE
     dim WFD as WIN32_FIND_DATAW
@@ -168,7 +168,7 @@ private function frmOptionsCompiler_LoadToolchains() as long
                     ' The old page warned when the compiler path contains a space (the fbc
                     ' invocation would break) -- keep the warning on the display text only.
                     ' Hard-coded English, exactly as the old page had it (not localized).
-                    if instr( PsUCase(wszPath & wszFolder & "\fbc32.exe"), " " ) then
+                    if PsInStr( PsUCase(wszPath & wszFolder & "\fbc32.exe"), " " ) then
                         wszDisplay = wszDisplay & "   (Warning: File path contains spaces)"
                     end if
 

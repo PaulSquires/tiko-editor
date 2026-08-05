@@ -374,7 +374,7 @@ function PSCOMBOBOX.DisplayText( byref bIsPlaceholder as boolean ) as DWSTRING
         dim as DWSTRING wszOut = this.items(this.nCurSel).wszText
         return wszOut
     end if
-    if len( this.wszPlaceholder ) > 0 then
+    if PsLen( this.wszPlaceholder ) > 0 then
         bIsPlaceholder = true
         dim as DWSTRING wszOut = this.wszPlaceholder
         return wszOut
@@ -582,7 +582,7 @@ sub PSCOMBOBOX.LayoutCombo()
         ' so a long placeholder cannot inflate the button and a short one cannot let it
         ' shrink -- either would make the button resize on the user's first pick.
         for i as long = 0 to this.itemCount - 1
-            dim as long nChars = len( this.items(i).wszText )
+            dim as long nChars = PsLen( this.items(i).wszText )
             if nChars > 0 then
                 dim as SIZE sz
                 if GetTextExtentPoint32W( hDC, this.items(i).wszText.vptr, nChars, @sz ) then

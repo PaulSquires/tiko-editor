@@ -338,7 +338,7 @@ sub ShowSpacesContextMenu()
     PsPopupMenu_Clear( ghPopupSpaces )
     for i as long = 0 to 8
         dim as DWSTRING wszCaption = str(i)
-        if i = val(gConfig.TabSize) then wszCaption = wszCaption & "  (Current Tab Size)"
+        if i = PsVal(gConfig.TabSize) then wszCaption = wszCaption & "  (Current Tab Size)"
         PsPopupMenu_AddItem( ghPopupSpaces, IDM_SPACES + i, wszCaption, "", false, _
                             (i = gConfig.TabSize) )
     next

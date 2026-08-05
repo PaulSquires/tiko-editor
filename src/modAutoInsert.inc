@@ -706,7 +706,7 @@ function AttemptAutoInsert() as long
         dim as string sEndText = gAIBlocks(idx).wszEnd
         if (idBlock = BLOCK_STATEMENT_FOR) andalso gConfig.ForNextVariable then
             ' Original casing, not the uppercased copy -- this is the user's identifier.
-            dim as string sFor = ltrim( PsStrShrink(strPrevLineRaw) )
+            dim as string sFor = PsLTrim( PsStrShrink(strPrevLineRaw) )
             dim as string sVar = PsStrParseAny( sFor, 2, " =" )
             if len(sVar) then sEndText &= " " & sVar
         end if
@@ -972,7 +972,7 @@ function AutoInsert_RunSelfTest() as long
     scope
         dim as long nBad = 0
         for i as long = 0 to gAIBlockCount - 1
-            if len(gAIBlocks(i).wszOpen) = 0 then nBad += 1
+            if PsLen(gAIBlocks(i).wszOpen) = 0 then nBad += 1
             if len(gAIBlocks(i).wszEnd) = 0 then nBad += 1
             if (len(gAIBlocks(i).wszCloseW2) = 0) andalso (len(gAIBlocks(i).wszCloseAlt) = 0) then nBad += 1
             if AutoInsert_FindByID( gAIBlocks(i).idBlock ) <> i then nBad += 1

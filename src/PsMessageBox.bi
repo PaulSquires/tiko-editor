@@ -311,7 +311,7 @@ end type
 ' A HOST GLYPH OVERRIDE BEATS MBX_ICON_NONE. Setting a glyph is an unambiguous request for an
 ' icon, so it turns the cell on rather than being silently ignored because the kind is NONE.
 function PSMESSAGEBOX.HasIcon() as boolean
-    if this.bGlyphOverride andalso (len( this.wszGlyph ) > 0) then return true
+    if this.bGlyphOverride andalso (PsLen( this.wszGlyph ) > 0) then return true
     return (this.nIconKind <> MBX_ICON_NONE)
 end function
 
@@ -431,14 +431,14 @@ sub PSMESSAGEBOX.LayoutBox()
 
     this.nTextBlockW = 0
     this.nTextBlockH = 0
-    if len( this.wszText ) then
+    if PsLen( this.wszText ) then
         dim as RECT rcCalc
         SetRect( @rcCalc, 0, 0, availW, 0 )
         ' DT_CALCRECT with DT_WORDBREAK is the whole auto-height mechanism: it returns the
         ' height the wrapped text needs AND the width it actually used. DT_NOPREFIX matches
         ' PsBufferPaint.PaintText, which forces it -- without it here, a message containing "&"
         ' would measure one width and draw another.
-        DrawTextW( hDC, cast( LPCWSTR, this.wszText.vptr ), len( this.wszText ), @rcCalc, _
+        DrawTextW( hDC, cast( LPCWSTR, this.wszText.vptr ), PsLen( this.wszText ), @rcCalc, _
                    DT_CALCRECT or DT_WORDBREAK or DT_LEFT or DT_NOPREFIX or DT_EXPANDTABS )
         this.nTextBlockW = rcCalc.right - rcCalc.left
         this.nTextBlockH = rcCalc.bottom - rcCalc.top
@@ -447,13 +447,13 @@ sub PSMESSAGEBOX.LayoutBox()
     ' The title only contributes a WIDTH FLOOR -- the caption band's height is declared, not
     ' measured, so a title too tall for it clips rather than growing the box.
     dim as long capTextW = 0
-    if len( this.wszCaption ) then
+    if PsLen( this.wszCaption ) then
         dim as HFONT hCapUse = this.hCaptionFont
         if hCapUse = 0 then hCapUse = hTextUse
         SelectObject( hDC, hCapUse )
         dim as SIZE sz
         if GetTextExtentPoint32W( hDC, cast( LPCWSTR, this.wszCaption.vptr ), _
-                                  len( this.wszCaption ), @sz ) then capTextW = sz.cx
+                                  PsLen( this.wszCaption ), @sz ) then capTextW = sz.cx
         SelectObject( hDC, hTextUse )
     end if
 

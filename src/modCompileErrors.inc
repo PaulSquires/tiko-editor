@@ -338,7 +338,7 @@ function SetLogFileTextbox( byval pCompile as COMPILE_TYPE ptr ) as long
     ' - raw log file output
     ' - compile command line used
     
-    if len(pCompile->wszOutputMsg) then pCompile->wszOutputMsg += vbcrlf
+    if PsLen(pCompile->wszOutputMsg) then pCompile->wszOutputMsg += vbcrlf
     
     dim as DWSTRING wszText = _
         pCompile->wszOutputMsg + _
@@ -410,7 +410,7 @@ function ParseLogForError ( _
     
     for nextLine = 1 to NumLines                   
     
-        wst = trim(PsStrParse(wsLogSt, nextLine, vbCrLf))                 
+        wst = PsTrim(PsStrParse(wsLogSt, nextLine, vbCrLf))                 
         wst_ucase = PsUCase(wst)
         
         ' Deal with the situation where we might be trying to compile a 64-bit application

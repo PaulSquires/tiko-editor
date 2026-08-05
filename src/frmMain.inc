@@ -163,7 +163,7 @@ function frmMain_SetStatusbar() as long
     ' mid-load case the IsProjectLoading test used to catch -- and once the untitled
     ' workspace exists it leaves ProjectName empty, which is what suppresses the
     ' caption rather than a separate test. Testing a flag instead would render " - []".
-    if len(gApp.ProjectName) > 0 then
+    if PsLen(gApp.ProjectName) > 0 then
         wszText = wszText & " - [" & gApp.ProjectName & "]"
     end if
     if pDoc then 
@@ -209,7 +209,7 @@ function frmMain_RestoreWorkspace( byref wszLastProject as const wstring ) as lo
     ' it, because an untitled workspace is perfectly self-consistent.
     if gConfig.RestoreSession = 0 then return 0
 
-    dim as boolean bIsNamed = ( PsUCase(wszLastProject) <> ucase(gConfig.UntitledProjectFilename) )
+    dim as boolean bIsNamed = ( PsUCase(wszLastProject) <> PsUCase(gConfig.UntitledProjectFilename) )
     if bIsNamed = false then return 0
     if PsLen(wszLastProject) = 0 then return 0
     if PsFileExists( wszLastProject ) = 0 then return 0
@@ -383,7 +383,7 @@ function frmMain_HighlightWord( _
     SciMsg( pSci, SCI_SETINDICATORCURRENT, 10, 0)
     SciMsg( pSci, SCI_INDICATORCLEARRANGE, 0, nLength)
 
-    if len(PsLTrim(text)) = 0 then exit function
+    if PsLen(PsLTrim(text)) = 0 then exit function
 
     '// Update indicator appearance
     SciMsg( pSci, SCI_INDICSETSTYLE, NUM, INDIC_STRAIGHTBOX )
@@ -1779,7 +1779,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         dim as string sTrace = "--- TIKO_TOOLTIPFONT_TRACE ---" & chr(10) & _
             "  screen LOGPIXELSY : " & str(dpiTrace) & _
             "  (" & str( (dpiTrace * 100) \ 96 ) & "%)" & chr(10) & _
-            "  face              : " & str(tipfont.wszFaceName) & chr(10) & _
+            "  face              : " & PsText(tipfont.wszFaceName) & chr(10) & _
             "  pixelHeight       : " & str(tipfont.pixelHeight) & chr(10) & _
             "  pointSize         : " & str(tipfont.pointSize) & chr(10) & _
             "  lfWeight          : " & str(tipfont.lfWeight) & _

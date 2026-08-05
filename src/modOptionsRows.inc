@@ -297,10 +297,10 @@ sub OptionsWork_Load()
     gOptWork.LineNumbering         = gConfig.LineNumbering
     gOptWork.IndentGuides          = gConfig.IndentGuides
     gOptWork.RightEdge             = gConfig.RightEdge
-    gOptWork.RightEdgePosition     = val( gConfig.RightEdgePosition )
+    gOptWork.RightEdgePosition     = PsVal( gConfig.RightEdgePosition )
     gOptWork.PositionMiddle        = gConfig.PositionMiddle
     gOptWork.ClickToggleBreakpoint = gConfig.ClickToggleBreakpoint
-    gOptWork.TabSize               = val( gConfig.TabSize )
+    gOptWork.TabSize               = PsVal( gConfig.TabSize )
     gOptWork.KeywordCase           = gConfig.KeywordCase
 
     gOptWork.Codetips              = gConfig.Codetips
@@ -329,7 +329,7 @@ sub OptionsWork_Load()
     gOptWork.EditorFontname        = gConfig.EditorFontname
     gOptWork.EditorFontSize        = gConfig.EditorFontSize
     gOptWork.EditorFontCharSet     = gConfig.EditorFontCharSet
-    gOptWork.FontExtraSpace        = val( gConfig.FontExtraSpace )
+    gOptWork.FontExtraSpace        = PsVal( gConfig.FontExtraSpace )
 end sub
 
 
@@ -355,10 +355,10 @@ sub OptionsWork_Commit()
     gConfig.RightEdge             = gOptWork.RightEdge
     ' str() on a positive fb LONG has no leading space, so this round-trips the "80"
     ' the config file already held.
-    gConfig.RightEdgePosition     = str( gOptWork.RightEdgePosition )
+    gConfig.RightEdgePosition     = str(gOptWork.RightEdgePosition)
     gConfig.PositionMiddle        = gOptWork.PositionMiddle
     gConfig.ClickToggleBreakpoint = gOptWork.ClickToggleBreakpoint
-    gConfig.TabSize               = str( gOptWork.TabSize )
+    gConfig.TabSize               = str(gOptWork.TabSize)
     gConfig.KeywordCase           = gOptWork.KeywordCase
 
     gConfig.Codetips              = gOptWork.Codetips
@@ -383,7 +383,7 @@ sub OptionsWork_Commit()
     ' page was never resolved to a folder (empty install, or an unvisited page whose
     ' stored path had no toolchains segment), and the existing paths are left untouched --
     ' the same thing the old page did when its listbox had no selection.
-    if len(gOptWork.CompilerToolchain) > 0 then
+    if PsLen(gOptWork.CompilerToolchain) > 0 then
         dim as DWSTRING wszBase = PsExePath + "Toolchains\" + gOptWork.CompilerToolchain
         gConfig.FBWINCompiler32 = wszBase + "\fbc32.exe"
         gConfig.FBWINCompiler64 = wszBase + "\fbc64.exe"
@@ -393,7 +393,7 @@ sub OptionsWork_Commit()
     gConfig.EditorFontname         = gOptWork.EditorFontname
     gConfig.EditorFontSize         = gOptWork.EditorFontSize
     gConfig.EditorFontCharSet      = gOptWork.EditorFontCharSet
-    gConfig.FontExtraSpace         = str( gOptWork.FontExtraSpace )
+    gConfig.FontExtraSpace         = str(gOptWork.FontExtraSpace)
 end sub
 
 

@@ -342,3 +342,26 @@ end function
 private function PsLocalTimeStr() as DWSTRING
     return AfxLocalTimeStr("hh:mm:ss")
 end function
+
+'' ---------------------------------------------------------------------------
+'' Numeric conversion, and DWSTRING-to-string.
+''
+'' fbc's Val and Str apply to AfxNova's DWSTRING for free, because that type
+'' extends wstring. Neither applies to PsCore's, and there are 44 Val sites and
+'' 46 Str sites between them.
+'' ---------------------------------------------------------------------------
+private function PsVal(byref w as const wstring) as double
+    return val(w)
+end function
+private function PsValInt(byref w as const wstring) as integer
+    return valint(w)
+end function
+private function PsValLng(byref w as const wstring) as longint
+    return vallng(w)
+end function
+
+'' Str() on a DWSTRING was never a number format -- it was a CONVERSION to
+'' fbc's string, which is what extending wstring gave it. PsText says so.
+private function PsText(byref w as const wstring) as string
+    return str(w)
+end function

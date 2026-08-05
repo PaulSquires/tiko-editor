@@ -353,7 +353,7 @@ sub AddAutocompleteItem( _
             byval bHasParams as boolean = false _
             )
     if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit sub
-    if len(PsRTrim(wszName)) = 0 then exit sub
+    if PsLen(PsRTrim(wszName)) = 0 then exit sub
 
     dim as DWSTRING wszSort = PsUCase(wszName)
     for i as long = 0 to nItems - 1
@@ -382,7 +382,7 @@ function CalltipHasParams( byref wszCalltip as DWSTRING ) as boolean
     if p = 0 then return false
     dim as long q = PsInStrRev( wszCalltip, ")" )
     if q <= p then return false
-    return ( len(trim(PsMid( wszCalltip, p + 1, q - p - 1 ))) > 0 )
+    return ( len(PsTrim(PsMid( wszCalltip, p + 1, q - p - 1 ))) > 0 )
 end function
 
 
@@ -623,7 +623,7 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
                pDoc->wszMatchWord = ucase(ch) & pDoc->wszMatchWord   
         end select
     next
-    nLenMatchWord = len(pDoc->wszMatchWord)
+    nLenMatchWord = PsLen(pDoc->wszMatchWord)
 
     ' If an autocomplete is active but now there is no match word then
     ' a space or tab must have been pressed so autocomplete cancel and now exit.
@@ -763,7 +763,7 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
                 for i as long = 1 to nCount
                     st = PsStrParse(sStdTypes, i, "|")
                     dim as boolean bMatch = true
-                    if nLenMatchWord then bMatch = ( left(PsUCase(st), nLenMatchWord) = pDoc->wszMatchWord )
+                    if nLenMatchWord then bMatch = ( PsLeft(PsUCase(st), nLenMatchWord) = pDoc->wszMatchWord )
                     if bMatch then
                         AddAutocompleteItem( gAutoCBuild(), nItems, st, "", AUTOC_KIND_STDTYPE )
                     end if
@@ -839,7 +839,7 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
                 if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit for
                 st = *gSymDb.SymName( rs(i) )
                 dim as boolean bMatch = true
-                if nLenMatchWord then bMatch = ( left(PsUCase(st), nLenMatchWord) = pDoc->wszMatchWord )
+                if nLenMatchWord then bMatch = ( PsLeft(PsUCase(st), nLenMatchWord) = pDoc->wszMatchWord )
                 if bMatch then
                     AddAutocompleteSymbol( gAutoCBuild(), nItems, rs(i) )
                 end if
@@ -866,7 +866,7 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
             dim as long n = gSymDb.EnumLocalsInScope( wszDocFile, nCaretLine, rs() )
             for i as long = 0 to n - 1
                 st = *gSymDb.SymName( rs(i) )
-                dim as boolean bMatch = ( left(PsUCase(st), nLenMatchWord) = pDoc->wszMatchWord )
+                dim as boolean bMatch = ( PsLeft(PsUCase(st), nLenMatchWord) = pDoc->wszMatchWord )
                 if bMatch then
                     AddAutocompleteSymbol( gAutoCBuild(), nItems, rs(i) )
                 end if
@@ -943,7 +943,7 @@ function RefreshAutocompleteMatchWord( byval pDoc as clsDocument ptr ) as long
     ' per keystroke. The old rebuild-every-key path got this for free.
     pDoc->AutoCStartPos = curPos
 
-    return len(pDoc->wszMatchWord)
+    return PsLen(pDoc->wszMatchWord)
 end function
 
 

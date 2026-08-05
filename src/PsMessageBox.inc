@@ -141,7 +141,7 @@ private sub PsMessageBox_RenderDefault( _
     ' ---- the title -------------------------------------------------------------------------
     ' DT_END_ELLIPSIS rather than a clip: rcCaptionText already stops short of the X, so a long
     ' title ellipsizes into its own span instead of sliding under the close button.
-    if (IsRectEmpty( @p->rcCaptionText ) = 0) andalso (len( p->wszCaption ) > 0) then
+    if (IsRectEmpty( @p->rcCaptionText ) = 0) andalso (PsLen( p->wszCaption ) > 0) then
         dim as RECT rcCT = p->rcCaptionText
         b->SetFont( hCapUse )
         b->SetColors( pBox->colors.CaptionForeColor, pBox->colors.CaptionBackColor )
@@ -167,7 +167,7 @@ private sub PsMessageBox_RenderDefault( _
     ' The cell is a LAYOUT rect, not a measurement of the glyph: the control never measures the
     ' icon font, so a glyph too large for the cell clips rather than resizing the box
     ' (PsIconPanel's declared-cell rule).
-    if (IsRectEmpty( @p->rcIcon ) = 0) andalso (len( p->wszGlyph ) > 0) then
+    if (IsRectEmpty( @p->rcIcon ) = 0) andalso (PsLen( p->wszGlyph ) > 0) then
         dim as RECT rcI = p->rcIcon
         b->SetFont( hGlyphUse )
         b->SetColors( p->clrIcon, pBox->colors.BackColor )
@@ -181,7 +181,7 @@ private sub PsMessageBox_RenderDefault( _
     '
     ' DT_TOP, and no vertical centring: rcText's height IS the measured height of the wrapped
     ' text, and the rect itself was already v-centred against the icon by LayoutBox.
-    if (IsRectEmpty( @p->rcText ) = 0) andalso (len( p->wszText ) > 0) then
+    if (IsRectEmpty( @p->rcText ) = 0) andalso (PsLen( p->wszText ) > 0) then
         dim as RECT rcT = p->rcText
         b->SetFont( hTextUse )
         b->SetColors( pBox->colors.ForeColor, pBox->colors.BackColor )

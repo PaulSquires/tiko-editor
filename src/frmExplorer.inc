@@ -1107,7 +1107,7 @@ end function
 sub frmExplorer_NormalizeDocFolders()
     dim pDoc as clsDocument ptr = gApp.pDocList
     do until pDoc = 0
-        if len(pDoc->docData.wszFolder) then
+        if PsLen(pDoc->docData.wszFolder) then
             dim as long catIndex = frmExplorer_CatIndexForDoc( pDoc )
             if ProjectFolders_Exists( catIndex, pDoc->docData.wszFolder ) = false then
                 pDoc->docData.wszFolder = ""
@@ -1171,7 +1171,7 @@ sub frmExplorer_AddFolderLevel( byval hCtrl as HWND, byval catIndex as long, _
     dim pDoc as clsDocument ptr = gApp.pDocList
     do until pDoc = 0
         if pDoc->ProjectFiletype = gConfig.Cat(catIndex).idFileType then
-            if ucase( pDoc->docData.wszFolder ) = PsUCase( wszParentPath ) then
+            if PsUCase( pDoc->docData.wszFolder ) = PsUCase( wszParentPath ) then
                 dim as long ub = ubound(pDocs) + 1
                 redim preserve pDocs(ub)
                 pDocs(ub) = pDoc

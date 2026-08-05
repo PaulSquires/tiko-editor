@@ -211,7 +211,7 @@ end sub
 private function ScanMgr_IsScannable( byval pDoc as clsDocument ptr ) as boolean
     dim as DWSTRING wszFile = pDoc->DiskFilename
     if PsInStr( wszFile, "\" ) = 0 then return true
-    dim as string sExt = lcase( PsPathExt(wszFile ) )
+    dim as string sExt = PsLCase( PsPathExt(wszFile ) )
     select case sExt
         case ".bas", ".bi", ".inc"
             return true
@@ -268,7 +268,7 @@ private function clsScanMgr.BuildRequest( _
 
     dim as long numPaths = PsStrParseCount( gConfig.CompilerIncludes, ";" )
     for i as long = 1 to numPaths
-        dim as DWSTRING wszP = trim( PsStrParse( gConfig.CompilerIncludes, i, ";" ) )
+        dim as DWSTRING wszP = PsTrim( PsStrParse( gConfig.CompilerIncludes, i, ";" ) )
         wszP = ProcessFromCurdriveApp( PsStrRemove( wszP, chr(34) ) )
         if PsLen( wszP ) then wszPaths = wszPaths & ";" & wszP
     next
@@ -276,7 +276,7 @@ private function clsScanMgr.BuildRequest( _
     dim as DWSTRING wszCompiler = ProcessFromCurdriveApp( gConfig.FBWINCompiler64 )
     if PsLen( wszCompiler ) then
         wszPaths = wszPaths & ";" & PsPathDirWithSep(wszCompiler ) & "inc"
-        pReq->sIncPrefix = ucase( PsPathDirWithSep(wszCompiler ) & "inc" )
+        pReq->sIncPrefix = PsUCase( PsPathDirWithSep(wszCompiler ) & "inc" )
     end if
 
     pReq->sIncludePaths = wszPaths
@@ -433,7 +433,7 @@ sub clsScanMgr.WorkerLoop()
             redim as wstring ptr pPaths( 0 to numPaths - 1 )
             dim as long cntPaths = 0
             for i as long = 1 to numPaths
-                dim as DWSTRING wszP = trim( PsStrParse( pReq->sIncludePaths, i, ";" ) )
+                dim as DWSTRING wszP = PsTrim( PsStrParse( pReq->sIncludePaths, i, ";" ) )
                 if PsLen( wszP ) then
                     wszPaths( cntPaths ) = wszP
                     pPaths( cntPaths ) = @wszPaths( cntPaths )

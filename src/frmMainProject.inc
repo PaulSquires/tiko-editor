@@ -85,7 +85,7 @@ private function Workspace_TestUntitledNotInMRU() as boolean
     for i as long = 0 to 9
         dim as DWSTRING wszEntry = ProcessFromCurdriveApp( gConfig.MRUProject(i) )
         if PsLen(wszEntry) = 0 then continue for
-        if PsUCase(wszEntry) = ucase(gConfig.UntitledProjectFilename) then return false
+        if PsUCase(wszEntry) = PsUCase(gConfig.UntitledProjectFilename) then return false
     next
     return true
 end function
@@ -100,7 +100,7 @@ sub Workspace_RunSelfTest()
     ' The single invariant the whole refactor rests on. If this fails, every save path is
     ' silently writing nothing: ProjectSaveToFile opens ProjectFilename and returns false.
     Workspace_Check( "a workspace is always established", _
-        len(gApp.ProjectFilename) > 0, "ProjectFilename=" & gApp.ProjectFilename )
+        PsLen(gApp.ProjectFilename) > 0, "ProjectFilename=" & gApp.ProjectFilename )
 
     ' The slot names a NAMED project or nothing. It must never name the untitled
     ' workspace: settings.ini persists it, so one such write makes every later launch come
@@ -108,18 +108,18 @@ sub Workspace_RunSelfTest()
     ' Projects. This assertion is the one that pins that down.
     if gApp.IsProjectNamed() then
         Workspace_Check( "the slot names the live named project", _
-            ucase(gConfig.wszLastActiveProject) = ucase(gApp.ProjectFilename), _
+            PsUCase(gConfig.wszLastActiveProject) = PsUCase(gApp.ProjectFilename), _
             "slot=" & gConfig.wszLastActiveProject )
     else
         Workspace_Check( "an untitled workspace leaves the slot empty", _
-            len(gConfig.wszLastActiveProject) = 0, _
+            PsLen(gConfig.wszLastActiveProject) = 0, _
             "slot=" & gConfig.wszLastActiveProject )
     end if
     Workspace_Check( "the slot never names the untitled workspace", _
-        ucase(gConfig.wszLastActiveProject) <> ucase(gConfig.UntitledProjectFilename) )
+        PsUCase(gConfig.wszLastActiveProject) <> PsUCase(gConfig.UntitledProjectFilename) )
 
     ' --- named vs untitled agree with the path -------------------------------------------
-    dim as boolean bIsUntitled = ( ucase(gApp.ProjectFilename) = ucase(gConfig.UntitledProjectFilename) )
+    dim as boolean bIsUntitled = ( PsUCase(gApp.ProjectFilename) = PsUCase(gConfig.UntitledProjectFilename) )
     Workspace_Check( "IsProjectNamed disagrees with the untitled path", _
         gApp.IsProjectNamed() <> bIsUntitled, _
         iif( bIsUntitled, "untitled", "named" ) )
@@ -128,10 +128,10 @@ sub Workspace_RunSelfTest()
     ' must leave it empty or the title bar reads " - []".
     if bIsUntitled then
         Workspace_Check( "an untitled workspace has no display name", _
-            len(gApp.ProjectName) = 0, "ProjectName=" & gApp.ProjectName )
+            PsLen(gApp.ProjectName) = 0, "ProjectName=" & gApp.ProjectName )
     else
         Workspace_Check( "a named workspace has a display name", _
-            len(gApp.ProjectName) > 0, "ProjectName=" & gApp.ProjectName )
+            PsLen(gApp.ProjectName) > 0, "ProjectName=" & gApp.ProjectName )
     end if
 
     ' The untitled workspace must never be offered as something to reopen by name.
@@ -144,13 +144,13 @@ sub Workspace_RunSelfTest()
     ' ignored the user's last project. (Cause: establish writes wszLastActiveProject, and
     ' the restore decision used to read that same field afterwards.)
     dim as boolean bHasTarget   = ( PsLen(gWorkspaceRestoreTarget) > 0 )
-    dim as boolean bNotUntitled = ( PsUCase(gWorkspaceRestoreTarget) <> ucase(gConfig.UntitledProjectFilename) )
+    dim as boolean bNotUntitled = ( PsUCase(gWorkspaceRestoreTarget) <> PsUCase(gConfig.UntitledProjectFilename) )
     dim as boolean bRestoreOn   = ( gConfig.RestoreSession <> 0 )
     dim as boolean bTargetOnDisk = ( PsFileExists(gWorkspaceRestoreTarget) <> 0 )
     dim as boolean bWantedNamed = bHasTarget andalso bNotUntitled
     if bRestoreOn andalso bWantedNamed andalso bTargetOnDisk then
         Workspace_Check( "a restorable named project was actually restored", _
-            ucase(gApp.ProjectFilename) = PsUCase(gWorkspaceRestoreTarget), _
+            PsUCase(gApp.ProjectFilename) = PsUCase(gWorkspaceRestoreTarget), _
             "wanted=" & gWorkspaceRestoreTarget & " got=" & gApp.ProjectFilename )
     else
         ' Say so rather than passing quietly -- a vacuous pass here reads as coverage.
@@ -325,7 +325,7 @@ sub Workspace_RunSelfTest()
                 gApp.IsProjectNamed() = false, "now=" & gApp.ProjectFilename )
             ' THE ONE THAT MATTERS: a closed project must not reopen on the next launch.
             Workspace_Check( "closing a project releases the restore slot", _
-                len(gConfig.wszLastActiveProject) = 0, _
+                PsLen(gConfig.wszLastActiveProject) = 0, _
                 "was=" & wszWas & " slot=" & gConfig.wszLastActiveProject )
 
             ' AND IT HAS TO SURVIVE THE ROUND TRIP TO DISK. The in-memory check above is
@@ -334,7 +334,7 @@ sub Workspace_RunSelfTest()
             gConfig.SaveConfigFile()
             gConfig.LoadConfigFile( true )   ' true = hot reload; leaves geometry alone
             Workspace_Check( "the released slot survives a settings.ini round trip", _
-                len(gConfig.wszLastActiveProject) = 0, _
+                PsLen(gConfig.wszLastActiveProject) = 0, _
                 "slot after reload=" & gConfig.wszLastActiveProject )
 
             ' THE ONE THAT REPRODUCES THE REPORTED BUG. Put a project path on DISK while
@@ -347,7 +347,7 @@ sub Workspace_RunSelfTest()
             gConfig.wszLastActiveProject = ""        ' memory says: released
             gConfig.LoadConfigFile( true )
             Workspace_Check( "a hot reload does not resurrect a closed project", _
-                len(gConfig.wszLastActiveProject) = 0, _
+                PsLen(gConfig.wszLastActiveProject) = 0, _
                 "slot after hot reload=" & gConfig.wszLastActiveProject )
 
             ' Leave the file consistent with memory rather than holding the stale path.
@@ -378,7 +378,7 @@ sub Workspace_RunSelfTest()
             Workspace_Check( "promotion makes the workspace named", _
                 gApp.IsProjectNamed() )
             Workspace_Check( "promotion repoints the restore slot to the new project", _
-                ucase(gConfig.wszLastActiveProject) = PsUCase(wszScratch), _
+                PsUCase(gConfig.wszLastActiveProject) = PsUCase(wszScratch), _
                 "slot=" & gConfig.wszLastActiveProject )
             Workspace_Check( "promotion retires the untitled workspace file", _
                 PsFileExists( gConfig.UntitledProjectFilename ) = 0 )

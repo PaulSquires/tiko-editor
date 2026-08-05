@@ -153,7 +153,7 @@ sub PSSTATUSBAR.LayoutPanels()
 
     for i as integer = 0 to this.panelCount - 1
         dim as integer textW = 0
-        dim as integer nChars = len( this.panels(i).Text )
+        dim as integer nChars = PsLen( this.panels(i).Text )
         if nChars > 0 then
             dim as SIZE sz
             if GetTextExtentPoint32W( hDC, this.panels(i).Text.vptr, nChars, @sz ) then

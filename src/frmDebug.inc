@@ -494,7 +494,7 @@ private sub frmDebug_CaptureExpanded( byval nSlot as long, byval hLV as HWND )
         if PsListTree_HasChildren( hLV, r ) = false then continue for
         dim as long k = cast(long, PsListTree_GetItemData( hLV, r ))
         if (k < 0) orelse (k >= gDbgRowCount) then continue for
-        if len(gDbgRow(k).wszPath) = 0 then continue for
+        if PsLen(gDbgRow(k).wszPath) = 0 then continue for
         gDbgExp(nSlot, gDbgExpCount(nSlot)) = gDbgRow(k).wszPath
         gDbgExpCount(nSlot) += 1
     next
@@ -522,7 +522,7 @@ private sub frmDebug_RestoreExpanded( byval nSlot as long, byval hLV as HWND )
     do while r < PsListTree_GetCount(hLV)
         dim as long k = cast(long, PsListTree_GetItemData( hLV, r ))
         if (k >= 0) andalso (k < gDbgRowCount) then
-            if (gDbgRow(k).bFilled = false) andalso (len(gDbgRow(k).wszPath) > 0) then
+            if (gDbgRow(k).bFilled = false) andalso (PsLen(gDbgRow(k).wszPath) > 0) then
                 if frmDebug_WasExpanded( nSlot, gDbgRow(k).wszPath ) then
                     frmDebug_ExpandRowChildren( hLV, r )
                     ' The SILENT setter, deliberately: the user did not just toggle this, so
@@ -2581,7 +2581,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
                 dim as long n = PsStrParseCount( wszBps, "," )
                 for i as long = 1 to n
                     dim as DWSTRING wszOne = PsStrParse( wszBps, i, "," )
-                    if len(PsTrim(wszOne)) = 0 then continue for
+                    if PsLen(PsTrim(wszOne)) = 0 then continue for
                     ' Editor lines are 0-based; the engine's are 1-based. That boundary is
                     ' stated once, here, because the old gdb path converted it in four
                     ' places and got one of them wrong.

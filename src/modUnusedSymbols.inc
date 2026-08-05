@@ -232,7 +232,7 @@ function UnusedSymbols_Build( byval nTier as long, rows() as UNUSEDROW, _
         if PsLen( wszInc ) > 0 then
             dim as DWSTRING wszF = *cast( wstring ptr, _
                 @pRSet->pResult->stringPool[ pRSet->pResult->fileOffsets[i] ] )
-            if ucase( PsLeft( wszF, PsLen( wszInc ) ) ) = wszInc then bUserFile(i) = false
+            if PsUCase( PsLeft( wszF, PsLen( wszInc ) ) ) = wszInc then bUserFile(i) = false
         end if
     next
 

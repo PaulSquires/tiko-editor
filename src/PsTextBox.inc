@@ -1051,7 +1051,7 @@ function PsTextBoxRichEdit_SubclassProc ( _
             ' Cue banner: drawn whenever the buffer is empty (focused or not).
             dim as long textLength = GetWindowTextLength( hWin )
             dim as boolean bHasCue = false
-            if pTextBox then bHasCue = ( len(pTextBox->CueText) > 0 )
+            if pTextBox then bHasCue = ( PsLen(pTextBox->CueText) > 0 )
             if (textLength = 0) andalso bHasCue then
                 ' Get the needed DC with DCX_INTERSECTUPDATE before the RichEdit's
                 ' WM_PAINT handler calls BeginPaint/EndPaint, which validates the update
@@ -1131,7 +1131,7 @@ function PsTextBoxRichEdit_SubclassProc ( _
                             ' In the fractional part, respect the decimal-places limit.
                             dim as integer foundat = PsInStr( wszText, "." )
                             if (foundat > 0) andalso (dwStart >= foundat) then
-                                if len(PsMid(wszText, foundat + 1)) >= pTextBox->nDecimalPlaces then return 0
+                                if PsLen(PsMid(wszText, foundat + 1)) >= pTextBox->nDecimalPlaces then return 0
                             end if
                         case asc(".")
                             if pTextBox->nDecimalPlaces = 0 then return 0

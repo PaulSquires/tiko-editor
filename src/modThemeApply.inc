@@ -629,7 +629,7 @@ sub Theme_RunSelfTest()
     '    general.* is exempt and always was: description and version are text, repaint
     '    nothing, and carry THSUB_NONE deliberately.
     for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
-        if left( gThemeKeys(i).keyValue, 8 ) = "general." then continue for
+        if PsLeft( gThemeKeys(i).keyValue, 8 ) = "general." then continue for
         THASSERT( gThemeKeys(i).nSubsys <> THSUB_NONE, _
                   "zero subsystem mask: " & gThemeKeys(i).keyValue )
     next
@@ -718,7 +718,7 @@ sub Theme_RunSelfTest()
             THASSERT( (np2 >= 0) andalso (gTheme(np2).background = clrPanel), _
                       "panel.text background did not survive write/read" )
             dim as long nd = Theme_FindEntry( "general.description" )
-            THASSERT( (nd >= 0) andalso (instr(gTheme(nd).keyData, "Self Test") > 0), _
+            THASSERT( (nd >= 0) andalso (PsInStr(gTheme(nd).keyData, "Self Test") > 0), _
                       "description did not survive sanitising and a round trip" )
         else
             THASSERT( false, "could not re-parse the file the writer just produced" )
@@ -793,7 +793,7 @@ sub Theme_RunSelfTest()
             dim as long na = Theme_FindEntry( "general.appearance" )
             THASSERT( na >= 0, "writer did not emit general.appearance" )
             if na >= 0 then
-                dim as string sApp = lcase(trim(gTheme(na).keyData))
+                dim as string sApp = lcase(PsTrim(gTheme(na).keyData))
                 THASSERT( (sApp = "dark") orelse (sApp = "light"), _
                           "general.appearance must be dark or light, got: " & sApp )
                 ' Force the filename sniff to disagree, so this proves the KEY is what is
@@ -1024,7 +1024,7 @@ sub Theme_RunSelfTest()
                           "general.description did not reach the root" )
                 ' Non-empty too: getThemePtr answers with a shared empty dummy on a miss, so
                 ' "" = "" would satisfy the line above while nothing had actually loaded.
-                THASSERT( len( theme.general.description ) > 0, _
+                THASSERT( PsLen( theme.general.description ) > 0, _
                           "general.description reached the root EMPTY" )
             end if
             if nv >= 0 then
@@ -1058,7 +1058,7 @@ sub Theme_RunSelfTest()
         ' 22f. Every key carries a real category. The theme editor derives its group headers
         '      from the table now, so an unclassified key would silently land in "Other".
         for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
-            if left( gThemeKeys(i).keyValue, 8 ) = "general." then continue for
+            if PsLeft( gThemeKeys(i).keyValue, 8 ) = "general." then continue for
             THASSERT( gThemeKeys(i).nCat <> THEMECAT_OTHER, _
                       "key has no category: " & gThemeKeys(i).keyValue )
         next
@@ -1474,7 +1474,7 @@ sub Theme_RunSelfTest()
                     next
                     THASSERT( nUnres = 0, "unresolved colour keys: " & nUnres & sT )
 
-                    THASSERT( len(theme.general.description) > 0, "no description" & sT )
+                    THASSERT( PsLen(theme.general.description) > 0, "no description" & sT )
 
                     ' CODE MUST BE READABLE ON ITS OWN PAGE. The single most important
                     ' number in a theme, and the one a blind author gets wrong.

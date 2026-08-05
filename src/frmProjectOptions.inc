@@ -190,7 +190,7 @@ function frmProjectOptions_SaveProjectOptions( byval hwnd as HWND ) as BOOLEAN
 
     ' The staging copy is the source, not the controls -- the change callbacks keep it
     ' current, so there is nothing to harvest here.
-    if len(gPOWork.ProjectPath) = 0 then
+    if PsLen(gPOWork.ProjectPath) = 0 then
         ' Parented to THIS dialog, not frmMain: this window is up and modal, and a box owned by
         ' a disabled ancestor comes up behind it.
         TikoMsgBox( hwnd, L(178,"Invalid project path specified."), L(162,"Error"), _
@@ -656,7 +656,7 @@ sub frmProjectOptions_RunSelfTest( byval bLayoutHalf as boolean )
 
             ' A NEW project seeds empty with the manifest ON.
             frmProjectOptions_LoadWork( true )
-            CHECK( len(gPOWork.ProjectPath) = 0, "a new project starts with an empty path" )
+            CHECK( PsLen(gPOWork.ProjectPath) = 0, "a new project starts with an empty path" )
             CHECK( gPOWork.Manifest = true,      "a new project defaults the manifest on" )
 
             ' ---- THE REGRESSION THAT MATTERS ---------------------------------------------

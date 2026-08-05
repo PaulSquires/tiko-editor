@@ -75,7 +75,7 @@ function code_Cleanup( byval pCompile as COMPILE_TYPE ptr ) as boolean
     ' nothing undid that, so the editor's own working directory silently became whichever
     ' project was last built -- which then decided where relative paths resolved everywhere
     ' else, and what a bare LoadLibrary would search.
-    if len( pCompile->wszCurDirSave ) then chdir pCompile->wszCurDirSave
+    if PsLen( pCompile->wszCurDirSave ) then chdir pCompile->wszCurDirSave
 
     delete( pCompile )
     pCompile = null
@@ -172,13 +172,13 @@ function code_SetMainFile( byval pCompile as COMPILE_TYPE ptr ) as boolean
 
     ' Need to determine the output filename in order to search for any existing running process.
     pCompile->OutputFilename = pCompile->MainFolder & pCompile->MainName & ".exe"
-    if instr(" " & ucase(pCompile->CompileFlags), " -DLL") then
+    if instr(" " & PsUCase(pCompile->CompileFlags), " -DLL") then
         pCompile->OutputFilename = pCompile->MainFolder & pCompile->MainName & ".dll"
     end if
-    if instr(" " & ucase(pCompile->CompileFlags), " -DYLIB") then
+    if instr(" " & PsUCase(pCompile->CompileFlags), " -DYLIB") then
         pCompile->OutputFilename = pCompile->MainFolder & pCompile->MainName & ".dll"
     end if
-    if instr(" " & ucase(pCompile->CompileFlags), " -LIB") then
+    if instr(" " & PsUCase(pCompile->CompileFlags), " -LIB") then
         pCompile->OutputFilename = pCompile->MainFolder & "lib" & pCompile->MainName & ".a"
     end if
 
@@ -231,7 +231,7 @@ function code_AddPathsToLinkModules( byval pCompile as COMPILE_TYPE ptr ) as lon
     
     dim as long numModules = PsStrParseCount(wszLinkModules, " ")
     for i as long = 1 to numModules
-        dim as DWSTRING modulename = trim(PsStrParse(wszLinkModules, i, " "))
+        dim as DWSTRING modulename = PsTrim(PsStrParse(wszLinkModules, i, " "))
         ' Remove any enclosing double quotes from the filename
         modulename = PsStrRemove(modulename, chr(34))
 
@@ -250,7 +250,7 @@ function code_AddPathsToLinkModules( byval pCompile as COMPILE_TYPE ptr ) as lon
         dim as DWSTRING includePath
         dim as long numpaths = PsStrParseCount(gConfig.CompilerIncludes, ";")
         for i as long = 1 to numpaths
-            includePath = rtrim(PsStrParse(gConfig.CompilerIncludes, i, ";"))
+            includePath = PsRTrim(PsStrParse(gConfig.CompilerIncludes, i, ";"))
             ' Remove any enclosing double quotes from the includepath
             includePath = PsStrRemove(includePath, chr(34)) & "\"   ' ensure trailing backslash
             if PsLen(includePath) then 
@@ -288,11 +288,11 @@ function code_SearchForDirectives( byval pCompile as COMPILE_TYPE ptr ) as boole
     for i as long = lbound(directives) to ubound(directives)
         select case directives(i).DirectiveFlag 
             case IDM_CONSOLE
-                n = instr(pCompile->CompileFlags, " -S GUI ")
+                n = PsInStr(pCompile->CompileFlags, " -S GUI ")
                 if n then pCompile->CompileFlags = PsStrDelete(pCompile->CompileFlags, n, 8)
                 pCompile->CompileFlags += " -s console "
             case IDM_GUI
-                n = instr(pCompile->CompileFlags, " -S CONSOLE ")
+                n = PsInStr(pCompile->CompileFlags, " -S CONSOLE ")
                 if n then pCompile->CompileFlags = PsStrDelete(pCompile->CompileFlags, n, 12)
                 pCompile->CompileFlags += " -s gui "
             case IDM_RESOURCE
@@ -364,10 +364,10 @@ function code_CompileModules( byval pCompile as COMPILE_TYPE ptr ) as boolean
     end if
 
     pCompile->CompileFlags = " " & pCompile->CompileFlags & " "
-    dim as string g_flag   = iif(instr(pCompile->CompileFlags, " -g "), " -g -nostrip ", "")
-    dim as string e_flag   = iif(instr(pCompile->CompileFlags, " -e "), " -e ", "")
-    dim as string ex_flag  = iif(instr(pCompile->CompileFlags, " -ex "), " -ex ", "")
-    dim as string exx_flag = iif(instr(pCompile->CompileFlags, " -exx "), " -exx ", "")
+    dim as string g_flag   = iif(PsInStr(pCompile->CompileFlags, " -g "), " -g -nostrip ", "")
+    dim as string e_flag   = iif(PsInStr(pCompile->CompileFlags, " -e "), " -e ", "")
+    dim as string ex_flag  = iif(PsInStr(pCompile->CompileFlags, " -ex "), " -ex ", "")
+    dim as string exx_flag = iif(PsInStr(pCompile->CompileFlags, " -exx "), " -exx ", "")
     
     dim as long nFileCount   ' used to calculate when to fire an AfxDoEvents
     
@@ -555,7 +555,7 @@ function code_Compile( byval wID as long ) as boolean
         ' correspond well. tiko now reads the format directly (debugParser.dll), so the
         ' debug build stays on the backend the project actually uses.
         dim as DWSTRING wszWantGen = iif( pCompile->bCompile32, wstr(" -gen gas"), wstr(" -gen gas64") )
-        if instr( pCompile->CompileFlags, wszWantGen ) = 0 then
+        if PsInStr( pCompile->CompileFlags, wszWantGen ) = 0 then
             ' Strip whatever backend was selected, then append the one we need. Done by
             ' removal rather than same-length substitution because " -gen gcc" and
             ' " -gen gas64" are different lengths and the old padding trick does not
@@ -575,7 +575,7 @@ function code_Compile( byval wID as long ) as boolean
     dim as DWSTRING includePath
     dim as long numpaths = PsStrParseCount(gConfig.CompilerIncludes, ";")
     for i as long = 1 to numpaths
-        includePath = rtrim(PsStrParse(gConfig.CompilerIncludes, i, ";"))
+        includePath = PsRTrim(PsStrParse(gConfig.CompilerIncludes, i, ";"))
         if PsLen(includePath) then 
             pCompile->CompileIncludes += " -i " + wDQ + includePath + wDQ
         end if
@@ -695,8 +695,8 @@ function code_Compile( byval wID as long ) as boolean
     ' So: MainName after -m (no path, no extension), and MainFilename as a real input.
     dim as DWSTRING wszParams = BuildMainModuleArgs( pCompile->MainName, pCompile->MainFilename )
 
-    if len(pCompile->LinkModules)  then wszParams += " " + pCompile->LinkModules
-    if len(pCompile->ResourceFile) then wszParams += " " + wDQ + pCompile->ResourceFile + wDQ
+    if PsLen(pCompile->LinkModules)  then wszParams += " " + pCompile->LinkModules
+    if PsLen(pCompile->ResourceFile) then wszParams += " " + wDQ + pCompile->ResourceFile + wDQ
     
     ' Ensure verbose compiler message output
     wszParams += " -v " + pCompile->CompileFlags 

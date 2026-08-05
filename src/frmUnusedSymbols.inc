@@ -1077,7 +1077,7 @@ sub frmUnusedSymbols_RunLayoutSelfTest()
 
     ' The engine uppercases filenames; the report shows them in their original casing.
     if gUnusedRowCount > 0 then
-        if gUnusedRows(0).wszFile <> ucase( gUnusedRows(0).wszFile ) then
+        if gUnusedRows(0).wszFile <> PsUCase( gUnusedRows(0).wszFile ) then
             nPass += 1
         else
             nFail += 1 : print "  FAIL filenames are still uppercased (FilenameOriginalCase not applied)"

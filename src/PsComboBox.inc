@@ -353,7 +353,7 @@ private sub PsComboBox_RenderDefault( _
     ' p->isTextVisible, NOT pCombo->nTextMode: under CBO_TEXT_WHENSELECTED the answer depends
     ' on the selection, and rcText is empty whenever this is false.
     if p->isTextVisible then
-        if len( p->wszText ) > 0 then
+        if PsLen( p->wszText ) > 0 then
             dim as COLORREF clrText = clrFore
             if p->isPlaceholder then clrText = pCombo->colors.ForeColorPlaceholder
 

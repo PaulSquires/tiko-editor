@@ -67,8 +67,8 @@ function GetThemeDescription( byval wszFilename as DWSTRING ) as string
         wst = pStream.ReadLine
         wst = trim(AfxStrExtract( 1, wst, "#"))     ' remove comments
         if PsLen(wst) = 0 then continue Do
-        keyValue = trim(PsStrParse(wst, 1, ":"))
-        keyData = trim(PsStrParse(wst, 2, ":"))
+        keyValue = PsTrim(PsStrParse(wst, 1, ":"))
+        keyData = PsTrim(PsStrParse(wst, 2, ":"))
         if keyValue = "general.description" then
             function = keyData
             exit do
@@ -266,7 +266,7 @@ private function frmOptionsColors_LoadFonts() as long
     next
 
     dim as long idxMatch = -1
-    dim as DWSTRING wszWanted = ucase( gOptWork.EditorFontname )
+    dim as DWSTRING wszWanted = PsUCase( gOptWork.EditorFontname )
     dim as DWSTRING wszPrev = ""
 
     PsListTree_BeginUpdate( ghColorFonts )

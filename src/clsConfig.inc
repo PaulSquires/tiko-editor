@@ -123,7 +123,7 @@ function clsConfig.LoadCodetipsFB() as boolean
         if i then
             redim preserve gFBIntrinsics( 0 to nIntrinsic )
             gFBIntrinsics(nIntrinsic).wszName    = PsLeft(wst, i-1)
-            gFBIntrinsics(nIntrinsic).wszNameUp  = ucase( PsLeft(wst, i-1) )
+            gFBIntrinsics(nIntrinsic).wszNameUp  = PsUCase( PsLeft(wst, i-1) )
             gFBIntrinsics(nIntrinsic).wszCalltip = PsMid(wst, i+1)
             nIntrinsic += 1
         end if
@@ -401,12 +401,12 @@ function clsConfig.SaveConfigFileBody() as long
     ' Do not modify the this.CompilerIncludes directly because that will put the
     ' {CURDRIVE} macro back into the path names causing future compiles to fail
     ' because that macro only gets resolved on LoadConfig.
-    dim as DWSTRING allIncludes = rtrim(this.CompilerIncludes, ";")
+    dim as DWSTRING allIncludes = PsRTrim(this.CompilerIncludes, ";")
     dim as DWSTRING SaveCompilerIncludes
     dim as DWSTRING includePath
     dim as long numpaths = PsStrParseCount(allIncludes, ";")
     for i as long = 1 to numpaths
-        includePath = trim(PsStrParse(allIncludes, i, ";"))
+        includePath = PsTrim(PsStrParse(allIncludes, i, ";"))
         if PsLen(includePath) then
             includePath = ProcessToCurdriveApp(includePath)
             SaveCompilerIncludes = SaveCompilerIncludes + includePath + ";"
@@ -426,8 +426,8 @@ function clsConfig.SaveConfigFileBody() as long
     pStream.WriteLine "[Categories]"
     dim as long nNext = 0
     for i as long = lbound(this.Cat) to ubound(this.Cat)
-        if left(this.Cat(i).wszDescription, 2) <> "%%" then
-            if trim(this.Cat(i).wszDescription) <> "" then
+        if PsLeft(this.Cat(i).wszDescription, 2) <> "%%" then
+            if PsTrim(this.Cat(i).wszDescription) <> "" then
                 pStream.Write "CATEGORY_" & right("00" & str(nNext), 2) & "="
                 pStream.Write this.Cat(i).idFileType & "|-|"
                 pStream.WriteLine this.Cat(i).wszDescription
@@ -669,21 +669,21 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
             ' non-ascending index in a hand-edited file, and -- for Tools, which is now
             ' erased above but was not -- EVERY entry on every reload after the first.
             if PsLeft(wKey, 9) = "CATEGORY_" then  ' is this a CATEGORY entry
-            i = val(PsRight(wKey,2))
+            i = PsVal(PsRight(wKey,2))
             if i >= 0 then
                 if i > ubound(this.Cat) then redim preserve this.Cat(i)
                 ' trim() is not cosmetic. idFileType is compared against the FILETYPE_*
                 ' string digits to decide which Explorer header a document belongs under,
                 ' so one stray space in a hand-edited "CATEGORY_01= 1|-|Main" makes that
                 ' category match nothing and silently empties it.
-                this.Cat(i).idFileType     = trim(PsStrParse(wData, 1, "|-|"))
+                this.Cat(i).idFileType     = PsTrim(PsStrParse(wData, 1, "|-|"))
                 this.Cat(i).wszDescription = PsStrParse(wData, 2, "|-|")
                 continue do
             end if
             end if
 
             if PsLeft(wKey, 9) = "USERTOOL_" then  ' is this a User Tool entry
-            i = val(PsRight(wKey,2))
+            i = PsVal(PsRight(wKey,2))
                 if i >= 0 then
                     if i > ubound(this.Tools) then redim preserve this.Tools(i)
                     this.Tools(i).wszDescription   = PsStrParse(wData, 1, "|-|")
@@ -691,39 +691,39 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
                     this.Tools(i).wszParameters    = PsStrParse(wData, 3, "|-|")
                     this.Tools(i).wszKey           = PsStrParse(wData, 4, "|-|")
                     this.Tools(i).wszWorkingFolder = ProcessFromCurdriveApp( PsStrParse(wData, 5, "|-|") )
-                    this.Tools(i).IsCtrl           = val(PsStrParse(wData, 6, "|-|"))
-                    this.Tools(i).IsAlt            = val(PsStrParse(wData, 7, "|-|"))
-                    this.Tools(i).IsShift          = val(PsStrParse(wData, 8, "|-|"))
-                    this.Tools(i).IsPromptRun      = val(PsStrParse(wData, 9, "|-|"))
-                    this.Tools(i).IsMinimized      = val(PsStrParse(wData, 10, "|-|"))
-                    this.Tools(i).IsWaitFinish     = val(PsStrParse(wData, 11, "|-|"))
-                    this.Tools(i).IsDisplayMenu    = val(PsStrParse(wData, 12, "|-|"))
-                    this.Tools(i).Action           = val(PsStrParse(wData, 13, "|-|"))
+                    this.Tools(i).IsCtrl           = PsVal(PsStrParse(wData, 6, "|-|"))
+                    this.Tools(i).IsAlt            = PsVal(PsStrParse(wData, 7, "|-|"))
+                    this.Tools(i).IsShift          = PsVal(PsStrParse(wData, 8, "|-|"))
+                    this.Tools(i).IsPromptRun      = PsVal(PsStrParse(wData, 9, "|-|"))
+                    this.Tools(i).IsMinimized      = PsVal(PsStrParse(wData, 10, "|-|"))
+                    this.Tools(i).IsWaitFinish     = PsVal(PsStrParse(wData, 11, "|-|"))
+                    this.Tools(i).IsDisplayMenu    = PsVal(PsStrParse(wData, 12, "|-|"))
+                    this.Tools(i).Action           = PsVal(PsStrParse(wData, 13, "|-|"))
                     continue do
                 end If
             end If
 
             if PsLeft(wKey, 6) = "BUILD_" then  ' is this a BUILD entry
-            i = val(PsRight(wKey,2))
+            i = PsVal(PsRight(wKey,2))
                 if i >= 0 then
                     if i > ubound(this.Builds) then redim preserve this.Builds(i)
                     this.Builds(i).id             = PsStrParse(wData, 1, "|-|")
                     this.Builds(i).wszDescription = PsStrParse(wData, 2, "|-|")
                     this.Builds(i).wszOptions     = PsStrParse(wData, 3, "|-|")
-                    this.Builds(i).IsDefault      = val(PsStrParse(wData, 4, "|-|"))
-                    this.Builds(i).Is32bit        = val(PsStrParse(wData, 5, "|-|"))
-                    this.Builds(i).Is64bit        = val(PsStrParse(wData, 6, "|-|"))
-                    this.Builds(i).ExcludeInPopup = val(PsStrParse(wData, 7, "|-|"))
-                    this.Builds(i).IsCtrl         = val(PsStrParse(wData, 8, "|-|"))
-                    this.Builds(i).IsAlt          = val(PsStrParse(wData, 9, "|-|"))
-                    this.Builds(i).IsShift        = val(PsStrParse(wData, 10, "|-|"))
+                    this.Builds(i).IsDefault      = PsVal(PsStrParse(wData, 4, "|-|"))
+                    this.Builds(i).Is32bit        = PsVal(PsStrParse(wData, 5, "|-|"))
+                    this.Builds(i).Is64bit        = PsVal(PsStrParse(wData, 6, "|-|"))
+                    this.Builds(i).ExcludeInPopup = PsVal(PsStrParse(wData, 7, "|-|"))
+                    this.Builds(i).IsCtrl         = PsVal(PsStrParse(wData, 8, "|-|"))
+                    this.Builds(i).IsAlt          = PsVal(PsStrParse(wData, 9, "|-|"))
+                    this.Builds(i).IsShift        = PsVal(PsStrParse(wData, 10, "|-|"))
                     this.Builds(i).wszKey         = PsStrParse(wData, 11, "|-|")
                     continue do
                 end If
             end If
 
             if PsLeft(wKey, 4) = "MRU_" then  ' is this an MRU entry
-            i = val(PsRight(wKey,2))
+            i = PsVal(PsRight(wKey,2))
                 if (i >= 0) And (i <= 9) then
                     this.MRU(i) = ProcessFromCurdriveApp(wData)
                     continue do
@@ -731,7 +731,7 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
             end If
 
             if PsLeft(wKey, 11) = "MRUPROJECT_" then  ' is this an MRU Project entry
-            i = val(PsRight(wKey,2))
+            i = PsVal(PsRight(wKey,2))
                 if (i >= 0) And (i <= 9) then
                     this.MRUProject(i) = ProcessFromCurdriveApp(wData)
                     continue do
@@ -893,12 +893,12 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
     if isHotReload then this.wszLastActiveProject = wszLiveLastProject
 
     ' Iterate the optional semi colon separated list of compiler include paths
-    dim as DWSTRING allIncludes = rtrim(this.CompilerIncludes, ";")
+    dim as DWSTRING allIncludes = PsRTrim(this.CompilerIncludes, ";")
     this.CompilerIncludes = ""
     dim as DWSTRING includePath
     dim as long numpaths = PsStrParseCount(allIncludes, ";")
     for i as long = 1 to numpaths
-        includePath = trim(PsStrParse(allIncludes, i, ";"))
+        includePath = PsTrim(PsStrParse(allIncludes, i, ";"))
         if PsLen(includePath) then
             includePath = ProcessFromCurdriveApp(includePath)
             this.CompilerIncludes = this.CompilerIncludes + includePath + ";"
@@ -1013,11 +1013,11 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
 
     ' Attempt to fill in any missing compiler paths and help files
     dim as DWSTRING wszText
-    if len(this.FBWINCompiler32) = 0 then
+    if PsLen(this.FBWINCompiler32) = 0 then
         wszText = PsExePath & "toolchains\" & gwszDefaultToolchain & "\fbc32.exe"
         if PsFileExists(wszText) then this.FBWINCompiler32 = wszText
     end if
-    if len(this.FBWINCompiler64) = 0 then
+    if PsLen(this.FBWINCompiler64) = 0 then
         wszText = PsExePath & "toolchains\" & gwszDefaultToolchain & "\fbc64.exe"
         if PsFileExists(wszText) then this.FBWINCompiler64 = wszText
     end if

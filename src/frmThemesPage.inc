@@ -149,7 +149,7 @@ end function
 ' the originals are pristine.
 ' ========================================================================================
 function frmThemes_IsProtectedTheme( byval wszShortFilename as DWSTRING ) as boolean
-    return (lcase(PsLeft(wszShortFilename, 8)) = "default_")
+    return (PsLCase(PsLeft(wszShortFilename, 8)) = "default_")
 end function
 
 
