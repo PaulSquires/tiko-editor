@@ -12,7 +12,7 @@
 '    GNU General Public License for more details.
 
 #include once "frmBuildConfig.bi"
-#include once "clsConfig.bi"
+#include once "app/clsConfig.bi"
 #include once "clsTopTabCtl.bi"
 #include once "clsDocument.bi"
 

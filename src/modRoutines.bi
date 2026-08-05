@@ -15,9 +15,9 @@
 
 ' modRoutines was a junk drawer; three coherent groups were split out of it. These are
 ' forwarded from here so the ~40 files that include modRoutines.bi did not have to change.
-#include once "modEncoding.bi"
-#include once "modPaths.bi"
-#include once "modUpdateCheck.bi"
+#include once "app/modEncoding.bi"
+#include once "app/modPaths.bi"
+#include once "app/modUpdateCheck.bi"
 
 
 

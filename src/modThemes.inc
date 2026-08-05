@@ -776,7 +776,7 @@ private sub Theme_BuildKeyTable()
         THKEY_END()
     #endmacro
 
-    #include "modThemeKeys.bi"
+    #include "app/modThemeKeys.bi"
 
     #undef THTEXTKEY
     #undef THSTYLEKEY

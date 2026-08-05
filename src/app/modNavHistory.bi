@@ -35,7 +35,7 @@
 ' NavHistory_Clear from its session-load paths), well ahead of every Ps* control.
 ' ========================================================================================
 
-#include once "clsDocument.bi"
+#include once "../clsDocument.bi"
 
 ' Deepest history we keep. Past this the OLDEST entry is dropped -- the far end of a long
 ' history is worth less than a bounded array.

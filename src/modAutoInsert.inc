@@ -53,7 +53,7 @@
 ''  normally a few lines rather than the whole document.
 ''
 
-#include once "modAutoInsert.bi"
+#include once "app/modAutoInsert.bi"
 #include once "frmFunctions.bi"
 
 

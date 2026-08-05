@@ -15,7 +15,7 @@
 ' modNavHistory  --  implementation. See modNavHistory.bi for the model.
 ' ========================================================================================
 
-#include once "modNavHistory.bi"
+#include once "app/modNavHistory.bi"
 #include once "modRoutines.bi"
 
 

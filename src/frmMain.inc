@@ -20,7 +20,7 @@
 #include once "frmPanel.bi"
 #include once "frmStatusBar.bi"
 #include once "modMRU.bi"
-#include once "modAutoInsert.bi"
+#include once "app/modAutoInsert.bi"
 #include once "modMenus.bi"
 #include once "modCompile.bi"
 

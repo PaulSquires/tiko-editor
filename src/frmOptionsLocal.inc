@@ -48,7 +48,7 @@
 #include once "frmOptions.bi"          ' HWND_FRMOPTIONS, frmOptions_ThemedMsgBox
 #include once "modOptionsRows.bi"      ' gOptWork, shared padding + theme helpers
 #include once "modRoutines.bi"         ' AfxIFileOpenDialogW / SaveDialog, ListBox_AddTabbedRow
-#include once "clsConfig.bi"
+#include once "app/clsConfig.bi"
 
 
 ' Fixed metrics, UNSCALED.

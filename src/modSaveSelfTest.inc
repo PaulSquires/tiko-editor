@@ -5,7 +5,7 @@
 ' For code_Initialize/code_Cleanup: section 12 drives the real pair. Safe this early --
 ' modCompile.bi is types and declarations only and names no Ps* type.
 #include once "modCompile.bi"
-#include once "modBuildService.bi"
+#include once "app/modBuildService.bi"
 
 ' Read a whole file back as raw bytes, through code that is NOT the writer under test.
 private function SaveSelfTest_ReadAll( byref wszPath as wstring ) as string

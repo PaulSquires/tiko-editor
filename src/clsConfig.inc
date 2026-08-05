@@ -14,7 +14,7 @@
 
 ''  CONFIGURATION MODULE
 
-#include once "clsConfig.bi"
+#include once "app/clsConfig.bi"
 #include once "modRoutines.bi"
 #include once "frmFunctions.bi"
 #include once "frmBookmarks.bi"

@@ -11,8 +11,8 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
-#include once "modMRU.bi"
-#include once "frmKeyboard.bi"
+#include once "../modMRU.bi"
+#include once "../frmKeyboard.bi"
 
 ' ========================================================================================
 ' Get the menu accelerator text (if one exists) for this menu item

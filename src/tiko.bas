@@ -62,22 +62,22 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 
 ' Comment out the following define in order to disable logging.
 '#define LOGGING_ENABLED
-#include once "logging.bas"
+#include once "app/logging.bas"
 
 #include once "modScintilla.bi"
 
-#include once "fbcParser.bi"
+#include once "app/fbcParser.bi"
 ' The debug engine, as a DLL (C:\dev\debugParser -- see _copy_debugparser.bat). This is its
 ' ONLY header. It reads the debug information fbc embeds with -g and a gas backend, which gdb
 ' cannot read at all, and drives the debuggee against it. Up here beside the other DLL header
 ' because clsDocument.ToggleBreakPoint calls into it.
-#include once "debugParser.bi"
+#include once "app/debugParser.bi"
 #include once "clsDocument.bi"
 #include once "modDeclares.bi"
 ' Declarations only, and deliberately naming no Ps* type: clsConfig.inc calls
 ' NavHistory_Clear from both of its session-load paths, well ahead of the frm* block. The
 ' implementation goes in after modRoutines.inc, whose OpenSelectedDocument it drives.
-#include once "modNavHistory.bi"
+#include once "app/modNavHistory.bi"
 ' Same split, same reason: clsDocument.inc calls FindProject_OnDocumentClosing from
 ' DestroyScintillaWindows, well ahead of the modFindProject.inc that implements it. This
 ' header names clsDocument ptr and SCNOTIFICATION but no Ps* type.
@@ -93,13 +93,13 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 ' names no Ps* type, no clsDocument and nothing from Scintilla -- the formatter engine is
 ' pure text in, text out, which is what lets the Options preview, the self-test and the
 ' offline Format Project path all drive the exact same code the editor does.
-#include once "modFormat.bi"
-#include once "clsConfig.bi"
-#include once "modProjectFolders.bi"
+#include once "app/modFormat.bi"
+#include once "app/clsConfig.bi"
+#include once "app/modProjectFolders.bi"
 #include once "clsApp.bi"
-#include once "clsSymbolDb.bi"
+#include once "app/clsSymbolDb.bi"
 #include once "clsScanMgr.bi"
-#include once "modUnusedSymbols.bi"
+#include once "app/modUnusedSymbols.bi"
 #include once "frmUnusedSymbols.bi"
 ' Declared up here rather than beside its .inc because modCodetips.inc (which BUILDS the
 ' AUTOC_ITEM array) is included well before the frm* block.
@@ -135,11 +135,11 @@ dim shared gTTabCtl as clsTopTabCtl
 ' own startup path, both of which are ahead of PsMessageBox.inc. This header names no Ps* type;
 ' the implementation is included at the end beside modFileWatch.inc.
 #include once "modMsgBox.bi"
-#include once "modProjectFolders.inc"
+#include once "app/modProjectFolders.inc"
 ' The shared key=value line decode. Ahead of clsConfig.inc, whose two parsers use it, and
 ' declarations-and-one-pure-function only -- it names no Ps* type and no global.
-#include once "modIniParse.bi"
-#include once "modIniParse.inc"
+#include once "app/modIniParse.bi"
+#include once "app/modIniParse.inc"
 #include once "clsConfig.inc"
 #include once "PsBufferPaint.inc"
 ' modRoutines was a 2,250-line junk drawer. These three are PURE MOVES out of it -- see
@@ -159,37 +159,37 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "clsDocument.inc"
 ' Encoding conversion self-test. After modRoutines.inc (Doc_EncodeForDisk/GetFileToString)
 ' and clsDocument.inc (the clsDocument type it instantiates for the disk round-trip).
-#include once "modEncodingSelfTest.bi"
-#include once "modEncodingSelfTest.inc"
+#include once "app/modEncodingSelfTest.bi"
+#include once "app/modEncodingSelfTest.inc"
 ' Atomic-save self-test. After modRoutines.inc, which owns Doc_WriteToDisk. It writes to
 ' %TEMP% rather than staying pure, deliberately: the contract it asserts -- that a FAILED
 ' write leaves the file already on disk intact -- cannot be reached without a real file.
-#include once "modSaveSelfTest.bi"
+#include once "app/modSaveSelfTest.bi"
 #include once "modSaveSelfTest.inc"
 #include once "clsApp.inc"
-#include once "clsSymbolDb.inc"
+#include once "app/clsSymbolDb.inc"
 #include once "clsScanMgr.inc"
 ' After clsSymbolDb.inc (it reads the reference counts through gSymDb's
 ' accessors) and after modRoutines.inc, whose OpenSelectedDocument the window
 ' drives. The MODEL only; the window comes in with the frm* block.
-#include once "modUnusedSymbols.inc"
+#include once "app/modUnusedSymbols.inc"
 #include once "clsTopTabCtl.inc"
 #include once "modAutoInsert.inc"
 ' Build state and the command-line composers. Ahead of modCompile.inc and
 ' modCompileErrors.inc, both of which call into it.
-#include once "modBuildService.inc"
+#include once "app/modBuildService.inc"
 #include once "modCompile.inc"
 #include once "modCompileErrors.inc"
 #include once "modMenus.inc"
 #include once "modCodetips.inc"
-#include once "modMenuDefinitions.inc"
+#include once "app/modMenuDefinitions.inc"
 #include once "modMRU.inc"
 ' The Find in Project search engine and result model. No windows and no Ps* types, so it
 ' needs only clsApp/clsDocument/modScintilla, all already in scope. Ahead of
 ' modFindReplace.inc because the Find bar drives the project search.
 #include once "modFindProject.inc"
 #include once "modFindReplace.inc"
-#include once "modFuzzy.inc"
+#include once "app/modFuzzy.inc"
 ' The keyboard shortcut MODEL (gKeys, the defaults table, keybindings.ini, the accelerator
 ' build, the key vocabulary). No UI and no control dependencies -- it needs only modDeclares
 ' (IDM_* / IDC_MENUBAR_*), CWindow and CTextStream, all of which are already in scope. It
@@ -237,7 +237,7 @@ dim shared gTTabCtl as clsTopTabCtl
 ' The two tooltip colour recipes, shared by all four tip owners. Here rather than in
 ' modThemeApply.inc because PSTOOLTIP_COLORS is PsTooltip's and every caller precedes
 ' the apply layer.
-#include once "modThemeTips.inc"
+#include once "app/modThemeTips.inc"
 ' The code tip window. Immediately after PsTooltip.inc because it is a PsTooltip driven
 ' entirely by hand, and before frmAutoComplete.inc, which calls Codetip_Show on commit.
 #include once "modCodetipTip.inc"

@@ -19,7 +19,7 @@
 #include once "frmOptionsCompiler.bi"
 #include once "modOptionsRows.bi"     ' gOptWork, shared padding, theme helpers
 #include once "modRoutines.bi"        ' AfxIFileOpenDialogW, ProcessFromCurdriveApp
-#include once "clsConfig.bi"
+#include once "app/clsConfig.bi"
 
 
 ' Fixed heights, UNSCALED (run through AfxScaleY at use).

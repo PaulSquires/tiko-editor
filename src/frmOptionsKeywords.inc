@@ -16,7 +16,7 @@
 #include once "frmOptionsKeywords.bi"
 #include once "frmOptions.bi"          ' HWND_FRMOPTIONS_PAGE, OPTPAGE_KEYWORDS*
 #include once "modOptionsRows.bi"      ' shared padding + theme helpers
-#include once "clsConfig.bi"
+#include once "app/clsConfig.bi"
 
 
 #define KW_COUNT   3

@@ -34,7 +34,7 @@
 '  the affected popup has no keyboard navigation and never closes on an outside click.
 
 #include once "frmUserTools.bi"
-#include once "clsConfig.bi"
+#include once "app/clsConfig.bi"
 #include once "modMRU.bi"
 
 

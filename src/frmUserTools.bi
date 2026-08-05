@@ -14,7 +14,7 @@
 #pragma once
 
 #include "modCompile.bi"
-#include once "clsConfig.bi"
+#include once "app/clsConfig.bi"
 
 ' ========================================================================================
 ' NOTHING IN THIS FILE MAY NAME A Ps* TYPE.

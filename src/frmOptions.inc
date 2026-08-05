@@ -44,7 +44,7 @@
 #include once "frmOptionsKeywords.bi"
 #include once "frmMain.bi"
 
-#include once "clsConfig.bi"
+#include once "app/clsConfig.bi"
 
 
 ' The page currently on show, and whether each table-driven page has been built yet.

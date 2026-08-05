@@ -13,7 +13,7 @@
 
 #include once "modOptionsRows.bi"
 #include once "frmOptions.bi"     ' IDC_FRMOPTIONS_FIRSTROW, HWND_FRMOPTIONS_PAGE
-#include once "clsConfig.bi"
+#include once "app/clsConfig.bi"
 
 
 ' Row metrics, in UNSCALED units -- everything below runs them through AfxScaleX/Y.

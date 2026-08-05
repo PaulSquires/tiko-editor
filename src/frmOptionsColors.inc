@@ -16,7 +16,7 @@
 #include once "frmOptionsColors.bi"
 #include once "frmOptions.bi"          ' HWND_FRMOPTIONS
 #include once "modOptionsRows.bi"      ' gOptWork, shared padding + theme helpers
-#include once "clsConfig.bi"
+#include once "app/clsConfig.bi"
 
 
 ' MEASURED AGAINST THE FIXED VIEWPORT. The page needed 928px of the 892 available at 175%, so
