@@ -150,7 +150,7 @@ gBuildOptions(25).wszText = "Preserve generated intermediate *.asm / *.c / *.ll 
 '
 ' EVERYTHING IS A WHITESPACE-DELIMITED TOKEN, and a table row's action is a token SEQUENCE:
 ' "-Wc -O1" is two tokens, not a substring. That is what makes -O1 and -O2 distinguishable
-' structurally rather than by luck, and it is what stops the old AfxStrRemove from cutting
+' structurally rather than by luck, and it is what stops the old PsStrRemove from cutting
 ' "-Wc -O2" out of the middle of a hand-typed -p "C:\libs -Wc -O2".
 '
 ' COMPARISON IS CASE-SENSITIVE, and that is load-bearing rather than incidental: -c and -C
@@ -168,10 +168,10 @@ gBuildOptions(25).wszText = "Preserve generated intermediate *.asm / *.c / *.ll 
 ' Split into tokens on any run of whitespace. Returns the count; tok() is redim'd to
 ' (count-1), and an empty or all-whitespace string leaves it erased.
 '
-' HAND-ROLLED RATHER THAN AfxStrParseCountAny + AfxStrParseAny, AND NOT BY PREFERENCE.
-' Those two disagree with each other about how many fields a string has. AfxStrParseCountAny
+' HAND-ROLLED RATHER THAN PsStrParseCountAny + PsStrParseAny, AND NOT BY PREFERENCE.
+' Those two disagree with each other about how many fields a string has. PsStrParseCountAny
 ' advances its scan by LEN(wszDelimiter) after each hit -- the length of the whole delimiter
-' SET, 4 here -- while AfxStrParseAny correctly parses with nLenDelimiter = 1. So the count
+' SET, 4 here -- while PsStrParseAny correctly parses with nLenDelimiter = 1. So the count
 ' is short whenever two delimiters sit closer together than the set is long, and the parse
 ' loop then stops early and DROPS THE TAIL of the string. Measured: "-mt -s console -v" came
 ' back as three tokens and lost "-v"; "-s   console    -lang fb" came back as two and lost
@@ -1498,7 +1498,7 @@ end function
 ' runs from Show, because it measures real windows at the real DPI.
 '
 ' WHY THE MATCHER IS WORTH ASSERTING AT ALL. It replaced a space-padded instr() plus a blind
-' AfxStrRemove, and every one of the cases below is a defect that code actually had -- the
+' PsStrRemove, and every one of the cases below is a defect that code actually had -- the
 ' two paths disagreeing about "checked", a quoted path losing switches out of its middle, a
 ' tab-separated string matching nothing and toggling a duplicate in. None of them raises an
 ' error; the result is always a shorter, valid-looking options string.

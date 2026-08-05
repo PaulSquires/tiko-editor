@@ -343,7 +343,7 @@ function frmTopTabsInfo_WndProc( _
                 dim as clsDocument ptr pDocTab = gTTabCtl.GetpDoc(i)
                 if pDocTab then
                     dim as DWSTRING wszMainFolder = AfxStrPathname("PATH", pDoc->DiskFilename)
-                    wszFilename = AfxStrRemove( pDocTab->DiskFilename, wszMainFolder )
+                    wszFilename = PsStrRemove( pDocTab->DiskFilename, wszMainFolder )
                 end if
             end if
             ' The strip's field color is BackColorHot, so a hovered button

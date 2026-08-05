@@ -406,11 +406,11 @@ function ParseLogForError ( _
     dim as boolean bReadingCompileOutput = false
     
     ' Parse the log string.
-    NumLines = AfxStrParseCount( wsLogSt, vbCrLf)
+    NumLines = PsStrParseCount( wsLogSt, vbCrLf)
     
     for nextLine = 1 to NumLines                   
     
-        wst = trim(AfxStrParse(wsLogSt, nextLine, vbCrLf))                 
+        wst = trim(PsStrParse(wsLogSt, nextLine, vbCrLf))                 
         wst_ucase = PsUCase(wst)
         
         ' Deal with the situation where we might be trying to compile a 64-bit application
@@ -481,9 +481,9 @@ function ParseLogForError ( _
             if i then
                 wszTemp = PsMid(wst, i + 4)
                 i = PsInStr(wszTemp, wDQ & " ")
-                if i then pCompile->OutputFilename = AfxStrRemove(PsLeft(wszTemp, i), wDQ)
+                if i then pCompile->OutputFilename = PsStrRemove(PsLeft(wszTemp, i), wDQ)
                 ' if pCompile->OutputFilename is a relative filename then convert it to full filename.
-                pCompile->OutputFilename = AfxStrReplace( pCompile->OutputFilename, "/", "\" )
+                pCompile->OutputFilename = PsStrReplace( pCompile->OutputFilename, "/", "\" )
                 if AfxPathIsRelative( pCompile->OutputFilename ) then 
                     pCompile->OutputFilename = AfxPathCombine( pCompile->MainFolder, pCompile->OutputFilename )
                 end if

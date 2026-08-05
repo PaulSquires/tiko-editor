@@ -85,9 +85,9 @@ end function
 private function SymDb_ExtractBaseType( byref wszTypeText as const wstring ) as DWSTRING
     dim as DWSTRING wszT = trim( wszTypeText )
     if PsLen( wszT ) = 0 then return ""
-    dim as long cnt = AfxStrParseCount( wszT, " " )
+    dim as long cnt = PsStrParseCount( wszT, " " )
     for i as long = 1 to cnt
-        dim as DWSTRING tok = trim( AfxStrParse( wszT, i, " " ) )
+        dim as DWSTRING tok = trim( PsStrParse( wszT, i, " " ) )
         if PsLen( tok ) = 0 then continue for
         if PsUCase( tok ) = "CONST" then continue for
         return tok

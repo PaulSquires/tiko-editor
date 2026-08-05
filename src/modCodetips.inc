@@ -22,31 +22,31 @@ function FormatCodetip( byval strCodeTip as string ) as string
     dim as long p
 
     ' remove multiple duplicate spaces 
-    strCodeTip = AfxStrReplace(strCodeTip, "  ", " ") 
+    strCodeTip = PsStrReplace(strCodeTip, "  ", " ") 
 
     ' If this is only a small CodeTip then don't bother trying
     ' to format it into multiple lines.
     if len(strCodeTip) < 75 then return strCodeTip
 
     if instr(strCodeTip, "( ") then
-        strCodeTip = AfxStrReplace(strCodeTip, "( ", "(  ")
+        strCodeTip = PsStrReplace(strCodeTip, "( ", "(  ")
     elseif instr(strCodeTip, "(") then
-        strCodeTip = AfxStrReplace(strCodeTip, "(", "(  ")
+        strCodeTip = PsStrReplace(strCodeTip, "(", "(  ")
     end if
     p = instr(strCodeTip, "(")
     if p then
         if mid(strCodeTip, p + 1, 1) <> ")" andalso mid(strCodeTip, p + 1, 2) <> " )" then
-            strCodeTip = AfxStrReplace(strCodeTip, "(", "( _" & vblf)
+            strCodeTip = PsStrReplace(strCodeTip, "(", "( _" & vblf)
             IF instr(strCodeTip, " )") then
-            strCodeTip = AfxStrReplace(strCodeTip, ")", "_" & vblf & ")")
+            strCodeTip = PsStrReplace(strCodeTip, ")", "_" & vblf & ")")
             elseif instr(strCodeTip, ")") then
-            strCodeTip = AfxStrReplace(strCodeTip, ")", " _" & vblf & ")")
+            strCodeTip = PsStrReplace(strCodeTip, ")", " _" & vblf & ")")
             end if
         end if
     end if
-    strCodeTip = AfxStrReplace(strCodeTip, ", ", ",")
-    strCodeTip = AfxStrReplace(strCodeTip, " ,", ",")
-    strCodeTip = AfxStrReplace(strCodeTip, ",", ", _" & vblf & "  ")
+    strCodeTip = PsStrReplace(strCodeTip, ", ", ",")
+    strCodeTip = PsStrReplace(strCodeTip, " ,", ",")
+    strCodeTip = PsStrReplace(strCodeTip, ",", ", _" & vblf & "  ")
     
     function = strCodeTip
 end function
@@ -90,9 +90,9 @@ function DetermineWithVariable( byval pDoc as clsDocument ptr) as string
     for i as long = nCurLine to 0 step -1
         sLine = ltrim(pDoc->GetLine(i))
         ' Remove double spaces and replace TABs with single space
-        sLine = AfxStrShrink(sLine, chr(32,9))
+        sLine = PsStrShrink(sLine, chr(32,9))
         if left(ucase(sLine), 5) = "WITH " then
-            sWithVariable = AfxStrParse(sLine, 2, " ")
+            sWithVariable = PsStrParse(sLine, 2, " ")
             exit for
         end if
     next
@@ -215,7 +215,7 @@ function DereferenceLine( _
     sLine = ucase(sLine)
     
     ' Convert all "->" pointer references to "." dots to make parsing easier
-    sLine = AfxStrReplace(sLine, "->", ".")
+    sLine = PsStrReplace(sLine, "->", ".")
     
     ' The active document's identity in the symbol database (same naming rule the
     ' buffer scan uses), and the caret line in fbcParser's 1-based line space
@@ -223,10 +223,10 @@ function DereferenceLine( _
     dim as DWSTRING wszDocFile = ScanMgr_GetRootName( pDoc )
     dim as long nCaretLine = pDoc->GetCurrentLineNumber + 1
 
-    dim as long numParts = AfxStrParseCount(sLine, ".")
+    dim as long numParts = PsStrParseCount(sLine, ".")
     dim parts(1 to numParts) as DWSTRING
     for i as long = 1 to numParts
-        parts(i) = AfxStrParse(sLine, i, ".")
+        parts(i) = PsStrParse(sLine, i, ".")
     next
 
     dim as SYMBOLREF refCur = refMiss
@@ -451,9 +451,9 @@ end sub
 '
 ' It used to be re-split on every popup, and that was the multi-second delay before a
 ' list appeared. extra_keywords.txt is ~220 KB / 12,500 words, and the old code
-'   - ran AfxStrReplaceAny over the whole buffer to normalize CR/LF/TAB (MEASURED
+'   - ran PsStrReplaceAny over the whole buffer to normalize CR/LF/TAB (MEASURED
 '     2026-08-03: 2.9 s -- it is three MID() passes over 220,000 characters), then
-'   - called AfxStrParse once per word. That rescans from character 1 every call, AND
+'   - called PsStrParse once per word. That rescans from character 1 every call, AND
 '     takes its argument byref as a CONST WSTRING, so each call also converted the whole
 '     220 KB ANSI buffer to UTF-16.
 ' Together: 3.1 s to reach the 1000-item cap on "dim d as " + space, and far worse with a
@@ -759,9 +759,9 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
                     "any|const|" & _
                     "boolean|byte|ubyte|short|ushort|integer|uinteger|long|ulong|longint|ulongint|single|" & _
                     "double|string|wstring|zstring|true|false|DWSTRING"
-                dim as long nCount = AfxStrParseCount(sStdTypes, "|")
+                dim as long nCount = PsStrParseCount(sStdTypes, "|")
                 for i as long = 1 to nCount
-                    st = AfxStrParse(sStdTypes, i, "|")
+                    st = PsStrParse(sStdTypes, i, "|")
                     dim as boolean bMatch = true
                     if nLenMatchWord then bMatch = ( left(PsUCase(st), nLenMatchWord) = pDoc->wszMatchWord )
                     if bMatch then

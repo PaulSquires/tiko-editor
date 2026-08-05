@@ -47,7 +47,7 @@ dim shared as long gAboutLicPage
 ' reproduced verbatim, and a community translation of a licence is not that licence.
 '
 ' The second is mechanical and is worth knowing before putting ANY prose in a .lang file:
-' LoadLocalizationFile runs every value through AfxStrParse(wData, 1, ";"), which treats a
+' LoadLocalizationFile runs every value through PsStrParse(wData, 1, ";"), which treats a
 ' semicolon as the start of a trailing comment and DISCARDS the rest of the line. The GPL's
 ' warranty paragraph contains one ("WITHOUT ANY WARRANTY; without even..."), so stored as a
 ' localized string it would silently lose two thirds of itself, with nothing in the build,

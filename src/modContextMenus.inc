@@ -680,8 +680,8 @@ sub ShowEditorSplitContextMenu( byval rcButton as RECT )
     ' getMenuAccelText returns the keystroke with a LEADING TAB (it is built for the
     ' caption & chr(9) & accel shape the menubar uses); PsPopupMenu takes the accel as its
     ' own parameter, so parse the text back out. Empty when the command has no shortcut.
-    dim as DWSTRING wszAccelLR = AfxStrParse( getMenuAccelText(IDM_SPLITLEFTRIGHT), 2, wchr(9) )
-    dim as DWSTRING wszAccelTB = AfxStrParse( getMenuAccelText(IDM_SPLITTOPBOTTOM), 2, wchr(9) )
+    dim as DWSTRING wszAccelLR = PsStrParse( getMenuAccelText(IDM_SPLITLEFTRIGHT), 2, wchr(9) )
+    dim as DWSTRING wszAccelTB = PsStrParse( getMenuAccelText(IDM_SPLITTOPBOTTOM), 2, wchr(9) )
 
     PsPopupMenu_Clear( ghPopupEditorSplit )
     PsPopupMenu_AddItem( ghPopupEditorSplit, IDM_SPLITLEFTRIGHT, L(67,"Split Editor Left/Right"), wszAccelLR )

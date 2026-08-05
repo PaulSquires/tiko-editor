@@ -126,3 +126,83 @@ end function
 private function PsRTrim(byref w as const wstring, byref sWhat as const wstring) as DWSTRING
     return rtrim(w, sWhat)
 end function
+
+'' ===========================================================================
+'' The AfxStr* replacements. Same rule as above: forwarders, so the conversion
+'' changes nothing and the self-tests stay the oracle.
+'' ===========================================================================
+
+private function PsStrParse(byref w as const wstring, byval nPosition as integer, _
+                            byref sDelim as const wstring) as DWSTRING
+    return AfxStrParse(w, nPosition, sDelim)
+end function
+
+private function PsStrParseCount(byref w as const wstring, byref sDelim as const wstring) as long
+    return AfxStrParseCount(w, sDelim)
+end function
+
+private function PsStrReplace(byref w as const wstring, byref sFind as const wstring, _
+                              byref sWith as const wstring) as DWSTRING
+    return AfxStrReplace(w, sFind, sWith)
+end function
+
+private function PsStrRemove(byref w as const wstring, byref sFind as const wstring) as DWSTRING
+    return AfxStrRemove(w, sFind)
+end function
+
+private function PsStrShrink(byref w as const wstring, byref sMask as const wstring = " ") as DWSTRING
+    return AfxStrShrink(w, sMask)
+end function
+
+private function PsStrParseAny(byref w as const wstring, byval nPosition as integer, _
+                               byref sDelim as const wstring) as DWSTRING
+    return AfxStrParseAny(w, nPosition, sDelim)
+end function
+
+private function PsStrReplaceAny(byref w as const wstring, byref sMatch as const wstring, _
+                                 byref sWith as const wstring) as DWSTRING
+    return AfxStrReplaceAny(w, sMatch, sWith)
+end function
+
+private function PsStrRemoveAny(byref w as const wstring, byref sMatch as const wstring) as DWSTRING
+    return AfxStrRemoveAny(w, sMatch)
+end function
+
+private function PsStrLSet(byref w as const wstring, byval nLength as integer, _
+                           byref sPad as const wstring = " ") as DWSTRING
+    return AfxStrLSet(w, nLength, sPad)
+end function
+
+private function PsStrRSet(byref w as const wstring, byval nLength as integer, _
+                           byref sPad as const wstring = " ") as DWSTRING
+    return AfxStrRSet(w, nLength, sPad)
+end function
+
+private function PsStrDelete(byref w as const wstring, byval nStart as integer, _
+                             byval nCount as integer) as DWSTRING
+    return AfxStrDelete(w, nStart, nCount)
+end function
+
+private function PsStrClipLeft(byref w as const wstring, byval nCount as integer) as DWSTRING
+    return AfxStrClipLeft(w, nCount)
+end function
+
+'' NOT A FORWARDER, DELIBERATELY -- the one function in this file that does not
+'' preserve current behaviour, because current behaviour is wrong.
+''
+'' AfxStrParseCountAny advances its scan by the LENGTH OF THE DELIMITER SET
+'' after each hit. The set is a set, and every hit is one character, so with a
+'' two-character set it steps over whatever follows a delimiter: "1;;2" counts
+'' 2 fields where ParseAny can plainly return 3. A count that disagrees with the
+'' parse it is counting cannot be relied on by either.
+''
+'' Implemented correctly HERE rather than at the type swap, so that if either of
+'' tiko's two call sites depends on the old answer, the 28 self-test suites say
+'' so NOW -- while this commit is the only thing that changed.
+private function PsStrParseCountAny(byref w as const wstring, byref sDelim as const wstring) as long
+    dim as long nCount = 1
+    for i as integer = 1 to len(w)
+        if instr(sDelim, mid(w, i, 1)) > 0 then nCount += 1
+    next
+    return nCount
+end function

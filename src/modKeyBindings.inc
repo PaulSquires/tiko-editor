@@ -266,7 +266,7 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
             ' Each keybinding entry has fields separated by a colon
             if PsInStr( wst, ":" ) = 0 then continue do
 
-            dim as DWSTRING wszMsgString = AfxStrParse(wst, 1, ":")
+            dim as DWSTRING wszMsgString = PsStrParse(wst, 1, ":")
 
             ' The MsgString could have an embedded (DISABLED) flag indicating that the
             ' default key combination should be disabled.
@@ -278,7 +278,7 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
                 wszMsgString = PsLeft(wszMsgString, i-1 )
             end if
 
-            dim as DWSTRING wszUserKeys = trim(AfxStrParse(wst, 2, ":"))
+            dim as DWSTRING wszUserKeys = trim(PsStrParse(wst, 2, ":"))
 
             frmKeyBoard_AddKeyBinding_User( wszMsgString, wszUserKeys, bDisabled )
         Loop
@@ -740,8 +740,8 @@ sub KeyBindings_RunSelfTest()
     for i as long = lbound(gKeys) to ubound(gKeys)
         if len(gKeys(i).wszDefaultKeys) = 0 then continue for
 
-        dim as long nCount = AfxStrParseCount( gKeys(i).wszDefaultKeys, "+" )
-        dim as DWSTRING wszFinal = AfxStrParse( gKeys(i).wszDefaultKeys, nCount, "+" )
+        dim as long nCount = PsStrParseCount( gKeys(i).wszDefaultKeys, "+" )
+        dim as DWSTRING wszFinal = PsStrParse( gKeys(i).wszDefaultKeys, nCount, "+" )
         dim as DWSTRING wszCanon = KeyBindings_VKToName( frmKeyboard_AccelKeyToValue( wszFinal ) )
 
         dim as string sMsg   = gKeys(i).wszMsgString
@@ -754,7 +754,7 @@ sub KeyBindings_RunSelfTest()
         ' Every non-final segment must be a modifier. "Ctrl+Shft+D" would otherwise build an
         ' accelerator for plain D and no one would notice until it fired at the wrong time.
         for ii as long = 1 to nCount - 1
-            dim as DWSTRING wszMod = AfxStrParse( gKeys(i).wszDefaultKeys, ii, "+" )
+            dim as DWSTRING wszMod = PsStrParse( gKeys(i).wszDefaultKeys, ii, "+" )
             dim as string sMod = wszMod
             KBASSERT( frmKeyboard_VirtKeyToValue( wszMod ) <> 0, _
                       sMsg & " default """ & sKeys & """ has an unrecognised modifier """ & sMod & """" )
@@ -915,14 +915,14 @@ function frmKeyboard_BuildAcceleratorTable() as long
         ' etc...
 
         ' Parse for + signs
-        dim as long nCount = AfxStrParseCount( wszKeys, "+" )
+        dim as long nCount = PsStrParseCount( wszKeys, "+" )
         dim as long nVirtValue = FVIRTKEY
         dim as long nAccelValue = 0
 
         for ii as long = nCount to 1 step -1
             ' The accelerator key will always be the last parse regardless of
             ' number of items in the string
-            dim as DWSTRING wszString = AfxStrParse( wszKeys, ii, "+" )
+            dim as DWSTRING wszString = PsStrParse( wszKeys, ii, "+" )
             if ii = nCount then
                 nAccelValue = frmKeyboard_AccelKeyToValue( wszString )
             else

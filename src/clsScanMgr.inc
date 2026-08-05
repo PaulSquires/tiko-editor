@@ -266,10 +266,10 @@ private function clsScanMgr.BuildRequest( _
     ' same way modCompile does before every compile.
     dim as DWSTRING wszPaths = AfxStrPathname( "PATH", wszRootFile )
 
-    dim as long numPaths = AfxStrParseCount( gConfig.CompilerIncludes, ";" )
+    dim as long numPaths = PsStrParseCount( gConfig.CompilerIncludes, ";" )
     for i as long = 1 to numPaths
-        dim as DWSTRING wszP = trim( AfxStrParse( gConfig.CompilerIncludes, i, ";" ) )
-        wszP = ProcessFromCurdriveApp( AfxStrRemove( wszP, chr(34) ) )
+        dim as DWSTRING wszP = trim( PsStrParse( gConfig.CompilerIncludes, i, ";" ) )
+        wszP = ProcessFromCurdriveApp( PsStrRemove( wszP, chr(34) ) )
         if PsLen( wszP ) then wszPaths = wszPaths & ";" & wszP
     next
 
@@ -427,13 +427,13 @@ sub clsScanMgr.WorkerLoop()
             if pReq = 0 then exit do
 
             ' ---- outside the lock: build options and run the scan ----
-            dim as long numPaths = AfxStrParseCount( pReq->sIncludePaths, ";" )
+            dim as long numPaths = PsStrParseCount( pReq->sIncludePaths, ";" )
             if numPaths < 1 then numPaths = 1
             redim as wstring * MAX_PATH wszPaths( 0 to numPaths - 1 )
             redim as wstring ptr pPaths( 0 to numPaths - 1 )
             dim as long cntPaths = 0
             for i as long = 1 to numPaths
-                dim as DWSTRING wszP = trim( AfxStrParse( pReq->sIncludePaths, i, ";" ) )
+                dim as DWSTRING wszP = trim( PsStrParse( pReq->sIncludePaths, i, ";" ) )
                 if PsLen( wszP ) then
                     wszPaths( cntPaths ) = wszP
                     pPaths( cntPaths ) = @wszPaths( cntPaths )

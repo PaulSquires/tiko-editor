@@ -817,7 +817,7 @@ function clsDocument.IsFunctionLine( byval lineNum as long ) as long
     ' trim and remove double spaces and replace TABs with single space
     dim as string lineText = this.GetLine( lineNum )
     if len( lineText ) < 4 then exit function
-    lineText = ltrim(ucase( AfxStrShrink(lineText, chr(32,9)) ))
+    lineText = ltrim(ucase( PsStrShrink(lineText, chr(32,9)) ))
     if len( lineText ) < 4 then exit function
         
     if left( lineText, 9 ) = "FUNCTION " then
@@ -904,9 +904,9 @@ function clsDocument.GetCurrentFunctionName( _
         elseif position > 0 then
             ' We found a valid SUB/function line so process it
             ' trim and remove double spaces and replace TABs with single space
-            lineText = ltrim(ucase( AfxStrShrink(this.GetLine(i), chr(32,9)) ))
+            lineText = ltrim(ucase( PsStrShrink(this.GetLine(i), chr(32,9)) ))
             funcName = ltrim(mid(lineText, position))
-            funcName = AfxStrParseAny( funcName, 1, " (" )
+            funcName = PsStrParseAny( funcName, 1, " (" )
             
             ' if this is a Property then we need to differentiate between a Get/Set
             if ( left(lineText, 9)  = "PROPERTY " ) orelse _
@@ -1944,7 +1944,7 @@ function clsDocument.GetWord( byval curPos as long = -1 ) as string
         p = PsInStr(buffer, chr(0))
         if p then buffer = PsLeft(buffer, p - 1)
     end if
-    buffer = AfxStrRemoveAny( buffer, chr(13, 10, 34) & "()%," )
+    buffer = PsStrRemoveAny( buffer, chr(13, 10, 34) & "()%," )
     function = buffer
 
 end function
@@ -1991,11 +1991,11 @@ function clsDocument.SetMarkers( byval sMarkers as string, byval MarkerType as l
     sMarkers = trim(sMarkers)
     if len(sMarkers) = 0 then exit function
     
-    dim as long nCount = AfxStrParseCount(sMarkers, ",")
+    dim as long nCount = PsStrParseCount(sMarkers, ",")
     dim as long nLine
     
     for i as long = 1 to nCount
-        nLine = val( AfxStrParse(sMarkers, i, ",") )
+        nLine = val( PsStrParse(sMarkers, i, ",") )
         SciMsg( pSci, SCI_MARKERADD, nLine, MarkerType )
     next
 
@@ -2046,11 +2046,11 @@ function clsDocument.SetFoldPoints( byval sFoldPoints as string ) as long
     sFoldPoints = trim(sFoldPoints)
     if len(sFoldPoints) = 0 then exit function
     
-    dim as long nCount = AfxStrParseCount(sFoldPoints, ",")
+    dim as long nCount = PsStrParseCount(sFoldPoints, ",")
     dim as long nLine
     
     for i as long = 1 to nCount
-        nLine = val( AfxStrParse(sFoldPoints, i, ",") )
+        nLine = val( PsStrParse(sFoldPoints, i, ",") )
         SciMsg( pSci, SCI_FOLDLINE, nLine, SC_FOLDACTION_CONTRACT) 
     next
 

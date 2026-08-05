@@ -2578,9 +2578,9 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
             end if
             if si >= 0 then
                 dim as DWSTRING wszBps = pDoc->GetBreakPoints()
-                dim as long n = AfxStrParseCount( wszBps, "," )
+                dim as long n = PsStrParseCount( wszBps, "," )
                 for i as long = 1 to n
-                    dim as DWSTRING wszOne = AfxStrParse( wszBps, i, "," )
+                    dim as DWSTRING wszOne = PsStrParse( wszBps, i, "," )
                     if len(PsTrim(wszOne)) = 0 then continue for
                     ' Editor lines are 0-based; the engine's are 1-based. That boundary is
                     ' stated once, here, because the old gdb path converted it in four

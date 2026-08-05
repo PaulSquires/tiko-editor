@@ -188,14 +188,14 @@ sub frmKeyboard_RunSelfTest()
                 if PsInStr( wst, ":" ) = 0 then continue do
                 nRead += 1
 
-                dim as DWSTRING wszMsg = AfxStrParse(wst, 1, ":")
+                dim as DWSTRING wszMsg = PsStrParse(wst, 1, ":")
                 dim as boolean bDisabled = false
                 dim as long p = PsInStr(wszMsg, "(DISABLED)")
                 if p then
                     bDisabled = true
                     wszMsg = PsLeft(wszMsg, p - 1)
                 end if
-                dim as DWSTRING wszUser = trim(AfxStrParse(wst, 2, ":"))
+                dim as DWSTRING wszUser = trim(PsStrParse(wst, 2, ":"))
 
                 for i as long = lbound(gKeys) to ubound(gKeys)
                     if gKeys(i).wszMsgString = wszMsg then

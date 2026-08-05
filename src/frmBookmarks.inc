@@ -224,9 +224,9 @@ function LoadBookmarksFiles() as long
             dim as DWSTRING wszText = AfxStrPathName( "NAMEX", pDoc->DiskFilename )
             PsListTree_AddHeader( hCtrl, wszText, cast(integer, pDoc), 0 )
 
-            dim as integer nCount = AfxStrParseCount( sBookmarks, "," )
+            dim as integer nCount = PsStrParseCount( sBookmarks, "," )
             for i as integer = 1 to nCount
-                dim as integer nLineNum = val( AfxStrParse( sBookmarks, i, "," ) )
+                dim as integer nLineNum = val( PsStrParse( sBookmarks, i, "," ) )
                 dim as string sDescription = ltrim(pDoc->GetLine(nLineNum))
                 wszText.utf8 = sDescription  ' convert ut8 to unicode  
                 PsListTree_AddString( hCtrl, wszText, cast(integer, pDoc), nLineNum )

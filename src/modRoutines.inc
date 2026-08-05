@@ -65,16 +65,16 @@ end function
 ' Returns the new row index, or -1 if the row could not be added.
 ' ========================================================================================
 function ListBox_AddTabbedRow( byval hCtl as HWND, byval wszTabbed as DWSTRING ) as long
-    dim as long nFields = AfxStrParseCount( wszTabbed, chr(9) )
+    dim as long nFields = PsStrParseCount( wszTabbed, chr(9) )
     if nFields < 1 then nFields = 1
 
-    ' AfxStrParse is 1-based, so field i+1 is column i -- the same mapping
+    ' PsStrParse is 1-based, so field i+1 is column i -- the same mapping
     ' frmListView_GetItemText used.
-    dim as long nRow = PsListTree_AddString( hCtl, AfxStrParse( wszTabbed, 1, chr(9) ) )
+    dim as long nRow = PsListTree_AddString( hCtl, PsStrParse( wszTabbed, 1, chr(9) ) )
     if nRow < 0 then return -1
 
     for i as long = 1 to nFields - 1
-        PsListTree_SetCellText( hCtl, nRow, i, AfxStrParse( wszTabbed, i + 1, chr(9) ) )
+        PsListTree_SetCellText( hCtl, nRow, i, PsStrParse( wszTabbed, i + 1, chr(9) ) )
     next
 
     return nRow
@@ -189,7 +189,7 @@ function SpawnPreviousInstance() as boolean
             if PsLen(wszArg) = 0 then exit do
             
             ' Remove any double quotes from the argument.
-            wszPath = AfxStrRemove( wszArg, wchr(34) )
+            wszPath = PsStrRemove( wszArg, wchr(34) )
             
             ' if no path exists for the file then add the current folder
             wszPath = AfxStrPathname( "PATH", wszArg )
@@ -589,17 +589,17 @@ function CompleteIncludeFilename( byval pDoc as clsDocument ptr, byval sFilename
     else
         ' Iterate the optional semi colon separated list of compiler include paths
         dim as DWSTRING includePath
-        dim as long numpaths = AfxStrParseCount(gConfig.CompilerIncludes, ";")
+        dim as long numpaths = PsStrParseCount(gConfig.CompilerIncludes, ";")
         for i as long = 1 to numpaths
-            includePath = rtrim(AfxStrParse(gConfig.CompilerIncludes, i, ";")) & "\" & sFilename
+            includePath = rtrim(PsStrParse(gConfig.CompilerIncludes, i, ";")) & "\" & sFilename
             if AfxFileExists(includePath) then
                 wszCompleteFilename = includePath
                 exit for
             end if
         next
     end if
-    wszCompleteFilename = AfxStrReplace(wszCompleteFilename, "/", "\")
-    wszCompleteFilename = AfxStrReplace(wszCompleteFilename, "\\", "\")
+    wszCompleteFilename = PsStrReplace(wszCompleteFilename, "/", "\")
+    wszCompleteFilename = PsStrReplace(wszCompleteFilename, "\\", "\")
  
     function = wszCompleteFilename
 end function
@@ -1124,7 +1124,7 @@ function LoadLocalizationFile( _
                 if (nKey >= lbound(gLangEnglish)) andalso (nKey <= ubound(gLangEnglish)) then
                     ' Use ** to ensure that cyrillic langauge gets converted correctly. FB intrinsic
                     ' functions (RTRIM) automatically convert those incorrectly when using CBSTR or DWSTRING.
-                    gLangEnglish(nKey) = rtrim(**AfxStrParse(wData, 1, ";"), any chr(9,32))
+                    gLangEnglish(nKey) = rtrim(**PsStrParse(wData, 1, ";"), any chr(9,32))
                 end if
             else
                 if (nKey >= lbound(LL)) andalso (nKey <= ubound(LL)) then
@@ -1132,7 +1132,7 @@ function LoadLocalizationFile( _
                     ' a semicolon character.
                     ' Use ** to ensure that cyrillic langauge gets converted correctly. FB intrinsic
                     ' functions (RTRIM) automatically convert those incorrectly when using CBSTR or DWSTRING.
-                    LL(nKey) = rtrim(**AfxStrParse(wData, 1, ";"), any chr(9,32))
+                    LL(nKey) = rtrim(**PsStrParse(wData, 1, ";"), any chr(9,32))
                     ' if the local phrase is empty then fill it using the English version.
                     if len(LL(nKey)) = 0 then 
                         if (nKey >= lbound(gLangEnglish)) andalso (nKey <= ubound(gLangEnglish)) then

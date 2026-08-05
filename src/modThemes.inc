@@ -449,8 +449,8 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
         wst = trim(AfxStrExtract( 1, wst, "#"))     ' remove comments
         If PsLen(wst) = 0 Then Continue Do
 
-        keyValue = trim(AfxStrParse(wst, 1, ":"))
-        keyData = trim(AfxStrParse(wst, 2, ":"))
+        keyValue = trim(PsStrParse(wst, 1, ":"))
+        keyData = trim(PsStrParse(wst, 2, ":"))
         
         ' is this a replaceable parameter
         if PsLeft(wst, 1) = "%" then
@@ -491,9 +491,9 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
         ' if 2 then simply store the data in keyData. if 3 then break the
         ' data into the component properties.
         dim keys(3) as string   ' always have maximum of 3 keys
-        dim as long numKeys = AfxStrParseCount(keyValue, ".")  ' actual number of keys retrieved
+        dim as long numKeys = PsStrParseCount(keyValue, ".")  ' actual number of keys retrieved
         for i as long = 1 to numKeys
-            keys(i) = AfxStrParse(keyValue, i, ".")
+            keys(i) = PsStrParse(keyValue, i, ".")
         next
         ' there will always be at least 2 elements to the key and
         ' we use that to lookup the theme type structure.
@@ -503,15 +503,15 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
         ' means opaque. The component COUNT is what distinguishes the two -- val("") is 0,
         ' i.e. fully transparent, which is the exact opposite of what "r,g,b" means.
         dim as long r, g, b, clr
-        r = val(AfxStrParse(keyData, 1, ","))
-        g = val(AfxStrParse(keyData, 2, ","))
-        b = val(AfxStrParse(keyData, 3, ","))
+        r = val(PsStrParse(keyData, 1, ","))
+        g = val(PsStrParse(keyData, 2, ","))
+        b = val(PsStrParse(keyData, 3, ","))
         clr = BGR(r, g, b)
 
         dim as long nAlpha = 255
         dim as boolean bHasAlpha = false
-        if AfxStrParseCount(keyData, ",") >= 4 then
-            nAlpha = val(AfxStrParse(keyData, 4, ","))
+        if PsStrParseCount(keyData, ",") >= 4 then
+            nAlpha = val(PsStrParse(keyData, 4, ","))
             if nAlpha < 0 then nAlpha = 0
             if nAlpha > 255 then nAlpha = 255
             bHasAlpha = true
@@ -603,7 +603,7 @@ end function
 ''
 private function Theme_SubsysForNamespace( byval k as string ) as ulong
 
-    dim as string ns = AfxStrParse( k, 1, "." )
+    dim as string ns = PsStrParse( k, 1, "." )
 
     select case ns
         ' frmAutoComplete derives its row colours from the editor styles (keyword2, keyword3,
@@ -1498,11 +1498,11 @@ private function Theme_ColorFromText( byval wszText as DWSTRING, _
 
     dim as string s = PsTrim( wszText )
     if len(s) = 0 then return false
-    if AfxStrParseCount( s, "," ) < 3 then return false
+    if PsStrParseCount( s, "," ) < 3 then return false
 
-    dim as long r = val( AfxStrParse( s, 1, "," ) )
-    dim as long g = val( AfxStrParse( s, 2, "," ) )
-    dim as long b = val( AfxStrParse( s, 3, "," ) )
+    dim as long r = val( PsStrParse( s, 1, "," ) )
+    dim as long g = val( PsStrParse( s, 2, "," ) )
+    dim as long b = val( PsStrParse( s, 3, "," ) )
     if r < 0 then r = 0
     if r > 255 then r = 255
     if g < 0 then g = 0
@@ -1511,8 +1511,8 @@ private function Theme_ColorFromText( byval wszText as DWSTRING, _
     if b > 255 then b = 255
     clr = BGR( r, g, b )
 
-    if AfxStrParseCount( s, "," ) >= 4 then
-        nAlpha = val( AfxStrParse( s, 4, "," ) )
+    if PsStrParseCount( s, "," ) >= 4 then
+        nAlpha = val( PsStrParse( s, 4, "," ) )
         if nAlpha < 0 then nAlpha = 0
         if nAlpha > 255 then nAlpha = 255
     end if
@@ -1781,7 +1781,7 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
         if gThemeKeys(i).ofsText >= 0 then continue for
 
         ' Blank line between namespaces, purely so the file stays readable by hand.
-        dim as string sNamespace = AfxStrParse( sKey, 1, "." )
+        dim as string sNamespace = PsStrParse( sKey, 1, "." )
         if (len(sLastNamespace) > 0) andalso (sNamespace <> sLastNamespace) then print #f, ""
         sLastNamespace = sNamespace
 

@@ -85,8 +85,8 @@ end function
 ' ========================================================================================
 private sub frmMenuBar_SplitCaption( byval nID as long, byref wszCaption as DWSTRING, byref wszAccel as DWSTRING )
     dim as DWSTRING wszText = getMenuText( nID )
-    wszCaption = AfxStrParse( wszText, 1, wchr(9) )
-    wszAccel   = AfxStrParse( wszText, 2, wchr(9) )
+    wszCaption = PsStrParse( wszText, 1, wchr(9) )
+    wszAccel   = PsStrParse( wszText, 2, wchr(9) )
 end sub
 
 

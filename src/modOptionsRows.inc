@@ -640,9 +640,9 @@ function OptionsRows_BuildPage( byval nPage as long, byval hPanel as HWND ) as l
             case OPT_COMBO
                 dim as HWND hCtrl = PsComboBox_Create( hPanel, IDC_FRMOPTIONS_FIRSTROW + i )
                 PsComboBox_SetFont( hCtrl, OptionsFont_Base() )
-                dim as long nItems = AfxStrParseCount( gOptRows(i).wszItems, chr(9) )
+                dim as long nItems = PsStrParseCount( gOptRows(i).wszItems, chr(9) )
                 for j as long = 1 to nItems
-                    PsComboBox_AddItem( hCtrl, AfxStrParse( gOptRows(i).wszItems, j, chr(9) ) )
+                    PsComboBox_AddItem( hCtrl, PsStrParse( gOptRows(i).wszItems, j, chr(9) ) )
                 next
                 PsComboBox_SetCurSel( hCtrl, nSeed )
                 PsComboBox_SetSelChangeCallback( hCtrl, @OptionsRows_ComboChanged )
@@ -880,12 +880,12 @@ sub OptionsRows_RunBindTest()
             ENCROWCHK( len(LL(gOptRows(idxRow).nLabelID)) > 0, _
                 "L(" & str(gOptRows(idxRow).nLabelID) & ") encoding label is blank" )
 
-            dim as long nItems = AfxStrParseCount( gOptRows(idxRow).wszItems, chr(9) )
+            dim as long nItems = PsStrParseCount( gOptRows(idxRow).wszItems, chr(9) )
             ENCROWCHK( nItems = (FILE_ENCODING_UTF16_BOM - FILE_ENCODING_ANSI + 1), _
                 "encoding combo has " & str(nItems) & " items, expected one per FILE_ENCODING_*" )
 
             for e as long = FILE_ENCODING_ANSI to FILE_ENCODING_UTF16_BOM
-                dim as DWSTRING wItem = AfxStrParse( gOptRows(idxRow).wszItems, e + 1, chr(9) )
+                dim as DWSTRING wItem = PsStrParse( gOptRows(idxRow).wszItems, e + 1, chr(9) )
                 ENCROWCHK( wItem = Doc_EncodingName(e), _
                     "encoding combo item " & str(e) & " is """ & wItem & """, expected """ & _
                     Doc_EncodingName(e) & """ -- index no longer equals the encoding value" )
@@ -960,7 +960,7 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
                        "row " & str(i) & " numeric range is empty" )
         end if
         if gOptRows(i).nKind = OPT_COMBO then
-            OPTASSERT( AfxStrParseCount(gOptRows(i).wszItems, chr(9)) > 1, _
+            OPTASSERT( PsStrParseCount(gOptRows(i).wszItems, chr(9)) > 1, _
                        "row " & str(i) & " combo has fewer than two choices" )
         end if
     next
@@ -1083,7 +1083,7 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
             case OPT_COMBO
                 OPTASSERT( PsComboBox_GetCurSel(gOptRows(i).hCtrl) = nSaved, _
                            "row " & str(i) & " combo does not match its staging field" )
-                OPTASSERT( PsComboBox_GetCount(gOptRows(i).hCtrl) = AfxStrParseCount(gOptRows(i).wszItems, chr(9)), _
+                OPTASSERT( PsComboBox_GetCount(gOptRows(i).hCtrl) = PsStrParseCount(gOptRows(i).wszItems, chr(9)), _
                            "row " & str(i) & " combo item count does not match its declared choices" )
                 OptionsRows_ComboChanged( gOptRows(i).hCtrl, nSaved, 0 )
                 OPTASSERT( *pFld = 0, "row " & str(i) & " did not store the combo index" )

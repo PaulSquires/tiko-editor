@@ -21,9 +21,9 @@
 function ConvertTikoVersion( byref wszVersion as wstring ) as long
    dim as DWSTRING wszPart1, wszPart2, wszPart3
    
-   wszPart1 = AfxStrLSet( AfxStrParse(wszVersion, 1, "."), 3, "0" )
-   wszPart2 = AfxStrLSet( AfxStrParse(wszVersion, 2, "."), 3, "0" )
-   wszPart3 = AfxStrRSet( AfxStrParse(wszVersion, 3, "."), 3, "0" )
+   wszPart1 = PsStrLSet( PsStrParse(wszVersion, 1, "."), 3, "0" )
+   wszPart2 = PsStrLSet( PsStrParse(wszVersion, 2, "."), 3, "0" )
+   wszPart3 = PsStrRSet( PsStrParse(wszVersion, 3, "."), 3, "0" )
    
    function = val(wszPart1 + wszPart2 + wszPart3) 
 end function

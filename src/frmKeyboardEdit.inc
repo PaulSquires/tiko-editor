@@ -223,10 +223,10 @@ private sub frmKeyboardEdit_RefreshViews()
     dim as boolean bCtrl, bAlt, bShift
     dim as DWSTRING wszKey
 
-    dim as long nCount = AfxStrParseCount( gEditKeys, "+" )
+    dim as long nCount = PsStrParseCount( gEditKeys, "+" )
     if len(gEditKeys) then
         for i as long = 1 to nCount
-            dim as DWSTRING wszPart = AfxStrParse( gEditKeys, i, "+" )
+            dim as DWSTRING wszPart = PsStrParse( gEditKeys, i, "+" )
             if i = nCount then
                 wszKey = wszPart
             else
@@ -906,8 +906,8 @@ sub frmKeyboardEdit_RunSelfTest()
         dim as long vks(4) = { asc("D"), VK_F4, VK_PRIOR, VK_TAB, VK_DELETE }
         for i as long = 0 to 4
             dim as DWSTRING wsz = frmKeyboardEdit_BuildKeyString( vks(i), true, false, false )
-            dim as long n = AfxStrParseCount( wsz, "+" )
-            dim as DWSTRING wszFinal = AfxStrParse( wsz, n, "+" )
+            dim as long n = PsStrParseCount( wsz, "+" )
+            dim as DWSTRING wszFinal = PsStrParse( wsz, n, "+" )
             dim as string sW = wsz
             KEASSERT( frmKeyboard_AccelKeyToValue( wszFinal ) = vks(i), _
                       "composed """ & sW & """ does not parse back to the same key" )

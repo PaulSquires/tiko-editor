@@ -227,13 +227,13 @@ function code_AddPathsToLinkModules( byval pCompile as COMPILE_TYPE ptr ) as lon
     dim as DWSTRING wszCurrentFolder = AfxStrPathname("PATH", pCompile->MainFilename)
     dim as DWSTRING wszCompilerIncFolder = AfxStrPathname("PATH", pCompile->CompilerPath) & "inc\"
     
-    dim as DWSTRING wszLinkModules = AfxStrShrink(pCompile->LinkModules)  
+    dim as DWSTRING wszLinkModules = PsStrShrink(pCompile->LinkModules)  
     
-    dim as long numModules = AfxStrParseCount(wszLinkModules, " ")
+    dim as long numModules = PsStrParseCount(wszLinkModules, " ")
     for i as long = 1 to numModules
-        dim as DWSTRING modulename = trim(AfxStrParse(wszLinkModules, i, " "))
+        dim as DWSTRING modulename = trim(PsStrParse(wszLinkModules, i, " "))
         ' Remove any enclosing double quotes from the filename
-        modulename = AfxStrRemove(modulename, chr(34))
+        modulename = PsStrRemove(modulename, chr(34))
 
         if PsLen(modulename) = 0 then continue for
 
@@ -248,11 +248,11 @@ function code_AddPathsToLinkModules( byval pCompile as COMPILE_TYPE ptr ) as lon
         ' Iterate the optional semi colon separated list of compiler include paths
         pCompile->CompileIncludes = ""
         dim as DWSTRING includePath
-        dim as long numpaths = AfxStrParseCount(gConfig.CompilerIncludes, ";")
+        dim as long numpaths = PsStrParseCount(gConfig.CompilerIncludes, ";")
         for i as long = 1 to numpaths
-            includePath = rtrim(AfxStrParse(gConfig.CompilerIncludes, i, ";"))
+            includePath = rtrim(PsStrParse(gConfig.CompilerIncludes, i, ";"))
             ' Remove any enclosing double quotes from the includepath
-            includePath = AfxStrRemove(includePath, chr(34)) & "\"   ' ensure trailing backslash
+            includePath = PsStrRemove(includePath, chr(34)) & "\"   ' ensure trailing backslash
             if PsLen(includePath) then 
             wszTemp = includePath & modulename
             if AfxFileExists(wszTemp) then
@@ -289,11 +289,11 @@ function code_SearchForDirectives( byval pCompile as COMPILE_TYPE ptr ) as boole
         select case directives(i).DirectiveFlag 
             case IDM_CONSOLE
                 n = instr(pCompile->CompileFlags, " -S GUI ")
-                if n then pCompile->CompileFlags = AfxStrDelete(pCompile->CompileFlags, n, 8)
+                if n then pCompile->CompileFlags = PsStrDelete(pCompile->CompileFlags, n, 8)
                 pCompile->CompileFlags += " -s console "
             case IDM_GUI
                 n = instr(pCompile->CompileFlags, " -S CONSOLE ")
-                if n then pCompile->CompileFlags = AfxStrDelete(pCompile->CompileFlags, n, 12)
+                if n then pCompile->CompileFlags = PsStrDelete(pCompile->CompileFlags, n, 12)
                 pCompile->CompileFlags += " -s gui "
             case IDM_RESOURCE
                 pCompile->ResourceFile = directives(i).DirectiveText
@@ -542,12 +542,12 @@ function code_Compile( byval wID as long ) as boolean
     ' also include the -g compile flag.
     if pCompile->CompileID = IDM_DEBUG_STARTDEBUGGING then
         ' Remove any -O optimization flags and add no inline flag.
-        pCompile->CompileFlags = AfxStrRemove( pCompile->CompileFlags, " -Wc" )
-        pCompile->CompileFlags = AfxStrRemove( pCompile->CompileFlags, " -O1" )
-        pCompile->CompileFlags = AfxStrRemove( pCompile->CompileFlags, " -O2" )
-        pCompile->CompileFlags = AfxStrRemove( pCompile->CompileFlags, " -O3" )
-        pCompile->CompileFlags = AfxStrRemove( pCompile->CompileFlags, " -Os" )
-        pCompile->CompileFlags = AfxStrRemove( pCompile->CompileFlags, " -Ofast" )
+        pCompile->CompileFlags = PsStrRemove( pCompile->CompileFlags, " -Wc" )
+        pCompile->CompileFlags = PsStrRemove( pCompile->CompileFlags, " -O1" )
+        pCompile->CompileFlags = PsStrRemove( pCompile->CompileFlags, " -O2" )
+        pCompile->CompileFlags = PsStrRemove( pCompile->CompileFlags, " -O3" )
+        pCompile->CompileFlags = PsStrRemove( pCompile->CompileFlags, " -Os" )
+        pCompile->CompileFlags = PsStrRemove( pCompile->CompileFlags, " -Ofast" )
         ' Force a GAS backend. This used to force gcc, because gdb cannot read what the
         ' gas backends emit -- fbc's changelog describes that data as "for FBdebugger
         ' only". The cost was debugging a DIFFERENT binary from the one being built, with
@@ -560,10 +560,10 @@ function code_Compile( byval wID as long ) as boolean
             ' removal rather than same-length substitution because " -gen gcc" and
             ' " -gen gas64" are different lengths and the old padding trick does not
             ' generalise in this direction.
-            pCompile->CompileFlags = AfxStrRemove( pCompile->CompileFlags, " -gen gas64" )
-            pCompile->CompileFlags = AfxStrRemove( pCompile->CompileFlags, " -gen gas" )
-            pCompile->CompileFlags = AfxStrRemove( pCompile->CompileFlags, " -gen gcc" )
-            pCompile->CompileFlags = AfxStrRemove( pCompile->CompileFlags, " -gen llvm" )
+            pCompile->CompileFlags = PsStrRemove( pCompile->CompileFlags, " -gen gas64" )
+            pCompile->CompileFlags = PsStrRemove( pCompile->CompileFlags, " -gen gas" )
+            pCompile->CompileFlags = PsStrRemove( pCompile->CompileFlags, " -gen gcc" )
+            pCompile->CompileFlags = PsStrRemove( pCompile->CompileFlags, " -gen llvm" )
             pCompile->CompileFlags += wszWantGen
         end if
         pCompile->CompileFlags += " -g -exx -nostrip "
@@ -573,9 +573,9 @@ function code_Compile( byval wID as long ) as boolean
     ' Process any user specified Include Paths (per Options). These are added
     ' to CompileFlags and passed to the compiler using the -i directive.
     dim as DWSTRING includePath
-    dim as long numpaths = AfxStrParseCount(gConfig.CompilerIncludes, ";")
+    dim as long numpaths = PsStrParseCount(gConfig.CompilerIncludes, ";")
     for i as long = 1 to numpaths
-        includePath = rtrim(AfxStrParse(gConfig.CompilerIncludes, i, ";"))
+        includePath = rtrim(PsStrParse(gConfig.CompilerIncludes, i, ";"))
         if PsLen(includePath) then 
             pCompile->CompileIncludes += " -i " + wDQ + includePath + wDQ
         end if
@@ -803,7 +803,7 @@ function code_Compile( byval wID as long ) as boolean
     
 
     ' if pCompile->OutputFilename is a relative filename then convert it to full filename.
-    pCompile->OutputFilename = AfxStrReplace( pCompile->OutputFilename, "/", "\" )
+    pCompile->OutputFilename = PsStrReplace( pCompile->OutputFilename, "/", "\" )
     if AfxPathIsRelative( pCompile->OutputFilename ) then 
         pCompile->OutputFilename = AfxPathCombine( pCompile->MainFolder, pCompile->OutputFilename )
     end if

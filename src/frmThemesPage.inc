@@ -195,7 +195,7 @@ end function
 ' list builder below calls this too, so the assertion checks the real rule rather than a copy
 ' of it that could drift.
 function frmThemes_PageForKey( byval sKey as string ) as long
-    dim as string sNamespace = AfxStrParse( sKey, 1, "." )
+    dim as string sNamespace = PsStrParse( sKey, 1, "." )
     ' general.* is description and version text, not colour: on neither page.
     if sNamespace = "general" then return THEMEPAGE_NONE
     if sNamespace = "editor" then return THEMEPAGE_SYNTAX

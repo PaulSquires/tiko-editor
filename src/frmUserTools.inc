@@ -117,10 +117,10 @@ function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval
         if pDocMain then wszMainSource = chr(34) + pDocMain->DiskFilename + chr(34)
 
         wszParameters = gConfig.Tools(nToolNum).wszParameters
-        wszParameters = AfxStrReplace(wszParameters, "<P>", wszProjectName)
-        wszParameters = AfxStrReplace(wszParameters, "<p>", wszProjectName)
-        wszParameters = AfxStrReplace(wszParameters, "<S>", wszMainSource)
-        wszParameters = AfxStrReplace(wszParameters, "<s>", wszMainSource)
+        wszParameters = PsStrReplace(wszParameters, "<P>", wszProjectName)
+        wszParameters = PsStrReplace(wszParameters, "<p>", wszProjectName)
+        wszParameters = PsStrReplace(wszParameters, "<S>", wszMainSource)
+        wszParameters = PsStrReplace(wszParameters, "<s>", wszMainSource)
 
         dim as long idxBuild = frmBuildConfig_getActiveBuildIndex()
         if (idxBuild > -1) andalso (pDocMain <> 0) then
@@ -142,15 +142,15 @@ function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval
                 end if
             end if
         end if
-        wszParameters = AfxStrReplace(wszParameters, "<E>", wszExeName)
-        wszParameters = AfxStrReplace(wszParameters, "<e>", wszExeName)
+        wszParameters = PsStrReplace(wszParameters, "<E>", wszExeName)
+        wszParameters = PsStrReplace(wszParameters, "<e>", wszExeName)
 
         if pDocCurrent then
             ' Determine the word underneath the cursor
             wszWord = trim(pDocCurrent->GetWord, any " ()*&^%$#@!~`:;'><?/.,-+=\|}{[]")
         end if
-        wszParameters = AfxStrReplace(wszParameters, "<W>", wszWord)
-        wszParameters = AfxStrReplace(wszParameters, "<w>", wszWord)
+        wszParameters = PsStrReplace(wszParameters, "<W>", wszWord)
+        wszParameters = PsStrReplace(wszParameters, "<w>", wszWord)
 
     end if
 
@@ -1448,8 +1448,8 @@ sub frmUserTools_RunSelfTest()
         dim as DWSTRING wszCandidates = "F11" & chr(9) & "F10" & chr(9) & "F9" & chr(9) & _
                                         "F8"  & chr(9) & "F7"  & chr(9) & "F6"
         dim as DWSTRING wszXKey
-        for i as long = 1 to AfxStrParseCount( wszCandidates, chr(9) )
-            dim as DWSTRING wszTry = AfxStrParse( wszCandidates, i, chr(9) )
+        for i as long = 1 to PsStrParseCount( wszCandidates, chr(9) )
+            dim as DWSTRING wszTry = PsStrParse( wszCandidates, i, chr(9) )
             if len( frmAssignKey_ClashText( wszTry, true, true, true, _
                                             ASSIGNKEY_DOMAIN_NONE, -1 ) ) = 0 then
                 wszXKey = wszTry : exit for

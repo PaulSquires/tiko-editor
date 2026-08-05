@@ -706,8 +706,8 @@ function AttemptAutoInsert() as long
         dim as string sEndText = gAIBlocks(idx).wszEnd
         if (idBlock = BLOCK_STATEMENT_FOR) andalso gConfig.ForNextVariable then
             ' Original casing, not the uppercased copy -- this is the user's identifier.
-            dim as string sFor = ltrim( AfxStrShrink(strPrevLineRaw) )
-            dim as string sVar = AfxStrParseAny( sFor, 2, " =" )
+            dim as string sFor = ltrim( PsStrShrink(strPrevLineRaw) )
+            dim as string sVar = PsStrParseAny( sFor, 2, " =" )
             if len(sVar) then sEndText &= " " & sVar
         end if
         strFill &= vbcrlf & sOuter & sEndText & vbcrlf

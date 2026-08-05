@@ -67,8 +67,8 @@ function GetThemeDescription( byval wszFilename as DWSTRING ) as string
         wst = pStream.ReadLine
         wst = trim(AfxStrExtract( 1, wst, "#"))     ' remove comments
         if PsLen(wst) = 0 then continue Do
-        keyValue = trim(AfxStrParse(wst, 1, ":"))
-        keyData = trim(AfxStrParse(wst, 2, ":"))
+        keyValue = trim(PsStrParse(wst, 1, ":"))
+        keyData = trim(PsStrParse(wst, 2, ":"))
         if keyValue = "general.description" then
             function = keyData
             exit do
@@ -112,8 +112,8 @@ private sub frmOptionsColors_FillSizes( byval hCombo as HWND, byval wszFont as D
             PsComboBox_AddItem( hCombo, "12" ): PsComboBox_AddItem( hCombo, "14" )
         case else
             dim as string sizes = "8 9 10 11 12 14 16 18 20 22 24 26 28 32 36"
-            for i as long = 1 to AfxStrParseCount( sizes, " " )
-                PsComboBox_AddItem( hCombo, AfxStrParse( sizes, i, " " ) )
+            for i as long = 1 to PsStrParseCount( sizes, " " )
+                PsComboBox_AddItem( hCombo, PsStrParse( sizes, i, " " ) )
             next
     end select
 end sub
@@ -122,8 +122,8 @@ end sub
 private sub frmOptionsColors_FillCharsets( byval hCombo as HWND )
     dim as string cs = "Default,Ansi,Arabic,Baltic,Chinese Big 5,East Europe,GB 2312,Greek," & _
                        "Hangul,Hebrew,Johab,Mac,OEM,Russian,Shiftjis,Symbol,Thai,Turkish,Vietnamese"
-    for i as long = 1 to AfxStrParseCount( cs, "," )
-        PsComboBox_AddItem( hCombo, AfxStrParse( cs, i, "," ) )
+    for i as long = 1 to PsStrParseCount( cs, "," )
+        PsComboBox_AddItem( hCombo, PsStrParse( cs, i, "," ) )
     next
 end sub
 

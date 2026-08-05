@@ -212,7 +212,7 @@ function frmOptionsLocal_LocalEditCheck() as long
         for i as long = 0 to nCount - 1
             dim as DWSTRING wszIndex = PsListTree_GetCellText( ghLocalList, i, LOCALCOL_INDEX )
             dim as long idx = val(wszIndex)
-            wszPhrase = AfxStrRSet(wszIndex, 5, "0") + wstr(":") + gLocalPhrases(idx)
+            wszPhrase = PsStrRSet(wszIndex, 5, "0") + wstr(":") + gLocalPhrases(idx)
             pStream.WriteLine PsRTrim(wszPhrase)
         next
     end if
@@ -275,7 +275,7 @@ function frmOptionsLocal_LoadLocalizationFile( byref wszFilename as wstring ) as
             if (nKey >= lbound(gLocalPhrases)) andalso (nKey <= ubound(gLocalPhrases)) then
                 ' Use ** so cyrillic gets converted correctly; FB intrinsics (RTRIM) convert
                 ' those incorrectly through CBSTR / DWSTRING.
-                gLocalPhrases(nKey) = rtrim(**AfxStrParse(wData, 1, ";"), any chr(9,32))
+                gLocalPhrases(nKey) = rtrim(**PsStrParse(wData, 1, ";"), any chr(9,32))
                 ' ENGLISH IS THE CANONICAL REFERENCE. An id the English file has no string for
                 ' is an unused slot, so every other language is blank there too -- a translation
                 ' sitting in one is stale data, not content, and is dropped on load. Deliberate;
@@ -882,7 +882,7 @@ sub frmOptionsLocal_Build( byval hPage as HWND )
     frmOptionsLocal_LoadLocalizationFile( gLocalCurrentFile )
     PsListTree_BeginUpdate( ghLocalList )
     for i as long = lbound(gLangEnglish) to ubound(gLangEnglish)
-        dim as DWSTRING wKey = AfxStrRset( str(i), 5, "0" )
+        dim as DWSTRING wKey = PsStrRSet( str(i), 5, "0" )
         ListBox_AddTabbedRow( ghLocalList, wKey & chr(9) & gLangEnglish(i) )
     next
     PsListTree_EndUpdate( ghLocalList )

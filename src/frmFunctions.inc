@@ -154,7 +154,7 @@ sub frmFunctions_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
         ' separated by an % character.
         p->b->SetFont( ghFont(GUIFONT_10) )
         rcText.left = rcIcon.right
-        wszCaption = AfxStrParse(wszCaption, 1, "%")
+        wszCaption = PsStrParse(wszCaption, 1, "%")
         p->b->PaintText( wszCaption, @rcText, DT_LEFT )
     end if
 
@@ -233,7 +233,7 @@ function frmFunctions_TooltipCallback( byval hCtl as HWND, byval row as integer,
         ' outer variable, so the formatted calltip died with the if-block and the empty
         ' outer one was returned. PsListTree reads an empty string as "no tip for this
         ' row", so the panel showed no tooltips at all.
-        wszTooltip = AfxStrParse(wszCaption, 2, "%")
+        wszTooltip = PsStrParse(wszCaption, 2, "%")
         wszTooltip = FormatCodetip( wszTooltip )
         ' The tip wraps because PsTooltip does it natively (armed once, in
         ' Tooltips_ApplyTheme). This used to hand-send TTM_SETMAXTIPWIDTH to the

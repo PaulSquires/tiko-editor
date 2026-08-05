@@ -404,9 +404,9 @@ function clsConfig.SaveConfigFileBody() as long
     dim as DWSTRING allIncludes = rtrim(this.CompilerIncludes, ";")
     dim as DWSTRING SaveCompilerIncludes
     dim as DWSTRING includePath
-    dim as long numpaths = AfxStrParseCount(allIncludes, ";")
+    dim as long numpaths = PsStrParseCount(allIncludes, ";")
     for i as long = 1 to numpaths
-        includePath = trim(AfxStrParse(allIncludes, i, ";"))
+        includePath = trim(PsStrParse(allIncludes, i, ";"))
         if PsLen(includePath) then
             includePath = ProcessToCurdriveApp(includePath)
             SaveCompilerIncludes = SaveCompilerIncludes + includePath + ";"
@@ -676,8 +676,8 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
                 ' string digits to decide which Explorer header a document belongs under,
                 ' so one stray space in a hand-edited "CATEGORY_01= 1|-|Main" makes that
                 ' category match nothing and silently empties it.
-                this.Cat(i).idFileType     = trim(AfxStrParse(wData, 1, "|-|"))
-                this.Cat(i).wszDescription = AfxStrParse(wData, 2, "|-|")
+                this.Cat(i).idFileType     = trim(PsStrParse(wData, 1, "|-|"))
+                this.Cat(i).wszDescription = PsStrParse(wData, 2, "|-|")
                 continue do
             end if
             end if
@@ -686,19 +686,19 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
             i = val(PsRight(wKey,2))
                 if i >= 0 then
                     if i > ubound(this.Tools) then redim preserve this.Tools(i)
-                    this.Tools(i).wszDescription   = AfxStrParse(wData, 1, "|-|")
-                    this.Tools(i).wszCommand       = ProcessFromCurdriveApp( AfxStrParse(wData, 2, "|-|") )
-                    this.Tools(i).wszParameters    = AfxStrParse(wData, 3, "|-|")
-                    this.Tools(i).wszKey           = AfxStrParse(wData, 4, "|-|")
-                    this.Tools(i).wszWorkingFolder = ProcessFromCurdriveApp( AfxStrParse(wData, 5, "|-|") )
-                    this.Tools(i).IsCtrl           = val(AfxStrParse(wData, 6, "|-|"))
-                    this.Tools(i).IsAlt            = val(AfxStrParse(wData, 7, "|-|"))
-                    this.Tools(i).IsShift          = val(AfxStrParse(wData, 8, "|-|"))
-                    this.Tools(i).IsPromptRun      = val(AfxStrParse(wData, 9, "|-|"))
-                    this.Tools(i).IsMinimized      = val(AfxStrParse(wData, 10, "|-|"))
-                    this.Tools(i).IsWaitFinish     = val(AfxStrParse(wData, 11, "|-|"))
-                    this.Tools(i).IsDisplayMenu    = val(AfxStrParse(wData, 12, "|-|"))
-                    this.Tools(i).Action           = val(AfxStrParse(wData, 13, "|-|"))
+                    this.Tools(i).wszDescription   = PsStrParse(wData, 1, "|-|")
+                    this.Tools(i).wszCommand       = ProcessFromCurdriveApp( PsStrParse(wData, 2, "|-|") )
+                    this.Tools(i).wszParameters    = PsStrParse(wData, 3, "|-|")
+                    this.Tools(i).wszKey           = PsStrParse(wData, 4, "|-|")
+                    this.Tools(i).wszWorkingFolder = ProcessFromCurdriveApp( PsStrParse(wData, 5, "|-|") )
+                    this.Tools(i).IsCtrl           = val(PsStrParse(wData, 6, "|-|"))
+                    this.Tools(i).IsAlt            = val(PsStrParse(wData, 7, "|-|"))
+                    this.Tools(i).IsShift          = val(PsStrParse(wData, 8, "|-|"))
+                    this.Tools(i).IsPromptRun      = val(PsStrParse(wData, 9, "|-|"))
+                    this.Tools(i).IsMinimized      = val(PsStrParse(wData, 10, "|-|"))
+                    this.Tools(i).IsWaitFinish     = val(PsStrParse(wData, 11, "|-|"))
+                    this.Tools(i).IsDisplayMenu    = val(PsStrParse(wData, 12, "|-|"))
+                    this.Tools(i).Action           = val(PsStrParse(wData, 13, "|-|"))
                     continue do
                 end If
             end If
@@ -707,17 +707,17 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
             i = val(PsRight(wKey,2))
                 if i >= 0 then
                     if i > ubound(this.Builds) then redim preserve this.Builds(i)
-                    this.Builds(i).id             = AfxStrParse(wData, 1, "|-|")
-                    this.Builds(i).wszDescription = AfxStrParse(wData, 2, "|-|")
-                    this.Builds(i).wszOptions     = AfxStrParse(wData, 3, "|-|")
-                    this.Builds(i).IsDefault      = val(AfxStrParse(wData, 4, "|-|"))
-                    this.Builds(i).Is32bit        = val(AfxStrParse(wData, 5, "|-|"))
-                    this.Builds(i).Is64bit        = val(AfxStrParse(wData, 6, "|-|"))
-                    this.Builds(i).ExcludeInPopup = val(AfxStrParse(wData, 7, "|-|"))
-                    this.Builds(i).IsCtrl         = val(AfxStrParse(wData, 8, "|-|"))
-                    this.Builds(i).IsAlt          = val(AfxStrParse(wData, 9, "|-|"))
-                    this.Builds(i).IsShift        = val(AfxStrParse(wData, 10, "|-|"))
-                    this.Builds(i).wszKey         = AfxStrParse(wData, 11, "|-|")
+                    this.Builds(i).id             = PsStrParse(wData, 1, "|-|")
+                    this.Builds(i).wszDescription = PsStrParse(wData, 2, "|-|")
+                    this.Builds(i).wszOptions     = PsStrParse(wData, 3, "|-|")
+                    this.Builds(i).IsDefault      = val(PsStrParse(wData, 4, "|-|"))
+                    this.Builds(i).Is32bit        = val(PsStrParse(wData, 5, "|-|"))
+                    this.Builds(i).Is64bit        = val(PsStrParse(wData, 6, "|-|"))
+                    this.Builds(i).ExcludeInPopup = val(PsStrParse(wData, 7, "|-|"))
+                    this.Builds(i).IsCtrl         = val(PsStrParse(wData, 8, "|-|"))
+                    this.Builds(i).IsAlt          = val(PsStrParse(wData, 9, "|-|"))
+                    this.Builds(i).IsShift        = val(PsStrParse(wData, 10, "|-|"))
+                    this.Builds(i).wszKey         = PsStrParse(wData, 11, "|-|")
                     continue do
                 end If
             end If
@@ -896,9 +896,9 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
     dim as DWSTRING allIncludes = rtrim(this.CompilerIncludes, ";")
     this.CompilerIncludes = ""
     dim as DWSTRING includePath
-    dim as long numpaths = AfxStrParseCount(allIncludes, ";")
+    dim as long numpaths = PsStrParseCount(allIncludes, ";")
     for i as long = 1 to numpaths
-        includePath = trim(AfxStrParse(allIncludes, i, ";"))
+        includePath = trim(PsStrParse(allIncludes, i, ";"))
         if PsLen(includePath) then
             includePath = ProcessFromCurdriveApp(includePath)
             this.CompilerIncludes = this.CompilerIncludes + includePath + ";"

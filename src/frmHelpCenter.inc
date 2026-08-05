@@ -152,11 +152,11 @@ end function
 ' ========================================================================================
 function HelpCenter_PathToFileUrl( byval wszPath as DWSTRING ) as DWSTRING
     dim as DWSTRING wszWork = wszPath
-    wszWork = AfxStrReplace( wszWork, "\", "/" )
-    wszWork = AfxStrReplace( wszWork, "%", "%25" )    ' first, or it re-encodes the rest
-    wszWork = AfxStrReplace( wszWork, " ", "%20" )
-    wszWork = AfxStrReplace( wszWork, "#", "%23" )
-    wszWork = AfxStrReplace( wszWork, "?", "%3F" )
+    wszWork = PsStrReplace( wszWork, "\", "/" )
+    wszWork = PsStrReplace( wszWork, "%", "%25" )    ' first, or it re-encodes the rest
+    wszWork = PsStrReplace( wszWork, " ", "%20" )
+    wszWork = PsStrReplace( wszWork, "#", "%23" )
+    wszWork = PsStrReplace( wszWork, "?", "%3F" )
     function = "file:///" & wszWork
 end function
 
@@ -194,7 +194,7 @@ function HelpCenter_NormalizeQuery( byval wszText as DWSTRING ) as DWSTRING
     if nCut > 0 then wszWork = PsLeft( wszWork, nCut - 1 )
 
     ' A tab inside the remaining line is whitespace to a search box, not a separator.
-    wszWork = AfxStrReplace( wszWork, wchr(9), " " )
+    wszWork = PsStrReplace( wszWork, wchr(9), " " )
     wszWork = PsTrim( wszWork )
 
     if PsLen( wszWork ) > HELPCENTER_MAXQUERY then
@@ -248,13 +248,13 @@ end function
 ' ========================================================================================
 function HelpCenter_JsQuote( byval wszText as DWSTRING ) as DWSTRING
     dim as DWSTRING wszWork = wszText
-    wszWork = AfxStrReplace( wszWork, "\", "\\" )        ' first, always
-    wszWork = AfxStrReplace( wszWork, """", "\" & """" )
-    wszWork = AfxStrReplace( wszWork, wchr(13), "\r" )
-    wszWork = AfxStrReplace( wszWork, wchr(10), "\n" )
-    wszWork = AfxStrReplace( wszWork, wchr(9),  "\t" )
-    wszWork = AfxStrReplace( wszWork, wchr(&h2028), "\u2028" )
-    wszWork = AfxStrReplace( wszWork, wchr(&h2029), "\u2029" )
+    wszWork = PsStrReplace( wszWork, "\", "\\" )        ' first, always
+    wszWork = PsStrReplace( wszWork, """", "\" & """" )
+    wszWork = PsStrReplace( wszWork, wchr(13), "\r" )
+    wszWork = PsStrReplace( wszWork, wchr(10), "\n" )
+    wszWork = PsStrReplace( wszWork, wchr(9),  "\t" )
+    wszWork = PsStrReplace( wszWork, wchr(&h2028), "\u2028" )
+    wszWork = PsStrReplace( wszWork, wchr(&h2029), "\u2029" )
     function = """" & wszWork & """"
 end function
 
@@ -700,7 +700,7 @@ sub frmHelpCenter_RunSelfTest()
     ' The result always carries its own surrounding quotes: it is pasted straight into the
     ' script as a complete literal, so a caller cannot forget them.
     HelpCenter_Check( "jsquote: plain text is quoted", _
-        HelpCenter_JsQuote( "AfxStrClipLeft" ) = """AfxStrClipLeft""" )
+        HelpCenter_JsQuote( "PsStrClipLeft" ) = """PsStrClipLeft""" )
     HelpCenter_Check( "jsquote: empty stays a valid literal", _
         HelpCenter_JsQuote( "" ) = """""" )
     ' The ordinary case that a wrong escape ORDER breaks: a Windows path.

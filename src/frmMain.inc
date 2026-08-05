@@ -330,7 +330,7 @@ function frmMain_ProcessCommandLine( byval hwnd as HWND ) as long
         if PsLen(wszArg) = 0 then exit do
         
         ' Remove any double quotes from the argument.
-        wszPath = AfxStrRemove( wszArg, wchr(34) )
+        wszPath = PsStrRemove( wszArg, wchr(34) )
         
         ' if no path exists for the file then add the current folder
         wszPath = AfxStrPathname( "PATH", wszArg )
@@ -1494,11 +1494,11 @@ function frmMain_WndProc( _
                             SafeCopyDataString( pDataToGet->lpData, pDataToGet->cbData )
                     if PsLen( wszCommandLine ) = 0 then return 0
 
-                    dim as integer numfiles = AfxStrParseCount(wszCommandLine, ";")
+                    dim as integer numfiles = PsStrParseCount(wszCommandLine, ";")
                     dim wszFiles(numfiles) as DWSTRING
 
                     for i as integer = 1 to numfiles
-                        wszFiles(i) = AfxStrParse(wszCommandLine, i, ";")
+                        wszFiles(i) = PsStrParse(wszCommandLine, i, ";")
                     next
                     if frmMain_ProcessFilesArray(hwnd, wszFiles()) then
                         LoadExplorerFiles()
