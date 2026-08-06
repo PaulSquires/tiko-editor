@@ -663,11 +663,32 @@ sub Format_RunApplySelfTest()
 
     print "Format apply self-test (localization)"
 
-    dim as long ids(0 to 15) = { 589, 591, 592, 593, 594, 595, 596, 598, _
-                                 633, 634, 635, 636, 637, 638, 639, 640 }
-    for i as long = 0 to 15
+    ' THE IDS THIS FILE ACTUALLY USES. The list here was 589-640 and had ZERO
+    ' overlap with them: the ids were renumbered at some point and this array was
+    ' never updated. Every one of those 16 was past ubound(LL) -- english.lang
+    ' carries MAXIMUM:521 -- so all 16 assertions were OUT-OF-BOUNDS READS on a
+    ' dynamic array, which FreeBASIC does not check.
+    '
+    ' That is why this suite was nondeterministic within one binary and differed
+    ' systematically between two: whatever sat past the end of the array decided
+    ' pass/fail, and it correlated with the build without being caused by it.
+    ' It cost two wrong conclusions during the 7d port before being pinned.
+    '
+    ' The stale list also survived in plain sight -- the resolved: line below
+    ' labelled its values 633/634/598 while READING 465/466/430.
+    dim as long ids(0 to 10) = { 421, 423, 424, 425, 426, 427, 428, 430, _
+                                 465, 471, 472 }
+    for i as long = lbound(ids) to ubound(ids)
         dim as string sName = "lang id " & str(ids(i)) & " is not blank"
-        CHECK( len(LL(ids(i))) > 0, sName )
+        ' BOUNDS FIRST, and reported as its own failure. An id past the end of LL
+        ' must fail LOUDLY and identically on every run -- the previous version
+        ' read the garbage instead and reported whatever it found.
+        if (ids(i) < lbound(LL)) orelse (ids(i) > ubound(LL)) then
+            CHECK( false, sName & " -- BEYOND ubound(LL)=" & str(ubound(LL)) & _
+                          ", so it is missing from english.lang entirely" )
+        else
+            CHECK( len(LL(ids(i))) > 0, sName )
+        end if
     next
 
     ' AND WHAT THEY RESOLVED TO, printed rather than asserted. This is NOT decoration:
@@ -676,7 +697,8 @@ sub Format_RunApplySelfTest()
     ' the assertions above cannot tell a real translation from the English fallback, and
     ' running under french.lang and seeing them green proves only that the ids exist.
     ' Reading this line is what distinguishes the two.
-    dim as string sShow = "  resolved: 633=" & LL(465) & " | 634=" & LL(466) & " | 598=" & LL(430)
+    ' The labels name the ids being READ. They did not, before.
+    dim as string sShow = "  resolved: 465=" & LL(465) & " | 466=" & LL(466) & " | 430=" & LL(430)
     print sShow
 
     dim as string sReport = "Format apply self-test: " & str(nPass) & " passed, " & str(nFail) & " failed"
