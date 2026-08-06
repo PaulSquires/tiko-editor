@@ -30,7 +30,7 @@
 ' ========================================================================================
 function frmMain_OpenProjectSafely( _
             byval hwnd as HWND, _
-            byref wszProjectFileName as const wstring _
+            byval wszProjectFileName as DWSTRING _
             ) as boolean
 
     ' The outgoing workspace's notes need no explicit capture here. frmOutput_NotesChanged
@@ -192,7 +192,8 @@ end Function
 ' is gone, or nothing was ever saved, that workspace is a fresh untitled one -- there is
 ' no "nothing open" state to fall through to any more.
 ' ========================================================================================
-function frmMain_RestoreWorkspace( byref wszLastProject as const wstring ) as long
+'' DWSTRING, NOT `byref as const wstring`. Pure -- two comparisons and an existence test.
+function frmMain_RestoreWorkspace( byval wszLastProject as DWSTRING ) as long
 
     ' NO tab-count guard here. It used to read "files already opened from the command line
     ' own the workspace", but both call sites already establish that nothing was opened --

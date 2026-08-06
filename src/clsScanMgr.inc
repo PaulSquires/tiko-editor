@@ -253,7 +253,7 @@ end sub
 ' and the toolchain's inc directory (same derivation modCompile uses).
 private function clsScanMgr.BuildRequest( _
             byval nTier as long, _
-            byref wszRootFile as wstring _
+            byval wszRootFile as DWSTRING _
             ) as SCANREQUEST ptr
 
     dim as SCANREQUEST ptr pReq = new SCANREQUEST

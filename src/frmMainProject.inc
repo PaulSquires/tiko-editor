@@ -66,16 +66,20 @@ dim shared as long gWorkspaceTestPass, gWorkspaceTestFail
 ' assertion for why nothing else could have caught that failure.
 dim shared as DWSTRING gWorkspaceRestoreTarget
 
-private sub Workspace_Check( byref wszName as wstring, byval bCond as boolean, byref wszDetail as wstring = "" )
+'' DWSTRING PARAMETERS, NOT `byref as wstring`. Every caller already holds a DWSTRING, and
+'' PsCore's does not bind to a wstring reference the way AfxNova's does -- so this signature
+'' is what the swap needs, and it is pure, so it can land ahead of it.
+'' str() went with it: it was the wstring -> string conversion, through the ANSI codepage.
+private sub Workspace_Check( byval wszName as DWSTRING, byval bCond as boolean, byval wszDetail as DWSTRING = "" )
     dim as string sLine
     if bCond then
         gWorkspaceTestPass += 1
-        sLine = "PASS  " & str(wszName)
+        sLine = "PASS  " & wszName.Utf8
     else
         gWorkspaceTestFail += 1
-        sLine = "FAIL  " & str(wszName)
+        sLine = "FAIL  " & wszName.Utf8
     end if
-    if PsLen(wszDetail) then sLine = sLine & "   [" & str(wszDetail) & "]"
+    if PsLen(wszDetail) then sLine = sLine & "   [" & wszDetail.Utf8 & "]"
     ' Build a `string` first -- printing a DWSTRING, or a `string & wstring` concat,
     ' interleaves nulls.
     print sLine

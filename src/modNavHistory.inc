@@ -353,13 +353,16 @@ end function
 dim shared gNavTestPass as long
 dim shared gNavTestFail as long
 
-private sub Nav_Check( byval sName as string, byval bCond as boolean, byval sGot as string = "" )
+'' DWSTRING PARAMETERS, NOT `string`. The callers pass DWSTRING-valued expressions, so this
+'' converted implicitly through the ANSI codepage. Assertion text -- see
+'' docs/port/type-swap-scope.md.
+private sub Nav_Check( byval sName as DWSTRING, byval bCond as boolean, byval sGot as DWSTRING = "" )
     if bCond then
         gNavTestPass += 1
     else
         gNavTestFail += 1
-        dim as string sLine = "  FAIL: " & sName
-        if len(sGot) then sLine = sLine & "   got: " & sGot
+        dim as string sLine = "  FAIL: " & sName.Utf8
+        if PsLen(sGot) then sLine = sLine & "   got: " & sGot.Utf8
         print sLine
     end if
 end sub

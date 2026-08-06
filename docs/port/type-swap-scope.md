@@ -291,3 +291,58 @@ and UTF-8 is the direction the port is going.
 gives: a file path returned to an ANSI caller, where `.Utf8` is a bug. Fixing it means
 `string` -> `DWSTRING` through its signature, its two callers, and `clsDocument.GetLine`
 behind them. That is the signature pass, and it belongs with the swap.
+
+---
+
+# The PURE signatures, landed too. 617 -> 549.
+
+Step 2 of the plan on this page, and the correction it needs: the earlier note says the
+signature pass "CANNOT be landed ahead of the swap". **That is true only of the ones whose
+bodies reach Win32.** Fourteen do not, and they went in on the same terms as everything
+above -- gas64 clean, all 27 suites byte-identical, `_check_app_layer` and
+`_check_scihost` green.
+
+    617  after the .Utf8 work
+    561  after 11 signatures
+    549  after OpenSelectedDocument and frmMain_OpenProjectSafely
+
+**14 signatures, 68 errors.** One declaration fixes every caller, which is why this is
+still the best lever on the page.
+
+| converted | was | errors |
+| --- | --- | --- |
+| `OpenSelectedDocument` | `byref wszFilename/wszFunctionName as wstring` | 11 |
+| `GetDocumentPtrByFilename` | `byref as wstring` | 7 |
+| `Workspace_Check` | `byref as wstring` x2 | 11 |
+| `CLRTest_Check`, `Nav_Check` | `byval as string` | 9 |
+| `SetCompileStatusBarMessage` | `byref as wstring` | 5 |
+| `UnusedSymbols_CmpText` | `byref as const wstring` x2 | 7 |
+| `frmOptionsLocal_LoadLocalizationFile`, `LoadDiskFile` | `byref as wstring` | 6 |
+| `frmMain_RestoreWorkspace`, `frmMain_OpenProjectSafely` | `byref as const wstring` | 4 |
+| `BuildRequest`, `ConvertTikoVersion` | `byref as wstring` | 3 |
+
+## The one that was not mechanical
+
+`OpenSelectedDocument`'s first parameter **was an out-parameter by accident.** Its FindProc
+branch does `wszFilename = *pFile`, and a `byref wstring` carried that back out. Twelve of
+the nineteen call sites pass `pDoc->DiskFilename` -- a document's own name, and its tab
+caption.
+
+It never fired there: the branch needs a function name AND `nLineNumber = -1`, exactly one
+call site passes a function name, and it passes a real line number. So `byval` is safe, and
+this is written down because the next reader of that branch deserves to know it was checked
+rather than assumed.
+
+## What is left, and why it is blocked
+
+The remaining `error 58` parameters are the boundary, not the vocabulary:
+
+* **`CWindow.Create`'s `wszTitle` -- 15 sites, the single biggest.** AfxNova's own
+  signature. It needs `.Wz()`, which does not exist on AfxNova's DWSTRING.
+* `GetTextWidth`, `CreateFont`, `SaveSelfTest_ReadAll` -- `GetTextExtentPoint32`,
+  `CreateFontW`, `CreateFileW`. Same circle: `.sptr` today, `Wz()` after.
+* the `clsSymbolDb` family (`FindProc`, `FindType`, `EnumPrefix`, `SymDb_FileNameEq`, ...)
+  -- fbcParser's `wstring ptr` pool, exactly as measured earlier on this page.
+* `Theme_SanitizeText` and `FormatCodetip` take `string` and INDEX IT BY BYTE. Widening
+  them changes what an index means, so they are a judgement for the swap, not a signature
+  swap.

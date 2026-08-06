@@ -78,7 +78,9 @@ end sub
 
 ' bOK, never "ok": GDI+'s Status enum defines Ok = 0 in namespace AfxNova, and every host says
 ' "using AfxNova", so an identifier called ok is a duplicate definition.
-private sub CLRTest_Check( byval sName as string, byval bOK as boolean, byval sDetail as string )
+'' DWSTRING PARAMETERS, NOT `string`. The callers pass DWSTRING-valued expressions, so this
+'' converted implicitly through the ANSI codepage. Assertion text.
+private sub CLRTest_Check( byval sName as DWSTRING, byval bOK as boolean, byval sDetail as DWSTRING )
     gCLR_TestCount += 1
     dim as string s
     if bOK then
@@ -87,7 +89,7 @@ private sub CLRTest_Check( byval sName as string, byval bOK as boolean, byval sD
         s = "FAIL  "
         gCLR_FailCount += 1
     end if
-    s &= sName & "   [" & sDetail & "]"
+    s &= sName.Utf8 & "   [" & sDetail.Utf8 & "]"
     print s
 end sub
 

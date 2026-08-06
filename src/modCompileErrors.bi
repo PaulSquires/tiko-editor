@@ -23,7 +23,8 @@ declare function ParseLogForError( _
             ) as boolean
 declare function ResetScintillaCursors() as long
 declare function RunEXE( byval pDocMain as clsDocument ptr, byref wszFileExe as DWSTRING, byref wszParam as DWSTRING ) as long
-declare function SetCompileStatusBarMessage(byref wszText as wstring, byval hIconCompile as long) as LRESULT
+'' DWSTRING, NOT `byref as wstring`. Pure -- PsLeft/PsMid and a panel update.
+declare function SetCompileStatusBarMessage(byval wszText as DWSTRING, byval hIconCompile as long) as LRESULT
 ' The two command-line composers moved to modBuildService.bi -- they are build composition,
 ' not error parsing. Nothing else about this header changed.
 declare function RedirConsoleToFile(byval wszExe as DWSTRING, byval wszCmdLine as DWSTRING, byref sConsoleText as string, byref nExitCode as long ) as long

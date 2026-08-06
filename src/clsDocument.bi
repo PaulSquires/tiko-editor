@@ -186,7 +186,9 @@ type clsDocument
     declare function IsValidScintillaID( byval idScintilla as long ) as boolean
     declare function GetActiveScintillaPtr() as any ptr
     declare function AssignTextBuffer() as long
-    declare function LoadDiskFile( byref wszFile as wstring, byval bIsTemplate as boolean = false ) as long
+    '' DWSTRING, NOT `byref as wstring`. It only forwards the name on; the Win32 call is
+    '' inside GetFileToString, which keeps its own signature until the swap.
+    declare function LoadDiskFile( byval wszFile as DWSTRING, byval bIsTemplate as boolean = false ) as long
     declare function DestroyScintillaWindows() as long
     declare function CreateScintillaWindows() as long
     declare function FindReplace( byval strFindText as string, byval strReplaceText as string ) as long

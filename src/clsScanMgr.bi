@@ -59,7 +59,8 @@ type clsScanMgr
         m_retire(any) as PARSERESULTSET ptr
         m_retireCount as long
 
-        declare function BuildRequest( byval nTier as long, byref wszRootFile as wstring ) as SCANREQUEST ptr
+        '' DWSTRING, NOT `byref as wstring`. Pure -- it copies the name into the request.
+        declare function BuildRequest( byval nTier as long, byval wszRootFile as DWSTRING ) as SCANREQUEST ptr
         declare sub EnqueueRequest( byval pReq as SCANREQUEST ptr )
         declare sub RetireLocked( byval pRSet as PARSERESULTSET ptr )
 

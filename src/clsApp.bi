@@ -115,7 +115,8 @@ type clsApp
         declare function RemoveAllDocuments() as long
         declare function GetDocumentCount() as long
         declare function GetDocumentPtrByWindow( byval hWindow as hwnd) as clsDocument ptr
-        declare function GetDocumentPtrByFilename( Byref wszName as wstring ) as clsDocument ptr
+        '' DWSTRING, NOT `byref as wstring`. Pure -- a walk of the document list comparing names.
+        declare function GetDocumentPtrByFilename( byval wszName as DWSTRING ) as clsDocument ptr
         declare function GetMainDocumentPtr() as clsDocument ptr
         declare function GetResourceDocumentPtr() as clsDocument ptr
         declare function GetSourceDocumentPtr( byval pDocIn as clsDocument ptr ) as clsDocument ptr

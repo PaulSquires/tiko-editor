@@ -18,7 +18,8 @@
 ' ========================================================================================
 ' Convert Tiko version to whole number for comparison to file versions being loaded.
 ' ========================================================================================
-function ConvertTikoVersion( byref wszVersion as wstring ) as long
+'' DWSTRING, NOT `byref as wstring`. Pure, so the signature the swap needs lands here.
+function ConvertTikoVersion( byval wszVersion as DWSTRING ) as long
    dim as DWSTRING wszPart1, wszPart2, wszPart3
    
    wszPart1 = PsStrLSet( PsStrParse(wszVersion, 1, "."), 3, "0" )

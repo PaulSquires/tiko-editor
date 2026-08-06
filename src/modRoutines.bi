@@ -54,7 +54,7 @@ declare function Scintilla_GetTextBytes( byval hEdit as hwnd ) as string
 declare function Scintilla_StripTrailingWhitespace( byval hEdit as hwnd ) as long
 declare function GetFileToString( byref wszFilename as const wstring, byref txtBuffer as string, byval pDoc as clsDocument ptr ) as boolean
 declare function IsCurrentLineIncludeFilename() as boolean
-declare function OpenSelectedDocument( byref wszFilename as wstring, byref wszFunctionName as wstring = "", byval nLineNumber as long = -1 ) as clsDocument ptr
+declare function OpenSelectedDocument( byval wszFilename as DWSTRING, byval wszFunctionName as DWSTRING = "", byval nLineNumber as long = -1 ) as clsDocument ptr
 declare function AfxIFileOpenDialogW( byval hwndOwner as HWND, byval idButton as long) as wstring Ptr
 declare function AfxIFileOpenDialogMultiple( byval hwndOwner as HWND, byval idButton as long) as IShellItemArray ptr
 declare function AfxIFileSaveDialog( byval hwndOwner as HWND, byval pwszFileName as wstring Ptr, byval pwszDefExt as wstring Ptr, byval id as long = 0, byval sigdnName as SIGDN = SIGDN_FILESYSPATH ) as wstring Ptr

@@ -646,9 +646,17 @@ end function
 ' ========================================================================================
 ' Generic open document handler for when function ListBox item selected or Explorer Treeview
 ' ========================================================================================
+'' DWSTRING PARAMETERS, NOT `byref as wstring`.
+''
+'' THE FIRST ONE USED TO BE AN OUT-PARAMETER BY ACCIDENT: the FindProc branch below writes
+'' `wszFilename = *pFile`, and a byref wstring carried that back to the caller. Checked at
+'' all 19 call sites and it is UNOBSERVABLE -- the branch needs a function name AND
+'' nLineNumber = -1, only one site passes a function name at all, and it passes a real line
+'' number. Everything else hands in `pDoc->DiskFilename`, which that write would have
+'' overwritten had the branch ever fired there.
 function OpenSelectedDocument( _
-            byref wszFilename as wstring, _
-            byref wszFunctionName as wstring = "", _
+            byval wszFilename as DWSTRING, _
+            byval wszFunctionName as DWSTRING = "", _
             byval nLineNumber as long = -1 _
             ) as clsDocument ptr
 

@@ -41,7 +41,9 @@
 #define PANEL_MIN_WIDTH                             236
 #define PANEL_MIN_CONTENT                           240
 
-declare function frmMain_OpenProjectSafely( byval HWnd as HWnd, byref wszProjectFileName as const WString ) as Boolean
+'' DWSTRING, NOT `byref as const wstring`. It only forwards the name to ProjectLoadFromFile
+'' and UpdateMRUProjectList.
+declare function frmMain_OpenProjectSafely( byval HWnd as HWnd, byval wszProjectFileName as DWSTRING ) as Boolean
 declare function frmMain_GotoFile( byval pDoc as clsDocument ptr, byval nMenuId as long ) as long
 declare function frmMain_GotoDefinition( byval pDoc as clsDocument Ptr ) as long
 declare function frmMain_SetStatusbar() as long

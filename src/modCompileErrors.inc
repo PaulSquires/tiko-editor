@@ -30,7 +30,7 @@
 ''  Set the statusbar text and icon for a good/bad compile
 ''
 function SetCompileStatusBarMessage( _
-            byref wszText as wstring, _
+            byval wszText as DWSTRING, _
             byval hIconCompile as long _
             ) as LRESULT
     dim as boolean bIsSpinner = iif( PsLeft(wszText, 1) = "#", true, false )

@@ -142,7 +142,7 @@ end function
 
 ''
 ''
-function clsApp.GetDocumentPtrByFilename( Byref wszName as wstring ) as clsDocument ptr
+function clsApp.GetDocumentPtrByFilename( byval wszName as DWSTRING ) as clsDocument ptr
     if PsLen(wszName) = 0 then return 0
     dim pDoc as clsDocument ptr = this.pDocList
     do until pDoc = 0

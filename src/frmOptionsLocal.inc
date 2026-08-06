@@ -113,7 +113,7 @@ dim shared gLocalLabels(any) as LOCAL_LABEL
 
 ' Forward declarations for the internal helpers used before their definition.
 declare sub frmOptionsLocal_DisableEnglish()
-declare function frmOptionsLocal_LoadLocalizationFile( byref wszFilename as wstring ) as long
+declare function frmOptionsLocal_LoadLocalizationFile( byval wszFilename as DWSTRING ) as long
 declare sub frmOptionsLocal_ClearGlobalArray()
 declare function frmOptionsLocal_LoadLanguages() as long
 declare sub frmOptionsLocal_FillTranslationColumn()
@@ -242,7 +242,7 @@ end sub
 ' ========================================================================================
 ' Load the selected localization file into the global array. (Unchanged from the old page.)
 ' ========================================================================================
-function frmOptionsLocal_LoadLocalizationFile( byref wszFilename as wstring ) as long
+function frmOptionsLocal_LoadLocalizationFile( byval wszFilename as DWSTRING ) as long
 
     if PsFileExists( wszFileName ) = 0 then exit function
 

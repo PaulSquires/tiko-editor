@@ -263,7 +263,7 @@ end function
 ''
 ''
 function clsDocument.LoadDiskFile( _
-            byref wszFile as wstring, _
+            byval wszFile as DWSTRING, _
                         byval bIsTemplate as boolean = false _
             ) as long
     ' if a disk file was specified then open it and load it into the editor

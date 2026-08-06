@@ -111,7 +111,9 @@ Three rules learned the hard way, all with worked examples in the doc:
    (minutes), then work the remainder by hand. **The `.Utf8` class is now done** —
    landed on the unswapped tree, 153 → 52 on the same probe, all 27 suites unmoved.
    The 52 that remain under that error code are not `.Utf8` sites at all; the table in
-   `type-swap-scope.md` says what each one actually needs.
+   `type-swap-scope.md` says what each one actually needs. **14 pure signatures went in
+   after it** — 718 → 549 in total. What is left of the signature pass is the Win32 and
+   AfxNova boundary, which genuinely cannot move before the swap.
 2. **Then `clsSymbolDb`, `PsCompat.bi`, `namespace PsC` and `DocView`'s forwarding** all
    fall out — they exist only because two DWSTRINGs coexist.
 3. **Then 7c proper**: the shell. `PsWin32Host` is scaffolding and is deleted when it lands.

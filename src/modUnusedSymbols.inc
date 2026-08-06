@@ -49,7 +49,8 @@ function UnusedSymbols_StatusText( byref r as UNUSEDROW ) as DWSTRING
 end function
 
 ' Case-insensitive text compare: -1 / 0 / +1.
-private function UnusedSymbols_CmpText( byref a as const wstring, byref b as const wstring ) as long
+'' DWSTRING, NOT `byref as const wstring`. Pure -- PsUCase and two comparisons.
+private function UnusedSymbols_CmpText( byval a as DWSTRING, byval b as DWSTRING ) as long
     dim as DWSTRING ua = PsUCase( a ), ub = PsUCase( b )
     if ua < ub then return -1
     if ua > ub then return 1
