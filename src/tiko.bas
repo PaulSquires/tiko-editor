@@ -127,6 +127,12 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 #include once "app/modLocalization.bi"
 '' The menu vocabulary. Before modDeclares.bi, which is where these declarations
 '' used to live, so nothing downstream sees a different order.
+'' app/modPaths.bi NAMED DIRECTLY. It was reached only through modRoutines.bi, a
+'' SHELL header -- so an app-layer file that used FilenameOriginalCase or
+'' ProcessFromCurdriveApp compiled inside tiko and not on its own, and the
+'' standalone gate could not see the declaration at all. #pragma once makes the
+'' existing include a no-op.
+#include once "app/modPaths.bi"
 #include once "app/modMenuIds.bi"
 #include once "app/modMenuDefinitions.bi"
 #include once "app/modAppState.bi"

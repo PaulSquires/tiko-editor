@@ -47,9 +47,26 @@ private function SymDb_NamePrefixW( byval pName as const wstring ptr, byval pPre
     return true
 end function
 
-' Case-insensitive path equality (Windows semantics).
+' Case-insensitive path equality.
+'
+' WAS lstrcmpiW -- a Win32 call, and the only one in this file. SymDb_NameEqW is
+' twelve lines above, does the same ASCII-insensitive comparison over the same
+' kind of NUL-terminated wide data, allocates nothing, and is already trusted for
+' symbol names. Using it here costs no conversion and removes the dependency.
+'
+' THE FOLD NARROWS, AND THAT IS A REAL BEHAVIOUR CHANGE. lstrcmpiW folds the full
+' Unicode range; this folds ASCII. Two paths differing only in the case of a
+' non-ASCII character now compare UNEQUAL on Windows where they used to match.
+' Deliberate, for two reasons:
+'
+'   - PsCore's PsUCase folds ASCII only as well, so this is what the layer does
+'     everywhere else once the port lands. Keeping lstrcmpiW would leave one
+'     comparison in the program disagreeing with all the others.
+'   - ON LINUX PATHS ARE CASE-SENSITIVE, so a portable symbol database cannot
+'     lean on case-insensitive path equality at all. The question is only which
+'     way to be wrong on the way there, and ASCII-folding is the smaller step.
 private function SymDb_FileNameEq( byref a as const wstring, byref b as const wstring ) as boolean
-    return (lstrcmpiW( @a, @b ) = 0)
+    return SymDb_NameEqW( @a, @b )
 end function
 
 ' Index of wszFile in pRSet's file table, or -1.
