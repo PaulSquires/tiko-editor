@@ -44,7 +44,7 @@ function frmKeyboard_SaveKeyBindings( byval wszFilename as DWSTRING ) as long
         wszLine = wszLine & ":" & gKeys(i).wszUserKeys
         wszOut &= wszLine & vbcrlf
     next
-    Config_WriteAnsi( wszFilename, wszOut )
+    TextFile_WriteAnsi( wszFilename, wszOut )
     function = 0
 end function
 
@@ -259,7 +259,7 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
     dim as DWSTRING wszFilename = PsExePath & "settings\keybindings.ini"
 
     redim as DWSTRING lines(any)
-    if Config_ReadLines( wszFilename, lines() ) then
+    if TextFile_ReadLines( wszFilename, lines() ) then
         for nLine as long = lbound(lines) to ubound(lines)
             dim as DWSTRING wst = lines(nLine)
             wst = PsTrim(wst)

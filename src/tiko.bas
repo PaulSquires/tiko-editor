@@ -132,6 +132,9 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 '' BEFORE modDeclares.bi, which is exactly where these declarations used to sit,
 '' so the effective order is unchanged. Everything downstream that uses L() is
 '' unaffected -- and the app layer can now reach it without the shell.
+'' Whole-file text I/O on PsFile. Early, because modThemes and modIniParse use it
+'' and are included well before clsConfig, where these started.
+#include once "modTextFile.inc"
 #include once "app/modLocalization.bi"
 '' The menu vocabulary. Before modDeclares.bi, which is where these declarations
 '' used to live, so nothing downstream sees a different order.

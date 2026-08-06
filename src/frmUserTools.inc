@@ -167,7 +167,7 @@ function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval
             wszWorkingFolder = PsPathJoin(PsExePath, wszWorkingFolder)
         end if
         if PsFileIsDir(wszWorkingFolder) = false then
-            wszWorkingFolder = left(PsExePath, 1) + PsMid(wszWorkingFolder, 2)
+            wszWorkingFolder = PsLeft(PsExePath, 1) + PsMid(wszWorkingFolder, 2)
         end if
         chdir gConfig.Tools(nToolNum).wszWorkingFolder
     end if
@@ -180,7 +180,7 @@ function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval
         wszCommand = PsPathJoin(PsExePath, wszCommand)
     end if
     if PsFileExists(wszCommand) = false then
-        wszCommand = left(PsExePath, 1) + PsMid(wszCommand, 2)
+        wszCommand = PsLeft(PsExePath, 1) + PsMid(wszCommand, 2)
     end if
     wszCommand = wchr(34) + wszCommand + wchr(34)
 

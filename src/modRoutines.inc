@@ -1104,17 +1104,17 @@ function LoadLocalizationFile( _
     dim nData as long  
     dim i     as long
     
-    dim pStream as CTextStream
-    if pStream.OpenUnicode( wszFileName ) <> S_OK then exit function
+    redim as DWSTRING lines_(any)
+    if TextFile_ReadLines( wszFileName, lines_() ) = false then exit function
     
-    do until pStream.EOS
-        wst = pStream.ReadLine
+    for nLine_ as long = lbound(lines_) to ubound(lines_)
+        wst = lines_(nLine_)
         
-        if PsLen(wst) = 0 then continue Do
-        if PsLeft(wst, 1) = "'" then continue Do
+        if PsLen(wst) = 0 then continue for
+        if PsLeft(wst, 1) = "'" then continue for
         
         i = PsInStr(wst, ":")
-        if i = 0 then continue Do
+        if i = 0 then continue for
         
         wKey = "": wData = "": nData = 0
 
@@ -1169,8 +1169,7 @@ function LoadLocalizationFile( _
             end if
         end if   
             
-    loop
-    pStream.Close
+    next
     
     function = true
 end function

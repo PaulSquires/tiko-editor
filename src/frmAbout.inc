@@ -66,12 +66,8 @@ private function frmAbout_LicenseText( byval nWhich as long ) as DWSTRING
     dim as DWSTRING wszPath = PsExePath & wszFile
 
     if PsFileExists( wszPath ) then
-        dim pStream as CTextStream
-        if pStream.Open( wszPath ) = S_OK then
-            dim as DWSTRING wszText = pStream.ReadAll
-            pStream.Close
-            if PsLen(wszText) > 0 then return wszText
-        end if
+        dim as DWSTRING wszText = TextFile_ReadAll( wszPath )
+        if PsLen(wszText) > 0 then return wszText
     end if
 
     ' RETURN throughout, not "function =": mixing the two styles is unsupported for a type

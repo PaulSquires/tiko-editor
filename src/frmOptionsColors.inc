@@ -58,24 +58,23 @@ function GetThemeDescription( byval wszFilename as DWSTRING ) as string
     ' default to the theme description being the filename
     function = PsPathName(wszFilename)
 
-    dim pStream as CTextStream
-    if pStream.Open(wszFilename) <> S_OK then exit function  'error
+    redim as DWSTRING lines(any)
+    if TextFile_ReadLines(wszFilename, lines()) = false then exit function  'error
 
     dim as DWSTRING wst, keyValue, keyData
 
-    do until pStream.EOS
-        wst = pStream.ReadLine
+    for nLine as long = lbound(lines) to ubound(lines)
+        wst = lines(nLine)
         wst = trim(AfxStrExtract( 1, wst, "#"))     ' remove comments
-        if PsLen(wst) = 0 then continue Do
+        if PsLen(wst) = 0 then continue for
         keyValue = PsTrim(PsStrParse(wst, 1, ":"))
         keyData = PsTrim(PsStrParse(wst, 2, ":"))
         if keyValue = "general.description" then
             function = keyData
-            exit do
+            exit for
         end if
-    loop
+    next
 
-    pStream.Close
 end function
 
 

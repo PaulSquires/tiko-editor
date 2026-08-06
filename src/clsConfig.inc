@@ -75,89 +75,6 @@ end constructor
 
 ''
 ''
-' ========================================================================================
-' File I/O for the settings and keyword files -- PsCore's PsFile, bytes in and bytes out.
-'
-' These replace CTextStream, which is the Scripting FileSystemObject behind a COM wrapper.
-' It did three things at once: opened the file, decided its encoding, and split it into
-' lines -- and the encoding decision was a BOOLEAN, `bUnicode`, which is why settings.ini
-' is UTF-16 and the keyword files are whatever the ANSI codepage happens to be.
-'
-' Here the three are separate: PsFile moves the bytes, PsEncoding decides the encoding,
-' PsStrParse splits the lines. The write is ONE call, so a settings.ini half-written by an
-' early return in the middle of 166 WriteLines is no longer a state this program can reach.
-'
-' THE ON-DISK FORMAT DOES NOT CHANGE. settings.ini stays UTF-16LE with a BOM, byte for
-' byte -- verified by writing it with both implementations and comparing the files.
-'
-' The two DWSTRINGs meet at .Utf8, which both types have and which is lossless in both
-' directions. That is the same bridge modEncoding uses for the document save path.
-' ========================================================================================
-private function Config_PsPath( byval wszPath as DWSTRING ) as PsC.DWSTRING
-    dim as PsC.DWSTRING d
-    d.Utf8 = wszPath.Utf8
-    return d
-end function
-
-' Reads a text file and hands back its LINES. The encoding is DETECTED from the BOM, so the
-' UTF-16 settings.ini and the ANSI keyword files both come back correct without the caller
-' saying which is which -- which CTextStream's bUnicode flag made every caller say, and get
-' wrong the moment a file changed encoding.
-private function Config_ReadLines( byval wszPath as DWSTRING, lines() as DWSTRING ) as boolean
-    erase lines
-    dim as boolean bOk
-    dim as string sBytes = PsC.PsFileReadAll( Config_PsPath(wszPath), bOk )
-    if bOk = false then return false
-
-    dim as PsC.PsEncodingId encUsed
-    dim as PsC.DWSTRING dwAll = PsC.PsEncDecodeAuto( sBytes, encUsed )
-    dim as DWSTRING wszAll
-    wszAll.Utf8 = dwAll.Utf8
-
-    ' A file that ends with a line terminator yields a final EMPTY element, exactly as
-    ' ReadLine + EOS did: that loop stopped at end-of-stream and never produced a phantom
-    ' last line. Every caller skips empty lines anyway, and both keyword readers and the
-    ' settings reader are asserted against the real files.
-    dim as long n = PsStrParseCount( wszAll, vbcrlf )
-    redim lines( 0 to n - 1 )
-    for i as long = 1 to n
-        lines(i - 1) = PsStrParse( wszAll, i, vbcrlf )
-    next
-    return true
-end function
-
-' Reads a whole text file as one string, replacing CTextStream.ReadAll.
-private function Config_ReadAll( byval wszPath as DWSTRING ) as DWSTRING
-    dim as boolean bOk
-    dim as string sBytes = PsC.PsFileReadAll( Config_PsPath(wszPath), bOk )
-    if bOk = false then return ""
-    dim as PsC.PsEncodingId encUsed
-    dim as PsC.DWSTRING dwAll = PsC.PsEncDecodeAuto( sBytes, encUsed )
-    dim as DWSTRING r
-    r.Utf8 = dwAll.Utf8
-    return r
-end function
-
-' Writes text as UTF-16LE with a BOM -- what CTextStream.Create(path, true, true) produced
-' and what every settings.ini already on disk is.
-private function Config_WriteUtf16( byval wszPath as DWSTRING, byref wszText as DWSTRING ) as boolean
-    dim as PsC.DWSTRING d
-    d.Utf8 = wszText.Utf8
-    dim as boolean bLossy
-    dim as string sBytes = PsC.PsEncEncode( d, PsC.PSENC_UTF16LE_BOM, bLossy )
-    return PsC.PsFileWriteAll( Config_PsPath(wszPath), sBytes )
-end function
-
-' Writes text as the ANSI codepage with no BOM -- what CTextStream.Create(path) produced for
-' the keyword files, which are plain lists and were never Unicode.
-private function Config_WriteAnsi( byval wszPath as DWSTRING, byref wszText as DWSTRING ) as boolean
-    dim as PsC.DWSTRING d
-    d.Utf8 = wszText.Utf8
-    dim as boolean bLossy
-    dim as string sBytes = PsC.PsEncEncode( d, PsC.PSENC_ANSI, bLossy )
-    return PsC.PsFileWriteAll( Config_PsPath(wszPath), sBytes )
-end function
-
 function clsConfig.LoadKeywords() as long
     if PsFileExists(this.FBKeywordsFilename) = false then
         ' The FB keywords file does not exist. Try copying the "default" keywords over
@@ -170,9 +87,9 @@ function clsConfig.LoadKeywords() as long
     end if
     if PsFileExists(this.FBKeywordsFilename) = false then exit function
 
-    this.FBKeywords     = Config_ReadAll( this.FBKeywordsFilename )
-    this.WinApiKeywords = Config_ReadAll( this.WinApiKeywordsFilename )
-    this.ExtraKeywords  = Config_ReadAll( this.ExtraKeywordsFilename )
+    this.FBKeywords     = TextFile_ReadAll( this.FBKeywordsFilename )
+    this.WinApiKeywords = TextFile_ReadAll( this.WinApiKeywordsFilename )
+    this.ExtraKeywords  = TextFile_ReadAll( this.ExtraKeywordsFilename )
 
     function = 0
 end function
@@ -182,9 +99,9 @@ end function
 function clsConfig.SaveKeywords() as long
     ' WriteLine appended a CRLF, so these keep it -- the files are compared by hand and a
     ' vanished trailing newline is the kind of diff that looks like data loss.
-    Config_WriteAnsi( this.FBKeywordsFilename,     this.FBKeywords     + vbcrlf )
-    Config_WriteAnsi( this.WinApiKeywordsFilename, this.WinApiKeywords + vbcrlf )
-    Config_WriteAnsi( this.ExtraKeywordsFilename,  this.ExtraKeywords  + vbcrlf )
+    TextFile_WriteAnsi( this.FBKeywordsFilename,     this.FBKeywords     + vbcrlf )
+    TextFile_WriteAnsi( this.WinApiKeywordsFilename, this.WinApiKeywords + vbcrlf )
+    TextFile_WriteAnsi( this.ExtraKeywordsFilename,  this.ExtraKeywords  + vbcrlf )
     function = 0
 end function
 
@@ -202,7 +119,7 @@ function clsConfig.LoadCodetipsFB() as boolean
     dim as long nIntrinsic = 0
 
     redim as DWSTRING lines(any)
-    if Config_ReadLines( this.FBCodetipsFilename, lines() ) = false then return true  ' error
+    if TextFile_ReadLines( this.FBCodetipsFilename, lines() ) = false then return true  ' error
 
     for nLine as long = lbound(lines) to ubound(lines)
         wst = lines(nLine)
@@ -364,7 +281,7 @@ function clsConfig.SaveConfigFileBody() as long
 
     ' ONE BUFFER, ONE WRITE. This was 166 WriteLines straight at a CTextStream, so an
     ' error partway through left a truncated settings.ini on disk that looked saved.
-    ' Config_WriteUtf16 emits the same bytes -- UTF-16LE with a BOM -- in a single call.
+    ' TextFile_WriteUtf16 emits the same bytes -- UTF-16LE with a BOM -- in a single call.
     dim as DWSTRING wszOut
 
     wszOut &= "' SETTINGS FILE" & vbcrlf
@@ -583,7 +500,7 @@ function clsConfig.SaveConfigFileBody() as long
     ' settings.ini's notes into the untitled workspace once, so the section ages out of
     ' settings.ini on the first save after that.
 
-    if Config_WriteUtf16( this.ConfigFilename, wszOut ) = false then return true   ' error
+    if TextFile_WriteUtf16( this.ConfigFilename, wszOut ) = false then return true   ' error
 
     ' Save the last write time so that it can be checked in the message loop
     ' in order to detect external changes to it.
@@ -728,7 +645,7 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
         ' The wrapper owns gApp.PreventConfigLoad, so this early return can no longer
         ' strand it -- which is exactly what it used to do.
         redim as DWSTRING lines(any)
-        if Config_ReadLines( this.ConfigFilename, lines() ) = false then return true   ' error
+        if TextFile_ReadLines( this.ConfigFilename, lines() ) = false then return true   ' error
 
         gApp.NonProjectNotes = ""
 
@@ -1273,7 +1190,7 @@ function clsConfig.ProjectSaveToFile() as boolean
     wszOut &= "[Notes]" & vbcrlf
     wszOut &= wszNotes & vbcrlf
 
-    if Config_WriteUtf16( gApp.ProjectFilename, wszOut ) = false then return false
+    if TextFile_WriteUtf16( gApp.ProjectFilename, wszOut ) = false then return false
 
     ' The restore slot names the NAMED project to reopen, and only that. Writing the
     ' untitled workspace's own path here makes the slot permanently name settings\
@@ -1330,7 +1247,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     ' Nothing below this line can fail in a way that leaves the previous workspace half
     ' dismantled, because nothing below it is reachable unless the file is readable.
     redim as DWSTRING lines(any)
-    if Config_ReadLines( wszFile, lines() ) = false then return false
+    if TextFile_ReadLines( wszFile, lines() ) = false then return false
 
     dim as HCURSOR hCurSave = GetCursor()
     SetCursor( LoadCursor(0, IDC_WAIT) )
@@ -1388,7 +1305,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
             ' "a/b" without "a" still loads as a well-formed tree instead of an orphan.
             dim as long nSepPos = instr( wData, "|-|" )
             if nSepPos > 0 then
-                ProjectFolders_Add( val( left(wData, nSepPos - 1) ), mid(wData, nSepPos + 3) )
+                ProjectFolders_Add( val( PsLeft(wData, nSepPos - 1) ), mid(wData, nSepPos + 3) )
             end if
             case "Bookmarks":           sBookmarks              = str(wData)
             case "BreakPoints":         sBreakPoints            = str(wData)

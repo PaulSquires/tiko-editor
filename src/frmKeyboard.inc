@@ -180,12 +180,12 @@ sub frmKeyboard_RunSelfTest()
         frmKeyboard_SaveKeyBindings( wszTmp )
 
         dim as long nRead = 0, nMatched = 0
-        dim pStream as CTextStream
-        if pStream.Open( wszTmp ) = S_OK then
-            do until pStream.EOS
-                dim as DWSTRING wst = trim(pStream.ReadLine)
-                if PsLen(wst) = 0 then continue do
-                if PsInStr( wst, ":" ) = 0 then continue do
+        redim as DWSTRING lines_(any)
+        if TextFile_ReadLines(wszTmp, lines_()) then
+            for nLine_ as long = lbound(lines_) to ubound(lines_)
+                dim as DWSTRING wst = trim(lines_(nLine_))
+                if PsLen(wst) = 0 then continue for
+                if PsInStr( wst, ":" ) = 0 then continue for
                 nRead += 1
 
                 dim as DWSTRING wszMsg = PsStrParse(wst, 1, ":")
@@ -204,8 +204,7 @@ sub frmKeyboard_RunSelfTest()
                         exit for
                     end if
                 next
-            loop
-            pStream.Close
+            next
         end if
         kill wszTmp
 

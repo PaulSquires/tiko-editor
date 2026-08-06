@@ -101,10 +101,10 @@ sub Ini_RunSelfTest()
 
         #macro CHECK_FILE( wszPath )
             scope
-                dim pS as CTextStream
-                if PsFileExists( wszPath ) andalso (pS.OpenUnicode( wszPath ) = S_OK) then
-                    do until pS.EOS
-                        dim as DWSTRING wl = pS.ReadLine
+                redim as DWSTRING lines_(any)
+                if PsFileExists( wszPath ) andalso TextFile_ReadLines( wszPath, lines_() ) then
+                    for nLine_ as long = lbound(lines_) to ubound(lines_)
+                        dim as DWSTRING wl = lines_(nLine_)
                         nLines += 1
 
                         ' --- the ORIGINAL preamble, verbatim ---
@@ -143,8 +143,7 @@ sub Ini_RunSelfTest()
                             nDisagree += 1
                             if PsLen(wszFirstBad) = 0 then wszFirstBad = wl
                         end if
-                    loop
-                    pS.Close
+                    next
                 end if
             end scope
         #endmacro

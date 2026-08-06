@@ -432,8 +432,8 @@ end function
 ''
 function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
 
-    dim pStream as CTextStream
-    if pStream.Open(wszFullPath) <> S_OK then return true   ' error
+    redim as DWSTRING lines_(any)
+    if TextFile_ReadLines(wszFullPath, lines_()) = false then return true   ' error
 
     ' Ensure to delete any existing gTheme data
     erase gTheme
@@ -443,11 +443,11 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
     
     dim as DWSTRING wst, keyValue, keyData
         
-    Do Until pStream.EOS
-        wst = pStream.ReadLine
+    for nLine_ as long = lbound(lines_) to ubound(lines_)
+        wst = lines_(nLine_)
 
         wst = trim(AfxStrExtract( 1, wst, "#"))     ' remove comments
-        If PsLen(wst) = 0 Then Continue Do
+        If PsLen(wst) = 0 Then continue for
 
         keyValue = PsTrim(PsStrParse(wst, 1, ":"))
         keyData = PsTrim(PsStrParse(wst, 2, ":"))
@@ -461,7 +461,7 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
             redim preserve gThemeMacros(nm) as THEMEMACRO_TYPE
             gThemeMacros(nm).name  = keyValue
             gThemeMacros(nm).value = keyData
-            continue do
+            continue for
         end if
 
         ' if keyData is a replaceable parameter then substitute it now, REMEMBERING which
@@ -553,7 +553,7 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
                 gTheme(nFound).hasForeAlpha    = true
             end if
             gTheme(nFound).foreMacro = wszMacroUsed
-            continue do
+            continue for
         end if
 
         select case keys(3)
@@ -581,9 +581,8 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
                     gThemeParseWarnings(ubound(gThemeParseWarnings)) = keyValue & "." & keys(3)
                 end if
         end select
-    loop
+    next
     
-    pStream.Close
 
     return false
 

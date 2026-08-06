@@ -182,8 +182,10 @@ function frmOptionsLocal_LocalEditCheck() as long
 
     PsFileDelete(wszFileName)
 
-    dim pStream as CTextStream
-    if pStream.OpenForOutputW(wszFilename, true) = S_OK then
+    ' UTF-16LE with a BOM, which is what OpenForOutputW wrote and what the header
+    ' block below tells translators the file must be.
+    dim as DWSTRING wszOut
+    scope
 
         wszTemp = _
         "' Localization file for " & PsUCase(PsPathStem(wszLocalName)) & " language" & vbcrlf & _
@@ -196,7 +198,7 @@ function frmOptionsLocal_LocalEditCheck() as long
         "' Each line represents a key/value pair describing the position to store the" & vbcrlf & _
         "' localized word/phrase into the localization array used by the editor. Simple." & vbcrlf & vbcrlf & _
         "MAXIMUM:" & wstr(nCount) & vbcrlf & vbcrlf
-        pStream.WriteLine(wszTemp)
+        wszOut &= wszTemp & vbcrlf
 
         ' KEY:PHRASE AND NOTHING ELSE. Each line used to carry the English original after a
         ' ";", padded out to column 60 -- a translator's crib sheet written into the data
@@ -213,10 +215,10 @@ function frmOptionsLocal_LocalEditCheck() as long
             dim as DWSTRING wszIndex = PsListTree_GetCellText( ghLocalList, i, LOCALCOL_INDEX )
             dim as long idx = val(wszIndex)
             wszPhrase = PsStrRSet(wszIndex, 5, "0") + wstr(":") + gLocalPhrases(idx)
-            pStream.WriteLine PsRTrim(wszPhrase)
+            wszOut &= PsRTrim(wszPhrase) & vbcrlf
         next
-    end if
-    pStream.Close
+    end scope
+    TextFile_WriteUtf16( wszFilename, wszOut )
 
     ' The file that was just written IS the one the editor runs in, so its new contents
     ' will not be seen until the next start. Recorded here, at the one place a write
@@ -247,19 +249,19 @@ function frmOptionsLocal_LoadLocalizationFile( byref wszFilename as wstring ) as
     dim as BSTRING wst, wKey, wData
     dim as long nKey, nData, i
 
-    dim pStream as CTextStream
-    if pStream.OpenUnicode( wszFileName ) <> S_OK then exit function
+    redim as DWSTRING lines_(any)
+    if TextFile_ReadLines( wszFileName, lines_() ) = false then exit function
 
     frmOptionsLocal_ClearGlobalArray()
 
-    do until pStream.EOS
-        wst = pStream.ReadLine
+    for nLine_ as long = lbound(lines_) to ubound(lines_)
+        wst = lines_(nLine_)
 
-        if PsLen(wst) = 0 then continue do
-        if PsLeft(wst, 1) = "'" then continue do
+        if PsLen(wst) = 0 then continue for
+        if PsLeft(wst, 1) = "'" then continue for
 
         i = PsInStr(wst, ":")
-        if i = 0 then continue do
+        if i = 0 then continue for
 
         wKey = "": wData = "": nData = 0
 
@@ -290,8 +292,7 @@ function frmOptionsLocal_LoadLocalizationFile( byref wszFilename as wstring ) as
                 ' key whose local string is empty, which is the only place it is needed.
             end if
         end if
-    loop
-    pStream.Close
+    next
 
     ' Keys past the end of the local file are left EMPTY -- untranslated, which is the truth.
     ' They used to be filled from English, so a file that stopped at key 200 came back with

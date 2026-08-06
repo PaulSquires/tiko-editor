@@ -351,11 +351,10 @@ function code_CompileModules( byval pCompile as COMPILE_TYPE ptr ) as boolean
         ' Debug build
         bForceRebuild = iif( bDebugFileExists, false, true )
         ' Create the debug active file for later checks
-        dim pStream as CTextStream   '(utf16)
-        if pStream.Create( wszDebugFilename, true, true ) = S_OK then 
-            pStream.WriteLine "-- DEBUG OBJECT FILES --"
-        end if
-        pStream.Close
+        ' A one-line marker file. UTF-16LE with a BOM, as Create(..., true, true) wrote:
+        ' nothing reads its CONTENT, only whether it exists, but rewriting it in another
+        ' encoding would still be a change to a file on the user's disk.
+        TextFile_WriteUtf16( wszDebugFilename, "-- DEBUG OBJECT FILES --" & vbcrlf )
     else
         ' Release builds
         if bDebugFileExists then bForceRebuild = true

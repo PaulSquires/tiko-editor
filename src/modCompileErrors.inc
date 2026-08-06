@@ -259,15 +259,20 @@ function RunEXE( _
     ' Otherwise, simple shell to the program.
     if gConfig.RunViaCommandWindow then
         PsFileDelete( wszBatchFile )
-        dim pStream as CTextStream
-        if pStream.Create(wszBatchFile) = S_OK then
-            pStream.WriteLine "@echo off"
-            pStream.WriteLine PsLeft(wszPath, 2)     ' ensure on correct drive
-            pStream.WriteLine "cd " & chr(34) & wszPath & chr(34)   ' change to correct folder
-            pStream.WriteLine chr(34) & wszFileExe & chr(34) & " " & wszParam
-            pStream.WriteLine "pause"
-        end if
-        pStream.Close
+        ' One buffer, one write -- same shape as clsConfig and modKeyBindings.
+        '
+        ' ANSI WITH NO BOM, WHICH MATTERS MORE HERE THAN ELSEWHERE: cmd.exe reads a
+        ' .bat in the console codepage and a BOM at the top is executed as a command,
+        ' which fails with a line noise error before anything runs. That is what
+        ' CTextStream.Create wrote without its bUnicode flag, and it is what
+        ' TextFile_WriteAnsi writes.
+        dim as DWSTRING wszBat
+        wszBat &= "@echo off" & vbcrlf
+        wszBat &= PsLeft(wszPath, 2) & vbcrlf                            ' correct drive
+        wszBat &= "cd " & chr(34) & wszPath & chr(34) & vbcrlf           ' correct folder
+        wszBat &= chr(34) & wszFileExe & chr(34) & " " & wszParam & vbcrlf
+        wszBat &= "pause" & vbcrlf
+        TextFile_WriteAnsi( wszBatchFile, wszBat )
         wszFileExe = wszBatchFile
         wszParam = ""
     end if
@@ -415,7 +420,7 @@ function ParseLogForError ( _
         
         ' Deal with the situation where we might be trying to compile a 64-bit application
         ' from a 32-bit operating system.
-        if left(wst_ucase, 16) = "THIS VERSION OF " then
+        if PsLeft(wst_ucase, 16) = "THIS VERSION OF " then
             fGoodCompile = false
             fSwitchToLogFile = true
             wszText = "" & chr(9) & "0" & chr(9) & "" & chr(9) & "compiling FAILED: Windows not 64-bit (refer to log file)"
@@ -425,11 +430,11 @@ function ParseLogForError ( _
         end if   
 
         ' Save the FB version and copyright information. 
-        if left(wst_ucase, 19) = "FREEBASIC COMPILER " then
+        if PsLeft(wst_ucase, 19) = "FREEBASIC COMPILER " then
             fGoodCompile = true
             wszOutputMsg = wszOutputMsg & wst & vbCrLf: continue For
         end if        
-        if left(wst_ucase, 13) = "COPYRIGHT (C)" then
+        if PsLeft(wst_ucase, 13) = "COPYRIGHT (C)" then
             fGoodCompile = true
             wszOutputMsg = wszOutputMsg & wst & vbCrLf: continue For
         end if        
@@ -447,18 +452,18 @@ function ParseLogForError ( _
         ' Very sorry, but GoRC had a problem.
                                             
         ' Check to see if linking failed
-        if (left(wst_ucase, 6) = "ERROR!") or _
+        if (PsLeft(wst_ucase, 6) = "ERROR!") or _
             (left(wst_ucase, 34) = "VERY SORRY, BUT GORC HAD A PROBLEM") then
             wszText = "" & chr(9) & "0" & chr(9) & "" & chr(9) & "compiling resource FAILED: Error Code 1 (refer to log file)"
             ListBox_AddTabbedRow( hLV, wszText )
             fSwitchToLogFile = true
             NumErrors += 1
-        elseif (left(wst_ucase, 5) = "ERROR") then
+        elseif (PsLeft(wst_ucase, 5) = "ERROR") then
             wszText = "" & chr(9) & "0" & chr(9) & "" & chr(9) & "compiling FAILED: Error Code 1 (refer to log file)"
             ListBox_AddTabbedRow( hLV, wszText )
             fSwitchToLogFile = true
             NumErrors += 1
-        elseif (left(wst_ucase, 19) = "COMPILING C FAILED:") then
+        elseif (PsLeft(wst_ucase, 19) = "COMPILING C FAILED:") then
             wszText = "" & chr(9) & "0" & chr(9) & "" & chr(9) & "compiling C FAILED: Error Code 1 (refer to log file)"
             ListBox_AddTabbedRow( hLV, wszText )
             fSwitchToLogFile = true
@@ -476,7 +481,7 @@ function ParseLogForError ( _
         ' If creating just a single compiled Module then obviously there is no linking step so this deeper dive
         ' to find the true OutputFilename never happens and will still be set to the default for the project
         ' which is most likely an EXE based on the Main file name.
-        if left(wst_ucase, 9) = "LINKING: " then 
+        if PsLeft(wst_ucase, 9) = "LINKING: " then 
             i = PsInStr(wst, " -o ")
             if i then
                 wszTemp = PsMid(wst, i + 4)
@@ -492,17 +497,17 @@ function ParseLogForError ( _
         
         ' Determine if we are reading any lines in the log file that appear after the "compiling: " line
         ' but before the "assembling: ". Anything there is data output by #print preprocessor statements.
-        if left(wst_ucase, 11) = "COMPILING: " then 
+        if PsLeft(wst_ucase, 11) = "COMPILING: " then 
             bReadingCompileOutput = true
             continue for
-        elseif left(wst_ucase, 13) = "COMPILING C: " then 
+        elseif PsLeft(wst_ucase, 13) = "COMPILING C: " then 
             bReadingCompileOutput = true
             continue for
-        elseif left(wst_ucase, 12) = "ASSEMBLING: " then 
+        elseif PsLeft(wst_ucase, 12) = "ASSEMBLING: " then 
             bReadingCompileOutput = false
-        elseif left(wst_ucase, 14) = "COMPILING RC: " then 
+        elseif PsLeft(wst_ucase, 14) = "COMPILING RC: " then 
             bReadingCompileOutput = false
-        elseif left(wst_ucase, 9) = "LINKING: " then 
+        elseif PsLeft(wst_ucase, 9) = "LINKING: " then 
             bReadingCompileOutput = false
         end if
 
