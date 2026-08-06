@@ -58,6 +58,12 @@
 ''
 '' This is why namespace PsC solved the encoder but does not solve the renderer:
 '' PsEncoding is pure FreeBASIC, and PsSciView is not.
+'' modScintilla.bi FIRST, and the order is load-bearing. tiko #Defines all 117
+'' SCI_* constants (and 19 SCK_*); PsPlatform declares them as `const` behind
+'' #ifndef guards. Guards only work in this direction -- with PsScintilla.bi
+'' first the const already exists and tiko's #Define becomes the duplicate,
+'' which no guard on the library side can prevent.
+#include once "modScintilla.bi"
 #include once "bind/Blend2D.bi"
 #include once "bind/FreeType.bi"
 #include once "bind/HarfBuzz.bi"
@@ -73,6 +79,9 @@ namespace PsC
     #include once "scintilla/PsSciNotify.inc"
     #include once "platform/win32host/PsWin32Host.inc"
 end namespace
+
+#include once "frmSciHost.bi"
+#include once "frmSciHost.inc"
 
 dim shared as long g_nBad
 
@@ -144,6 +153,116 @@ Ck("...and the line count is right", pv->Msg(SCI_GETLINECOUNT) = 2, _
 dim as PsC.PsWin32Host bridge
 Ck("the Win32 bridge constructs", bridge.Attach(@surf, cast(any ptr, 1)) <> 0, "")
 bridge.Detach()
+
+
+'' ---- the window class, driven exactly as tiko drives it ------------------
+''
+'' Everything above proves the pieces link. This proves the CLASS works, and it
+'' is driven the way the 212 call sites do it -- SendMessage of an SCI_* message
+'' to an HWND -- rather than by calling PsSciView directly, which would test a
+'' path no caller uses.
+
+dim shared as long g_nNotify
+dim shared as HWND g_hNotifyFrom
+dim shared as long g_nNotifyId
+
+function ParentProc stdcall (byval hWnd as HWND, byval nMsg as UINT, _
+                           byval wParam as WPARAM, byval lParam as LPARAM) as LRESULT
+    if nMsg = WM_NOTIFY then
+        dim as NMHDR ptr p = cast(NMHDR ptr, lParam)
+        g_nNotify += 1
+        g_hNotifyFrom = p->hwndFrom
+        g_nNotifyId = clng(p->idFrom)
+    end if
+    return DefWindowProc(hWnd, nMsg, wParam, lParam)
+end function
+
+dim as WNDCLASSEX wcp
+wcp.cbSize = sizeof(WNDCLASSEX)
+wcp.lpfnWndProc = @ParentProc
+wcp.hInstance = GetModuleHandle(null)
+wcp.lpszClassName = @"tikoSciHostProbeParent"
+RegisterClassEx(@wcp)
+
+dim as HWND hParent = CreateWindowEx(0, "tikoSciHostProbeParent", "", WS_OVERLAPPED, _
+                                     0, 0, 400, 300, null, null, GetModuleHandle(null), null)
+Ck("a parent window to receive WM_NOTIFY", hParent <> 0, "")
+
+'' 4242 rather than IDC_SCINTILLA: an id echoed back correctly by accident is
+'' not echoed back correctly. tiko gates on IsValidScintillaID(id), so a host
+'' that reported the wrong id would drop every notification silently.
+const PROBE_ID = 4242
+dim as HWND hSci = SciHost_Create(hParent, PROBE_ID)
+Ck("SciHost_Create returns a window", hSci <> 0, "")
+scope
+    '' ASKED OF THE WINDOW, not assumed. The first version of this line was
+    '' `len(dir("")) >= 0`, which is true for every input and therefore asserted
+    '' nothing at all -- a green tick that could never go red.
+    dim as zstring * 64 zCls
+    GetClassName(hSci, @zCls, 64)
+    Ck("...of class tikoSciHost", zCls = TIKO_SCIHOST_CLASS, zCls)
+end scope
+
+'' THE BRANCH THAT IS 7d: SCI_* by SendMessage, exactly as SciExec does it.
+dim as string sProbe = "alpha" & chr(10) & "beta" & chr(10) & "gamma"
+SendMessage(hSci, SCI_SETTEXT, 0, cast(LPARAM, strptr(sProbe)))
+Ck("SciExec-shaped SCI_SETTEXT reaches the fork", _
+   SendMessage(hSci, SCI_GETLENGTH, 0, 0) = len(sProbe), _
+   str(SendMessage(hSci, SCI_GETLENGTH, 0, 0)))
+Ck("...and the line count is right", _
+   SendMessage(hSci, SCI_GETLINECOUNT, 0, 0) = 3, _
+   str(SendMessage(hSci, SCI_GETLINECOUNT, 0, 0)))
+
+'' The direct pointer the 350 SciMsg sites use. It must be the SAME editor the
+'' HWND route just talked to -- two editors behind one window would diverge
+'' silently, and only under a split.
+dim as any ptr pProbe = SciHost_DirectPointer(hSci)
+Ck("SciHost_DirectPointer is non-null", pProbe <> 0, "")
+Ck("...and addresses the same editor as the HWND route", _
+   SciPs_Send(pProbe, SCI_GETLENGTH, 0, 0) = len(sProbe), _
+   str(SciPs_Send(pProbe, SCI_GETLENGTH, 0, 0)))
+
+'' PSEV_NOTIFY -> WM_NOTIFY. tiko resolves the document from hwndFrom and gates
+'' on the id; both wrong is not a crash, it is an edit attributed to nothing.
+Ck("the edit produced WM_NOTIFY at the parent", g_nNotify > 0, str(g_nNotify))
+Ck("...with hwndFrom = the host window", g_hNotifyFrom = hSci, "")
+Ck("...and idFrom = the control id", g_nNotifyId = PROBE_ID, str(g_nNotifyId))
+
+'' Sizing, which clsDocument does after creating both splits at 0,0,0,0.
+SetWindowPos(hSci, null, 0, 0, 320, 240, SWP_NOZORDER or SWP_NOACTIVATE)
+Ck("resizing does not destroy the editor", _
+   SendMessage(hSci, SCI_GETLENGTH, 0, 0) = len(sProbe), "")
+
+'' PER-WINDOW STATE, not global. clsDocument creates TWO of these per document
+'' and Find in Project creates sixteen more, all in one process -- state that
+'' leaked between them would show up as the split view editing the wrong buffer.
+scope
+    dim as HWND hSci2 = SciHost_Create(hParent, PROBE_ID + 1)
+    Ck("a second host window creates", hSci2 <> 0, "")
+    Ck("...with its own state", _
+       SciHost_StateFromHwnd(hSci2) <> SciHost_StateFromHwnd(hSci), "")
+    Ck("...and its own editor", _
+       SciHost_DirectPointer(hSci2) <> SciHost_DirectPointer(hSci), "")
+
+    '' Independent documents: text set in one must not appear in the other.
+    dim as string sOther = "x"
+    SendMessage(hSci2, SCI_SETTEXT, 0, cast(LPARAM, strptr(sOther)))
+    Ck("...whose content is independent", _
+       SendMessage(hSci2, SCI_GETLENGTH, 0, 0) = 1 andalso _
+       SendMessage(hSci,  SCI_GETLENGTH, 0, 0) = len(sProbe), _
+       str(SendMessage(hSci, SCI_GETLENGTH, 0, 0)))
+    DestroyWindow(hSci2)
+end scope
+
+'' NOT ASSERTED: that teardown releases the state.
+''
+'' The obvious line -- SciHost_StateFromHwnd(hSci) = 0 after DestroyWindow -- was
+'' here and was VACUOUS: GetWindowLongPtr on a destroyed HWND returns 0 whatever
+'' WM_DESTROY did. It survived a mutation that deleted the SetWindowLongPtr(0)
+'' entirely, which is how it was found. A green tick that cannot go red is worse
+'' than no tick, so it is gone rather than reworded.
+DestroyWindow(hSci)
+DestroyWindow(hParent)
 
 print ""
 if g_nBad > 0 then
