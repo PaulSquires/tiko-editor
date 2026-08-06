@@ -101,7 +101,6 @@ declare sub      KeyBindings_EnsureKeyNames()
 declare function KeyBindings_VKToName( byval vk as long ) as DWSTRING
 ' Fill a pick-list from the vocabulary. Used by frmKeyboardEdit, frmBuildConfig and
 ' frmUserTools (the last two on raw Win32 comboboxes -- do not change this signature).
-declare function AddShortcutsToComboBox( byval hCombo as HWND ) as long
 ' ========================================================================================
 ' WHICH LIVE EDITOR COMMAND OWNS THIS KEYSTROKE?
 '

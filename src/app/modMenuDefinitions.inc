@@ -11,8 +11,15 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
-#include once "../modMRU.bi"
-#include once "../frmKeyboard.bi"
+'' modKeyBindings.bi DIRECTLY. This file needs gKeys and nothing else, and
+'' frmKeyboard.bi says so itself: "The MODEL (gKeys, ...) moved to
+'' modKeyBindings.* ... Included here so the existing includers of
+'' frmKeyboard.bi (modMenuDefinitions.inc, frmKeyboardEdit.inc) still see gKeys
+'' without changing." That convenience cost this file the whole keyboard DIALOG.
+''
+'' ../modMRU.bi was included too and NOTHING here used it -- measured: it defines
+'' five symbols and this file names none of them.
+#include once "../modKeyBindings.bi"
 
 ' ========================================================================================
 ' Get the menu accelerator text (if one exists) for this menu item

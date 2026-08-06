@@ -533,14 +533,14 @@ end function
 '
 ' frmBuildConfig and frmUserTools do not persist a binding string the way gKeys() does. They
 ' keep the modifiers in three booleans (IsCtrl/IsAlt/IsShift) and the key itself as whatever
-' text AddShortcutsToComboBox put in their combobox, so there is never a "Ctrl+" prefix to
+' text the pick list put in front of the user, so there is never a "Ctrl+" prefix to
 ' parse. This turns that stored text back into an accelerator, and it is deliberately NOT
 ' frmKeyboard_AccelKeyToValue.
 '
 ' TWO REASONS IT HAS TO BE ITS OWN FUNCTION, and note that both produce a WRONG accelerator
 ' rather than a missing one -- so neither has a visible symptom:
 '
-'   (1) "None" IS A PICK-LIST ENTRY. AddShortcutsToComboBox prepends it, and both dialogs
+'   (1) "None" IS A PICK-LIST ENTRY. frmAssignKey and frmKeyboardEdit prepend it, and both
 '       write it straight back into gConfig as the stored key meaning "no shortcut". Handed
 '       to AccelKeyToValue it does not fall through to zero: that function ends with
 '             case "A" to "Z": return asc(wszString)
@@ -795,7 +795,7 @@ sub KeyBindings_RunSelfTest()
         KBASSERT( vkPick(i) <> 0, _
                   "pick-list name """ & sName & """ resolves to virtual key 0" )
 
-        ' "None" is prepended by AddShortcutsToComboBox as an affordance meaning "no key at
+        ' "None" is prepended by the two key-picking dialogs as an affordance meaning "no key at
         ' all". If it were ever also a vocabulary entry, PickListKeyToValue's early return
         ' would shadow it and that key would become unbindable.
         KBASSERT( PsUCase(gKeyNames(i).wszName) <> "NONE", _
@@ -945,31 +945,6 @@ function frmKeyboard_BuildAcceleratorTable() as long
     ' this is the one place every rebind path converges on. A no-op when the window is
     ' closed, which is the usual case.
     if frmDebug_IsOpen() then frmDebug_ArmButtonTooltips()
-
-    function = 0
-end function
-
-
-' ========================================================================================
-' Add shortcuts to the specified combobox.
-' (1) frmKeyboardEdit
-' (2) frmBuildConfig
-' (3) frmUserTools
-'
-' The last two hand this a RAW WIN32 COMBOBOX, so the signature is fixed. "None" is
-' prepended here rather than living in gKeyNames(): it is a pick-list affordance meaning
-' "no key at all", not a key, and it has no virtual-key value to round-trip.
-' ========================================================================================
-function AddShortcutsToComboBox( byval hCombo as HWND ) as long
-    KeyBindings_EnsureKeyNames()
-
-    ComboBox_AddString( hCombo, @wstr("None") )
-
-    dim as DWSTRING wszText
-    for i as long = lbound(gKeyNames) to ubound(gKeyNames)
-        wszText = gKeyNames(i).wszName
-        ComboBox_AddString( hCombo, wszText.sptr )
-    next
 
     function = 0
 end function
