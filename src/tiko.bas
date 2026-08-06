@@ -125,6 +125,9 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 '' so the effective order is unchanged. Everything downstream that uses L() is
 '' unaffected -- and the app layer can now reach it without the shell.
 #include once "app/modLocalization.bi"
+'' The menu vocabulary. Before modDeclares.bi, which is where these declarations
+'' used to live, so nothing downstream sees a different order.
+#include once "app/modMenuIds.bi"
 #include once "modDeclares.bi"
 ' Declarations only, and deliberately naming no Ps* type: clsConfig.inc calls
 ' NavHistory_Clear from both of its session-load paths, well ahead of the frm* block. The
