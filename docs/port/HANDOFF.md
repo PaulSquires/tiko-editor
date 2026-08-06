@@ -67,9 +67,18 @@ if (nMsg >= SCI_START) andalso (nMsg < 5000) then
 because `SciExec` is `SendMessage`. Confirmed by hand: rendering, typing, caret, syntax
 colouring, font size.
 
-**The interactive pass has now been done, and it found two defects.** Selection,
-autocompletion, the split view and Find-in-Project all work. Teardown is still not asserted —
-the obvious assertion was vacuous and was deleted rather than reworded.
+**The interactive pass has now been done, and it found three defects.** Confirmed working by
+hand afterwards: selection, autocompletion, the context menu, the split view,
+Find-in-Project, the wheel in both split and unsplit, and Ctrl+wheel zoom. Teardown is still
+not asserted — the obvious assertion was vacuous and was deleted rather than reworded.
+
+**Shift+wheel is the one thing still untried.** It should scroll sideways and the horizontal
+thumb should follow: `frmEditorHScroll_UpdateScrollBars` is driven from the message pump's
+`handleMouseShowScrollBar`, which polls `SCI_GETXOFFSET` on every mouse message, and a wheel
+is one. Note the deliberate asymmetry if it ever looks wrong — the H bar's own wheel step
+honours `SPI_GETWHEELSCROLLCHARS`, while PsCore's Shift+wheel hard-codes 3 columns so both
+platforms scroll identically from the same event. On a machine where that setting is not 3,
+the two paths move by different amounts.
 
 **The mouse wheel did nothing in the editor.** `PsSciDispatch` had no `PSEV_MOUSE_WHEEL`
 case, so the Win32 host translated the message correctly, `PsSciView` forwarded it correctly,
