@@ -53,6 +53,12 @@
 '' SciExec is tiko's own Scintilla wrapper rather than Win32, but it takes an
 '' HWND and so ties a file to the editor window -- the same dependency by
 '' another name.
+''
+'' THE AfxNova CLASSES ARE NOT CAUGHT BY THE Afx-PREFIX RULE BELOW, because they
+'' are named CTextStream, CFileStream, CWebView2 and so on. That gap let
+'' modIniParse.inc into app/ with a `dim pS as CTextStream` in it -- found when
+'' src/app was compiled WITHOUT AfxNova in scope for the first time, which is
+'' the thing the boundary was supposed to guarantee and had never been tested.
 dim shared as zstring * 24 g_banned(...) = { _
     "HWND", "HDC", "HMENU", "HBITMAP", "HICON", "HFONT", "HBRUSH", "HPEN", _
     "HINSTANCE", "WPARAM", "LPARAM", "LRESULT", "CWindow", "SendMessage", _
@@ -63,7 +69,10 @@ dim shared as zstring * 24 g_banned(...) = { _
     "CreateFileW", "WriteFile", "ReadFile", "CloseHandle", "GetLastError", _
     "DWORD", "LPWSTR", "LPCWSTR", "LPSTR", "HGLOBAL", "GlobalAlloc", _
     "GlobalLock", "CP_UTF8", "CP_ACP", "IDOK", "IDCANCEL", "IDYES", "IDNO", _
-    "SciExec" }
+    "SciExec", _
+    _
+    "CTextStream", "CFileStream", "CWinHttpRequest", "CImageCtx", "CGdiPlus", _
+    "CWebView2", "CBSTR", "CWSTR" }
 
 dim shared as long g_nBad
 

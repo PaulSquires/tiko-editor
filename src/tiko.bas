@@ -156,7 +156,7 @@ dim shared gTTabCtl as clsTopTabCtl
 ' The shared key=value line decode. Ahead of clsConfig.inc, whose two parsers use it, and
 ' declarations-and-one-pure-function only -- it names no Ps* type and no global.
 #include once "app/modIniParse.bi"
-#include once "app/modIniParse.inc"
+#include once "modIniParse.inc"
 #include once "clsConfig.inc"
 #include once "PsBufferPaint.inc"
 ' modRoutines was a 2,250-line junk drawer. These three are PURE MOVES out of it -- see
