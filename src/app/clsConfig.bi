@@ -13,6 +13,8 @@
 
 #pragma once
 
+#include once "modDocEncodingIds.bi"
+
 
 type TYPE_BUILDS
     id               as string    ' GUID

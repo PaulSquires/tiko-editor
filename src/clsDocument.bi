@@ -18,11 +18,10 @@
 '  Scintilla Control identifiers
 #define IDC_SCINTILLA              100
 
-' File encodings
-#define FILE_ENCODING_ANSI         0
-#define FILE_ENCODING_UTF8         1
-#define FILE_ENCODING_UTF8_BOM     2
-#define FILE_ENCODING_UTF16_BOM    3
+' File encodings -- moved to app\modDocEncodingIds.bi, which the app layer can reach.
+' clsConfig.bi needs FILE_ENCODING_UTF8 and cannot include this file: it holds Scintilla's
+' HWND, so following that dependency would drag the whole document model shell-side.
+#include once "app/modDocEncodingIds.bi"
 
 #define FILETYPE_UNDEFINED        "0"
 #define FILETYPE_MAIN             "1"

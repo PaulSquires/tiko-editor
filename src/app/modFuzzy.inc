@@ -83,7 +83,19 @@ sub fuzzy_init_bonus_tables()
 end sub
 
 #define fuzzy_compute_bonus(last_ch, ch) bonus_states(bonus_index((ch) and 255), (last_ch) and 255)
-'#define max(a, b) iif((a) > (b), (a), (b))
+' RESTORED, AND GUARDED. This was commented out because the unity build got a
+' max() from win\windef.bi -- so this file has been quietly depending on a WIN32
+' HEADER MACRO. Nothing could see it: it is not an Afx name, not an HWND, and
+' the grep-based ratchet has no reason to know that `max` is Windows'.
+'
+' The standalone compile found it in one run, which is the argument for having
+' the compiler check the boundary rather than a word list.
+'
+' #ifndef so the unity build, where windef.bi is still in scope, does not get a
+' duplicate definition.
+#ifndef max
+    #define max(a, b) iif((a) > (b), (a), (b))
+#endif
 
 
 function fuzzy_has_match( byval needle as DWSTRING, byval haystack as DWSTRING ) as boolean
@@ -95,7 +107,7 @@ function fuzzy_has_match( byval needle as DWSTRING, byval haystack as DWSTRING )
 	dim as integer hpos = 1
 
 	for i as integer = 1 to PsLen(lneedle)
-		hpos = instr(hpos, lhaystack, PsMid(lneedle, i, 1))
+		hpos = PsInStr(hpos, lhaystack, PsMid(lneedle, i, 1))
 		if hpos = 0 then return false
 		hpos += 1
 	next
