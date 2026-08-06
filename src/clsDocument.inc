@@ -105,8 +105,8 @@ function clsDocument.SetDocInfo() as long
        this.docData.wszBookmarks = this.GetBookmarks()
        this.docData.wszBreakPoints = this.GetBreakPoints()
        this.docData.wszFoldPoints =this.GetFoldPoints()
-       this.docData.nFirstLine = SendMessage( this.hWindow(0), SCI_GETFIRSTVISIBLELINE, 0, 0) 
-       this.docData.nPosition = SendMessage( this.hWindow(0), SCI_GETCURRENTPOS, 0, 0)  
+       this.docData.nFirstLine = SciMsg( pSci(0), SCI_GETFIRSTVISIBLELINE, 0, 0) 
+       this.docData.nPosition = SciMsg( pSci(0), SCI_GETCURRENTPOS, 0, 0)  
        this.docData.nFirstLine1 = 0
        this.docData.nPosition1 = 0
        this.docData.nSplitMode = this.EditorSplitMode
@@ -115,8 +115,8 @@ function clsDocument.SetDocInfo() as long
        this.docData.nFocusEdit = iif(this.hWndActiveScintilla = this.hWindow(0), 0, 1)
     end if
     if IsWindow(this.hWindow(1)) then    
-       this.docData.nFirstLine1 = SendMessage( this.hWindow(1), SCI_GETFIRSTVISIBLELINE, 0, 0) 
-       this.docData.nPosition1 = SendMessage( this.hWindow(1), SCI_GETCURRENTPOS, 0, 0)  
+       this.docData.nFirstLine1 = SciMsg( pSci(1), SCI_GETFIRSTVISIBLELINE, 0, 0) 
+       this.docData.nPosition1 = SciMsg( pSci(1), SCI_GETCURRENTPOS, 0, 0)  
     end if
     function = 0
 end function    
@@ -240,10 +240,10 @@ function clsDocument.AssignTextBuffer() as long
             this.SetBookmarks(this.docData.wszBookmarks)
             this.SetBreakPoints(this.docData.wszBreakPoints)
             this.SetFoldPoints(this.docData.wszFoldPoints)
-            SciExec( this.hWindow(0), SCI_SETFIRSTVISIBLELINE, this.docData.nFirstLine, 0) 
-            SciExec( this.hWindow(0), SCI_GOTOPOS, this.docData.nPosition, 0) 
-            SciExec( this.hWindow(1), SCI_SETFIRSTVISIBLELINE, this.docData.nFirstLine1, 0) 
-            SciExec( this.hWindow(1), SCI_GOTOPOS, this.docData.nPosition1, 0) 
+            SciMsg( pSci(0), SCI_SETFIRSTVISIBLELINE, this.docData.nFirstLine, 0) 
+            SciMsg( pSci(0), SCI_GOTOPOS, this.docData.nPosition, 0) 
+            SciMsg( pSci(1), SCI_SETFIRSTVISIBLELINE, this.docData.nFirstLine1, 0) 
+            SciMsg( pSci(1), SCI_GOTOPOS, this.docData.nPosition1, 0) 
         end if
         this.ApplyProperties()
     end if
@@ -611,12 +611,12 @@ end function
 function clsDocument.RemoveSelectionAttributes() as long
     ' Remove all Attribute #8 selection highlights from this document.
     dim as long startPos, endPos
-    SendMessage( this.hWindow(0), SCI_INDICSETSTYLE, 8, INDIC_STRAIGHTBOX)
-    SendMessage( this.hWindow(0), SCI_SETINDICATORCURRENT, 8, 0)
-    SendMessage( this.hWindow(0), SCI_TARGETWHOLEDOCUMENT, 0, 0)
-    startPos = SendMessage( this.hWindow(0), SCI_GETTARGETSTART, 0, 0)
-    endPos =  SendMessage( this.hWindow(0), SCI_GETTARGETEND, 0, 0)
-    SendMessage( this.hWindow(0), SCI_INDICATORCLEARRANGE, startPos, cast(LPARAM, endPos))
+    SciMsg( pSci(0), SCI_INDICSETSTYLE, 8, INDIC_STRAIGHTBOX)
+    SciMsg( pSci(0), SCI_SETINDICATORCURRENT, 8, 0)
+    SciMsg( pSci(0), SCI_TARGETWHOLEDOCUMENT, 0, 0)
+    startPos = SciMsg( pSci(0), SCI_GETTARGETSTART, 0, 0)
+    endPos =  SciMsg( pSci(0), SCI_GETTARGETEND, 0, 0)
+    SciMsg( pSci(0), SCI_INDICATORCLEARRANGE, startPos, cast(LPARAM, endPos))
     function = 0
 end function
 
