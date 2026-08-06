@@ -1351,7 +1351,9 @@ sub CopyData_RunSelfTest()
             nPass += 1
         else
             nFail += 1
-            sMsg = "  FAIL: " & msg
+            '' .Utf8 rather than the implicit ANSI-codepage conversion. Assertion text.
+            dim as DWSTRING wszMsg = msg
+            sMsg = "  FAIL: " & wszMsg.Utf8
             ? sMsg
         end if
     #endmacro

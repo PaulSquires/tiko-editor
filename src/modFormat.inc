@@ -810,9 +810,9 @@ private function FMT_ClassifyLine( tokens() as FMTTOKEN, _
         if nSig = -1 then nSig = i
         if (k = FMTTOK_WORD) andalso (nWords < 3) then
             nWords += 1
-            if nWords = 1 then sW1 = PsLCase(tokens(i).text)
-            if nWords = 2 then sW2 = PsLCase(tokens(i).text)
-            if nWords = 3 then sW3 = PsLCase(tokens(i).text)
+            if nWords = 1 then sW1 = PsLCase(tokens(i).text).Utf8
+            if nWords = 2 then sW2 = PsLCase(tokens(i).text).Utf8
+            if nWords = 3 then sW3 = PsLCase(tokens(i).text).Utf8
         end if
     next
 
@@ -828,7 +828,7 @@ private function FMT_ClassifyLine( tokens() as FMTTOKEN, _
         dim as long k = tokens(i).kind
         if (k = FMTTOK_WS) orelse (k = FMTTOK_COMMENT) orelse (k = FMTTOK_MLCOMMENT) then continue for
         if k = FMTTOK_CONT then continue for
-        if k = FMTTOK_WORD then sLastWord = PsLCase(tokens(i).text)
+        if k = FMTTOK_WORD then sLastWord = PsLCase(tokens(i).text).Utf8
         exit for
     next
 

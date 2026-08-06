@@ -54,7 +54,11 @@ dim shared gColorBuilt as boolean
 ' GetThemeDescription -- the theme file's general.description, or its filename. (Unchanged
 ' standalone helper carried over from the old page.)
 ' ========================================================================================
-function GetThemeDescription( byval wszFilename as DWSTRING ) as string
+'' RETURNS DWSTRING, NOT string. It used to return fbc's `string`, which round-tripped a
+'' theme description -- user-visible text -- through the ANSI codepage for no reason; every
+'' caller assigns the result straight back into a DWSTRING. Widening the return type is the
+'' right answer here rather than .Utf8, which would hand UTF-8 bytes to a wide consumer.
+function GetThemeDescription( byval wszFilename as DWSTRING ) as DWSTRING
     ' default to the theme description being the filename
     function = PsPathName(wszFilename)
 

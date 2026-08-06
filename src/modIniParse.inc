@@ -47,7 +47,11 @@ sub Ini_RunSelfTest()
             nPass += 1
         else
             nFail += 1
-            sMsg = "  FAIL: " & msg
+            '' .Utf8 rather than the implicit wstring->string, which goes through the ANSI
+            '' codepage. Assertion text, so the encoding change is safe -- see
+            '' docs/port/type-swap-scope.md.
+            dim as DWSTRING wszMsg = msg
+            sMsg = "  FAIL: " & wszMsg.Utf8
             ? sMsg
         end if
     #endmacro

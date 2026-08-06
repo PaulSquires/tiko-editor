@@ -1254,15 +1254,18 @@ private sub frmThemes_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
             dim as boolean bShow = (_has_)
             bShow = (bShow andalso (_from_))
             if bShow andalso (_rid_ > THROLE_NONE) then
-                dim as string sRole
+                '' DWSTRING rather than a `string` fed by .Utf8: this is text that gets
+                '' PAINTED, so a UTF-8 byte string drawn through an ANSI path would mojibake.
+                '' The whole DWSTRING is the destination anyway -- see docs/port/type-swap-scope.md.
+                dim as DWSTRING sRole
                 for i as long = 0 to Theme_RoleCount() - 1
                     if gThemeRoleDef(i).nRole = (_rid_) then
                         sRole = Theme_RoleName(i)
-                        if left(sRole,5) = "role." then sRole = mid(sRole, 6)
+                        if PsLeft(sRole,5) = "role." then sRole = PsMid(sRole, 6)
                         exit for
                     end if
                 next
-                if len(sRole) > 0 then
+                if PsLen(sRole) > 0 then
                     dim as RECT rcR = ( (_x_), p->rc.top, (_x_) + roleW, p->rc.bottom )
                     p->b->SetForeColor( theme.role.clr(THROLE_FOREGROUNDDIM) )
                     ' Each name hugs its own swatch: the fore name is right-aligned (its

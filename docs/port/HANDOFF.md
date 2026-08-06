@@ -108,8 +108,10 @@ Three rules learned the hard way, all with worked examples in the doc:
 ## What I would do next, in order
 
 1. **The swap, in one dedicated run.** Re-apply the four passes from `type-swap-scope.md`
-   (minutes), then work the 512 by hand. Do the `.Utf8` class **last** and watch
-   `TIKO_ENCODING_SELFTEST` on every batch.
+   (minutes), then work the remainder by hand. **The `.Utf8` class is now done** —
+   landed on the unswapped tree, 153 → 52 on the same probe, all 27 suites unmoved.
+   The 52 that remain under that error code are not `.Utf8` sites at all; the table in
+   `type-swap-scope.md` says what each one actually needs.
 2. **Then `clsSymbolDb`, `PsCompat.bi`, `namespace PsC` and `DocView`'s forwarding** all
    fall out — they exist only because two DWSTRINGs coexist.
 3. **Then 7c proper**: the shell. `PsWin32Host` is scaffolding and is deleted when it lands.

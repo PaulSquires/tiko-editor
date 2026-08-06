@@ -22,31 +22,31 @@ function FormatCodetip( byval strCodeTip as string ) as string
     dim as long p
 
     ' remove multiple duplicate spaces 
-    strCodeTip = PsStrReplace(strCodeTip, "  ", " ") 
+    strCodeTip = PsStrReplace(strCodeTip, "  ", " ").Utf8
 
     ' If this is only a small CodeTip then don't bother trying
     ' to format it into multiple lines.
     if len(strCodeTip) < 75 then return strCodeTip
 
     if instr(strCodeTip, "( ") then
-        strCodeTip = PsStrReplace(strCodeTip, "( ", "(  ")
+        strCodeTip = PsStrReplace(strCodeTip, "( ", "(  ").Utf8
     elseif instr(strCodeTip, "(") then
-        strCodeTip = PsStrReplace(strCodeTip, "(", "(  ")
+        strCodeTip = PsStrReplace(strCodeTip, "(", "(  ").Utf8
     end if
     p = instr(strCodeTip, "(")
     if p then
         if mid(strCodeTip, p + 1, 1) <> ")" andalso mid(strCodeTip, p + 1, 2) <> " )" then
-            strCodeTip = PsStrReplace(strCodeTip, "(", "( _" & vblf)
+            strCodeTip = PsStrReplace(strCodeTip, "(", "( _" & vblf).Utf8
             IF instr(strCodeTip, " )") then
-            strCodeTip = PsStrReplace(strCodeTip, ")", "_" & vblf & ")")
+            strCodeTip = PsStrReplace(strCodeTip, ")", "_" & vblf & ")").Utf8
             elseif instr(strCodeTip, ")") then
-            strCodeTip = PsStrReplace(strCodeTip, ")", " _" & vblf & ")")
+            strCodeTip = PsStrReplace(strCodeTip, ")", " _" & vblf & ")").Utf8
             end if
         end if
     end if
-    strCodeTip = PsStrReplace(strCodeTip, ", ", ",")
-    strCodeTip = PsStrReplace(strCodeTip, " ,", ",")
-    strCodeTip = PsStrReplace(strCodeTip, ",", ", _" & vblf & "  ")
+    strCodeTip = PsStrReplace(strCodeTip, ", ", ",").Utf8
+    strCodeTip = PsStrReplace(strCodeTip, " ,", ",").Utf8
+    strCodeTip = PsStrReplace(strCodeTip, ",", ", _" & vblf & "  ").Utf8
     
     function = strCodeTip
 end function
@@ -90,9 +90,9 @@ function DetermineWithVariable( byval pDoc as clsDocument ptr) as string
     for i as long = nCurLine to 0 step -1
         sLine = ltrim(pDoc->GetLine(i))
         ' Remove double spaces and replace TABs with single space
-        sLine = PsStrShrink(sLine, chr(32,9))
+        sLine = PsStrShrink(sLine, chr(32,9)).Utf8
         if left(ucase(sLine), 5) = "WITH " then
-            sWithVariable = PsStrParse(sLine, 2, " ")
+            sWithVariable = PsStrParse(sLine, 2, " ").Utf8
             exit for
         end if
     next
@@ -215,7 +215,7 @@ function DereferenceLine( _
     sLine = ucase(sLine)
     
     ' Convert all "->" pointer references to "." dots to make parsing easier
-    sLine = PsStrReplace(sLine, "->", ".")
+    sLine = PsStrReplace(sLine, "->", ".").Utf8
     
     ' The active document's identity in the symbol database (same naming rule the
     ' buffer scan uses), and the caret line in fbcParser's 1-based line space
@@ -304,7 +304,7 @@ function ShowCodetip( _
     if refProc.IsValid then
         select case gSymDb.SymKind( refProc )
             case FBCP_KIND_SUB, FBCP_KIND_FUNCTION
-                codeTip = gSymDb.BuildCalltip( refProc )
+                codeTip = gSymDb.BuildCalltip( refProc ).Utf8
         end select
     end if
 
@@ -312,7 +312,7 @@ function ShowCodetip( _
         ' FB intrinsic fallback (LEN, MID, ...): the identifier before the "("
         dim as long nParenCol = SciExec(hEdit, SCI_GETCOLUMN, curPos-1, 0)
         dim as string sName = GetTrailingIdentifier( left(pDoc->GetLine(pDoc->GetCurrentLineNumber), nParenCol) )
-        if PsLen(sName) then codeTip = FindIntrinsicCalltip( sName )
+        if PsLen(sName) then codeTip = FindIntrinsicCalltip( sName ).Utf8
     end if
 
     if len(codeTip) then
@@ -761,7 +761,7 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
                     "double|string|wstring|zstring|true|false|DWSTRING"
                 dim as long nCount = PsStrParseCount(sStdTypes, "|")
                 for i as long = 1 to nCount
-                    st = PsStrParse(sStdTypes, i, "|")
+                    st = PsStrParse(sStdTypes, i, "|").Utf8
                     dim as boolean bMatch = true
                     if nLenMatchWord then bMatch = ( PsLeft(PsUCase(st), nLenMatchWord) = pDoc->wszMatchWord )
                     if bMatch then

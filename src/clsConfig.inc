@@ -87,9 +87,9 @@ function clsConfig.LoadKeywords() as long
     end if
     if PsFileExists(this.FBKeywordsFilename) = false then exit function
 
-    this.FBKeywords     = TextFile_ReadAll( this.FBKeywordsFilename )
-    this.WinApiKeywords = TextFile_ReadAll( this.WinApiKeywordsFilename )
-    this.ExtraKeywords  = TextFile_ReadAll( this.ExtraKeywordsFilename )
+    this.FBKeywords     = TextFile_ReadAll( this.FBKeywordsFilename ).Utf8
+    this.WinApiKeywords = TextFile_ReadAll( this.WinApiKeywordsFilename ).Utf8
+    this.ExtraKeywords  = TextFile_ReadAll( this.ExtraKeywordsFilename ).Utf8
 
     function = 0
 end function
@@ -715,7 +715,7 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
             i = PsVal(PsRight(wKey,2))
                 if i >= 0 then
                     if i > ubound(this.Builds) then redim preserve this.Builds(i)
-                    this.Builds(i).id             = PsStrParse(wData, 1, "|-|")
+                    this.Builds(i).id             = PsStrParse(wData, 1, "|-|").Utf8
                     this.Builds(i).wszDescription = PsStrParse(wData, 2, "|-|")
                     this.Builds(i).wszOptions     = PsStrParse(wData, 3, "|-|")
                     this.Builds(i).IsDefault      = PsVal(PsStrParse(wData, 4, "|-|"))
@@ -1290,7 +1290,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
         wData = ProcessFromCurdriveProject(wData)
 
         select case wKey.Utf8
-            case "ProjectBuild":        gApp.ProjectBuild       = wData
+            case "ProjectBuild":        gApp.ProjectBuild       = wData.Utf8
             case "ProjectOther32":      gApp.ProjectOther32     = wData
             case "ProjectOther64":      gApp.ProjectOther64     = wData
             case "ProjectCommandLine":  gApp.ProjectCommandLine = wData

@@ -496,9 +496,9 @@ function FindReplace_DoReplace( _
             if gFind.nPreserve then
                 dim as string sReplaceText
                 if isUpperCaseString( sSelText ) then
-                    sReplaceText = PsUCase(txtReplace)
+                    sReplaceText = PsUCase(txtReplace).Utf8
                 elseif isLowerCaseString( sSelText ) then
-                    sReplaceText = PsLCase(txtReplace)
+                    sReplaceText = PsLCase(txtReplace).Utf8
                 else
                     sReplaceText = txtReplace
                 end if
@@ -532,9 +532,9 @@ function FindReplace_DoReplace( _
             dim as string sSelText = pDoc->GetSelText
             dim as string sReplaceText
             if isUpperCaseString( sSelText ) then
-                sReplaceText = PsUCase(txtReplace)
+                sReplaceText = PsUCase(txtReplace).Utf8
             elseif isLowerCaseString( sSelText ) then
-                sReplaceText = PsLCase(txtReplace)
+                sReplaceText = PsLCase(txtReplace).Utf8
             else
                 sReplaceText = txtReplace
             end if

@@ -590,7 +590,9 @@ sub Theme_RunSelfTest()
             nPass += 1
         else
             nFail += 1
-            sLine = "  FAIL: " & msg
+            '' .Utf8 rather than the implicit ANSI-codepage conversion. Assertion text.
+            dim as DWSTRING wszMsg = msg
+            sLine = "  FAIL: " & wszMsg.Utf8
             ? sLine
         end if
     #endmacro

@@ -120,7 +120,7 @@ sub DoCheckForUpdates( byval param as any ptr )
     ' The reply is a handful of bytes. A larger one is not this file, and there is no reason
     ' to hand an unbounded remote string to the parser.
     const MAX_VERSION_REPLY = 4096
-    if PsLen(st) > MAX_VERSION_REPLY then st = PsLeft( st, MAX_VERSION_REPLY )
+    if PsLen(st) > MAX_VERSION_REPLY then st = PsLeft( st, MAX_VERSION_REPLY ).Utf8
 
     wszLatestVersion = ParseLatestVersion( st )
     if PsLen(wszLatestVersion) = 0 then exit sub

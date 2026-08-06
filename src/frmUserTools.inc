@@ -1223,7 +1223,9 @@ sub frmUserTools_RunSelfTest()
             nPass += 1
         else
             nFail += 1
-            sLine = "  FAIL: " & _desc_
+            '' .Utf8 rather than the implicit ANSI-codepage conversion. Assertion text.
+            dim as DWSTRING wszMsg = _desc_
+            sLine = "  FAIL: " & wszMsg.Utf8
             ? sLine
         end if
     #endmacro

@@ -524,7 +524,7 @@ function clsDocument.GetTextRange( _
     txtrg.lpstrText = strptr(buffer)
     SciMsg(pSci, SCI_GETTEXTRANGE, 0, cast(LPARAM, @txtrg))
     p = PsInStr(buffer, chr(0))
-    if p then buffer = PsLeft(buffer, p - 1)
+    if p then buffer = PsLeft(buffer, p - 1).Utf8
     function = buffer
 end function
 
@@ -785,7 +785,7 @@ function clsDocument.IsFunctionLine( byval lineNum as long ) as long
     ' trim and remove double spaces and replace TABs with single space
     dim as string lineText = this.GetLine( lineNum )
     if len( lineText ) < 4 then exit function
-    lineText = PsLTrim(PsUCase( PsStrShrink(lineText, chr(32,9)) ))
+    lineText = PsLTrim(PsUCase( PsStrShrink(lineText, chr(32,9)) )).Utf8
     if len( lineText ) < 4 then exit function
         
     if left( lineText, 9 ) = "FUNCTION " then
@@ -872,9 +872,9 @@ function clsDocument.GetCurrentFunctionName( _
         elseif position > 0 then
             ' We found a valid SUB/function line so process it
             ' trim and remove double spaces and replace TABs with single space
-            lineText = PsLTrim(PsUCase( PsStrShrink(this.GetLine(i), chr(32,9)) ))
+            lineText = PsLTrim(PsUCase( PsStrShrink(this.GetLine(i), chr(32,9)) )).Utf8
             funcName = ltrim(mid(lineText, position))
-            funcName = PsStrParseAny( funcName, 1, " (" )
+            funcName = PsStrParseAny( funcName, 1, " (" ).Utf8
             
             ' if this is a Property then we need to differentiate between a Get/Set
             if ( left(lineText, 9)  = "PROPERTY " ) orelse _
@@ -1910,9 +1910,9 @@ function clsDocument.GetWord( byval curPos as long = -1 ) as string
         buffer = this.GetTextRange(x, y)
         ' Remove the $NUL
         p = PsInStr(buffer, chr(0))
-        if p then buffer = PsLeft(buffer, p - 1)
+        if p then buffer = PsLeft(buffer, p - 1).Utf8
     end if
-    buffer = PsStrRemoveAny( buffer, chr(13, 10, 34) & "()%," )
+    buffer = PsStrRemoveAny( buffer, chr(13, 10, 34) & "()%," ).Utf8
     function = buffer
 
 end function
@@ -2080,10 +2080,10 @@ function clsDocument.CompileDirectives( Directives() as COMPILE_DIRECTIVES ) as 
         st = ltrim(this.GetLine(i))
             
         if PsLeft(st, 1) <> "'" then continue for  ' must start with a comment character
-        st = PsLTrim(PsMid(st, 2))
+        st = PsLTrim(PsMid(st, 2)).Utf8
 
         if PsLen(st) < 10 then continue for
-        st_ucase = PsUCase(st)
+        st_ucase = PsUCase(st).Utf8
         
         ub = ubound(Directives)
         
@@ -2100,7 +2100,7 @@ function clsDocument.CompileDirectives( Directives() as COMPILE_DIRECTIVES ) as 
         if left(st_ucase, 10) = "#RESOURCE " then
             redim preserve Directives(ub+1)
             Directives(ub+1).DirectiveFlag = IDM_RESOURCE
-            st = PsMid(st, 11)
+            st = PsMid(st, 11).Utf8
             Directives(ub+1).DirectiveText = AfxStrExtract(st, chr(34), chr(34))
         end if
         

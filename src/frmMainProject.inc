@@ -436,7 +436,7 @@ function Workspace_EstablishUntitled( byval bRestoreFromFile as boolean = false 
     if bLoaded = false then
         ' Fresh workspace. Seed the per-workspace compiler settings from the machine-wide
         ' defaults in Options -- those globals are seeds now, not a parallel store.
-        gApp.ProjectBuild       = gConfig.CompilerBuild
+        gApp.ProjectBuild       = gConfig.CompilerBuild.Utf8
         gApp.ProjectOther32     = gConfig.CompilerSwitches
         gApp.ProjectOther64     = gConfig.CompilerSwitches
         gApp.ProjectCommandLine = ""

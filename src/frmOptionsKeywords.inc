@@ -243,7 +243,7 @@ end sub
 sub frmOptionsKeywords_Harvest()
     ' Guard on IsWindow as well as the handle: harvesting a destroyed editor would read ""
     ' and blank a good keyword file. A live editor always reads back its real text.
-    if (ghKwText(0) <> 0) andalso (IsWindow(ghKwText(0)) <> 0) then gConfig.FBKeywords     = PsTextBox_GetText( ghKwText(0) )
-    if (ghKwText(1) <> 0) andalso (IsWindow(ghKwText(1)) <> 0) then gConfig.WinApiKeywords = PsTextBox_GetText( ghKwText(1) )
-    if (ghKwText(2) <> 0) andalso (IsWindow(ghKwText(2)) <> 0) then gConfig.ExtraKeywords  = PsTextBox_GetText( ghKwText(2) )
+    if (ghKwText(0) <> 0) andalso (IsWindow(ghKwText(0)) <> 0) then gConfig.FBKeywords     = PsTextBox_GetText( ghKwText(0) ).Utf8
+    if (ghKwText(1) <> 0) andalso (IsWindow(ghKwText(1)) <> 0) then gConfig.WinApiKeywords = PsTextBox_GetText( ghKwText(1) ).Utf8
+    if (ghKwText(2) <> 0) andalso (IsWindow(ghKwText(2)) <> 0) then gConfig.ExtraKeywords  = PsTextBox_GetText( ghKwText(2) ).Utf8
 end sub

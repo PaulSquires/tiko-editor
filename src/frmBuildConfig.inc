@@ -1519,8 +1519,9 @@ sub frmBuildConfig_RunSelfTest()
                 nPass += 1
             else
                 nFail += 1
-                sMsg = "  FAIL: " & (_desc_) & !"\n         got  [" & wszGot & _
-                       !"]\n         want [" & wszWant & "]"
+                '' .Utf8 rather than the implicit ANSI-codepage conversion. Assertion text.
+                sMsg = "  FAIL: " & (_desc_) & !"\n         got  [" & wszGot.Utf8 & _
+                       !"]\n         want [" & wszWant.Utf8 & "]"
                 print sMsg
             end if
         end scope
@@ -1531,7 +1532,9 @@ sub frmBuildConfig_RunSelfTest()
             nPass += 1
         else
             nFail += 1
-            sMsg = "  FAIL: " & (_desc_)
+            '' .Utf8 rather than the implicit ANSI-codepage conversion. Assertion text.
+            dim as DWSTRING wszMsg = (_desc_)
+            sMsg = "  FAIL: " & wszMsg.Utf8
             print sMsg
         end if
     #endmacro
@@ -1688,7 +1691,9 @@ private sub frmBuildConfig_RunLayoutSelfTest()
             nPass += 1
         else
             nFail += 1
-            sMsg = "  FAIL: " & (_desc_)
+            '' .Utf8 rather than the implicit ANSI-codepage conversion. Assertion text.
+            dim as DWSTRING wszMsg = (_desc_)
+            sMsg = "  FAIL: " & wszMsg.Utf8
             print sMsg
         end if
     #endmacro

@@ -101,20 +101,20 @@ functions behind them are 28 declarations taking a plain `wstring` parameter, 13
 of them in `app/clsSymbolDb.bi`. Converting a signature fixes every caller at
 once, so the surface is far smaller than the error count suggests.
 
-But the 13 in `clsSymbolDb` cannot be converted yet — measured, not guessed —
+But the 13 in `clsSymbolDb` cannot be converted yet ï¿½ measured, not guessed ï¿½
 because their bodies hand the parameter to helpers that walk fbcParser's
 NUL-terminated pool by `wstring ptr`, and getting a buffer pointer out of a
 DWSTRING is `.sptr` under AfxNova and `Wz()` under PsCore, with `Wz()`
 Windows-only *by design*. And of the other 15, several are Win32-boundary
-functions — `getTextWidth` feeds `GetTextExtentPoint32`, `GetFileToString` feeds
-`CreateFileW` — so converting them today adds a `.sptr` at the boundary and buys
+functions ï¿½ `getTextWidth` feeds `GetTextExtentPoint32`, `GetFileToString` feeds
+`CreateFileW` ï¿½ so converting them today adds a `.sptr` at the boundary and buys
 nothing until the swap lands. Attempted, measured, reverted.
 
 **2. `.Utf8` EXISTS ON BOTH TYPES, so the biggest category is convertible
 BEFORE the swap.** AfxNova's DWSTRING has `Utf8()` as a property returning
 `STRING` via `WideCharToMultiByte(CP_UTF8, ...)`; PsCore's has the same shape.
 So the ~270 `dim as string s = <DWSTRING>` and `select case <DWSTRING>` sites can
-take `.Utf8` today, compile under AfxNova, and be verified against the oracle —
+take `.Utf8` today, compile under AfxNova, and be verified against the oracle ï¿½
 each batch shrinking what the swap has to do in one go.
 
 **WITH ONE CAVEAT THAT IS NOT A DETAIL.** Today those sites convert implicitly,
@@ -125,7 +125,7 @@ encoding suites can see it rather than quietly across 270 sites at once.
 
 ## The shape this gives the swap
 
-Not one commit, still — but for a better reason than before. The path is:
+Not one commit, still ï¿½ but for a better reason than before. The path is:
 
 1. the `.Utf8` sites, in batches, oracle-verified (the caveat above)
 2. the 15 non-clsSymbolDb signatures, minus the Win32-boundary ones
@@ -146,7 +146,7 @@ Three mechanical passes, applied to the swapped tree and measured after each:
 | `val()` -> `PsVal()` | 18 | 620 |
 | `byref x as wstring` -> `byval x as DWSTRING` in tiko's OWN signatures | **137 across 23 files** | **543** |
 
-**The signature pass is the biggest single lever there is** — 137 parameters removed
+**The signature pass is the biggest single lever there is** ï¿½ 137 parameters removed
 168 errors, because one signature fixes every caller at once. It is also the pass
 that CANNOT be landed ahead of the swap: the bodies behind those parameters hand
 them to Win32, and a DWSTRING buffer pointer is `.sptr` under AfxNova and `Wz()`
@@ -159,7 +159,7 @@ under PsCore. Same circle as everywhere else.
   `FindFirstFile`, `WritePrivateProfileString`, `CTextStream.Create` in the two
   AfxNova files left, and the IFileOpenDialog / IFileSaveDialog vtable calls.
   Mechanical per site, but the *argument* differs each time.
-* **~148 `Invalid assignment/conversion`** — the `.Utf8` class. Many are assertion
+* **~148 `Invalid assignment/conversion`** ï¿½ the `.Utf8` class. Many are assertion
   text in self-tests and safe; some are data (`keys(i) = PsStrParse(...)` into a
   `string` array) and are an encoding decision each.
 * **~72 `Invalid data types`**, plus a tail of small classes.
@@ -178,7 +178,7 @@ judgements, and it wants a dedicated run rather than the tail of a long one.
 ## The boundary pass, added the same day: 543 -> 512, converged
 
 A fourth pass, scripted from fbc's own `at parameter N of FUNC()` text: find the
-call, split its arguments, append `.Wz()` to the Nth. Multi-line aware — it joins
+call, split its arguments, append `.Wz()` to the Nth. Multi-line aware ï¿½ it joins
 continuation lines until the parentheses balance and puts them back, comments and
 all. Run to a fixed point:
 
@@ -186,7 +186,7 @@ all. Run to a fixed point:
 
 **~70 sites, 31 errors, and then it stops.** That number corrects an estimate
 made earlier on this page: "roughly 200 Win32/CRT boundary sites". That counted
-every `error 58`, and most of those are NOT the Win32 boundary at all — they are
+every `error 58`, and most of those are NOT the Win32 boundary at all ï¿½ they are
 tiko functions taking `string`, and intrinsics.
 
 ### Why the rest cannot be scripted, which is the useful part
@@ -209,3 +209,85 @@ tiko functions taking `string`, and intrinsics.
 The 512 are: 168 `Type mismatch`, 148 `Invalid assignment/conversion` (the
 `.Utf8` class, each an encoding decision), 73 `Invalid data types`, and a tail.
 They are individual judgements, not a category with a recipe.
+
+---
+
+# The `.Utf8` sites, landed ahead of the swap. 153 -> 52.
+
+Step 1 of the plan above, done and committed on the unswapped tree, so every batch
+is oracle-verifiable. **All 27 suites are byte-identical to the pre-change capture,
+end to end.**
+
+## How the sites were found
+
+The class cannot be found by grep -- it is "a DWSTRING flowing into an fbc `string`",
+which is a type question, not a text one. So: swap the tree, build with
+`-maxerr 99999`, keep the `error 181` lines, revert, and work the list on the tree
+that still builds.
+
+    #include once "PsCompat.bi"
+      ->  core/DWString.inc, core/PsStr.inc, core/PsPath.inc, core/PsFile.inc,
+          core/PsEncoding.inc
+
+**That probe is not the same one the numbers above were taken with** -- it names five
+headers rather than three, so its totals (718 before this work) are not comparable to
+the 711/512 on this page. What IS comparable is the same probe run before and after:
+
+    error 181   153  ->  52
+    total       718  ->  617
+
+## The finding: a THIRD of that class is not the `.Utf8` class at all
+
+Of the 153, **101 had an fbc `string` on the receiving end** and took `.Utf8`. The
+other 52 are `error 181` for a different reason and must not take it:
+
+| the real destination | example | what it actually needs |
+| --- | --- | --- |
+| `wstring * MAX_PATH` | `frmMain`'s `wszText`, `modMRU`'s `wzFile` | nothing -- the swap |
+| an LPWSTR struct field | `.lpFile = wszCommand` (SHELLEXECUTEINFO) | `.Wz()` |
+| AfxNova's `BSTRING` | `dim as BSTRING wst` in `modRoutines`, `frmOptionsLocal` | deleted with AfxNova |
+| an AfxNova-returning wrapper | `PsTextBox.inc`'s `return RichEdit_GetText(...)` | the swap |
+| a const-qualified parameter | `PsUCase( wszName )` in `clsSymbolDb` | a signature change |
+
+Reading "148 `Invalid assignment/conversion`" as "148 `.Utf8` sites" would have put
+UTF-8 bytes into a `wstring * MAX_PATH` at about fifty sites. **The error code names
+the symptom, not the class.**
+
+## Three shapes the 101 took
+
+**1. The assertion macros -- 55 of the 101, and ONE edit each.** Every self-test in
+the tree spells its failure the same way:
+
+    sMsg = "  FAIL: " & msg          ' msg is the CALLER's expression, DWSTRING-valued
+
+fbc reports that at the *call* line, so the list showed 55 sites in 11 files. They are
+11 macro bodies:
+
+    dim as DWSTRING wszMsg = msg
+    sMsg = "  FAIL: " & wszMsg.Utf8
+
+`INIASSERT`, `CDASSERT`, `SAVEASSERT`, `CMDASSERT`, `ENCASSERT`, `OPTASSERT`,
+`ENCROWCHK`, `THASSERT`, `UTASSERT`, `BCEQ`, `LAYASSERT`/`BCASSERT`. Assertion text,
+so the ANSI -> UTF-8 change is the safe one this page already called safe.
+
+**2. Mechanical `.Utf8` on internal text -- 46.** `modCodetips` (15), `clsDocument` (9),
+`clsConfig` (5), `modThemes` (5), `modFormat` (4), `modFindReplace` (4),
+`frmOptionsKeywords` (3), and one each in `modUpdateCheck` and `frmMainProject`.
+FreeBASIC source tokens, calltips, keyword lists and build GUIDs -- ASCII in practice,
+and UTF-8 is the direction the port is going.
+
+**3. Two sites where `.Utf8` would have been the BUG, and the type widened instead.**
+
+* `frmThemesPage`'s `PAINTROLE` held a role name in a `string` and then PAINTED it.
+  UTF-8 bytes down an ANSI drawing path is mojibake. The local is a `DWSTRING` now,
+  with `PsLeft`/`PsMid`/`PsLen` in place of the intrinsics.
+* `GetThemeDescription` returned `string` -- a theme description round-tripped through
+  the ANSI codepage -- and **every one of its five callers assigns it straight back
+  into a DWSTRING.** It returns DWSTRING now.
+
+## What is deliberately NOT done
+
+`CompleteIncludeFilename` (`modRoutines:612`) is the worked example this page already
+gives: a file path returned to an ANSI caller, where `.Utf8` is a bug. Fixing it means
+`string` -> `DWSTRING` through its signature, its two callers, and `clsDocument.GetLine`
+behind them. That is the signature pass, and it belongs with the swap.

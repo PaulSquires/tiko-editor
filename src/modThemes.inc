@@ -493,7 +493,7 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
         dim keys(3) as string   ' always have maximum of 3 keys
         dim as long numKeys = PsStrParseCount(keyValue, ".")  ' actual number of keys retrieved
         for i as long = 1 to numKeys
-            keys(i) = PsStrParse(keyValue, i, ".")
+            keys(i) = PsStrParse(keyValue, i, ".").Utf8
         next
         ' there will always be at least 2 elements to the key and
         ' we use that to lookup the theme type structure.
@@ -1716,7 +1716,7 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
                 sLine = "# inherits from one of these."
                 print #f, sLine
             end if
-            sLine = Theme_RoleName(i) & ": " & Theme_FormatColor( Theme_RoleColor(i), -1 )
+            sLine = DWSTRING( Theme_RoleName(i) & ": " & Theme_FormatColor( Theme_RoleColor(i), -1 ) ).Utf8
             print #f, sLine
             nWritten += 1
         next
@@ -1791,7 +1791,7 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
             dim as long nA = -1
             if gTheme(n).hasForeAlpha then nA = clng(gTheme(n).foregroundAlpha)
             sLine = sKey & ".foreground: " & _
-                    Theme_ChannelText( gTheme(n).foreMacro, gTheme(n).foreground, nA )
+                    Theme_ChannelText( gTheme(n).foreMacro, gTheme(n).foreground, nA ).Utf8
             print #f, sLine
         end if
 
@@ -1802,7 +1802,7 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
             dim as long nA = -1
             if gTheme(n).hasBackAlpha then nA = clng(gTheme(n).backgroundAlpha)
             sLine = sKey & ".background: " & _
-                    Theme_ChannelText( gTheme(n).backMacro, gTheme(n).background, nA )
+                    Theme_ChannelText( gTheme(n).backMacro, gTheme(n).background, nA ).Utf8
             print #f, sLine
         end if
 
@@ -1854,8 +1854,13 @@ sub Theme_DumpGlobals( byval wszOutPath as DWSTRING )
         print #f, sLine
     #endmacro
     #macro DUMPTXT( nm, v )
-        sLine = nm & "=" & v
-        print #f, sLine
+        scope
+            '' .Utf8 rather than the implicit wstring->string, which goes through the ANSI
+            '' codepage. This is a diagnostic dump -- see docs/port/type-swap-scope.md.
+            dim as DWSTRING wszV = v
+            sLine = nm & "=" & wszV.Utf8
+            print #f, sLine
+        end scope
     #endmacro
 
     DUMPTXT( "general.description",        theme.general.description )
@@ -2017,7 +2022,7 @@ sub Theme_DumpGlobals( byval wszOutPath as DWSTRING )
 
     ' Anything the parser accepted but could not act on.
     for i as long = lbound(gThemeParseWarnings) to ubound(gThemeParseWarnings)
-        sLine = "!warning=" & gThemeParseWarnings(i)
+        sLine = DWSTRING( "!warning=" & gThemeParseWarnings(i) ).Utf8
         print #f, sLine
     next
 

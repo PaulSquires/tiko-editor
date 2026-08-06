@@ -1119,7 +1119,8 @@ sub frmFormatOptions_RunSelfTest( byval bLayoutHalf as boolean )
                 bFits = false
                 if (sz.cx - nHave) > nWorstOver then
                     nWorstOver = sz.cx - nHave
-                    sWorst = str(sz.cx) & "px into " & str(nHave) & "px: " & wszLabel
+                    '' .Utf8 rather than the implicit ANSI-codepage conversion. Diagnostic text.
+                    sWorst = str(sz.cx) & "px into " & str(nHave) & "px: " & wszLabel.Utf8
                 end if
             end if
         next
