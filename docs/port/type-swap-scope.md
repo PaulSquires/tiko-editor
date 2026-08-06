@@ -132,3 +132,45 @@ Not one commit, still — but for a better reason than before. The path is:
 3. the swap itself, against whatever remains
 4. `clsSymbolDb` and the Win32-boundary functions, which need `Wz()` and so can
    only move once PsCore's DWSTRING is the one in scope
+
+---
+
+# The swap attempted again, 2026-08-06. 711 -> 543, then reverted.
+
+Three mechanical passes, applied to the swapped tree and measured after each:
+
+| pass | sites | errors after |
+| --- | --- | --- |
+| start | | 711 |
+| `.sptr` / `.vptr` -> `.Wz()` | 73 | 637 |
+| `val()` -> `PsVal()` | 18 | 620 |
+| `byref x as wstring` -> `byval x as DWSTRING` in tiko's OWN signatures | **137 across 23 files** | **543** |
+
+**The signature pass is the biggest single lever there is** — 137 parameters removed
+168 errors, because one signature fixes every caller at once. It is also the pass
+that CANNOT be landed ahead of the swap: the bodies behind those parameters hand
+them to Win32, and a DWSTRING buffer pointer is `.sptr` under AfxNova and `Wz()`
+under PsCore. Same circle as everywhere else.
+
+## What 543 is made of
+
+* **~200 Win32/CRT boundary**, needing `.Wz()` on a specific argument:
+  `CreateFileW`, `SetWindowTextW`, `SHCreateItemFromParsingName`, `chdir`,
+  `FindFirstFile`, `WritePrivateProfileString`, `CTextStream.Create` in the two
+  AfxNova files left, and the IFileOpenDialog / IFileSaveDialog vtable calls.
+  Mechanical per site, but the *argument* differs each time.
+* **~148 `Invalid assignment/conversion`** — the `.Utf8` class. Many are assertion
+  text in self-tests and safe; some are data (`keys(i) = PsStrParse(...)` into a
+  `string` array) and are an encoding decision each.
+* **~72 `Invalid data types`**, plus a tail of small classes.
+
+## Why it was reverted rather than committed part-way
+
+A partly-swapped tree does not build, so there is nothing to verify against the
+oracle and nothing safe to leave on the branch. That is the same reason the first
+attempt was backed out, and it has not changed.
+
+**What HAS changed is the size and the shape.** 1010 -> 711 was earned by work
+that stands on its own and is committed; 711 -> 543 is three passes that take
+minutes to re-apply from this table. The remainder is a few hundred individual
+judgements, and it wants a dedicated run rather than the tail of a long one.
