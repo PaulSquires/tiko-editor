@@ -28,9 +28,11 @@ private function FindProject_Scratch() as HWND
     ' IDC_FINDPROJ_SCRATCH deliberately is NOT IDC_SCINTILLA(+1): clsDocument.IsValidScintillaID
     ' is a control-ID test, and frmMain_OnNotify uses it to decide whether a notification
     ' belongs to a document. An unrecognised id is ignored, which is what we want.
-    gFipScratch = CreateWindowEx( 0, "Scintilla", "", WS_CHILD, 0, 0, 0, 0, _
-                                  HWND_FRMMAIN, cast(HMENU, IDC_FINDPROJ_SCRATCH), _
-                                  GetModuleHandle(null), null )
+    ' PHASE 7d: a tikoSciHost. It holds a REFERENCE to a document owned by the
+    ' main editor -- see the SCI_ADDREFDOCUMENT discipline below -- so it has to
+    ' be the same Scintilla implementation as the editor is, or the refcount is
+    ' being kept by one library on another library's object.
+    gFipScratch = SciHost_Create( HWND_FRMMAIN, IDC_FINDPROJ_SCRATCH, WS_CHILD )
     if gFipScratch then
         ' SILENCE IT. The modification event mask is per-view and defaults to every event,
         ' and every view bound to a document is one of that document's watchers -- so a

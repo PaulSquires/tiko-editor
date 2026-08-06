@@ -174,6 +174,18 @@ private function SciHost_OnCreate(byval hWnd as HWND) as boolean
 
     PsC.PsSciNotifyAttach(pSt->sink, pSt->pView->pSci, @SciHost_OnNotify, pSt)
 
+    ' SURFACE FOCUS, SET ONCE AND NEVER MOVED. PsSurface routes key events to
+    ' pFocus, and a surface with none drops every one of them -- so an editor
+    ' that renders and takes the mouse would silently ignore the keyboard.
+    '
+    ' This is NOT the same thing as Win32 focus, which the HWND still tracks: the
+    ' surface holds exactly one focusable widget, so the only question it can ask
+    ' is answered here for good. The old Scintilla window had no such split --
+    ' it handled WM_KEYDOWN whether it was focused or not, which is why
+    ' frmFindInProject's SendMessage(hSlotView, WM_KEYDOWN, VK_DOWN, 0) worked
+    ' against an unfocused, zero-sized, never-shown pool window.
+    pSt->surf.SetFocus(pSt->pView)
+
     '' STEADY, NOT BLINKING. There is no frame scheduler in this tree, so a
     '' blinking caret would sit at whatever phase it started in. Asking for
     '' steady makes that a decision rather than an artefact. A WM_TIMER could
@@ -201,7 +213,12 @@ end sub
 '' ---------------------------------------------------------------------------
 '' The window procedure.
 '' ---------------------------------------------------------------------------
-private function SciHost_WndProc( byval hWnd as HWND, byval nMsg as UINT, _
+'' STDCALL, EXPLICITLY. Every window procedure is stdcall, and fbc's default on
+'' this target is not -- leaving it off produces only a "Suspicious pointer
+'' assignment" warning at the RegisterClassEx, which is easy to read past.
+'' On x64 the two conventions happen to coincide, so it would also have worked
+'' by accident, and gone on working until the 32-bit build.
+private function SciHost_WndProc stdcall ( byval hWnd as HWND, byval nMsg as UINT, _
                                   byval wParam as WPARAM, byval lParam as LPARAM _
                                   ) as LRESULT
     '' ---- SCI_* FIRST, and before the state check has any chance to matter.
@@ -389,10 +406,11 @@ function SciHost_Register() as boolean
     return bDone
 end function
 
-function SciHost_Create(byval hParent as HWND, byval nId as long) as HWND
+function SciHost_Create(byval hParent as HWND, byval nId as long, _
+                        byval nStyle as long) as HWND
     if SciHost_Register() = false then return 0
     return CreateWindowEx( 0, TIKO_SCIHOST_CLASS, "", _
-                           WS_CHILD or WS_TABSTOP or WS_CLIPCHILDREN, _
+                           nStyle, _
                            0, 0, 0, 0, hParent, _
                            cast(HMENU, cast(LONG_PTR, nId)), GetModuleHandle(null), null )
 end function

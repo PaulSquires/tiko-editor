@@ -46,7 +46,12 @@
 '' The window class name. Deliberately NOT "Scintilla": both must be able to
 '' exist in one process during the conversion, and a class name collision would
 '' be reported as nothing more useful than a failed CreateWindowEx.
-#define TIKO_SCIHOST_CLASS  "tikoSciHost"
+'' wstr(), not a narrow literal. tiko is a UNICODE build, so WNDCLASSEX and
+'' CreateWindowEx want LPCWSTR -- a plain "tikoSciHost" here is a zstring ptr
+'' and produces only a "Suspicious pointer assignment" warning at the
+'' RegisterClassEx, after which the class registers under a garbled name and
+'' every CreateWindowEx for it fails.
+#define TIKO_SCIHOST_CLASS  wstr("tikoSciHost")
 
 type SciHostState
     hWnd     as HWND
@@ -71,7 +76,13 @@ type SciHostState
 end type
 
 declare function SciHost_Register() as boolean
-declare function SciHost_Create(byval hParent as HWND, byval nId as long) as HWND
+'' The default style is clsDocument's. Find in Project wants WS_CLIPSIBLINGS and
+'' no WS_TABSTOP, and the scratch window wants nothing but WS_CHILD -- so the
+'' style is a parameter rather than baked in, exactly as it was when these were
+'' four separate CreateWindowEx calls.
+declare function SciHost_Create(byval hParent as HWND, byval nId as long, _
+                                byval nStyle as long = _
+                                    WS_CHILD or WS_TABSTOP or WS_CLIPCHILDREN) as HWND
 declare function SciHost_StateFromHwnd(byval hWnd as HWND) as SciHostState ptr
 
 '' The direct pointer, replacing SendMessage(h, SCI_GETDIRECTPOINTER, 0, 0).

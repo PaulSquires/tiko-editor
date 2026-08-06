@@ -261,11 +261,15 @@ private sub FipPool_Ensure( byval n as long )
     if IsWindow( HWND_FRMFINDINPROJECT_SURFACE ) = 0 then exit sub
 
     for i as long = gFipPoolCount to n - 1
-        dim as HWND h = CreateWindowEx( 0, "Scintilla", "", _
-                            WS_CHILD or WS_CLIPSIBLINGS, 0, 0, 0, 0, _
-                            HWND_FRMFINDINPROJECT_SURFACE, _
-                            cast(HMENU, IDC_SCINTILLA_EXCERPT + i), _
-                            GetModuleHandle(null), null )
+        ' PHASE 7d: a tikoSciHost. FORCED INTO THE SAME STEP as clsDocument's two
+        ' windows, and not by tidiness -- FindProject_BindSlot takes a Scintilla
+        ' Document* out of the main editor and SCI_SETDOCPOINTERs it into one of
+        ' these. A document from the vendored fork cannot be handed to the stock
+        ' Scintilla DLL: different code, different vtables, different heap. It
+        ' would not fail loudly, it would corrupt.
+        dim as HWND h = SciHost_Create( HWND_FRMFINDINPROJECT_SURFACE, _
+                                        IDC_SCINTILLA_EXCERPT + i, _
+                                        WS_CHILD or WS_CLIPSIBLINGS )
         if h = 0 then exit for
 
         ' MANDATORY. The modification event mask is per-VIEW and defaults to every event, and
@@ -290,7 +294,7 @@ private sub FipPool_Ensure( byval n as long )
                                                           cast(LONG_PTR, @FipPool_SciProc) ) )
 
         gFipPool(i).hWnd     = h
-        gFipPool(i).pSciView = cast( any ptr, SciExec( h, SCI_GETDIRECTPOINTER, 0, 0 ) )
+        gFipPool(i).pSciView = SciHost_DirectPointer( h )
         gFipPool(i).pSciDoc  = 0
         gFipPool(i).nRow     = -1
         gFipPoolCount = i + 1

@@ -56,8 +56,37 @@ using AfxNova
 ' This is scaffolding of the same kind as PsCompat.bi. When the type swap lands, the
 ' namespace comes off and the PsC. prefixes go with it.
 ' ----------------------------------------------------------------------------------------
+'' modScintilla.bi FIRST, and the ORDER IS LOAD-BEARING. tiko #Defines all 117
+'' SCI_* constants and 19 SCK_*; PsPlatform declares them as `const` behind
+'' #ifndef guards. Guards only work in this direction -- with PsScintilla.bi
+'' first the const already exists and tiko's #Define becomes the duplicate,
+'' which no guard on the library side can prevent.
+#include once "modScintilla.bi"
+
+'' THE C BINDINGS GO OUTSIDE THE NAMESPACE, and this is not a style choice.
+'' fbc mangles an `extern "C"` block declared inside a namespace as
+'' PSC::bl_context_save, which matches nothing in libblend2d -- five undefined
+'' references, at LINK time only, with a clean compile. PsEncoding never hit
+'' this because it is pure FreeBASIC; PsSciView is not.
+''
+'' `#include once` makes the copies inside the namespace below no-ops, so the
+'' FreeBASIC code -- which is what needs PsCore's DWSTRING -- still gets the
+'' namespace and the C entry points stay global.
+#include once "bind/Blend2D.bi"
+#include once "bind/FreeType.bi"
+#include once "bind/HarfBuzz.bi"
+#include once "scintilla/PsScintilla.bi"
+
 namespace PsC
     #include once "core/PsEncoding.inc"
+    '' Phase 7d: the editor. PsSciView is a PsWidget in a PsSurface, driven
+    '' through PsPlatform's Win32 host bridge -- see frmSciHost.bi.
+    #include once "ui/core/PsDispatch.inc"
+    #include once "ui/core/PsPaintWalk.inc"
+    #include once "scintilla/PsTextEngineC.inc"
+    #include once "scintilla/PsSciView.inc"
+    #include once "scintilla/PsSciNotify.inc"
+    #include once "platform/win32host/PsWin32Host.inc"
 end namespace
 
 
@@ -81,14 +110,13 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 '#define LOGGING_ENABLED
 #include once "app/logging.bas"
 
-#include once "modScintilla.bi"
-
 #include once "app/fbcParser.bi"
 ' The debug engine, as a DLL (C:\dev\debugParser -- see _copy_debugparser.bat). This is its
 ' ONLY header. It reads the debug information fbc embeds with -g and a gas backend, which gdb
 ' cannot read at all, and drives the debuggee against it. Up here beside the other DLL header
 ' because clsDocument.ToggleBreakPoint calls into it.
 #include once "app/debugParser.bi"
+#include once "frmSciHost.bi"
 #include once "clsDocument.bi"
 #include once "modDeclares.bi"
 ' Declarations only, and deliberately naming no Ps* type: clsConfig.inc calls
@@ -178,6 +206,7 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modFormat.inc"
 ' After modRoutines.inc: NavHistory_Goto drives OpenSelectedDocument.
 #include once "modNavHistory.inc"
+#include once "frmSciHost.inc"
 #include once "clsDocument.inc"
 ' Encoding conversion self-test. After modRoutines.inc (Doc_EncodeForDisk/GetFileToString)
 ' and clsDocument.inc (the clsDocument type it instantiates for the disk round-trip).

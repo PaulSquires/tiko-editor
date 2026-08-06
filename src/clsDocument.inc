@@ -155,10 +155,12 @@ end function
 function clsDocument.CreateScintillaWindows() as long
     ' Creates two Scintilla editing windows (initially not visible).
     for i as long = lbound(this.hWindow) to ubound(this.hWindow)
-        this.hWindow(i) = CreateWindowEx( 0, "Scintilla", "", _
-                        WS_CHILD or WS_TABSTOP or WS_CLIPCHILDREN, _
-                        0,0,0,0, HWND_FRMMAIN, _
-                        cast(HMENU, IDC_SCINTILLA+i), GetModuleHandle(null), null)
+        ' PHASE 7d: a tikoSciHost, not a Scintilla window. Same WS_* style, same
+        ' parent, same control id -- and still a real HWND, which is why the 142
+        ' hWindow uses and ~90 hWndActiveScintilla sites elsewhere are untouched.
+        ' Behind it there is no Scintilla window at all: a PsSurface holding a
+        ' PsSciView, painted with Blend2D. See frmSciHost.bi.
+        this.hWindow(i) = SciHost_Create( HWND_FRMMAIN, IDC_SCINTILLA + i )
 
         SendMessage( this.hWindow(i), SCI_SETMODEVENTMASK, _
                         SC_MOD_INSERTTEXT or SC_MOD_DELETETEXT, 0 )
@@ -180,10 +182,17 @@ function clsDocument.CreateScintillaWindows() as long
                 SendMessage( this.hWindow(i), SCI_SETILEXER, 0, cast(LPARAM, pLexer) )
             end if
             if SciMsg = 0 then
-                SciMsg = cast( Scintilla_Directfunction, SendMessage( this.hWindow(0), SCI_GETDIRECTFUNCTION, 0, 0 ) )
+                ' TAKEN DIRECTLY, not asked for via SCI_GETDIRECTFUNCTION. The
+                ' signatures are identical on win64 -- cdecl, (any ptr, 32-bit
+                ' message, pointer-sized wParam and lParam, pointer-sized result)
+                ' -- so this is the same call the 350 SciMsg sites already make,
+                ' and it says plainly which implementation they now reach.
+                SciMsg = cast( Scintilla_Directfunction, @SciPs_Send )
             end if
-            ' Call the direct function for speed purposes rather than relying on the traditional SendMessage method.
-            pSci(i) = cast(any ptr, SendMessage( this.hWindow(i), SCI_GETDIRECTPOINTER, 0, 0 )) 
+            ' The opaque editor pointer. Its PROVENANCE changed -- SciPs_Create
+            ' rather than SCI_GETDIRECTPOINTER -- and nothing else did: the 398
+            ' pSci uses never cared where it came from.
+            pSci(i) = SciHost_DirectPointer( this.hWindow(i) )
         end if
     next
 

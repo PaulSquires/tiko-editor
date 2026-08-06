@@ -47,6 +47,12 @@
 '' Build: _check_scihost.bat. Exit code is the verdict.
 '' ===========================================================================
 
+'' #define UNICODE BEFORE windows.bi, exactly as tiko.bas:21 does. Without it
+'' this probe gets the ANSI WNDCLASSEX/CreateWindowEx while tiko gets the wide
+'' ones -- and the gate would then be testing a configuration that does not
+'' exist. It caught the class-name literal only because the two were made to
+'' match; a gate that quietly differs from its subject is worth nothing.
+#define UNICODE
 #include once "windows.bi"
 #include once "AfxNova\CWindow.inc"
 #include once "AfxNova\AfxStr.inc"
@@ -181,10 +187,10 @@ dim as WNDCLASSEX wcp
 wcp.cbSize = sizeof(WNDCLASSEX)
 wcp.lpfnWndProc = @ParentProc
 wcp.hInstance = GetModuleHandle(null)
-wcp.lpszClassName = @"tikoSciHostProbeParent"
+wcp.lpszClassName = @wstr("tikoSciHostProbeParent")
 RegisterClassEx(@wcp)
 
-dim as HWND hParent = CreateWindowEx(0, "tikoSciHostProbeParent", "", WS_OVERLAPPED, _
+dim as HWND hParent = CreateWindowEx(0, wstr("tikoSciHostProbeParent"), "", WS_OVERLAPPED, _
                                      0, 0, 400, 300, null, null, GetModuleHandle(null), null)
 Ck("a parent window to receive WM_NOTIFY", hParent <> 0, "")
 
@@ -198,7 +204,9 @@ scope
     '' ASKED OF THE WINDOW, not assumed. The first version of this line was
     '' `len(dir("")) >= 0`, which is true for every input and therefore asserted
     '' nothing at all -- a green tick that could never go red.
-    dim as zstring * 64 zCls
+    '' WSTRING: tiko is a Unicode build, so this is GetClassNameW and a zstring
+    '' buffer would come back as the first byte of each wide character.
+    dim as wstring * 64 zCls
     GetClassName(hSci, @zCls, 64)
     Ck("...of class tikoSciHost", zCls = TIKO_SCIHOST_CLASS, zCls)
 end scope
