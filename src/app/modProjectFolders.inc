@@ -42,8 +42,12 @@ function ProjectFolders_Normalize( byval wszPath as DWSTRING ) as DWSTRING
         if wszCh = PROJECTFOLDER_SEP then bIsSep = true
         if wszCh = "\" then bIsSep = true
         if bIsSep then
-            wszSeg = trim(wszSeg)
-            if len(wszSeg) then
+            ' PsTrim/PsLen, not trim/len. The intrinsics work on AfxNova's DWSTRING
+            ' because it EXTENDS WSTRING; PsCore's does not, and `len` on it is
+            ' the silent one -- it compiles and returns SizeOf, a plausible 24.
+            ' Both forward through PsCompat.bi in the tiko build.
+            wszSeg = PsTrim(wszSeg)
+            if PsLen(wszSeg) then
                 if PsLen(wszOut) then wszOut = wszOut + PROJECTFOLDER_SEP
                 wszOut = wszOut + wszSeg
             end if
@@ -310,17 +314,23 @@ end function
 ' gesture. The merge is done by dropping the duplicate record; the documents in both already
 ' name the same path by then, so nothing else has to move.
 ' ========================================================================================
+' pDocHead and wszFileType are PASSED IN rather than read from the two shell
+' globals this used to reach for. Those are declared in tiko.bas, so touching
+' them tied this file to the shell -- and src/app exists to not be. The document
+' TYPE is fine: since clsDocument.bi stopped naming Win32, the app layer sees it.
 function ProjectFolders_Rebase( byval catIndex as long, byval wszOldPath as DWSTRING, _
-                                byval wszNewPath as DWSTRING ) as boolean
+                                byval wszNewPath as DWSTRING, _
+                                byval pDocHead as clsDocument ptr, _
+                                byval wszFileType as DWSTRING ) as boolean
     wszOldPath = ProjectFolders_Normalize( wszOldPath )
     wszNewPath = ProjectFolders_Normalize( wszNewPath )
     if PsLen(wszOldPath) = 0 then return false
     if ProjectFolders_Find( catIndex, wszOldPath ) < 0 then return false
 
     ' Documents first, while the old paths are still in the table to be recognised.
-    dim pDoc as clsDocument ptr = gApp.pDocList
+    dim pDoc as clsDocument ptr = pDocHead
     do until pDoc = 0
-        if pDoc->ProjectFiletype = gConfig.Cat(catIndex).idFileType then
+        if pDoc->ProjectFiletype = wszFileType then
             if PsLen(pDoc->docData.wszFolder) then
                 pDoc->docData.wszFolder = _
                     ProjectFolders_RebasePath( pDoc->docData.wszFolder, wszOldPath, wszNewPath )
@@ -382,8 +392,11 @@ end function
 ' dissolve does; the duplicate record is dropped and the documents in both already name the
 ' same path by then.
 ' ========================================================================================
+' Same inversion as ProjectFolders_Rebase above.
 function ProjectFolders_MoveFolder( byval catFrom as long, byval wszPath as DWSTRING, _
-                                    byval catTo as long, byval wszNewParent as DWSTRING ) as boolean
+                                    byval catTo as long, byval wszNewParent as DWSTRING, _
+                                    byval pDocHead as clsDocument ptr, _
+                                    byval wszFileType as DWSTRING ) as boolean
     wszPath      = ProjectFolders_Normalize( wszPath )
     wszNewParent = ProjectFolders_Normalize( wszNewParent )
 
@@ -405,9 +418,9 @@ function ProjectFolders_MoveFolder( byval catFrom as long, byval wszPath as DWST
     if (catFrom = catTo) andalso (PsUCase(wszNewPath) = PsUCase(wszPath)) then return true
 
     ' Documents first, while their folders still name the source paths.
-    dim pDoc as clsDocument ptr = gApp.pDocList
+    dim pDoc as clsDocument ptr = pDocHead
     do until pDoc = 0
-        if pDoc->ProjectFiletype = gConfig.Cat(catFrom).idFileType then
+        if pDoc->ProjectFiletype = wszFileType then
             if PsLen(pDoc->docData.wszFolder) then
                 dim as DWSTRING wszWas = pDoc->docData.wszFolder
                 dim as boolean bInSubtree = false

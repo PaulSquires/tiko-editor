@@ -483,7 +483,7 @@ sub frmExplorer_RunSelfTest()
         ' --- rename and delete against the real table -----------------------------------------
         ProjectFolders_Clear()
         ProjectFolders_Add( catTest, "one/two/three" )
-        ProjectFolders_Rebase( catTest, "one/two", "one/deux" )
+        ProjectFolders_Rebase( catTest, "one/two", "one/deux", gApp.pDocList, gConfig.Cat(catTest).idFileType )
         Exp_Check( "renaming a folder renames it", _
             ProjectFolders_Exists( catTest, "one/deux" ) andalso _
             ( ProjectFolders_Exists( catTest, "one/two" ) = false ) )
@@ -491,7 +491,7 @@ sub frmExplorer_RunSelfTest()
             ProjectFolders_Exists( catTest, "one/deux/three" ), "count=" & str(ProjectFolders_Count()) )
 
         ' Deleting re-parents rather than destroying: "three" must survive one level up.
-        ProjectFolders_Rebase( catTest, "one/deux", ProjectFolders_ParentPath("one/deux") )
+        ProjectFolders_Rebase( catTest, "one/deux", ProjectFolders_ParentPath("one/deux"), gApp.pDocList, gConfig.Cat(catTest).idFileType )
         Exp_Check( "deleting a folder removes it", ProjectFolders_Exists( catTest, "one/deux" ) = false )
         Exp_Check( "deleting a folder re-parents its children", _
             ProjectFolders_Exists( catTest, "one/three" ), "count=" & str(ProjectFolders_Count()) )
@@ -502,7 +502,7 @@ sub frmExplorer_RunSelfTest()
         ProjectFolders_Clear()
         ProjectFolders_Add( catTest, "p/dup" )
         ProjectFolders_Add( catTest, "dup" )
-        ProjectFolders_Rebase( catTest, "p", "" )
+        ProjectFolders_Rebase( catTest, "p", "", gApp.pDocList, gConfig.Cat(catTest).idFileType )
         Exp_Check( "a collision on re-parent merges to one record", _
             ProjectFolders_Count() = 1, "count=" & str(ProjectFolders_Count()) )
         Exp_Check( "the merged record is the surviving path", ProjectFolders_Exists( catTest, "dup" ) )
@@ -522,14 +522,14 @@ sub frmExplorer_RunSelfTest()
         ' Into its own descendant is the classic tree-move corruption: the new parent is about
         ' to stop existing at that path.
         Exp_Check( "a folder cannot move into its own descendant", _
-            ProjectFolders_MoveFolder( CATINDEX_NORMAL, "src", CATINDEX_NORMAL, "src/net" ) = false )
+            ProjectFolders_MoveFolder( CATINDEX_NORMAL, "src", CATINDEX_NORMAL, "src/net", gApp.pDocList, gConfig.Cat(CATINDEX_NORMAL).idFileType ) = false )
         Exp_Check( "a folder cannot move into itself", _
-            ProjectFolders_MoveFolder( CATINDEX_NORMAL, "src", CATINDEX_NORMAL, "src" ) = false )
+            ProjectFolders_MoveFolder( CATINDEX_NORMAL, "src", CATINDEX_NORMAL, "src", gApp.pDocList, gConfig.Cat(CATINDEX_NORMAL).idFileType ) = false )
         Exp_Check( "the refused moves changed nothing", _
             ProjectFolders_Exists( CATINDEX_NORMAL, "src/net/http" ) )
 
         Exp_Check( "a folder moves under a new parent", _
-            ProjectFolders_MoveFolder( CATINDEX_NORMAL, "src/net", CATINDEX_NORMAL, "lib" ) )
+            ProjectFolders_MoveFolder( CATINDEX_NORMAL, "src/net", CATINDEX_NORMAL, "lib", gApp.pDocList, gConfig.Cat(CATINDEX_NORMAL).idFileType ) )
         Exp_Check( "moving a folder carries its whole subtree", _
             ProjectFolders_Exists( CATINDEX_NORMAL, "lib/net" ) andalso _
             ProjectFolders_Exists( CATINDEX_NORMAL, "lib/net/http" ) andalso _
@@ -542,14 +542,14 @@ sub frmExplorer_RunSelfTest()
         ' (category, path), so a subtree left holding the old category would vanish from the
         ' destination and reappear under the source.
         Exp_Check( "a folder moves to another group", _
-            ProjectFolders_MoveFolder( CATINDEX_NORMAL, "lib/net", CATINDEX_MODULE, "" ) )
+            ProjectFolders_MoveFolder( CATINDEX_NORMAL, "lib/net", CATINDEX_MODULE, "", gApp.pDocList, gConfig.Cat(CATINDEX_NORMAL).idFileType ) )
         Exp_Check( "a cross-group move carries the subtree's category", _
             ProjectFolders_Exists( CATINDEX_MODULE, "net" ) andalso _
             ProjectFolders_Exists( CATINDEX_MODULE, "net/http" ) andalso _
             ( ProjectFolders_Exists( CATINDEX_NORMAL, "lib/net" ) = false ), _
             "count=" & str(ProjectFolders_Count()) )
         Exp_Check( "a folder cannot move into a group that takes none", _
-            ProjectFolders_MoveFolder( CATINDEX_MODULE, "net", CATINDEX_MAIN, "" ) = false )
+            ProjectFolders_MoveFolder( CATINDEX_MODULE, "net", CATINDEX_MAIN, "", gApp.pDocList, gConfig.Cat(CATINDEX_MODULE).idFileType ) = false )
         ProjectFolders_Clear()
 
         ' --- the localized strings --------------------------------------------------------------

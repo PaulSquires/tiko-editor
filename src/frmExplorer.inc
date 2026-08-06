@@ -536,7 +536,8 @@ sub frmExplorer_DeleteFolder( byval hCtl as HWND, byval row as integer )
     ' Dissolving IS rebasing onto the parent: descendants lose one level, documents follow,
     ' and the folder's own record maps onto its parent and is dropped as a duplicate. One
     ' implementation shared with rename rather than a second path walk that could disagree.
-    ProjectFolders_Rebase( catIndex, wszPath, ProjectFolders_ParentPath( wszPath ) )
+    ProjectFolders_Rebase( catIndex, wszPath, ProjectFolders_ParentPath( wszPath ), _
+                           gApp.pDocList, gConfig.Cat(catIndex).idFileType )
 
     LoadExplorerFiles()
 end sub
@@ -724,7 +725,8 @@ function frmExplorer_CanDropCallback( byval p as PSLISTTREE_DROPINFO ptr ) as bo
             loop
         end if
 
-        if ProjectFolders_MoveFolder( srcFolderCats(i), srcFolderPaths(i), catDest, wszDest ) then
+        if ProjectFolders_MoveFolder( srcFolderCats(i), srcFolderPaths(i), catDest, wszDest, _
+                                      gApp.pDocList, gConfig.Cat(srcFolderCats(i)).idFileType ) then
             for j as long = lbound(moved) to ubound(moved)
                 if moved(j) then gApp.ProjectSetFileType( moved(j), gConfig.Cat(catDest).idFileType )
             next
@@ -781,7 +783,8 @@ function frmExplorer_EndLabelEditCallback( byval hCtl as HWND, byval row as inte
     dim as DWSTRING wszNew = ProjectFolders_Combine( ProjectFolders_ParentPath( wszOld ), wszName )
     if ProjectFolders_Exists( catIndex, wszNew ) then return false
 
-    ProjectFolders_Rebase( catIndex, wszOld, wszNew )
+    ProjectFolders_Rebase( catIndex, wszOld, wszNew, _
+                           gApp.pDocList, gConfig.Cat(catIndex).idFileType )
 
     ' The control would write the new caption into the row it has, but every row index is
     ' about to be rebuilt from the table anyway -- and the table is now the truth.

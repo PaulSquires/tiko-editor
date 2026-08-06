@@ -77,7 +77,11 @@ declare function ProjectFolders_RebasePath( byval wszPath as DWSTRING, byval wsz
 ' Rename a folder, or -- with an empty wszNewPath -- dissolve it into its parent. Rewrites
 ' every descendant folder AND every affected document. See its definition.
 declare function ProjectFolders_Rebase( byval catIndex as long, byval wszOldPath as DWSTRING, _
-                                        byval wszNewPath as DWSTRING ) as boolean
+                                        byval wszNewPath as DWSTRING, _
+                                        byval pDocHead as clsDocument ptr, _
+                                        byval wszFileType as DWSTRING ) as boolean
 ' Move a folder and its whole subtree, possibly into another root group. See its definition.
 declare function ProjectFolders_MoveFolder( byval catFrom as long, byval wszPath as DWSTRING, _
-                                            byval catTo as long, byval wszNewParent as DWSTRING ) as boolean
+                                            byval catTo as long, byval wszNewParent as DWSTRING, _
+                                            byval pDocHead as clsDocument ptr, _
+                                            byval wszFileType as DWSTRING ) as boolean

@@ -292,7 +292,15 @@ dim shared gTTabCtl as clsTopTabCtl
 ' The two tooltip colour recipes, shared by all four tip owners. Here rather than in
 ' modThemeApply.inc because PSTOOLTIP_COLORS is PsTooltip's and every caller precedes
 ' the apply layer.
-#include once "app/modThemeTips.inc"
+'' MOVED OUT OF app/. It fills a PSTOOLTIP_COLORS, a type declared by
+'' PsTooltip.bi, and its own header says it sits immediately after
+'' PsTooltip.inc for that reason. That is UI code.
+''
+'' It was in app/ because the grep ratchet passed it -- no Win32 token appears
+'' in it -- which is the weaker property the ratchet can check. The standalone
+'' compile asked the real question and the answer was 17 errors, every one of
+'' them PSTOOLTIP_COLORS.
+#include once "modThemeTips.inc"
 ' The code tip window. Immediately after PsTooltip.inc because it is a PsTooltip driven
 ' entirely by hand, and before frmAutoComplete.inc, which calls Codetip_Show on commit.
 #include once "modCodetipTip.inc"

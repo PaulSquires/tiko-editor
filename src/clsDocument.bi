@@ -13,7 +13,15 @@
 
 #pragma once
 
-#include once "frmDebug.bi"
+'' frmDebug.bi WAS INCLUDED HERE AND NOTHING IN THIS FILE USED IT. Measured: it
+'' defines 70 symbols and clsDocument.bi names none of them.
+''
+'' It was not free. clsDocument.bi is reached from app/modNavHistory.bi, so this
+'' one line dragged a shell header -- full of HWND, RECT and LRESULT -- into
+'' three app-layer files that have nothing to do with the debugger, and the
+'' standalone gate reported all three as failing inside frmDebug.bi. One include
+'' produced identical errors in modBuildService.inc, modFuzzy.inc and
+'' logging.bas, and none of them could be fixed where they were reported.
 
 '  Scintilla Control identifiers
 #define IDC_SCINTILLA              100

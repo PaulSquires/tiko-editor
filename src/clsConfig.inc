@@ -15,6 +15,15 @@
 ''  CONFIGURATION MODULE
 
 #include once "app/clsConfig.bi"
+'' frmDebug.bi, NAMED HERE BECAUSE THIS FILE USES IT. It arrived transitively
+'' until clsDocument.bi stopped including a header it never used -- and the
+'' moment that went, this file stopped compiling, which is what a hidden
+'' transitive dependency looks like when it is finally exposed.
+''
+'' clsConfig.inc is shell-side and legitimately needs the debugger's layout
+'' constants (FRMDEBUG_DEFPCT*, FRMDEBUG_PCTSCALE) and frmDebug_CaptureState.
+'' Its HEADER, app/clsConfig.bi, needs none of them -- that is the split.
+#include once "frmDebug.bi"
 #include once "modRoutines.bi"
 #include once "frmFunctions.bi"
 #include once "frmBookmarks.bi"
