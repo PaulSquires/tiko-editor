@@ -136,7 +136,7 @@ sub DoCheckForUpdates( byval param as any ptr )
     '  went with the temporary file. Nothing is written now.)
 
     if installedVersion < latestVersion then
-        gApp.IsUpdateAvailable = true
+        AppState_SetUpdateAvailable( true )
     end if
 
     ' Tell the UI thread. This used to be unnecessary because the caller joined this thread

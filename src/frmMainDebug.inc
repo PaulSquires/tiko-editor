@@ -32,7 +32,7 @@ function OnCommand_DebugCommon( byval id as long ) as LRESULT
             ' They used to share one CASE as well -- listed twice, and FreeBASIC takes the
             ' first match -- so Continue recompiled and opened a second debugger instead of
             ' resuming. Only the toolbar button ever worked.
-            if gApp.IsDebuggerActive then
+            if AppState_IsDebuggerActive() then
                 frmDebug_Command( IDM_DEBUG_STARTDEBUGGING )
             else
                 code_Compile(id)

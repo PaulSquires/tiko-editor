@@ -21,6 +21,33 @@
 '' five symbols and this file names none of them.
 #include once "../modKeyBindings.bi"
 
+
+
+' ========================================================================================
+' Create the keyboard shortcut text description for the Tools MENU.
+'
+' UNCHANGED. Note that the guard below is now belt AND braces: the previous dialog wrote the
+' literal string "None" into a keyless tool the moment its row was selected, and this is what
+' stopped that reaching the menu as "Ctrl+NONE". The new dialog stores "" instead (see
+' frmAssignKey_ModelFromViews), but an existing settings.ini still holds "None" and this
+' has to keep working for it.
+' ========================================================================================
+function createToolsMenuShortcut( byval nCtrlID as long ) as DWSTRING
+    dim wszShortcut as DWSTRING
+
+    if KeyBindings_PickListKeyToValue( gConfig.Tools(nCtrlID).wszKey ) = 0 then return ""
+
+    if gConfig.Tools(nCtrlID).IsCtrl then wszShortcut = "Ctrl+"
+    if gConfig.Tools(nCtrlID).IsShift then wszShortcut = wszShortcut + "Shift+"
+    if gConfig.Tools(nCtrlID).IsAlt then wszShortcut = wszShortcut + "Alt+"
+    ' PsStrTrimAny, not PsTrim: this trims the SET { space, + }, which is what the
+    ' original `trim(..., any " +")` did. It cleans the join when the key name is
+    ' absent and "Ctrl+Shift+Alt+" would otherwise end in a dangling separator.
+    wszShortcut = PsStrTrimAny(wszShortcut + PsUCase(PsTrim(gConfig.Tools(nCtrlID).wszKey)), " +")
+
+    return wszShortcut
+end function
+
 ' ========================================================================================
 ' Get the menu accelerator text (if one exists) for this menu item
 ' ========================================================================================
@@ -61,7 +88,7 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDC_MENUBAR_DEBUG: wszText = L(241,"Debug")
         case IDC_MENUBAR_HELP: wszText = L(70,"Help")
         case IDC_MENUBAR_UPDATE
-            if gApp.IsUpdateAvailable then
+            if AppState_IsUpdateAvailable() then
                 wszText = L(96,"Update Available")
             end if
 
@@ -193,7 +220,7 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_COMPILEMODULE: wszText = L(78,"Compile Module")
 
         case IDM_DEBUG_STARTDEBUGGING
-            if gApp.IsDebuggerActive then
+            if AppState_IsDebuggerActive() then
                 wszText = L(249,"Continue Debugging")
             else    
                 wszText = L(242,"Start Debugging")

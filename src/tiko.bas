@@ -128,6 +128,8 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 '' The menu vocabulary. Before modDeclares.bi, which is where these declarations
 '' used to live, so nothing downstream sees a different order.
 #include once "app/modMenuIds.bi"
+#include once "app/modMenuDefinitions.bi"
+#include once "app/modAppState.bi"
 #include once "modDeclares.bi"
 ' Declarations only, and deliberately naming no Ps* type: clsConfig.inc calls
 ' NavHistory_Clear from both of its session-load paths, well ahead of the frm* block. The
@@ -174,7 +176,7 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 
 '  Global classes
 dim shared gApp     as clsApp
-dim shared gConfig  as clsConfig
+'' gConfig is declared in app/clsConfig.bi, beside its type.
 dim shared gTTabCtl as clsTopTabCtl
 
 
@@ -239,6 +241,7 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modAutoInsert.inc"
 ' Build state and the command-line composers. Ahead of modCompile.inc and
 ' modCompileErrors.inc, both of which call into it.
+#include once "app/modAppState.inc"
 #include once "app/modBuildService.inc"
 #include once "modCompile.inc"
 #include once "modCompileErrors.inc"

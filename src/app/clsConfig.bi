@@ -267,3 +267,15 @@ type clsConfig
         declare function LoadCodetips() as long
         declare function ReloadConfigFileTest() as boolean    
 end type
+
+'' THE INSTANCE LIVES WITH ITS TYPE. It was `dim shared gConfig as clsConfig` in
+'' tiko.bas, which meant app-layer code could name the TYPE but not the object --
+'' and the object is what every reader actually wants. modMenuDefinitions.inc
+'' reads gConfig.MRU, .Tools, .MRUPROJECT and .ExplorerPositionRight.
+''
+'' MOVING IT CHANGES WHEN ITS CONSTRUCTOR RUNS: shared instances are constructed
+'' in declaration order, and this is now ~30 lines earlier, ahead of gApp instead
+'' of after it. Checked before moving -- clsConfig's constructor does not read
+'' gApp, clsApp's does not read gConfig, and nothing declared in between has an
+'' initialiser that could reach either.
+dim shared gConfig as clsConfig

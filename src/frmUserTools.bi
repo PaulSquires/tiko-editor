@@ -122,7 +122,8 @@ dim shared HWND_FRMUSERTOOLS_LIST as HWND     ' PsListTree, 3 columns
 declare function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval nToolNum as long ) as long
 declare function frmUserTools_CreateAcceleratorTable() as long
 declare function frmUserTools_Show( byval hWndParent As HWND ) as LRESULT
-declare function createToolsMenuShortcut( byval nCtrlID as long ) as DWSTRING
+' createToolsMenuShortcut is declared in app/modMenuDefinitions.bi -- it composes
+' a string out of gConfig and the key vocabulary and knows nothing about a window.
 
 ' The shortcut a tool row DISPLAYS: "Ctrl+Alt+R", or "" when the tool has no key. Composed
 ' from the modifier booleans and the bare key name, never stored -- so the list, the detail

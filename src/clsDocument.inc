@@ -1170,7 +1170,7 @@ end function
 function clsDocument.ToggleBreakPoint( byval nLine as long ) as long
     ' If the Debugger is active then simply make it a breakpoint
     ' rather than a persistemt breakpoint that will get saved between sessions.
-    if gApp.IsDebuggerActive = true then
+    if AppState_IsDebuggerActive() = true then
         ' Tell the engine directly. The gdb path needed a two-message round trip to delete
         ' one breakpoint (-break-list, then match the reply, then -break-delete), and its
         ' add path was the one site of four that forgot the 0-based to 1-based conversion,

@@ -910,7 +910,7 @@ end sub
 
 private sub frmDebug_OnExited( byval exitCode as long )
     gDbgSessionEnding = true
-    gApp.IsDebuggerActive = false
+    AppState_SetDebuggerActive( false )
     frmDebug_ClearExecutionMarkers()
 
     if exitCode = 0 then
@@ -2243,7 +2243,7 @@ private function frmDebug_WndProc( byval hwnd as HWND, byval uMsg as UINT, _
         case MSG_DBGP_FAILED
             dim as wstring * 512 werr
             debugparser_get_error( @werr, 512 )
-            gApp.IsDebuggerActive = false
+            AppState_SetDebuggerActive( false )
             gDbgSessionEnding = true
             TikoMsgBox( HWND_FRMMAIN, L(446, "The debugger could not start the program.") & _
                         chr(13) & chr(13) & werr, L(214, "Confirm"), TMB_ICON_ERROR, TMB_OK )
@@ -2372,7 +2372,7 @@ private function frmDebug_WndProc( byval hwnd as HWND, byval uMsg as UINT, _
         case WM_NCDESTROY
             frmDebug_DestroyDataTip()
             frmDebug_ClearExecutionMarkers()
-            gApp.IsDebuggerActive = false
+            AppState_SetDebuggerActive( false )
             debugparser_unload()
             dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
             if pWindow then delete pWindow
@@ -2627,14 +2627,14 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
     AfxForceVisibleDisplay( HWND_FRMDEBUG )
     UpdateWindow( HWND_FRMDEBUG )
 
-    gApp.IsDebuggerActive = true
+    AppState_SetDebuggerActive( true )
     frmMain_DebugTopMenuStates()
 
     dim as wstring * 1024 wszParams = cmdparams
     if debugparser_start( @wszExe, @wszParams, HWND_FRMDEBUG ) <> DBGP_OK then
         dim as wstring * 512 werr
         debugparser_get_error( @werr, 512 )
-        gApp.IsDebuggerActive = false
+        AppState_SetDebuggerActive( false )
         gDbgSessionEnding = true
         TikoMsgBox( hWndParent, L(446, "The debugger could not start the program.") & _
                     chr(13) & chr(13) & werr, L(214, "Confirm"), TMB_ICON_ERROR, TMB_OK )

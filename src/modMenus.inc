@@ -336,12 +336,12 @@ function frmMain_DebugTopMenuStates() as long
     dim as boolean fEnabled = cbool( gApp.GetDocumentCount() ) orelse cbool( gTTabCtl.GetDocumentTabCount() )
     EnableTopMenuItem( IDM_DEBUG_STARTDEBUGGING, fEnabled )
     
-    EnableTopMenuItem( IDM_DEBUG_STOPDEBUGGING, gApp.IsDebuggerActive )
-    EnableTopMenuItem( IDM_DEBUG_PAUSE, gApp.IsDebuggerActive )
-    EnableTopMenuItem( IDM_DEBUG_STEPINTO, gApp.IsDebuggerActive )
-    EnableTopMenuItem( IDM_DEBUG_STEPOVER, gApp.IsDebuggerActive )
-    EnableTopMenuItem( IDM_DEBUG_STEPOUT, gApp.IsDebuggerActive )
-    EnableTopMenuItem( IDM_DEBUG_RUNTOCURSOR, gApp.IsDebuggerActive )
+    EnableTopMenuItem( IDM_DEBUG_STOPDEBUGGING, AppState_IsDebuggerActive() )
+    EnableTopMenuItem( IDM_DEBUG_PAUSE, AppState_IsDebuggerActive() )
+    EnableTopMenuItem( IDM_DEBUG_STEPINTO, AppState_IsDebuggerActive() )
+    EnableTopMenuItem( IDM_DEBUG_STEPOVER, AppState_IsDebuggerActive() )
+    EnableTopMenuItem( IDM_DEBUG_STEPOUT, AppState_IsDebuggerActive() )
+    EnableTopMenuItem( IDM_DEBUG_RUNTOCURSOR, AppState_IsDebuggerActive() )
     
     ' A breakpoint needs a document to sit in.
     fEnabled = iif( cbool(gTTabCtl.GetDocumentTabCount), true, false )

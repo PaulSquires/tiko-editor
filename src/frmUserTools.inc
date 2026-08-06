@@ -210,29 +210,6 @@ function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval
 end Function
 
 
-' ========================================================================================
-' Create the keyboard shortcut text description for the Tools MENU.
-'
-' UNCHANGED. Note that the guard below is now belt AND braces: the previous dialog wrote the
-' literal string "None" into a keyless tool the moment its row was selected, and this is what
-' stopped that reaching the menu as "Ctrl+NONE". The new dialog stores "" instead (see
-' frmAssignKey_ModelFromViews), but an existing settings.ini still holds "None" and this
-' has to keep working for it.
-' ========================================================================================
-function createToolsMenuShortcut( byval nCtrlID as long ) as DWSTRING
-    dim wszShortcut as DWSTRING
-
-    if KeyBindings_PickListKeyToValue( gConfig.Tools(nCtrlID).wszKey ) = 0 then return ""
-
-    if gConfig.Tools(nCtrlID).IsCtrl then wszShortcut = "Ctrl+"
-    if gConfig.Tools(nCtrlID).IsShift then wszShortcut = wszShortcut + "Shift+"
-    if gConfig.Tools(nCtrlID).IsAlt then wszShortcut = wszShortcut + "Alt+"
-    wszShortcut = Trim(wszShortcut + ucase(PsTrim(gConfig.Tools(nCtrlID).wszKey)), any " +")
-
-    return wszShortcut
-end function
-
-
 
 ' ========================================================================================
 ' Create an accelerator table based on selections for the user tools.

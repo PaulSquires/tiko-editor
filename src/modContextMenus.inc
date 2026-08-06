@@ -381,7 +381,7 @@ sub ShowScintillaContextMenu()
     PsPopupMenu_AddItem( ghPopupScintilla, IDM_PASTE, L(19,"Paste") )
     PsPopupMenu_AddSeparator( ghPopupScintilla )
     PsPopupMenu_AddItem( ghPopupScintilla, IDM_DEBUG_TOGGLEBREAKPOINT, L(245,"Toggle Breakpoint") )
-    if gApp.IsDebuggerActive then
+    if AppState_IsDebuggerActive() then
         PsPopupMenu_AddItem( ghPopupScintilla, IDM_DEBUG_RUNTOCURSOR, L(252,"Run to Cursor") )
     end if
     PsPopupMenu_AddSeparator( ghPopupScintilla )

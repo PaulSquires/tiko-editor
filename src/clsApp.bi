@@ -91,9 +91,11 @@ type clsApp
         SpinnerCurrentFrame        as long = 0          ' The index of the icon to use when timer fires.
         SpinnerTimerID             as long = 101       
         
-        IsUpdateAvailable          as boolean = false   ' Set in DoCheckForUpdates() for server check for updated version available
+        ' IsUpdateAvailable and IsDebuggerActive MOVED to app/modAppState.bi. Neither
+        ' has anything to do with a window, and both are read by menus -- which is
+        ' app-layer code that cannot see this type. Same move, same reason, as
+        ' IsCompiling -> modBuildService.
         
-        IsDebuggerActive           as boolean
         DebugTimerID               as long = 102
         
         ProjectBuild               as string            ' default build configuration for the project (GUID)

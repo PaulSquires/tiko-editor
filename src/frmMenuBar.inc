@@ -359,7 +359,7 @@ end sub
 ' ========================================================================================
 ' The "Update Available" label: a small host-owned window over the right end of the
 ' menubar strip (the bar control knows nothing about it). Shown only while
-' gApp.IsUpdateAvailable resolves getMenuText(IDC_MENUBAR_UPDATE) to a caption.
+' AppState_IsUpdateAvailable() resolves getMenuText(IDC_MENUBAR_UPDATE) to a caption.
 ' ========================================================================================
 function frmMenuBarUpdate_WndProc( _
             byval hwnd   as HWND, _

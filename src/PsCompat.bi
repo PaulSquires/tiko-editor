@@ -103,6 +103,17 @@ private function PsTrim(byref w as const wstring, byref sWhat as const wstring) 
     return trim(w, sWhat)
 end function
 
+'' PsStrTrimAny -- trims a SET of characters from both ends. Forwards to the
+'' intrinsic's `any` form here; PsCore has a real one now, added because the
+'' "Any" family already had RemoveAny, ReplaceAny and ParseAny and this was the
+'' member that was missing.
+''
+'' NOT PsStrRemoveAny, which takes every occurrence out of the middle too --
+'' "a+b" would become "ab". This trims ends only.
+private function PsStrTrimAny(byref w as const wstring, byref sMatch as const wstring) as DWSTRING
+    return trim(w, any sMatch)
+end function
+
 private function PsLTrim overload (byref w as const wstring) as DWSTRING
     return ltrim(w)
 end function
