@@ -82,3 +82,16 @@ The big portable subsystems — the document model, undo, search, settings, the
 editor core — are still in `src/` because they carry `HWND` in their signatures
 rather than in their logic. Moving them is the same work as 7c and belongs with
 it.
+
+## Interactive verification
+
+The save path was exercised by hand on 2026-08-06, after the writer moved to
+`PsFileWriteAll`/`PsFileReplace` and the encoder to `PsC.PsEncDecode`/
+`PsC.PsEncEncode`. Saving works.
+
+That closes the caveat those two commits carried. It matters more than the
+suite numbers do here: `TIKO_SAVE_SELFTEST` drives `Doc_WriteToDisk` directly,
+so it exercises the `ReplaceFileW` branch but not the `MoveFileExW` fallback
+that every Save As and every new file takes — the two branches are chosen by
+whether the destination already exists, and only a real Save As picks the
+second.

@@ -103,10 +103,10 @@ end sub
 ' Default button is CANCEL: SetText empties the undo buffer, so there is no going back.
 ' ========================================================================================
 function Doc_ConfirmAnsiConversion() as boolean
-    dim as long nAnswer = MessageBoxW( HWND_FRMMAIN, _
+    dim as long nAnswer = TikoMsgBox( HWND_FRMMAIN, _
             L(316,"This document contains characters that cannot be represented in ANSI. " & _
                   "Converting will replace them and cannot be undone. Convert anyway?"), _
             L(317,"Convert to ANSI"), _
-            MB_OKCANCEL or MB_ICONEXCLAMATION or MB_DEFBUTTON2 )
+            TMB_ICON_WARNING, TMB_OKCANCEL, 1 )   ' default = Cancel: this is destructive
     return (nAnswer = IDOK)
 end function
