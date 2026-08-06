@@ -174,3 +174,38 @@ attempt was backed out, and it has not changed.
 that stands on its own and is committed; 711 -> 543 is three passes that take
 minutes to re-apply from this table. The remainder is a few hundred individual
 judgements, and it wants a dedicated run rather than the tail of a long one.
+
+## The boundary pass, added the same day: 543 -> 512, converged
+
+A fourth pass, scripted from fbc's own `at parameter N of FUNC()` text: find the
+call, split its arguments, append `.Wz()` to the Nth. Multi-line aware — it joins
+continuation lines until the parentheses balance and puts them back, comments and
+all. Run to a fixed point:
+
+    543 -> 526 -> 516 -> 514 -> 512 -> 512
+
+**~70 sites, 31 errors, and then it stops.** That number corrects an estimate
+made earlier on this page: "roughly 200 Win32/CRT boundary sites". That counted
+every `error 58`, and most of those are NOT the Win32 boundary at all — they are
+tiko functions taking `string`, and intrinsics.
+
+### Why the rest cannot be scripted, which is the useful part
+
+* **fbc names the RESOLVED callee, not the identifier written.**
+  `AfxSetWindowText(h, wszText)` is reported as `parameter 2 of SETWINDOWTEXTW()`.
+  Nothing on that line says `SetWindowTextW`, so name-matching cannot find it,
+  and this is the normal case for every wrapper.
+* **Statement forms have no parentheses.** `chdir wszDir` and
+  `open <path> for output as #f` are reported like calls and are not.
+* **43 distinct callees**, each with the argument in a different position.
+
+## The position after this run
+
+    1010  the swap, before any of this
+     711  after the committed work -- select case, localization, CTextStream,
+          the menu vocabulary, the app layer
+     512  after four scripted passes that take minutes to re-apply
+
+The 512 are: 168 `Type mismatch`, 148 `Invalid assignment/conversion` (the
+`.Utf8` class, each an encoding decision), 73 `Invalid data types`, and a tail.
+They are individual judgements, not a category with a recipe.
