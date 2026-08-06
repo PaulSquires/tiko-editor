@@ -75,6 +75,90 @@ end constructor
 
 ''
 ''
+' ========================================================================================
+' File I/O for the settings and keyword files -- PsCore's PsFile, bytes in and bytes out.
+'
+' These replace CTextStream, which is the Scripting FileSystemObject behind a COM wrapper.
+' It did three things at once: opened the file, decided its encoding, and split it into
+' lines -- and the encoding decision was a BOOLEAN, `bUnicode`, which is why settings.ini
+' is UTF-16 and the keyword files are whatever the ANSI codepage happens to be.
+'
+' Here the three are separate: PsFile moves the bytes, PsEncoding decides the encoding,
+' PsStrParse splits the lines. The write is ONE call, so a settings.ini half-written by an
+' early return in the middle of 166 WriteLines is no longer a state this program can reach.
+'
+' THE ON-DISK FORMAT DOES NOT CHANGE. settings.ini stays UTF-16LE with a BOM, byte for
+' byte -- verified by writing it with both implementations and comparing the files.
+'
+' The two DWSTRINGs meet at .Utf8, which both types have and which is lossless in both
+' directions. That is the same bridge modEncoding uses for the document save path.
+' ========================================================================================
+private function Config_PsPath( byref wszPath as wstring ) as PsC.DWSTRING
+    dim as DWSTRING w = wszPath
+    dim as PsC.DWSTRING d
+    d.Utf8 = w.Utf8
+    return d
+end function
+
+' Reads a text file and hands back its LINES. The encoding is DETECTED from the BOM, so the
+' UTF-16 settings.ini and the ANSI keyword files both come back correct without the caller
+' saying which is which -- which CTextStream's bUnicode flag made every caller say, and get
+' wrong the moment a file changed encoding.
+private function Config_ReadLines( byref wszPath as wstring, lines() as DWSTRING ) as boolean
+    erase lines
+    dim as boolean bOk
+    dim as string sBytes = PsC.PsFileReadAll( Config_PsPath(wszPath), bOk )
+    if bOk = false then return false
+
+    dim as PsC.PsEncodingId encUsed
+    dim as PsC.DWSTRING dwAll = PsC.PsEncDecodeAuto( sBytes, encUsed )
+    dim as DWSTRING wszAll
+    wszAll.Utf8 = dwAll.Utf8
+
+    ' A file that ends with a line terminator yields a final EMPTY element, exactly as
+    ' ReadLine + EOS did: that loop stopped at end-of-stream and never produced a phantom
+    ' last line. Every caller skips empty lines anyway, and both keyword readers and the
+    ' settings reader are asserted against the real files.
+    dim as long n = PsStrParseCount( wszAll, vbcrlf )
+    redim lines( 0 to n - 1 )
+    for i as long = 1 to n
+        lines(i - 1) = PsStrParse( wszAll, i, vbcrlf )
+    next
+    return true
+end function
+
+' Reads a whole text file as one string, replacing CTextStream.ReadAll.
+private function Config_ReadAll( byref wszPath as wstring ) as DWSTRING
+    dim as boolean bOk
+    dim as string sBytes = PsC.PsFileReadAll( Config_PsPath(wszPath), bOk )
+    if bOk = false then return ""
+    dim as PsC.PsEncodingId encUsed
+    dim as PsC.DWSTRING dwAll = PsC.PsEncDecodeAuto( sBytes, encUsed )
+    dim as DWSTRING r
+    r.Utf8 = dwAll.Utf8
+    return r
+end function
+
+' Writes text as UTF-16LE with a BOM -- what CTextStream.Create(path, true, true) produced
+' and what every settings.ini already on disk is.
+private function Config_WriteUtf16( byref wszPath as wstring, byref wszText as DWSTRING ) as boolean
+    dim as PsC.DWSTRING d
+    d.Utf8 = wszText.Utf8
+    dim as boolean bLossy
+    dim as string sBytes = PsC.PsEncEncode( d, PsC.PSENC_UTF16LE_BOM, bLossy )
+    return PsC.PsFileWriteAll( Config_PsPath(wszPath), sBytes )
+end function
+
+' Writes text as the ANSI codepage with no BOM -- what CTextStream.Create(path) produced for
+' the keyword files, which are plain lists and were never Unicode.
+private function Config_WriteAnsi( byref wszPath as wstring, byref wszText as DWSTRING ) as boolean
+    dim as PsC.DWSTRING d
+    d.Utf8 = wszText.Utf8
+    dim as boolean bLossy
+    dim as string sBytes = PsC.PsEncEncode( d, PsC.PSENC_ANSI, bLossy )
+    return PsC.PsFileWriteAll( Config_PsPath(wszPath), sBytes )
+end function
+
 function clsConfig.LoadKeywords() as long
     if PsFileExists(this.FBKeywordsFilename) = false then
         ' The FB keywords file does not exist. Try copying the "default" keywords over
@@ -87,21 +171,9 @@ function clsConfig.LoadKeywords() as long
     end if
     if PsFileExists(this.FBKeywordsFilename) = false then exit function
 
-    dim pStream as CTextStream
-    if pStream.Open(this.FBKeywordsFilename) = S_OK then
-        this.FBKeywords = pStream.ReadAll
-        pStream.Close
-    end if
-
-    if pStream.Open(this.WinApiKeywordsFilename) = S_OK then
-        this.WinApiKeywords = pStream.ReadAll
-        pStream.Close
-    end if
-
-    if pStream.Open(this.ExtraKeywordsFilename) = S_OK then
-        this.ExtraKeywords = pStream.ReadAll
-        pStream.Close
-    end if
+    this.FBKeywords     = Config_ReadAll( this.FBKeywordsFilename )
+    this.WinApiKeywords = Config_ReadAll( this.WinApiKeywordsFilename )
+    this.ExtraKeywords  = Config_ReadAll( this.ExtraKeywordsFilename )
 
     function = 0
 end function
@@ -109,19 +181,11 @@ end function
 ''
 ''
 function clsConfig.SaveKeywords() as long
-    dim pStream as CTextStream
-    if pStream.Create(this.FBKeywordsFilename) = S_OK then
-        pStream.WriteLine this.FBKeywords
-        pStream.Close
-    end if
-    if pStream.Create(this.WinApiKeywordsFilename) = S_OK then
-        pStream.WriteLine this.WinApiKeywords
-        pStream.Close
-    end if
-    if pStream.Create(this.ExtraKeywordsFilename) = S_OK then
-        pStream.WriteLine this.ExtraKeywords
-        pStream.Close
-    end if
+    ' WriteLine appended a CRLF, so these keep it -- the files are compared by hand and a
+    ' vanished trailing newline is the kind of diff that looks like data loss.
+    Config_WriteAnsi( this.FBKeywordsFilename,     this.FBKeywords     + vbcrlf )
+    Config_WriteAnsi( this.WinApiKeywordsFilename, this.WinApiKeywords + vbcrlf )
+    Config_WriteAnsi( this.ExtraKeywordsFilename,  this.ExtraKeywords  + vbcrlf )
     function = 0
 end function
 
@@ -138,13 +202,13 @@ function clsConfig.LoadCodetipsFB() as boolean
     erase gFBIntrinsics
     dim as long nIntrinsic = 0
 
-    dim pStream as CTextStream
-    if pStream.Open(this.FBCodetipsFilename) <> S_OK then return true  ' error
+    redim as DWSTRING lines(any)
+    if Config_ReadLines( this.FBCodetipsFilename, lines() ) = false then return true  ' error
 
-    do until pStream.EOS
-        wst = pStream.ReadLine
+    for nLine as long = lbound(lines) to ubound(lines)
+        wst = lines(nLine)
         wst = PsTrim(wst)
-        if PsLen(wst) = 0 then continue do
+        if PsLen(wst) = 0 then continue for
 
         i = PsInStr(wst, "=")
         if i then
@@ -154,8 +218,7 @@ function clsConfig.LoadCodetipsFB() as boolean
             gFBIntrinsics(nIntrinsic).wszCalltip = PsMid(wst, i+1)
             nIntrinsic += 1
         end if
-    loop
-    pStream.Close
+    next
 
     ' sort gFBIntrinsics ascending by wszNameUp for FindIntrinsicCalltip's binary search
     for a as long = 1 to nIntrinsic - 1
@@ -300,121 +363,123 @@ function clsConfig.SaveConfigFileBody() as long
 
     this.CompilerBuild = frmBuildConfig_GetSelectedBuildGUID()
 
-    dim pStream as CTextStream   '(utf16)
-    if pStream.Create(this.ConfigFilename, true, true) <> S_OK then return true   ' error
+    ' ONE BUFFER, ONE WRITE. This was 166 WriteLines straight at a CTextStream, so an
+    ' error partway through left a truncated settings.ini on disk that looked saved.
+    ' Config_WriteUtf16 emits the same bytes -- UTF-16LE with a BOM -- in a single call.
+    dim as DWSTRING wszOut
 
-    pStream.WriteLine "' SETTINGS FILE"
-    pStream.WriteLine ""
-    pStream.WriteLine "SettingsVersion="       & APPVERSION
-    pStream.WriteLine ""
-    pStream.WriteLine "[Editor]"
-    pStream.WriteLine "AskExit="               & this.AskExit
-    pStream.WriteLine "AutoSaveFiles="         & this.AutoSaveFiles
-    pStream.WriteLine "AutoSaveInterval="      & this.AutoSaveInterval
-    pStream.WriteLine "RestoreSession="        & this.RestoreSession
+    wszOut &= "' SETTINGS FILE" & vbcrlf
+    wszOut &= "" & vbcrlf
+    wszOut &= "SettingsVersion="       & APPVERSION & vbcrlf
+    wszOut &= "" & vbcrlf
+    wszOut &= "[Editor]" & vbcrlf
+    wszOut &= "AskExit="               & this.AskExit & vbcrlf
+    wszOut &= "AutoSaveFiles="         & this.AutoSaveFiles & vbcrlf
+    wszOut &= "AutoSaveInterval="      & this.AutoSaveInterval & vbcrlf
+    wszOut &= "RestoreSession="        & this.RestoreSession & vbcrlf
     if this.RestoreSession = 0 then this.wszLastActiveProject = ""
-    pStream.WriteLine "LastActiveProjectFile=" & ProcessToCurdriveApp(this.wszLastActiveProject)
-    pStream.WriteLine "CompactMenus="          & this.CompactMenus
-    pStream.WriteLine "MultipleInstances="     & this.MultipleInstances
-    pStream.WriteLine "CompileAutosave="       & this.CompileAutosave
-    pStream.WriteLine "CheckUpdates="          & this.CheckUpdates
-    pStream.WriteLine "SyntaxHighlighting="    & this.SyntaxHighlighting
-    pStream.WriteLine "Codetips="              & this.Codetips
-    pStream.WriteLine "AutoComplete="          & this.AutoComplete
-    pStream.WriteLine "CharacterAutoComplete=" & this.CharacterAutoComplete
-    pStream.WriteLine "RightEdge="             & this.RightEdge
-    pStream.WriteLine "RightEdgePosition="     & this.RightEdgePosition
-    pStream.WriteLine "LeftMargin="            & this.LeftMargin
-    pStream.WriteLine "FoldMargin="            & this.FoldMargin
-    pStream.WriteLine "AutoIndentation="       & this.AutoIndentation
-    pStream.WriteLine "FornextVariable="       & this.FornextVariable
-    pStream.WriteLine "ConfineCaret="          & this.ConfineCaret
-    pStream.WriteLine "LineNumbering="         & this.LineNumbering
-    pStream.WriteLine "HighlightCurrentLine="  & this.HighlightCurrentLine
-    pStream.WriteLine "IndentGuides="          & this.IndentGuides
-    pStream.WriteLine "TabIndentSpaces="       & this.TabIndentSpaces
-    pStream.WriteLine "UnicodeEncoding="       & this.UnicodeEncoding
-    pStream.WriteLine "NewFileEncoding="       & this.NewFileEncoding
-    pStream.WriteLine "KeywordCase="           & this.KeywordCase
+    wszOut &= "LastActiveProjectFile=" & ProcessToCurdriveApp(this.wszLastActiveProject) & vbcrlf
+    wszOut &= "CompactMenus="          & this.CompactMenus & vbcrlf
+    wszOut &= "MultipleInstances="     & this.MultipleInstances & vbcrlf
+    wszOut &= "CompileAutosave="       & this.CompileAutosave & vbcrlf
+    wszOut &= "CheckUpdates="          & this.CheckUpdates & vbcrlf
+    wszOut &= "SyntaxHighlighting="    & this.SyntaxHighlighting & vbcrlf
+    wszOut &= "Codetips="              & this.Codetips & vbcrlf
+    wszOut &= "AutoComplete="          & this.AutoComplete & vbcrlf
+    wszOut &= "CharacterAutoComplete=" & this.CharacterAutoComplete & vbcrlf
+    wszOut &= "RightEdge="             & this.RightEdge & vbcrlf
+    wszOut &= "RightEdgePosition="     & this.RightEdgePosition & vbcrlf
+    wszOut &= "LeftMargin="            & this.LeftMargin & vbcrlf
+    wszOut &= "FoldMargin="            & this.FoldMargin & vbcrlf
+    wszOut &= "AutoIndentation="       & this.AutoIndentation & vbcrlf
+    wszOut &= "FornextVariable="       & this.FornextVariable & vbcrlf
+    wszOut &= "ConfineCaret="          & this.ConfineCaret & vbcrlf
+    wszOut &= "LineNumbering="         & this.LineNumbering & vbcrlf
+    wszOut &= "HighlightCurrentLine="  & this.HighlightCurrentLine & vbcrlf
+    wszOut &= "IndentGuides="          & this.IndentGuides & vbcrlf
+    wszOut &= "TabIndentSpaces="       & this.TabIndentSpaces & vbcrlf
+    wszOut &= "UnicodeEncoding="       & this.UnicodeEncoding & vbcrlf
+    wszOut &= "NewFileEncoding="       & this.NewFileEncoding & vbcrlf
+    wszOut &= "KeywordCase="           & this.KeywordCase & vbcrlf
     ' The code formatter's rule set. Every field is `as long` for the reason the AskExit
     ' note above gives -- these are written verbatim, and a real boolean would emit
     ' "true"/"false" where the reader expects 0/1.
-    pStream.WriteLine "FmtReindent="           & this.Format.Reindent
-    pStream.WriteLine "FmtIndentCase="         & this.Format.IndentCase
-    pStream.WriteLine "FmtContinuationIndent=" & this.Format.ContinuationIndent
-    pStream.WriteLine "FmtCaseKeywords="       & this.Format.CaseKeywords
-    pStream.WriteLine "FmtCaseDirectives="     & this.Format.CaseDirectives
-    pStream.WriteLine "FmtCaseTypes="          & this.Format.CaseTypes
-    pStream.WriteLine "FmtSpaceOperators="     & this.Format.SpaceAroundOperators
-    pStream.WriteLine "FmtSpaceAfterComma="    & this.Format.SpaceAfterComma
-    pStream.WriteLine "FmtParenSpacing="       & this.Format.ParenSpacing
-    pStream.WriteLine "FmtSpacesBeforeComment=" & this.Format.SpacesBeforeComment
-    pStream.WriteLine "FmtTrimTrailing="       & this.Format.TrimTrailing
-    pStream.WriteLine "FmtMaxBlankLines="      & this.Format.MaxBlankLines
-    pStream.WriteLine "FmtBlankLinesAroundProc=" & this.Format.BlankLinesAroundProc
-    pStream.WriteLine "FmtFormatOnEnter="      & this.Format.FormatOnEnter
-    pStream.WriteLine "FmtFormatOnPaste="      & this.Format.FormatOnPaste
-    pStream.WriteLine "LocalizationFile="      & this.LocalizationFile
-    pStream.WriteLine "TabSize="               & this.TabSize
-    pStream.WriteLine "PositionMiddle="        & this.PositionMiddle
-    pStream.WriteLine "ClickToggleBreakpoint=" & this.ClickToggleBreakpoint
-    pStream.WriteLine "BraceHighlight="        & this.BraceHighlight
-    pStream.WriteLine "OccurrenceHighlight="   & this.OccurrenceHighlight
-    pStream.WriteLine "DetectExternalFileChanges=" & this.DetectExternalFileChanges
-    pStream.WriteLine "StripTrailingWhitespace=" & this.StripTrailingWhitespace
-    pStream.WriteLine "EditorFontname="        & this.EditorFontname
-    pStream.WriteLine "EditorFontsize="        & this.EditorFontsize
-    pStream.WriteLine "EditorFontCharSet="     & this.EditorFontCharSet
-    pStream.WriteLine "FontExtraSpace="        & this.FontExtraSpace
-    pStream.WriteLine "Theme="                 & this.ThemeShortFilename
-    pStream.WriteLine "ExplorerPositionRight=" & this.ExplorerPositionRight
-    pStream.WriteLine ""
+    wszOut &= "FmtReindent="           & this.Format.Reindent & vbcrlf
+    wszOut &= "FmtIndentCase="         & this.Format.IndentCase & vbcrlf
+    wszOut &= "FmtContinuationIndent=" & this.Format.ContinuationIndent & vbcrlf
+    wszOut &= "FmtCaseKeywords="       & this.Format.CaseKeywords & vbcrlf
+    wszOut &= "FmtCaseDirectives="     & this.Format.CaseDirectives & vbcrlf
+    wszOut &= "FmtCaseTypes="          & this.Format.CaseTypes & vbcrlf
+    wszOut &= "FmtSpaceOperators="     & this.Format.SpaceAroundOperators & vbcrlf
+    wszOut &= "FmtSpaceAfterComma="    & this.Format.SpaceAfterComma & vbcrlf
+    wszOut &= "FmtParenSpacing="       & this.Format.ParenSpacing & vbcrlf
+    wszOut &= "FmtSpacesBeforeComment=" & this.Format.SpacesBeforeComment & vbcrlf
+    wszOut &= "FmtTrimTrailing="       & this.Format.TrimTrailing & vbcrlf
+    wszOut &= "FmtMaxBlankLines="      & this.Format.MaxBlankLines & vbcrlf
+    wszOut &= "FmtBlankLinesAroundProc=" & this.Format.BlankLinesAroundProc & vbcrlf
+    wszOut &= "FmtFormatOnEnter="      & this.Format.FormatOnEnter & vbcrlf
+    wszOut &= "FmtFormatOnPaste="      & this.Format.FormatOnPaste & vbcrlf
+    wszOut &= "LocalizationFile="      & this.LocalizationFile & vbcrlf
+    wszOut &= "TabSize="               & this.TabSize & vbcrlf
+    wszOut &= "PositionMiddle="        & this.PositionMiddle & vbcrlf
+    wszOut &= "ClickToggleBreakpoint=" & this.ClickToggleBreakpoint & vbcrlf
+    wszOut &= "BraceHighlight="        & this.BraceHighlight & vbcrlf
+    wszOut &= "OccurrenceHighlight="   & this.OccurrenceHighlight & vbcrlf
+    wszOut &= "DetectExternalFileChanges=" & this.DetectExternalFileChanges & vbcrlf
+    wszOut &= "StripTrailingWhitespace=" & this.StripTrailingWhitespace & vbcrlf
+    wszOut &= "EditorFontname="        & this.EditorFontname & vbcrlf
+    wszOut &= "EditorFontsize="        & this.EditorFontsize & vbcrlf
+    wszOut &= "EditorFontCharSet="     & this.EditorFontCharSet & vbcrlf
+    wszOut &= "FontExtraSpace="        & this.FontExtraSpace & vbcrlf
+    wszOut &= "Theme="                 & this.ThemeShortFilename & vbcrlf
+    wszOut &= "ExplorerPositionRight=" & this.ExplorerPositionRight & vbcrlf
+    wszOut &= "" & vbcrlf
     ' Note: Main window StartUp positions are in scaled screen coordinates.
-    pStream.WriteLine "[Startup]"
-    pStream.WriteLine "StartupLeft="              & this.StartupLeft
-    pStream.WriteLine "StartupTop="               & this.StartupTop
-    pStream.WriteLine "StartupRight="             & this.StartupRight
-    pStream.WriteLine "StartupBottom="            & this.StartupBottom
-    pStream.WriteLine "StartupMaximized="         & this.StartupMaximized
+    wszOut &= "[Startup]" & vbcrlf
+    wszOut &= "StartupLeft="              & this.StartupLeft & vbcrlf
+    wszOut &= "StartupTop="               & this.StartupTop & vbcrlf
+    wszOut &= "StartupRight="             & this.StartupRight & vbcrlf
+    wszOut &= "StartupBottom="            & this.StartupBottom & vbcrlf
+    wszOut &= "StartupMaximized="         & this.StartupMaximized & vbcrlf
     ' Note: HelpViewer StartUp positions are in scaled screen coordinates.
-    pStream.WriteLine "HelpStartupLeft="          & this.HelpStartupLeft
-    pStream.WriteLine "HelpStartupTop="           & this.HelpStartupTop
-    pStream.WriteLine "HelpStartupRight="         & this.HelpStartupRight
-    pStream.WriteLine "HelpStartupBottom="        & this.HelpStartupBottom
-    pStream.WriteLine "HelpStartupMaximized="     & this.HelpStartupMaximized
+    wszOut &= "HelpStartupLeft="          & this.HelpStartupLeft & vbcrlf
+    wszOut &= "HelpStartupTop="           & this.HelpStartupTop & vbcrlf
+    wszOut &= "HelpStartupRight="         & this.HelpStartupRight & vbcrlf
+    wszOut &= "HelpStartupBottom="        & this.HelpStartupBottom & vbcrlf
+    wszOut &= "HelpStartupMaximized="     & this.HelpStartupMaximized & vbcrlf
     ' Note: SidePanel and OutputPanel positions are in unscaled screen coordinates.
-    pStream.WriteLine "ShowPanel="                & this.ShowPanel
-    pStream.WriteLine "ShowPanelWidth="           & this.ShowPanelWidth
-    pStream.WriteLine "ShowOutputPanel="          & this.ShowOutputPanel
-    pStream.WriteLine "ShowOutputPanelHeight="    & this.ShowOutputPanelHeight
-    pStream.WriteLine "ShowOutputPanelMinimized=" & this.ShowOutputPanelMinimized
+    wszOut &= "ShowPanel="                & this.ShowPanel & vbcrlf
+    wszOut &= "ShowPanelWidth="           & this.ShowPanelWidth & vbcrlf
+    wszOut &= "ShowOutputPanel="          & this.ShowOutputPanel & vbcrlf
+    wszOut &= "ShowOutputPanelHeight="    & this.ShowOutputPanelHeight & vbcrlf
+    wszOut &= "ShowOutputPanelMinimized=" & this.ShowOutputPanelMinimized & vbcrlf
     ' Written from this.ShowOutputPanelIndex, which frmMain refreshes from the tab bar
     ' (PsSelectBar_GetCurSel) just before the config is saved.
-    pStream.WriteLine "ShowOutputPanelIndex="     & this.ShowOutputPanelIndex
-    pStream.WriteLine "UnusedKindMask="           & this.UnusedKindMask
-    pStream.WriteLine "UnusedSortCol="            & this.UnusedSortCol
-    pStream.WriteLine "UnusedSortDesc="           & this.UnusedSortDesc
-    pStream.WriteLine "UnusedMinimizeOnOpen="     & this.UnusedMinimizeOnOpen
+    wszOut &= "ShowOutputPanelIndex="     & this.ShowOutputPanelIndex & vbcrlf
+    wszOut &= "UnusedKindMask="           & this.UnusedKindMask & vbcrlf
+    wszOut &= "UnusedSortCol="            & this.UnusedSortCol & vbcrlf
+    wszOut &= "UnusedSortDesc="           & this.UnusedSortDesc & vbcrlf
+    wszOut &= "UnusedMinimizeOnOpen="     & this.UnusedMinimizeOnOpen & vbcrlf
     ' Note: the floating Output window's positions are in scaled screen coordinates (the
     ' Startup/HelpStartup convention above, NOT the unscaled one the two lines above use).
-    pStream.WriteLine "OutputFloating="           & this.OutputFloating
-    pStream.WriteLine "OutputFloatLeft="          & this.OutputFloatLeft
-    pStream.WriteLine "OutputFloatTop="           & this.OutputFloatTop
-    pStream.WriteLine "OutputFloatRight="         & this.OutputFloatRight
-    pStream.WriteLine "OutputFloatBottom="        & this.OutputFloatBottom
-    pStream.WriteLine "OutputFloatMaximized="     & this.OutputFloatMaximized
+    wszOut &= "OutputFloating="           & this.OutputFloating & vbcrlf
+    wszOut &= "OutputFloatLeft="          & this.OutputFloatLeft & vbcrlf
+    wszOut &= "OutputFloatTop="           & this.OutputFloatTop & vbcrlf
+    wszOut &= "OutputFloatRight="         & this.OutputFloatRight & vbcrlf
+    wszOut &= "OutputFloatBottom="        & this.OutputFloatBottom & vbcrlf
+    wszOut &= "OutputFloatMaximized="     & this.OutputFloatMaximized & vbcrlf
     ' Note: the debugger window's positions are in scaled screen coordinates (the
     ' Startup/HelpStartup convention), but its three splitters are a PERCENT x 10000 of the
     ' span each divides -- see clsConfig.bi for why they are not pixels.
-    pStream.WriteLine "DebugLeft="                & this.DebugLeft
-    pStream.WriteLine "DebugTop="                 & this.DebugTop
-    pStream.WriteLine "DebugRight="               & this.DebugRight
-    pStream.WriteLine "DebugBottom="              & this.DebugBottom
-    pStream.WriteLine "DebugMaximized="           & this.DebugMaximized
-    pStream.WriteLine "DebugSplitMain="           & this.DebugSplitMain
-    pStream.WriteLine "DebugSplitLeft="           & this.DebugSplitLeft
-    pStream.WriteLine "DebugSplitRight="          & this.DebugSplitRight
-    pStream.WriteLine ""
+    wszOut &= "DebugLeft="                & this.DebugLeft & vbcrlf
+    wszOut &= "DebugTop="                 & this.DebugTop & vbcrlf
+    wszOut &= "DebugRight="               & this.DebugRight & vbcrlf
+    wszOut &= "DebugBottom="              & this.DebugBottom & vbcrlf
+    wszOut &= "DebugMaximized="           & this.DebugMaximized & vbcrlf
+    wszOut &= "DebugSplitMain="           & this.DebugSplitMain & vbcrlf
+    wszOut &= "DebugSplitLeft="           & this.DebugSplitLeft & vbcrlf
+    wszOut &= "DebugSplitRight="          & this.DebugSplitRight & vbcrlf
+    wszOut &= "" & vbcrlf
 
     ' for each folder location determine if it resides on the same drive as
     ' the editor. if it does then substitute the replaceable parameter
@@ -440,78 +505,78 @@ function clsConfig.SaveConfigFileBody() as long
         end if
     next
 
-    pStream.WriteLine "[Compiler]"
-    pStream.WriteLine "FBWINCompiler32="       & this.FBWINCompiler32
-    pStream.WriteLine "FBWINCompiler64="       & this.FBWINCompiler64
-    pStream.WriteLine "CompilerBuild="         & this.CompilerBuild
-    pStream.WriteLine "CompilerSwitches="      & this.CompilerSwitches
-    pStream.WriteLine "CompilerIncludes="      & SaveCompilerIncludes
-    pStream.WriteLine "RunViaCommandWindow="   & this.RunViaCommandWindow
-    pStream.WriteLine "DisableCompileBeep="    & this.DisableCompileBeep
+    wszOut &= "[Compiler]" & vbcrlf
+    wszOut &= "FBWINCompiler32="       & this.FBWINCompiler32 & vbcrlf
+    wszOut &= "FBWINCompiler64="       & this.FBWINCompiler64 & vbcrlf
+    wszOut &= "CompilerBuild="         & this.CompilerBuild & vbcrlf
+    wszOut &= "CompilerSwitches="      & this.CompilerSwitches & vbcrlf
+    wszOut &= "CompilerIncludes="      & SaveCompilerIncludes & vbcrlf
+    wszOut &= "RunViaCommandWindow="   & this.RunViaCommandWindow & vbcrlf
+    wszOut &= "DisableCompileBeep="    & this.DisableCompileBeep & vbcrlf
 
-    pStream.WriteLine ""
-    pStream.WriteLine "[Categories]"
+    wszOut &= "" & vbcrlf
+    wszOut &= "[Categories]" & vbcrlf
     dim as long nNext = 0
     for i as long = lbound(this.Cat) to ubound(this.Cat)
         if PsLeft(this.Cat(i).wszDescription, 2) <> "%%" then
             if PsTrim(this.Cat(i).wszDescription) <> "" then
-                pStream.Write "CATEGORY_" & right("00" & str(nNext), 2) & "="
-                pStream.Write this.Cat(i).idFileType & "|-|"
-                pStream.WriteLine this.Cat(i).wszDescription
+                wszOut &= "CATEGORY_" & right("00" & str(nNext), 2) & "="
+                wszOut &= this.Cat(i).idFileType & "|-|"
+                wszOut &= this.Cat(i).wszDescription & vbcrlf
                 nNext = nNext + 1
             end if
         end if
     next
 
-    pStream.WriteLine ""
-    pStream.WriteLine "[UserTools]"
+    wszOut &= "" & vbcrlf
+    wszOut &= "[UserTools]" & vbcrlf
     for i as long = lbound(this.Tools) to ubound(this.Tools)
-        pStream.Write "USERTOOL_" & right("00" & str(i), 2) & "="
-        pStream.Write this.Tools(i).wszDescription & "|-|"
-        pStream.Write ProcessToCurdriveApp(this.Tools(i).wszCommand) & "|-|"
-        pStream.Write this.Tools(i).wszParameters & "|-|"
-        pStream.Write this.Tools(i).wszKey & "|-|"
-        pStream.Write ProcessToCurdriveApp(this.Tools(i).wszWorkingFolder) & "|-|"
-        pStream.Write this.Tools(i).IsCtrl & "|-|"
-        pStream.Write this.Tools(i).IsAlt & "|-|"
-        pStream.Write this.Tools(i).IsShift & "|-|"
-        pStream.Write this.Tools(i).IsPromptRun & "|-|"
-        pStream.Write this.Tools(i).IsMinimized & "|-|"
-        pStream.Write this.Tools(i).IsWaitFinish & "|-|"
-        pStream.Write this.Tools(i).IsDisplayMenu & "|-|"
-        pStream.WriteLine wstr(this.Tools(i).Action)
+        wszOut &= "USERTOOL_" & right("00" & str(i), 2) & "="
+        wszOut &= this.Tools(i).wszDescription & "|-|"
+        wszOut &= ProcessToCurdriveApp(this.Tools(i).wszCommand) & "|-|"
+        wszOut &= this.Tools(i).wszParameters & "|-|"
+        wszOut &= this.Tools(i).wszKey & "|-|"
+        wszOut &= ProcessToCurdriveApp(this.Tools(i).wszWorkingFolder) & "|-|"
+        wszOut &= this.Tools(i).IsCtrl & "|-|"
+        wszOut &= this.Tools(i).IsAlt & "|-|"
+        wszOut &= this.Tools(i).IsShift & "|-|"
+        wszOut &= this.Tools(i).IsPromptRun & "|-|"
+        wszOut &= this.Tools(i).IsMinimized & "|-|"
+        wszOut &= this.Tools(i).IsWaitFinish & "|-|"
+        wszOut &= this.Tools(i).IsDisplayMenu & "|-|"
+        wszOut &= wstr(this.Tools(i).Action) & vbcrlf
     next
 
-    pStream.WriteLine ""
-    pStream.WriteLine "[Builds]"
+    wszOut &= "" & vbcrlf
+    wszOut &= "[Builds]" & vbcrlf
     for i as long = lbound(this.Builds) to ubound(this.Builds)
-        pStream.Write "BUILD_" & right("00" & str(i), 2) & "="
-        pStream.Write this.Builds(i).id & "|-|"
-        pStream.Write this.Builds(i).wszDescription & "|-|"
-        pStream.Write this.Builds(i).wszOptions & "|-|"
-        pStream.Write this.Builds(i).IsDefault & "|-|"
-        pStream.Write this.Builds(i).Is32bit & "|-|"
-        pStream.Write this.Builds(i).Is64bit & "|-|"
-        pStream.Write this.Builds(i).ExcludeInPopup & "|-|"
-        pStream.Write this.Builds(i).IsCtrl & "|-|"
-        pStream.Write this.Builds(i).IsAlt & "|-|"
-        pStream.Write this.Builds(i).IsShift & "|-|"
-        pStream.WriteLine this.Builds(i).wszKey
+        wszOut &= "BUILD_" & right("00" & str(i), 2) & "="
+        wszOut &= this.Builds(i).id & "|-|"
+        wszOut &= this.Builds(i).wszDescription & "|-|"
+        wszOut &= this.Builds(i).wszOptions & "|-|"
+        wszOut &= this.Builds(i).IsDefault & "|-|"
+        wszOut &= this.Builds(i).Is32bit & "|-|"
+        wszOut &= this.Builds(i).Is64bit & "|-|"
+        wszOut &= this.Builds(i).ExcludeInPopup & "|-|"
+        wszOut &= this.Builds(i).IsCtrl & "|-|"
+        wszOut &= this.Builds(i).IsAlt & "|-|"
+        wszOut &= this.Builds(i).IsShift & "|-|"
+        wszOut &= this.Builds(i).wszKey & vbcrlf
     next
 
 
-    pStream.WriteLine ""
-    pStream.WriteLine "[MRU]"
+    wszOut &= "" & vbcrlf
+    wszOut &= "[MRU]" & vbcrlf
     for i as long = 0 To 9
         this.MRU(i) = ProcessToCurdriveApp(this.MRU(i))
-        pStream.WriteLine "MRU_" & right("00" & str(i), 2) & "=" & this.MRU(i)
+        wszOut &= "MRU_" & right("00" & str(i), 2) & "=" & this.MRU(i) & vbcrlf
     next
 
-    pStream.WriteLine ""
-    pStream.WriteLine "[MRUPROJECTS]"
+    wszOut &= "" & vbcrlf
+    wszOut &= "[MRUPROJECTS]" & vbcrlf
     for i as long = 0 To 9
         this.MRUProject(i) = ProcessToCurdriveApp(this.MRUProject(i))
-        pStream.WriteLine "MRUPROJECT_" & right("00" & str(i), 2) & "=" & this.MRUProject(i)
+        wszOut &= "MRUPROJECT_" & right("00" & str(i), 2) & "=" & this.MRUProject(i) & vbcrlf
     next
 
     ' The [Notes] block is no longer WRITTEN. Notes belong to the workspace and are stored
@@ -519,7 +584,7 @@ function clsConfig.SaveConfigFileBody() as long
     ' settings.ini's notes into the untitled workspace once, so the section ages out of
     ' settings.ini on the first save after that.
 
-    pStream.Close
+    if Config_WriteUtf16( this.ConfigFilename, wszOut ) = false then return true   ' error
 
     ' Save the last write time so that it can be checked in the message loop
     ' in order to detect external changes to it.
@@ -661,29 +726,29 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
     ' default-Tools seeding below, which is gone -- everything else here defaults through
     ' the field initialisers in clsConfig.bi.
     if PsFileExists(this.ConfigFilename) <> 0 then
-        dim pStream as CTextStream   '(utf16)
         ' The wrapper owns gApp.PreventConfigLoad, so this early return can no longer
         ' strand it -- which is exactly what it used to do.
-        if pStream.OpenUnicode(this.ConfigFilename) <> S_OK then return true   ' error
+        redim as DWSTRING lines(any)
+        if Config_ReadLines( this.ConfigFilename, lines() ) = false then return true   ' error
 
         gApp.NonProjectNotes = ""
 
-        do until pStream.EOS
-            wst = pStream.ReadLine
+        for nLine as long = lbound(lines) to ubound(lines)
+            wst = lines(nLine)
 
             ' One shared decode (modIniParse). The three loops that used to carry their
             ' own copy of this had already drifted -- see that file's header.
             dim as long nKind = Ini_ClassifyLine( wst, wKey, wData )
-            if nKind = INI_LINE_SKIP then continue do
-            if nKind = INI_LINE_NOTES_START then bReadingNote = true  : continue do
-            if nKind = INI_LINE_NOTES_END   then bReadingNote = false : continue do
+            if nKind = INI_LINE_SKIP then continue for
+            if nKind = INI_LINE_NOTES_START then bReadingNote = true  : continue for
+            if nKind = INI_LINE_NOTES_END   then bReadingNote = false : continue for
             ' BEFORE the key=value test, deliberately: a note containing an "=" is text,
             ' not configuration.
             if bReadingNote then
                 gApp.NonProjectNotes = gApp.NonProjectNotes + wst + vbcrlf
-                continue do
+                continue for
             end IF
-            if nKind <> INI_LINE_KEYVALUE then continue do
+            if nKind <> INI_LINE_KEYVALUE then continue for
 
             nData = val(wData)
 
@@ -705,7 +770,7 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
                 ' category match nothing and silently empties it.
                 this.Cat(i).idFileType     = PsTrim(PsStrParse(wData, 1, "|-|"))
                 this.Cat(i).wszDescription = PsStrParse(wData, 2, "|-|")
-                continue do
+                continue for
             end if
             end if
 
@@ -726,7 +791,7 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
                     this.Tools(i).IsWaitFinish     = PsVal(PsStrParse(wData, 11, "|-|"))
                     this.Tools(i).IsDisplayMenu    = PsVal(PsStrParse(wData, 12, "|-|"))
                     this.Tools(i).Action           = PsVal(PsStrParse(wData, 13, "|-|"))
-                    continue do
+                    continue for
                 end If
             end If
 
@@ -745,7 +810,7 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
                     this.Builds(i).IsAlt          = PsVal(PsStrParse(wData, 9, "|-|"))
                     this.Builds(i).IsShift        = PsVal(PsStrParse(wData, 10, "|-|"))
                     this.Builds(i).wszKey         = PsStrParse(wData, 11, "|-|")
-                    continue do
+                    continue for
                 end If
             end If
 
@@ -753,7 +818,7 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
             i = PsVal(PsRight(wKey,2))
                 if (i >= 0) And (i <= 9) then
                     this.MRU(i) = ProcessFromCurdriveApp(wData)
-                    continue do
+                    continue for
                 end If
             end If
 
@@ -761,7 +826,7 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
             i = PsVal(PsRight(wKey,2))
                 if (i >= 0) And (i <= 9) then
                     this.MRUProject(i) = ProcessFromCurdriveApp(wData)
-                    continue do
+                    continue for
                 end If
             end If
 
@@ -920,8 +985,7 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
                 end select
             end if
 
-        loop
-        pStream.Close
+        next
     end if
 
     ' Put the LIVE restore slot back. See the note on this function's header: a hot reload
@@ -1096,17 +1160,17 @@ function clsConfig.ProjectSaveToFile() as boolean
     ' sits in the exe's own directory, so it already resolves to the App variant's answer.
     dim as boolean bRelativize = gApp.IsProjectNamed()
 
-    dim pStream as CTextStream  ' (utf16)
-    if pStream.Create(gApp.ProjectFilename, true, true) <> S_OK then return false
+    ' One buffer, one write -- see SaveConfigFileBody for why.
+    dim as DWSTRING wszOut
 
-    pStream.WriteLine "' PROJECT FILE"
-    pStream.WriteLine "ProjectBuild="       & gApp.ProjectBuild
-    pStream.WriteLine "ProjectOther32="     & gApp.ProjectOther32
-    pStream.WriteLine "ProjectOther64="     & gApp.ProjectOther64
-    pStream.WriteLine "ProjectCommandLine=" & gApp.ProjectCommandLine
+    wszOut &= "' PROJECT FILE" & vbcrlf
+    wszOut &= "ProjectBuild="       & gApp.ProjectBuild & vbcrlf
+    wszOut &= "ProjectOther32="     & gApp.ProjectOther32 & vbcrlf
+    wszOut &= "ProjectOther64="     & gApp.ProjectOther64 & vbcrlf
+    wszOut &= "ProjectCommandLine=" & gApp.ProjectCommandLine & vbcrlf
 
     ' Save all of the loaded tabs first. Not GetCurSel -- see clsTopTabCtl.SaveActiveTabIndex.
-    pStream.WriteLine "ActiveTab=" & gTTabCtl.SaveActiveTabIndex()
+    wszOut &= "ActiveTab=" & gTTabCtl.SaveActiveTabIndex() & vbcrlf
 
     nCount = gTTabCtl.GetItemCount
 
@@ -1126,22 +1190,22 @@ function clsConfig.ProjectSaveToFile() as boolean
                 end if
             end if
             wszText = ProcessToCurdriveProject(wszText)
-            pStream.WriteLine "File=" & wszText
-            pStream.WriteLine "FileType=" & pDoc->ProjectFileType
-            pStream.WriteLine "FileFolder=" & pDoc->docData.wszFolder
-            pStream.WriteLine "TabIndex=" & "-1"     ' use -1 rather than true
-            pStream.WriteLine "Bookmarks=" & pDoc->docData.wszBookmarks
-            pStream.WriteLine "BreakPoints=" & pDoc->docData.wszBreakPoints
-            pStream.WriteLine "FoldPoints=" & pDoc->docData.wszFoldPoints
-            pStream.WriteLine "FirstLine=" & pDoc->docData.nFirstLine
-            pStream.WriteLine "Position=" & pDoc->docData.nPosition
-            pStream.WriteLine "FirstLine1=" & pDoc->docData.nFirstLine1
-            pStream.WriteLine "Position1=" & pDoc->docData.nPosition1
-            pStream.WriteLine "SplitMode=" & pDoc->docData.nSplitMode
-            pStream.WriteLine "SplitPositionX=" & pDoc->docData.nSplitPositionX
-            pStream.WriteLine "SplitPositionY=" & pDoc->docData.nSplitPositionY
-            pStream.WriteLine "FocusEdit=" & pDoc->docData.nFocusEdit
-            pStream.WriteLine "FileEnd=[-]"
+            wszOut &= "File=" & wszText & vbcrlf
+            wszOut &= "FileType=" & pDoc->ProjectFileType & vbcrlf
+            wszOut &= "FileFolder=" & pDoc->docData.wszFolder & vbcrlf
+            wszOut &= "TabIndex=" & "-1"     ' use -1 rather than true & vbcrlf
+            wszOut &= "Bookmarks=" & pDoc->docData.wszBookmarks & vbcrlf
+            wszOut &= "BreakPoints=" & pDoc->docData.wszBreakPoints & vbcrlf
+            wszOut &= "FoldPoints=" & pDoc->docData.wszFoldPoints & vbcrlf
+            wszOut &= "FirstLine=" & pDoc->docData.nFirstLine & vbcrlf
+            wszOut &= "Position=" & pDoc->docData.nPosition & vbcrlf
+            wszOut &= "FirstLine1=" & pDoc->docData.nFirstLine1 & vbcrlf
+            wszOut &= "Position1=" & pDoc->docData.nPosition1 & vbcrlf
+            wszOut &= "SplitMode=" & pDoc->docData.nSplitMode & vbcrlf
+            wszOut &= "SplitPositionX=" & pDoc->docData.nSplitPositionX & vbcrlf
+            wszOut &= "SplitPositionY=" & pDoc->docData.nSplitPositionY & vbcrlf
+            wszOut &= "FocusEdit=" & pDoc->docData.nFocusEdit & vbcrlf
+            wszOut &= "FileEnd=[-]" & vbcrlf
         end if
     next
 
@@ -1165,22 +1229,22 @@ function clsConfig.ProjectSaveToFile() as boolean
                     end if
                 end if
                 wszText = ProcessToCurdriveProject(wszText)
-                pStream.WriteLine "File=" & wszText
-                pStream.WriteLine "FileType=" & pDoc->ProjectFileType
-            pStream.WriteLine "FileFolder=" & pDoc->docData.wszFolder
-                pStream.WriteLine "TabIndex=" & "0"
-                pStream.WriteLine "Bookmarks=" & pDoc->docData.wszBookmarks
-                pStream.WriteLine "BreakPoints=" & pDoc->docData.wszBreakPoints
-                pStream.WriteLine "FoldPoints=" & pDoc->docData.wszFoldPoints
-                pStream.WriteLine "FirstLine=" & pDoc->docData.nFirstLine
-                pStream.WriteLine "Position=" & pDoc->docData.nPosition
-                pStream.WriteLine "FirstLine1=" & pDoc->docData.nFirstLine1
-                pStream.WriteLine "Position1=" & pDoc->docData.nPosition1
-                pStream.WriteLine "SplitMode=" & pDoc->docData.nSplitMode
-                pStream.WriteLine "SplitPositionX=" & pDoc->docData.nSplitPositionX
-                pStream.WriteLine "SplitPositionY=" & pDoc->docData.nSplitPositionY
-                pStream.WriteLine "FocusEdit=" & pDoc->docData.nFocusEdit
-                pStream.WriteLine "FileEnd=[-]"
+                wszOut &= "File=" & wszText & vbcrlf
+                wszOut &= "FileType=" & pDoc->ProjectFileType & vbcrlf
+            wszOut &= "FileFolder=" & pDoc->docData.wszFolder & vbcrlf
+                wszOut &= "TabIndex=" & "0" & vbcrlf
+                wszOut &= "Bookmarks=" & pDoc->docData.wszBookmarks & vbcrlf
+                wszOut &= "BreakPoints=" & pDoc->docData.wszBreakPoints & vbcrlf
+                wszOut &= "FoldPoints=" & pDoc->docData.wszFoldPoints & vbcrlf
+                wszOut &= "FirstLine=" & pDoc->docData.nFirstLine & vbcrlf
+                wszOut &= "Position=" & pDoc->docData.nPosition & vbcrlf
+                wszOut &= "FirstLine1=" & pDoc->docData.nFirstLine1 & vbcrlf
+                wszOut &= "Position1=" & pDoc->docData.nPosition1 & vbcrlf
+                wszOut &= "SplitMode=" & pDoc->docData.nSplitMode & vbcrlf
+                wszOut &= "SplitPositionX=" & pDoc->docData.nSplitPositionX & vbcrlf
+                wszOut &= "SplitPositionY=" & pDoc->docData.nSplitPositionY & vbcrlf
+                wszOut &= "FocusEdit=" & pDoc->docData.nFocusEdit & vbcrlf
+                wszOut &= "FileEnd=[-]" & vbcrlf
             end If
         end if
         pDoc = pDoc->pDocnext
@@ -1198,7 +1262,7 @@ function clsConfig.ProjectSaveToFile() as boolean
     ' to be pending. Emitted after the file block for readability only -- the reader is
     ' order-independent.
     for i = lbound(gProjectFolders) to ubound(gProjectFolders)
-        pStream.WriteLine "ProjectFolder=" & gProjectFolders(i).catIndex & _
+        wszOut &= "ProjectFolder=" & gProjectFolders(i).catIndex & _ & vbcrlf
                           "|-|" & gProjectFolders(i).wszPath
     next
 
@@ -1206,11 +1270,11 @@ function clsConfig.ProjectSaveToFile() as boolean
     dim wszNotes as DWSTRING = wstr("NOTES-START") + vbcrlf + _
                             gApp.ProjectNotes + vbcrlf + _
                             wstr("NOTES-END") + vbcrlf
-    pStream.WriteLine ""
-    pStream.WriteLine "[Notes]"
-    pStream.WriteLine wszNotes
+    wszOut &= "" & vbcrlf
+    wszOut &= "[Notes]" & vbcrlf
+    wszOut &= wszNotes & vbcrlf
 
-    pStream.Close
+    if Config_WriteUtf16( gApp.ProjectFilename, wszOut ) = false then return false
 
     ' The restore slot names the NAMED project to reopen, and only that. Writing the
     ' untitled workspace's own path here makes the slot permanently name settings\
@@ -1266,8 +1330,8 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     '
     ' Nothing below this line can fail in a way that leaves the previous workspace half
     ' dismantled, because nothing below it is reachable unless the file is readable.
-    dim pStream as CTextStream  ' (utf16)
-    if pStream.OpenUnicode( wszFile ) <> S_OK then return false
+    redim as DWSTRING lines(any)
+    if Config_ReadLines( wszFile, lines() ) = false then return false
 
     dim as HCURSOR hCurSave = GetCursor()
     SetCursor( LoadCursor(0, IDC_WAIT) )
@@ -1286,20 +1350,20 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
 
     gApp.IsProjectLoading = true
 
-    do until pStream.EOS
-        wst = pStream.ReadLine
+    for nLine as long = lbound(lines) to ubound(lines)
+        wst = lines(nLine)
 
         ' One shared decode (modIniParse), same as LoadConfigFileBody.
         dim as long nKind = Ini_ClassifyLine( wst, wKey, wData )
-        if nKind = INI_LINE_SKIP then continue do
-        if nKind = INI_LINE_NOTES_START then bReadingNote = true  : continue do
-        if nKind = INI_LINE_NOTES_END   then bReadingNote = false : continue do
+        if nKind = INI_LINE_SKIP then continue for
+        if nKind = INI_LINE_NOTES_START then bReadingNote = true  : continue for
+        if nKind = INI_LINE_NOTES_END   then bReadingNote = false : continue for
         ' BEFORE the key=value test: a note containing an "=" is text, not a setting.
         if bReadingNote then
             gApp.ProjectNotes = gApp.ProjectNotes + wst + vbcrlf
-            continue do
+            continue for
         end IF
-        if nKind <> INI_LINE_KEYVALUE then continue do
+        if nKind <> INI_LINE_KEYVALUE then continue for
 
         select case PsUCase(wData).Utf8
             case "TRUE":   nData = true
@@ -1386,8 +1450,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
 
         end select
 
-    loop
-    pStream.Close
+    next
 
 
     ' Load/Display all of the project files

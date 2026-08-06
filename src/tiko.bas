@@ -78,6 +78,14 @@ using AfxNova
 #include once "scintilla/PsScintilla.bi"
 
 namespace PsC
+    '' PsFile: the portable file layer. It could not be included here at all until
+    '' PsPlatform split FindFirstFileW and GetModuleFileNameW behind an
+    '' INVALID_HANDLE_VALUE test -- their C prototypes collided with AfxNova's.
+    ''
+    '' vbcompat.bi is hoisted at :25, which this depends on: PsFile uses Format and
+    '' now(), and a namespace mangles fbc runtime entry points to PSC::fb_StrFormat
+    '' at link time with a perfectly clean compile.
+    #include once "core/PsFile.inc"
     #include once "core/PsEncoding.inc"
     '' Phase 7d: the editor. PsSciView is a PsWidget in a PsSurface, driven
     '' through PsPlatform's Win32 host bridge -- see frmSciHost.bi.
