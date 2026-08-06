@@ -748,20 +748,25 @@ function AfxIFileOpenDialogW( _
 
     select case idButton
         case IDM_PROJECTOPEN
-            rgFileTypes(1).pszName = @L(177,"Project files")
+            ' .sptr, NOT @. LL is a DWSTRING array now, so the address of an element is a
+            ' DWSTRING ptr rather than the WSTRING ptr pszName wants -- fbc reports that as
+            ' "Suspicious pointer assignment" and carries on. sptr() hands back the buffer
+            ' itself, which is the same pointer @ used to yield when the entries were
+            ' fixed-width wstrings, and it stays valid as long as LL is not reloaded.
+            rgFileTypes(1).pszName = L(177,"Project files").sptr
             rgFileTypes(1).pszSpec = @wstr("*" & APPEXTENSION)
-            rgFileTypes(2).pszName = @L(76,"All files")
+            rgFileTypes(2).pszName = L(76,"All files").sptr
             rgFileTypes(2).pszSpec = @wstr("*.*")
             pofd->lpVtbl->SetFileTypes(pofd, 2, @rgFileTypes(1))
             ' Set the title of the dialog
             hr = pofd->lpVtbl->SetTitle(pofd, L(177,"Project files"))
         
         case IDM_INSERTFILE
-            rgFileTypes(1).pszName = @L(102,"Source files")
-            rgFileTypes(2).pszName = @L(74,"Code files")
-            rgFileTypes(3).pszName = @L(75,"Header files")
-            rgFileTypes(4).pszName = @L(170,"Resource files")
-            rgFileTypes(5).pszName = @L(76,"All files")
+            rgFileTypes(1).pszName = L(102,"Source files").sptr
+            rgFileTypes(2).pszName = L(74,"Code files").sptr
+            rgFileTypes(3).pszName = L(75,"Header files").sptr
+            rgFileTypes(4).pszName = L(170,"Resource files").sptr
+            rgFileTypes(5).pszName = L(76,"All files").sptr
             rgFileTypes(1).pszSpec = @wstr("*.bas;*.bi;*.inc;*.rc")
             rgFileTypes(2).pszSpec = @wstr("*.bas;*.inc")
             rgFileTypes(3).pszSpec = @wstr("*.bi")
@@ -772,9 +777,9 @@ function AfxIFileOpenDialogW( _
             hr = pofd->lpVtbl->SetTitle(pofd, L(77,"Insert File"))
 
         case IDC_FRMOPTIONSLOCAL_CMDLOCALIZATION  '1012
-            rgFileTypes(1).pszName = @L(98,"Localization files")
+            rgFileTypes(1).pszName = L(98,"Localization files").sptr
             rgFileTypes(1).pszSpec = @wstr("*.lang")
-            rgFileTypes(2).pszName = @L(76,"All files")
+            rgFileTypes(2).pszName = L(76,"All files").sptr
             rgFileTypes(2).pszSpec = @wstr("*.*")
             pofd->lpVtbl->SetFileTypes(pofd, 2, @rgFileTypes(1))
             ' Set the title of the dialog
@@ -791,7 +796,7 @@ function AfxIFileOpenDialogW( _
             end if
 
         case IDC_FRMUSERTOOLS_CMDBROWSEEXE
-            rgFileTypes(1).pszName = @L(76,"All files")
+            rgFileTypes(1).pszName = L(76,"All files").sptr
             rgFileTypes(1).pszSpec = @wstr("*.*")
             pofd->lpVtbl->SetFileTypes(pofd, 1, @rgFileTypes(1))
             ' Set the title of the dialog
@@ -856,11 +861,11 @@ function AfxIFileOpenDialogMultiple( _
 
     select case idButton
         case IDM_FILEOPEN
-            rgFileTypes(1).pszName = @L(102,"Source files")
-            rgFileTypes(2).pszName = @L(74,"Code files")
-            rgFileTypes(3).pszName = @L(75,"Header files")
-            rgFileTypes(4).pszName = @L(170,"Resource files")
-            rgFileTypes(5).pszName = @L(76,"All files")
+            rgFileTypes(1).pszName = L(102,"Source files").sptr
+            rgFileTypes(2).pszName = L(74,"Code files").sptr
+            rgFileTypes(3).pszName = L(75,"Header files").sptr
+            rgFileTypes(4).pszName = L(170,"Resource files").sptr
+            rgFileTypes(5).pszName = L(76,"All files").sptr
             rgFileTypes(1).pszSpec = @wstr("*.bas;*.bi;*.inc;*.rc")
             rgFileTypes(2).pszSpec = @wstr("*.bas;*.inc")
             rgFileTypes(3).pszSpec = @wstr("*.bi")
@@ -959,25 +964,25 @@ function AfxIFileSaveDialog( _
     ' Set the file types
     select case id
         case IDM_FILERENAME
-            rgFileTypes(1).pszName = @L(76,"All files")
+            rgFileTypes(1).pszName = L(76,"All files").sptr
             rgFileTypes(1).pszSpec = @wstr("*.*")
             psfd->lpVtbl->SetFileTypes(psfd, 1, @rgFileTypes(1))
             ' // Set the title of the dialog
             hr = psfd->lpVtbl->SetTitle(psfd, L(21,"Rename"))
 
         case IDC_FRMPROJECTOPTIONS_CMDSELECT, IDM_PROJECTSAVE, IDM_PROJECTSAVEAS
-            rgFileTypes(1).pszName = @L(177,"Project files")
+            rgFileTypes(1).pszName = L(177,"Project files").sptr
             rgFileTypes(1).pszSpec = @wstr("*" & APPEXTENSION)
-            rgFileTypes(2).pszName = @L(76,"All files")
+            rgFileTypes(2).pszName = L(76,"All files").sptr
             rgFileTypes(2).pszSpec = @wstr("*.*")
             psfd->lpVtbl->SetFileTypes(psfd, 2, @rgFileTypes(1))
             ' // Set the title of the dialog
             hr = psfd->lpVtbl->SetTitle(psfd, L(149,"Save Project As..."))
 
         case IDC_FRMOPTIONSLOCAL_CMDNEW
-            rgFileTypes(1).pszName = @L(98,"Localization files")
+            rgFileTypes(1).pszName = L(98,"Localization files").sptr
             rgFileTypes(1).pszSpec = @wstr("*.lang")
-            rgFileTypes(2).pszName = @L(76,"All files")
+            rgFileTypes(2).pszName = L(76,"All files").sptr
             rgFileTypes(2).pszSpec = @wstr("*.*")
             psfd->lpVtbl->SetFileTypes(psfd, 2, @rgFileTypes(1))
             psfd->lpVtbl->SetTitle(psfd, L(8,"Save As..."))
@@ -993,9 +998,9 @@ function AfxIFileSaveDialog( _
             end if
 
         case IDC_THEMES_SAVEAS
-            rgFileTypes(1).pszName = @L(318,"Themes")
+            rgFileTypes(1).pszName = L(318,"Themes").sptr
             rgFileTypes(1).pszSpec = @wstr("*.theme")
-            rgFileTypes(2).pszName = @L(76,"All files")
+            rgFileTypes(2).pszName = L(76,"All files").sptr
             rgFileTypes(2).pszSpec = @wstr("*.*")
             psfd->lpVtbl->SetFileTypes(psfd, 2, @rgFileTypes(1))
             psfd->lpVtbl->SetTitle(psfd, L(8,"Save As..."))
@@ -1011,11 +1016,11 @@ function AfxIFileSaveDialog( _
             end if
 
         case else
-            rgFileTypes(1).pszName = @L(102,"Source files")
-            rgFileTypes(2).pszName = @L(74,"Code files")
-            rgFileTypes(3).pszName = @L(75,"Header files")
-            rgFileTypes(4).pszName = @L(170,"Resource files")
-            rgFileTypes(5).pszName = @L(76,"All files")
+            rgFileTypes(1).pszName = L(102,"Source files").sptr
+            rgFileTypes(2).pszName = L(74,"Code files").sptr
+            rgFileTypes(3).pszName = L(75,"Header files").sptr
+            rgFileTypes(4).pszName = L(170,"Resource files").sptr
+            rgFileTypes(5).pszName = L(76,"All files").sptr
             rgFileTypes(1).pszSpec = @wstr("*.bas;*.bi;*.inc;*.rc")
             rgFileTypes(2).pszSpec = @wstr("*.bas;*.inc")
             rgFileTypes(3).pszSpec = @wstr("*.bi")
@@ -1111,9 +1116,19 @@ function LoadLocalizationFile( _
         if PsUCase(wKey) = "MAXIMUM" then
             ' resize the global dynamic array
             if IsEnglish then
-                redim gLangEnglish(nData) as wstring * MAX_PATH
+                ' NO `as <type>` CLAUSE, AND THAT IS LOAD-BEARING. These said
+                ' `as wstring * MAX_PATH`, restating the element type -- and once
+                ' the shared arrays became DWSTRING, restating the OLD type made
+                ' fbc declare a LOCAL array of that name instead of resizing the
+                ' shared one. The loader then filled the local, the global stayed
+                ' at ubound -1, and every localized string in the program rendered
+                ' blank. Clean build, no warning, no error.
+                '
+                ' A bare redim resizes the array that is in scope, which is the
+                ' one this is meant to fill.
+                redim gLangEnglish(nData)
             else   
-                redim LL(nData) as wstring * MAX_PATH
+                redim LL(nData)
             end if
         else
             ' this should be a key/value pair line in the format:

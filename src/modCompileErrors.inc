@@ -609,8 +609,8 @@ function ParseLogForError ( _
     if (NumWarnings > 0) orelse (NumErrors > 0) orelse (NumDirectives > 0) then
     
         wszIconCompileMsg = _
-                L(155, "Errors")   & " " & NumErrors   & "  " & _
-                L(154, "Warnings") & " " & NumWarnings & _
+                L(155, "Errors")   & " " & str(NumErrors)   & "  " & _
+                L(154, "Warnings") & " " & str(NumWarnings) & _
                 "  [" & _
                 PsLocalDateStr() & "  " & _
                 PsLocalTimeStr() & _
@@ -650,8 +650,8 @@ function ParseLogForError ( _
         ' we are not compiling modules
         dim as long nFileSize = PsFileSize(pCompile->OutputFilename)
         wszIconCompileMsg = _
-                L(155, "Errors") & " " & NumErrors & "  " & _
-                L(154, "Warnings") & " " & NumWarnings & _
+                L(155, "Errors") & " " & str(NumErrors) & "  " & _
+                L(154, "Warnings") & " " & str(NumWarnings) & _
                 "  [ " & PsPathName(pCompile->OutputFilename) & "  " & _
                 rtrim(AfxStrFormatKBSize(nFileSize)) & " (" & _
                 wstr(nFileSize) & " " & L(160,"bytes") & ") ]"
@@ -679,8 +679,8 @@ function ParseLogForError ( _
 
         pCompile->wszOutputMsg = _   ' this gets output to the Output window
             L(187,"Successful Compile")  & " (" & _
-            L(155,"Errors")              & " " & NumErrors & " " & _
-            L(154,"Warnings")            & " " & NumWarnings & ")" & vbcrlf & vbcrlf & _
+            L(155,"Errors")              & " " & str(NumErrors) & " " & _
+            L(154,"Warnings")            & " " & str(NumWarnings) & ")" & vbcrlf & vbcrlf & _
             L(156,"Primary Source:")     & " " & pCompile->MainFilename & vbCrLf & _
             L(157,"Target Compilation:") & " " & pCompile->OutputFilename & " (" & _
                                     rtrim(AfxStrFormatKBSize(nFileSize)) & ", " & _

@@ -36,7 +36,12 @@ function UnusedSymbols_StatusText( byref r as UNUSEDROW ) as DWSTRING
     select case r.nStatus
         case UnusedStatusWriteOnly
             ' the count is the evidence - show it rather than only a word
-            return L(406, "Never read") & " (" & r.nWrites & "w)"
+            ' str() ON THE NUMBER. LL is a DWSTRING array now, and DWSTRING's `&`
+            ' overloads make `dwstring & long` ambiguous -- fbc reports "Ambiguous call
+            ' to overloaded function" and names the operator, not the number. Same
+            ' family as the literal-on-left overload that broke "?" & k in six PsCore
+            ' suites; the fix is to leave the compiler no choice.
+            return L(406, "Never read") & " (" & str(r.nWrites) & "w)"
         case UnusedStatusUnknown
             return L(407, "Unknown")
     end select

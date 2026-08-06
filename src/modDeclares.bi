@@ -292,21 +292,11 @@ dim shared as long ghIconGood, ghIconBad
 dim shared as HCURSOR ghCursorSizeNS
 dim shared as HCURSOR ghCursorSizeWE
 
-' Create a dynamic array that will hold all localization words/phrases while
-' a language is being edited in frmOptionsLocal. Also create a global array
-' that holds the english phrases. When a localization is loaded, any missing
-' translations are replaced with the english version.
-redim shared gLangEnglish(any) as wstring * MAX_PATH
-redim shared gLocalPhrases(any) as wstring * MAX_PATH
-dim shared gLocalPhrasesEdit as boolean   ' a localization language is being edited. 
-
-' Create a dynamic array that will hold all localization words/phrases. This
-' array is resized and loaded using the LoadLocalizationFile function.
-redim shared LL(any) as wstring * MAX_PATH
-
-' Define a macro that allows the user to specify the LL array subscript and
-' also a descriptive label (that is ignored), and return the LL array value.
-#Define L(e,s) LL(e)
+' The localization tables and the L() macro MOVED to app\modLocalization.bi.
+' Localization is an app-layer concern -- every app file with user-facing text
+' needs L(), and this header is full of HWNDs. The arrays were also declared
+' `wstring * MAX_PATH`, so the table holding every translated string in the
+' program could not be declared without windows.bi.
 
 #Define SetFocusScintilla  PostMessage( HWND_FRMMAIN, MSG_USER_SETFOCUS, 0, 0 )
 #Define SciExec(h, m, w, l) SendMessage(h, m, w, CAST(LPARAM, l))

@@ -121,6 +121,10 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 '' Where a document's editor WINDOWS live. Must follow clsDocument.bi, which
 '' declares the type it takes.
 #include once "modDocViews.bi"
+'' BEFORE modDeclares.bi, which is exactly where these declarations used to sit,
+'' so the effective order is unchanged. Everything downstream that uses L() is
+'' unaffected -- and the app layer can now reach it without the shell.
+#include once "app/modLocalization.bi"
 #include once "modDeclares.bi"
 ' Declarations only, and deliberately naming no Ps* type: clsConfig.inc calls
 ' NavHistory_Clear from both of its session-load paths, well ahead of the frm* block. The
