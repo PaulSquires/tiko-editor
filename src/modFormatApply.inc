@@ -84,7 +84,7 @@ function Format_IsFormattableDocument( byval pDoc as clsDocument ptr ) as long
 
     if pDoc->IsNewFlag then return true
 
-    dim as string sExt = PsUCase( PsPathExt(pDoc->DiskFilename ) )
+    dim as string sExt = PsUCase( PsPathExt(pDoc->DiskFilename ) ).Utf8
     select case sExt
         case ".BAS", ".INC", ".BI"
             return true
@@ -698,7 +698,7 @@ sub Format_RunApplySelfTest()
     ' running under french.lang and seeing them green proves only that the ids exist.
     ' Reading this line is what distinguishes the two.
     ' The labels name the ids being READ. They did not, before.
-    dim as string sShow = "  resolved: 465=" & LL(465) & " | 466=" & LL(466) & " | 430=" & LL(430)
+    dim as string sShow = "  resolved: 465=" & LL(465).Utf8 & " | 466=" & LL(466).Utf8 & " | 430=" & LL(430).Utf8
     print sShow
 
     dim as string sReport = "Format apply self-test: " & str(nPass) & " passed, " & str(nFail) & " failed"

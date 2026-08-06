@@ -498,7 +498,7 @@ sub FileWatch_RunSelfTest()
     ' A blank id passes the check above under ANY language file, because LoadLocalizationFile
     ' fills an empty translation with the English text -- so print the two new ones rather than
     ' claiming a language-independent pass. Under english.lang these read Yes/No.
-    dim as string sShow = "NOTE  id 94=" & str(LL(94)) & " | id 95=" & str(LL(95))
+    dim as string sShow = "NOTE  id 94=" & LL(94).Utf8 & " | id 95=" & LL(95).Utf8
     ? sShow
 
     dim as string sRpt = "--- file watch: " & str(nPass) & " passed, " & str(nFail) & " failed ---"

@@ -33,8 +33,8 @@
 dim shared as long gExpTestPass, gExpTestFail
 
 private sub Exp_Check( byval wszName as DWSTRING, byval bCond as boolean, byval wszDetail as DWSTRING = "" )
-    dim as string sLine = "  " & iif(bCond, "PASS", "FAIL") & "  " & str(wszName)
-    if PsLen(wszDetail) then sLine = sLine & "   [" & str(wszDetail) & "]"
+    dim as string sLine = "  " & iif(bCond, "PASS", "FAIL") & "  " & wszName.Utf8
+    if PsLen(wszDetail) then sLine = sLine & "   [" & wszDetail.Utf8 & "]"
     print sLine
     if bCond then gExpTestPass += 1 else gExpTestFail += 1
 end sub

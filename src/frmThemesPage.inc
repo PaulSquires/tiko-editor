@@ -160,7 +160,7 @@ end function
 ' ========================================================================================
 function frmThemes_MakeForkName( byval wszShortFilename as DWSTRING ) as DWSTRING
 
-    dim as string sBase = wszShortFilename
+    dim as string sBase = wszShortFilename.Utf8
     if lcase(right(sBase, 6)) = ".theme" then sBase = left(sBase, len(sBase) - 6)
 
     ' STRIP THE "default_" PREFIX. Without this the fork of default_dark.theme is
@@ -195,7 +195,7 @@ end function
 ' list builder below calls this too, so the assertion checks the real rule rather than a copy
 ' of it that could drift.
 function frmThemes_PageForKey( byval sKey as string ) as long
-    dim as string sNamespace = PsStrParse( sKey, 1, "." )
+    dim as string sNamespace = PsStrParse( sKey, 1, "." ).Utf8
     ' general.* is description and version text, not colour: on neither page.
     if sNamespace = "general" then return THEMEPAGE_NONE
     if sNamespace = "editor" then return THEMEPAGE_SYNTAX
@@ -1191,7 +1191,7 @@ private sub frmThemes_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
 
         dim as RECT rcNm = ( p->rc.left + AfxScaleX(6), p->rc.top, rcSw.left - AfxScaleX(60), p->rc.bottom )
         ' The "role." prefix is on every row and carries no information; drop it.
-        dim as string sRole = Theme_RoleName(nb)
+        dim as string sRole = Theme_RoleName(nb).Utf8
         if left(sRole,5) = "role." then sRole = mid(sRole, 6)
         p->b->PaintText( sRole, @rcNm, DT_LEFT or DT_END_ELLIPSIS )
 

@@ -307,7 +307,7 @@ function FindReplace_NextSelection( _
 
     dim as hwnd hEdit = pDoc->hWndActiveScintilla
 
-    dim txtFind as string = gFind.txtFind
+    dim txtFind as string = gFind.txtFind.Utf8
     lenFind = PsLen(txtFind)
 
     ' Are we searching a selection or the whole document
@@ -386,7 +386,7 @@ function FindReplace_HighlightSearches() as long
     SciExec( hEdit, SCI_INDICSETFORE, 8, theme.editor.occurrence ) 
     SciExec( hEdit, SCI_INDICSETALPHA, 8, 90 )   
     
-    dim txtFind as string = gFind.txtFind
+    dim txtFind as string = gFind.txtFind.Utf8
 
     ' Remove all existing selection indicators
     pDoc->RemoveSelectionAttributes()

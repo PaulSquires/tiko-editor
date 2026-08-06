@@ -516,7 +516,7 @@ function frmAutoComplete_Commit( byval pDoc as clsDocument ptr ) as boolean
     dim as long nLenMatchWord = PsLen( pDoc->wszMatchWord )
 
     if PsUCase(wszText) <> PsUCase(pDoc->wszMatchWord) then
-        dim as string sText = wszText
+        dim as string sText = wszText.Utf8
         SciExec( hEdit, SCI_SETSEL, nStartPos - nLenMatchWord, nPos )
         SciExec( hEdit, SCI_REPLACESEL, 0, cast(LPARAM, strptr(sText)) )
         nPos = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0 )

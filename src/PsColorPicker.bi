@@ -771,7 +771,7 @@ end function
 
 
 function PsColorPicker_ParseHex( byval wszText as DWSTRING, byref clr as COLORREF ) as boolean
-    dim as string s = ucase( trim( str( wszText ) ) )
+    dim as string s = ucase( trim( wszText.Utf8 ) )
     if left( s, 1 ) = "#" then s = mid( s, 2 )
     if len( s ) <> 6 then return false
 

@@ -805,7 +805,7 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
             ' outside any proc body, the variable not scanned yet, the TYPE suppressed by
             ' the merge masks), so a silent "return false" is untraceable from outside.
             if environ("TIKO_MEMBER_TRACE") = "1" then
-                dim as string sT = "MEMBER: file=" & ScanMgr_GetRootName( pDoc ) & _
+                dim as string sT = "MEMBER: file=" & ScanMgr_GetRootName( pDoc ).Utf8 & _
                     " line=" & str(pDoc->GetCurrentLineNumber + 1) & " trigger='" & sDot & "'"
                 if refExpr.IsValid then
                     sT &= "  expr=OK " & *gSymDb.SymName(refExpr)

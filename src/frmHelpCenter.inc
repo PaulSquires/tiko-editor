@@ -282,7 +282,7 @@ sub frmHelpCenter_ApplySearch( byval wszQuery as DWSTRING )
     ' -- the selection, or the word under the caret -- so this reports what actually
     ' arrived. TIKO_HELPCENTER_TRACE=1.
     if environ("TIKO_HELPCENTER_TRACE") = "1" then
-        dim as string sQ = "  helpcenter: search=[" & wszQuery & "]"
+        dim as string sQ = "  helpcenter: search=[" & wszQuery.Utf8 & "]"
         print sQ
     end if
 

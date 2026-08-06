@@ -346,3 +346,45 @@ The remaining `error 58` parameters are the boundary, not the vocabulary:
 * `Theme_SanitizeText` and `FormatCodetip` take `string` and INDEX IT BY BYTE. Widening
   them changes what an index means, so they are a judgement for the swap, not a signature
   swap.
+
+---
+
+# `error 24` was the same class wearing a different number. 549 -> 501.
+
+`dim as string s = <DWSTRING>` is reported as **`Invalid data types`**, not as the
+`Invalid assignment/conversion` the identical assignment gets one line later. Same class,
+different error code — so the `.Utf8` pass above had missed 48 of its own sites.
+
+    90  error 24 before
+    42  after
+
+Two shapes, both mechanical:
+
+* `dim as string x = <DWSTRING expr>` — the initialiser form of the assignment.
+* `str(<DWSTRING>)` — which was never number formatting; it was the conversion that
+  extending `wstring` gave DWSTRING for free.
+
+## THREE SITES WERE LEFT ALONE, AND THEY ARE THE INTERESTING PART
+
+**1. `PsText` IS NOT THE SAME FUNCTION ON BOTH SIDES OF THE SWAP.**
+
+    PsCompat.bi   function PsText(...) as string : return str(w)     '' ANSI codepage
+    PsCore        function PsText(...) as string : return s.Utf8     '' UTF-8
+
+So the obvious mechanical pass — `str(x)` -> `PsText(x)`, which compiles today, changes
+nothing today, and is exactly what `PsText`'s own header invites — **silently becomes an
+encoding change the moment the swap lands.** For diagnostics that is fine. For the sites
+below it is not, and nothing would have flagged it: the tree builds, the suites pass, and
+the defect arrives with a commit that did not touch the line.
+
+**2. An fbc `string` used as a PATH by `open` / `kill`.** `frmFindInProject`'s self-test
+scratch files (five sites) and `modThemeApply`'s trace log. fbc's `open` on a `string` goes
+through the ANSI codepage, so `.Utf8` there is the `CompleteIncludeFilename` bug again. They
+want `PsFile`, at the swap.
+
+**3. `CompileCmd_Tokenize` — and this one CORRUPTS rather than mangles.** It takes a
+`DWSTRING` command line, converts it to `string`, walks it ONE BYTE AT A TIME, and
+reassembles each token back into a `DWSTRING`. Today that is ANSI in and ANSI out, which
+round-trips. Put `.Utf8` on the way in and the way out is still an ANSI assign: a non-ASCII
+compiler path would be split at byte boundaries and reinterpreted. It has to become a wide
+tokeniser, not a converted one.

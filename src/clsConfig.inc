@@ -1307,9 +1307,9 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
             if nSepPos > 0 then
                 ProjectFolders_Add( val( PsLeft(wData, nSepPos - 1) ), mid(wData, nSepPos + 3) )
             end if
-            case "Bookmarks":           sBookmarks              = str(wData)
-            case "BreakPoints":         sBreakPoints            = str(wData)
-            case "FoldPoints":          sFoldPoints             = str(wData)
+            case "Bookmarks":           sBookmarks              = wData.Utf8
+            case "BreakPoints":         sBreakPoints            = wData.Utf8
+            case "FoldPoints":          sFoldPoints             = wData.Utf8
             case "TabIndex":            bLoadInTab              = nData
             case "FirstLine":           nFirstLine              = nData
             case "Position":            nPosition               = nData

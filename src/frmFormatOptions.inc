@@ -767,7 +767,7 @@ function frmFormatOptions_Show( byval hWndParent as HWND ) as LRESULT
                 gFmtRows(i).hCtrl = PsComboBox_Create( HWND_FRMFORMATOPTIONS, nID )
                 PsComboBox_SetFont( gFmtRows(i).hCtrl, ghFont(GUIFONT_11) )
                 dim as long nStart = 1
-                dim as string sItems = gFmtRows(i).wszItems
+                dim as string sItems = gFmtRows(i).wszItems.Utf8
                 do
                     dim as long nTab = instr( nStart, sItems, chr(9) )
                     dim as string sItem
@@ -967,7 +967,7 @@ sub frmFormatOptions_RunSelfTest( byval bLayoutHalf as boolean )
         ' running under french.lang and seeing them green proves only that the ids exist.
         ' The labels name the ids being READ. They did not, before -- which is
         ' how a fully stale id list survived in plain sight.
-        dim as string sShow = "  resolved: 497=" & LL(497) & " | 479=" & LL(479) & " | 476=" & LL(476)
+        dim as string sShow = "  resolved: 497=" & LL(497).Utf8 & " | 479=" & LL(479).Utf8 & " | 476=" & LL(476).Utf8
         print sShow
 
         ' ---- the row table ----------------------------------------------------------------
@@ -1234,11 +1234,11 @@ sub frmFormatOptions_RunSelfTest( byval bLayoutHalf as boolean )
         gFmtPage = FMTPAGE_INDENT
         gFmtWork.Reindent = 0
         frmFormatOptions_RefreshPreview()
-        dim as string sOff = PsTextBox_GetText( ghFmtPreview )
+        dim as string sOff = PsTextBox_GetText( ghFmtPreview ).Utf8
 
         gFmtWork.Reindent = 1
         frmFormatOptions_RefreshPreview()
-        dim as string sOn = PsTextBox_GetText( ghFmtPreview )
+        dim as string sOn = PsTextBox_GetText( ghFmtPreview ).Utf8
 
         CHECK( len(sOff) > 0 andalso len(sOn) > 0, "the preview pane holds text" )
         CHECK( sOff <> sOn, "toggling a rule changes what the preview shows" )

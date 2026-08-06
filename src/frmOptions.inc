@@ -742,7 +742,7 @@ sub frmOptions_RunFitSelfTest()
         dim as boolean bVisible = (IsWindowVisible( hPageWnd ) <> 0)
         dim as string sVis = iif( bVisible, "PASS  ", "FAIL  " )
         if bVisible = false then nBlank += 1
-        ? sVis & "page " & str(nPage) & " " & str( frmOptions_PageTitle( nPage ) ) & " container is visible"
+        ? sVis & "page " & str(nPage) & " " & frmOptions_PageTitle( nPage ).Utf8 & " container is visible"
 
         dim as RECT rcPage
         GetClientRect( hPageWnd, @rcPage )
@@ -771,7 +771,7 @@ sub frmOptions_RunFitSelfTest()
         end if
 
         dim as string sLine = sVerdict & " page " & str(nPage) & " " & _
-                              str( frmOptions_PageTitle( nPage ) ) & _
+                              frmOptions_PageTitle( nPage ).Utf8 & _
                               "   needs " & str(nNeed) & " of " & str(nViewH)
         ? sLine
     next

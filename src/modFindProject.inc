@@ -548,7 +548,7 @@ function FindProject_Search( byval wszPhrase as DWSTRING, _
     ' "dim txtFind as string = gFind.txtFind"). Kept identical ON PURPOSE: it means a
     ' non-ASCII search term behaves the same way in both, rather than the two quietly
     ' disagreeing about what matches. Improving it is a change to BOTH or neither.
-    dim as string sPhrase = wszPhrase
+    dim as string sPhrase = wszPhrase.Utf8
 
     dim pDoc as clsDocument ptr = gApp.pDocList
     do until pDoc = 0
@@ -745,7 +745,7 @@ function FindProject_ReplaceOne( byval nMatch as long, byval wszReplace as DWSTR
     ' ordinary SCN_MODIFIED path means every other match in the file is remapped by the same
     ' code that handles the user's own typing. The replaced match is killed by that remap (a
     ' delete overlapping it), which is exactly right.
-    dim as string sRep = wszReplace
+    dim as string sRep = wszReplace.Utf8
     dim as HWND h = DocView(gFip.groups(g).pDoc, 0)
     SciExec( h, SCI_BEGINUNDOACTION, 0, 0 )
     SciExec( h, SCI_SETTARGETSTART, gFip.matches(nMatch).nStart, 0 )
@@ -760,7 +760,7 @@ end function
 
 function FindProject_ReplaceAll( byval wszReplace as DWSTRING ) as long
     if gFip.bValid = false then return 0
-    dim as string sRep = wszReplace
+    dim as string sRep = wszReplace.Utf8
     dim as long nDone = 0
 
     ' The hook is suppressed and the model updated by hand. Driving N replacements through

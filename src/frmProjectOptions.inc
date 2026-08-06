@@ -617,10 +617,10 @@ sub frmProjectOptions_RunSelfTest( byval bLayoutHalf as boolean )
         ' untranslated one, and running the suite under french.lang and seeing it green proves
         ' only that the ids exist. Reading these four lines is what distinguishes the two.
         scope
-            dim as string sL = "  resolved: " & str(27) & "=" & LL(27) & " | " & _
-                               str(31) & "=" & LL(31) & " | " & str(35) & "=" & LL(35)
+            dim as string sL = "  resolved: " & str(27) & "=" & LL(27).Utf8 & " | " & _
+                               str(31) & "=" & LL(31).Utf8 & " | " & str(35) & "=" & LL(35).Utf8
             print sL
-            dim as string sL2 = "  resolved: " & str(80) & "=" & LL(79)
+            dim as string sL2 = "  resolved: " & str(80) & "=" & LL(79).Utf8
             print sL2
         end scope
 

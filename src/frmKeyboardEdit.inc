@@ -893,7 +893,7 @@ sub frmKeyboardEdit_RunSelfTest()
     ' This is the assertion that ties the capture field to something that actually fires: a
     ' string that cannot be re-parsed is a shortcut that saves, displays and never works.
     KEASSERT( frmKeyboardEdit_BuildKeyString( asc("D"), true, false, true ) = "Ctrl+Shift+D", _
-              "Ctrl+Shift+D composed as """ & str(frmKeyboardEdit_BuildKeyString( asc("D"), true, false, true )) & """" )
+              "Ctrl+Shift+D composed as """ & frmKeyboardEdit_BuildKeyString( asc("D"), true, false, true ).Utf8 & """" )
     KEASSERT( frmKeyboardEdit_BuildKeyString( VK_F4, false, true, false ) = "Alt+F4", "Alt+F4 mis-composed" )
     KEASSERT( frmKeyboardEdit_BuildKeyString( VK_PRIOR, true, false, false ) = "Ctrl+PgUp", "Ctrl+PgUp mis-composed" )
     KEASSERT( len(frmKeyboardEdit_BuildKeyString( &h2C, true, false, false )) = 0, _
@@ -912,7 +912,7 @@ sub frmKeyboardEdit_RunSelfTest()
             dim as DWSTRING wsz = frmKeyboardEdit_BuildKeyString( vks(i), true, false, false )
             dim as long n = PsStrParseCount( wsz, "+" )
             dim as DWSTRING wszFinal = PsStrParse( wsz, n, "+" )
-            dim as string sW = wsz
+            dim as string sW = wsz.Utf8
             KEASSERT( frmKeyboard_AccelKeyToValue( wszFinal ) = vks(i), _
                       "composed """ & sW & """ does not parse back to the same key" )
         next

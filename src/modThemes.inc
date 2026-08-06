@@ -602,7 +602,7 @@ end function
 ''
 private function Theme_SubsysForNamespace( byval k as string ) as ulong
 
-    dim as string ns = PsStrParse( k, 1, "." )
+    dim as string ns = PsStrParse( k, 1, "." ).Utf8
 
     select case ns
         ' frmAutoComplete derives its row colours from the editor styles (keyword2, keyword3,
@@ -1495,7 +1495,7 @@ private function Theme_ColorFromText( byval wszText as DWSTRING, _
     clr = 0
     nAlpha = -1
 
-    dim as string s = PsTrim( wszText )
+    dim as string s = PsTrim( wszText ).Utf8
     if len(s) = 0 then return false
     if PsStrParseCount( s, "," ) < 3 then return false
 
@@ -1780,7 +1780,7 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
         if gThemeKeys(i).ofsText >= 0 then continue for
 
         ' Blank line between namespaces, purely so the file stays readable by hand.
-        dim as string sNamespace = PsStrParse( sKey, 1, "." )
+        dim as string sNamespace = PsStrParse( sKey, 1, "." ).Utf8
         if (len(sLastNamespace) > 0) andalso (sNamespace <> sLastNamespace) then print #f, ""
         sLastNamespace = sNamespace
 

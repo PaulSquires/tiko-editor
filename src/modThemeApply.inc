@@ -1447,7 +1447,7 @@ sub Theme_RunSelfTest()
                 dim as DWSTRING wszName = WFD.cFileName
                 if (wszName <> ".") andalso (wszName <> "..") then
                     nThemes += 1
-                    dim as string sT = " [" & wszName & "]"
+                    dim as string sT = " [" & wszName.Utf8 & "]"
 
                     erase gTheme
                     dim as boolean bErr = Theme_ParseFile( wszFolder & wszName )

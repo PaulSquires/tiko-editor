@@ -2941,23 +2941,23 @@ sub frmDebug_RunSelfTest()
     dim as DWSTRING wszSrc = "    rec.inner.ix = n * 2"
     frmDebug_Check( "a bare name resolves to itself", _
         frmDebug_ExprFromLine( "    total = a + b", 7 ) = "total", _
-        str(frmDebug_ExprFromLine( "    total = a + b", 7 )) )
+        frmDebug_ExprFromLine( "    total = a + b", 7 ).Utf8 )
     frmDebug_Check( "hovering the LAST member returns the whole dotted path", _
         frmDebug_ExprFromLine( wszSrc, 15 ) = "rec.inner.ix", _
-        str(frmDebug_ExprFromLine( wszSrc, 15 )) )
+        frmDebug_ExprFromLine( wszSrc, 15 ).Utf8 )
     ' This is the asymmetry that matters: left walks through dots, right does not. Hovering
     ' the HEAD must not drag in members the cursor is not on.
     frmDebug_Check( "hovering the HEAD does not drag in the members after it", _
         frmDebug_ExprFromLine( wszSrc, 5 ) = "rec", _
-        str(frmDebug_ExprFromLine( wszSrc, 5 )) )
+        frmDebug_ExprFromLine( wszSrc, 5 ).Utf8 )
     frmDebug_Check( "hovering a MIDDLE member stops at that member", _
         frmDebug_ExprFromLine( wszSrc, 9 ) = "rec.inner", _
-        str(frmDebug_ExprFromLine( wszSrc, 9 )) )
+        frmDebug_ExprFromLine( wszSrc, 9 ).Utf8 )
     frmDebug_Check( "whitespace yields nothing", _
         len(frmDebug_ExprFromLine( wszSrc, 1 )) = 0 )
     frmDebug_Check( "an operator yields nothing", _
         len(frmDebug_ExprFromLine( wszSrc, 18 )) = 0, _
-        str(frmDebug_ExprFromLine( wszSrc, 18 )) )
+        frmDebug_ExprFromLine( wszSrc, 18 ).Utf8 )
     frmDebug_Check( "a column past the end of the line yields nothing", _
         len(frmDebug_ExprFromLine( wszSrc, 9999 )) = 0 )
     frmDebug_Check( "column zero yields nothing", _
@@ -2966,12 +2966,12 @@ sub frmDebug_RunSelfTest()
         len(frmDebug_ExprFromLine( "", 1 )) = 0 )
     frmDebug_Check( "underscores and digits are part of a name", _
         frmDebug_ExprFromLine( "  my_var2 = 1", 3 ) = "my_var2", _
-        str(frmDebug_ExprFromLine( "  my_var2 = 1", 3 )) )
+        frmDebug_ExprFromLine( "  my_var2 = 1", 3 ).Utf8 )
     ' A member access written against a call result has no head we can evaluate; the leading
     ' dot must be stripped rather than passed to the engine as ".field".
     frmDebug_Check( "a leading dot is stripped", _
         frmDebug_ExprFromLine( "  ).field = 1", 5 ) = "field", _
-        str(frmDebug_ExprFromLine( "  ).field = 1", 5 )) )
+        frmDebug_ExprFromLine( "  ).field = 1", 5 ).Utf8 )
 
     ' ---- localization --------------------------------------------------------------------
     ' Every id this window uses must resolve. An id with no entry renders as an EMPTY string,
@@ -3002,7 +3002,7 @@ sub frmDebug_RunSelfTest()
     ' file. Printing some of them is what actually distinguishes them. 247 is here because it
     ' was RE-WORDED rather than added ("Step Into" -> "Step"): a stale translation left behind
     ' in one of the six files still resolves, and only reading it back catches that.
-    sLine = "  NOTE resolved: 247=" & str(LL(243)) & " | 618=" & str(LL(450)) & _
+    sLine = "  NOTE resolved: 247=" & LL(243).Utf8 & " | 618=" & LL(450).Utf8 & _
             " | 619=" & str(LL(451)) & " | 620=" & str(LL(452)) & _
             " | 627=" & str(LL(459)) & " | 629=" & str(LL(461))
     print sLine

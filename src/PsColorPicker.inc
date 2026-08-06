@@ -600,7 +600,7 @@ private sub PsColorPicker_CommitField( byval pClr as PSCOLORPICKER ptr )
     dim as ubyte    nANew  = pClr->nAlphaCurrent
     dim as boolean  bValid = false
 
-    dim as string s = PsTrim( pClr->wszEdit )
+    dim as string s = PsTrim( pClr->wszEdit ).Utf8
     if len( s ) > 0 then
         dim as long v = clng( valint( s ) )
         if v < 0 then v = 0

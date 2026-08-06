@@ -290,7 +290,7 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
         ' is written -- the wrong-and-plausible mistake. BGR(1,2,3) must format as #010203 and not
         ' as #030201, and a symmetric test value would not tell the two apart.
         dim as DWSTRING wszH = PsColorPicker_FormatHex( BGR(1, 2, 3) )
-        dim as string sH = wszH
+        dim as string sH = wszH.Utf8
         CLRTest_Check( "FormatHex writes R,G,B order and not the COLORREF's byte order", _
                        (sH = "#010203"), sH )
 
@@ -1293,7 +1293,7 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
 
         ' The buffer is seeded from the value, not left empty -- otherwise the field reads as
         ' blank the instant you click it.
-        dim as string sSeed = pClr->wszEdit
+        dim as string sSeed = pClr->wszEdit.Utf8
         CLRTest_Check( "entering a field seeds its buffer from the current value", (sSeed = "0"), sSeed )
 
         CLRTest_ResetNotify()
@@ -1330,7 +1330,7 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
         ' re-seeded it), so this also covers the ordering defect the first run found: clearing
         ' the seed before testing whether the character was acceptable meant a stray letter
         ' destroyed the value it was rejected by.
-        dim as string sBefore = pClr->wszEdit
+        dim as string sBefore = pClr->wszEdit.Utf8
         CLRTest_TypeChar( h, asc("x") )
         CLRTest_Check( "a rejected letter neither reaches nor wipes a freshly seeded buffer", _
                        (pClr->wszEdit = sBefore), "'" & sBefore & "' -> '" & pClr->wszEdit & "'" )

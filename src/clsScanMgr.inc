@@ -211,7 +211,7 @@ end sub
 private function ScanMgr_IsScannable( byval pDoc as clsDocument ptr ) as boolean
     dim as DWSTRING wszFile = pDoc->DiskFilename
     if PsInStr( wszFile, "\" ) = 0 then return true
-    dim as string sExt = PsLCase( PsPathExt(wszFile ) )
+    dim as string sExt = PsLCase( PsPathExt(wszFile ) ).Utf8
     select case sExt
         case ".bas", ".bi", ".inc"
             return true

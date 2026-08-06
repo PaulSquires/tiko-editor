@@ -2032,7 +2032,7 @@ sub PsButton_RunSelfTest( byval hWndParent as HWND )
                 wszA = pTip->TooltipCallback( hPs, hT, -1 )
             end if
             BTNTest_Check( "tooltip: authored text wins on the PsTooltip backend too", _
-                (wszA = "authored"), "resolved = " & str(wszA) )
+                (wszA = "authored"), "resolved = " & wszA.Utf8 )
 
             ' A whole-control tip has no items, so the index must not disturb it. This is the
             ' call site that sends TTM_POP on the system backend.
