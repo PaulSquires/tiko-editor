@@ -1026,11 +1026,15 @@ function PsListTree_SetCurSel( byval hListControl as HWND, byval row as integer 
     ' page, move topRow so the caret lands on-page (above -> caret at top; below ->
     ' caret at bottom). The view is then re-derived, never asked to scroll on its own.
     ' A row hidden under a collapsed header stays where it is.
+    ' AN UNSIZED CONTROL DOES NOT SCROLL. VisPerPage is 0 until the host has given the
+    ' surface a height; ItemsPerPage clamps that to 1, and a page of 1 makes ensure-visible
+    ' scroll the caret to the TOP -- so a host that fills the list and selects row N before
+    ' its layout pass runs loses rows 0..N-1 permanently. Nothing is on screen yet, so there
+    ' is nothing to bring into view: leave topRow alone and let the first real layout decide.
     dim as integer visRow = pList->ModelToVisible( row )
-    if (hList <> 0) andalso (visRow >= 0) then
+    if (hList <> 0) andalso (visRow >= 0) andalso (PsListTree_VisPerPage( pList ) >= 1) then
         dim as integer visTop  = pList->nTopVis
         dim as integer perPage = PsListTree_ItemsPerPage( pList )
-        if perPage < 1 then perPage = 1
         if visRow < visTop then
             pList->topRow = row
         elseif visRow >= visTop + perPage then
@@ -2446,6 +2450,9 @@ end function
 sub PsListTree_EnsureVisible( byval pList as PSLISTTREE ptr, byval modelRow as integer )
     dim as integer vis = pList->ModelToVisible( modelRow )
     if vis < 0 then return
+    ' Same rule as SetCurSel: an unsized surface has no page to scroll within, and the
+    ' clamped page of 1 would drag the caret to the top of the list.
+    if PsListTree_VisPerPage( pList ) < 1 then return
     dim as integer top = pList->nTopVis
     dim as integer perPage = PsListTree_ItemsPerPage( pList )
     if vis < top then
