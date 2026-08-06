@@ -112,7 +112,17 @@ type clsConfig
         ' the window was created and unscaled again in frmMain_OnClose, which meant every
         ' save that was not the final one wrote a scaled number into a field documented as
         ' unscaled, and the height grew by the DPI factor on every launch.
-        ShowOutputPanelHeight     as long = OUTPUT_TABS_HEIGHT * 5 ' user set height
+        '' NO INITIALISER, AND THAT IS THE SPLIT. This was
+        '' `= OUTPUT_TABS_HEIGHT * 5`, and OUTPUT_TABS_HEIGHT is a shell layout
+        '' constant in modDeclares.bi -- so this header could not be compiled
+        '' without the shell, which is the whole property src/app exists to have.
+        ''
+        '' The FIELD is portable: it is a stored user preference in unscaled
+        '' pixels. The DEFAULT is not -- it is a statement about how tall the
+        '' output tabs are, which only the UI knows. So the field stays here and
+        '' the default moves to clsConfig's constructor, in clsConfig.inc, which
+        '' is shell-side and already sets every path default the same way.
+        ShowOutputPanelHeight     as long          ' user set height; default in the ctor
         ShowOutputPanelMinimized  as long = true          ' if window is at minimum height (toggled "minimized")
         ' Unused Symbols report. The toggles are a bitmask of (1 shl UNUSED_KIND); the
         ' default 63 is all six kinds on, which is what the report is for.
@@ -218,9 +228,13 @@ type clsConfig
         DebugRight                as long = 0
         DebugBottom               as long = 0
         DebugMaximized            as long = false
-        DebugSplitMain            as long = FRMDEBUG_DEFPCTMAIN
-        DebugSplitLeft            as long = FRMDEBUG_DEFPCTLEFT
-        DebugSplitRight           as long = FRMDEBUG_DEFPCTRIGHT
+        '' Defaults in the constructor, for the same reason as
+        '' ShowOutputPanelHeight above: FRMDEBUG_DEFPCT* live in frmDebug.bi and
+        '' describe where a splitter sits, which is shell knowledge. The stored
+        '' percentages are not.
+        DebugSplitMain            as long
+        DebugSplitLeft            as long
+        DebugSplitRight           as long
         FBWINCompiler32           as DWSTRING
         FBWINCompiler64           as DWSTRING
         CompilerBuild             as DWSTRING     ' Build GUID

@@ -44,6 +44,24 @@ constructor clsConfig
     FBKeywordsDefaultFilename = exe_path & "settings\keywords\freebasic_keywords_default.txt"
     FBCodetipsFilename        = exe_path & "settings\keywords\codetips.ini"
     UntitledProjectFilename   = exe_path & "settings\default" & APPEXTENSION
+
+    ' ---- UI LAYOUT DEFAULTS, WHICH LIVE HERE AND NOT IN THE HEADER ------------
+    ' These four were field initialisers in app/clsConfig.bi and named
+    ' OUTPUT_TABS_HEIGHT and FRMDEBUG_DEFPCT*, which are shell constants -- so the
+    ' header could not compile without the shell, and src/app exists precisely to
+    ' be compilable without it.
+    '
+    ' The split is between the FIELD and its DEFAULT. A stored panel height and a
+    ' stored splitter percentage are portable user preferences. How tall the
+    ' output tabs are, and where a debugger splitter should start, are statements
+    ' about the UI. Only the second kind moved.
+    '
+    ' The constructor was already the place every path default is set, so this
+    ' follows the line that was already drawn rather than inventing one.
+    ShowOutputPanelHeight     = OUTPUT_TABS_HEIGHT * 5
+    DebugSplitMain            = FRMDEBUG_DEFPCTMAIN
+    DebugSplitLeft            = FRMDEBUG_DEFPCTLEFT
+    DebugSplitRight           = FRMDEBUG_DEFPCTRIGHT
 end constructor
 
 ''

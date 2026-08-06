@@ -19,36 +19,61 @@ rem will not -- however green the ratchet is.
 rem
 rem Exit code is the verdict. Failures are listed with their error counts so
 rem progress is visible while the layer is still partway there.
+rem
+rem ---- THE HEADER ORDER COMES FROM tiko.bas, NOT FROM THE DIRECTORY ---------
+rem
+rem This used to include app\*.bi ALPHABETICALLY, and that is wrong: the layer's
+rem headers are not order-independent and say so themselves. modFormat.bi carries
+rem the line "This file is included AHEAD of clsConfig.bi because clsConfig
+rem embeds a FORMAT_RULES" -- and alphabetically clsConfig comes first. Same for
+rem clsSymbolDb.bi, which needs FBCP_KIND_* from fbcParser.bi.
+rem
+rem So the gate reported failures that were its OWN ordering, mixed with real
+rem ones and indistinguishable from them in a count. It now reads the order out
+rem of tiko.bas -- the one place that already has to get it right -- so the list
+rem cannot drift from the build.
+rem
+rem modThemeKeys.bi needs no special case any more: tiko.bas does not include it,
+rem so it is simply absent. It is an X-MACRO TABLE of THTEXTKEY(...) rows whose
+rem macro the includer defines -- not a translation unit, and not compilable
+rem alone by design.
 rem ---------------------------------------------------------------------------
 set FBC=..\toolchains\FreeBASIC-1.10.1-winlibs-gcc-9.3.0\fbc64.exe
 set /a OK=0
 set /a BAD=0
 pushd "%~dp0src"
 
+rem The prelude, built once: every app\*.bi that tiko.bas includes, in tiko.bas's
+rem own order. PowerShell only because batch cannot split a string on a quote.
+powershell -NoProfile -Command ^
+  "Select-String -Path tiko.bas -Pattern 'include once \"app/(.+\.bi)\"' |" ^
+  "ForEach-Object { '#include once \"app/' + $_.Matches[0].Groups[1].Value + '\"' } |" ^
+  "Set-Content -Encoding ascii _prelude.txt"
+
+
 for %%F in (app\*.inc app\*.bas) do (
     > _standalone.bas echo #include once "core/PsStr.inc"
     >>_standalone.bas echo #include once "core/PsPath.inc"
     >>_standalone.bas echo #include once "core/PsFile.inc"
     >>_standalone.bas echo #include once "core/PsEncoding.inc"
-    rem The layer's OWN declarations first. A file may legitimately depend on
-    rem its neighbours' types -- what it may not depend on is anything outside
-    rem app\ and PsCore. Leaving these out tested "needs nothing", which is a
-    rem different and wrong question.
-    rem modThemeKeys.bi is skipped: it is an X-MACRO TABLE, a list of
-    rem THTEXTKEY(...) rows that its includer defines the macro for. It is not a
-    rem translation unit and cannot compile alone by design -- excluding it is
-    rem correct, not a concession.
-    for %%B in (app\*.bi) do if /i not "%%~nxB"=="modThemeKeys.bi" >>_standalone.bas echo #include once "%%B"
+    rem The layer's OWN declarations first, IN tiko.bas's ORDER -- see the note
+    rem at the top of this file about why alphabetical was wrong.
+    type _prelude.txt >>_standalone.bas
     >>_standalone.bas echo #include once "%%F"
     %FBC% -i ..\..\PsPlatform\src -maxerr 999 -c _standalone.bas > _standalone.log 2>&1
     if !errorlevel! equ 0 (
         set /a OK+=1
     ) else (
         set /a BAD+=1
-        for /f %%C in ('find /c "error" ^< _standalone.log') do echo   FAIL  %%~nxF  (%%C errors^)
+        rem find.exe BY FULL PATH. This .bat is routinely run from Git Bash, which
+        rem puts its own PATH in front -- so a bare `find` resolves to UNIX find,
+        rem which ignores /c, treats "error" as a path and walks the whole of C:\.
+        rem The gate did not fail when that happened; it HUNG, on the first file
+        rem with an error, which reads exactly like a slow compile.
+        for /f %%C in ('%SystemRoot%\system32\find.exe /c "error" ^< _standalone.log') do echo   FAIL  %%~nxF  (%%C errors^)
     )
 )
-del /q _standalone.bas _standalone.log _standalone.o 2>nul
+del /q _standalone.bas _standalone.log _standalone.o _prelude.txt 2>nul
 popd
 
 echo.
