@@ -100,7 +100,18 @@ end enum
 type clsDocument
     private:
     ' 2 Scintilla direct pointers to accommodate split editing
-    m_hWndActiveScintilla as HWND
+    '' any ptr, NOT HWND. This is the last Win32 TYPE in clsDocument, and
+    '' removing it is what lets the type stop being shell-side -- src/app cannot
+    '' close around a document model that names Win32.
+    ''
+    '' It is still a window handle on Windows. What changes is that clsDocument
+    '' no longer SAYS so: the shell owns editor views and hands back an opaque
+    '' handle, exactly as pSci(1) below has always been an opaque any ptr that
+    '' 398 call sites pass around without caring where it came from.
+    ''
+    '' FreeBASIC converts any ptr to and from any pointer type without a cast or
+    '' a warning, so the ~90 sites reading this property are untouched.
+    m_hWndActiveScintilla as any ptr
     m_UserModified        as boolean               ' user manually changes state outside of Scintilla changes
         
     public:
@@ -114,7 +125,10 @@ type clsDocument
     ' 2 Scintilla controls to accommodate split editing
     ' hWindow(0) is our MAIN control (main bottom)
     ' hWindow(1) is our split control (top or left)
-    hWindow(1)            as HWND   ' Scintilla split edit windows 
+    '' any ptr for the same reason as m_hWndActiveScintilla above. Read through
+    '' DocView(pDoc, i) -- see modDocViews.bi -- which casts once, at the
+    '' boundary where the shell already knows it is on Windows.
+    hWindow(1)            as any ptr   ' Scintilla split edit windows 
     pSci(1)               as any ptr      
     
     ' Code document related
@@ -150,12 +164,11 @@ type clsDocument
     SplitX                as long               ' X coordinate of left/right splitter
     EditorSplitMode       as SPLIT_MODE = SplitNone
     bSizing               as boolean            ' set/cleared by the splitter's BEGIN/END; read by modMsgPump
-    rcDocSplitArea        as rect               ' entire rc client area for one or both edit windows + scrollbars
     
     static NextFileNum as long
     
-    declare property hWndActiveScintilla() as hwnd
-    declare property hWndActiveScintilla(byval hWindow as hwnd)
+    declare property hWndActiveScintilla() as any ptr
+    declare property hWndActiveScintilla(byval hWindow as any ptr)
     
     declare property UserModified() as boolean
     declare property UserModified( byval nModified as boolean )
@@ -168,7 +181,6 @@ type clsDocument
     declare function LoadDiskFile( byref wszFile as wstring, byval bIsTemplate as boolean = false ) as long
     declare function DestroyScintillaWindows() as long
     declare function CreateScintillaWindows() as long
-    declare function CreateCodeWindow( byval hWndParent as HWnd, byval IsNewFile as boolean, byval IsTemplate as boolean = False, byref wszFileName as wstring = "") as HWnd
     declare function FindReplace( byval strFindText as string, byval strReplaceText as string ) as long
     declare function InsertFile() as boolean
     declare function SaveFile(byval bSaveAs as boolean = false ) as boolean

@@ -71,12 +71,12 @@ function clsDocument.GetActiveScintillaPtr() as any ptr
 end function
 
 
-property clsDocument.hWndActiveScintilla() as HWND
+property clsDocument.hWndActiveScintilla() as any ptr
     if m_hWndActiveScintilla = 0 then m_hWndActiveScintilla = this.hWindow(0)
     property = m_hWndActiveScintilla
 end property
 
-property clsDocument.hWndActiveScintilla(byval hWindow as HWND)
+property clsDocument.hWndActiveScintilla(byval hWindow as any ptr)
     m_hWndActiveScintilla = hWindow
 end property
 
@@ -293,47 +293,6 @@ function clsDocument.LoadDiskFile( _
     end if
 
     function = 0
-end function
-    
-
-''
-''
-function clsDocument.CreateCodeWindow( _
-            byval hWndParent as HWND, _
-            byval IsNewFile  as boolean, _     
-            byval IsTemplate as boolean = false, _
-            byref wszFile    as wstring = "" _
-            ) as HWND   
-
-    this.CreateScintillaWindows()
-    this.LoadDiskFile( wszFile )
-    
-    ' Set the IsNewFlag after the above load file code. This is because the load
-    ' code could load a file as template but is then still considered a "new file"/
-    this.IsNewFlag = IsNewFile
-    if IsNewFile then
-        this.nextFileNum = this.nextFileNum + 1
-        this.DiskFilename = "Untitled" & this.nextFileNum
-    end if
-    this.ProjectFileType = FILETYPE_UNDEFINED
-    
-    ' All newly opened files have dirty modified buffer status set to false
-    ' unless this is a template being opened whereby the user will need to save
-    ' it under a new name.
-    if IsTemplate then
-        this.UserModified = IsTemplate
-    end if
-        
-    ' Set the text and apply properties to the edit window
-    this.AssignTextBuffer()
-
-    ' Update the most recently used file list (only for non-IsNewFlag files)
-    ' Only add file to MRU list if it is not part of a named Project.
-    if gApp.IsProjectNamed() = false then
-        UpdateMRUList(wszFile)
-    end if
-
-    function = this.hWindow(0)
 end function
 
 ''

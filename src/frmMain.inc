@@ -1026,7 +1026,6 @@ function frmMain_PositionWindows() as LRESULT
         ' Position the Scintilla child edit windows
         dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
 
-        pDoc->rcDocSplitArea = rcDoc
 
 
         ' Editor split bar. Two PsSplitter instances exist (one per orientation, because
