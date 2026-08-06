@@ -230,7 +230,11 @@ private sub frmKeyboardEdit_RefreshViews()
             if i = nCount then
                 wszKey = wszPart
             else
-                select case PsUCase(wszPart)
+                ' .Utf8 on the selector -- `select case <DWSTRING>` binds today only because
+                ' AfxNova's DWSTRING extends WSTRING. Every `case` label below is ASCII, so
+                ' the ANSI-vs-UTF-8 difference between the two conversions cannot change a
+                ' match. See clsConfig.inc for the long form.
+                select case PsUCase(wszPart).Utf8
                     case "CTRL":  bCtrl  = true
                     case "ALT":   bAlt   = true
                     case "SHIFT": bShift = true

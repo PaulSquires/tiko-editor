@@ -355,7 +355,11 @@ function GetFontCharSetID(byref wzCharsetName as DWSTRING ) as long
 
     if PsLen(wzCharsetName) = 0 then return SC_CHARSET_DEFAULT
     
-    select case wzCharsetName
+    ' .Utf8 on the selector -- `select case <DWSTRING>` binds today only because
+    ' AfxNova's DWSTRING extends WSTRING. Every `case` label below is ASCII, so
+    ' the ANSI-vs-UTF-8 difference between the two conversions cannot change a
+    ' match. See clsConfig.inc for the long form.
+    select case wzCharsetName.Utf8
         case "Default"       : function = SC_CHARSET_DEFAULT
         case "Ansi"          : function = SC_CHARSET_ANSI
         case "Arabic"        : function = SC_CHARSET_ARABIC

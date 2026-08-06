@@ -188,7 +188,11 @@ function frmTopTabsInfo_PositionWindows() as LRESULT
     gTTabCtl.wszFileType = L(171,"Normal") 
     dim as clsDocument ptr pDoc = gTTabCtl.GetActiveDocumentPtr()
     if pDoc then 
-        select case pDoc->ProjectFileType
+        ' .Utf8 on the selector -- `select case <DWSTRING>` binds today only because
+        ' AfxNova's DWSTRING extends WSTRING. Every `case` label below is ASCII, so
+        ' the ANSI-vs-UTF-8 difference between the two conversions cannot change a
+        ' match. See clsConfig.inc for the long form.
+        select case pDoc->ProjectFileType.Utf8
             case FILETYPE_HEADER:    gTTabCtl.wszFileType = L(140,"Header") 
             case FILETYPE_NORMAL:    gTTabCtl.wszFileType = L(171,"Normal") 
             case FILETYPE_MODULE:    gTTabCtl.wszFileType = L(172,"Module")

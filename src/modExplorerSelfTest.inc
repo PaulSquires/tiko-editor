@@ -210,7 +210,11 @@ sub frmExplorer_RunSelfTest()
                 case EXPKIND_FOLDER
                     dim as long fi = PsListTree_GetItemData( HWND_FRMEXPLORER, i )
                     if (fi >= lbound(gProjectFolders)) andalso (fi <= ubound(gProjectFolders)) then
-                        select case PsUCase( gProjectFolders(fi).wszPath )
+                        ' .Utf8 on the selector -- `select case <DWSTRING>` binds today only because
+                        ' AfxNova's DWSTRING extends WSTRING. Every `case` label below is ASCII, so
+                        ' the ANSI-vs-UTF-8 difference between the two conversions cannot change a
+                        ' match. See clsConfig.inc for the long form.
+                        select case PsUCase( gProjectFolders(fi).wszPath ).Utf8
                             case "ALPHA":      nRowAlpha = i
                             case "ZETA":       nRowZeta  = i
                             case "ALPHA/DEEP": nRowDeep  = i

@@ -152,7 +152,11 @@ private sub AddProjectFileTypesToPopup( _
     if fExplorerTreeview andalso (nSelCount > 1) then bAllowCheckMark = false
 
     if bAllowCheckMark then
-        select case pDoc->ProjectFileType
+        ' .Utf8 on the selector -- `select case <DWSTRING>` binds today only because
+        ' AfxNova's DWSTRING extends WSTRING. Every `case` label below is ASCII, so
+        ' the ANSI-vs-UTF-8 difference between the two conversions cannot change a
+        ' match. See clsConfig.inc for the long form.
+        select case pDoc->ProjectFileType.Utf8
             case FILETYPE_MAIN:     nFileType = iif( fExplorerTreeview, IDM_SETFILEMAIN_EXPLORERTREEVIEW, IDM_SETFILEMAIN )
             case FILETYPE_RESOURCE: nFileType = iif( fExplorerTreeview, IDM_SETFILERESOURCE_EXPLORERTREEVIEW, IDM_SETFILERESOURCE )
             case FILETYPE_HEADER:   nFileType = iif( fExplorerTreeview, IDM_SETFILEHEADER_EXPLORERTREEVIEW, IDM_SETFILEHEADER )

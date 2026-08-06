@@ -297,7 +297,11 @@ end function
 ' Convert a virtual key string (Ctrl, Alt, Shift) to virtual key value
 ' ========================================================================================
 function frmKeyboard_VirtKeyToValue( byval wszString as DWSTRING ) as long
-    select case PsUCase(wszString)
+    ' .Utf8 on the selector -- `select case <DWSTRING>` binds today only because
+    ' AfxNova's DWSTRING extends WSTRING. Every `case` label below is ASCII, so
+    ' the ANSI-vs-UTF-8 difference between the two conversions cannot change a
+    ' match. See clsConfig.inc for the long form.
+    select case PsUCase(wszString).Utf8
         case "CTRL":  return FCONTROL
         case "ALT":   return FALT
         case "SHIFT": return FSHIFT
@@ -329,7 +333,11 @@ end function
 ' shortcut string, and is kept only so a hand-edited keybindings.ini still loads.
 ' ========================================================================================
 function frmKeyboard_AccelKeyToValue( byval wszString as DWSTRING ) as long
-    select case PsUCase(wszString)
+    ' .Utf8 on the selector -- `select case <DWSTRING>` binds today only because
+    ' AfxNova's DWSTRING extends WSTRING. Every `case` label below is ASCII, so
+    ' the ANSI-vs-UTF-8 difference between the two conversions cannot change a
+    ' match. See clsConfig.inc for the long form.
+    select case PsUCase(wszString).Utf8
         case "BACKSPACE": return VK_BACK
         case "TAB": return VK_TAB
         case "ENTER": return VK_RETURN

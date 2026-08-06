@@ -769,7 +769,16 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
             ' below, match nothing, and are dropped -- the [MRUSESSIONS] section ages out
             ' on the first save.
 
-            select case wKey
+            ' .Utf8 ON THE SELECTOR. `select case <DWSTRING>` works today only because
+            ' AfxNova's DWSTRING extends WSTRING and converts implicitly; PsCore's does
+            ' not, and this one line is what 120 of clsConfig's errors under the swap
+            ' reduce to -- one per `case`, all from the same selector.
+            '
+            ' NO ENCODING CHANGE HERE, and that is checked rather than assumed: the
+            ' implicit conversion goes through the ANSI codepage and .Utf8 does not, but
+            ' every `case` label below is an ASCII key name, so a value that differs
+            ' between the two encodings matches nothing either way.
+            select case wKey.Utf8
             case "SettingsVersion":          this.SettingsVersion       = wData
             case "AskExit":                  this.AskExit               = nData
             case "RestoreSession":           this.RestoreSession        = nData
@@ -856,7 +865,7 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
             ' that the config file has been externally modified (eg by a User Tool)
             ' and then will be reloaded on the fly.
             if isHotReload = false then
-                select case wKey
+                select case wKey.Utf8
                     case "StartupLeft":              this.StartupLeft           = nData
                     case "StartupTop":               this.StartupTop            = nData
                     case "StartupRight":             this.StartupRight          = nData
@@ -1292,7 +1301,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
         end IF
         if nKind <> INI_LINE_KEYVALUE then continue do
 
-        select case ucase(wData)
+        select case PsUCase(wData).Utf8
             case "TRUE":   nData = true
             case "FALSE":  nData = false
             case Else:     nData = val(wData)
@@ -1300,7 +1309,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
 
         wData = ProcessFromCurdriveProject(wData)
 
-        select case wKey
+        select case wKey.Utf8
             case "ProjectBuild":        gApp.ProjectBuild       = wData
             case "ProjectOther32":      gApp.ProjectOther32     = wData
             case "ProjectOther64":      gApp.ProjectOther64     = wData
