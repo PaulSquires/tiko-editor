@@ -109,8 +109,8 @@ sub frmDebug_ClearExecutionMarkers()
     dim pDoc as clsDocument ptr = gApp.pDocList
     do until pDoc = 0
         for i as long = 0 to 1
-            if pDoc->hWindow(i) then
-                SciExec( pDoc->hWindow(i), SCI_MARKERDELETEALL, MARKER_DEBUGGER_CURLINE, 0 )
+            if DocView(pDoc, i) then
+                SciExec( DocView(pDoc, i), SCI_MARKERDELETEALL, MARKER_DEBUGGER_CURLINE, 0 )
             end if
         next
         pDoc = pDoc->pDocNext
@@ -2568,7 +2568,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
     debugparser_clear_breakpoints()
     dim pDoc as clsDocument ptr = gApp.pDocList
     do until pDoc = 0
-        if pDoc->hWindow(0) then
+        if DocView(pDoc, 0) then
             dim as wstring * 520 wszFile = pDoc->DiskFilename
             dim as long si = debugparser_source_index( @wszFile )
             if bTrace then

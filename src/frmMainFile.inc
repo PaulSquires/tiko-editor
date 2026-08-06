@@ -70,7 +70,7 @@ function OnCommand_FileOpen( _
     SetCursor( LoadCursor(0, IDC_WAIT) )
     dim pDoc as clsDocument ptr
     pDoc = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc then SciExec( pDoc->hWindow(0), SCI_SETCURSOR, SC_CURSORWAIT, 0 )
+    if pDoc then SciExec( DocView(pDoc, 0), SCI_SETCURSOR, SC_CURSORWAIT, 0 )
 
     ' Prevent the constant updating of the app caption bar with filename
     gApp.IsFileLoading = true  
@@ -191,8 +191,8 @@ function OnCommand_FileSave( _
         ' document that has none -- which is most of a project's files, and exactly what the
         ' Find in Project excerpts edit -- produced iStart = -1 and saved nothing at all.
         if (iStart = -1) andalso (pDoc <> 0) then
-            if IsWindow( pDoc->hWindow(0) ) then
-                dim as boolean bDirty = cbool(SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0)
+            if IsWindow( DocView(pDoc, 0) ) then
+                dim as boolean bDirty = cbool(SciExec( DocView(pDoc, 0), SCI_GETMODIFY, 0, 0 ) <> 0)
                 if bDirty orelse pDoc->UserModified orelse bSaveAs then
                     if pDoc->SaveFile(bSaveAs) then return true   ' cancelled
                     pDoc->ApplyProperties
@@ -209,7 +209,7 @@ function OnCommand_FileSave( _
         pDoc = gTTabCtl.GetpDoc(i)
         if pDoc = null then continue for
 
-        If (cbool(SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0)) orelse _
+        If (cbool(SciExec( DocView(pDoc, 0), SCI_GETMODIFY, 0, 0 ) <> 0)) orelse _
            (pDoc->UserModified = true) orelse (bSaveAs = true) then   
             ' Do the actual saving to disk
             dim wszFilename as DWSTRING = pDoc->DiskFilename
@@ -317,10 +317,10 @@ function OnCommand_FileDuplicate( _
     loop    
     
     ' Encode the full Scintilla buffer through the single shared writer (same path as SaveFile).
-    dim as long sciCodePage = SciExec(pDoc->hWindow(0), SCI_GETCODEPAGE, 0, 0)   ' 0 or SC_CP_UTF8
+    dim as long sciCodePage = SciExec(DocView(pDoc, 0), SCI_GETCODEPAGE, 0, 0)   ' 0 or SC_CP_UTF8
 
     dim as boolean bLossy
-    dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(pDoc->hWindow(0)), _
+    dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(DocView(pDoc, 0)), _
                                             (sciCodePage = SC_CP_UTF8), pDoc->FileEncoding, bLossy )
 
     if bLossy then
@@ -469,8 +469,8 @@ function OnCommand_FileClose( _
             ' be "continue for", which skipped the RemoveElement below and so made such a
             ' tab impossible to close at all -- reachable now that a project's untabbed
             ' documents can be realized on demand.
-            if IsWindow(pDoc->hWindow(0)) then
-                if cbool(SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0)) orelse _
+            if IsWindow(DocView(pDoc, 0)) then
+                if cbool(SciExec( DocView(pDoc, 0), SCI_GETMODIFY, 0, 0)) orelse _
                     (pDoc->UserModified = true) then
 
                     gTTabCtl.SetFocusTab(i)
@@ -488,7 +488,7 @@ function OnCommand_FileClose( _
                 ' to be SetRectEmpty on the document's gripper rect, but the bar is a real
                 ' window (owned by frmMain) now.
                 for ii as long = lbound(pDoc->hWindow) to ubound(pDoc->hWindow)
-                    ShowWindow( pDoc->hWindow(ii), SW_HIDE)
+                    ShowWindow( DocView(pDoc, ii), SW_HIDE)
                 next
                 ShowWindow( HWND_FRMMAIN_SPLITV, SW_HIDE )
                 ShowWindow( HWND_FRMMAIN_SPLITH, SW_HIDE )

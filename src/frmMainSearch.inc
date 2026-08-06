@@ -458,7 +458,7 @@ function OnCommand_SearchBookmarks( _
             end if            
             dim pDoc as clsDocument ptr = gApp.pDocList
             do until pDoc = 0
-                hEdit = pDoc->hWindow(0)
+                hEdit = DocView(pDoc, 0)
                 SciExec( hEdit, SCI_MARKERDELETEALL, MARKER_BOOKMARK, 0 )
                 pDoc = pDoc->pDocNext
             loop

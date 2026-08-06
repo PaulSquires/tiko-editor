@@ -284,8 +284,8 @@ function UnusedSymbols_Build( byval nTier as long, rows() as UNUSEDROW, _
     ' line. Reported, not blocked on.
     dim as clsDocument ptr pDoc = gApp.pDocList
     do until pDoc = 0
-        if pDoc->hWindow(0) then
-            if SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0 then
+        if DocView(pDoc, 0) then
+            if SciExec( DocView(pDoc, 0), SCI_GETMODIFY, 0, 0 ) <> 0 then
                 if PsLen( wszDirtyFiles ) > 0 then wszDirtyFiles = wszDirtyFiles & ", "
                 wszDirtyFiles = wszDirtyFiles & PsPathName(pDoc->DiskFilename )
             end if

@@ -74,7 +74,7 @@ sub frmTopTabs_PaintCallback( byval p as PSTABBAR_PAINTINFO ptr )
     if gTTabCtl.IsValidTab( p->itemID ) then
         dim as clsDocument ptr pDoc = gTTabCtl.GetpDoc(p->itemID)
         if pDoc then
-            if cbool(SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 )) then isDirty = true
+            if cbool(SciExec( DocView(pDoc, 0), SCI_GETMODIFY, 0, 0 )) then isDirty = true
             if pDoc->UserModified then isDirty = true
         end if
         ' The Find in Project tab has no document of its own, but its results ARE editable --

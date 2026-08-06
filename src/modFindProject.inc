@@ -427,12 +427,12 @@ private sub FindProject_SearchOneDocument( byval pDoc as clsDocument ptr, _
     dim as HWND hScratch = FindProject_Scratch()
     if hScratch = 0 then exit sub
 
-    dim as boolean bRealized = cbool( IsWindow( pDoc->hWindow(0) ) )
+    dim as boolean bRealized = cbool( IsWindow( DocView(pDoc, 0) ) )
 
     if bRealized then
         ' Point the scratch at the document itself: no copy, and the buffer includes unsaved
         ' edits, which is the whole reason results come from documents rather than from disk.
-        dim as any ptr pSciDoc = cast( any ptr, SciExec( pDoc->hWindow(0), SCI_GETDOCPOINTER, 0, 0 ) )
+        dim as any ptr pSciDoc = cast( any ptr, SciExec( DocView(pDoc, 0), SCI_GETDOCPOINTER, 0, 0 ) )
         if pSciDoc = 0 then exit sub
         SciExec( hScratch, SCI_SETDOCPOINTER, 0, cast(LPARAM, pSciDoc) )
     else
@@ -501,10 +501,10 @@ private sub FindProject_SearchOneDocument( byval pDoc as clsDocument ptr, _
     ' so per-slot bookkeeping would be both redundant and easy to get wrong. This single
     ' reference is what makes a rebind -- and a document the user closes -- safe.
     dim as any ptr pSciDocNew = 0
-    if IsWindow( pDoc->hWindow(0) ) then
-        pSciDocNew = cast( any ptr, SciExec( pDoc->hWindow(0), SCI_GETDOCPOINTER, 0, 0 ) )
+    if IsWindow( DocView(pDoc, 0) ) then
+        pSciDocNew = cast( any ptr, SciExec( DocView(pDoc, 0), SCI_GETDOCPOINTER, 0, 0 ) )
         if pSciDocNew then
-            SciExec( pDoc->hWindow(0), SCI_ADDREFDOCUMENT, 0, cast(LPARAM, pSciDocNew) )
+            SciExec( DocView(pDoc, 0), SCI_ADDREFDOCUMENT, 0, cast(LPARAM, pSciDocNew) )
         end if
     end if
 
@@ -585,9 +585,9 @@ sub FindProject_ApplyIndicators( byval nGroup as long )
     if (nGroup < 0) orelse (nGroup >= gFip.nGroupCount) then exit sub
     dim as clsDocument ptr pDoc = gFip.groups(nGroup).pDoc
     if pDoc = 0 then exit sub
-    if IsWindow( pDoc->hWindow(0) ) = 0 then exit sub
+    if IsWindow( DocView(pDoc, 0) ) = 0 then exit sub
 
-    dim as HWND h = pDoc->hWindow(0)
+    dim as HWND h = DocView(pDoc, 0)
     SciExec( h, SCI_SETINDICATORCURRENT, FINDPROJ_INDICATOR, 0 )
     SciExec( h, SCI_INDICATORCLEARRANGE, 0, SciExec( h, SCI_GETLENGTH, 0, 0 ) )
 
@@ -603,9 +603,9 @@ sub FindProject_ClearIndicators( byval nGroup as long )
     if (nGroup < 0) orelse (nGroup >= gFip.nGroupCount) then exit sub
     dim as clsDocument ptr pDoc = gFip.groups(nGroup).pDoc
     if pDoc = 0 then exit sub
-    if IsWindow( pDoc->hWindow(0) ) = 0 then exit sub
+    if IsWindow( DocView(pDoc, 0) ) = 0 then exit sub
 
-    dim as HWND h = pDoc->hWindow(0)
+    dim as HWND h = DocView(pDoc, 0)
     SciExec( h, SCI_SETINDICATORCURRENT, FINDPROJ_INDICATOR, 0 )
     SciExec( h, SCI_INDICATORCLEARRANGE, 0, SciExec( h, SCI_GETLENGTH, 0, 0 ) )
 end sub
@@ -623,8 +623,8 @@ function FindProject_IsGroupDirty( byval nGroup as long ) as boolean
     if (nGroup < 0) orelse (nGroup >= gFip.nGroupCount) then return false
     dim as clsDocument ptr pDoc = gFip.groups(nGroup).pDoc
     if pDoc = 0 then return false
-    if IsWindow( pDoc->hWindow(0) ) = 0 then return false
-    if SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0 then return true
+    if IsWindow( DocView(pDoc, 0) ) = 0 then return false
+    if SciExec( DocView(pDoc, 0), SCI_GETMODIFY, 0, 0 ) <> 0 then return true
     return pDoc->UserModified
 end function
 
@@ -666,8 +666,8 @@ function FindProject_SaveAllDirty() as boolean
     for g as long = 0 to gFip.nGroupCount - 1
         dim as clsDocument ptr pDoc = gFip.groups(g).pDoc
         if pDoc = 0 then continue for
-        if IsWindow( pDoc->hWindow(0) ) = 0 then continue for
-        if SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 ) = 0 then
+        if IsWindow( DocView(pDoc, 0) ) = 0 then continue for
+        if SciExec( DocView(pDoc, 0), SCI_GETMODIFY, 0, 0 ) = 0 then
             if pDoc->UserModified = false then continue for
         end if
         ' SaveFile returns TRUE when the user cancelled (its own inverted convention).
@@ -739,14 +739,14 @@ function FindProject_ReplaceOne( byval nMatch as long, byval wszReplace as DWSTR
     next
     if g = -1 then return false
     if gFip.groups(g).pDoc = 0 then return false
-    if IsWindow( gFip.groups(g).pDoc->hWindow(0) ) = 0 then return false
+    if IsWindow( DocView(gFip.groups(g).pDoc, 0) ) = 0 then return false
 
     ' Deliberately NOT suppressed: one replace is one edit, and letting it go through the
     ' ordinary SCN_MODIFIED path means every other match in the file is remapped by the same
     ' code that handles the user's own typing. The replaced match is killed by that remap (a
     ' delete overlapping it), which is exactly right.
     dim as string sRep = wszReplace
-    dim as HWND h = gFip.groups(g).pDoc->hWindow(0)
+    dim as HWND h = DocView(gFip.groups(g).pDoc, 0)
     SciExec( h, SCI_BEGINUNDOACTION, 0, 0 )
     SciExec( h, SCI_SETTARGETSTART, gFip.matches(nMatch).nStart, 0 )
     SciExec( h, SCI_SETTARGETEND, gFip.matches(nMatch).nStart + gFip.matches(nMatch).nLen, 0 )
@@ -770,9 +770,9 @@ function FindProject_ReplaceAll( byval wszReplace as DWSTRING ) as long
 
     for g as long = 0 to gFip.nGroupCount - 1
         if gFip.groups(g).pDoc = 0 then continue for
-        if IsWindow( gFip.groups(g).pDoc->hWindow(0) ) = 0 then continue for
+        if IsWindow( DocView(gFip.groups(g).pDoc, 0) ) = 0 then continue for
 
-        dim as HWND h = gFip.groups(g).pDoc->hWindow(0)
+        dim as HWND h = DocView(gFip.groups(g).pDoc, 0)
         dim as long m0 = gFip.groups(g).nMatchFirst
         dim as long mN = m0 + gFip.groups(g).nMatchCount - 1
 
@@ -873,8 +873,8 @@ sub FindProject_OnDocumentModified( byval pDocMod as clsDocument ptr, _
         ' decide which blocks move and which grow, and asking per match would put a message
         ' storm on every keystroke in a file with hundreds of hits.
         dim as long nEditLine = 0
-        if IsWindow( pDocMod->hWindow(0) ) then
-            nEditLine = SciExec( pDocMod->hWindow(0), SCI_LINEFROMPOSITION, nModPos, 0 )
+        if IsWindow( DocView(pDocMod, 0) ) then
+            nEditLine = SciExec( DocView(pDocMod, 0), SCI_LINEFROMPOSITION, nModPos, 0 )
 
             ' (Nothing is marked here. Whether a file is dirty is DERIVED, by asking the
             '  document -- see FindProject_IsGroupDirty -- so an edit that is undone stops

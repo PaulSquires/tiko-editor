@@ -77,8 +77,8 @@ function ResetScintillaCursors() as long
         if gTTabCtl.IsValidTab(i) = false then continue for
         dim as clsDocument ptr pDoc = gTTabCtl.GetpDoc(i)
         if pDoc then 
-            SciExec( pDoc->hWindow(0), SCI_SETCURSOR, SC_CURSORNORMAL, 0 )
-            SciExec( pDoc->hWindow(1), SCI_SETCURSOR, SC_CURSORNORMAL, 0 )
+            SciExec( DocView(pDoc, 0), SCI_SETCURSOR, SC_CURSORNORMAL, 0 )
+            SciExec( DocView(pDoc, 1), SCI_SETCURSOR, SC_CURSORNORMAL, 0 )
         end if
     next
     function = 0

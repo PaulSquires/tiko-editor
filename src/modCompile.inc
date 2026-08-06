@@ -643,7 +643,7 @@ function code_Compile( byval wID as long ) as boolean
     ' Indicate via mouse cursor to user to wait for compile process to end.
     SetCursor( LoadCursor(0, IDC_WAIT) )
     dim as clsDocument ptr pDoc = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc then SciExec( pDoc->hWindow(0), SCI_SETCURSOR, SC_CURSORWAIT, 0 )
+    if pDoc then SciExec( DocView(pDoc, 0), SCI_SETCURSOR, SC_CURSORWAIT, 0 )
 
 
     ' Change to the output code directory

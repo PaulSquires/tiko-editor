@@ -331,7 +331,7 @@ sub clsScanMgr.RequestBufferScan( byval pDoc as clsDocument ptr )
     ' document bytes (ANSI or UTF-8, both fine for the DLL); documents not
     ' yet realized in a Scintilla window still hold their text in TextBuffer.
     dim as string sText
-    if pDoc->hWindow(0) then sText = pDoc->GetText()
+    if DocView(pDoc, 0) then sText = pDoc->GetText()
     if len( sText ) = 0 then sText = pDoc->TextBuffer
     if len( sText ) = 0 then exit sub
 

@@ -133,8 +133,8 @@ end function
 function FileWatch_IsDocModified( byval pDoc as clsDocument ptr ) as boolean
     if pDoc = 0 then return false
 
-    dim as boolean bMod0 = cbool( SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0 )
-    dim as boolean bMod1 = cbool( SciExec( pDoc->hWindow(1), SCI_GETMODIFY, 0, 0 ) <> 0 )
+    dim as boolean bMod0 = cbool( SciExec( DocView(pDoc, 0), SCI_GETMODIFY, 0, 0 ) <> 0 )
+    dim as boolean bMod1 = cbool( SciExec( DocView(pDoc, 1), SCI_GETMODIFY, 0, 0 ) <> 0 )
 
     ' Written as two locals rather than one orelse chain: fbc warning 38 fires on mixing
     ' boolean and non-boolean operands, and SciExec returns an integer.
@@ -201,13 +201,13 @@ function FileWatch_ReloadInPlace( byval pDoc as clsDocument ptr, _
     ' reports whatever the system moved to.
     dim as HWND hFocus = GetFocus()
     dim as boolean bHadFocus = false
-    if hFocus = pDoc->hWindow(0) then bHadFocus = true
-    if hFocus = pDoc->hWindow(1) then bHadFocus = true
+    if hFocus = DocView(pDoc, 0) then bHadFocus = true
+    if hFocus = DocView(pDoc, 1) then bHadFocus = true
 
-    dim as long nFirst0 = SciExec( pDoc->hWindow(0), SCI_GETFIRSTVISIBLELINE, 0, 0 )
-    dim as long nPos0   = SciExec( pDoc->hWindow(0), SCI_GETCURRENTPOS, 0, 0 )
-    dim as long nFirst1 = SciExec( pDoc->hWindow(1), SCI_GETFIRSTVISIBLELINE, 0, 0 )
-    dim as long nPos1   = SciExec( pDoc->hWindow(1), SCI_GETCURRENTPOS, 0, 0 )
+    dim as long nFirst0 = SciExec( DocView(pDoc, 0), SCI_GETFIRSTVISIBLELINE, 0, 0 )
+    dim as long nPos0   = SciExec( DocView(pDoc, 0), SCI_GETCURRENTPOS, 0, 0 )
+    dim as long nFirst1 = SciExec( DocView(pDoc, 1), SCI_GETFIRSTVISIBLELINE, 0, 0 )
+    dim as long nPos1   = SciExec( DocView(pDoc, 1), SCI_GETCURRENTPOS, 0, 0 )
 
     dim as string sBookmarks   = pDoc->GetBookmarks()
     dim as string sBreakPoints = pDoc->GetBreakPoints()
@@ -216,26 +216,26 @@ function FileWatch_ReloadInPlace( byval pDoc as clsDocument ptr, _
     ' Which half had focus. hWndActiveScintilla is a property, so it is read before the
     ' windows are destroyed and re-applied by handle INDEX afterwards, not by handle.
     dim as long nFocusEdit = 0
-    if pDoc->hWndActiveScintilla = pDoc->hWindow(1) then nFocusEdit = 1
+    if pDoc->hWndActiveScintilla = DocView(pDoc, 1) then nFocusEdit = 1
 
     ReloadDocument( pDoc->DiskFilename )
 
-    dim as long nLen = SciExec( pDoc->hWindow(0), SCI_GETLENGTH, 0, 0 )
+    dim as long nLen = SciExec( DocView(pDoc, 0), SCI_GETLENGTH, 0, 0 )
     if nPos0 > nLen then nPos0 = nLen
     if nPos1 > nLen then nPos1 = nLen
 
     ' Scroll first, then the caret: SCI_GOTOPOS scrolls the caret into view, so doing it last
     ' means a caret that is still on screen leaves the restored scroll position alone.
-    SciExec( pDoc->hWindow(0), SCI_SETFIRSTVISIBLELINE, nFirst0, 0 )
-    SciExec( pDoc->hWindow(0), SCI_GOTOPOS, nPos0, 0 )
-    SciExec( pDoc->hWindow(1), SCI_SETFIRSTVISIBLELINE, nFirst1, 0 )
-    SciExec( pDoc->hWindow(1), SCI_GOTOPOS, nPos1, 0 )
+    SciExec( DocView(pDoc, 0), SCI_SETFIRSTVISIBLELINE, nFirst0, 0 )
+    SciExec( DocView(pDoc, 0), SCI_GOTOPOS, nPos0, 0 )
+    SciExec( DocView(pDoc, 1), SCI_SETFIRSTVISIBLELINE, nFirst1, 0 )
+    SciExec( DocView(pDoc, 1), SCI_GOTOPOS, nPos1, 0 )
 
     pDoc->SetBookmarks( sBookmarks )
     pDoc->SetBreakPoints( sBreakPoints )
     pDoc->SetFoldPoints( sFoldPoints )
 
-    pDoc->hWndActiveScintilla = pDoc->hWindow(nFocusEdit)
+    pDoc->hWndActiveScintilla = DocView(pDoc, nFocusEdit)
 
     ' PostMessage-based (MSG_USER_SETFOCUS), so it lands after this reload -- and after the
     ' message box has fully torn down on the prompt path -- rather than fighting either.

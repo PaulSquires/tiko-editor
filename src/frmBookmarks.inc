@@ -216,7 +216,7 @@ function LoadBookmarksFiles() as long
         dim as string sBookmarks
 
         ' Search documents that have been loaded and have valid Scintilla window.
-        if pDoc->hWindow(0) <> null then
+        if DocView(pDoc, 0) <> null then
             sBookmarks = pDoc->GetBookmarks()
         end if
 

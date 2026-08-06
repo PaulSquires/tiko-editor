@@ -118,6 +118,9 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 #include once "app/debugParser.bi"
 #include once "frmSciHost.bi"
 #include once "clsDocument.bi"
+'' Where a document's editor WINDOWS live. Must follow clsDocument.bi, which
+'' declares the type it takes.
+#include once "modDocViews.bi"
 #include once "modDeclares.bi"
 ' Declarations only, and deliberately naming no Ps* type: clsConfig.inc calls
 ' NavHistory_Clear from both of its session-load paths, well ahead of the frm* block. The
@@ -207,6 +210,7 @@ dim shared gTTabCtl as clsTopTabCtl
 ' After modRoutines.inc: NavHistory_Goto drives OpenSelectedDocument.
 #include once "modNavHistory.inc"
 #include once "frmSciHost.inc"
+#include once "modDocViews.inc"
 #include once "clsDocument.inc"
 ' Encoding conversion self-test. After modRoutines.inc (Doc_EncodeForDisk/GetFileToString)
 ' and clsDocument.inc (the clsDocument type it instantiates for the disk round-trip).

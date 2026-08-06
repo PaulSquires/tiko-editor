@@ -37,29 +37,29 @@ function frmEditorHScroll_NeedScrollBar( _
             byval idxWindow as long _
             ) as long
 
-    dim as RECT rc = AfxGetWindowRect( pDoc->hWindow(idxWindow) )
+    dim as RECT rc = AfxGetWindowRect( DocView(pDoc, idxWindow) )
     MapWindowPoints( HWND_DESKTOP, HWND_FRMMAIN, cast(point ptr, @rc), 2 )
     dim as long ClientWidth = rc.right - rc.left
 
     ' Visible TEXT area width (client minus the margin columns)
     dim as long totalMarginWidth = 0
     for i as long = 0 to SC_MAX_MARGIN - 1
-        totalMarginWidth += SciExec( pDoc->hWindow(idxWindow), SCI_GETMARGINWIDTHN, i, 0 )
+        totalMarginWidth += SciExec( DocView(pDoc, idxWindow), SCI_GETMARGINWIDTHN, i, 0 )
     next
     dim as long visibleTextWidth = ClientWidth - totalMarginWidth
     if visibleTextWidth < 0 then visibleTextWidth = 0
 
-    dim as long firstVisibleLine = SciExec( pDoc->hWindow(idxWindow), SCI_GETFIRSTVISIBLELINE, 0, 0 )
-    dim as long linesOnScreen    = SciExec( pDoc->hWindow(idxWindow), SCI_LINESONSCREEN, 0, 0 )
-    dim as long lineCount        = SciExec( pDoc->hWindow(idxWindow), SCI_GETLINECOUNT, 0, 0 )
-    dim as long xOffset          = SciExec( pDoc->hWindow(idxWindow), SCI_GETXOFFSET, 0, 0 )
+    dim as long firstVisibleLine = SciExec( DocView(pDoc, idxWindow), SCI_GETFIRSTVISIBLELINE, 0, 0 )
+    dim as long linesOnScreen    = SciExec( DocView(pDoc, idxWindow), SCI_LINESONSCREEN, 0, 0 )
+    dim as long lineCount        = SciExec( DocView(pDoc, idxWindow), SCI_GETLINECOUNT, 0, 0 )
+    dim as long xOffset          = SciExec( DocView(pDoc, idxWindow), SCI_GETXOFFSET, 0, 0 )
 
     dim as long maxWidth = 0
     for i as long = 0 to linesOnScreen - 1
         dim as long docLine = firstVisibleLine + i
         if docLine >= lineCount then exit for
-        dim as long endPos = SciExec( pDoc->hWindow(idxWindow), SCI_GETLINEENDPOSITION, docLine, 0 )
-        dim as long x = xOffset + SciExec( pDoc->hWindow(idxWindow), SCI_POINTXFROMPOSITION, 0, endPos )
+        dim as long endPos = SciExec( DocView(pDoc, idxWindow), SCI_GETLINEENDPOSITION, docLine, 0 )
+        dim as long x = xOffset + SciExec( DocView(pDoc, idxWindow), SCI_POINTXFROMPOSITION, 0, endPos )
         if x > maxWidth then maxWidth = x
     next
 
@@ -80,7 +80,7 @@ function frmEditorHScroll_NeedScrollBar( _
     ' Set here rather than once at creation deliberately: Ctrl+wheel zoom changes the
     ' character width, and this function already re-runs on every layout and content
     ' change, so the step tracks the zoom for free.
-    dim as long charWidth = SciExec( pDoc->hWindow(idxWindow), SCI_TEXTWIDTH, 0, cast(LPARAM, @"n") )
+    dim as long charWidth = SciExec( DocView(pDoc, idxWindow), SCI_TEXTWIDTH, 0, cast(LPARAM, @"n") )
     if charWidth < 1 then charWidth = 1        ' Scintilla not ready / degenerate font
     dim as ulong wheelChars = 3
     SystemParametersInfo( SPI_GETWHEELSCROLLCHARS, 0, @wheelChars, 0 )
@@ -125,7 +125,7 @@ sub frmEditorHScroll_OnScroll( byval hScrollBar as HWND, byval newPos as integer
     if pDoc = 0 then exit sub
     dim as long idxWindow = iif( hScrollBar = HWND_FRMEDITOR_HSCROLLBAR(0), 0, 1 )
     gApp.SuppressNotify = true
-    SendMessage( pDoc->hWindow(idxWindow), SCI_SETXOFFSET, newPos, 0 )
+    SendMessage( DocView(pDoc, idxWindow), SCI_SETXOFFSET, newPos, 0 )
     gApp.SuppressNotify = false
     pDoc->lastXOffsetPos = newPos
 end sub
@@ -178,7 +178,7 @@ function frmEditorHScroll_DoNeedScrollBar( byval pDoc as clsDocument ptr ) as lo
         dim as boolean isVisible = IsWindowVisible( HWND_FRMEDITOR_HSCROLLBAR(i) )
         dim as long curState = iif(isVisible, SW_SHOWNOACTIVATE, SW_HIDE)
         dim as long newState = SW_HIDE
-        if isMouseOverWindow( pDoc->hWindow(i) ) orelse _
+        if isMouseOverWindow( DocView(pDoc, i) ) orelse _
             isMouseOverWindow( HWND_FRMEDITOR_HSCROLLBAR(i) ) then
             newState = frmEditorHScroll_NeedScrollBar( pDoc, i )
         end if

@@ -250,8 +250,8 @@ function clsTopTabCtl.SetFocusTab( byval idx as long ) as long
 
                 dim pDoc as clsDocument ptr = this.GetpDoc(idx)
                 if pDoc then
-                    AfxRedrawWindow( pDoc->hWindow(0) )  ' makes the code window display quicker especially when loading Project.
-                    AfxRedrawWindow( pDoc->hWindow(1) )  ' makes the code window display quicker especially when loading Project.
+                    AfxRedrawWindow( DocView(pDoc, 0) )  ' makes the code window display quicker especially when loading Project.
+                    AfxRedrawWindow( DocView(pDoc, 1) )  ' makes the code window display quicker especially when loading Project.
 
                     ' We have moved to a new Tab. If Find is open then highlight any search phrase.   
                     FindReplace_HighlightSearches()
@@ -371,16 +371,16 @@ function clsTopTabCtl.DisplayScintilla( byval idx as long, byval bShow as boolea
 
     do until pDoc = 0
         ' Scintilla windows and scrollbars
-        ShowWindow(pDoc->hWindow(0), SW_HIDE)
-        ShowWindow(pDoc->hWindow(1), SW_HIDE)
+        ShowWindow(DocView(pDoc, 0), SW_HIDE)
+        ShowWindow(DocView(pDoc, 1), SW_HIDE)
         pDoc = pDoc->pDocNext
     loop
 
     ' Show/Hide our current active Scintilla window and scrollbar. Nothing to show for a tab
     ' with no document -- frmMain_PositionWindows puts the results surface in that space.
     if pDocShow then
-        ShowWindow(pDocShow->hWindow(0), iif(bShow, SW_SHOWNORMAL, SW_HIDE))
-        ShowWindow(pDocShow->hWindow(1), iif(bShow, SW_SHOWNORMAL, SW_HIDE))
+        ShowWindow(DocView(pDocShow, 0), iif(bShow, SW_SHOWNORMAL, SW_HIDE))
+        ShowWindow(DocView(pDocShow, 1), iif(bShow, SW_SHOWNORMAL, SW_HIDE))
     end if
 
     function = 0

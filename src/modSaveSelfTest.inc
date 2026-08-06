@@ -156,11 +156,11 @@ sub Save_RunSelfTest()
             pD->IsNewFlag     = false
             pD->FileEncoding  = FILE_ENCODING_ANSI
             pD->AssignTextBuffer()
-            if pD->hWindow(0) then
+            if DocView(pD, 0) then
                 ' Two CJK characters: representable in UTF-8, not in any Western ANSI page.
                 dim as string sCJK = chr(&hE4,&hBD,&hA0) & chr(&hE5,&hA5,&hBD)
-                SciExec( pD->hWindow(0), SCI_SETCODEPAGE, SC_CP_UTF8, 0 )
-                SciExec( pD->hWindow(0), SCI_SETTEXT, 0, cast(LPARAM, strptr(sCJK)) )
+                SciExec( DocView(pD, 0), SCI_SETCODEPAGE, SC_CP_UTF8, 0 )
+                SciExec( DocView(pD, 0), SCI_SETTEXT, 0, cast(LPARAM, strptr(sCJK)) )
                 pD->UserModified = true
 
                 ' GetTextRange with an empty or inverted range: space() of a non-positive

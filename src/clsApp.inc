@@ -485,8 +485,8 @@ function clsApp.GetDocumentPtrByWindow( byval hWindow as hwnd) as clsDocument pt
     
     do until pDoc = 0
         ' Determine if the incoming hWindow matches the clsDocument hWindow 
-        if (hWindow = pDoc->hWindow(0)) orelse _
-            (hWindow = pDoc->hWindow(1)) then
+        if (hWindow = DocView(pDoc, 0)) orelse _
+            (hWindow = DocView(pDoc, 1)) then
             return pDoc
         end if   
         pDoc = pDoc->pDocNext

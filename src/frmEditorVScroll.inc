@@ -37,7 +37,7 @@ function frmEditorVScroll_UpdateScrollBars( byval pDoc as clsDocument ptr ) as b
     if pDoc = 0 then exit function
     dim as long numLines = pDoc->GetLineCount + 1
     for i as long = lbound(pDoc->hWindow) to ubound(pDoc->hWindow)
-        dim as long firstVisibleLine = SciExec( pDoc->hWindow(i), SCI_GETFIRSTVISIBLELINE, 0, 0 )
+        dim as long firstVisibleLine = SciExec( DocView(pDoc, i), SCI_GETFIRSTVISIBLELINE, 0, 0 )
         PsVScrollBar_SetRange( HWND_FRMEDITOR_VSCROLLBAR(i), _
                               numLines, pDoc->LinesPerPage(i), firstVisibleLine )
     next
@@ -56,7 +56,7 @@ sub frmEditorVScroll_OnScroll( byval hScrollBar as HWND, byval newPos as integer
     if pDoc = 0 then exit sub
     dim as long idxWindow = iif( hScrollBar = HWND_FRMEDITOR_VSCROLLBAR(0), 0, 1 )
     gApp.SuppressNotify = true
-    SendMessage( pDoc->hWindow(idxWindow), SCI_SETFIRSTVISIBLELINE, newPos, 0 )
+    SendMessage( DocView(pDoc, idxWindow), SCI_SETFIRSTVISIBLELINE, newPos, 0 )
     gApp.SuppressNotify = false
 end sub
 

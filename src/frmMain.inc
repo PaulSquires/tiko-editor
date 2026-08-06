@@ -526,7 +526,7 @@ function frmMain_SplitterMessage( byval m as PSSPLITTER_MESSAGEINFO ptr ) as boo
     pDoc->SplitX = 0
     pDoc->SplitY = 0
     pDoc->EditorSplitMode = SplitNone
-    pDoc->hWndActiveScintilla = pDoc->hWindow(0)
+    pDoc->hWndActiveScintilla = DocView(pDoc, 0)
     frmMain_PositionWindows()
     return true
 end function
@@ -619,7 +619,7 @@ function frmMain_PositionSplitDocLeft( byval pDoc as clsDocument ptr, byval rcDo
     ' Position the document window
     dim as long nWidth = pDoc->SplitX - rcDoc.left - iVScrollbarWidth
     dim as long nHeight = rcDoc.bottom - rcDoc.top
-    SetWindowPos( pDoc->hWindow(1), 0, _
+    SetWindowPos( DocView(pDoc, 1), 0, _
                 rcDoc.left, rcDoc.top, _
                 nWidth, nHeight  - iHScrollbarHeight, _
                 SWP_SHOWWINDOW or SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE )
@@ -659,7 +659,7 @@ function frmMain_PositionSplitDocTop( byval pDoc as clsDocument ptr, byval rcDoc
     ' scrollbar will not be "janky" due to the edit window height being adjusted 
     ' shorter everytime the horizontal scrollbar appears.
     ' Position the document window
-    SetWindowPos( pDoc->hWindow(1), 0, _
+    SetWindowPos( DocView(pDoc, 1), 0, _
                 rcDoc.left, rcDoc.top, _
                 rcDoc.right - rcDoc.left - iVScrollbarWidth, _
                 pDoc->SplitY - rcDoc.top - iHScrollbarHeight, _ 
@@ -680,7 +680,7 @@ function frmMain_PositionSplitDocTop( byval pDoc as clsDocument ptr, byval rcDoc
                         rcDoc.right - iVScrollbarWidth, _
                         rcDoc.top, _
                         iVScrollbarWidth, _
-                        AfxGetWindowHeight(pDoc->hWindow(1)), _ 
+                        AfxGetWindowHeight(DocView(pDoc, 1)), _ 
                         SWP_SHOWWINDOW or SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE )
         AfxRedrawWindow(HWND_FRMEDITOR_VSCROLLBAR(1))
     end if
@@ -712,7 +712,7 @@ function frmMain_PositionMainDocRight( byval pDoc as clsDocument ptr, byval rcDo
     ' shorter everytime the horizontal scrollbar appears.
     dim as long nWidth = rcDoc.right - nLeft - iVScrollbarWidth
     dim as long nHeight = rcDoc.bottom - rcDoc.top
-    SetWindowPos( pDoc->hWindow(0), 0, _
+    SetWindowPos( DocView(pDoc, 0), 0, _
                 nLeft, rcDoc.top, _
                 nWidth, nHeight - iHScrollbarHeight, _
                 SWP_SHOWWINDOW or SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE )
@@ -758,7 +758,7 @@ function frmMain_PositionMainDocBottom( byval pDoc as clsDocument ptr, byval rcD
     ' scrollbar regardless if that scrollbar is visible. This ensures that the vertical
     ' scrollbar will not be "janky" due to the edit window height being adjusted 
     ' shorter everytime the horizontal scrollbar appears.
-    SetWindowPos( pDoc->hWindow(0), 0, _
+    SetWindowPos( DocView(pDoc, 0), 0, _
                 rcDoc.left, nTop, _
                 rcDoc.right - rcDoc.left - iVScrollbarWidth, _
                 rcDoc.bottom - nTop - iHScrollbarHeight, _
@@ -778,7 +778,7 @@ function frmMain_PositionMainDocBottom( byval pDoc as clsDocument ptr, byval rcD
         SetWindowPos( HWND_FRMEDITOR_VSCROLLBAR(0), 0, _ 
                     rcDoc.right - iVScrollbarWidth, nTop, _
                     iVScrollbarWidth, _
-                    AfxGetWindowHeight(pDoc->hWindow(0)) + iHScrollbarHeight, _ 
+                    AfxGetWindowHeight(DocView(pDoc, 0)) + iHScrollbarHeight, _ 
                     SWP_SHOWWINDOW or SWP_NOZORDER or SWP_NOOWNERZORDER or SWP_NOACTIVATE )
         AfxRedrawWindow(HWND_FRMEDITOR_VSCROLLBAR(0))
     else
@@ -1041,7 +1041,7 @@ function frmMain_PositionWindows() as LRESULT
         if pDoc->EditorSplitMode = SplitNone then
             ShowWindow( HWND_FRMEDITOR_VSCROLLBAR(0), SW_SHOW )
             ShowWindow( HWND_FRMEDITOR_VSCROLLBAR(1), SW_HIDE )
-            ShowWindow( pDoc->hWindow(1), SW_HIDE )
+            ShowWindow( DocView(pDoc, 1), SW_HIDE )
             ShowWindow( HWND_FRMMAIN_SPLITV, SW_HIDE )
             ShowWindow( HWND_FRMMAIN_SPLITH, SW_HIDE )
             frmMain_PositionMainDocBottom(pDoc, rcDoc)

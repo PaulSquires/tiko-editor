@@ -112,8 +112,8 @@ private sub FipPool_OpenGroupFile( byval g as long )
     gTTabCtl.TabFocusLost( gTTabCtl.GetCurSel() )
     gTTabCtl.SetFocusTab( idx )
 
-    if (nPos >= 0) andalso IsWindow( pDoc->hWindow(0) ) then
-        SciExec( pDoc->hWindow(0), SCI_GOTOPOS, nPos, 0 )
+    if (nPos >= 0) andalso IsWindow( DocView(pDoc, 0) ) then
+        SciExec( DocView(pDoc, 0), SCI_GOTOPOS, nPos, 0 )
         pDoc->CenterCurrentLine
     end if
 end sub
@@ -576,8 +576,8 @@ end function
 private function FipMetrics_LineHeight() as long
     dim pDoc as clsDocument ptr = gApp.pDocList
     do until pDoc = 0
-        if IsWindow( pDoc->hWindow(0) ) then
-            dim as long n = SciExec( pDoc->hWindow(0), SCI_TEXTHEIGHT, 0, 0 )
+        if IsWindow( DocView(pDoc, 0) ) then
+            dim as long n = SciExec( DocView(pDoc, 0), SCI_TEXTHEIGHT, 0, 0 )
             if n > 0 then return n
         end if
         pDoc = pDoc->pDocNext
@@ -1493,7 +1493,7 @@ private function frmFindInProject_CountVisibleEditors() as long
     dim pDoc as clsDocument ptr = gApp.pDocList
     do until pDoc = 0
         for i as long = lbound(pDoc->hWindow) to ubound(pDoc->hWindow)
-            if IsWindowVisible( pDoc->hWindow(i) ) then n += 1
+            if IsWindowVisible( DocView(pDoc, i) ) then n += 1
         next
         pDoc = pDoc->pDocNext
     loop
@@ -1670,7 +1670,7 @@ sub frmFindInProject_RunSelfTest()
     dim as clsDocument ptr pTest = 0
     dim pWalk as clsDocument ptr = gApp.pDocList
     do until pWalk = 0
-        if IsWindow( pWalk->hWindow(0) ) then pTest = pWalk: exit do
+        if IsWindow( DocView(pWalk, 0) ) then pTest = pWalk: exit do
         pWalk = pWalk->pDocNext
     loop
 
@@ -2005,7 +2005,7 @@ sub frmFindInProject_RunSelfTest()
                 dim as any ptr pViewDoc = cast( any ptr, _
                     SciExec( gFipPool(nSlot).hWnd, SCI_GETDOCPOINTER, 0, 0 ) )
                 dim as any ptr pRealDoc = cast( any ptr, _
-                    SciExec( gFip.groups(gg).pDoc->hWindow(0), SCI_GETDOCPOINTER, 0, 0 ) )
+                    SciExec( DocView(gFip.groups(gg).pDoc, 0), SCI_GETDOCPOINTER, 0, 0 ) )
                 frmFindInProject_Check( "pool: the view shares the document, it is not a copy", _
                     (pViewDoc <> 0) andalso (pViewDoc = pRealDoc) )
 
@@ -2013,7 +2013,7 @@ sub frmFindInProject_RunSelfTest()
                 ' proof that the binding worked.
                 frmFindInProject_Check( "pool: the view sees the document's real length", _
                     SciExec( gFipPool(nSlot).hWnd, SCI_GETLENGTH, 0, 0 ) = _
-                    SciExec( gFip.groups(gg).pDoc->hWindow(0), SCI_GETLENGTH, 0, 0 ) )
+                    SciExec( DocView(gFip.groups(gg).pDoc, 0), SCI_GETLENGTH, 0, 0 ) )
             end if
 
             ' SCROLLING MUST NOT REBIND A VIEW THAT IS STILL ON SCREEN. If it did, every tick
@@ -2088,7 +2088,7 @@ sub frmFindInProject_RunSelfTest()
                 ' per-line comparison was written for. Asking the DOCUMENT keeps that property
                 ' -- Scintilla clears SCI_GETMODIFY itself when the buffer returns to its save
                 ' point -- without this module remembering anything.
-                dim as HWND hD2 = pD2->hWindow(0)
+                dim as HWND hD2 = DocView(pD2, 0)
                 SciExec( hD2, SCI_BEGINUNDOACTION, 0, 0 )
                 SciExec( hD2, SCI_INSERTTEXT, _
                          SciExec( hD2, SCI_POSITIONFROMLINE, nLn, 0 ), @"zz" )
@@ -2308,7 +2308,7 @@ sub frmFindInProject_RunSelfTest()
             next
 
             dim as long nLiveBefore = gFip.nLiveMatches
-            dim as long nLenBefore  = SciExec( pTest->hWindow(0), SCI_GETLENGTH, 0, 0 )
+            dim as long nLenBefore  = SciExec( DocView(pTest, 0), SCI_GETLENGTH, 0, 0 )
             ' THIS FILE's share of the replacements. Not the project-wide total: the length
             ' check below measures ONE document, and comparing it against every file's matches
             ' passed only because a single-file test run made the two numbers identical. A run
@@ -2330,8 +2330,8 @@ sub frmFindInProject_RunSelfTest()
             frmFindInProject_Check( "replace: nothing is left matching the old phrase", _
                 gFip.nLiveMatches = 0, str(gFip.nLiveMatches) )
             frmFindInProject_Check( "replace: this document grew by 2 bytes per match in it", _
-                SciExec( pTest->hWindow(0), SCI_GETLENGTH, 0, 0 ) = nLenBefore + (nGroupLive * 2), _
-                str(SciExec( pTest->hWindow(0), SCI_GETLENGTH, 0, 0 )) & " vs " & _
+                SciExec( DocView(pTest, 0), SCI_GETLENGTH, 0, 0 ) = nLenBefore + (nGroupLive * 2), _
+                str(SciExec( DocView(pTest, 0), SCI_GETLENGTH, 0, 0 )) & " vs " & _
                 str(nLenBefore + (nGroupLive * 2)) )
 
             ' THE ONE THAT CATCHES MISPLACEMENT. The length check above cannot: each
@@ -2355,16 +2355,16 @@ sub frmFindInProject_RunSelfTest()
             frmFindInProject_Check( "replace: the replacement appears once per match", _
                 nNewFound = nGroupLive, str(nNewFound) & " vs " & str(nGroupLive) )
             frmFindInProject_Check( "replace: the document is left DIRTY, not saved", _
-                SciExec( pTest->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0 )
+                SciExec( DocView(pTest, 0), SCI_GETMODIFY, 0, 0 ) <> 0 )
 
             ' ...and one undo puts the whole file back, because the replacements were wrapped
             ' in ONE undo action per file rather than one per match.
-            SciExec( pTest->hWindow(0), SCI_UNDO, 0, 0 )
+            SciExec( DocView(pTest, 0), SCI_UNDO, 0, 0 )
             frmFindInProject_Check( "replace: ONE undo reverses the whole file", _
-                SciExec( pTest->hWindow(0), SCI_GETLENGTH, 0, 0 ) = nLenBefore, _
-                str(SciExec( pTest->hWindow(0), SCI_GETLENGTH, 0, 0 )) & " vs " & str(nLenBefore) )
+                SciExec( DocView(pTest, 0), SCI_GETLENGTH, 0, 0 ) = nLenBefore, _
+                str(SciExec( DocView(pTest, 0), SCI_GETLENGTH, 0, 0 )) & " vs " & str(nLenBefore) )
             ' Leave the buffer exactly as it was found.
-            SciExec( pTest->hWindow(0), SCI_SETSAVEPOINT, 0, 0 )
+            SciExec( DocView(pTest, 0), SCI_SETSAVEPOINT, 0, 0 )
 
             ' ---- the close funnel ----------------------------------------------------------
             ' A document whose Scintilla windows are going away takes its results with it, and
@@ -3067,8 +3067,8 @@ sub frmFindInProject_RunReplaceTest()
         dim pNextStale as clsDocument ptr = pStale->pDocNext
         if ucase(str(pStale->DiskFilename)) = ucase(str(wszFile)) then
             ' Silence the save prompt: this buffer is about to be overwritten anyway.
-            if IsWindow( pStale->hWindow(0) ) then
-                SciExec( pStale->hWindow(0), SCI_SETSAVEPOINT, 0, 0 )
+            if IsWindow( DocView(pStale, 0) ) then
+                SciExec( DocView(pStale, 0), SCI_SETSAVEPOINT, 0, 0 )
             end if
             pStale->UserModified = false
             dim as long idxStale = gTTabCtl.GetTabIndexByDocumentPtr( pStale )
@@ -3191,7 +3191,7 @@ sub frmFindInProject_RunReplaceTest()
                 FipRT_GroupLive( pT ) = nBefore - 1, _
                 str(FipRT_GroupLive( pT )) & " vs " & str(nBefore - 1) )
             frmFindInProject_Check( "replace one: the document is DIRTY, not written to disk", _
-                SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0 )
+                SciExec( DocView(pT, 0), SCI_GETMODIFY, 0, 0 ) <> 0 )
 
             ' ---- REPLACE ALL ------------------------------------------------------------
             dim as long nLeft = FipRT_GroupLive( pT )
@@ -3263,8 +3263,8 @@ sub frmFindInProject_RunReplaceTest()
                 FipRepro_Pump()
 
                 frmFindInProject_Check( "ctrl+s: the buffer is no longer modified", _
-                    SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 ) = 0, _
-                    str(SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 )) )
+                    SciExec( DocView(pT, 0), SCI_GETMODIFY, 0, 0 ) = 0, _
+                    str(SciExec( DocView(pT, 0), SCI_GETMODIFY, 0, 0 )) )
 
                 ' The only proof that matters: the bytes on disk.
                 dim as long f2 = freefile
@@ -3294,16 +3294,16 @@ sub frmFindInProject_RunReplaceTest()
                 SetForegroundWindow( HWND_FRMMAIN )
                 SetFocus( hExcerpt )
                 FipRT_PumpWithAccel()
-                FipRT_DirtyBuffer( pT->hWindow(0) )
+                FipRT_DirtyBuffer( DocView(pT, 0) )
                 FipRT_PumpWithAccel()
                 frmFindInProject_Check( "ctrl+s key: the buffer is dirty before the keystroke", _
-                    SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0 )
+                    SciExec( DocView(pT, 0), SCI_GETMODIFY, 0, 0 ) <> 0 )
                 frmFindInProject_Check( "ctrl+s key: the excerpt still has the focus", _
                     GetFocus() = hExcerpt )
                 if FipRT_SendCtrlS() then
                     frmFindInProject_Check( "ctrl+s key: Ctrl+S in an EXCERPT saved the file", _
-                        SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 ) = 0, _
-                        str(SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 )) )
+                        SciExec( DocView(pT, 0), SCI_GETMODIFY, 0, 0 ) = 0, _
+                        str(SciExec( DocView(pT, 0), SCI_GETMODIFY, 0, 0 )) )
                 end if
 
                 ' (4) THE SAME KEYSTROKE WITH THE FOCUS ONE WINDOW OUT. On this tab
@@ -3312,22 +3312,22 @@ sub frmFindInProject_RunReplaceTest()
                 '     the find field -- Ctrl+S is a silent no-op while Ctrl+Shift+S still
                 '     saves everything. That asymmetry is the reported symptom, so it is
                 '     measured here rather than reasoned about.
-                FipRT_DirtyBuffer( pT->hWindow(0) )
+                FipRT_DirtyBuffer( DocView(pT, 0) )
                 FipRT_PumpWithAccel()
                 SetFocus( HWND_FRMFINDINPROJECT_SURFACE )
                 FipRT_PumpWithAccel()
                 if FipRT_SendCtrlS() then
                     frmFindInProject_Check( "ctrl+s key: Ctrl+S saves from the SURFACE too", _
-                        SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 ) = 0, _
-                        str(SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 )) )
+                        SciExec( DocView(pT, 0), SCI_GETMODIFY, 0, 0 ) = 0, _
+                        str(SciExec( DocView(pT, 0), SCI_GETMODIFY, 0, 0 )) )
                 end if
 
                 ' ...and Save All, from the same focus, does save it.
                 SendMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_FILESAVEALL, 0), 0 )
                 FipRT_PumpWithAccel()
                 frmFindInProject_Check( "save all: Save All saves from anywhere on the tab", _
-                    SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 ) = 0, _
-                    str(SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 )) )
+                    SciExec( DocView(pT, 0), SCI_GETMODIFY, 0, 0 ) = 0, _
+                    str(SciExec( DocView(pT, 0), SCI_GETMODIFY, 0, 0 )) )
             end if
         end if
     end if
@@ -3349,13 +3349,13 @@ sub frmFindInProject_RunReplaceTest()
         FipRT_DirtyBuffer( pT->hWndActiveScintilla )
         FipRT_PumpWithAccel()
         frmFindInProject_Check( "ctrl+s key: the editor buffer is dirty before the keystroke", _
-            SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0 )
+            SciExec( DocView(pT, 0), SCI_GETMODIFY, 0, 0 ) <> 0 )
         frmFindInProject_Check( "ctrl+s key: the editor window has the focus", _
             GetFocus() = pT->hWndActiveScintilla, hex(cast(integer, GetFocus())) )
         if FipRT_SendCtrlS() then
             frmFindInProject_Check( "ctrl+s key: Ctrl+S in a plain EDITOR window saved the file", _
-                SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 ) = 0, _
-                str(SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 )) )
+                SciExec( DocView(pT, 0), SCI_GETMODIFY, 0, 0 ) = 0, _
+                str(SciExec( DocView(pT, 0), SCI_GETMODIFY, 0, 0 )) )
         end if
     end if
 

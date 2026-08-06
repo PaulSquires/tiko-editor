@@ -668,8 +668,8 @@ function frmMain_OnNotify( _
         if pDocMod then
             if environ("TIKO_FINDPROJ_TRACE") = "1" then
                 dim as string sT = "SCNMOD: from=" & hex(cast(integer, pNMHDR->hwndFrom)) & _
-                    " w0=" & hex(cast(integer, pDocMod->hWindow(0))) & _
-                    " w1=" & hex(cast(integer, pDocMod->hWindow(1))) & _
+                    " w0=" & hex(cast(integer, DocView(pDocMod, 0))) & _
+                    " w1=" & hex(cast(integer, DocView(pDocMod, 1))) & _
                     " type=" & hex(pNotify->modificationType) & _
                     " pos=" & str(pNotify->position) & " len=" & str(pNotify->length)
                 print sT
@@ -685,7 +685,7 @@ function frmMain_OnNotify( _
             ' edit never touched. Measured: one Replace in the Find in Project tab killed TWO
             ' matches, and the failure is silent -- the buffer is edited correctly, only the
             ' model is wrong, so it shows up as results quietly going missing.
-            if pNMHDR->hwndFrom = pDocMod->hWindow(0) then
+            if pNMHDR->hwndFrom = DocView(pDocMod, 0) then
                 FindProject_OnDocumentModified( pDocMod, pNotify->modificationType, _
                                                 pNotify->position, pNotify->length, _
                                                 pNotify->linesAdded )

@@ -1,0 +1,133 @@
+C:\dev\tiko\src\app\clsConfig.bi(115) error 42: Variable not declared, OUTPUT_TABS_HEIGHT
+C:\dev\tiko\src\app\clsConfig.bi(184) error 14: Expected identifier, found 'FORMAT_RULES'
+C:\dev\tiko\src\app\clsConfig.bi(221) error 42: Variable not declared, FRMDEBUG_DEFPCTMAIN
+C:\dev\tiko\src\app\clsConfig.bi(222) error 42: Variable not declared, FRMDEBUG_DEFPCTLEFT
+C:\dev\tiko\src\app\clsConfig.bi(223) error 42: Variable not declared, FRMDEBUG_DEFPCTRIGHT
+C:\dev\tiko\src\app\clsSymbolDb.bi(27) error 42: Variable not declared, FBCP_KIND_SUB in 'const SYMMASK_PROC  = (1 shl FBCP_KIND_SUB) or (1 shl FBCP_KIND_FUNCTION)'
+C:\dev\tiko\src\app\clsSymbolDb.bi(28) error 42: Variable not declared, FBCP_KIND_TYPE in 'const SYMMASK_TYPE  = (1 shl FBCP_KIND_TYPE) or (1 shl FBCP_KIND_UNION) or _'
+C:\dev\tiko\src\app\clsSymbolDb.bi(30) error 42: Variable not declared, FBCP_KIND_VAR in 'const SYMMASK_VAR   = (1 shl FBCP_KIND_VAR) or (1 shl FBCP_KIND_CONST)'
+C:\dev\tiko\src\app\clsSymbolDb.bi(31) error 42: Variable not declared, FBCP_KIND_FIELD in 'const SYMMASK_FIELD = (1 shl FBCP_KIND_FIELD)'
+C:\dev\tiko\src\app\clsSymbolDb.bi(59) error 14: Expected identifier, found 'FBCP_RESULT' in 'pResult        as FBCP_RESULT ptr'
+C:\dev\tiko\src\app\modCodetips.bi(37) error 59: Illegal specification, at parameter 1 (pDoc) of DereferenceLine() in 'declare function DereferenceLine( byval pDoc as clsDocument ptr, _'
+C:\dev\tiko\src\app\modEncoding.bi(26) error 59: Illegal specification, at parameter 1 (pDoc) of ConvertTextBuffer() in 'declare function ConvertTextBuffer( byval pDoc as clsDocument ptr, byval nNewEncoding as long ) as boolean'
+C:\dev\tiko\src\frmDebug.bi(164) error 59: Illegal specification, at parameter 1 (hWndParent) of frmDebug_Show() in 'declare function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, byval cmdparams as DWSTRING ) as LRESULT'
+C:\dev\tiko\src\frmDebug.bi(173) error 14: Expected identifier, found 'HWND' in 'declare function frmDebug_GetButton( byval id as long ) as HWND'
+C:\dev\tiko\src\frmDebug.bi(187) error 59: Illegal specification, at parameter 1 (rcAnchor) of frmDebug_ComputeStubRect() in 'declare sub frmDebug_ComputeStubRect( byref rcAnchor as RECT, _'
+C:\dev\tiko\src\frmDebug.bi(198) error 14: Expected identifier, found 'RECT' in 'rcStatus     as RECT'
+C:\dev\tiko\src\frmDebug.bi(240) error 59: Illegal specification, at parameter 1 (hEdit) of frmDebug_ShowDataTip() in 'declare sub      frmDebug_ShowDataTip( byval hEdit as HWND, byval nPos as long )'
+C:\dev\tiko\src\clsDocument.bi(103) error 14: Expected identifier, found 'HWND' in 'm_hWndActiveScintilla as HWND'
+C:\dev\tiko\src\clsDocument.bi(117) error 14: Expected identifier, found 'HWND' in 'hWindow(1)            as HWND   ' Scintilla split edit windows'
+C:\dev\tiko\src\clsDocument.bi(153) error 14: Expected identifier, found 'rect' in 'rcDocSplitArea        as rect               ' entire rc client area for one or both edit windows + scrollbars'
+C:\dev\tiko\src\clsDocument.bi(157) error 14: Expected identifier, found 'hwnd' in 'declare property hWndActiveScintilla() as hwnd'
+C:\dev\tiko\src\clsDocument.bi(171) error 59: Illegal specification, at parameter 1 (hWndParent) of CreateCodeWindow() in 'declare function CreateCodeWindow( byval hWndParent as HWnd, byval IsNewFile as boolean, byval IsTemplate as boolean = False, byref wszFileName as wstring = "") as HWnd'
+C:\dev\tiko\src\app\clsSymbolDb.inc(52) error 42: Variable not declared, lstrcmpiW in 'return (lstrcmpiW( @a, @b ) = 0)'
+C:\dev\tiko\src\app\clsSymbolDb.inc(59) error 28: Expected pointer, before '->' in 'dim as long fc = pRSet->pResult->fileCount'
+C:\dev\tiko\src\app\clsSymbolDb.inc(61) error 28: Expected pointer, before '->' in 'dim as wstring ptr pfn = @pRSet->pResult->stringPool[ pRSet->pResult->fileOffsets[i] ]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(61) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(72) error 28: Expected pointer, before '->' in 'dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[s]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(72) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(105) error 28: Expected pointer, before '->' in 'n  = this.pResult->symbolCount'
+C:\dev\tiko\src\app\clsSymbolDb.inc(106) error 28: Expected pointer, before '->' in 'fc = this.pResult->fileCount'
+C:\dev\tiko\src\app\clsSymbolDb.inc(146) error 28: Expected pointer, before '->' in 'if this.pResult then pSyms = this.pResult->symbols'
+C:\dev\tiko\src\app\clsSymbolDb.inc(146) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(146) error 3: Expected End-of-Line, found '->' in 'if this.pResult then pSyms = this.pResult->symbols'
+C:\dev\tiko\src\app\clsSymbolDb.inc(151) error 28: Expected pointer, before '->' in 'dim as ulong h = SymDb_HashName( @this.pResult->stringPool[ pSym->nameOffset ] )'
+C:\dev\tiko\src\app\clsSymbolDb.inc(151) warning 3(2): Passing different pointer types, at parameter 1 (pName) of SYMDB_HASHNAME()
+C:\dev\tiko\src\app\clsSymbolDb.inc(171) error 28: Expected pointer, before '->' in 'dim as wstring ptr pfn = @this.pResult->stringPool[ this.pResult->fileOffsets[i] ]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(171) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(227) error 28: Expected pointer, before '->' in 'dim as long fc = pNew->pResult->fileCount'
+C:\dev\tiko\src\app\clsSymbolDb.inc(229) error 28: Expected pointer, before '->' in 'dim as wstring ptr pFile = @pNew->pResult->stringPool[ pNew->pResult->fileOffsets[i] ]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(229) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(231) error 58: Type mismatch, at parameter 2 (b) of SYMDB_FILENAMEEQ() in 'if SymDb_FileNameEq( *pFile, wszBufRoot ) then continue for'
+C:\dev\tiko\src\app\clsSymbolDb.inc(237) error 58: Type mismatch, at parameter 1 (a) of SYMDB_FILENAMEEQ() in 'if SymDb_FileNameEq( pNew->todoItems(t).wszFile, *pFile ) then'
+C:\dev\tiko\src\app\clsSymbolDb.inc(246) error 58: Type mismatch, at parameter 1 of TODOSTORE_REPLACEFILE() in 'TodoStore_ReplaceFile( FilenameOriginalCase( *pFile ), tmp(), nSub )'
+C:\dev\tiko\src\app\clsSymbolDb.inc(271) error 28: Expected pointer, before '->' in 'dim as long fc = m_pProject->pResult->fileCount'
+C:\dev\tiko\src\app\clsSymbolDb.inc(279) error 28: Expected pointer, before '->' in 'dim as wstring ptr pfn = @m_pProject->pResult->stringPool[ m_pProject->pResult->fileOffsets[i] ]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(279) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(289) error 28: Expected pointer, before '->' in 'dim as long fc = m_pBuffer->pResult->fileCount'
+C:\dev\tiko\src\app\clsSymbolDb.inc(299) error 28: Expected pointer, before '->' in 'dim as wstring ptr pfn = @m_pBuffer->pResult->stringPool[ m_pBuffer->pResult->fileOffsets[i] ]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(299) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(333) error 28: Expected pointer, before '->' in 'dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[s]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(333) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(335) error 28: Expected pointer, before '->' in 'dim as wstring ptr pName = @pRSet->pResult->stringPool[ pSym->nameOffset ]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(335) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(377) error 58: Type mismatch, at parameter 1 (wszName) of FINDBYKINDMASK() in 'dim as SYMBOLREF r2 = this.FindByKindMask( wszBase, SYMMASK_TYPE )'
+C:\dev\tiko\src\app\clsSymbolDb.inc(396) error 58: Type mismatch, at parameter 1 (wszName) of FINDTYPE() in 'return this.FindType( wszBase )'
+C:\dev\tiko\src\app\clsSymbolDb.inc(406) error 58: Type mismatch, at parameter 1 (wszName) of FINDTYPE() in 'return this.FindType( wszBase )'
+C:\dev\tiko\src\app\clsSymbolDb.inc(420) error 28: Expected pointer, before '->' in 'dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[c]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(420) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(422) error 28: Expected pointer, before '->' in 'dim as wstring ptr pName = @pRSet->pResult->stringPool[ pSym->nameOffset ]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(422) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(455) error 28: Expected pointer, before '->' in 'dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[c]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(455) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(459) error 28: Expected pointer, before '->' in 'if SymDb_NameEqW( @pRSet->pResult->stringPool[pSym->nameOffset], @wszName ) then'
+C:\dev\tiko\src\app\clsSymbolDb.inc(459) warning 3(2): Passing different pointer types, at parameter 1 (pName) of SYMDB_NAMEEQW()
+C:\dev\tiko\src\app\clsSymbolDb.inc(472) error 28: Expected pointer, before '->' in 'dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[s]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(472) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(477) error 28: Expected pointer, before '->' in 'if SymDb_NameEqW( @pRSet->pResult->stringPool[pSym->nameOffset], @wszName ) then'
+C:\dev\tiko\src\app\clsSymbolDb.inc(477) warning 3(2): Passing different pointer types, at parameter 1 (pName) of SYMDB_NAMEEQW()
+C:\dev\tiko\src\app\clsSymbolDb.inc(509) error 28: Expected pointer, before '->' in 'dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[c]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(509) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(513) error 28: Expected pointer, before '->' in 'dim as wstring ptr pName = @pRSet->pResult->stringPool[ pSym->nameOffset ]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(513) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(547) error 181: Invalid assignment/conversion, at parameter 1 (s) of PSLEN() in 'dim as long plen = PsLen( wszPrefix )'
+C:\dev\tiko\src\app\clsSymbolDb.inc(565) error 28: Expected pointer, before '->' in 'dim as long fc = pRSet->pResult->fileCount'
+C:\dev\tiko\src\app\clsSymbolDb.inc(569) error 28: Expected pointer, before '->' in 'dim as DWSTRING wszF = *cast(wstring ptr, @pRSet->pResult->stringPool[ pRSet->pResult->fileOffsets[i] ])'
+C:\dev\tiko\src\app\clsSymbolDb.inc(574) error 28: Expected pointer, before '->' in 'dim as long n = pRSet->pResult->symbolCount'
+C:\dev\tiko\src\app\clsSymbolDb.inc(577) error 28: Expected pointer, before '->' in 'dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[i]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(577) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(587) error 28: Expected pointer, before '->' in 'dim as wstring ptr pName = @pRSet->pResult->stringPool[ pSym->nameOffset ]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(587) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(614) error 28: Expected pointer, before '->' in 'dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[c]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(614) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(643) error 28: Expected pointer, before '->' in 'dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[s]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(643) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(660) error 42: Variable not declared, gConfig in 'if PsLen( gConfig.FBWINCompiler64 ) then'
+C:\dev\tiko\src\app\clsSymbolDb.inc(661) error 1: Argument count mismatch, found 'gConfig' in 'wszInc = PsUCase( PsPathDirWithSep(ProcessFromCurdriveApp( gConfig.FBWINCompiler64 ) ) & "inc" )'
+C:\dev\tiko\src\app\clsSymbolDb.inc(670) error 28: Expected pointer, before '->' in 'dim as long fc = pRSet->pResult->fileCount'
+C:\dev\tiko\src\app\clsSymbolDb.inc(673) error 28: Expected pointer, before '->' in 'dim as DWSTRING wszF = *cast(wstring ptr, @pRSet->pResult->stringPool[ pRSet->pResult->fileOffsets[i] ])'
+C:\dev\tiko\src\app\clsSymbolDb.inc(679) error 58: Type mismatch, at parameter 1 (a) of SYMDB_FILENAMEEQ() in 'if SymDb_FileNameEq( results(j), wszF ) then'
+C:\dev\tiko\src\app\clsSymbolDb.inc(699) error 1: Argument count mismatch, found 'gConfig' in 'if bUserFilesOnly andalso (PsLen( gConfig.FBWINCompiler64 ) > 0) then'
+C:\dev\tiko\src\app\clsSymbolDb.inc(700) error 1: Argument count mismatch, found 'gConfig' in 'wszInc = PsUCase( PsPathDirWithSep(ProcessFromCurdriveApp( gConfig.FBWINCompiler64 ) ) & "inc" )'
+C:\dev\tiko\src\app\clsSymbolDb.inc(710) error 28: Expected pointer, before '->' in 'dim as long fc = pRSet->pResult->fileCount'
+C:\dev\tiko\src\app\clsSymbolDb.inc(715) error 28: Expected pointer, before '->' in 'dim as DWSTRING wszF = *cast(wstring ptr, @pRSet->pResult->stringPool[ pRSet->pResult->fileOffsets[i] ])'
+C:\dev\tiko\src\app\clsSymbolDb.inc(720) error 28: Expected pointer, before '->' in 'dim as long n = pRSet->pResult->symbolCount'
+C:\dev\tiko\src\app\clsSymbolDb.inc(723) error 28: Expected pointer, before '->' in 'dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[i]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(723) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(747) error 28: Expected pointer, before '->' in 'dim as long dc = pRSet->pResult->diagCount'
+C:\dev\tiko\src\app\clsSymbolDb.inc(763) error 28: Expected pointer, before '->' in 'function = @r.pRSet->pResult->stringPool[ r.pRSet->pResult->symbols[r.idx].nameOffset ]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(763) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(768) error 28: Expected pointer, before '->' in 'dim as long ofs = r.pRSet->pResult->symbols[r.idx].typeOffset'
+C:\dev\tiko\src\app\clsSymbolDb.inc(770) error 28: Expected pointer, before '->' in 'function = @r.pRSet->pResult->stringPool[ ofs ]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(770) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(775) error 28: Expected pointer, before '->' in 'dim as long fi = r.pRSet->pResult->symbols[r.idx].fileIndex'
+C:\dev\tiko\src\app\clsSymbolDb.inc(777) error 28: Expected pointer, before '->' in 'function = @r.pRSet->pResult->stringPool[ r.pRSet->pResult->fileOffsets[fi] ]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(777) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(782) error 28: Expected pointer, before '->' in 'function = r.pRSet->pResult->symbols[r.idx].kind'
+C:\dev\tiko\src\app\clsSymbolDb.inc(787) error 28: Expected pointer, before '->' in 'function = r.pRSet->pResult->symbols[r.idx].flags'
+C:\dev\tiko\src\app\clsSymbolDb.inc(792) error 28: Expected pointer, before '->' in 'function = r.pRSet->pResult->symbols[r.idx].readCount'
+C:\dev\tiko\src\app\clsSymbolDb.inc(797) error 28: Expected pointer, before '->' in 'function = r.pRSet->pResult->symbols[r.idx].writeCount'
+C:\dev\tiko\src\app\clsSymbolDb.inc(802) error 28: Expected pointer, before '->' in 'dim as long fi = r.pRSet->pResult->symbols[r.idx].refFileIndex'
+C:\dev\tiko\src\app\clsSymbolDb.inc(804) error 28: Expected pointer, before '->' in 'if fi >= r.pRSet->pResult->fileCount then return 0'
+C:\dev\tiko\src\app\clsSymbolDb.inc(804) error 3: Expected End-of-Line, found '->' in 'if fi >= r.pRSet->pResult->fileCount then return 0'
+C:\dev\tiko\src\app\clsSymbolDb.inc(805) error 28: Expected pointer, before '->' in 'function = cast( wstring ptr, @r.pRSet->pResult->stringPool[ r.pRSet->pResult->fileOffsets[fi] ] )'
+C:\dev\tiko\src\app\clsSymbolDb.inc(810) error 28: Expected pointer, before '->' in 'function = r.pRSet->pResult->symbols[r.idx].refLine'
+C:\dev\tiko\src\app\clsSymbolDb.inc(814) error 1: Argument count mismatch, found 'gConfig' in 'if PsLen( gConfig.FBWINCompiler64 ) = 0 then return ""'
+C:\dev\tiko\src\app\clsSymbolDb.inc(815) error 1: Argument count mismatch, found 'gConfig' in 'return PsUCase( PsPathDirWithSep(ProcessFromCurdriveApp( gConfig.FBWINCompiler64 ) ) & "inc" )'
+C:\dev\tiko\src\app\clsSymbolDb.inc(820) error 28: Expected pointer, before '->' in 'function = r.pRSet->pResult->symbols[r.idx].lineNum'
+C:\dev\tiko\src\app\clsSymbolDb.inc(825) error 28: Expected pointer, before '->' in 'function = r.pRSet->pResult->symbols[r.idx].colNum'
+C:\dev\tiko\src\app\clsSymbolDb.inc(830) error 28: Expected pointer, before '->' in 'function = r.pRSet->pResult->symbols[r.idx].bodyLine'
+C:\dev\tiko\src\app\clsSymbolDb.inc(837) error 28: Expected pointer, before '->' in 'dim as long p = r.pRSet->pResult->symbols[r.idx].parentIndex'
+C:\dev\tiko\src\app\clsSymbolDb.inc(850) error 28: Expected pointer, before '->' in 'dim as FBCP_SYMBOL ptr pProc = @pRSet->pResult->symbols[ refProc.idx ]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(850) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(852) error 28: Expected pointer, before '->' in 'dim as DWSTRING wszTip = *cast(wstring ptr, @pRSet->pResult->stringPool[ pProc->nameOffset ]) & "("'
+C:\dev\tiko\src\app\clsSymbolDb.inc(857) error 28: Expected pointer, before '->' in 'dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[c]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(857) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(862) error 28: Expected pointer, before '->' in 'wszP = wszP & *cast(wstring ptr, @pRSet->pResult->stringPool[ pSym->nameOffset ])'
+C:\dev\tiko\src\app\clsSymbolDb.inc(865) error 28: Expected pointer, before '->' in 'wszP = wszP & " as " & *cast(wstring ptr, @pRSet->pResult->stringPool[ pSym->typeOffset ])'
+C:\dev\tiko\src\app\clsSymbolDb.inc(878) error 28: Expected pointer, before '->' in 'wszTip = wszTip & " as " & *cast(wstring ptr, @pRSet->pResult->stringPool[ pProc->typeOffset ])'
+C:\dev\tiko\src\app\clsSymbolDb.inc(897) error 28: Expected pointer, before '->' in 'dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[c]'
+C:\dev\tiko\src\app\clsSymbolDb.inc(897) warning 4(2): Suspicious pointer assignment
+C:\dev\tiko\src\app\clsSymbolDb.inc(927) error 58: Type mismatch, at parameter 1 (a) of SYMDB_FILENAMEEQ() in 'if SymDb_FileNameEq( gTodoItems(i).wszFile, wszFile ) = false then'
+C:\dev\tiko\src\app\clsSymbolDb.inc(961) error 181: Invalid assignment/conversion, at parameter 1 (s) of PSUCASE() in 'dim as DWSTRING wszUp = PsUCase( wszName )'
+C:\dev\tiko\src\app\clsSymbolDb.inc(967) error 20: Type mismatch, found 'then' in 'elseif wszUp < gFBIntrinsics(mid_).wszNameUp then'

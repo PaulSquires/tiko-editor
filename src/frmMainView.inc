@@ -76,20 +76,20 @@ function OnCommand_ViewSplit( _
             ' If already left/right then toggle it closed
             if pDoc->EditorSplitMode = SplitLeftRight then
                 pDoc->EditorSplitMode = SplitNone
-                pDoc->hWndActiveScintilla = pDoc->hWindow(0)
+                pDoc->hWndActiveScintilla = DocView(pDoc, 0)
             else    
                 ' If already split then make sure to cancel the current split and
                 ' reposition windows before engaging new split in order to ensure 
                 ' that window sizes are calculated correctly.
                 pDoc->EditorSplitMode = SplitLeftRight
                 frmMain_PositionWindows()
-                dim as RECT rc = AfxGetWindowRect(pDoc->hWindow(0))
+                dim as RECT rc = AfxGetWindowRect(DocView(pDoc, 0))
                 MapWindowpoints( HWND_DESKTOP, HWND_FRMMAIN, cast(point ptr, @rc), 2 )
                 pDoc->SplitX = rc.left + (rc.right - rc.left) / 2
-                dim as long nTopLine = SciExec( pDoc->hWindow(0), SCI_GETFIRSTVISIBLELINE, 0, 0)  
-                SciExec( pDoc->hWindow(1), SCI_SETFIRSTVISIBLELINE, nTopLine, 0) 
-                dim as long currPos  = SciExec( pDoc->hWindow(0), SCI_GETCURRENTPOS, 0, 0)
-                SciExec( pDoc->hWindow(1), SCI_GOTOPOS, currPos, 0) 
+                dim as long nTopLine = SciExec( DocView(pDoc, 0), SCI_GETFIRSTVISIBLELINE, 0, 0)  
+                SciExec( DocView(pDoc, 1), SCI_SETFIRSTVISIBLELINE, nTopLine, 0) 
+                dim as long currPos  = SciExec( DocView(pDoc, 0), SCI_GETCURRENTPOS, 0, 0)
+                SciExec( DocView(pDoc, 1), SCI_GOTOPOS, currPos, 0) 
             end if
 
         case IDM_SPLITTOPBOTTOM
@@ -102,26 +102,26 @@ function OnCommand_ViewSplit( _
                 ' makes it less visibly jarring. Switch the active scintilla
                 ' to ensure that GetCurrentLineNumber gets the value from the
                 ' correct document.
-                pDoc->hWndActiveScintilla = pDoc->hWindow(0)
+                pDoc->hWndActiveScintilla = DocView(pDoc, 0)
                 dim as long nLines =  pDoc->LinesPerPage(1)
                 dim as long nCurLine =  pDoc->GetCurrentLineNumber()
-                SciExec( pDoc->hWindow(0), SCI_SETFIRSTVISIBLELINE, nCurLine - nLines, 0) 
+                SciExec( DocView(pDoc, 0), SCI_SETFIRSTVISIBLELINE, nCurLine - nLines, 0) 
             else    
                 ' If already split then make sure to cancel the current split and
                 ' reposition windows before engaging new split in order to ensure 
                 ' that window sizes are calculated correctly.
                 pDoc->EditorSplitMode = SplitTopBottom 
                 frmMain_PositionWindows()
-                dim as RECT rc = AfxGetWindowRect(pDoc->hWindow(0))
+                dim as RECT rc = AfxGetWindowRect(DocView(pDoc, 0))
                 MapWindowpoints( HWND_DESKTOP, HWND_FRMMAIN, cast(point ptr, @rc), 2 )
                 ' \ not /: / is floating point in FB and assigning it to a long rounds.
                 pDoc->SplitY = (rc.bottom - rc.top) \ 2
                 dim as long nLines =  pDoc->LinesPerPage(0) \ 2 - 3
                 dim as long nCurLine =  pDoc->GetCurrentLineNumber()
-                SciExec( pDoc->hWindow(1), SCI_SETFIRSTVISIBLELINE, nCurLine - nLines, 0) 
-                dim as long currPos  = SciExec( pDoc->hWindow(0), SCI_GETCURRENTPOS, 0, 0)
-                SciExec( pDoc->hWindow(1), SCI_GOTOPOS, currPos, 0) 
-                SciExec( pDoc->hWindow(0), SCI_SETFIRSTVISIBLELINE, nCurLine, 0) 
+                SciExec( DocView(pDoc, 1), SCI_SETFIRSTVISIBLELINE, nCurLine - nLines, 0) 
+                dim as long currPos  = SciExec( DocView(pDoc, 0), SCI_GETCURRENTPOS, 0, 0)
+                SciExec( DocView(pDoc, 1), SCI_GOTOPOS, currPos, 0) 
+                SciExec( DocView(pDoc, 0), SCI_SETFIRSTVISIBLELINE, nCurLine, 0) 
             end if
     end select
     
@@ -147,8 +147,8 @@ function OnCommand_ViewToggleFocus( byval pDoc as clsDocument ptr ) as LRESULT
     dim idx as long
     
     dim hWin(2) as HWND
-    hWin(0) = pDoc->hWindow(0): if GetFocus() = hWin(0) then idx = 0
-    hWin(1) = pDoc->hWindow(1): if GetFocus() = hWin(1) then idx = 1
+    hWin(0) = DocView(pDoc, 0): if GetFocus() = hWin(0) then idx = 0
+    hWin(1) = DocView(pDoc, 1): if GetFocus() = hWin(1) then idx = 1
     hWin(2) = hFindCtl: if GetFocus() = hWin(2) then idx = 2
     
     do
@@ -267,8 +267,8 @@ function OnCommand_ViewExplorerPosition() as LRESULT
     frmMain_PositionWindows()
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc then
-        AfxRedrawWindow( pDoc->hWindow(0) )
-        AfxRedrawWindow( pDoc->hWindow(1) )
+        AfxRedrawWindow( DocView(pDoc, 0) )
+        AfxRedrawWindow( DocView(pDoc, 1) )
     end if   
     function = 0
 end function
