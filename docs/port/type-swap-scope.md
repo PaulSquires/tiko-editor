@@ -68,3 +68,67 @@ Found by trying, not by review, and all of it verified on both platforms:
    it -- and swap DWSTRING inside that layer, where the `wstring` APIs are
    fewest.
 4. The shell's `wstring` signatures move with 7c, where they belong.
+
+---
+
+# Re-measured, 2026-08-06 (after 7c's app-layer work)
+
+The numbers above were taken before the app layer was closed, the localization
+tables became DWSTRING, `PsVal`/`PsStr`/`PsFile` landed and `PsCompat.bi` grew.
+Re-run: replace `PsCompat.bi` with PsCore's three headers in `tiko.bas`, change
+nothing else, build with `-maxerr 99999`.
+
+    1029 errors reported
+    1010 excluding the "Illegal inside functions" cascade
+
+**Essentially unchanged.** Everything that landed since addressed other things.
+
+| kind | count |
+| --- | --- |
+| Type mismatch | 362 |
+| Invalid data types, before `:` | 206 |
+| Invalid assignment/conversion | 153 |
+| Invalid data types | 95 |
+| the rest | ~194 |
+
+Concentrated: `clsConfig.inc` 200, `modRoutines.inc` 87, `modKeyBindings.inc` 84,
+`modCompileErrors.inc` 38.
+
+## Two findings that change the plan
+
+**1. It is 28 signatures, not ~266.** The table above counted ERROR SITES. The
+functions behind them are 28 declarations taking a plain `wstring` parameter, 13
+of them in `app/clsSymbolDb.bi`. Converting a signature fixes every caller at
+once, so the surface is far smaller than the error count suggests.
+
+But the 13 in `clsSymbolDb` cannot be converted yet — measured, not guessed —
+because their bodies hand the parameter to helpers that walk fbcParser's
+NUL-terminated pool by `wstring ptr`, and getting a buffer pointer out of a
+DWSTRING is `.sptr` under AfxNova and `Wz()` under PsCore, with `Wz()`
+Windows-only *by design*. And of the other 15, several are Win32-boundary
+functions — `getTextWidth` feeds `GetTextExtentPoint32`, `GetFileToString` feeds
+`CreateFileW` — so converting them today adds a `.sptr` at the boundary and buys
+nothing until the swap lands. Attempted, measured, reverted.
+
+**2. `.Utf8` EXISTS ON BOTH TYPES, so the biggest category is convertible
+BEFORE the swap.** AfxNova's DWSTRING has `Utf8()` as a property returning
+`STRING` via `WideCharToMultiByte(CP_UTF8, ...)`; PsCore's has the same shape.
+So the ~270 `dim as string s = <DWSTRING>` and `select case <DWSTRING>` sites can
+take `.Utf8` today, compile under AfxNova, and be verified against the oracle —
+each batch shrinking what the swap has to do in one go.
+
+**WITH ONE CAVEAT THAT IS NOT A DETAIL.** Today those sites convert implicitly,
+and fbc's `wstring` -> `string` conversion goes through the **ANSI codepage**.
+`.Utf8` is UTF-8. So the conversion is a real encoding change for any non-ASCII
+text, in the direction the port is going, and it should be landed where the
+encoding suites can see it rather than quietly across 270 sites at once.
+
+## The shape this gives the swap
+
+Not one commit, still — but for a better reason than before. The path is:
+
+1. the `.Utf8` sites, in batches, oracle-verified (the caveat above)
+2. the 15 non-clsSymbolDb signatures, minus the Win32-boundary ones
+3. the swap itself, against whatever remains
+4. `clsSymbolDb` and the Win32-boundary functions, which need `Wz()` and so can
+   only move once PsCore's DWSTRING is the one in scope
