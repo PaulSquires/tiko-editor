@@ -85,27 +85,76 @@ That reframes 7d. The measured surface is:
 
 Four creation sites, converted together because of finding 4.
 
-## What is next
+## The window class, and the four sites — done
 
-A `tikoSciHost` window class:
+`src/frmSciHost.bi` / `.inc` registers `tikoSciHost`; per-window state in
+`GWLP_USERDATA`; `WM_CREATE` builds the surface, the `PsSciView` and the bridge;
+`PSEV_NOTIFY` becomes a synthesised `SCNotification` sent to the parent as
+`WM_NOTIFY`. One branch is the whole of finding 5:
 
-- registers a class; per-window state in `GWLP_USERDATA`
-- `WM_CREATE` builds the surface, the `PsSciView` and the bridge
-- `msg >= SCI_START` â†’ `SciPs_Send` (this is finding 5)
-- `WM_PAINT` / `WM_SIZE` / input â†’ the bridge
-- `PSEV_NOTIFY` â†’ a synthesised `SCNotification` sent to the parent as
-  `WM_NOTIFY`, so `frmMainOnNotify`'s path is untouched
+```
+if (nMsg >= SCI_START) andalso (nMsg < 5000) then
+    return SciPs_Send(pSt->pView->pSci, nMsg, wParam, lParam)
+```
 
-Then the four creation sites, and a **paired** self-test run â€” the oracle is 27
-stable suites out of 28, and an absolute baseline is the wrong instrument.
+Four creation sites converted: `clsDocument`'s two, FIP's 16-slot pool, the FIP
+scratch. `SciMsg` is `cast(Scintilla_DirectFunction, @SciPs_Send)`. **No other
+call site was edited.**
+
+### What the ceiling had to be
+
+`< 4000` was wrong. **Scintilla's lexer messages live above 4000** —
+`SCI_SETILEXER` 4033, `SCI_GETLEXER` 4002, `SCI_SETKEYWORDS` 4005. With a 4000
+ceiling the editor worked and simply had no lexer, which looks exactly like a
+theme that forgot its colours.
+
+### Six bugs the gates caught, in order
+
+1. **Synthetic key messages carry no scancode** — `lParam = 0`. The headless
+   suite's own helper always built one, so it could not see this.
+2. **The surface had no focus.** `PsSurface` routes keys to `pFocus` and drops
+   them when there is none.
+3. **The view was not the root.** `PsSurface.Resize` sizes only the root, so a
+   view under a bare `PsWidget` kept bounds `0x0` and painted nothing — a blank
+   black pane. The pixel test passed throughout, because it called
+   `SciPs_PaintTo` directly and so called `SciPs_SetSize` directly too.
+4. **The lexer messages** (above).
+5. **`LogPixelsY` hardcoded to 96**, so a DPI-aware host rendered small.
+6. **The class name was a narrow literal** in a Unicode build.
+
+## Verification
+
+- **All 27 oracle suites identical** between the pre-7d build and this one,
+  paired, with state snapshot and restored.
+- `_check_scihost.bat` — 26 assertions including an **A/B against a stock
+  Scintilla window in the same process**: same styles, same lexer, matching
+  line height (within 1px) and matching style bytes.
+- `_check_package.bat` — tiko runs with **only the Windows directories on
+  `PATH`**.
+- Confirmed by hand: rendering, typing, caret, syntax colouring, font size.
+
+## Packaging — done
+
+`_package.bat` stages five DLLs beside the exe; they are committed, as
+`Scintilla64.dll` and `Lexilla64.dll` already were. `_run_tiko.bat` is deleted —
+nothing needs to be on `PATH` any more.
+
+The five are the transitive import closure of `tiko.exe` minus the Windows
+system DLLs, from `objdump -p`: the fork, Blend2D, FreeType, HarfBuzz and
+**`libwinpthread-1.dll`**. Not SDL3 — the closure confirms what the bridge was
+for — and not the four harfbuzz variants.
+
+The earlier `0xC0000139` was an **incomplete copy, not a broken one**.
+`libwinpthread-1.dll` lives only in `build\out\win64` while the other four are
+also in `deps\out\win64in`; copying from the deps directory left it out, the
+loader found another mingw's copy on `PATH`, and the ABI mismatch reported a
+missing *entry point* rather than a missing *file*.
 
 ## Not verified
 
-- **tiko's own build has not changed yet.** `_compile_fast.bat` does not yet
-  carry `-p`/`-l psscintilla`, and tiko.exe will need the DLLs on `PATH` or
-  beside it. Packaging is untouched.
-- **Nothing is wired.** No `PsSciView` exists in a running tiko. Everything
-  above is a probe.
-- **Copying the DLLs next to the exe does not work** â€” an incomplete copied set
-  fails at load with `0xC0000139` naming no useful entry point. The gate points
-  `PATH` at the real directories instead; tiko will have to solve this properly.
+- **Untried by hand:** selection, autocompletion, the context menu, scrolling,
+  the split view, and the Find-in-Project excerpt panes.
+- **Teardown is not asserted.** The one mutation that survived; the obvious
+  assertion was vacuous and was deleted rather than reworded.
+- **`PsWin32Host` and `namespace PsC` remain scaffolding**, due for deletion at
+  7c along with `PsCompat.bi`.
