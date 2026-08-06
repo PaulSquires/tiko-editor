@@ -262,6 +262,96 @@ scope
     DestroyWindow(hSci2)
 end scope
 
+'' ---- THE PIXELS ----------------------------------------------------------
+''
+'' "the editor pane is blank BLACK and typing seems to work but I can't see it".
+'' Reasoning about that produced three plausible causes and no answer; LOOKING
+'' at the buffer settles it in one run. minieditor's white page went the same
+'' way and was only ever solved by dumping the picture.
+''
+'' The styles set here are the ones clsDocument.ApplyProperties sets, in the
+'' same order: a font FACE NAME (not a path), a point size, then fore/back from
+'' the theme, then SCI_STYLECLEARALL.
+scope
+    const CLR_BACK = &h1E1E1E     '' Scintilla colours are 0xBBGGRR
+    const CLR_FORE = &hD4D4D4
+
+    SendMessage(hSci, SCI_STYLESETFONT, STYLE_DEFAULT, cast(LPARAM, strptr("Consolas")))
+    SendMessage(hSci, SCI_STYLESETSIZE, STYLE_DEFAULT, 10)
+    SendMessage(hSci, SCI_STYLESETFORE, STYLE_DEFAULT, CLR_FORE)
+    SendMessage(hSci, SCI_STYLESETBACK, STYLE_DEFAULT, CLR_BACK)
+    SendMessage(hSci, SCI_STYLECLEARALL, 0, 0)
+
+    dim as string sPix = "MMMMMMMMMMMMMMMM"
+    SendMessage(hSci, SCI_SETTEXT, 0, cast(LPARAM, strptr(sPix)))
+    SendMessage(hSci, SCI_COLOURISE, 0, -1)
+
+    '' PAINTED THROUGH THE WIDGET, not through SciPs_PaintTo.
+    ''
+    '' The first version of this called SciPs_PaintTo directly and reported 3926
+    '' ink pixels while the real pane was BLANK BLACK -- because calling it
+    '' directly also meant calling SciPs_SetSize directly, which is the one thing
+    '' the broken path never did. It measured the renderer, which was never at
+    '' fault, and skipped the widget, which was.
+    ''
+    '' So this drives the surface exactly as WM_SIZE and WM_PAINT do: resize the
+    '' host, then walk the tree into the buffer.
+    const PW = 400, PH = 200
+    dim as SciHostState ptr pStP = SciHost_StateFromHwnd(hSci)
+    Ck("the host state is reachable", pStP <> 0, "")
+    pStP->bridge.Resize(PW, PH)
+
+    '' Bounds first, because a zero-sized widget paints nothing and reports no
+    '' error while doing it -- which is precisely how this failed.
+    Ck("the view has a non-zero width after resize", pStP->pView->bounds.w = PW, _
+       str(pStP->pView->bounds.w))
+    Ck("...and height", pStP->pView->bounds.h = PH, str(pStP->pView->bounds.h))
+
+    dim as ulong ptr pBuf = callocate(PW * PH * 4)
+    pStP->pnt.BeginFrame(pBuf, PW, PH, PW * 4)
+    PsC.PsSurfacePaint(pStP->surf, pStP->pnt)
+    pStP->pnt.EndFrame()
+    dim as long nOk = 1
+
+    '' THE MODE, not pixel 0. Pixel 0 is in the margin, which is a different
+    '' colour from the text background -- measuring against it was wrong in
+    '' minieditor and would be wrong here.
+    dim as long nDistinct, nInk, nBackPix
+    dim as ulong uMode
+    scope
+        '' Cheap mode: the most common value wins. 400x200 is small enough to
+        '' do this with a linear scan over a tiny candidate list.
+        dim as ulong cand(0 to 15)
+        dim as long cnt(0 to 15), nc
+        for i as long = 0 to PW * PH - 1
+            dim as ulong c = pBuf[i] and &hFFFFFF
+            dim as boolean bFound
+            for j as long = 0 to nc - 1
+                if cand(j) = c then cnt(j) += 1 : bFound = true : exit for
+            next
+            if (not bFound) andalso (nc < 16) then
+                cand(nc) = c : cnt(nc) = 1 : nc += 1
+            end if
+        next
+        nDistinct = nc
+        dim as long nBest = -1
+        for j as long = 0 to nc - 1
+            if cnt(j) > nBest then nBest = cnt(j) : uMode = cand(j)
+        next
+        nBackPix = nBest
+        nInk = (PW * PH) - nBest
+    end scope
+
+    Ck("the buffer is not one flat colour", nDistinct > 1, str(nDistinct) & " distinct")
+    Ck("the background is the style back colour", uMode = &h1E1E1E, hex(uMode, 6))
+    '' 16 M glyphs cannot cover less than a few hundred pixels. A handful would
+    '' mean the caret and nothing else -- which is exactly what "typing works but
+    '' I can't see it" looks like.
+    Ck("there is INK on the page, not just a caret", nInk > 500, str(nInk) & " px")
+
+    deallocate(pBuf)
+end scope
+
 '' NOT ASSERTED: that teardown releases the state.
 ''
 '' The obvious line -- SciHost_StateFromHwnd(hSci) = 0 after DestroyWindow -- was

@@ -153,8 +153,6 @@ private function SciHost_OnCreate(byval hWnd as HWND) as boolean
     pSt->surf.pText = cptr(PsC.PsTextEngine_ ptr, @g_sciHostTE)
     pSt->pnt.pText  = @g_sciHostTE
 
-    dim as PsC.PsWidget ptr root = new PsC.PsWidget
-    pSt->surf.SetRoot(root)
 
     dim as RECT rc
     GetClientRect(hWnd, @rc)
@@ -167,7 +165,21 @@ private function SciHost_OnCreate(byval hWnd as HWND) as boolean
     pSt->pView = new PsC.PsSciView()
     if pSt->pView = 0 then return false
     if pSt->pView->Create(g_sSciHostFont, cw, ch) = false then return false
-    root->AddChild(pSt->pView)
+
+    ' THE VIEW IS THE ROOT. It was a child of a bare PsWidget, and that is why the
+    ' pane came up blank BLACK with typing that worked but could not be seen.
+    '
+    ' PsSurface.Resize sets the bounds of THE ROOT and stops there -- a plain
+    ' PsWidget is not a layout manager and does not pass anything to its
+    ' children. So the view's bounds stayed 0x0, OnLayout published a size of
+    ' zero to Scintilla, and the widget painted nothing: the black was the
+    ' untouched DIB, not the editor's background.
+    '
+    ' minieditor got away with the same shape because it has a real layout
+    ' function that sets the view's bounds explicitly -- it has a status bar to
+    ' place. This window holds exactly one widget and needs no layout at all, so
+    ' making it the root is both simpler and the thing that makes Resize work.
+    pSt->surf.SetRoot(pSt->pView)
 
     if pSt->bridge.Attach(@pSt->surf, hWnd) = false then return false
     pSt->bridge.Resize(cw, ch)
