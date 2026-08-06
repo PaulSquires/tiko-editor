@@ -588,8 +588,12 @@ function CompleteIncludeFilename( byval pDoc as clsDocument ptr, byval sFilename
         wszCompleteFilename = PsCurDir & "\" & sFilename
     elseif PsFileExists(PsExePath & sFilename) then 
         wszCompleteFilename = PsExePath & sFilename
-    elseif PsFileExists(str(wszCompilerPath) & "\" & sFilename) then 
-        wszCompleteFilename = str(wszCompilerPath) & "\" & sFilename
+    ' NO str() ON THE DWSTRING. It converted wide -> ANSI purely to join two strings,
+    ' so a compiler path with a non-ASCII character was mangled on the way through
+    ' for no reason. Dropping it keeps the expression wide end to end, and it is
+    ' also what the swap needs: PsCore's DWSTRING has no str().
+    elseif PsFileExists(wszCompilerPath & "\" & sFilename) then 
+        wszCompleteFilename = wszCompilerPath & "\" & sFilename
     else
         ' Iterate the optional semi colon separated list of compiler include paths
         dim as DWSTRING includePath
@@ -954,7 +958,10 @@ function AfxIFileSaveDialog( _
         wszFilePath = PsPathDirWithSep(*pwszFileName )
     else   
         ' Set the default folder to save the file
-        if gApp.wszLastOpenFolder then 
+        ' PsLen, not the implicit cast. `if <DWSTRING> then` relies on AfxNova's
+        ' cast-to-boolean, which PsCore's type does not have -- and it reads as a
+        ' null test when it is an is-it-empty test.
+        if PsLen(gApp.wszLastOpenFolder) then 
             wszFilePath = gApp.wszLastOpenFolder
         else
             ' New file being saved try to default to the project folder
