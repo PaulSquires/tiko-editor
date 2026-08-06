@@ -93,10 +93,9 @@ end constructor
 ' The two DWSTRINGs meet at .Utf8, which both types have and which is lossless in both
 ' directions. That is the same bridge modEncoding uses for the document save path.
 ' ========================================================================================
-private function Config_PsPath( byref wszPath as wstring ) as PsC.DWSTRING
-    dim as DWSTRING w = wszPath
+private function Config_PsPath( byval wszPath as DWSTRING ) as PsC.DWSTRING
     dim as PsC.DWSTRING d
-    d.Utf8 = w.Utf8
+    d.Utf8 = wszPath.Utf8
     return d
 end function
 
@@ -104,7 +103,7 @@ end function
 ' UTF-16 settings.ini and the ANSI keyword files both come back correct without the caller
 ' saying which is which -- which CTextStream's bUnicode flag made every caller say, and get
 ' wrong the moment a file changed encoding.
-private function Config_ReadLines( byref wszPath as wstring, lines() as DWSTRING ) as boolean
+private function Config_ReadLines( byval wszPath as DWSTRING, lines() as DWSTRING ) as boolean
     erase lines
     dim as boolean bOk
     dim as string sBytes = PsC.PsFileReadAll( Config_PsPath(wszPath), bOk )
@@ -128,7 +127,7 @@ private function Config_ReadLines( byref wszPath as wstring, lines() as DWSTRING
 end function
 
 ' Reads a whole text file as one string, replacing CTextStream.ReadAll.
-private function Config_ReadAll( byref wszPath as wstring ) as DWSTRING
+private function Config_ReadAll( byval wszPath as DWSTRING ) as DWSTRING
     dim as boolean bOk
     dim as string sBytes = PsC.PsFileReadAll( Config_PsPath(wszPath), bOk )
     if bOk = false then return ""
@@ -141,7 +140,7 @@ end function
 
 ' Writes text as UTF-16LE with a BOM -- what CTextStream.Create(path, true, true) produced
 ' and what every settings.ini already on disk is.
-private function Config_WriteUtf16( byref wszPath as wstring, byref wszText as DWSTRING ) as boolean
+private function Config_WriteUtf16( byval wszPath as DWSTRING, byref wszText as DWSTRING ) as boolean
     dim as PsC.DWSTRING d
     d.Utf8 = wszText.Utf8
     dim as boolean bLossy
@@ -151,7 +150,7 @@ end function
 
 ' Writes text as the ANSI codepage with no BOM -- what CTextStream.Create(path) produced for
 ' the keyword files, which are plain lists and were never Unicode.
-private function Config_WriteAnsi( byref wszPath as wstring, byref wszText as DWSTRING ) as boolean
+private function Config_WriteAnsi( byval wszPath as DWSTRING, byref wszText as DWSTRING ) as boolean
     dim as PsC.DWSTRING d
     d.Utf8 = wszText.Utf8
     dim as boolean bLossy

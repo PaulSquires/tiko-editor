@@ -27,21 +27,24 @@
 ' source must not silently invalidate every mapping a user has saved.
 ' ========================================================================================
 function frmKeyboard_SaveKeyBindings( byval wszFilename as DWSTRING ) as long
-    dim pStream as CTextStream
-    if pStream.Create( wszFilename ) = S_OK then
-        dim as DWSTRING wszLine
-        for i as long = lbound(gKeys) to ubound(gKeys)
-            wszLine = gKeys(i).wszMsgString
+    ' One buffer, one write -- the same shape clsConfig now uses, and for the same
+    ' reason: a failure partway through a per-line stream leaves a truncated
+    ' keybindings.ini that looks saved. The file is plain ASCII with no BOM, which
+    ' is what CTextStream.Create wrote without the bUnicode flag, so it is written
+    ' back the same way.
+    dim as DWSTRING wszOut
+    dim as DWSTRING wszLine
+    for i as long = lbound(gKeys) to ubound(gKeys)
+        wszLine = gKeys(i).wszMsgString
 
-            if gKeys(i).bDefaultDisabled then
-                wszLine = wszLine & "(DISABLED)"
-            end if
+        if gKeys(i).bDefaultDisabled then
+            wszLine = wszLine & "(DISABLED)"
+        end if
 
-            wszLine = wszLine & ":" & gKeys(i).wszUserKeys
-            pStream.WriteLine wszLine
-        next
-        pStream.Close
-    end if
+        wszLine = wszLine & ":" & gKeys(i).wszUserKeys
+        wszOut &= wszLine & vbcrlf
+    next
+    Config_WriteAnsi( wszFilename, wszOut )
     function = 0
 end function
 
@@ -255,16 +258,15 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
     ' user defined key mappings.
     dim as DWSTRING wszFilename = PsExePath & "settings\keybindings.ini"
 
-    dim pStream as CTextStream
-
-    if pStream.Open( wszFilename ) = S_OK then
-        do until pStream.EOS
-            dim as DWSTRING wst = pStream.ReadLine
+    redim as DWSTRING lines(any)
+    if Config_ReadLines( wszFilename, lines() ) then
+        for nLine as long = lbound(lines) to ubound(lines)
+            dim as DWSTRING wst = lines(nLine)
             wst = PsTrim(wst)
-            if PsLen(wst) = 0 then continue Do
+            if PsLen(wst) = 0 then continue for
 
             ' Each keybinding entry has fields separated by a colon
-            if PsInStr( wst, ":" ) = 0 then continue do
+            if PsInStr( wst, ":" ) = 0 then continue for
 
             dim as DWSTRING wszMsgString = PsStrParse(wst, 1, ":")
 
@@ -281,8 +283,7 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
             dim as DWSTRING wszUserKeys = PsTrim(PsStrParse(wst, 2, ":"))
 
             frmKeyBoard_AddKeyBinding_User( wszMsgString, wszUserKeys, bDisabled )
-        Loop
-        pStream.Close
+        next
     end if
 
     ' Lastly, save the keybindings settings file (we do this in case the file never existed
@@ -412,8 +413,17 @@ function frmKeyboard_AccelKeyToValue( byval wszString as DWSTRING ) as long
             return frmKeyboard_OEMtoVirtKey(asc("'"))
         case chr(34), "DOUBLEQUOTE"     ' VK_OEM_7
             return frmKeyboard_OEMtoVirtKey(34)
-        case "0" to "9": return asc(wszString)
-        case "A" to "Z": return asc(wszString)
+        ' asc(.Utf8), and the ORIGINAL rather than the uppercased selector -- that is
+        ' the behaviour being preserved, not chosen: "a" matches the "A" to "Z" arm
+        ' after PsUCase and then returns asc("a") = 97, not 65. Both reachable arms
+        ' are ASCII, where the first UTF-8 byte and the first wide character agree.
+        '
+        ' THE RANGES THEMSELVES ARE THE TRAP WRITTEN UP IN Learnings.md: `case "A" to
+        ' "Z"` is a LEXICOGRAPHIC range over the whole string, so an unrecognised
+        ' multi-character name still resolves to its own initial. Left alone here --
+        ' that is a vocabulary question, not a string-type one.
+        case "0" to "9": return asc(wszString.Utf8)
+        case "A" to "Z": return asc(wszString.Utf8)
     end select
     function = 0
 end function
@@ -684,12 +694,16 @@ sub KeyBindings_RunSelfTest()
     ' construction.
     for i as long = lbound(gKeyNames) to ubound(gKeyNames)
         dim as long vkI = frmKeyboard_AccelKeyToValue( gKeyNames(i).wszName )
-        dim as string sName = gKeyNames(i).wszName
-
+        ' .Utf8 -- these exist ONLY to build KBASSERT failure text. The implicit
+        ' conversion they used goes through the ANSI codepage and .Utf8 does not, so
+        ' this IS an encoding change; here it can only affect how a failure message
+        ' prints, and every value is a key name or a message id. That is what makes
+        ' these safe to convert ahead of the swap when a file path would not be.
+        dim as string sName = gKeyNames(i).wszName.Utf8
         KBASSERT( vkI <> 0, "vocabulary name """ & sName & """ resolves to virtual key 0" )
 
         for j as long = i + 1 to ubound(gKeyNames)
-            dim as string sOther = gKeyNames(j).wszName
+            dim as string sOther = gKeyNames(j).wszName.Utf8
             KBASSERT( vkI <> frmKeyboard_AccelKeyToValue( gKeyNames(j).wszName ), _
                       "vocabulary names """ & sName & """ and """ & sOther & _
                       """ both resolve to virtual key " & str(vkI) )
@@ -701,7 +715,7 @@ sub KeyBindings_RunSelfTest()
     ' order ambiguous.
     for i as long = lbound(gKeyNames) to ubound(gKeyNames)
         for j as long = i + 1 to ubound(gKeyNames)
-            dim as string sName = gKeyNames(i).wszName
+            dim as string sName = gKeyNames(i).wszName.Utf8
             KBASSERT( PsUCase(gKeyNames(i).wszName) <> PsUCase(gKeyNames(j).wszName), _
                       "duplicate vocabulary name """ & sName & """" )
         next
@@ -752,9 +766,9 @@ sub KeyBindings_RunSelfTest()
         dim as DWSTRING wszFinal = PsStrParse( gKeys(i).wszDefaultKeys, nCount, "+" )
         dim as DWSTRING wszCanon = KeyBindings_VKToName( frmKeyboard_AccelKeyToValue( wszFinal ) )
 
-        dim as string sMsg   = gKeys(i).wszMsgString
-        dim as string sKeys  = gKeys(i).wszDefaultKeys
-        dim as string sCanon = wszCanon
+        dim as string sMsg   = gKeys(i).wszMsgString.Utf8
+        dim as string sKeys  = gKeys(i).wszDefaultKeys.Utf8
+        dim as string sCanon = wszCanon.Utf8
         KBASSERT( (PsLen(wszCanon) > 0) andalso (PsUCase(wszCanon) = PsUCase(wszFinal)), _
                   sMsg & " default """ & sKeys & """ final key is not canonical (got """ & _
                   sCanon & """)" )
@@ -763,7 +777,7 @@ sub KeyBindings_RunSelfTest()
         ' accelerator for plain D and no one would notice until it fired at the wrong time.
         for ii as long = 1 to nCount - 1
             dim as DWSTRING wszMod = PsStrParse( gKeys(i).wszDefaultKeys, ii, "+" )
-            dim as string sMod = wszMod
+            dim as string sMod = wszMod.Utf8
             KBASSERT( frmKeyboard_VirtKeyToValue( wszMod ) <> 0, _
                       sMsg & " default """ & sKeys & """ has an unrecognised modifier """ & sMod & """" )
         next
@@ -774,7 +788,7 @@ sub KeyBindings_RunSelfTest()
     ' stops at the first match, so the second entry could never be given a user key.
     for i as long = lbound(gKeys) to ubound(gKeys)
         for j as long = i + 1 to ubound(gKeys)
-            dim as string sMsg = gKeys(i).wszMsgString
+            dim as string sMsg = gKeys(i).wszMsgString.Utf8
             KBASSERT( gKeys(i).wszMsgString <> gKeys(j).wszMsgString, _
                       "duplicate binding message string """ & sMsg & """" )
         next
@@ -797,7 +811,7 @@ sub KeyBindings_RunSelfTest()
     redim as long vkPick( lbound(gKeyNames) to ubound(gKeyNames) )
 
     for i as long = lbound(gKeyNames) to ubound(gKeyNames)
-        dim as string sName = gKeyNames(i).wszName
+        dim as string sName = gKeyNames(i).wszName.Utf8
         vkPick(i) = KeyBindings_PickListKeyToValue( gKeyNames(i).wszName )
 
         KBASSERT( vkPick(i) <> 0, _
@@ -814,8 +828,8 @@ sub KeyBindings_RunSelfTest()
     ' about what it offers, and the second one silently steals the first one's key.
     for i as long = lbound(gKeyNames) to ubound(gKeyNames)
         for j as long = i + 1 to ubound(gKeyNames)
-            dim as string sName  = gKeyNames(i).wszName
-            dim as string sOther = gKeyNames(j).wszName
+            dim as string sName  = gKeyNames(i).wszName.Utf8
+            dim as string sOther = gKeyNames(j).wszName.Utf8
             KBASSERT( vkPick(i) <> vkPick(j), _
                       "pick-list names """ & sName & """ and """ & sOther & _
                       """ both resolve to virtual key " & str(vkPick(i)) )
