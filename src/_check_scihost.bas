@@ -352,6 +352,135 @@ scope
     deallocate(pBuf)
 end scope
 
+'' ---- A/B AGAINST STOCK SCINTILLA -----------------------------------------
+''
+'' "The text is VERY small and there is no syntax coloring."
+''
+'' Both are answerable by MEASUREMENT rather than by eye, because tiko still
+'' loads Scintilla64.dll and Lexilla64.dll -- so the thing 7d replaced can be
+'' stood up in the same process, given the SAME styles, and asked the same
+'' questions. That is a real A/B, not a recollection of what tiko used to look
+'' like.
+scope
+    dim as any ptr pLibSci = dylibload( exepath() & "\..\Scintilla64.dll" )
+    dim as any ptr pLibLex = dylibload( exepath() & "\..\Lexilla64.dll" )
+    Ck("Scintilla64.dll loads (the A side)", pLibSci <> 0, "")
+    Ck("Lexilla64.dll loads", pLibLex <> 0, "")
+
+    if (pLibSci <> 0) andalso (pLibLex <> 0) then
+        dim as CreateLexerFn pfnCreate = _
+            cast(CreateLexerFn, dylibsymbol(pLibLex, "CreateLexer"))
+        Ck("Lexilla exports CreateLexer", pfnCreate <> 0, "")
+
+        '' The stock control, same parent, a DIFFERENT id.
+        dim as HWND hRef = CreateWindowEx(0, wstr("Scintilla"), "", _
+                                          WS_CHILD, 0, 0, 400, 200, hParent, _
+                                          cast(HMENU, 5000), GetModuleHandle(null), null)
+        Ck("a stock Scintilla window", hRef <> 0, "")
+
+        '' IDENTICAL style setup on both, in clsDocument.ApplyProperties's order.
+        const FSIZE = 10
+        for each_ as long = 0 to 1
+            dim as HWND h = iif(each_ = 0, hRef, hSci)
+            SendMessage(h, SCI_STYLESETFONT, STYLE_DEFAULT, cast(LPARAM, strptr("Consolas")))
+            SendMessage(h, SCI_STYLESETSIZE, STYLE_DEFAULT, FSIZE)
+            SendMessage(h, SCI_STYLESETFORE, STYLE_DEFAULT, &hD4D4D4)
+            SendMessage(h, SCI_STYLESETBACK, STYLE_DEFAULT, &h1E1E1E)
+            SendMessage(h, SCI_STYLECLEARALL, 0, 0)
+        next
+
+        '' ---- THE SIZE, ASKED OF SCINTILLA ITSELF -------------------------
+        '' SCI_TEXTHEIGHT is the line height Scintilla lays out with, which is
+        '' the number that decides how big the text LOOKS. Comparing it to the
+        '' stock control at the same point size turns "very small" into a ratio.
+        dim as long hRefLine = SendMessage(hRef, SCI_TEXTHEIGHT, 0, 0)
+        dim as long hPsLine  = SendMessage(hSci, SCI_TEXTHEIGHT, 0, 0)
+        Ck("stock line height is sane", hRefLine > 0, str(hRefLine))
+        '' WITHIN A PIXEL, not equal. FreeType and GDI round ascent and descent
+        '' differently and always will; insisting on equality would be a test that
+        '' fails for a reason nobody can fix. A pixel is the tolerance -- anything
+        '' larger is a real difference in how big the text comes out.
+        Ck("the fork's line height matches stock within 1px", _
+           abs(hPsLine - hRefLine) <= 1, str(hPsLine) & " vs " & str(hRefLine))
+
+        '' ---- DPI, WHICH IS WHAT "VERY SMALL" ACTUALLY WAS -----------------
+        ''
+        '' PlatPs hardcoded LogPixelsY to 96, and Scintilla turns points into
+        '' pixels with points * LogPixelsY / 72 -- so on a DPI-aware host at 150%
+        '' the editor rendered at two thirds size while every control around it
+        '' scaled correctly.
+        ''
+        '' This gate is NOT DPI-aware, so it cannot reproduce that by running at
+        '' high DPI. It asserts the MECHANISM instead: tell PlatPs 144, force the
+        '' fonts to be realised again, and the line height must grow by half.
+        '' Without that, "the host now calls PlatPs_SetDpi" is an unverified claim.
+        scope
+            PlatPs_SetDpi(144)
+            SendMessage(hSci, SCI_STYLESETSIZE, STYLE_DEFAULT, FSIZE)
+            SendMessage(hSci, SCI_STYLECLEARALL, 0, 0)
+            dim as long hHi = SendMessage(hSci, SCI_TEXTHEIGHT, 0, 0)
+
+            PlatPs_SetDpi(96)
+            SendMessage(hSci, SCI_STYLESETSIZE, STYLE_DEFAULT, FSIZE)
+            SendMessage(hSci, SCI_STYLECLEARALL, 0, 0)
+            dim as long hLo = SendMessage(hSci, SCI_TEXTHEIGHT, 0, 0)
+
+            Ck("at 144 dpi the line height grows by about half", _
+               (hHi > hLo * 13 \ 10) andalso (hHi < hLo * 17 \ 10), _
+               str(hHi) & " at 144 vs " & str(hLo) & " at 96")
+            Ck("...and setting it back restores the old height", hLo = hPsLine, _
+               str(hLo) & " vs " & str(hPsLine))
+        end scope
+
+        '' ---- THE LEXER ---------------------------------------------------
+        '' Colouring means SCI_GETSTYLEAT returns something other than 0 across
+        '' the text. Asserted as a COUNT OF DISTINCT STYLE BYTES, because a
+        '' lexer that ran but classified everything the same way is also broken,
+        '' and "not all zero" would not catch it.
+        dim as string sCode = "' a comment" & chr(10) & "dim as long x = 42" & chr(10)
+        for each_ as long = 0 to 1
+            dim as HWND h = iif(each_ = 0, hRef, hSci)
+            if pfnCreate <> 0 then
+                dim as any ptr pLx = pfnCreate("tiko")
+                SendMessage(h, SCI_SETILEXER, 0, cast(LPARAM, pLx))
+            end if
+            SendMessage(h, SCI_SETTEXT, 0, cast(LPARAM, strptr(sCode)))
+            SendMessage(h, SCI_COLOURISE, 0, -1)
+        next
+
+        dim as long nRefStyles, nPsStyles
+        for each_ as long = 0 to 1
+            dim as HWND h = iif(each_ = 0, hRef, hSci)
+            dim as long nLen = SendMessage(h, SCI_GETLENGTH, 0, 0)
+            dim as long seen(0 to 255), n
+            for i as long = 0 to nLen - 1
+                dim as long st = SendMessage(h, SCI_GETSTYLEAT, i, 0) and &hFF
+                if seen(st) = 0 then seen(st) = 1 : n += 1
+            next
+            if each_ = 0 then nRefStyles = n else nPsStyles = n
+        next
+
+        '' Diagnostics, printed rather than asserted: which of the three steps --
+        '' accepting the lexer, running it, writing styles -- actually differs.
+        print "        [dx] endStyled  stock=" & _
+              str(SendMessage(hRef, SCI_GETENDSTYLED, 0, 0)) & _
+              "  fork=" & str(SendMessage(hSci, SCI_GETENDSTYLED, 0, 0))
+        print "        [dx] lexer id   stock=" & _
+              str(SendMessage(hRef, SCI_GETLEXER, 0, 0)) & _
+              "  fork=" & str(SendMessage(hSci, SCI_GETLEXER, 0, 0))
+        print "        [dx] len        stock=" & _
+              str(SendMessage(hRef, SCI_GETLENGTH, 0, 0)) & _
+              "  fork=" & str(SendMessage(hSci, SCI_GETLENGTH, 0, 0))
+
+        Ck("stock Scintilla styles the text with the tiko lexer", nRefStyles > 1, _
+           str(nRefStyles) & " distinct styles")
+        Ck("the fork styles it the SAME way", nPsStyles = nRefStyles, _
+           str(nPsStyles) & " vs " & str(nRefStyles))
+
+        DestroyWindow(hRef)
+    end if
+end scope
+
 '' NOT ASSERTED: that teardown releases the state.
 ''
 '' The obvious line -- SciHost_StateFromHwnd(hSci) = 0 after DestroyWindow -- was

@@ -21,6 +21,30 @@ sub SciHost_SetFontPath(byref sPath as string)
     g_sSciHostFont = sPath
 end sub
 
+'' GetDpiForWindow, resolved at run time. It is Windows 10 1607+, and fbc's
+'' windows.bi does not declare it -- a static import would refuse to start on
+'' anything older rather than fall back.
+private function SciHost_DpiFor(byval hWnd as HWND) as long
+    static as any ptr pfn
+    static as boolean bTried
+    if bTried = false then
+        bTried = true
+        dim as any ptr hUser = GetModuleHandle("user32.dll")
+        if hUser then pfn = GetProcAddress(hUser, "GetDpiForWindow")
+    end if
+    if pfn <> 0 then
+        dim as function stdcall (byval as HWND) as ulong f = pfn
+        dim as long d = f(hWnd)
+        if d >= 48 then return d
+    end if
+    '' The desktop DC, which reports the SYSTEM dpi -- right on a single-monitor
+    '' box and stale on a mixed-DPI one. Only reached on pre-1607.
+    dim as HDC hdc = GetDC(0)
+    dim as long d = GetDeviceCaps(hdc, LOGPIXELSY)
+    ReleaseDC(0, hdc)
+    return iif(d >= 48, d, 96)
+end function
+
 private function SciHost_GlobalInit() as boolean
     if g_bSciHostInit then return true
     if len(g_sSciHostFont) = 0 then
@@ -162,6 +186,15 @@ private function SciHost_OnCreate(byval hWnd as HWND) as boolean
     dim as long cw = iif(rc.right  > 0, rc.right,  1)
     dim as long ch = iif(rc.bottom > 0, rc.bottom, 1)
 
+    ' BEFORE the view is created, because Scintilla realises its default font
+    ' during construction and would otherwise cache one at 96 dpi.
+    '
+    ' Without this the editor renders at 96 dpi while tiko -- which IS dpi aware --
+    ' scales everything around it, so on a 150% display the text comes out two
+    ' thirds size against correctly-sized tabs and menus. That is what "the text
+    ' is VERY small" was.
+    PlatPs_SetDpi( SciHost_DpiFor(hWnd) )
+
     pSt->pView = new PsC.PsSciView()
     if pSt->pView = 0 then return false
     if pSt->pView->Create(g_sSciHostFont, cw, ch) = false then return false
@@ -238,10 +271,20 @@ private function SciHost_WndProc stdcall ( byval hWnd as HWND, byval nMsg as UIN
     '' THIS SINGLE BRANCH IS 7d. It carries all ~212 SciExec sites, all 350
     '' SciMsg sites and everything clsDocument sends, with no call site edited.
     ''
-    '' The range is safe by Scintilla's own design: ordinary window messages are
-    '' below 0x0400, WM_APP is 0x8000 and registered messages are above 0xC000,
-    '' so 2000-3999 belongs to nobody else.
-    if (nMsg >= SCI_START) andalso (nMsg < 4000) then
+    '' UP TO 5000, NOT 4000. THE LEXER MESSAGES LIVE ABOVE 4000 -- SCI_SETILEXER
+    '' is 4033, SCI_GETLEXER 4002, SCI_SETKEYWORDS 4005 -- and a 4000 ceiling sent
+    '' every one of them to DefWindowProc instead. The editor worked and simply
+    '' had no lexer: all text came out in style 0, which looks exactly like a
+    '' theme that forgot its colours rather than like a message being dropped.
+    ''
+    '' Measured against a stock Scintilla window in the SAME PROCESS, given the
+    '' same styles and the same tiko lexer: stock reported lexer id 8 and 5
+    '' distinct style bytes, the fork reported id 0 and 1.
+    ''
+    '' The range is still safe by Scintilla's own design: ordinary window messages
+    '' are below 0x0400, WM_APP is 0x8000 and registered messages are above
+    '' 0xC000, so 2000-4999 belongs to nobody else.
+    if (nMsg >= SCI_START) andalso (nMsg < 5000) then
         dim as SciHostState ptr pSt = SciHost_StateFromHwnd(hWnd)
         if pSt = 0 orelse pSt->pView = 0 then return 0
         '' NOT PsC.SciPs_Send. The extern "c" block lives at GLOBAL scope by
