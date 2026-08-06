@@ -362,13 +362,33 @@ private function SciHost_WndProc stdcall ( byval hWnd as HWND, byval nMsg as UIN
             end if
             return 0
 
-        case WM_LBUTTONUP, WM_RBUTTONUP, WM_MBUTTONUP
+        case WM_LBUTTONUP, WM_MBUTTONUP
             ReleaseCapture()
             if pSt then
                 pSt->bridge.HandleMessage(nMsg, wParam, lParam, GetTickCount())
                 SciHost_FlushDamage(pSt)
             end if
             return 0
+
+        case WM_RBUTTONUP
+            '' THE ONE MOUSE-UP THAT MUST STILL REACH DefWindowProc, and the
+            '' reason the editor's right-click menu disappeared in Phase 7d.
+            ''
+            '' Nothing SENDS WM_CONTEXTMENU. DefWindowProc SYNTHESISES it from
+            '' the right-button release, and when the window does not handle it
+            '' DefWindowProc walks it up to the parent -- which is HWND_FRMMAIN,
+            '' where frmMain_OnContextMenu calls ShowScintillaContextMenu.
+            ''
+            '' The real Scintilla window went through that chain. This one
+            '' returned 0 for the whole button-up group, so the chain stopped
+            '' here and no WM_CONTEXTMENU was ever generated. The bridge still
+            '' gets the message first; DefWindowProc only adds the synthesis.
+            ReleaseCapture()
+            if pSt then
+                pSt->bridge.HandleMessage(nMsg, wParam, lParam, GetTickCount())
+                SciHost_FlushDamage(pSt)
+            end if
+            return DefWindowProc(hWnd, nMsg, wParam, lParam)
 
         case WM_MOUSEMOVE
             if pSt then

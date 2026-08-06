@@ -27,6 +27,19 @@ rem A BOUNDED run, by PID. tiko prints its result and then goes on being an
 rem editor -- it never exits -- so a plain `start /wait` hangs forever. PowerShell
 rem is used only to get the PID back: `taskkill /im tiko.exe` would also kill an
 rem editor the author happens to have open, which is not this script's business.
+rem
+rem THE KILL IS A TREE KILL, AND THAT IS THE FIX FOR "IT HANGS WHEN TIKO ENDS".
+rem -NoNewWindow means tiko shares THIS console, and every process it spawns
+rem inherits both that console and the redirected stdout/stderr handles. Killing
+rem only tiko leaves those children alive holding them, and cmd goes on waiting
+rem for a console nobody has released -- which looks exactly like the check
+rem hanging after tiko has visibly gone. `taskkill /T` takes the tree; the
+rem WaitForExit then makes sure the log is flushed and closed before findstr
+rem reads it, rather than trusting that the kill was instantaneous.
+rem
+rem IT ALSO STOPS AS SOON AS THE LINE APPEARS instead of always sleeping 20s.
+rem The 20 is a CEILING now, not a duration, so a healthy package costs about a
+rem second and only a broken one waits.
 pushd "%~dp0"
 rem BY FULL PATH. PATH was just reduced to the Windows directories, which is
 rem the point of this check -- so powershell.exe is not on it either. Adding
@@ -34,7 +47,13 @@ rem its directory back would work and would also be one more thing on PATH
 rem that the check is supposed to be doing without.
 %SystemRoot%\system32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -Command ^
   "$p = Start-Process (Join-Path (Get-Location) 'tiko.exe') -PassThru -NoNewWindow -RedirectStandardOutput _pkgcheck.log -RedirectStandardError _pkgcheck.err;" ^
-  "Start-Sleep -Seconds 20; try { $p.Kill() } catch {}"
+  "for ($i = 0; $i -lt 80; $i++) {" ^
+  "  Start-Sleep -Milliseconds 250;" ^
+  "  if ($p.HasExited) { break };" ^
+  "  if (Test-Path _pkgcheck.log) { if (Select-String -Path _pkgcheck.log -Pattern 'encoding self-test' -Quiet -ErrorAction SilentlyContinue) { break } }" ^
+  "};" ^
+  "if (-not $p.HasExited) { & \"$env:SystemRoot\system32\taskkill.exe\" /PID $p.Id /T /F 2>&1 | Out-Null };" ^
+  "[void]$p.WaitForExit(5000)"
 popd
 
 findstr /c:"encoding self-test" "%~dp0_pkgcheck.log" >nul 2>&1

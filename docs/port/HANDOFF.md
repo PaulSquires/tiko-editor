@@ -41,6 +41,7 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | `_compile_fast.bat` | gas64 build, zero warnings | green |
 | `_check_scihost.bat` | the editor works — 26 assertions, incl. an **A/B against a stock Scintilla window in the same process** | green |
 | `_check_package.bat` | tiko runs with **only the Windows directories on PATH** | green |
+| ^ | it killed only tiko, and `-NoNewWindow` means every child it spawned inherited this console and the redirected handles — so the tree survived holding them and cmd waited for a console nobody released. `taskkill /T` plus a `WaitForExit`; it also stops as soon as the line appears, so a healthy package costs ~1s rather than a flat 20 | |
 | `_check_app_layer.bat` | `src/app` names no Win32 or AfxNova token (26 files) | green |
 | `_check_app_standalone.bat` | `src/app` **compiles** against PsCore alone | **6 clean, 1 with errors** |
 
@@ -66,9 +67,16 @@ if (nMsg >= SCI_START) andalso (nMsg < 5000) then
 because `SciExec` is `SendMessage`. Confirmed by hand: rendering, typing, caret, syntax
 colouring, font size.
 
-**Not verified:** selection, autocompletion, the context menu, scrolling, the split view, and
-the Find-in-Project excerpt panes. Teardown is not asserted — the obvious assertion was
-vacuous and was deleted rather than reworded.
+**Not verified:** selection, autocompletion, scrolling, the split view, and the
+Find-in-Project excerpt panes. Teardown is not asserted — the obvious assertion was vacuous
+and was deleted rather than reworded.
+
+**The context menu was one of these, and it WAS broken.** An interactive pass found no
+right-click menu in the editor. Nothing sends `WM_CONTEXTMENU` — `DefWindowProc` synthesises
+it from the right-button release and walks it up to the parent, and `tikoSciHost` returned 0
+for the whole button-up group, so the chain stopped at the editor and `frmMain_OnContextMenu`
+never fired. `WM_RBUTTONUP` now returns `DefWindowProc` after the bridge has had it. **This is
+exactly the class of defect the suites cannot see** — every assertion passed throughout.
 
 ### 7c — the app layer. 6 of 7.
 
