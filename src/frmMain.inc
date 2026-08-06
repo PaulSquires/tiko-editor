@@ -1416,9 +1416,39 @@ function frmMain_WndProc( _
         HWND_FRMMAIN = 0
         return 0
 
+        case WM_MOUSEWHEEL
+            ' A WHEEL ROLLED OVER THE EDITOR'S HORIZONTAL SCROLLBAR, and nothing else.
+            '
+            ' PsHScrollBar deliberately has no WM_MOUSEWHEEL case -- "a horizontal bar
+            ' answers horizontal gestures only" -- so it falls through to DefWindowProc,
+            ' which bubbles the message up to here. Its vertical twin DOES handle the
+            ' wheel, which is why rolling over one bar scrolled and the other did nothing.
+            '
+            ' GUARDED BY CURSOR POSITION, not just forwarded. frmMain is the parent of
+            ' every panel in the window, and anything else that ignores a wheel bubbles it
+            ' here too -- forwarding all of them would make a wheel over an unrelated pane
+            ' scroll the document, which is worse than the bug.
+            scope
+                dim as POINT pt : GetCursorPos( @pt )
+                dim as HWND hOver = WindowFromPoint( pt )
+                dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+                if pDoc then
+                    for i as long = 0 to 1
+                        if (HWND_FRMEDITOR_HSCROLLBAR(i) <> 0) andalso _
+                           (hOver = HWND_FRMEDITOR_HSCROLLBAR(i)) then
+                            ' Straight to the editor, which now handles the wheel itself
+                            ' (PsSciInput.inc). Sending rather than posting so the
+                            ' scrollbar sync in SCN_UPDATEUI has run by the time we return.
+                            SendMessage( DocView(pDoc, i), WM_MOUSEWHEEL, wParam, lParam )
+                            return 0
+                        end if
+                    next
+                end if
+            end scope
+
         case WM_ERASEBKGND
             return true      ' prevents painting the background
-            
+
         case WM_TIMER
             ' Handle any Spinner (used when compiling)
             if wParam = gApp.SpinnerTimerID then

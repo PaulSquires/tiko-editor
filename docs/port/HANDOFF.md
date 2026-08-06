@@ -67,9 +67,24 @@ if (nMsg >= SCI_START) andalso (nMsg < 5000) then
 because `SciExec` is `SendMessage`. Confirmed by hand: rendering, typing, caret, syntax
 colouring, font size.
 
-**Not verified:** selection, autocompletion, scrolling, the split view, and the
-Find-in-Project excerpt panes. Teardown is not asserted — the obvious assertion was vacuous
-and was deleted rather than reworded.
+**The interactive pass has now been done, and it found two defects.** Selection,
+autocompletion, the split view and Find-in-Project all work. Teardown is still not asserted —
+the obvious assertion was vacuous and was deleted rather than reworded.
+
+**The mouse wheel did nothing in the editor.** `PsSciDispatch` had no `PSEV_MOUSE_WHEEL`
+case, so the Win32 host translated the message correctly, `PsSciView` forwarded it correctly,
+and the dispatcher fell straight through to `return FALSE`. Scintilla has no
+`SciPs_MouseWheel` and never has — wheel behaviour is not in ScintillaBase at all, because
+"how far is a notch" is a system setting. Every platform layer builds it on `SCI_LINESCROLL`,
+and now so does this one, with Ctrl to zoom and Shift for sideways. Fractional notches
+accumulate, or a precision touchpad floors every message to zero and looks dead.
+
+**And the wheel did nothing over the editor's HORIZONTAL scrollbar** while working over the
+vertical one. `PsHScrollBar` deliberately has no `WM_MOUSEWHEEL` case — "a horizontal bar
+answers horizontal gestures only" — so it fell through to `DefWindowProc` and bubbled up to
+`frmMain`, which ignored it. `frmMain` now routes it to the editor, **guarded by cursor
+position**: it is the parent of every panel in the window, so forwarding every bubbled wheel
+would make a roll over an unrelated pane scroll the document.
 
 **The context menu was one of these, and it WAS broken.** An interactive pass found no
 right-click menu in the editor. Nothing sends `WM_CONTEXTMENU` — `DefWindowProc` synthesises
