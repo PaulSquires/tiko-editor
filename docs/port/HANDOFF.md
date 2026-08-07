@@ -1,20 +1,44 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ `e8f15420`; PsPlatform `master` @ `962f6d0`. Both build
+tiko `feat/cross-platform` @ `f4496a1d`; PsPlatform `master` @ `337c08c`. Both build
 warning-free, both push cleanly, and tiko runs.
 
-Read [Learnings.md](../../../Learnings.md) first — the run-derived traps are there, not here.
-This page is where the work stands, what is proven, and what to pick up.
+**Every count on this page was re-verified on 2026-08-07.** Three were stale and are corrected
+below. If you are reading this later, re-run them before quoting them — the commands are
+beside each number, and this page's record is that its numbers rot faster than its prose.
+
+## If you are picking this up cold
+
+Read in this order, and do not skip the first:
+
+1. [`Learnings.md`](../../../Learnings.md) — the run-derived traps. Longer than this page and
+   more useful.
+2. This page's **one-paragraph version**, then **"What is verified, and how"**. The second
+   matters more than it looks: five green gates and 27 green suites coexisted with an editor
+   that had no right-click menu, no mouse wheel, and no horizontal scrolling at all.
+3. [`d2-decision.md`](d2-decision.md) — what the next phase is waiting on, and why it is
+   deliberately not started.
+
+**The one habit worth copying from this run:** every defect found this session came from
+running the program or reading the callers, and none from the gates. When a note here says
+something is done, blocked, or not yours to decide, check it before believing it — that claim
+was true when written and this page's own record is that it stops being true quickly.
 
 ---
 
 ## The one-paragraph version
 
-**Phases 7c and 7d are done, the DWSTRING type swap has landed, and this page's whole
-follow-up queue is now closed.** tiko's editor is a `PsSciView` rendered with Blend2D, hosted
-in a Win32 window through PsPlatform's bridge. `DWSTRING` means PsCore's everywhere;
-`PsCompat.bi` is deleted. All five gates are green, including `_check_app_standalone` at
-**7 clean / 0 with errors**.
+**Phase 7d is done, 7c's PREREQUISITE is done, the DWSTRING type swap has landed, and this
+page's whole follow-up queue is closed.** tiko's editor is a `PsSciView` rendered with
+Blend2D, hosted in a Win32 window through PsPlatform's bridge. `DWSTRING` means PsCore's
+everywhere; `PsCompat.bi` is deleted. All five gates are green, including
+`_check_app_standalone` at **7 clean / 0 with errors**.
+
+**7c ITSELF HAS NOT STARTED, and an earlier version of this page said it was done.** That was
+wrong and it is the most consequential error this page has carried. 7c is *the shell* — 48
+forms, ~45,000 lines, a third of tiko (`7c-starting-position.md`). What is finished is the
+increment that page recommends doing *first*: making `src/app` compile against PsCore alone.
+The app layer closing is 7c's precondition, not 7c.
 
 **THE NEXT STEP IS NOT `frmMain`, AND IT IS NOT A DECISION EITHER.** `frmMain` becoming a
 `PsSurface` is phase 7c — 48 forms, ~45,000 lines, 14–20 weeks — and it hangs on decision
@@ -138,11 +162,18 @@ All four were invisible to every suite.
    `SCI_GETXOFFSET` back immediately after the set, at the call site — `newPos=316 xBefore=16
    xAfter=16` names it in one line, and nothing that watches only the write can see it.
 
-### 7c — the app layer. Done.
+### 7c's first increment — the app layer. Done. **7c itself has not started.**
 
-`clsDocument.bi` is free of Win32; the menu vocabulary, localization and two `gApp` flags
-moved into `app/`; `clsConfig`'s UI defaults split out. `clsSymbolDb.inc` was the last file,
-and its 11 errors were the type swap — they went with it.
+This heading used to read "7c — the app layer. Done." **That is wrong twice over**: 7c is the
+shell — 48 forms, ~45,000 lines — and the app layer is the increment
+`7c-starting-position.md` recommends doing *before* it, precisely so the shell binary has a
+translation unit with no AfxNova in it. Reading the old heading, you would conclude a third of
+the codebase had already been converted.
+
+What is actually done: `clsDocument.bi` is free of Win32; the menu vocabulary, localization
+and two `gApp` flags moved into `app/` (30 files); `clsConfig`'s UI defaults split out.
+`clsSymbolDb.inc` was the last file, and its 11 errors were the type swap — they went with it.
+`_check_app_standalone` compiling those files against PsCore alone is the proof.
 
 ### The DWSTRING swap. Landed.
 
@@ -164,12 +195,15 @@ is what makes DWSTRING one type; only the UI is fenced. 30 `PsC.` prefixes remai
 
 **`.Wz()` has two spellings and they are not interchangeable.** It returns a `wstring ptr`.
 That binds to a Win32 `LPCWSTR` parameter and **not** to AfxNova's `byref as wstring`, which
-needs `*x.Wz()`. 253 sites.
+needs `*x.Wz()`. **241 sites** — `grep -roh '\.Wz()' src/ | wc -l`.
 
 **`modAfxBridge.bi` is the way back.** AfxNova still owns the windows and returns its *own*
 DWSTRING; fbc will not chain that to PsCore's. `AfxW()` is the one named conversion, and
-`git grep -c "AfxW("` — **26 today** — is the honest measure of how much AfxNova text still
-crosses into tiko. The file is deleted, not rewritten, when that reaches zero.
+`git grep -c "AfxW("` — **10 today**, down from 26 — used to be the honest measure of how much
+AfxNova text still crosses into tiko. **It no longer measures that**: all 10 survivors read
+out of an AfxNova subsystem tiko has not replaced (8 are `PsTextBox`'s RichEdit and clipboard,
+1 `AfxBrowseForFolder`, 1 `AfxCommand`). Track those three subsystems, not the number. The
+file is deleted, not rewritten, when it reaches zero.
 
 ---
 
@@ -240,13 +274,15 @@ before acting on any of it.
    Asserted rather than argued: `TIKO_COMPILECMD_SELFTEST` is 30 → 35, covering a `café` exe
    path and a quoted non-ASCII argument by content **and unit count**.
 
-## Open decisions — both closed, and NEITHER was the decision this page described
+## Open decisions — the two real ones are closed, and NEITHER was the decision described
 
 Kept rather than deleted, because the pattern is the point. Both were parked here as
 judgement calls needing the author. One turned out to need no decision at all — the work it
 described had already been done and this page had not noticed. The other was a live defect
 wearing a decision's clothes. **Reading the callers, or the data, took minutes in each case
 and was worth more than the note that said not to.**
+
+(The third bullet was never a decision — it is a record of one already taken.)
 
 The rule that falls out: an entry that says "not mine to take" is a claim about the *state of
 the code*, and the code moves. Re-check the claim before honouring it.
@@ -270,8 +306,9 @@ the code*, and the code moves. Re-check the claim before honouring it.
 
   **What to carry forward instead:** `english.lang` has exactly **three blank slots — 100,
   101, 133**. A new phrase claims one of those; appending past 521 means moving `MAXIMUM` in
-  all six files. And `L()` is an unchecked index at 748 call sites — all currently in range,
-  and that is a fact with a shelf life.
+  all six files. And `L()` is an unchecked index at **812 call sites** — `grep -roh 'L( *[0-9]\+'
+  src/ | wc -l`, and this page said 748 until it was re-counted — all currently in range, which
+  is a fact with a shelf life.
 * ~~**`modKeyBindings`' `case "A" to "Z"`.**~~ **Fixed — and it was not the vocabulary
   question this page called it.** The trap was live, not confined to the self-tests:
   `KeyBindings_ApplyAccelerators` feeds `AccelKeyToValue` the last `+`-separated token
@@ -289,7 +326,19 @@ the code*, and the code moves. Re-check the claim before honouring it.
 
 ## Things that will bite
 
-Beyond `Learnings.md`, four specific to this tree:
+Beyond `Learnings.md`, six specific to this tree:
+
+* **NEVER hand fbc's `open` or `kill` a path.** They take an fbc `string`, and on Windows that
+  goes through the **ANSI codepage** — so a `DWSTRING` spelled `*p.Wz()` or `.Utf8` at the call
+  addresses a different file, or none, under any non-ASCII directory. Use `PsFile`
+  (`PsFileReadAll` / `PsFileWriteAll` / `PsFileAppendAll` / `PsFileDelete`), which uses the wide
+  CRT. All 13 sites in `src/` were converted 2026-08-07; `grep -n 'open( \|kill(' src/*.inc`
+  should stay empty. This one had reached `Theme_WriteFile`, the real theme **save** path.
+* **`for i as uinteger = 0 to X.Length - 1` WRAPS when the length is 0** and runs 2^64 times.
+  It has landed **five times** in PsCore. `At()` bounds-checks, so there is no crash to find —
+  a read-only loop just spins, and a loop that *appends* took the process to 49 GB and froze
+  tiko's compile of any single `.bas`. Guard at the site, and when you find one, `grep` the
+  shape rather than fixing the instance.
 
 * **`PsText` is not the same function on both sides of the swap.** The old `PsCompat.bi`'s
   returned `str()` — the ANSI codepage. PsCore's returns `.Utf8`. Anything that reads like a
@@ -312,5 +361,12 @@ Beyond `Learnings.md`, four specific to this tree:
 
 ## Loose ends in the working tree
 
-`toolchains/fbc-win-USTRING/` is untracked and is not mine — it predates this run. Nothing in
-the build references it.
+Two untracked things, both deliberate:
+
+* `toolchains/fbc-win-USTRING/` — predates this run, not mine, nothing in the build references
+  it.
+* `settings/themes/paul-dark_custom.theme` — the author's own theme, saved during the
+  interactive test of the new `PsFile` save path. **Left uncommitted on purpose**: whether a
+  personal theme ships with tiko is the author's call, not a source change to make for them.
+  (It is also incidental evidence the new writer works — the theme suite reads every file in
+  that directory and went 929 → 948 assertions, all passing, when it appeared.)
