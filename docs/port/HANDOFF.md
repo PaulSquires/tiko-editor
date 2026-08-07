@@ -74,17 +74,18 @@ because `SciExec` is `SendMessage`.
 autocompletion, the context menu, scrolling, the split view, Find-in-Project, the wheel in
 both split and unsplit, and Ctrl+wheel zoom.
 
-**Not verified:** Shift+wheel, and teardown. On Shift+wheel the horizontal thumb should
-follow — `frmEditorHScroll_UpdateScrollBars` runs from the pump's `handleMouseShowScrollBar`,
-which polls `SCI_GETXOFFSET` on every mouse message, and a wheel is one. If it ever looks
-wrong, the asymmetry is deliberate: the H bar's own wheel step honours
+**Also confirmed by hand, after the fix below:** the horizontal scrollbar — thumb drag, track
+paging, Shift+wheel and caret tracking off the right edge.
+
+**Not verified:** teardown. If Shift+wheel ever looks wrong, the asymmetry is deliberate: the
+H bar's own wheel step honours
 `SPI_GETWHEELSCROLLCHARS`, while PsCore's Shift+wheel hard-codes 3 columns so both platforms
 move identically from the same event. Teardown has no assertion because the obvious one was
 vacuous and was deleted rather than reworded.
 
-#### The three defects the interactive pass found
+#### The four defects the interactive pass found
 
-All three were invisible to every suite.
+All four were invisible to every suite.
 
 1. **No right-click menu.** Nothing *sends* `WM_CONTEXTMENU` — `DefWindowProc` synthesises it
    from the right-button release and walks it to the parent. `tikoSciHost` returned 0 for the
@@ -101,6 +102,16 @@ All three were invisible to every suite.
    ignored it. `frmMain` now routes it — **guarded by cursor position**, because it is the
    parent of every panel and forwarding every bubbled wheel would scroll the document from an
    unrelated pane.
+4. **Horizontal scrolling did not work at all.** PsPlatform's `ScintillaPs.cxx` had
+   `SetHorizontalScrollPos() override { xOffset = 0; }` — Scinterm's body, where a curses
+   backend genuinely cannot scroll sideways. Scintilla's `SCI_SETXOFFSET` handler assigns
+   `xOffset` and *then* calls that, so the write was wiped one line later. The override means
+   "push the position out to the platform's scrollbar widget"; with no widget it is a no-op,
+   as the vertical sibling directly above it already was. **One stub took out the bar,
+   Shift+wheel and caret tracking together**, and each read as its own missing feature. Fixed
+   in PsPlatform `e6a4956`; suite output byte-identical before and after. Found by reading
+   `SCI_GETXOFFSET` back immediately after the set, at the call site — `newPos=316 xBefore=16
+   xAfter=16` names it in one line, and nothing that watches only the write can see it.
 
 ### 7c — the app layer. Done.
 
