@@ -531,11 +531,11 @@ private sub Theme_TraceLine( byval sText as string )
         bOn = (environ("TIKO_THEME_TRACE") = "1")
     end if
     if bOn = false then exit sub
-    dim as string sPath = (PsExePath & "theme_trace.log").Utf8
-    dim as long f = freefile
-    if open( sPath for append as #f ) <> 0 then exit sub
-    print #f, sText
-    close #f
+    '' PsFileAppendAll, not `open ... for append`. The path was `.Utf8` -- UTF-8 BYTES in an
+    '' fbc `string` -- and fbc's Open then reads those bytes through the ANSI codepage, so a
+    '' tiko installed under a non-ASCII path wrote its trace somewhere else entirely. That is
+    '' the CompleteIncludeFilename bug; keeping the path a DWSTRING is the fix.
+    PsFileAppendAll( PsExePath() & "theme_trace.log", sText & vbcrlf )
 end sub
 
 
@@ -727,7 +727,7 @@ sub Theme_RunSelfTest()
         end if
         Theme_Restore()
         Theme_DiscardSnapshot()
-        kill( *wszTmp.Wz() )
+        PsFileDelete( wszTmp )
     end if
 
     ' -- 11. The two colour pages PARTITION the COLOUR keys. -----------------------------
@@ -814,7 +814,7 @@ sub Theme_RunSelfTest()
     end if
     Theme_Restore()
     Theme_DiscardSnapshot()
-    kill( *wszTmp2.Wz() )
+    PsFileDelete( wszTmp2 )
 
     ' -- 15. Every key is classified into a real category. -------------------------------
     '    The interface side derives its category from the namespace and cannot drift, but the
@@ -934,13 +934,17 @@ sub Theme_RunSelfTest()
 
     ' -- 20b. AN OLD MACRO-BEARING THEME STILL LOADS. ------------------------------------
     scope
-        dim as string sTmp = (PsExePath() & "_theme_macrocompat.tmp").Utf8
-        dim as long f = freefile
-        if open( sTmp for output encoding "utf-8" as #f ) = 0 then
-            print #f, "general.description: legacy macros"
-            print #f, "%OLDBLUE: 10,20,30"
-            print #f, "editor.keyword.foreground: %OLDBLUE"
-            close #f
+        '' A DWSTRING path written through PsFile. It was an fbc `string` holding UTF-8
+        '' bytes handed to Open, which reads a path in the ANSI codepage -- and Theme_ParseFile
+        '' below takes a DWSTRING, so the same name meant two different files whenever the
+        '' exe path was not ASCII. The content here is ASCII, so `encoding "utf-8"` and a
+        '' raw byte write produce identical bytes.
+        dim as DWSTRING sTmp = PsExePath() & "_theme_macrocompat.tmp"
+        dim as string sMacroFile = _
+            "general.description: legacy macros" & vbcrlf & _
+            "%OLDBLUE: 10,20,30" & vbcrlf & _
+            "editor.keyword.foreground: %OLDBLUE" & vbcrlf
+        if PsFileWriteAll( sTmp, sMacroFile ) then
 
             Theme_Snapshot()
             erase gTheme
@@ -957,7 +961,7 @@ sub Theme_RunSelfTest()
             Theme_DiscardSnapshot()
             Theme_ResolveFallbacks()
             Theme_FillGlobals()
-            kill( sTmp )
+            PsFileDelete( sTmp )
         end if
     end scope
 
@@ -1356,7 +1360,7 @@ sub Theme_RunSelfTest()
         '      authored colour from an inherited one and would flatten the whole palette
         '      into hard-coded literals on the first save.
         scope
-            dim as string sTmp = (PsExePath() & "_theme_roletest.tmp").Utf8
+            dim as DWSTRING sTmp = PsExePath() & "_theme_roletest.tmp"
 
             ' A theme with ONE authored key and everything else inherited.
             erase gTheme
@@ -1371,17 +1375,30 @@ sub Theme_RunSelfTest()
 
             THASSERT( Theme_WriteFile( sTmp, "roles only" ) = false, "roles-only write failed" )
 
+            '' Read through PsFile for the same reason the write above does: fbc's Open
+            '' takes the path in the ANSI codepage. Theme_WriteFile emits ASCII, so
+            '' splitting the bytes on LF is the same walk `line input` was doing --
+            '' except that it leaves the CR, which `line input` consumed, so the trim
+            '' below names it. Without that every blank line counts as a real one.
             dim as long nLines
-            dim as long f = freefile
-            if open( sTmp for input encoding "utf-8" as #f ) = 0 then
-                dim as string sLineIn
-                while eof(f) = 0
-                    line input #f, sLineIn
-                    dim as boolean bReal = (len(trim(sLineIn)) > 0)
-                    bReal = (bReal andalso (left(trim(sLineIn),1) <> "#"))
+            dim as boolean bRoleOk
+            dim as string sRest = PsFileReadAll( sTmp, bRoleOk )
+            if bRoleOk then
+                do while len(sRest) > 0
+                    dim as string sLineIn
+                    dim as long nEol = instr( sRest, chr(10) )
+                    if nEol = 0 then
+                        sLineIn = sRest
+                        sRest   = ""
+                    else
+                        sLineIn = left( sRest, nEol - 1 )
+                        sRest   = mid( sRest, nEol + 1 )
+                    end if
+                    sLineIn = trim( sLineIn, any (" " + chr(9) + chr(13)) )
+                    dim as boolean bReal = (len(sLineIn) > 0)
+                    bReal = (bReal andalso (left(sLineIn,1) <> "#"))
                     if bReal then nLines += 1
-                wend
-                close #f
+                loop
             end if
 
             ' The authored key comes back...
@@ -1409,7 +1426,7 @@ sub Theme_RunSelfTest()
             THASSERT( nRoles > 0, "the role palette did not survive the save" )
             THASSERT( theme.role.clr(THROLE_ACCENT) = BGR(4,4,4), _
                       "an authored role came back with a different colour" )
-            kill( sTmp )
+            PsFileDelete( sTmp )
         end scope
 
         Theme_Restore()

@@ -3078,15 +3078,18 @@ sub frmFindInProject_RunReplaceTest()
     loop
     FipRepro_Pump()
 
-    dim as long f = freefile
-    if open( *wszFile.Wz() for output as #f ) <> 0 then
+    ' PsFileWriteAll, not `open`: fbc's Open takes a `string` and puts the PATH through the
+    ' ANSI codepage, so a scratch file under a non-ASCII profile directory was created
+    ' somewhere else -- or not at all -- while this test reported the failure as its own.
+    ' PsFile uses the wide CRT. `print #` writes CRLF, so the seed spells it out.
+    dim as string sSeed = _
+        "' Wbeta Wbeta Wbeta WbetaBeta Wbeta2" & vbcrlf & _
+        "dim Wbeta as long" & vbcrlf & _
+        "print ""Wbeta""" & vbcrlf
+    if PsFileWriteAll( wszFile, sSeed ) = false then
         print "  FAIL: could not create " & wszFile.Utf8
         exit sub
     end if
-    print #f, "' Wbeta Wbeta Wbeta WbetaBeta Wbeta2"
-    print #f, "dim Wbeta as long"
-    print #f, "print ""Wbeta"""
-    close #f
 
     dim as wstring * MAX_PATH wszOpen = *wszFile.Wz()
     dim as clsDocument ptr pT = OpenSelectedDocument( wszOpen )
@@ -3267,13 +3270,8 @@ sub frmFindInProject_RunReplaceTest()
                     str(SciExec( DocView(pT, 0), SCI_GETMODIFY, 0, 0 )) )
 
                 ' The only proof that matters: the bytes on disk.
-                dim as long f2 = freefile
-                dim as string sDisk
-                if open( *wszFile.Wz() for input as #f2 ) = 0 then
-                    sDisk = space( lof(f2) )
-                    if len(sDisk) then get #f2, , sDisk
-                    close #f2
-                end if
+                dim as boolean bDiskOk
+                dim as string sDisk = PsFileReadAll( wszFile, bDiskOk )
                 frmFindInProject_Check( "ctrl+s: the replacement reached the file on disk", _
                     FipRT_Count( sDisk, "Wbeta" ) > 0, str(FipRT_Count( sDisk, "Wbeta" )) )
                 frmFindInProject_Check( "ctrl+s: the old token is gone from the file on disk", _
@@ -3363,7 +3361,7 @@ sub frmFindInProject_RunReplaceTest()
     idxDoc = gTTabCtl.GetTabIndexByDocumentPtr( pT )
     if idxDoc <> -1 then gTTabCtl.CloseTab( idxDoc )
     FipRepro_Pump()
-    kill( *wszFile.Wz() )
+    PsFileDelete( wszFile )
 
     print "--- TIKO_FINDPROJ_REPLACETEST: " & str(gFipTestPass) & " passed, " & _
           str(gFipTestFail) & " failed ---"
