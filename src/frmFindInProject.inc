@@ -2651,7 +2651,7 @@ end sub
 ' Run the search for whatever is in the find box.
 private sub FipBar_RunSearch()
     dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND )
-    dim as DWSTRING wszPhrase = AfxW(AfxGetWindowText( hCtl ))
+    dim as DWSTRING wszPhrase = WindowText( hCtl )
     gFind.txtFind = wszPhrase
 
     if PsLen(wszPhrase) = 0 then
@@ -2705,7 +2705,7 @@ function frmFindInProject_BarAction( byval id as long ) as boolean
     if frmFindInProject_IsActive() = false then return false
 
     dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND )
-    dim as DWSTRING wszPhrase = AfxW(AfxGetWindowText( hCtl ))
+    dim as DWSTRING wszPhrase = WindowText( hCtl )
 
     select case id
         case IDM_FINDNEXT, IDM_FINDNEXTACCEL, IDM_FINDPREV, IDM_FINDPREVACCEL
@@ -2729,8 +2729,8 @@ function frmFindInProject_BarAction( byval id as long ) as boolean
             return true
 
         case IDM_REPLACENEXT, IDM_REPLACEPREV
-            dim as DWSTRING wszRep = AfxW(AfxGetWindowText( _
-                    GetDlgItem( HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE ) ))
+            dim as DWSTRING wszRep = WindowText( _
+                    GetDlgItem( HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE ) )
             if gFipCurrent >= 0 then
                 FindProject_ReplaceOne( gFipCurrent, wszRep )
                 ' The replaced match is dead now; move to the next live one.
@@ -2742,8 +2742,8 @@ function frmFindInProject_BarAction( byval id as long ) as boolean
             return true
 
         case IDM_REPLACEALL
-            dim as DWSTRING wszRep = AfxW(AfxGetWindowText( _
-                    GetDlgItem( HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE ) ))
+            dim as DWSTRING wszRep = WindowText( _
+                    GetDlgItem( HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE ) )
             FindProject_ReplaceAll( wszRep )
             gFipCurrent = -1
             frmFindInProject_Refresh( false )

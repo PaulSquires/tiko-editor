@@ -64,6 +64,30 @@ end function
 '
 ' Returns the new row index, or -1 if the row could not be added.
 ' ========================================================================================
+' ========================================================================================
+' A window's text as a PsCore DWSTRING. See modRoutines.bi for why this exists.
+'
+' The buffer is heap-allocated rather than a `wstring * n` local: fbc needs a
+' COMPILE-TIME constant for that, and an edit control holds however much the user typed.
+' GetWindowTextW null-terminates and returns the count it wrote, which is what is
+' trusted here -- the length can change between the two calls if another thread edits
+' the control, and the returned count cannot exceed the buffer.
+' ========================================================================================
+function WindowText( byval hWin as HWND ) as DWSTRING
+    dim as long nLen = GetWindowTextLengthW( hWin )
+    if nLen <= 0 then return DWSTRING()
+
+    dim as wstring ptr pBuf = callocate( (nLen + 1) * sizeof(wstring) )
+    if pBuf = 0 then return DWSTRING()
+
+    GetWindowTextW( hWin, pBuf, nLen + 1 )
+    dim as DWSTRING wszText = *pBuf
+    deallocate( pBuf )
+
+    return wszText
+end function
+
+
 function ListBox_AddTabbedRow( byval hCtl as HWND, byval wszTabbed as DWSTRING ) as long
     dim as long nFields = PsStrParseCount( wszTabbed, chr(9) )
     if nFields < 1 then nFields = 1

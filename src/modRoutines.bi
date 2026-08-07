@@ -65,3 +65,10 @@ declare function GetRunExecutableFilename() as DWSTRING
 
 ' Add a chr(9)-delimited row to a multi-column PsListTree (see modRoutines.inc).
 declare function ListBox_AddTabbedRow( byval hCtl as HWND, byval wszTabbed as DWSTRING ) as long
+
+'' A window's text as a PsCore DWSTRING. Replaces AfxGetWindowText, whose only
+'' problem was that it returns AfxNova's OWN DWSTRING and so needed AfxW() at
+'' every call -- see modAfxBridge.bi. The window is the shell's, so reading it
+'' with Win32 directly is not a layering violation; taking the TEXT back through
+'' a second string type was the thing worth removing.
+declare function WindowText( byval hWin as HWND ) as DWSTRING

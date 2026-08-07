@@ -69,7 +69,13 @@ function GetThemeDescription( byval wszFilename as DWSTRING ) as DWSTRING
 
     for nLine as long = lbound(lines) to ubound(lines)
         wst = lines(nLine)
-        wst = PsTrim(AfxW(AfxStrExtract( 1, *wst.Wz(), "#")))     ' remove comments
+        ' remove comments -- everything from the first "#", and the WHOLE line
+        ' when there is no "#" at all. That fallback is why this is not
+        ' PsStrExtract, which returns "" when its delimiter is absent and would
+        ' silently blank every uncommented line in the file.
+        dim as integer nHash = PsInStr(wst, "#")
+        if nHash > 0 then wst = PsLeft(wst, nHash - 1)
+        wst = PsTrim(wst)
         if PsLen(wst) = 0 then continue for
         keyValue = PsTrim(PsStrParse(wst, 1, ":"))
         keyData = PsTrim(PsStrParse(wst, 2, ":"))

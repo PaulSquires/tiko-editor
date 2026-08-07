@@ -187,7 +187,15 @@ PsCore now declares `operator len`, so unconverted sites are right rather than q
      place the portable `any ptr` becomes a shell HWND, and the one null/bounds guard 142
      sites rely on. Inlining it would delete that guard and scatter the cast.
    * `namespace PsC` does **not** go either — see above.
-3. **Shrink `modAfxBridge.bi` to nothing.** 26 sites.
+3. **Shrink `modAfxBridge.bi` to nothing.** 24 → **10**, and the remaining 10 are not the
+   same kind of thing. What went was text tiko routed through AfxNova out of habit:
+   `AfxGetWindowText` ×9 became `modRoutines`' `WindowText()`, and `AfxStrExtract` ×5 became
+   `PsStrExtract` — bar the two comment-stripping sites, which relied on AfxStrExtract
+   returning the *whole string* when its delimiter is absent where `PsStrExtract` returns `""`.
+   Each of the 10 left reads out of an AfxNova **subsystem** tiko has not replaced: 8 are
+   `PsTextBox`'s RichEdit and clipboard, 1 is `AfxBrowseForFolder`, 1 is `AfxCommand` (the
+   *wide* command line — fbc's `command()` is ANSI, so it needs `CommandLineToArgvW` and its
+   own splitting, not a rename). The count now tracks three subsystems, not conversion debt.
 4. **The three sites deliberately left alone during the `.Utf8` work** — the `open`/`kill`
    paths in `frmFindInProject` and `modThemeApply`, and `CompileCmd_Tokenize`, which
    byte-tokenises a command line and would corrupt a non-ASCII compiler path if converted

@@ -2101,7 +2101,12 @@ function clsDocument.CompileDirectives( Directives() as COMPILE_DIRECTIVES ) as 
             redim preserve Directives(ub+1)
             Directives(ub+1).DirectiveFlag = IDM_RESOURCE
             st = PsMid(st, 11).Utf8
-            Directives(ub+1).DirectiveText = AfxW(AfxStrExtract(st, chr(34), chr(34)))
+            '' PsStrExtract, not AfxStrExtract: `st` holds UTF-8 and every other
+            '' Ps* call in this function already reads it that way (DWSTRING's
+            '' zstring constructor is UTF-8). AfxStrExtract took `byref as
+            '' wstring`, so the same bytes went through the ANSI codepage --
+            '' a non-ASCII resource filename came back mangled.
+            Directives(ub+1).DirectiveText = PsStrExtract(st, chr(34), chr(34))
         end if
         
         ' '#LINKMODULES "module1.bas" "module2.bas"

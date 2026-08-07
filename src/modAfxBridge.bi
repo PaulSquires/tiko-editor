@@ -33,6 +33,33 @@
 '' THIS FILE IS THE MEASURE OF HOW MUCH AfxNova IS LEFT. `git grep -c AfxW(`
 '' is the count of places tiko still takes text back from it, and the file is
 '' deleted -- not rewritten -- when that count reaches zero.
+''
+'' ---- WHAT IS LEFT, AND WHY IT IS NOT 26 ANY MORE --------------------------
+''
+'' 24 -> 10. The ones that went were text tiko was routing through AfxNova for
+'' no reason other than habit:
+''
+''   AfxGetWindowText   9 sites -> modRoutines' WindowText(). The window is the
+''                      shell's own; only the RETURN TYPE ever needed a bridge.
+''   AfxStrExtract      5 sites -> PsStrExtract, except the two "strip the
+''                      comment" sites, which relied on AfxStrExtract returning
+''                      THE WHOLE STRING when the delimiter is absent.
+''                      PsStrExtract returns "" there, so those two are spelled
+''                      out with PsInStr/PsLeft rather than swapped.
+''
+'' THE 10 THAT REMAIN ARE NOT LIKE THOSE. Every one reads text out of an
+'' AfxNova SUBSYSTEM tiko has not replaced, so the bridge is not what is
+'' holding them:
+''
+''   8  PsTextBox   RichEdit_GetText / RichEdit_GetSelText / AfxGetClipboardText
+''                  -- goes when PsTextBox stops hosting AfxNova's RichEdit.
+''   1  frmUserTools  AfxBrowseForFolder -- an AfxNova shell dialog.
+''   1  modRoutines   AfxCommand -- the WIDE command line. fbc's `command()` is
+''                  ANSI, so this needs CommandLineToArgvW and its own argument
+''                  splitting, not a rename.
+''
+'' So the count no longer measures conversion laziness; it measures three
+'' specific subsystems. Track those, not the number.
 '' ===========================================================================
 
 #pragma once

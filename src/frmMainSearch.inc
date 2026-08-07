@@ -140,7 +140,7 @@ function OnCommand_SearchFindDialog() as LRESULT
     FindControls_Show()
 
     dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
-    gFind.txtFind = AfxW(AfxGetWindowText(hCtl))
+    gFind.txtFind = WindowText(hCtl)
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     ' NOTHING TO SEARCH FOR MEANS DO NOTHING, and that guard is load-bearing now that an
     ' empty selection leaves the box empty. NextSelection's no-match arm ends in
@@ -215,7 +215,7 @@ function OnCommand_SearchFindInProject() as LRESULT
         gFind.txtFind = sFindText
         dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND )
         if IsWindow(hCtl) then
-            if sFindText <> AfxGetWindowText(hCtl) then
+            if sFindText <> WindowText(hCtl) then
                 AfxSetWindowText( hCtl, sFindText )
             end if
             dim as long nLen = len(sFindText)
@@ -262,7 +262,7 @@ function OnCommand_SearchFindActions( _
     dim as HWND hFocus = GetFocus()
 
     if PsTextBox_HasFocus( hWndFind ) then
-        gFind.txtFind = AfxW(AfxGetWindowText(hWndFind))
+        gFind.txtFind = WindowText(hWndFind)
     elseif hFocus = hEdit then    
         dim as string sFindText = pDoc->GetSelText
         if len(sFindText) then 

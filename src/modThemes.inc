@@ -446,7 +446,13 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
     for nLine_ as long = lbound(lines_) to ubound(lines_)
         wst = lines_(nLine_)
 
-        wst = PsTrim(AfxW(AfxStrExtract( 1, *wst.Wz(), "#")))     ' remove comments
+        ' remove comments -- everything from the first "#", and the WHOLE line
+        ' when there is no "#" at all. That fallback is why this is not
+        ' PsStrExtract, which returns "" when its delimiter is absent and would
+        ' silently blank every uncommented line in the file.
+        dim as integer nHash = PsInStr(wst, "#")
+        if nHash > 0 then wst = PsLeft(wst, nHash - 1)
+        wst = PsTrim(wst)
         If PsLen(wst) = 0 Then continue for
 
         keyValue = PsTrim(PsStrParse(wst, 1, ":"))

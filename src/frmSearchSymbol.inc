@@ -35,7 +35,7 @@ end sub
 ' ========================================================================================
 function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     dim as DWSTRING wszFilename
-    dim as DWSTRING wszNeedle = AfxW(AfxGetWindowText( hwndCtl ))
+    dim as DWSTRING wszNeedle = WindowText( hwndCtl )
 
     gSymbolsCount = 0
     dim as long nextEl = 0

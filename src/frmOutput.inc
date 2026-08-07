@@ -260,7 +260,7 @@ function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) as LRESULT
             ' permanent left margin instead, set at creation.)
             hTextBox = GetDlgItem(hwnd, IDC_FRMOUTPUT_TXTLOGFILE)
             hCtrl = hTextBox
-            dim as DWSTRING wszText = PsLTrim(AfxW(AfxGetWindowText(hTextBox)))
+            dim as DWSTRING wszText = PsLTrim(WindowText(hTextBox))
             if wszText = "" then
                 AfxSetWindowText(hTextBox, *L(92, "No compiler log file exists").Wz() )
             end if

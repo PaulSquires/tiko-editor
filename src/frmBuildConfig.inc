@@ -221,7 +221,7 @@ end function
 private function BuildOpts_ActionTokens( byval nIdx as long, tok() as DWSTRING ) as long
     erase tok
     if (nIdx < lbound(gBuildOptions)) orelse (nIdx > ubound(gBuildOptions)) then return 0
-    return BuildOpts_Split( AfxW(AfxStrExtract( *gBuildOptions(nIdx).wszText.Wz(), "(", ")" )), tok() )
+    return BuildOpts_Split( PsStrExtract( gBuildOptions(nIdx).wszText, "(", ")" ), tok() )
 end function
 
 
@@ -1547,7 +1547,7 @@ sub frmBuildConfig_RunSelfTest()
     dim as long iConsole = -1, iGui = -1, iGas64 = -1, iGcc = -1, iErrE = -1
     dim as long iO1 = -1, iO2 = -1, iSmallC = -1, iBigC = -1, iSmallR = -1, iBigR = -1
     for i as long = lbound(gBuildOptions) to ubound(gBuildOptions)
-        dim as DWSTRING a = AfxW(AfxStrExtract( *gBuildOptions(i).wszText.Wz(), "(", ")" ))
+        dim as DWSTRING a = PsStrExtract( gBuildOptions(i).wszText, "(", ")" )
         if      a = "-s console" then : iConsole = i
         elseif  a = "-s gui"     then : iGui     = i
         elseif  a = "-gen gas64" then : iGas64   = i
