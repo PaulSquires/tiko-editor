@@ -852,6 +852,33 @@ sub CompileCmd_RunSelfTest()
     CMDASSERT( nTok = 1, "empty params gave " & nTok & " tokens, expected 1" )
     CMDASSERT( tok(0) = wszExe, "empty params lost the exe" )
 
+    ' ---- 5b. A NON-ASCII PATH SURVIVES THE TOKENISER ------------------------------------
+    ' This walks the command line ONE BYTE AT A TIME, which is why the type swap left it
+    ' alone: byte-splitting is only sound if what goes in and what comes out agree on the
+    ' encoding. They do -- `.Utf8` in, and the assignment out binds DWSTRING's zstring-ptr
+    ' (UTF-8) overload rather than its wstring one -- and splitting UTF-8 by byte is safe
+    ' here specifically because the delimiters are ASCII and no continuation byte can be
+    ' mistaken for one. Both halves are load-bearing, neither is visible at the call, and
+    ' an ANSI conversion at EITHER end turns this path into mojibake. So it is asserted.
+    dim as DWSTRING wszExeU = "C:\fb\caf" & wchr(233) & "\fbc64.exe"       ' café
+    CompileCmd_Tokenize( BuildChildCommandLine( wszExeU, "-v" ), tok(), nTok )
+    CMDASSERT( nTok = 2, "a non-ASCII exe path gave " & nTok & " tokens, expected 2" )
+    CMDASSERT( tok(0) = wszExeU, "the non-ASCII exe path did not round-trip: [" & tok(0) & "]" )
+    ' THE LENGTH IS THE ASSERTION THAT CATCHES A BYTE SPLIT. Equality above would also fail,
+    ' but a unit count says WHICH way it broke: é is two bytes and one code unit.
+    CMDASSERT( PsLen( tok(0) ) = PsLen( wszExeU ), _
+               "the path came back " & PsLen(tok(0)) & " units, not " & PsLen(wszExeU) & _
+               " -- it was converted or split per BYTE" )
+
+    ' A non-ASCII character inside a QUOTED argument, so a mis-split shows up in the token
+    ' count as well as in the content.
+    dim as DWSTRING wszQ = wchr(34)
+    dim as DWSTRING wszArgU = "-i " & wszQ & wchr(233) & "dir" & wchr(233) & wszQ & " -v"
+    CompileCmd_Tokenize( BuildChildCommandLine( wszExeU, wszArgU ), tok(), nTok )
+    CMDASSERT( nTok = 4, "a quoted non-ASCII arg gave " & nTok & " tokens, expected 4" )
+    CMDASSERT( tok(2) = wchr(233) & "dir" & wchr(233), _
+               "the quoted non-ASCII argument came back as [" & tok(2) & "]" )
+
     ' ---- 6. THE EXIT CODE, against a REAL child process ---------------------------------
     ' Build success used to be decided purely by scraping stdout, and the "good compile"
     ' flag that drove it is set merely by seeing the FreeBASIC banner -- i.e. by the compiler

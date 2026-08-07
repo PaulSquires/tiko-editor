@@ -196,10 +196,15 @@ PsCore now declares `operator len`, so unconverted sites are right rather than q
    `PsTextBox`'s RichEdit and clipboard, 1 is `AfxBrowseForFolder`, 1 is `AfxCommand` (the
    *wide* command line — fbc's `command()` is ANSI, so it needs `CommandLineToArgvW` and its
    own splitting, not a rename). The count now tracks three subsystems, not conversion debt.
-4. **The three sites deliberately left alone during the `.Utf8` work** — the `open`/`kill`
-   paths in `frmFindInProject` and `modThemeApply`, and `CompileCmd_Tokenize`, which
-   byte-tokenises a command line and would corrupt a non-ASCII compiler path if converted
-   naively. `type-swap-scope.md` says what each needs.
+4. ~~**The three sites deliberately left alone during the `.Utf8` work.**~~ **Done, and one
+   of the three needed nothing.** The `open`/`kill` paths in `frmFindInProject` and
+   `modThemeApply` now go through `PsFile` and its wide CRT — plus the same shape in
+   `modThemes` and `clsScanMgr`, which the list had missed. **`CompileCmd_Tokenize` was
+   already correct**: the swap put `.Utf8` on the way in, and the way out binds DWSTRING's
+   `zstring ptr` (UTF-8) overload, not its `wstring` one — so byte-splitting is sound,
+   because the delimiters are ASCII and no UTF-8 continuation byte can be mistaken for one.
+   Asserted rather than argued: `TIKO_COMPILECMD_SELFTEST` is 30 → 35, covering a `café` exe
+   path and a quoted non-ASCII argument by content **and unit count**.
 
 ## Open decisions, not mine to take
 

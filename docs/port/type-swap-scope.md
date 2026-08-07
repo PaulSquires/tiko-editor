@@ -382,12 +382,34 @@ scratch files (five sites) and `modThemeApply`'s trace log. fbc's `open` on a `s
 through the ANSI codepage, so `.Utf8` there is the `CompleteIncludeFilename` bug again. They
 want `PsFile`, at the swap.
 
+> **DONE.** All of them now go through `PsFile`, which uses the wide CRT — and the audit
+> found the same shape in `modThemes` (`Theme_WriteFile`, `Theme_DumpGlobals`) and
+> `clsScanMgr`, which this list had missed. Two were more than a rename: the two
+> `modThemeApply` scratch tests declared the path as a `string` while `Theme_ParseFile` and
+> `Theme_WriteFile` take a `DWSTRING`, so the same name meant two different files; and the
+> roles-only line count read with `line input`, which consumes the CR — splitting bytes on
+> LF does not, so the trim has to name it or every blank line counts as a real one.
+> `PsFileAppendAll` was added to PsCore for the trace log: read-all-then-write-all is the
+> only shape `PsFile` offered and it is quadratic in the log's own length.
+
 **3. `CompileCmd_Tokenize` — and this one CORRUPTS rather than mangles.** It takes a
 `DWSTRING` command line, converts it to `string`, walks it ONE BYTE AT A TIME, and
 reassembles each token back into a `DWSTRING`. Today that is ANSI in and ANSI out, which
 round-trips. Put `.Utf8` on the way in and the way out is still an ANSI assign: a non-ASCII
 compiler path would be split at byte boundaries and reinterpreted. It has to become a wide
 tokeniser, not a converted one.
+
+> **THIS ONE WAS ALREADY FIXED, AND THE WARNING ABOVE IS STALE.** The swap put `.Utf8` on
+> the way in, and the way out is *not* an ANSI assign: `tokens(n) = cur` binds DWSTRING's
+> **`zstring ptr`** overload, which is UTF-8, not its `wstring` one. So it is UTF-8 in and
+> UTF-8 out, and byte-splitting is sound for UTF-8 precisely because the delimiters are
+> ASCII and no continuation byte can be mistaken for one. It does **not** need to become a
+> wide tokeniser.
+>
+> Two facts hold that up, neither visible at the call site and either one able to break it
+> silently, so `TIKO_COMPILECMD_SELFTEST` now asserts the round trip instead: a `café` exe
+> path and a quoted non-ASCII argument, checked for content **and unit count** — the count
+> is what says a failure was a byte split rather than a conversion. 30 → 35 assertions.
 
 ---
 

@@ -173,17 +173,16 @@ private sub ScanMgr_ScanProjectTodos( _
             if ucase( left( *pFile, len( wszIncPrefix ) ) ) = wszIncPrefix then continue for
         end if
 
+        ' PsFileReadAll, not `open`: fbc's Open takes the path as an fbc `string` and reads
+        ' it in the ANSI codepage, so a source file under a non-ASCII directory was silently
+        ' skipped -- the `continue for` below made that indistinguishable from a file that
+        ' genuinely could not be read. PsFile uses the wide CRT.
         dim as DWSTRING wszF = *pFile
-        dim as long f = freefile
-        if open( *wszF.Wz() for binary access read as #f ) <> 0 then continue for
-        dim as long cb = lof( f )
-        if cb <= 0 then
-            close #f
-            continue for
-        end if
-        dim as string sBytes = space( cb )
-        get #f, 1, sBytes
-        close #f
+        dim as boolean bReadOk
+        dim as string sBytes = PsFileReadAll( wszF, bReadOk )
+        if bReadOk = false then continue for
+        dim as long cb = len( sBytes )
+        if cb <= 0 then continue for
 
         dim as ubyte ptr pB = cast( ubyte ptr, strptr( sBytes ) )
         dim as long nStart = 0

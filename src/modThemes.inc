@@ -1687,18 +1687,20 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
 
     Theme_BuildKeyTable()
 
-    dim as long f = freefile
-    if open( *wszFullPath.Wz() for output as #f ) <> 0 then return true
+    '' Built in memory and written once through PsFile. fbc's Open takes the path as
+    '' an fbc `string`, i.e. the ANSI codepage, so saving a theme to a non-ASCII
+    '' folder wrote it somewhere else. `print #` appends CRLF; sOut spells that out.
+    dim as string sOut
 
     dim as string sLine
 
     sLine = "# tiko theme file. Written by tiko -- edits are safe, but the layout is"
-    print #f, sLine
+    sOut &= sLine & vbcrlf
     sLine = "# regenerated whenever the theme is saved from the Options dialog."
-    print #f, sLine
+    sOut &= sLine & vbcrlf
     sLine = "# Colors are red,green,blue (0-255), optionally red,green,blue,alpha."
-    print #f, sLine
-    print #f, ""
+    sOut &= sLine & vbcrlf
+    sOut &= vbcrlf
 
     ' THE ROLE PALETTE, and it MUST be written or the theme loses it.
     '
@@ -1718,15 +1720,15 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
             if Theme_RoleIsExplicit(i) = false then continue for
             if nWritten = 0 then
                 sLine = "# The palette. Every key that does not name a colour of its own"
-                print #f, sLine
+                sOut &= sLine & vbcrlf
                 sLine = "# inherits from one of these."
-                print #f, sLine
+                sOut &= sLine & vbcrlf
             end if
             sLine = DWSTRING( Theme_RoleName(i) & ": " & Theme_FormatColor( Theme_RoleColor(i), -1 ) ).Utf8
-            print #f, sLine
+            sOut &= sLine & vbcrlf
             nWritten += 1
         next
-        if nWritten > 0 then print #f, ""
+        if nWritten > 0 then sOut &= vbcrlf
     end scope
 
     ' NO %MACRO BLOCK. The writer used to echo the palette back here so a hand-authored
@@ -1740,14 +1742,14 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
     ' one-way migration costs a branch in the parser and breaks nobody's file.
 
     sLine = "general.description: " & Theme_SanitizeText( *wszDescription.Wz() )
-    print #f, sLine
+    sOut &= sLine & vbcrlf
     dim as long nVer = Theme_FindEntry( "general.version" )
     dim as string sVer = "1.0.0"
     if nVer >= 0 then
         if PsLen(gTheme(nVer).keyData) > 0 then sVer = Theme_SanitizeText( *gTheme(nVer).keyData.Wz() )
     end if
     sLine = "general.version: " & sVer
-    print #f, sLine
+    sOut &= sLine & vbcrlf
 
     ' Declared explicitly rather than left to the "_dark" filename sniff, which cannot survive
     ' the user renaming a theme and gets a fork of default_dark wrong the moment they give it
@@ -1763,8 +1765,8 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
         if lum >= 128 then sAppearance = "light"
     end if
     sLine = "general.appearance: " & sAppearance
-    print #f, sLine
-    print #f, ""
+    sOut &= sLine & vbcrlf
+    sOut &= vbcrlf
 
     dim as string sLastNamespace
 
@@ -1787,7 +1789,7 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
 
         ' Blank line between namespaces, purely so the file stays readable by hand.
         dim as string sNamespace = PsStrParse( sKey, 1, "." ).Utf8
-        if (len(sLastNamespace) > 0) andalso (sNamespace <> sLastNamespace) then print #f, ""
+        if (len(sLastNamespace) > 0) andalso (sNamespace <> sLastNamespace) then sOut &= vbcrlf
         sLastNamespace = sNamespace
 
         dim as boolean bWriteF = (gThemeKeys(i).ofsFore >= 0)
@@ -1798,7 +1800,7 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
             if gTheme(n).hasForeAlpha then nA = clng(gTheme(n).foregroundAlpha)
             sLine = sKey & ".foreground: " & _
                     Theme_ChannelText( gTheme(n).foreMacro, gTheme(n).foreground, nA ).Utf8
-            print #f, sLine
+            sOut &= sLine & vbcrlf
         end if
 
         dim as boolean bWriteB = (gThemeKeys(i).ofsBack >= 0)
@@ -1809,23 +1811,23 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
             if gTheme(n).hasBackAlpha then nA = clng(gTheme(n).backgroundAlpha)
             sLine = sKey & ".background: " & _
                     Theme_ChannelText( gTheme(n).backMacro, gTheme(n).background, nA ).Utf8
-            print #f, sLine
+            sOut &= sLine & vbcrlf
         end if
 
         ' Flags are written for every key that HAS them bound, present or not, so a syntax
         ' style always shows its full triplet rather than a partial one.
         if gThemeKeys(i).ofsBold >= 0 then
             sLine = sKey & ".bold: "      & iif( gTheme(n).bold      <> 0, "true", "false" )
-            print #f, sLine
+            sOut &= sLine & vbcrlf
             sLine = sKey & ".italic: "    & iif( gTheme(n).italic    <> 0, "true", "false" )
-            print #f, sLine
+            sOut &= sLine & vbcrlf
             sLine = sKey & ".underline: " & iif( gTheme(n).underline <> 0, "true", "false" )
-            print #f, sLine
+            sOut &= sLine & vbcrlf
         end if
 
     next
 
-    close #f
+    if PsFileWriteAll( wszFullPath, sOut ) = false then return true   '' true = FAILED
 
     return false
 
@@ -1846,18 +1848,20 @@ end function
 ''
 sub Theme_DumpGlobals( byval wszOutPath as DWSTRING )
 
-    dim as long f = freefile
-    if open( *wszOutPath.Wz() for output as #f ) <> 0 then exit sub
+    '' Accumulated and written once through PsFile, for the same reason Theme_WriteFile is:
+    '' fbc's Open reads the path in the ANSI codepage, so a dump aimed at a non-ASCII folder
+    '' landed elsewhere. `print #` appends CRLF, which the macros below now spell out.
+    dim as string sOut
 
     dim as string sLine
 
     #macro DUMPCLR( nm, v )
         sLine = nm & "=" & hex(v, 6)
-        print #f, sLine
+        sOut &= sLine & vbcrlf
     #endmacro
     #macro DUMPFLG( nm, v )
         sLine = nm & "=" & str(iif(v, 1, 0))
-        print #f, sLine
+        sOut &= sLine & vbcrlf
     #endmacro
     #macro DUMPTXT( nm, v )
         scope
@@ -1865,7 +1869,7 @@ sub Theme_DumpGlobals( byval wszOutPath as DWSTRING )
             '' codepage. This is a diagnostic dump -- see docs/port/type-swap-scope.md.
             dim as DWSTRING wszV = v
             sLine = nm & "=" & wszV.Utf8
-            print #f, sLine
+            sOut &= sLine & vbcrlf
         end scope
     #endmacro
 
@@ -2029,10 +2033,10 @@ sub Theme_DumpGlobals( byval wszOutPath as DWSTRING )
     ' Anything the parser accepted but could not act on.
     for i as long = lbound(gThemeParseWarnings) to ubound(gThemeParseWarnings)
         sLine = DWSTRING( "!warning=" & gThemeParseWarnings(i) ).Utf8
-        print #f, sLine
+        sOut &= sLine & vbcrlf
     next
 
-    close #f
+    PsFileWriteAll( wszOutPath, sOut )
 
 end sub
 
