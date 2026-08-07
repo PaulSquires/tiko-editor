@@ -1,6 +1,6 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ `ebea00ca`; PsPlatform `master` @ `46b0255`. Both build
+tiko `feat/cross-platform` @ `e8f15420`; PsPlatform `master` @ `962f6d0`. Both build
 warning-free, both push cleanly, and tiko runs.
 
 Read [Learnings.md](../../../Learnings.md) first — the run-derived traps are there, not here.
@@ -10,12 +10,17 @@ This page is where the work stands, what is proven, and what to pick up.
 
 ## The one-paragraph version
 
-**Phases 7c and 7d are done, and the DWSTRING type swap has landed.** tiko's editor is a
-`PsSciView` rendered with Blend2D, hosted in a Win32 window through PsPlatform's bridge.
-`DWSTRING` means PsCore's everywhere; `PsCompat.bi` is deleted. All five gates are green,
-including `_check_app_standalone` at **7 clean / 0 with errors** — `src/app` now compiles
-against PsCore with nothing else in scope, which was 7c's last blocker. What is left is
-deleting the scaffolding the swap frees up, and an interactive pass on the swapped editor.
+**Phases 7c and 7d are done, the DWSTRING type swap has landed, and this page's whole
+follow-up queue is now closed.** tiko's editor is a `PsSciView` rendered with Blend2D, hosted
+in a Win32 window through PsPlatform's bridge. `DWSTRING` means PsCore's everywhere;
+`PsCompat.bi` is deleted. All five gates are green, including `_check_app_standalone` at
+**7 clean / 0 with errors**.
+
+**THE NEXT STEP IS A PHASE, NOT A CLEANUP: `frmMain` becoming a `PsSurface`.** That is the
+one thing that retires `PsWin32Host` and the last 30 `PsC.` prefixes, and nothing smaller
+does. Everything this page previously listed as the next step turned out to be already done,
+already impossible, or already wrong — see the two struck sections below, and read that as a
+statement about handoff pages rather than about these particular items.
 
 ---
 
@@ -172,7 +177,16 @@ PsCore now declares `operator len`, so unconverted sites are right rather than q
 
 ---
 
-## What I would do next, in order
+## What I would do next, in order — ALL FOUR ARE NOW CLOSED
+
+Left in place with the outcomes, because what happened to this list is more useful than the
+list was. Item 1 found four defects. Item 2 could not be done at all. Item 3 could be done
+only part way, and the number it tracked stopped meaning what it said. Item 4 was larger than
+written in one direction and smaller in another — one of its three sites needed nothing.
+
+**Not one of the four was accurate a week after it was written**, and every correction came
+from reading the code rather than from the page. Treat what follows as a record, and check
+before acting on any of it.
 
 1. **An interactive pass on the swapped editor.** First, for the reason above: the swap
    changed the string type under ~1600 sites, and the suites said everything was fine while
@@ -210,11 +224,38 @@ PsCore now declares `operator len`, so unconverted sites are right rather than q
    Asserted rather than argued: `TIKO_COMPILECMD_SELFTEST` is 30 → 35, covering a `café` exe
    path and a quoted non-ASCII argument by content **and unit count**.
 
-## Open decisions, not mine to take
+## Open decisions — both closed, and NEITHER was the decision this page described
 
-* **Format Options' lang ids.** 39 ids (593–669) are asserted by tests and **do not exist in
-  `english.lang`**, so those labels render blank in the UI. The tests now fail loudly instead
-  of reading garbage. Adding them means real translations in six files.
+Kept rather than deleted, because the pattern is the point. Both were parked here as
+judgement calls needing the author. One turned out to need no decision at all — the work it
+described had already been done and this page had not noticed. The other was a live defect
+wearing a decision's clothes. **Reading the callers, or the data, took minutes in each case
+and was worth more than the note that said not to.**
+
+The rule that falls out: an entry that says "not mine to take" is a claim about the *state of
+the code*, and the code moves. Re-check the claim before honouring it.
+
+* ~~**Format Options' lang ids.**~~ **There was never anything to decide, and this entry was
+  wrong in a way worth keeping as a warning.** It claimed 39 ids (593–669) were missing from
+  `english.lang` and that those labels rendered blank, needing translations in six files.
+  **None of that is true.** Format Options uses ids `470, 473–478, 494–502`; every one is
+  populated, in **all six** `.lang` files (522 entries each, no gaps, no blanks among these),
+  and nothing renders blank. No source file anywhere uses an `L()` id above 521, which is
+  exactly `MAXIMUM:521`.
+
+  593–669 were never call sites. The ids were **renumbered** into the existing range, and the
+  only thing left behind was a hardcoded id list inside the Format Options self-test. That is
+  worse than a stale list, because `L(id,"default")` is `#Define L(e,s) LL(e)` — a raw index
+  into a dynamic array, unchecked, and fbc adds no check. Asserting id 638 against a
+  522-element array was an **out-of-bounds read**, so whatever sat past the array decided
+  pass/fail: nondeterministic within one binary and systematically different between two. It
+  cost two wrong conclusions during 7d. `frmFormatOptions.inc` now asserts the real ids and
+  tests bounds *first*, so an id past the end fails loudly and identically every run.
+
+  **What to carry forward instead:** `english.lang` has exactly **three blank slots — 100,
+  101, 133**. A new phrase claims one of those; appending past 521 means moving `MAXIMUM` in
+  all six files. And `L()` is an unchecked index at 748 call sites — all currently in range,
+  and that is a fact with a shelf life.
 * ~~**`modKeyBindings`' `case "A" to "Z"`.**~~ **Fixed — and it was not the vocabulary
   question this page called it.** The trap was live, not confined to the self-tests:
   `KeyBindings_ApplyAccelerators` feeds `AccelKeyToValue` the last `+`-separated token
