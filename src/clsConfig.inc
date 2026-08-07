@@ -186,7 +186,7 @@ end function
 function isFontNameExist( byval wszFontName as DWSTRING ) as boolean
     wszFontName = PsUCase(wszFontName)
     for i as long = lbound(gFontnames) to ubound(gFontNames)
-        if wszFontName = ucase(gFontNames(i)) then return true
+        if wszFontName = PsUCase(gFontNames(i)) then return true
     next
     return false
 end function
@@ -409,7 +409,7 @@ function clsConfig.SaveConfigFileBody() as long
     ' Do not modify the this.CompilerIncludes directly because that will put the
     ' {CURDRIVE} macro back into the path names causing future compiles to fail
     ' because that macro only gets resolved on LoadConfig.
-    dim as DWSTRING allIncludes = PsRTrim(this.CompilerIncludes, ";")
+    dim as DWSTRING allIncludes = PsStrTrimAny(this.CompilerIncludes, ";")
     dim as DWSTRING SaveCompilerIncludes
     dim as DWSTRING includePath
     dim as long numpaths = PsStrParseCount(allIncludes, ";")
@@ -520,14 +520,14 @@ function clsConfig.WriteMRU() as long
 
     ' Delete the section name
     dim as DWSTRING wszSectionName = "MRU"
-    WritePrivateProfileString( wszSectionName, null, null, this.ConfigFilename )
+    WritePrivateProfileString( wszSectionName.Wz(), null, null, this.ConfigFilename.Wz() )
 
     ' Write the new values.
     for i as long = 0 To 9
         this.MRU(i) = ProcessToCurdriveApp(this.MRU(i))
         wszKeyName = "MRU_" & right("00" & str(i), 2)
         wszValue   = this.MRU(i)
-        WritePrivateProfileString(wszSectionName, wszKeyName, wszValue, this.ConfigFilename)
+        WritePrivateProfileString(wszSectionName.Wz(), wszKeyName.Wz(), wszValue.Wz(), this.ConfigFilename.Wz())
     next
 
     function = 0
@@ -543,14 +543,14 @@ function clsConfig.WriteMRUProjects() as long
 
     ' Delete the section name
     dim as DWSTRING wszSectionName = "MRUPROJECTS"
-    WritePrivateProfileString( wszSectionName, null, null, this.ConfigFilename )
+    WritePrivateProfileString( wszSectionName.Wz(), null, null, this.ConfigFilename.Wz() )
 
     ' Write the new values.
     for i as long = 0 To 9
         this.MRUProject(i) = ProcessToCurdriveApp(this.MRUProject(i))
         wszKeyName = "MRUPROJECT_" & right("00" & str(i), 2)
         wszValue   = this.MRUProject(i)
-        WritePrivateProfileString( wszSectionName, wszKeyName, wszValue, this.ConfigFilename )
+        WritePrivateProfileString( wszSectionName.Wz(), wszKeyName.Wz(), wszValue.Wz(), this.ConfigFilename.Wz() )
     next
 
     function = 0
@@ -666,7 +666,7 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
             end IF
             if nKind <> INI_LINE_KEYVALUE then continue for
 
-            nData = val(wData)
+            nData = PsVal(wData)
 
 
             ' SIZING AND ASSIGNMENT ARE SEPARATE, in all three indexed blocks below.
@@ -909,7 +909,7 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
     if isHotReload then this.wszLastActiveProject = wszLiveLastProject
 
     ' Iterate the optional semi colon separated list of compiler include paths
-    dim as DWSTRING allIncludes = PsRTrim(this.CompilerIncludes, ";")
+    dim as DWSTRING allIncludes = PsStrTrimAny(this.CompilerIncludes, ";")
     this.CompilerIncludes = ""
     dim as DWSTRING includePath
     dim as long numpaths = PsStrParseCount(allIncludes, ";")
@@ -1284,7 +1284,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
         select case PsUCase(wData).Utf8
             case "TRUE":   nData = true
             case "FALSE":  nData = false
-            case Else:     nData = val(wData)
+            case Else:     nData = PsVal(wData)
         end select
 
         wData = ProcessFromCurdriveProject(wData)
@@ -1303,9 +1303,9 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
             ' <catIndex>|-|<path>. Add rather than append blindly: ProjectFolders_Add is
             ' idempotent and creates missing ancestors, so a hand-edited file listing
             ' "a/b" without "a" still loads as a well-formed tree instead of an orphan.
-            dim as long nSepPos = instr( wData, "|-|" )
+            dim as long nSepPos = PsInStr( wData, "|-|" )
             if nSepPos > 0 then
-                ProjectFolders_Add( val( PsLeft(wData, nSepPos - 1) ), mid(wData, nSepPos + 3) )
+                ProjectFolders_Add( PsVal( PsLeft(wData, nSepPos - 1) ), PsMid(wData, nSepPos + 3) )
             end if
             case "Bookmarks":           sBookmarks              = wData.Utf8
             case "BreakPoints":         sBreakPoints            = wData.Utf8

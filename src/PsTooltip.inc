@@ -456,7 +456,7 @@ sub PSTOOLTIP.LayoutTooltip()
     dim as long nTextW = 0, nTextH = 0
     if PsLen( this.wszTipBuf ) then
         SetRect( @rcCalc, 0, 0, nWrapW, 0 )
-        DrawText( hDC, this.wszTipBuf.vptr, -1, cast(lpRect, @rcCalc), dwFlags or DT_CALCRECT )
+        DrawText( hDC, this.wszTipBuf.Wz(), -1, cast(lpRect, @rcCalc), dwFlags or DT_CALCRECT )
         nTextW = rcCalc.right - rcCalc.left
         nTextH = rcCalc.bottom - rcCalc.top
     end if
@@ -465,7 +465,7 @@ sub PSTOOLTIP.LayoutTooltip()
     if PsLen( this.wszTitle ) then
         SelectObject( hDC, hTitleUse )
         SetRect( @rcCalc, 0, 0, 0, 0 )
-        DrawText( hDC, this.wszTitle.vptr, -1, cast(lpRect, @rcCalc), _
+        DrawText( hDC, this.wszTitle.Wz(), -1, cast(lpRect, @rcCalc), _
                   DT_LEFT or DT_TOP or DT_NOPREFIX or DT_SINGLELINE or DT_CALCRECT )
         nTitleW = rcCalc.right - rcCalc.left
         nTitleH = rcCalc.bottom - rcCalc.top

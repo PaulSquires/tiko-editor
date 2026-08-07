@@ -902,7 +902,7 @@ function PsSelectBar_WndProc( _
                 dim as NMTTDISPINFOW ptr pdi = cast(NMTTDISPINFOW ptr, lParam)
                 ' store in an instance-lifetime buffer and point lpszText at it
                 pSel->wszTooltip = PsSelectBar_ResolveTooltipText( pSel, pSel->nLastHotIdx )
-                pdi->lpszText = cast( LPWSTR, pSel->wszTooltip.vptr )
+                pdi->lpszText = cast( LPWSTR, pSel->wszTooltip.Wz() )
                 pdi->hinst    = NULL
             end if
             return 0

@@ -224,7 +224,7 @@ function clsApp.GetSourceDocumentPtr( byval pDocIn as clsDocument ptr ) as clsDo
     end if
     
     if pDoc <> 0 then
-        select case pDoc->ProjectFileType 
+        select case pDoc->ProjectFileType.Utf8
             case FILETYPE_MAIN, FILETYPE_MODULE, FILETYPE_NORMAL
             case else
             pDoc = 0
@@ -271,11 +271,11 @@ end function
 
 ''
 ''
-function clsApp.SaveProject( byval bSaveAs as boolean = false, byref wszForcedName as wstring = "" ) as boolean
+function clsApp.SaveProject( byval bSaveAs as boolean = false, byval wszForcedName as DWSTRING = "" ) as boolean
 
     dim wFilename as wstring * MAX_PATH
     
-    wFilename = this.ProjectFilename
+    wFilename = *(this.ProjectFilename).Wz()
 
     if bSaveAs then
         if len(wszForcedName) > 0 then
@@ -283,7 +283,7 @@ function clsApp.SaveProject( byval bSaveAs as boolean = false, byref wszForcedNa
             ' PROMOTION can be driven by the self-test: promotion is a state TRANSITION,
             ' and the state is self-consistent on both sides of it, so no startup assertion
             ' can see whether the transition did its job. Two bugs escaped that way.
-            wFilename = wszForcedName
+            wFilename = *(wszForcedName).Wz()
         else
             ' Offer the dialog only a name the user chose. The untitled workspace's path is
             ' an internal detail under settings\ and must never be presented as a starting
@@ -382,8 +382,8 @@ end function
 ''  purpose -- a .bi or .inc is never a program entry point, and an .rc has its own
 ''  category.
 ''
-function Workspace_DeriveFileType( byref wszExt as wstring, byval bHasMain as boolean ) as DWSTRING
-    select case ucase(wszExt)
+function Workspace_DeriveFileType( byval wszExt as DWSTRING, byval bHasMain as boolean ) as DWSTRING
+    select case PsUCase(wszExt).Utf8
     case ".BAS":  return iif( bHasMain, FILETYPE_NORMAL, FILETYPE_MAIN )
     case ".RC":   return FILETYPE_RESOURCE
     case ".BI":   return FILETYPE_HEADER
@@ -404,7 +404,7 @@ function clsApp.ProjectSetFileType( _
     
     dim wzFileExt as wstring * MAX_PATH 
 
-    wzFileExt = PsPathExt(pDoc->DiskFilename )
+    wzFileExt = *(PsPathExt(pDoc->DiskFilename )).Wz()
     
     ' Determine if the document already exists in the project. If it does not then
     ' make a determination of a default file type for this new file being added to the project.

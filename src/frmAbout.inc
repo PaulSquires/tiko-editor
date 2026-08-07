@@ -1161,10 +1161,10 @@ function frmAbout_Show( byval hWndParent as HWND ) as LRESULT
 
     dim pWindow as CWindow ptr = new CWindow
 
-    HWND_FRMABOUT = pWindow->Create( hWndParent, L(71,"About") & " " & APPNAME, _
-        @frmAbout_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
+    HWND_FRMABOUT = pWindow->Create( hWndParent, *(L(71,"About") & " " & APPNAME).Wz(), _
+                        @frmAbout_WndProc, 0, 0, 0, 0, _
+                        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
+                        WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
     pWindow->SetClientSize( FRMABOUT_CLIENT_W, FRMABOUT_CLIENT_H )
     pWindow->Center( pWindow->hWindow, hWndParent )
 

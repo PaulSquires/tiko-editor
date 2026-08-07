@@ -38,8 +38,8 @@
 ' The two DWSTRINGs meet at .Utf8, which both types have and which is lossless in both
 ' directions. That is the same bridge modEncoding uses for the document save path.
 ' ========================================================================================
-private function TextFile_PsPath( byval wszPath as DWSTRING ) as PsC.DWSTRING
-    dim as PsC.DWSTRING d
+private function TextFile_PsPath( byval wszPath as DWSTRING ) as DWSTRING
+    dim as DWSTRING d
     d.Utf8 = wszPath.Utf8
     return d
 end function
@@ -51,11 +51,11 @@ end function
 private function TextFile_ReadLines( byval wszPath as DWSTRING, lines() as DWSTRING ) as boolean
     erase lines
     dim as boolean bOk
-    dim as string sBytes = PsC.PsFileReadAll( TextFile_PsPath(wszPath), bOk )
+    dim as string sBytes = PsFileReadAll( TextFile_PsPath(wszPath), bOk )
     if bOk = false then return false
 
-    dim as PsC.PsEncodingId encUsed
-    dim as PsC.DWSTRING dwAll = PsC.PsEncDecodeAuto( sBytes, encUsed )
+    dim as PsEncodingId encUsed
+    dim as DWSTRING dwAll = PsEncDecodeAuto( sBytes, encUsed )
     dim as DWSTRING wszAll
     wszAll.Utf8 = dwAll.Utf8
 
@@ -74,10 +74,10 @@ end function
 ' Reads a whole text file as one string, replacing CTextStream.ReadAll.
 private function TextFile_ReadAll( byval wszPath as DWSTRING ) as DWSTRING
     dim as boolean bOk
-    dim as string sBytes = PsC.PsFileReadAll( TextFile_PsPath(wszPath), bOk )
+    dim as string sBytes = PsFileReadAll( TextFile_PsPath(wszPath), bOk )
     if bOk = false then return ""
-    dim as PsC.PsEncodingId encUsed
-    dim as PsC.DWSTRING dwAll = PsC.PsEncDecodeAuto( sBytes, encUsed )
+    dim as PsEncodingId encUsed
+    dim as DWSTRING dwAll = PsEncDecodeAuto( sBytes, encUsed )
     dim as DWSTRING r
     r.Utf8 = dwAll.Utf8
     return r
@@ -86,20 +86,20 @@ end function
 ' Writes text as UTF-16LE with a BOM -- what CTextStream.Create(path, true, true) produced
 ' and what every settings.ini already on disk is.
 private function TextFile_WriteUtf16( byval wszPath as DWSTRING, byref wszText as DWSTRING ) as boolean
-    dim as PsC.DWSTRING d
+    dim as DWSTRING d
     d.Utf8 = wszText.Utf8
     dim as boolean bLossy
-    dim as string sBytes = PsC.PsEncEncode( d, PsC.PSENC_UTF16LE_BOM, bLossy )
-    return PsC.PsFileWriteAll( TextFile_PsPath(wszPath), sBytes )
+    dim as string sBytes = PsEncEncode( d, PSENC_UTF16LE_BOM, bLossy )
+    return PsFileWriteAll( TextFile_PsPath(wszPath), sBytes )
 end function
 
 ' Writes text as the ANSI codepage with no BOM -- what CTextStream.Create(path) produced for
 ' the keyword files, which are plain lists and were never Unicode.
 private function TextFile_WriteAnsi( byval wszPath as DWSTRING, byref wszText as DWSTRING ) as boolean
-    dim as PsC.DWSTRING d
+    dim as DWSTRING d
     d.Utf8 = wszText.Utf8
     dim as boolean bLossy
-    dim as string sBytes = PsC.PsEncEncode( d, PsC.PSENC_ANSI, bLossy )
-    return PsC.PsFileWriteAll( TextFile_PsPath(wszPath), sBytes )
+    dim as string sBytes = PsEncEncode( d, PSENC_ANSI, bLossy )
+    return PsFileWriteAll( TextFile_PsPath(wszPath), sBytes )
 end function
 

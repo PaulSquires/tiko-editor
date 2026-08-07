@@ -140,7 +140,7 @@ function OnCommand_SearchFindDialog() as LRESULT
     FindControls_Show()
 
     dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
-    gFind.txtFind = AfxGetWindowText(hCtl)
+    gFind.txtFind = AfxW(AfxGetWindowText(hCtl))
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     ' NOTHING TO SEARCH FOR MEANS DO NOTHING, and that guard is load-bearing now that an
     ' empty selection leaves the box empty. NextSelection's no-match arm ends in
@@ -262,12 +262,15 @@ function OnCommand_SearchFindActions( _
     dim as HWND hFocus = GetFocus()
 
     if PsTextBox_HasFocus( hWndFind ) then
-        gFind.txtFind = AfxGetWindowText(hWndFind)
+        gFind.txtFind = AfxW(AfxGetWindowText(hWndFind))
     elseif hFocus = hEdit then    
         dim as string sFindText = pDoc->GetSelText
         if len(sFindText) then 
             ' Update the Find search term if the frmFind pane is open.
-            if (sFindText <> gFind.txtFind) andalso IsWindowVisible(HWND_FRMMAIN_FIND) then
+            '' HOISTED TO A BOOLEAN. IsWindowVisible returns a BOOL, and mixing that with a
+            '' boolean in `andalso` is fbc warning 38 -- see C:\dev\Learnings.md.
+            dim as boolean bFindVisible = (IsWindowVisible(HWND_FRMMAIN_FIND) <> 0)
+            if (sFindText <> gFind.txtFind) andalso bFindVisible then
                 dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
                 AfxSetWindowText( hCtl, sFindText )
             end if

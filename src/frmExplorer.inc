@@ -55,8 +55,8 @@ function QuickSortpDocs( pDocs() as clsDocument ptr, lo as long, hi as long ) as
         i = lo : j = hi
         pivot = ucase( pDocs( (lo+hi)/2 )->DiskFilename )
         do
-            while ucase(pDocs(i)->DiskFilename) < pivot and i < hi: i += 1: wend
-            while ucase(pDocs(j)->DiskFilename) > Pivot and j > lo: j -= 1: wend
+            while PsUCase(pDocs(i)->DiskFilename) < pivot and i < hi: i += 1: wend
+            while PsUCase(pDocs(j)->DiskFilename) > Pivot and j > lo: j -= 1: wend
             if i <= j then swap pDocs(i), pDocs(j): i += 1: j -= 1
         loop while i <= j
         if lo < j then QuickSortpDocs( pDocs(), lo, j )
@@ -687,7 +687,7 @@ function frmExplorer_CanDropCallback( byval p as PSLISTTREE_DROPINFO ptr ) as bo
         if ProjectFolders_CatAllowsFolders( catDest ) = false then return false
         for i as long = 0 to nFolders - 1
             if srcFolderCats(i) = catDest then
-                if ucase(srcFolderPaths(i)) = PsUCase(wszDest) then return false
+                if PsUCase(srcFolderPaths(i)) = PsUCase(wszDest) then return false
                 if ProjectFolders_IsDescendantOf( wszDest, srcFolderPaths(i) ) then return false
             end if
         next
@@ -713,7 +713,7 @@ function frmExplorer_CanDropCallback( byval p as PSLISTTREE_DROPINFO ptr ) as bo
                 if frmExplorer_CatIndexForDoc( pScan ) = srcFolderCats(i) then
                     dim as DWSTRING wszF = pScan->docData.wszFolder
                     dim as boolean bInside = false
-                    if PsUCase(wszF) = ucase(srcFolderPaths(i)) then bInside = true
+                    if PsUCase(wszF) = PsUCase(srcFolderPaths(i)) then bInside = true
                     if ProjectFolders_IsDescendantOf( wszF, srcFolderPaths(i) ) then bInside = true
                     if bInside then
                         dim as long ub = ubound(moved) + 1
@@ -778,7 +778,7 @@ function frmExplorer_EndLabelEditCallback( byval hCtl as HWND, byval row as inte
     if ProjectFolders_IsValidName( wszName ) = false then return false
 
     ' Unchanged apart from case is not a rename, and must not be refused as a self-collision.
-    if PsUCase(wszName) = ucase( ProjectFolders_LeafName( wszOld ) ) then return true
+    if PsUCase(wszName) = PsUCase( ProjectFolders_LeafName( wszOld ) ) then return true
 
     dim as DWSTRING wszNew = ProjectFolders_Combine( ProjectFolders_ParentPath( wszOld ), wszName )
     if ProjectFolders_Exists( catIndex, wszNew ) then return false
@@ -1141,7 +1141,7 @@ sub frmExplorer_AddFolderLevel( byval hCtrl as HWND, byval catIndex as long, _
     redim nFolders(any) as long
     for i as long = lbound(gProjectFolders) to ubound(gProjectFolders)
         if gProjectFolders(i).catIndex <> catIndex then continue for
-        if ucase( ProjectFolders_ParentPath( gProjectFolders(i).wszPath ) ) <> PsUCase( wszParentPath ) then continue for
+        if PsUCase( ProjectFolders_ParentPath( gProjectFolders(i).wszPath ) ) <> PsUCase( wszParentPath ) then continue for
         dim as long ub = ubound(nFolders) + 1
         redim preserve nFolders(ub)
         nFolders(ub) = i
@@ -1149,10 +1149,10 @@ sub frmExplorer_AddFolderLevel( byval hCtrl as HWND, byval catIndex as long, _
 
     for i as long = lbound(nFolders) + 1 to ubound(nFolders)
         dim as long nHold = nFolders(i)
-        dim as DWSTRING wszHold = ucase( ProjectFolders_LeafName( gProjectFolders(nHold).wszPath ) )
+        dim as DWSTRING wszHold = PsUCase( ProjectFolders_LeafName( gProjectFolders(nHold).wszPath ) )
         dim as long j = i - 1
         do while j >= lbound(nFolders)
-            if ucase( ProjectFolders_LeafName( gProjectFolders(nFolders(j)).wszPath ) ) <= wszHold then exit do
+            if PsUCase( ProjectFolders_LeafName( gProjectFolders(nFolders(j)).wszPath ) ) <= wszHold then exit do
             nFolders(j + 1) = nFolders(j)
             j -= 1
         loop
@@ -1272,7 +1272,7 @@ function LoadExplorerFiles() as long
         ' depended on selecting a group row -- the context menu and the up-handler both bail
         ' on them -- and a non-selectable row still reports its index to the message
         ' callback, so the host toggle is unaffected.
-        wszText = gConfig.Cat(ii).wszDescription
+        wszText = *gConfig.Cat(ii).wszDescription.Wz()
         dim as integer nRootRow = PsListTree_AddNode( hCtrl, -1, wszText, ii, EXPKIND_ROOT )
         PsListTree_SetRowSelectable( hCtrl, nRootRow, false )
 

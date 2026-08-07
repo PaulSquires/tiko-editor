@@ -261,7 +261,7 @@ sub PsTipHost_TrackShow( byval pHost as PSTIPHOST ptr, byval ptScreen as POINT, 
     ti.cbSize   = sizeof(TOOLINFOW)
     ti.hwnd     = pHost->hCtrl
     ti.uId      = cast(UINT_PTR, pHost->hCtrl)
-    ti.lpszText = cast(WSTRING ptr, wszText.vptr)
+    ti.lpszText = cast(WSTRING ptr, wszText.Wz())
     SendMessageW( pHost->hSysTip, TTM_UPDATETIPTEXTW, 0, cast(LPARAM, @ti) )
     SendMessageW( pHost->hSysTip, TTM_TRACKPOSITION, 0, _
                   cast(LPARAM, MAKELONG(ptScreen.x, ptScreen.y)) )

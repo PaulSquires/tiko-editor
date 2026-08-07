@@ -438,7 +438,7 @@ sub PSMESSAGEBOX.LayoutBox()
         ' height the wrapped text needs AND the width it actually used. DT_NOPREFIX matches
         ' PsBufferPaint.PaintText, which forces it -- without it here, a message containing "&"
         ' would measure one width and draw another.
-        DrawTextW( hDC, cast( LPCWSTR, this.wszText.vptr ), PsLen( this.wszText ), @rcCalc, _
+        DrawTextW( hDC, cast( LPCWSTR, this.wszText.Wz() ), PsLen( this.wszText ), @rcCalc, _
                    DT_CALCRECT or DT_WORDBREAK or DT_LEFT or DT_NOPREFIX or DT_EXPANDTABS )
         this.nTextBlockW = rcCalc.right - rcCalc.left
         this.nTextBlockH = rcCalc.bottom - rcCalc.top
@@ -452,7 +452,7 @@ sub PSMESSAGEBOX.LayoutBox()
         if hCapUse = 0 then hCapUse = hTextUse
         SelectObject( hDC, hCapUse )
         dim as SIZE sz
-        if GetTextExtentPoint32W( hDC, cast( LPCWSTR, this.wszCaption.vptr ), _
+        if GetTextExtentPoint32W( hDC, cast( LPCWSTR, this.wszCaption.Wz() ), _
                                   PsLen( this.wszCaption ), @sz ) then capTextW = sz.cx
         SelectObject( hDC, hTextUse )
     end if

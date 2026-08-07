@@ -67,7 +67,7 @@ private sub PsTextBox_ShowContextMenu( byval pTextBox as PSTEXTBOX ptr )
     dim as HWND hWin = pTextBox->hRichEdit
     dim as HWND hPopup = pTextBox->hContextMenu
     dim as boolean bReadOnly = ( (GetWindowLongPtr(hWin, GWL_STYLE) and ES_READONLY) <> 0 )
-    dim as DWSTRING wszSelText = RichEdit_GetSelText( hWin )
+    dim as DWSTRING wszSelText = AfxW(RichEdit_GetSelText( hWin ))
     dim as boolean bHasSel = (PsLen(wszSelText) > 0)
 
     PsPopupMenu_Clear( hPopup )
@@ -225,7 +225,7 @@ private sub PsTextBox_ApplyParaFormat( byval pTextBox as PSTEXTBOX ptr )
     case else             : pf.wAlignment = PFA_LEFT
     end select
 
-    dim as DWSTRING wszSaved = RichEdit_GetText( pTextBox->hRichEdit )
+    dim as DWSTRING wszSaved = AfxW(RichEdit_GetText( pTextBox->hRichEdit ))
     dim as DWORD dwStart, dwEnd
     SendMessage( pTextBox->hRichEdit, EM_GETSEL, cast(WPARAM, @dwStart), cast(LPARAM, @dwEnd) )
 
@@ -246,7 +246,7 @@ private sub PsTextBox_ApplyParaFormat( byval pTextBox as PSTEXTBOX ptr )
     end if
 
     if PsLen(wszSaved) > 0 then
-        SendMessage( pTextBox->hRichEdit, WM_SETTEXT, 0, cast(LPARAM, wszSaved.vptr) )
+        SendMessage( pTextBox->hRichEdit, WM_SETTEXT, 0, cast(LPARAM, wszSaved.Wz()) )
         SendMessage( pTextBox->hRichEdit, EM_SETSEL, cast(WPARAM, dwStart), cast(LPARAM, dwEnd) )
     end if
 
@@ -352,7 +352,7 @@ end function
 private function PsTextBox_IsValidNumericText( byval pTextBox as PSTEXTBOX ptr, byref wszText as DWSTRING ) as boolean
     dim as integer periodAt = 0
     for i as integer = 1 to PsLen(wszText)
-        select case asc(PsMid(wszText, i, 1))
+        select case wszText[i - 1]
             case asc("0") to asc("9")
             case asc("-")
                 if i <> 1 then return false
@@ -408,7 +408,7 @@ end function
 function PsTextBox_GetText( byval hTextBoxControl as HWND ) as DWSTRING
     dim as PSTEXTBOX ptr pTextBox = GetTextBoxPointer(hTextBoxControl)
     if pTextBox = null then return ""
-    return RichEdit_GetText( pTextBox->hRichEdit )
+    return AfxW(RichEdit_GetText( pTextBox->hRichEdit ))
 end function
 
 
@@ -419,7 +419,7 @@ function PsTextBox_SetText( byval hTextBoxControl as HWND, byval Text as DWSTRIN
     dim as PSTEXTBOX ptr pTextBox = GetTextBoxPointer(hTextBoxControl)
     if pTextBox = null then return false
     pTextBox->bInternalChange = true
-    SendMessage( pTextBox->hRichEdit, WM_SETTEXT, 0, cast(LPARAM, Text.vptr) )
+    SendMessage( pTextBox->hRichEdit, WM_SETTEXT, 0, cast(LPARAM, Text.Wz()) )
     pTextBox->bInternalChange = false
     return true
 end function
@@ -441,7 +441,7 @@ end function
 function PsTextBox_GetSelText( byval hTextBoxControl as HWND ) as DWSTRING
     dim as PSTEXTBOX ptr pTextBox = GetTextBoxPointer(hTextBoxControl)
     if pTextBox = null then return ""
-    return RichEdit_GetSelText( pTextBox->hRichEdit )
+    return AfxW(RichEdit_GetSelText( pTextBox->hRichEdit ))
 end function
 
 
@@ -453,7 +453,7 @@ function PsTextBox_ReplaceSel( byval hTextBoxControl as HWND, byval Text as DWST
     dim as PSTEXTBOX ptr pTextBox = GetTextBoxPointer(hTextBoxControl)
     if pTextBox = null then return false
     pTextBox->bInternalChange = true
-    SendMessage( pTextBox->hRichEdit, EM_REPLACESEL, true, cast(LPARAM, Text.vptr) )
+    SendMessage( pTextBox->hRichEdit, EM_REPLACESEL, true, cast(LPARAM, Text.Wz()) )
     pTextBox->bInternalChange = false
     return true
 end function
@@ -1088,7 +1088,7 @@ function PsTextBoxRichEdit_SubclassProc ( _
                 else
                     wsStyle or= DT_NOCLIP or DT_SINGLELINE
                 end if
-                DrawText( hdc, pTextBox->CueText.vptr, -1, @editRect, wsStyle )
+                DrawText( hdc, pTextBox->CueText.Wz(), -1, @editRect, wsStyle )
                 RestoreDC( hdc, -1 )
                 ReleaseDC( hWin, hdc )
 
@@ -1119,7 +1119,7 @@ function PsTextBoxRichEdit_SubclassProc ( _
                     ' replaced: caret position + remaining text decide validity.
                     dim as DWORD dwStart, dwEnd
                     SendMessage( hWin, EM_GETSEL, cast(WPARAM, @dwStart), cast(LPARAM, @dwEnd) )
-                    dim as DWSTRING wszText = RichEdit_GetText( hWin )
+                    dim as DWSTRING wszText = AfxW(RichEdit_GetText( hWin ))
                     if dwEnd > dwStart then
                         wszText = PsLeft(wszText, dwStart) & PsMid(wszText, dwEnd + 1)
                     end if
@@ -1152,7 +1152,7 @@ function PsTextBoxRichEdit_SubclassProc ( _
             ' Numeric mode: vet the paste by building the prospective text. Rejected
             ' wholesale if the result would be invalid -- nothing is half-pasted.
             if (pTextBox <> null) andalso (pTextBox->bNumericOnly = true) then
-                dim as DWSTRING wszClip = AfxGetClipboardText()
+                dim as DWSTRING wszClip = AfxW(AfxGetClipboardText())
                 ' A single-line control keeps only the first pasted line; mirror that
                 ' before validating.
                 dim as integer nEol = PsInStr( wszClip, wchr(13) )
@@ -1160,7 +1160,7 @@ function PsTextBoxRichEdit_SubclassProc ( _
                 if nEol > 0 then wszClip = PsLeft( wszClip, nEol - 1 )
                 dim as DWORD dwStart, dwEnd
                 SendMessage( hWin, EM_GETSEL, cast(WPARAM, @dwStart), cast(LPARAM, @dwEnd) )
-                dim as DWSTRING wszText = RichEdit_GetText( hWin )
+                dim as DWSTRING wszText = AfxW(RichEdit_GetText( hWin ))
                 dim as DWSTRING wszProspective = PsLeft(wszText, dwStart) & wszClip & PsMid(wszText, dwEnd + 1)
                 if PsTextBox_IsValidNumericText( pTextBox, wszProspective ) = false then return 0
             end if
@@ -1233,13 +1233,13 @@ function PsTextBoxRichEdit_SubclassProc ( _
             ' unless ZeroWhenEmpty, which stamps the formatted zero instead.
             if (uMsg = WM_KILLFOCUS) andalso (pTextBox <> null) then
                 if pTextBox->bNumericOnly then
-                    dim as DWSTRING wszText = RichEdit_GetText( hWin )
+                    dim as DWSTRING wszText = AfxW(RichEdit_GetText( hWin ))
                     if (PsLen(wszText) > 0) orelse (pTextBox->bZeroWhenEmpty = true) then
                         dim as DWSTRING wszFormatted = _
-                            PsTextBox_FormatNumeric( val(wszText), pTextBox->nDecimalPlaces, false )
+                            PsTextBox_FormatNumeric( PsVal(wszText), pTextBox->nDecimalPlaces, false )
                         if wszFormatted <> wszText then
                             pTextBox->bInternalChange = true
-                            SendMessage( hWin, WM_SETTEXT, 0, cast(LPARAM, wszFormatted.vptr) )
+                            SendMessage( hWin, WM_SETTEXT, 0, cast(LPARAM, wszFormatted.Wz()) )
                             pTextBox->bInternalChange = false
                         end if
                     end if

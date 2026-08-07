@@ -11,12 +11,12 @@ This page is where the work stands and what to pick up.
 ## The one-paragraph version
 
 Phase 7d is **done**: tiko's editor is a `PsSciView` rendered with Blend2D, hosted in a Win32
-window through PsPlatform's bridge. It builds, runs, edits, colours and packages. Phase 7c —
-closing `src/app` so a shell binary with no AfxNova can include it — is **6 of 7 files clean**.
-The last file and the deletion of the scaffolding both wait on the **DWSTRING type swap**,
-which is measured at **512 errors** and is the single thing gating the rest of the port.
-
----
+window through PsPlatform's bridge. **The DWSTRING type swap has landed** — `DWSTRING` means
+PsCore's everywhere, `PsCompat.bi` is deleted, and with it Phase 7c's last blocker: the
+standalone gate is **7 clean / 0 with errors**. gas64 builds warning-free, tiko runs, and all
+27 suites are byte-identical to the pre-swap capture. The swap cost 501 errors and, far more
+to the point, **four defects in PsCore's string type, three of which compiled cleanly** — see
+`type-swap-scope.md`. What remains is deleting the scaffolding the swap frees up.
 
 ## What is verified, and how
 
@@ -43,7 +43,7 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | `_check_package.bat` | tiko runs with **only the Windows directories on PATH** | green |
 | ^ | it killed only tiko, and `-NoNewWindow` means every child it spawned inherited this console and the redirected handles — so the tree survived holding them and cmd waited for a console nobody released. `taskkill /T` plus a `WaitForExit`; it also stops as soon as the line appears, so a healthy package costs ~1s rather than a flat 20 | |
 | `_check_app_layer.bat` | `src/app` names no Win32 or AfxNova token (26 files) | green |
-| `_check_app_standalone.bat` | `src/app` **compiles** against PsCore alone | **6 clean, 1 with errors** |
+| `_check_app_standalone.bat` | `src/app` **compiles** against PsCore alone | green — **7 clean, 0 with errors** |
 
 The ratchet is the weak one and knows it: it greps a hand-written vocabulary. Three gaps in
 three audits. The standalone compile is the real test — read a green ratchet as evidence,
@@ -102,60 +102,53 @@ for the whole button-up group, so the chain stopped at the editor and `frmMain_O
 never fired. `WM_RBUTTONUP` now returns `DefWindowProc` after the bridge has had it. **This is
 exactly the class of defect the suites cannot see** — every assertion passed throughout.
 
-### 7c — the app layer. 6 of 7.
+### 7c — the app layer. Done.
 
 `clsDocument.bi` is free of Win32; the menu vocabulary, localization and two `gApp` flags moved
-into `app/`; `clsConfig`'s UI defaults split out. `clsSymbolDb.inc` is the one left, and its
-11 errors are **the type swap**, not a boundary problem — see below.
+into `app/`; `clsConfig`'s UI defaults split out. `clsSymbolDb.inc` was the one left, and its
+11 errors were **the type swap** — they went with it. The gate is 7 clean, 0 with errors.
 
-### The DWSTRING swap. 512, and this is the gate.
+### The DWSTRING swap. LANDED.
 
-`docs/port/type-swap-scope.md` has the full measurement. Short version:
+`docs/port/type-swap-scope.md` has the whole measurement. The arc:
 
     1010  before any of this work
-     711  after what is committed and standing on its own
-     512  after four scripted passes that take minutes to re-apply
+     711  after work that stood on its own and was committed
+     512  after four scripted passes
+     501  after the .Utf8 class and 14 pure signatures landed ahead of it
+       0  the swap itself
 
-The four passes are tabulated in that doc. The remaining 512 are individual judgements:
-168 `Type mismatch`, 148 `Invalid assignment/conversion` (the `.Utf8` class), 73
-`Invalid data types`, and a tail.
+`DWSTRING` means PsCore's everywhere. `PsCompat.bi` is deleted. `namespace PsC` SURVIVES, for
+a reason nobody had written down: it was also fencing PsCore's UI layer off from tiko's, and
+both sides have a `PsBufferPaint`.
 
-**The 148 are the dangerous ones.** Today those sites convert implicitly and fbc's
-`wstring` → `string` goes through the **ANSI codepage**; `.Utf8` is UTF-8. A wrong call there
-does not fail to compile — it silently changes an encoding. `TIKO_ENCODING_SELFTEST` is the
-only thing that catches it.
+**THE SWAP'S REAL COST WAS NOT THE 501 ERRORS.** It was four defects in PsCore's DWSTRING,
+**three of which compiled cleanly**:
 
-Three rules learned the hard way, all with worked examples in the doc:
+* **no constructor from a native `wstring`** — fbc silently used the `zstring ptr` overload
+  and the process died of `STATUS_HEAP_CORRUPTION` far from any string
+* **`Wz()` returned NULL for an empty string**, so `*s.Wz()` dereferenced null
+* **`len(<DWSTRING>)` returned 24**, the descriptor size, at every unconverted site
+* no ordering operators, which was the one that failed to build
 
-* `.Utf8` on **assertion text** is safe. On a **file path** returned to a caller expecting
-  ANSI it is a bug — `CompleteIncludeFilename` is the example.
-* fbc reports the **resolved** callee, not the identifier written: `AfxSetWindowText(…)` is
-  reported as `parameter 2 of SETWINDOWTEXTW()`. Scripts that match on the name cannot find
-  wrapper calls, which is most of them.
-* A partly-swapped tree does not build, so there is nothing to run the oracle against. **It
-  lands whole or not at all.** Two attempts have been reverted for exactly this.
+All four are fixed in PsPlatform. The lesson for the rest of the port is on the tin: a clean
+build of a swapped tree is the START of the verification, not the end of it.
 
 ---
 
 ## What I would do next, in order
 
-1. **The swap, in one dedicated run.** Re-apply the four passes from `type-swap-scope.md`
-   (minutes), then work the remainder by hand. **The `.Utf8` class is now done** —
-   landed on the unswapped tree, 153 → 52 on the same probe, all 27 suites unmoved.
-   The 52 that remain under that error code are not `.Utf8` sites at all; the table in
-   `type-swap-scope.md` says what each one actually needs. **14 pure signatures went in
-   after it**, then **`error 24`, which is the same `.Utf8` class under a different number** —
-   `dim as string s = <DWSTRING>` is reported as `Invalid data types`. **718 → 501** in total.
-   What is left of the signature pass is the Win32 and AfxNova boundary, which genuinely
-   cannot move before the swap.
-   **Read the three left-alone sites in `type-swap-scope.md` before doing any more of this**
-   — particularly that `PsText` means `str()` in `PsCompat.bi` and `.Utf8` in PsCore, so the
-   obvious mechanical rename is an encoding change that arrives later, silently.
-2. **Then `clsSymbolDb`, `PsCompat.bi`, `namespace PsC` and `DocView`'s forwarding** all
-   fall out — they exist only because two DWSTRINGs coexist.
-3. **Then 7c proper**: the shell. `PsWin32Host` is scaffolding and is deleted when it lands.
-4. **An interactive pass on the editor**, which needs a human, and is the only thing that
-   will find what the suites cannot.
+1. **An interactive pass on the swapped editor**, and it is first for a reason. The swap
+   changed the string type under 1600 sites; the suites say the model is unmoved and they
+   said exactly that while the context menu and the mouse wheel were both broken.
+2. **Delete the scaffolding the swap frees up.** `PsWin32Host` goes; `DocView`'s forwarding
+   goes. `namespace PsC` does NOT — see above.
+3. **Shrink `modAfxBridge.bi` to nothing.** `git grep -c "AfxW("` is the honest count of how
+   much AfxNova text still crosses into tiko, and the file is deleted rather than rewritten
+   when it reaches zero.
+4. **The three sites left alone during the `.Utf8` work** — the `open`/`kill` paths and
+   `CompileCmd_Tokenize`, which byte-tokenises a command line. `type-swap-scope.md` says what
+   each needs. `PsText` is the trap: `str()` in the old `PsCompat.bi`, `.Utf8` in PsCore.
 
 ## Open decisions, not mine to take
 

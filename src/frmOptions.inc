@@ -158,7 +158,7 @@ function frmOptions_SaveEditorOptions() as long
     ' for "the strings this session is using have changed" and stopped being one when editing
     ' and selecting became separate actions. Creating a new language, or fixing a typo in one
     ' the editor is not running in, changes nothing about this session and must not claim it does.
-    dim as boolean bLangSwitched = (ucase(gLocalCurrentFile) <> PsUCase(gConfig.LocalizationFile))
+    dim as boolean bLangSwitched = (PsUCase(gLocalCurrentFile) <> PsUCase(gConfig.LocalizationFile))
     if bLangSwitched orelse (gLocalSelectedEdited = true) then
         bChangesNextRun = true
     end if
@@ -1114,7 +1114,7 @@ private sub frmOptions_BuildNavList( byval hList as HWND )
     ' under Code Editor.
     ' One helper per row so the filter test lives in exactly one place. A page whose title does
     ' not contain the (lower-cased) filter is simply not added -- the list shrinks to the matches.
-    dim as string sFilter = lcase( trim( gOptNavFilter ) )
+    dim as string sFilter = PsLCase( PsTrim( gOptNavFilter ) ).Utf8
     #macro NAVITEM( wszTitle, nPage )
         scope
             dim as DWSTRING wszT = (wszTitle)
@@ -1180,9 +1180,7 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
 
     dim pWindow as CWindow ptr = new CWindow
 
-    HWND_FRMOPTIONS = pWindow->Create( hWndParent, L(108,"Options"), @frmOptions_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
+    HWND_FRMOPTIONS = pWindow->Create( hWndParent, *L(108,"Options").Wz(), @frmOptions_WndProc, 0, 0, 0, 0,          WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN,          WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
     pWindow->SetClientSize( FRMOPTIONS_CLIENT_W, FRMOPTIONS_CLIENT_H )
     pWindow->Center( pWindow->hWindow, hWndParent )
 

@@ -434,8 +434,8 @@ sub SortAutocompleteItems( items() as AUTOC_ITEM, byval lo as long, byval hi as 
     dim as long i = lo, j = hi
     dim as DWSTRING pivot = items( (lo + hi) \ 2 ).wszSort
     do
-        while items(i).wszSort < pivot : i += 1 : wend
-        while items(j).wszSort > pivot : j -= 1 : wend
+        while (items(i).wszSort < pivot) : i += 1 : wend
+        while (items(j).wszSort > pivot) : j -= 1 : wend
         if i <= j then
             swap items(i), items(j)
             i += 1 : j -= 1
@@ -549,8 +549,8 @@ private function AutoC_HasPrefixUp( _
             byval nLen as long _
             ) as boolean
     if PsLen(wszUp) < nLen then return false
-    dim as ushort ptr pUp  = cast(ushort ptr, wszUp.vptr)
-    dim as ushort ptr pPre = cast(ushort ptr, wszPrefix.vptr)
+    dim as ushort ptr pUp  = cast(ushort ptr, wszUp.Wz())
+    dim as ushort ptr pPre = cast(ushort ptr, wszPrefix.Wz())
     if (pUp = 0) orelse (pPre = 0) then return false
     for i as long = 0 to nLen - 1
         if pUp[i] <> pPre[i] then return false

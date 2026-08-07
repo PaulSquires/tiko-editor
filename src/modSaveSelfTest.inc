@@ -8,8 +8,8 @@
 #include once "app/modBuildService.bi"
 
 ' Read a whole file back as raw bytes, through code that is NOT the writer under test.
-private function SaveSelfTest_ReadAll( byref wszPath as wstring ) as string
-    dim as HANDLE h = CreateFileW( @wszPath, GENERIC_READ, _
+private function SaveSelfTest_ReadAll( byval wszPath as DWSTRING ) as string
+    dim as HANDLE h = CreateFileW( wszPath.Wz(), GENERIC_READ, _
                                    FILE_SHARE_READ or FILE_SHARE_WRITE, 0, _
                                    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 )
     if h = INVALID_HANDLE_VALUE then return ""
@@ -83,8 +83,7 @@ sub Save_RunSelfTest()
     ' Put known content down, then hold the target open with NO sharing at all -- the exact
     ' condition produced by the file being open in another program, or held by a scanner.
     Doc_WriteToDisk( wszFile, sV2, wszErr )
-    dim as HANDLE hLock = CreateFileW( wszFile, GENERIC_READ or GENERIC_WRITE, _
-                                       0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 )
+    dim as HANDLE hLock = CreateFileW( wszFile.Wz(), GENERIC_READ or GENERIC_WRITE,                                         0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 )
     if hLock = INVALID_HANDLE_VALUE then
         ? "  NOTE: could not take an exclusive lock; the failure-path assertions did NOT run."
     else
@@ -154,7 +153,7 @@ sub Save_RunSelfTest()
         if pD = 0 then
             ? "  NOTE: could not create a document; the call-site assertions did NOT run."
         else
-            pD->DiskFilename  = wszLossy
+            pD->DiskFilename  = *(wszLossy).Wz()
             pD->IsNewFlag     = false
             pD->FileEncoding  = FILE_ENCODING_ANSI
             pD->AssignTextBuffer()
@@ -217,8 +216,7 @@ sub Save_RunSelfTest()
         ' hold it open with no sharing at all.
         gConfig.ConfigFilename = wszDir & "\lockedcfg.ini"
         Doc_WriteToDisk( gConfig.ConfigFilename, "MAXIMUM:1", wszErr )
-        dim as HANDLE hCfgLock = CreateFileW( gConfig.ConfigFilename, GENERIC_READ or GENERIC_WRITE, _
-                                              0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 )
+        dim as HANDLE hCfgLock = CreateFileW( gConfig.ConfigFilename.Wz(), GENERIC_READ or GENERIC_WRITE,                                                0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 )
         if hCfgLock = INVALID_HANDLE_VALUE then
             ? "  NOTE: could not lock a config file; the Load half did NOT run."
         else
@@ -308,8 +306,7 @@ sub Save_RunSelfTest()
         SAVEASSERT( nFoldersBefore > 0, _
             "precondition: the sentinel folder was not added, so the clear-check below tests nothing" )
 
-        dim as HANDLE hPLock = CreateFileW( wszProj, GENERIC_READ or GENERIC_WRITE, _
-                                            0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 )
+        dim as HANDLE hPLock = CreateFileW( wszProj.Wz(), GENERIC_READ or GENERIC_WRITE,                                              0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 )
         if hPLock = INVALID_HANDLE_VALUE then
             ? "  NOTE: could not lock a .tiko; the project-open assertions did NOT run."
         else
@@ -347,7 +344,7 @@ sub Save_RunSelfTest()
         if pC = 0 then
             ? "  NOTE: code_Initialize failed; the cwd assertions did NOT run."
         else
-            chdir wszDir                      ' stand in for the compile's own chdir
+            chdir *wszDir.Wz()                ' stand in for the compile's own chdir
             SAVEASSERT( curdir <> sBefore, _
                 "precondition: the directory did not actually change, so the restore below tests nothing" )
             code_Cleanup( pC )
@@ -385,12 +382,12 @@ sub Save_RunSelfTest()
             ? "  NOTE: no Lexilla64.dll to copy; the DLL-search assertion did NOT run."
         else
             PsFileDelete( wszPlanted )
-            CopyFileW( wszSrcDll, wszPlanted, FALSE )
+            CopyFileW( wszSrcDll.Wz(), wszPlanted.Wz(), FALSE )
             SAVEASSERT( PsFileExists( wszPlanted ), _
                 "precondition: the probe DLL was not planted, so the search test proves nothing" )
 
             dim as string sCwdSave = curdir
-            chdir wszDir
+            chdir *wszDir.Wz()
             dim as HMODULE hProbe = LoadLibraryW( "zz_hijack_probe.dll" )
             chdir sCwdSave
 

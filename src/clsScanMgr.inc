@@ -77,7 +77,7 @@ private sub ScanMgr_ScanTodoBytes( _
             byval pRSet as PARSERESULTSET ptr, _
             byval pB as ubyte ptr, _
             byval cb as long, _
-            byref wszFile as const wstring, _
+            byval wszFile as DWSTRING, _
             byval bUtf8 as boolean _
             )
 
@@ -175,7 +175,7 @@ private sub ScanMgr_ScanProjectTodos( _
 
         dim as DWSTRING wszF = *pFile
         dim as long f = freefile
-        if open( wszF for binary access read as #f ) <> 0 then continue for
+        if open( *wszF.Wz() for binary access read as #f ) <> 0 then continue for
         dim as long cb = lof( f )
         if cb <= 0 then
             close #f
@@ -258,7 +258,7 @@ private function clsScanMgr.BuildRequest( _
 
     dim as SCANREQUEST ptr pReq = new SCANREQUEST
     pReq->tier = nTier
-    pReq->wszRootFile = wszRootFile
+    pReq->wszRootFile = *(wszRootFile).Wz()
 
     ' NOTE: config path values may be in {CURDRIVE} placeholder form at any
     ' moment (SaveConfigFile converts the LIVE gConfig values as a side effect
@@ -303,7 +303,7 @@ end sub
 
 ''
 ''
-sub clsScanMgr.RequestProjectScan( byref wszRootOverride as const wstring = "" )
+sub clsScanMgr.RequestProjectScan( byval wszRootOverride as DWSTRING = "" )
     if m_bStarted = false then exit sub
     if m_bShutdown then exit sub
 
@@ -435,7 +435,7 @@ sub clsScanMgr.WorkerLoop()
             for i as long = 1 to numPaths
                 dim as DWSTRING wszP = PsTrim( PsStrParse( pReq->sIncludePaths, i, ";" ) )
                 if PsLen( wszP ) then
-                    wszPaths( cntPaths ) = wszP
+                    wszPaths( cntPaths ) = *(wszP).Wz()
                     pPaths( cntPaths ) = @wszPaths( cntPaths )
                     cntPaths += 1
                 end if
@@ -470,7 +470,7 @@ sub clsScanMgr.WorkerLoop()
                 ScanMgr_ScanTodoBytes( pRSet, cast( ubyte ptr, pReq->pszText ), _
                                        pReq->cchText, pReq->wszRootFile, pReq->bTextUtf8 )
             else
-                ScanMgr_ScanProjectTodos( pRSet, pReq->sIncPrefix )
+                ScanMgr_ScanProjectTodos( pRSet, *pReq->sIncPrefix.Wz() )
             end if
             delete pReq
 

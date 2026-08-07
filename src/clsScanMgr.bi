@@ -70,7 +70,7 @@ type clsScanMgr
         ' project's main document. For the no-project case only (the Unused Symbols
         ' report scans the active document); with a project open, passing an override
         ' would replace the project's scan with a single file's.
-        declare sub RequestProjectScan( byref wszRootOverride as const wstring = "" )   ' UI thread only
+        declare sub RequestProjectScan( byval wszRootOverride as DWSTRING = "" )   ' UI thread only
         declare sub RequestBufferScan( byval pDoc as clsDocument ptr )  ' UI thread only
         declare function TakeCompleted( byval nTier as long ) as PARSERESULTSET ptr
         declare sub RetireResult( byval pRSet as PARSERESULTSET ptr )    ' UI thread only

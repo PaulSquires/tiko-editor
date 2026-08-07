@@ -120,12 +120,12 @@ function frmMain_SetStatusbar() as long
 
         ' PANEL Build Configuration
         if gApp.GetDocumentCount then
-            wszText = frmBuildConfig_GetSelectedBuildDescription()
+            wszText = *(frmBuildConfig_GetSelectedBuildDescription()).Wz()
             PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, BUILD_POPUP_PANEL, wszText )
         end if
         
         ' PANEL Spacing
-        wszText = "Spaces: " & gConfig.TabSize
+        wszText = *("Spaces: " & gConfig.TabSize).Wz()
         PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, SPACES_PANEL, wszText )
         
         ' PANEL File Encoding (Ansi, UTF-8, UTF-16) -- DISPLAY ONLY.
@@ -136,7 +136,7 @@ function frmMain_SetStatusbar() as long
         ' (on load) and ConvertTextBuffer (on an explicit user switch), nowhere else.
         ' The four names live in Doc_EncodingName (modRoutines.inc), shared with the
         ' statusbar's own popup and with the Options page's new-file-encoding combo.
-        wszText = Doc_EncodingName( pDoc->FileEncoding )
+        wszText = *(Doc_EncodingName( pDoc->FileEncoding )).Wz()
         PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, UTF_PANEL, wszText )
 
         ' PANEL Line Endings
@@ -149,7 +149,7 @@ function frmMain_SetStatusbar() as long
         PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, CRLF_PANEL, wszText )
         
         if SciExec( hEdit, SCI_GETREADONLY, 0, 0 ) then
-            wszText = L(182,"Read Only")
+            wszText = *(L(182,"Read Only")).Wz()
             PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, COMPILE_STATUS_PANEL, wszText )
         end if
         
@@ -164,12 +164,12 @@ function frmMain_SetStatusbar() as long
     ' workspace exists it leaves ProjectName empty, which is what suppresses the
     ' caption rather than a separate test. Testing a flag instead would render " - []".
     if PsLen(gApp.ProjectName) > 0 then
-        wszText = wszText & " - [" & gApp.ProjectName & "]"
+        wszText = *(wszText & " - [" & gApp.ProjectName & "]").Wz()
     end if
     if pDoc then 
         wszText = wszText & " - [" & pDoc->DiskFilename & "]"
         if SciExec( pDoc->hWndActiveScintilla, SCI_GETREADONLY, 0, 0 ) then
-            wszText = wszText & " - [" & L(182,"Read Only") & "]"
+            wszText = *(wszText & " - [" & L(182,"Read Only") & "]").Wz()
         end if
     end if
     if wszText <> AfxGetWindowText( HWND_FRMMAIN ) then AfxSetWindowText( HWND_FRMMAIN, wszText )
@@ -238,7 +238,7 @@ function frmMain_ProcessFilesArray( _
         if PsFileExists(wszArg) = 0 then continue for
 
         ' We have a valid filename so determine what type it is.
-        wszExt = PsPathExt(wszArg )
+        wszExt = *(PsPathExt(wszArg )).Wz()
         wszExt = lcase(wszExt)
         
         select case wszExt
@@ -331,11 +331,11 @@ function frmMain_ProcessCommandLine( byval hwnd as HWND ) as long
         if PsLen(wszArg) = 0 then exit do
         
         ' Remove any double quotes from the argument.
-        wszPath = PsStrRemove( wszArg, wchr(34) )
+        wszPath = *(PsStrRemove( wszArg, wchr(34) )).Wz()
         
         ' if no path exists for the file then add the current folder
-        wszPath = PsPathDirWithSep(wszArg )
-        if PsLen(wszPath) = 0 then wszArg = PsExePath & wszArg 
+        wszPath = *(PsPathDirWithSep(wszArg )).Wz()
+        if PsLen(wszPath) = 0 then wszArg = *(PsExePath & wszArg).Wz()
         
         dim as integer ub = ubound(wszFiles) + 1
         redim preserve wszFiles(ub)
@@ -1790,10 +1790,8 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' so ghFont(TOOLTIPFONT) is ALWAYS a valid font and no caller needs a second branch.
     dim as PSTOOLTIP_SYSTEMFONT tipfont
     if PsTooltip_GetSystemFont( tipfont ) then
-        ghFont(TOOLTIPFONT)     = pWindow->CreateFont( tipfont.wszFaceName, tipfont.pointSize, _
-                                                       tipfont.lfWeight, tipfont.isItalic )
-        ghFont(TOOLTIPFONTBOLD) = pWindow->CreateFont( tipfont.wszFaceName, tipfont.pointSize, _
-                                                       FW_HEAVY, tipfont.isItalic )
+        ghFont(TOOLTIPFONT)     = pWindow->CreateFont( *tipfont.wszFaceName.Wz(), tipfont.pointSize,                                                         tipfont.lfWeight, tipfont.isItalic )
+        ghFont(TOOLTIPFONTBOLD) = pWindow->CreateFont( *tipfont.wszFaceName.Wz(), tipfont.pointSize,                                                         FW_HEAVY, tipfont.isItalic )
     end if
     if ghFont(TOOLTIPFONT) = 0     then ghFont(TOOLTIPFONT)     = pWindow->CreateFont(GUIFONT, 10, FW_NORMAL)
     if ghFont(TOOLTIPFONTBOLD) = 0 then ghFont(TOOLTIPFONTBOLD) = pWindow->CreateFont(GUIFONT, 10, FW_HEAVY)

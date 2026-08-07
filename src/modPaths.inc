@@ -25,12 +25,11 @@ function AfxFilenameOriginalCase( byval filename as DWSTRING ) as DWSTRING
     dim as long bufSize = 1024
     dim as DWSTRING buffer = wspace(bufSize \ 2)
 
-    dim as HANDLE hfile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, _
-                                null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null)
+    dim as HANDLE hfile = CreateFileW(filename.Wz(), GENERIC_READ, FILE_SHARE_READ,                                  null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null)
 
     if hfile = INVALID_HANDLE_VALUE then exit function
 
-    dim as DWORD result = GetFinalPathNameByHandleW( hfile, *buffer, bufSize, FILE_NAME_NORMALIZED )
+    dim as DWORD result = GetFinalPathNameByHandleW( hfile, buffer.Wz(), bufSize, FILE_NAME_NORMALIZED )
 
     if (result > 0) andalso (result < bufSize) then
         ' Good data returned but still need to remove the mapping characters
@@ -57,11 +56,10 @@ function FilenameOriginalCase( byval wszFilename as DWSTRING ) as DWSTRING
     dim as long bufSize = 1024
     dim as DWSTRING buffer = wspace(bufSize \ 2)
 
-    dim as HANDLE hFile = CreateFileW( wszFilename, GENERIC_READ, FILE_SHARE_READ, _
-                                       null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null )
+    dim as HANDLE hFile = CreateFileW( wszFilename.Wz(), GENERIC_READ, FILE_SHARE_READ,                                         null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null )
     if hFile = INVALID_HANDLE_VALUE then return wszFilename
 
-    dim as DWORD result = GetFinalPathNameByHandleW( hFile, buffer.vptr, bufSize, FILE_NAME_NORMALIZED )
+    dim as DWORD result = GetFinalPathNameByHandleW( hFile, buffer.Wz(), bufSize, FILE_NAME_NORMALIZED )
     CloseHandle( hFile )
 
     if (result > 0) andalso (result < bufSize) then

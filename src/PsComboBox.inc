@@ -1037,10 +1037,10 @@ function PsComboBox_FindItemByText( byval hCombo as HWND, byval Text as DWSTRING
     dim as PSCOMBOBOX ptr pCombo = GetComboBoxPointer(hCombo)
     if pCombo = 0 then return -1
     dim as wstring * 1024 wszWant
-    wszWant = Text
+    wszWant = *Text.Wz()
     for i as long = 0 to pCombo->itemCount - 1
         dim as wstring * 1024 wszHave
-        wszHave = pCombo->items(i).wszText
+        wszHave = *pCombo->items(i).wszText.Wz()
         if lcase(wszHave) = lcase(wszWant) then return i
     next
     return -1

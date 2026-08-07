@@ -804,7 +804,7 @@ function PsColumnHeader_WndProc( _
                 dim as NMTTDISPINFOW ptr pdi = cast(NMTTDISPINFOW ptr, lParam)
                 ' store in an instance-lifetime buffer and point lpszText at it
                 pHdr->wszTooltip = PsColumnHeader_ResolveTooltipText( pHdr, pHdr->nLastHotIdx )
-                pdi->lpszText = cast( LPWSTR, pHdr->wszTooltip.vptr )
+                pdi->lpszText = cast( LPWSTR, pHdr->wszTooltip.Wz() )
                 pdi->hinst    = NULL
             end if
             return 0

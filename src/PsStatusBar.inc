@@ -645,7 +645,7 @@ function PsStatusBar_WndProc( _
                 dim as NMTTDISPINFOW ptr pdi = cast(NMTTDISPINFOW ptr, lParam)
                 ' store in an instance-lifetime buffer and point lpszText at it
                 pStatus->wszTooltip = PsStatusBar_ResolveTooltipText( pStatus, pStatus->nLastHotIdx )
-                pdi->lpszText = cast( LPWSTR, pStatus->wszTooltip.vptr )
+                pdi->lpszText = cast( LPWSTR, pStatus->wszTooltip.Wz() )
                 pdi->hinst    = NULL
             end if
             return 0

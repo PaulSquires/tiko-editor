@@ -227,7 +227,7 @@ sub frmUnusedSymbols_Rebuild()
         ' reached the control. They differ by the kind filter, and a visible count of 0
         ' against a non-zero model is exactly the "no results" failure.
         dim as string sR = "  rebuild: " & gUnusedVisCount & " of " & gUnusedRowCount & _
-                           " rows visible, from " & gUnusedScannedText
+                           " rows visible, from " & gUnusedScannedText.Utf8
         print sR
     end if
 end sub
@@ -719,7 +719,7 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
     gUnusedPending = true
     dim as PARSERESULTSET ptr pExisting = gSymDb.ProjectSet()
     if pExisting then
-        if lstrcmpiW( @pExisting->wszRootFile, wszRoot ) = 0 then gUnusedPending = false
+        if lstrcmpiW( @pExisting->wszRootFile, wszRoot.Wz() ) = 0 then gUnusedPending = false
     end if
 
     if gUnusedPending then
@@ -747,10 +747,7 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
     ' window collapses to a stub instead - see the .bi. No WS_EX_APPWINDOW: that was only
     ' ever needed to give a REAL minimize somewhere to come back from, and this window
     ' never becomes iconic, so it does not need a taskbar button of its own.
-    HWND_FRMUNUSED = pWindow->Create( hWndParent, L(409, "Unused Symbols"), @frmUnusedSymbols_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_THICKFRAME or WS_CAPTION or WS_SYSMENU or WS_MINIMIZEBOX or _
-        WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_CONTROLPARENT or WS_EX_LEFT )
+    HWND_FRMUNUSED = pWindow->Create( hWndParent, *L(409, "Unused Symbols").Wz(), @frmUnusedSymbols_WndProc, 0, 0, 0, 0,          WS_POPUP or WS_THICKFRAME or WS_CAPTION or WS_SYSMENU or WS_MINIMIZEBOX or          WS_CLIPSIBLINGS or WS_CLIPCHILDREN,          WS_EX_CONTROLPARENT or WS_EX_LEFT )
     ' UNSCALED: SetClientSize applies the DPI factor itself, so a pre-scaled value squares it
     pWindow->SetClientSize( FRMUNUSED_DEFWIDTH, FRMUNUSED_DEFHEIGHT )
     pWindow->Center( HWND_FRMUNUSED, hWndParent )

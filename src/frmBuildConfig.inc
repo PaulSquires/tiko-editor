@@ -183,7 +183,7 @@ private function BuildOpts_Split( byval wszOptions as DWSTRING, tok() as DWSTRIN
     erase tok
     dim as long nLen = PsLen(wszOptions)
     if nLen = 0 then return 0
-    dim as wstring ptr p = wszOptions.sptr
+    dim as wstring ptr p = wszOptions.Wz()
     if p = 0 then return 0
 
     redim tok(nLen - 1)          ' worst case, every character its own token
@@ -221,7 +221,7 @@ end function
 private function BuildOpts_ActionTokens( byval nIdx as long, tok() as DWSTRING ) as long
     erase tok
     if (nIdx < lbound(gBuildOptions)) orelse (nIdx > ubound(gBuildOptions)) then return 0
-    return BuildOpts_Split( AfxStrExtract( gBuildOptions(nIdx).wszText, "(", ")" ), tok() )
+    return BuildOpts_Split( AfxW(AfxStrExtract( *gBuildOptions(nIdx).wszText.Wz(), "(", ")" )), tok() )
 end function
 
 
@@ -1002,7 +1002,7 @@ private sub frmBuildConfig_DoAssign()
     ' "None" is a legacy affordance, not a key. Hand the dialog an empty string or it starts
     ' up showing a shortcut that does not exist.
     gAssignKeyName   = gBuildsWork(idx).wszKey
-    if ucase(trim(gAssignKeyName)) = "NONE" then gAssignKeyName = ""
+    if PsUCase(PsTrim(gAssignKeyName)) = "NONE" then gAssignKeyName = ""
     gAssignKeyCtrl   = iif( gBuildsWork(idx).IsCtrl  <> 0, true, false )
     gAssignKeyAlt    = iif( gBuildsWork(idx).IsAlt   <> 0, true, false )
     gAssignKeyShift  = iif( gBuildsWork(idx).IsShift <> 0, true, false )
@@ -1547,7 +1547,7 @@ sub frmBuildConfig_RunSelfTest()
     dim as long iConsole = -1, iGui = -1, iGas64 = -1, iGcc = -1, iErrE = -1
     dim as long iO1 = -1, iO2 = -1, iSmallC = -1, iBigC = -1, iSmallR = -1, iBigR = -1
     for i as long = lbound(gBuildOptions) to ubound(gBuildOptions)
-        dim as DWSTRING a = AfxStrExtract( gBuildOptions(i).wszText, "(", ")" )
+        dim as DWSTRING a = AfxW(AfxStrExtract( *gBuildOptions(i).wszText.Wz(), "(", ")" ))
         if      a = "-s console" then : iConsole = i
         elseif  a = "-s gui"     then : iGui     = i
         elseif  a = "-gen gas64" then : iGas64   = i
@@ -1791,7 +1791,7 @@ private sub frmBuildConfig_RunLayoutSelfTest()
                 scope
                     dim as DWSTRING wszL = (_text_)
                     dim as SIZEL sz
-                    GetTextExtentPoint32( hDC, wszL.sptr, PsLen(wszL), @sz )
+                    GetTextExtentPoint32( hDC, wszL.Wz(), PsLen(wszL), @sz )
                     dim as long avail = gBCRowLabelRect(_row_).right - gBCRowLabelRect(_row_).left
                     LAYASSERT( avail >= sz.cx, _
                                "the label """ & wszL & """ fits (" & str(sz.cx) & _
@@ -2053,10 +2053,7 @@ function frmBuildConfig_Show( byval hWndParent as HWND ) as LRESULT
 
     dim pWindow as CWindow ptr = new CWindow
 
-    HWND_FRMBUILDCONFIG = pWindow->Create( hWndParent, L(215,"Build Configurations"), _
-        @frmBuildConfig_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
+    HWND_FRMBUILDCONFIG = pWindow->Create( hWndParent, *L(215,"Build Configurations").Wz(),          @frmBuildConfig_WndProc, 0, 0, 0, 0,          WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN,          WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
     pWindow->SetClientSize( FRMBUILDCONFIG_CLIENT_W, FRMBUILDCONFIG_CLIENT_H )
     pWindow->Center( pWindow->hWindow, hWndParent )
 

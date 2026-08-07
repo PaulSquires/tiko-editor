@@ -411,7 +411,7 @@ function Theme_ResolvePath( byval wszShortFilename as DWSTRING ) as DWSTRING
             wszFilename = PsExePath & "settings\backup_default_dark.theme"
             ' Attempt to copy the file for next time
             dim as DWSTRING wszThemeDirFilename = PsExePath & "settings\themes\default_dark.theme"
-            if PsFileCopy( wszFilename, wszThemeDirFilename ) then
+            if PsFileCopy( wszFilename, wszThemeDirFilename, false ) then
             gConfig.ThemeShortFilename = "default_dark.theme"
             end if
         end if
@@ -446,7 +446,7 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
     for nLine_ as long = lbound(lines_) to ubound(lines_)
         wst = lines_(nLine_)
 
-        wst = trim(AfxStrExtract( 1, wst, "#"))     ' remove comments
+        wst = PsTrim(AfxW(AfxStrExtract( 1, *wst.Wz(), "#")))     ' remove comments
         If PsLen(wst) = 0 Then continue for
 
         keyValue = PsTrim(PsStrParse(wst, 1, ":"))
@@ -569,9 +569,9 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
                 gTheme(nFound).backgroundAlpha = cubyte(nAlpha)
                 gTheme(nFound).hasBackAlpha = bHasAlpha
                 gTheme(nFound).backMacro = wszMacroUsed
-            case "bold":       gTheme(nFound).bold = val(keyData)        : gTheme(nFound).hasFlags = true
-            case "italic":     gTheme(nFound).italic = val(keyData)      : gTheme(nFound).hasFlags = true
-            case "underline":  gTheme(nFound).underline = val(keyData)   : gTheme(nFound).hasFlags = true
+            case "bold":       gTheme(nFound).bold = PsVal(keyData)        : gTheme(nFound).hasFlags = true
+            case "italic":     gTheme(nFound).italic = PsVal(keyData)      : gTheme(nFound).hasFlags = true
+            case "underline":  gTheme(nFound).underline = PsVal(keyData)   : gTheme(nFound).hasFlags = true
             case else
                 ' A two-part key (general.description, general.version) has no third
                 ' segment by design and has already stored its payload in keyData above.
@@ -1232,12 +1232,12 @@ function Theme_IsDark() as boolean
     ' Prefer an explicit declaration by the theme itself.
     dim as long n = Theme_FindEntry( "general.appearance" )
     if n >= 0 then
-        dim as string s = lcase(PsTrim(gTheme(n).keyData))
+        dim as string s = PsLCase(PsTrim(gTheme(n).keyData)).Utf8
         if s = "light" then return false
         if s = "dark" then return true
     end if
     ' Fall back to the historical filename sniff, which is all the shipped themes carry.
-    return (instr(gThemeCurrentShortFilename, "_dark") > 0)
+    return (PsInStr(gThemeCurrentShortFilename, "_dark") > 0)
 end function
 
 
@@ -1682,7 +1682,7 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
     Theme_BuildKeyTable()
 
     dim as long f = freefile
-    if open( wszFullPath for output as #f ) <> 0 then return true
+    if open( *wszFullPath.Wz() for output as #f ) <> 0 then return true
 
     dim as string sLine
 
@@ -1733,12 +1733,12 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
     ' the first save through this function migrates it to literals. That is deliberate: a
     ' one-way migration costs a branch in the parser and breaks nobody's file.
 
-    sLine = "general.description: " & Theme_SanitizeText( wszDescription )
+    sLine = "general.description: " & Theme_SanitizeText( *wszDescription.Wz() )
     print #f, sLine
     dim as long nVer = Theme_FindEntry( "general.version" )
     dim as string sVer = "1.0.0"
     if nVer >= 0 then
-        if PsLen(gTheme(nVer).keyData) > 0 then sVer = Theme_SanitizeText( gTheme(nVer).keyData )
+        if PsLen(gTheme(nVer).keyData) > 0 then sVer = Theme_SanitizeText( *gTheme(nVer).keyData.Wz() )
     end if
     sLine = "general.version: " & sVer
     print #f, sLine
@@ -1841,7 +1841,7 @@ end function
 sub Theme_DumpGlobals( byval wszOutPath as DWSTRING )
 
     dim as long f = freefile
-    if open( wszOutPath for output as #f ) <> 0 then exit sub
+    if open( *wszOutPath.Wz() for output as #f ) <> 0 then exit sub
 
     dim as string sLine
 

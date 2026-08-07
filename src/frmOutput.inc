@@ -179,7 +179,7 @@ function frmOutput_ShowNotes() as long
 
     dim hCtl as HWND = GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES)
 
-    AfxSetWindowText(hCtl, gApp.ProjectNotes)
+    AfxSetWindowText(hCtl, *gApp.ProjectNotes.Wz())
 
     function = 0
 end function
@@ -260,9 +260,9 @@ function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) as LRESULT
             ' permanent left margin instead, set at creation.)
             hTextBox = GetDlgItem(hwnd, IDC_FRMOUTPUT_TXTLOGFILE)
             hCtrl = hTextBox
-            dim as DWSTRING wszText = ltrim(AfxGetWindowText(hTextBox))
+            dim as DWSTRING wszText = PsLTrim(AfxW(AfxGetWindowText(hTextBox)))
             if wszText = "" then
-                AfxSetWindowText(hTextBox, L(92, "No compiler log file exists") )
+                AfxSetWindowText(hTextBox, *L(92, "No compiler log file exists").Wz() )
             end if
 
         case OUTPUT_TAB_TODO
@@ -663,10 +663,10 @@ sub frmOutput_SetTabCaptions()
     ' so a loop overrunning the panel count would call SetText (which re-measures and
     ' re-lays out the whole bar) forever, silently, on the hot path.
     dim as DWSTRING wszCaption(OUTPUT_TAB_RESULTS to OUTPUT_TAB_NOTES)
-    wszCaption(OUTPUT_TAB_RESULTS) = ucase(L(153, "Compiler Results"))
-    wszCaption(OUTPUT_TAB_LOGFILE) = ucase(L(199, "Compiler Log File"))
-    wszCaption(OUTPUT_TAB_TODO)    = ucase(L(204, "TODO"))
-    wszCaption(OUTPUT_TAB_NOTES)   = ucase(L(205, "Notes"))
+    wszCaption(OUTPUT_TAB_RESULTS) = PsUCase(L(153, "Compiler Results"))
+    wszCaption(OUTPUT_TAB_LOGFILE) = PsUCase(L(199, "Compiler Log File"))
+    wszCaption(OUTPUT_TAB_TODO)    = PsUCase(L(204, "TODO"))
+    wszCaption(OUTPUT_TAB_NOTES)   = PsUCase(L(205, "Notes"))
 
     for i as long = 0 to PsSelectBar_GetCount( HWND_FRMOUTPUT_SELECTBAR ) - 1
         dim as long nTabID = PsSelectBar_GetPanelID( HWND_FRMOUTPUT_SELECTBAR, i )

@@ -388,3 +388,78 @@ reassembles each token back into a `DWSTRING`. Today that is ANSI in and ANSI ou
 round-trips. Put `.Utf8` on the way in and the way out is still an ANSI assign: a non-ASCII
 compiler path would be split at byte boundaries and reinterpreted. It has to become a wide
 tokeniser, not a converted one.
+
+---
+
+# THE SWAP LANDED. 501 -> 0.
+
+`DWSTRING` means PsCore's, everywhere in tiko. `PsCompat.bi` is deleted. gas64 builds with
+**zero errors and zero warnings**, tiko runs, and **all 27 suites are byte-identical to the
+pre-swap capture**. `_check_app_layer`, `_check_scihost` and `_check_package` are green, and
+**`_check_app_standalone` is 7 clean / 0 with errors** — `clsSymbolDb`'s eleven errors were
+the swap, as this page predicted, and they went with it.
+
+## The four scripted passes, re-applied, and what each was worth
+
+    501  the measured starting point
+    470  namespace PsC kept, PsC. prefixes dropped from the core headers
+    396  .sptr / .vptr -> .Wz()                              73 sites
+    378  val() -> PsVal()                                    18 sites
+    344  byref <x> as wstring -> byval <x> as DWSTRING       61 signatures
+    312  the boundary pass, run to a fixed point             ~87 sites
+    287  the SAME pass again emitting *x.Wz() instead        31 sites
+    207  fbc intrinsics on an EXPRESSION, per error line     60 lines
+    171  assignments into a fixed `wstring * N` buffer       46 sites
+      0  by hand
+
+**`namespace PsC` SURVIVES, and that was the first surprise.** It was introduced to let two
+types called DWSTRING coexist, so the swap should have deleted it. It was also — undocumented
+until it was removed — keeping PsCore's UI layer out of tiko's: both sides have a
+`PsBufferPaint`, and PsCore's paint backend and tiko's `PsImage` both define `PsBgrToArgb`.
+Lifting those six headers to global scope produces 17 `Duplicated definition` errors that
+have nothing to do with strings. The CORE headers are global — that is what makes DWSTRING
+one type — and only the UI is still fenced.
+
+**`.Wz()` NEEDS TWO SPELLINGS, and the pass had to be run twice.** It returns a
+`wstring ptr`, which binds to a Win32 `LPCWSTR` parameter but NOT to AfxNova's
+`byref as wstring`. The first run fixed the pointer-taking callees and stalled; the second
+run rewrote what it had just written as `*x.Wz()` and took another 25 errors with it.
+`CWindow.Create`'s `wszTitle` — 15 sites, the single biggest item on this page for weeks — is
+in the second group.
+
+## FOUR DEFECTS IN PsCore, AND ONLY ONE OF THEM FAILED TO COMPILE
+
+The swap did not really cost 501 errors. It cost four bugs in the string type, three of which
+a clean build said nothing about. They are fixed in PsPlatform, not worked around here.
+
+**1. `DWSTRING` HAD NO CONSTRUCTOR FROM A NATIVE `wstring`.** This is the one that mattered.
+It does not fail to compile — fbc silently reaches for the `zstring ptr` overload and
+converts on the way — and it does not mangle text either. **It corrupts the heap.** tiko
+built clean, ran to the sixth call of `frmMenuBar_ApplyPopupTheme`, and died with
+`STATUS_HEAP_CORRUPTION` at an allocation nowhere near a string. On a UTF-16 type on Windows
+this is the commonest assignment there is: every Win32 out-parameter, every
+`wstring * MAX_PATH` buffer, every glyph constant.
+
+**2. `Wz()` RETURNED NULL FOR AN EMPTY STRING.** `m_buf` is 0 until something is appended, and
+`Wz()` returned it raw — so `*s.Wz()`, the spelling the whole boundary uses, dereferenced
+null whenever the string was empty. An empty string is not an error at that boundary: it is
+the window with no title, the filter nobody has typed in.
+
+**3. `len(<DWSTRING>)` RETURNED 24.** `PsCompat.bi`'s header warned about exactly this three
+phases ago and it still caught us, because the warning was about *converting* sites and these
+are sites nobody has converted. fbc falls back to `SizeOf` and yields the descriptor size, at
+every call, silently. Found through five keyboard assertions that read `len(VKToName(vk)) = 0`
+and were all reporting a defect that did not exist; the `len(x) > 0` sites had the
+mirror-image problem and reported nothing at all. **PsCore now declares `operator len`**, so
+the unconverted sites are right rather than quietly wrong.
+
+**4. No ordering operators at all** — `=` and `<>` and nothing else, so every quicksort,
+insertion sort and binary search in tiko failed to compile. Added as a documented UTF-16
+code-unit order. My first implementation shipped its own bug: `for i as uinteger = 0 to n - 1`
+with `n = 0` does not skip, it WRAPS.
+
+## What is still owed
+
+`PsWin32Host` is scaffolding and can now go. `modAfxBridge.bi` is the new measure of how much
+AfxNova is left: `git grep -c "AfxW("` is the count of places tiko still takes text back from
+it, and the file is deleted rather than rewritten when that reaches zero.

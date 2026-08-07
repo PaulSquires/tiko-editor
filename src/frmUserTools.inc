@@ -129,13 +129,13 @@ function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval
                 wszExeName = PsPathDirWithSep(pDocMain->DiskFilename) + _
                                 PsPathStem(pDocMain->DiskFilename) + _
                                 ".exe"
-                if instr(PsUCase(gConfig.Builds(idxBuild).wszOptions), " -DLL") orelse _
-                    instr(PsUCase(gConfig.Builds(idxBuild).wszOptions), " -DYLIB") then
+                if PsInStr(PsUCase(gConfig.Builds(idxBuild).wszOptions), " -DLL") orelse _
+                    PsInStr(PsUCase(gConfig.Builds(idxBuild).wszOptions), " -DYLIB") then
                     wszExeName = PsPathDirWithSep(pDocMain->DiskFilename) + _
                                 PsPathStem(pDocMain->DiskFilename) + _
                                 ".dll"
                 end if
-                if instr(PsUCase(gConfig.Builds(idxBuild).wszOptions), " -LIB") then
+                if PsInStr(PsUCase(gConfig.Builds(idxBuild).wszOptions), " -LIB") then
                     wszExeName = PsPathDirWithSep(pDocMain->DiskFilename) + _
                                 PsPathStem(pDocMain->DiskFilename) + _
                                 ".a"
@@ -169,7 +169,7 @@ function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval
         if PsFileIsDir(wszWorkingFolder) = false then
             wszWorkingFolder = PsLeft(PsExePath, 1) + PsMid(wszWorkingFolder, 2)
         end if
-        chdir gConfig.Tools(nToolNum).wszWorkingFolder
+        chdir *gConfig.Tools(nToolNum).wszWorkingFolder.Wz()
     end if
 
     ' Is the specified exe command to execute valid? if it is not, then maybe try same path
@@ -189,8 +189,8 @@ function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval
         .fMask        = SEE_MASK_NOCLOSEPROCESS
         .HWnd         = 0
         .lpVerb       = null
-        .lpFile       = wszCommand
-        .lpParameters = wszParameters
+        .lpFile       = wszCommand.Wz()
+        .lpParameters = wszParameters.Wz()
         .lpDirectory  = 0
         .nShow        = nWndStyle
         .hInstApp     = 0
@@ -765,7 +765,7 @@ private sub frmUserTools_ButtonClick( byval hButton as HWND, byval id as long )
 
         case IDC_FRMUSERTOOLS_CMDBROWSEFOLDER
             if gUTCurrent < 0 then exit sub
-            dim as DWSTRING wszFolder = AfxBrowseForFolder( HWND_FRMUSERTOOLS, L(228,"Working Folder"), curdir )
+            dim as DWSTRING wszFolder = AfxW(AfxBrowseForFolder( HWND_FRMUSERTOOLS, *L(228,"Working Folder").Wz(), curdir ))
             if PsLen(wszFolder) then
                 PsTextBox_SetText( ghUTFolder, wszFolder )
                 gToolsWork(gUTCurrent).wszWorkingFolder = wszFolder
@@ -1381,9 +1381,9 @@ sub frmUserTools_RunSelfTest()
     redim gToolsWork(1)
     gToolsWork(0).wszDescription = "AAA" : gToolsWork(0).wszKey = "F12" : gToolsWork(0).IsCtrl = 1
     gToolsWork(1).wszDescription = "BBB" : gToolsWork(1).wszKey = "F12" : gToolsWork(1).IsCtrl = 1
-    UTASSERT( instr( frmAssignKey_ClashText("F12", true, false, false, ASSIGNKEY_DOMAIN_TOOLS, 0), "BBB" ) > 0, _
+    UTASSERT( PsInStr( frmAssignKey_ClashText("F12", true, false, false, ASSIGNKEY_DOMAIN_TOOLS, 0), "BBB" ) > 0, _
               "a tool sees the OTHER tool holding its shortcut" )
-    UTASSERT( instr( frmAssignKey_ClashText("F12", true, false, false, ASSIGNKEY_DOMAIN_TOOLS, 0), "AAA" ) = 0, _
+    UTASSERT( PsInStr( frmAssignKey_ClashText("F12", true, false, false, ASSIGNKEY_DOMAIN_TOOLS, 0), "AAA" ) = 0, _
               "a tool does not report clashing with itself" )
     ' Differing by one modifier is not a clash.
     gToolsWork(1).IsShift = 1
@@ -1445,7 +1445,7 @@ sub frmUserTools_RunSelfTest()
             gConfig.Builds(0).IsCtrl         = 1
             gConfig.Builds(0).IsAlt          = 1
             gConfig.Builds(0).IsShift        = 1
-            UTASSERT( instr( frmAssignKey_ClashText(wszXKey, true, true, true, _
+            UTASSERT( PsInStr( frmAssignKey_ClashText(wszXKey, true, true, true, _
                              ASSIGNKEY_DOMAIN_TOOLS, -1), "ZZBUILD" ) > 0, _
                       "a tool sees a BUILD holding its shortcut" )
 
@@ -1456,7 +1456,7 @@ sub frmUserTools_RunSelfTest()
             gConfig.Tools(0).IsCtrl         = 1
             gConfig.Tools(0).IsAlt          = 1
             gConfig.Tools(0).IsShift        = 1
-            UTASSERT( instr( frmAssignKey_ClashText(wszXKey, true, true, true, _
+            UTASSERT( PsInStr( frmAssignKey_ClashText(wszXKey, true, true, true, _
                              ASSIGNKEY_DOMAIN_BUILDS, -1), "ZZTOOL" ) > 0, _
                       "a build sees a TOOL holding its shortcut" )
 
@@ -1638,10 +1638,7 @@ function frmUserTools_Show( byval hWndParent as HWND ) as LRESULT
 
     dim pWindow as CWindow ptr = new CWindow
 
-    HWND_FRMUSERTOOLS = pWindow->Create( hWndParent, L(225,"User Tools"), _
-        @frmUserTools_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
+    HWND_FRMUSERTOOLS = pWindow->Create( hWndParent, *L(225,"User Tools").Wz(),          @frmUserTools_WndProc, 0, 0, 0, 0,          WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN,          WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
     pWindow->SetClientSize( FRMUSERTOOLS_CLIENT_W, FRMUSERTOOLS_CLIENT_H )
     pWindow->Center( pWindow->hWindow, hWndParent )
 

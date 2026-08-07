@@ -114,14 +114,14 @@ function frmPanel_PositionWindows() as LRESULT
             ShowWindow( HWND_FRMEXPLORER, SW_HIDE )
             ShowWindow( HWND_FRMFUNCTIONS, SW_HIDE )
 
-            gPanel.wszHeader = ucase( L(151,"Bookmarks") )
+            gPanel.wszHeader = PsUCase( L(151,"Bookmarks") )
             ShowWindow( HWND_FRMBOOKMARKS, SW_SHOW )
         
         case HWND_FRMFUNCTIONS
             ShowWindow( HWND_FRMEXPLORER, SW_HIDE )
             ShowWindow( HWND_FRMBOOKMARKS, SW_HIDE )
 
-            gPanel.wszHeader = ucase( L(183,"Function List") )
+            gPanel.wszHeader = PsUCase( L(183,"Function List") )
             ShowWindow( HWND_FRMFUNCTIONS, SW_SHOW )
 
     end select

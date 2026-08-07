@@ -41,7 +41,7 @@ function OpenMRUFile( _
     dim pDoc as clsDocument ptr
     dim wszFile as wstring * MAX_PATH
 
-    wszFile = gConfig.MRU(wID - IDM_MRUBASE)
+    wszFile = *(gConfig.MRU(wID - IDM_MRUBASE)).Wz()
     
     pDoc = OpenSelectedDocument( wszFile )
     if pDoc then pDoc->SetProjectFileType
@@ -72,7 +72,7 @@ end function
 
 ''
 ''
-function UpdateMRUList( byref wzFilename as wstring ) as long
+function UpdateMRUList( byval wzFilename as DWSTRING ) as long
     dim idxExistsAt as long = -1   ' index of where filename already exists 
     dim i           as long
     dim wzFile      as wstring * MAX_PATH
@@ -87,8 +87,8 @@ function UpdateMRUList( byref wzFilename as wstring ) as long
     ' Search the 10 MRU items to see if the filename already exists and
     ' also for an available entry to put the filename in.
     for i = 0 To 9
-        wzFile = gConfig.MRU(i)
-        wzFile = ProcessFromCurdriveApp(wzFile)
+        wzFile = *(gConfig.MRU(i)).Wz()
+        wzFile = *(ProcessFromCurdriveApp(wzFile)).Wz()
         if ucase(wzFile) = PsUCase(wzFilename) then
             idxExistsAt = i:  exit for
         end if   
@@ -123,7 +123,7 @@ function OpenMRUProjectFile( _
             byval wID as long _
             ) as long
     dim wzFile as wstring * MAX_PATH
-    wzFile = gConfig.MRUPROJECT(wID - IDM_MRUPROJECTBASE)
+    wzFile = *(gConfig.MRUPROJECT(wID - IDM_MRUPROJECTBASE)).Wz()
     frmMain_OpenProjectSafely(hwnd, wzFile) 
     function = 0
 end function

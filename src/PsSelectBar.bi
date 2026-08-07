@@ -258,7 +258,7 @@ sub PSSELECTBAR.LayoutPanels()
             dim as long nChars = len( .wszText )
             if nChars > 0 then
                 dim as SIZE sz
-                if GetTextExtentPoint32W( hDC, .wszText.vptr, nChars, @sz ) then
+                if GetTextExtentPoint32W( hDC, .wszText.Wz(), nChars, @sz ) then
                     textW(i) = sz.cx
                 end if
             end if

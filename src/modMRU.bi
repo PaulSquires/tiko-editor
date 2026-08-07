@@ -15,7 +15,7 @@
 
 declare function OpenMRUFile( byval hwnd as HWND, byval wID as Long ) as long
 declare function ClearMRUlist( byval wID as long ) as long
-declare function UpdateMRUList( byref wzFilename as wstring ) as long
+declare function UpdateMRUList( byval wzFilename as DWSTRING ) as long
 declare function OpenMRUProjectFile( byval hwnd as HWND, byval wID as long) as long
 declare function UpdateMRUProjectList( byval wszFilename as DWSTRING ) as long
 

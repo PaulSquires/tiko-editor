@@ -158,7 +158,7 @@ private function frmOptionsCompiler_LoadToolchains() as long
     dim WFD as WIN32_FIND_DATAW
     dim as DWSTRING wszPath = PsExePath + "toolchains\"
 
-    hSearch = FindFirstFile( wszPath + "*", @WFD )
+    hSearch = FindFirstFile( (wszPath & "*").Wz(), @WFD )
     if hSearch <> INVALID_HANDLE_VALUE then
         do
             if (WFD.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY) = FILE_ATTRIBUTE_DIRECTORY then

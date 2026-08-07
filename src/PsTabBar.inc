@@ -1143,7 +1143,7 @@ function PsTabBar_WndProc( _
                 dim as NMTTDISPINFOW ptr pdi = cast(NMTTDISPINFOW ptr, lParam)
                 ' store in an instance-lifetime buffer and point lpszText at it
                 pTabBar->wszTooltip = PsTabBar_ResolveTooltipText( pTabBar, pTabBar->nLastHotIdx )
-                pdi->lpszText = cast( LPWSTR, pTabBar->wszTooltip.vptr )
+                pdi->lpszText = cast( LPWSTR, pTabBar->wszTooltip.Wz() )
                 pdi->hinst    = NULL
             end if
             return 0

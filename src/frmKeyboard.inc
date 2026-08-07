@@ -183,7 +183,7 @@ sub frmKeyboard_RunSelfTest()
         redim as DWSTRING lines_(any)
         if TextFile_ReadLines(wszTmp, lines_()) then
             for nLine_ as long = lbound(lines_) to ubound(lines_)
-                dim as DWSTRING wst = trim(lines_(nLine_))
+                dim as DWSTRING wst = PsTrim(lines_(nLine_))
                 if PsLen(wst) = 0 then continue for
                 if PsInStr( wst, ":" ) = 0 then continue for
                 nRead += 1
@@ -206,7 +206,7 @@ sub frmKeyboard_RunSelfTest()
                 next
             next
         end if
-        kill wszTmp
+        kill *wszTmp.Wz()
 
         dim as long nExpected = ubound(gKeys) - lbound(gKeys) + 1
         FKASSERT( nRead = nExpected, _
@@ -309,11 +309,11 @@ end function
 private function frmKeyboard_RowMatchesFilter( byval idx as long ) as boolean
     if len(gKeysFilter) = 0 then return true
 
-    dim as DWSTRING wszNeedle = ucase(gKeysFilter)
-    if instr( PsUCase(gKeysWork(idx).wszCategory), wszNeedle ) then return true
-    if instr( PsUCase(gKeysWork(idx).wszDescription), wszNeedle ) then return true
-    if instr( ucase(frmKeyboard_DefaultKeysDisplay(idx)), wszNeedle ) then return true
-    if instr( PsUCase(gKeysWork(idx).wszUserKeys), wszNeedle ) then return true
+    dim as DWSTRING wszNeedle = PsUCase(gKeysFilter)
+    if PsInStr( PsUCase(gKeysWork(idx).wszCategory), wszNeedle ) then return true
+    if PsInStr( PsUCase(gKeysWork(idx).wszDescription), wszNeedle ) then return true
+    if PsInStr( PsUCase(frmKeyboard_DefaultKeysDisplay(idx)), wszNeedle ) then return true
+    if PsInStr( PsUCase(gKeysWork(idx).wszUserKeys), wszNeedle ) then return true
 
     return false
 end function
@@ -880,7 +880,7 @@ private sub frmKeyboard_RunLayoutSelfTest()
     #macro COUNTIN( _field_, _needle_, _out_ )
         _out_ = 0
         for i as long = lbound(gKeysWork) to ubound(gKeysWork)
-            if instr( ucase(_field_), ucase(_needle_) ) then _out_ += 1
+            if PsInStr( PsUCase(_field_), PsUCase(_needle_) ) then _out_ += 1
         next
     #endmacro
 
@@ -1020,10 +1020,7 @@ function frmKeyboard_Show( byval hWndParent as HWND ) as LRESULT
 
     dim pWindow as CWindow ptr = new CWindow
 
-    HWND_FRMKEYBOARD = pWindow->Create( hWndParent, L(180,"Keyboard Shortcuts"), _
-        @frmKeyboard_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
+    HWND_FRMKEYBOARD = pWindow->Create( hWndParent, *L(180,"Keyboard Shortcuts").Wz(),          @frmKeyboard_WndProc, 0, 0, 0, 0,          WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN,          WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
     pWindow->SetClientSize( FRMKEYBOARD_CLIENT_W, FRMKEYBOARD_CLIENT_H )
     pWindow->Center( pWindow->hWindow, hWndParent )
 

@@ -246,9 +246,9 @@ function clsDocument.AssignTextBuffer() as long
             this.SplitX = this.docData.nSplitPositionX
             this.SplitY = this.docData.nSplitPositionY
             this.EditorSplitMode = this.docData.nSplitMode
-            this.SetBookmarks(this.docData.wszBookmarks)
-            this.SetBreakPoints(this.docData.wszBreakPoints)
-            this.SetFoldPoints(this.docData.wszFoldPoints)
+            this.SetBookmarks(*this.docData.wszBookmarks.Wz())
+            this.SetBreakPoints(*this.docData.wszBreakPoints.Wz())
+            this.SetFoldPoints(*this.docData.wszFoldPoints.Wz())
             SciMsg( pSci(0), SCI_SETFIRSTVISIBLELINE, this.docData.nFirstLine, 0) 
             SciMsg( pSci(0), SCI_GOTOPOS, this.docData.nPosition, 0) 
             SciMsg( pSci(1), SCI_SETFIRSTVISIBLELINE, this.docData.nFirstLine1, 0) 
@@ -283,7 +283,7 @@ function clsDocument.LoadDiskFile( _
     ' set the diskfilename. The original CreateEmptyDocument would have
     ' already set the filename to Untitled.
     if bIsTemplate = false then
-        this.DiskFilename = wszFile
+        this.DiskFilename = *(wszFile).Wz()
     end if
     
     ' Kick a background symbol scan for the freshly loaded text (skipped
@@ -1662,7 +1662,7 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
 
         ''
         ''  APPLY ALL LANGUAGE SPECIFIC SYNTAX COLORING
-        wFileExt = PsPathExt(this.DiskFilename )
+        wFileExt = *(PsPathExt(this.DiskFilename )).Wz()
         wFileExt = ucase(wFileExt)
 
         if cbool(wFileExt = ".BAS") orelse cbool(wFileExt = ".INC") _
@@ -1934,7 +1934,7 @@ function clsDocument.GetMarkers( byval MarkerType as long ) as string
         end if
     next
 
-    function = PsRTrim(buffer, ",")
+    function = *(PsStrTrimAny(buffer, ",")).Wz()
 
 end function
 
@@ -2001,7 +2001,7 @@ function clsDocument.GetFoldPoints() as string
         end if
     next
 
-    function = PsRTrim(buffer, ",")
+    function = *(PsStrTrimAny(buffer, ",")).Wz()
 
 end function
 
@@ -2101,7 +2101,7 @@ function clsDocument.CompileDirectives( Directives() as COMPILE_DIRECTIVES ) as 
             redim preserve Directives(ub+1)
             Directives(ub+1).DirectiveFlag = IDM_RESOURCE
             st = PsMid(st, 11).Utf8
-            Directives(ub+1).DirectiveText = AfxStrExtract(st, chr(34), chr(34))
+            Directives(ub+1).DirectiveText = AfxW(AfxStrExtract(st, chr(34), chr(34)))
         end if
         
         ' '#LINKMODULES "module1.bas" "module2.bas"

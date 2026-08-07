@@ -191,7 +191,7 @@ private function frmDebug_ValSlot( arr() as FRMDEBUG_VALSLOT, byval wszKey as DW
     ' degrades to "nothing looks changed" rather than to a wrong highlight.
     dim as ulongint h = 14695981039346656037ull
     for i as long = 1 to PsLen(wszKey)
-        h = (h xor cast(ulongint, asc(PsMid(wszKey, i, 1)))) * 1099511628211ull
+        h = (h xor cast(ulongint, wszKey[i - 1])) * 1099511628211ull
     next
     dim as long idx = cast(long, h and cast(ulongint, FRMDEBUG_VALSLOTS - 1))
     for probe as long = 0 to FRMDEBUG_VALSLOTS - 1
@@ -641,7 +641,7 @@ sub frmDebug_FillWatch()
 
     for i as long = 0 to gDbgWatchCount - 1
         dim as DBGP_NODE nd
-        dim as wstring * 512 wexpr = gDbgWatch(i)
+        dim as wstring * 512 wexpr = *gDbgWatch(i).Wz()
         dim as long r
         if debugparser_evaluate( @wexpr, gDbgCurFrame, @nd ) = DBGP_OK then
             ' The row's caption is what the USER typed, not the name the engine resolved it
@@ -1483,9 +1483,9 @@ sub frmDebug_Trace()
                         if gDbgRow(kk2).bChanged then sMark = " *"
                     end if
                     sLine = sMark & " " & space(PsListTree_GetLevel(hG, r) * 2) & _
-                            str(PsListTree_GetText(hG, r)) & " | " & _
-                            str(PsListTree_GetCellText(hG, r, 1)) & " | " & _
-                            str(PsListTree_GetCellText(hG, r, 2))
+                            PsListTree_GetText(hG, r).Utf8 & " | " & _
+                            PsListTree_GetCellText(hG, r, 1).Utf8 & " | " & _
+                            PsListTree_GetCellText(hG, r, 2).Utf8
                     print sLine
                 next
                 sLine = "   rows=" & str(PsListTree_GetCount(hG)) & _
@@ -1975,7 +1975,7 @@ function frmDebug_ExprFromLine( byval wszLine as DWSTRING, byval col as long ) a
           ((c) >= 97 andalso (c) <= 122) orelse (c) = 95 )
     #endmacro
 
-    dim as long ch = asc(PsMid(wszLine, col, 1))
+    dim as long ch = wszLine[col - 1]
     if ISIDCH(ch) = 0 then return ""
 
     ' Walk left through identifier characters AND dots, so the dotted path comes with it --
@@ -1983,7 +1983,7 @@ function frmDebug_ExprFromLine( byval wszLine as DWSTRING, byval col as long ) a
     ' field name resolves to nothing.
     dim as long loPos = col
     do while loPos > 1
-        dim as long c2 = asc(PsMid(wszLine, loPos - 1, 1))
+        dim as long c2 = wszLine[loPos - 2]
         if ISIDCH(c2) orelse (c2 = 46) then
             loPos -= 1
         else
@@ -1994,7 +1994,7 @@ function frmDebug_ExprFromLine( byval wszLine as DWSTRING, byval col as long ) a
     ' and the member after it is not what the cursor is on.
     dim as long hiPos = col
     do while hiPos < PsLen(wszLine)
-        dim as long c2 = asc(PsMid(wszLine, hiPos + 1, 1))
+        dim as long c2 = wszLine[hiPos]
         if ISIDCH(c2) then
             hiPos += 1
         else
@@ -2093,7 +2093,7 @@ sub frmDebug_ShowDataTip( byval hEdit as HWND, byval nPos as long )
     if wszExpr = gDbgDataTipExpr then exit sub
 
     dim as DBGP_NODE nd
-    dim as wstring * 512 wexpr = wszExpr
+    dim as wstring * 512 wexpr = *wszExpr.Wz()
     if debugparser_evaluate( @wexpr, gDbgCurFrame, @nd ) <> DBGP_OK then
         frmDebug_HideDataTip()
         exit sub
@@ -2342,10 +2342,10 @@ private function frmDebug_WndProc( byval hwnd as HWND, byval uMsg as UINT, _
                         b.PaintText( wszCap, @rcCap, DT_LEFT or DT_END_ELLIPSIS )
                     end scope
                 #endmacro
-                PAINTCAPTION( lo.rcCapGlobals, ucase(L(452, "Globals")) )
-                PAINTCAPTION( lo.rcCapLocals,  ucase(L(451, "Locals")) )
-                PAINTCAPTION( lo.rcCapStack,   ucase(L(459, "Call Stack")) )
-                PAINTCAPTION( lo.rcCapWatch,   ucase(L(457, "Watch")) )
+                PAINTCAPTION( lo.rcCapGlobals, PsUCase(L(452, "Globals")) )
+                PAINTCAPTION( lo.rcCapLocals,  PsUCase(L(451, "Locals")) )
+                PAINTCAPTION( lo.rcCapStack,   PsUCase(L(459, "Call Stack")) )
+                PAINTCAPTION( lo.rcCapWatch,   PsUCase(L(457, "Watch")) )
             end if
 
             b.EndDoubleBuffer()
@@ -2414,7 +2414,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
     ' Read the debug information BEFORE creating any window. A release build carries none,
     ' and failing here means no debugger window ever appears rather than an empty one that
     ' then has to explain itself.
-    dim as wstring * 1024 wszExe = executable
+    dim as wstring * 1024 wszExe = *executable.Wz()
     dim as long rc = debugparser_load( @wszExe, 0 )
     if rc <> DBGP_OK then
         dim as DWSTRING wszMsg
@@ -2452,9 +2452,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
 
     ' WS_MINIMIZEBOX is what puts the caption button there; SC_MINIMIZE is intercepted in the
     ' window procedure and collapses to the icon strip instead of ever becoming iconic.
-    HWND_FRMDEBUG = pWindow->Create( hWndParent, L(450, "Debugger"), @frmDebug_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_THICKFRAME or WS_CAPTION or WS_SYSMENU or WS_MINIMIZEBOX or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_CONTROLPARENT or WS_EX_LEFT or WS_EX_COMPOSITED )
+    HWND_FRMDEBUG = pWindow->Create( hWndParent, *L(450, "Debugger").Wz(), @frmDebug_WndProc, 0, 0, 0, 0,          WS_POPUP or WS_THICKFRAME or WS_CAPTION or WS_SYSMENU or WS_MINIMIZEBOX or WS_CLIPSIBLINGS or WS_CLIPCHILDREN,          WS_EX_CONTROLPARENT or WS_EX_LEFT or WS_EX_COMPOSITED )
     ' UNSCALED. SetClientSize applies the DPI factor itself; passing a pre-scaled value
     ' squares it, which at 175% turned a 900px window into a 2756px one.
     pWindow->SetClientSize( FRMDEBUG_DEFWIDTH, FRMDEBUG_DEFHEIGHT )
@@ -2585,7 +2583,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
                     ' Editor lines are 0-based; the engine's are 1-based. That boundary is
                     ' stated once, here, because the old gdb path converted it in four
                     ' places and got one of them wrong.
-                    dim as long ln = valint(wszOne) + 1
+                    dim as long ln = PsValInt(wszOne) + 1
                     ' The line table says which lines actually generated code, so a
                     ' breakpoint on a comment or a declaration moves forward to the next
                     ' real one instead of silently never firing.
@@ -2630,7 +2628,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
     AppState_SetDebuggerActive( true )
     frmMain_DebugTopMenuStates()
 
-    dim as wstring * 1024 wszParams = cmdparams
+    dim as wstring * 1024 wszParams = *cmdparams.Wz()
     if debugparser_start( @wszExe, @wszParams, HWND_FRMDEBUG ) <> DBGP_OK then
         dim as wstring * 512 werr
         debugparser_get_error( @werr, 512 )
@@ -3003,8 +3001,8 @@ sub frmDebug_RunSelfTest()
     ' was RE-WORDED rather than added ("Step Into" -> "Step"): a stale translation left behind
     ' in one of the six files still resolves, and only reading it back catches that.
     sLine = "  NOTE resolved: 247=" & LL(243).Utf8 & " | 618=" & LL(450).Utf8 & _
-            " | 619=" & str(LL(451)) & " | 620=" & str(LL(452)) & _
-            " | 627=" & str(LL(459)) & " | 629=" & str(LL(461))
+            " | 619=" & LL(451).Utf8 & " | 620=" & LL(452).Utf8 & _
+            " | 627=" & LL(459).Utf8 & " | 629=" & LL(461).Utf8
     print sLine
 
     sLine = "--- TIKO_DEBUG_SELFTEST: " & str(gDbgTestPass) & " passed, " & _

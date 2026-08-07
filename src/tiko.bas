@@ -40,22 +40,27 @@
 
 using AfxNova
 
-'' Phase 7a scaffolding -- see the header. Deleted when the DWSTRING swap lands.
-#include once "PsCompat.bi"
+' ----------------------------------------------------------------------------------------
+' PsCore. THE TYPE SWAP HAS LANDED: `DWSTRING` here means PsCore's, everywhere, and both
+' pieces of scaffolding that existed to postpone that are gone -- PsCompat.bi, whose Ps*
+' functions were forwarders to fbc intrinsics and AfxStr, and `namespace PsC`, which existed
+' only so two types called DWSTRING could be in scope at once.
+'
+' THE ORDER IS LOAD-BEARING, AND FOR A DIFFERENT REASON THAN BEFORE. These come AFTER
+' AfxNova's headers deliberately: AfxNova also declares a DWSTRING, and the unqualified name
+' means whichever was declared last. Moving this block up silently gives 1600 sites the other
+' type, with no error anywhere -- see docs/port/type-swap-scope.md.
+' ----------------------------------------------------------------------------------------
+#include once "core/DWString.inc"
+#include once "core/PsStr.inc"
+#include once "core/PsPath.inc"
+#include once "core/PsFile.inc"
+#include once "core/PsEncoding.inc"
 
-' ----------------------------------------------------------------------------------------
-' PsCore, UNDER A NAMESPACE. AfxNova and PsCore both declare a type called DWSTRING, and
-' the unqualified name can only mean one of them -- which is why the full swap is 1008
-' errors and belongs with the shell conversion.
-'
-' A namespace makes both available at once: `DWSTRING` stays AfxNova's for tiko's 1631
-' existing sites, and `PsC.DWSTRING` is PsCore's, for code that needs what PsCore's has
-' and AfxNova's does not. The encoder needs exactly that -- a string whose LENGTH is
-' authoritative rather than its terminator, so an embedded NUL survives the round trip.
-'
-' This is scaffolding of the same kind as PsCompat.bi. When the type swap lands, the
-' namespace comes off and the PsC. prefixes go with it.
-' ----------------------------------------------------------------------------------------
+'' The way back from AfxNova, which is still linked and still owns the windows.
+'' Its header is the argument for why one named function beats a cast at each site.
+#include once "modAfxBridge.bi"
+
 '' modScintilla.bi FIRST, and the ORDER IS LOAD-BEARING. tiko #Defines all 117
 '' SCI_* constants and 19 SCK_*; PsPlatform declares them as `const` behind
 '' #ifndef guards. Guards only work in this direction -- with PsScintilla.bi
@@ -66,27 +71,28 @@ using AfxNova
 '' THE C BINDINGS GO OUTSIDE THE NAMESPACE, and this is not a style choice.
 '' fbc mangles an `extern "C"` block declared inside a namespace as
 '' PSC::bl_context_save, which matches nothing in libblend2d -- five undefined
-'' references, at LINK time only, with a clean compile. PsEncoding never hit
-'' this because it is pure FreeBASIC; PsSciView is not.
-''
-'' `#include once` makes the copies inside the namespace below no-ops, so the
-'' FreeBASIC code -- which is what needs PsCore's DWSTRING -- still gets the
-'' namespace and the C entry points stay global.
+'' references, at LINK time only, with a clean compile.
 #include once "bind/Blend2D.bi"
 #include once "bind/FreeType.bi"
 #include once "bind/HarfBuzz.bi"
 #include once "scintilla/PsScintilla.bi"
 
+'' ----------------------------------------------------------------------------------------
+'' `namespace PsC` SURVIVES THE TYPE SWAP, FOR THE OTHER JOB IT WAS DOING.
+''
+'' It was introduced to let two types called DWSTRING coexist. That reason is gone. But it
+'' was also -- undocumented until the swap was attempted -- keeping PsCore's UI layer out of
+'' tiko's: BOTH sides have a PsBufferPaint, and PsCore's paint backend and tiko's PsImage
+'' both define PsBgrToArgb. Lifting these six headers to global scope produces 17
+'' `Duplicated definition` errors and one `UDT's with methods must have unique names`, none
+'' of which has anything to do with strings.
+''
+'' So the namespace stays and the PsC. prefixes in frmSciHost.* stay with it. The CORE
+'' headers above are global, which is what makes DWSTRING one type again; only the UI is
+'' fenced. Collapsing that fence is a rename job for whenever tiko's Ps* controls and
+'' PsCore's converge, and it is not this phase.
+'' ----------------------------------------------------------------------------------------
 namespace PsC
-    '' PsFile: the portable file layer. It could not be included here at all until
-    '' PsPlatform split FindFirstFileW and GetModuleFileNameW behind an
-    '' INVALID_HANDLE_VALUE test -- their C prototypes collided with AfxNova's.
-    ''
-    '' vbcompat.bi is hoisted at :25, which this depends on: PsFile uses Format and
-    '' now(), and a namespace mangles fbc runtime entry points to PSC::fb_StrFormat
-    '' at link time with a perfectly clean compile.
-    #include once "core/PsFile.inc"
-    #include once "core/PsEncoding.inc"
     '' Phase 7d: the editor. PsSciView is a PsWidget in a PsSurface, driven
     '' through PsPlatform's Win32 host bridge -- see frmSciHost.bi.
     #include once "ui/core/PsDispatch.inc"
@@ -497,7 +503,7 @@ function WinMain( _
     ' icons used within the editor.
     dim as DWSTRING wszFontFile 
     wszFontFile = PsExePath + "SegoeFluentIcons.ttf"
-    if AddFontResourceEx(wszFontFile.vptr, FR_PRIVATE, NULL) = 0 then
+    if AddFontResourceEx(wszFontFile.Wz(), FR_PRIVATE, NULL) = 0 then
         TikoMsgBox( 0, _
                     "Unable to load application font 'SegoeFluentIcons.ttf'. Aborting application." , _
                     "Error", TMB_ICON_NONE, TMB_OK )
@@ -528,8 +534,8 @@ function WinMain( _
     ' naming the directory removes the search entirely rather than relying on the order
     ' being what we hardened it to above. Belt and braces, and it costs nothing.
     dim as DWSTRING wszDllPath = PsExePath()
-    dim as any ptr pLibLexilla   = dylibload( wszDllPath & "Lexilla64.dll" )
-    dim as any ptr pLibScintilla = dylibload( wszDllPath & "Scintilla64.dll" )
+    dim as any ptr pLibLexilla   = dylibload( *(wszDllPath & "Lexilla64.dll").Wz() )
+    dim as any ptr pLibScintilla = dylibload( *(wszDllPath & "Scintilla64.dll").Wz() )
 
     if (pLibLexilla = 0) orelse (pLibScintilla = 0) then
         TikoMsgBox( 0, _
@@ -566,7 +572,7 @@ function WinMain( _
 
     
     ' Unload the font file
-    if PsLen(wszFontFile) then RemoveFontResource(wszFontFile)
+    if PsLen(wszFontFile) then RemoveFontResource(*wszFontFile.Wz())
 
     ' Shut GDI+ down. frmMain_Show has returned, so every window is destroyed and every
     ' PsBufferPaint that painted into one has run its destructor -- no CGp* object can

@@ -69,7 +69,7 @@ private function frmAssignKey_TextWidthPx( byval hwnd as HWND, _
 
     dim as HFONT oldFont
     if hFont then oldFont = SelectObject( hDC, hFont )
-    GetTextExtentPoint32( hDC, wszText.sptr, PsLen(wszText), @sz )
+    GetTextExtentPoint32( hDC, wszText.Wz(), PsLen(wszText), @sz )
     if hFont then SelectObject( hDC, oldFont )
 
     ReleaseDC( hwnd, hDC )
@@ -276,7 +276,7 @@ private sub frmAssignKey_RefreshViews()
     if len(gTKKey) then
         KeyBindings_EnsureKeyNames()
         for i as long = lbound(gKeyNames) to ubound(gKeyNames)
-            if PsUCase(gKeyNames(i).wszName) = ucase(gTKKey) then
+            if PsUCase(gKeyNames(i).wszName) = PsUCase(gTKKey) then
                 nSel = i + 1
                 exit for
             end if
@@ -887,10 +887,7 @@ function frmAssignKey_Show( byval hWndParent as HWND ) as LRESULT
     dim pWindow as CWindow ptr = new CWindow
     pWindow->DPI = AfxCWindowOwnerPtr(hWndParent)->DPI
 
-    HWND_FRMASSIGNKEY = pWindow->Create( hWndParent, L(331,"Assign Shortcut"), _
-        @frmAssignKey_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
+    HWND_FRMASSIGNKEY = pWindow->Create( hWndParent, *L(331,"Assign Shortcut").Wz(),          @frmAssignKey_WndProc, 0, 0, 0, 0,          WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN,          WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
     pWindow->SetClientSize( FRMASSIGNKEY_CLIENT_W, FRMASSIGNKEY_CLIENT_H )
     pWindow->Center( pWindow->hWindow, hWndParent )
 

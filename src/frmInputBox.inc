@@ -420,10 +420,7 @@ function frmInputBox_Show( byval hWndParent as HWND, _
     dim pWindow as CWindow ptr = new CWindow
     pWindow->DPI = AfxCWindowOwnerPtr(hWndParent)->DPI
 
-    HWND_FRMINPUTBOX = pWindow->Create( hWndParent, wszCaption, _
-        @frmInputBox_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
+    HWND_FRMINPUTBOX = pWindow->Create( hWndParent, *wszCaption.Wz(),          @frmInputBox_WndProc, 0, 0, 0, 0,          WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN,          WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
     pWindow->SetClientSize( FRMINPUTBOX_CLIENT_W, FRMINPUTBOX_CLIENT_H )
     pWindow->Center( pWindow->hWindow, hWndParent )
 

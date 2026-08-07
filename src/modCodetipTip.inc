@@ -335,7 +335,7 @@ sub Codetip_RunSelfTest()
             instr( sNoArgs, chr(10) ) = 0, sNoArgs )
 
         dim as string sLong = FormatCodetip( _
-            "MyVeryLongFunctionName(byref wszFirstParameter as const wstring, " & _
+            "MyVeryLongFunctionName(byval wszFirstParameter as DWSTRING, " & _
             "byval nSecondParameter as long, byval nThirdParameter as long) as boolean" )
         dim as long nLines = 1
         for i as long = 1 to len(sLong)

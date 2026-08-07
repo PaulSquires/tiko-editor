@@ -4,20 +4,20 @@
 
 ' Independent oracle: raw Win32 UTF-16 -> UTF-8 (distinct code from modRoutines' private
 ' helpers, so a shared bug cannot hide behind both). Length-explicit.
-private function EncSelfTest_WideToUtf8( byref w as wstring ) as string
+private function EncSelfTest_WideToUtf8( byval w as DWSTRING ) as string
     dim as long n = PsLen(w)
     if n = 0 then return ""
-    dim as long u8 = WideCharToMultiByte( CP_UTF8, 0, @w, n, NULL, 0, NULL, NULL )
+    dim as long u8 = WideCharToMultiByte( CP_UTF8, 0, w.Wz(), n, NULL, 0, NULL, NULL )
     if u8 <= 0 then return ""
     dim as string s = string( u8, 0 )
-    WideCharToMultiByte( CP_UTF8, 0, @w, n, strptr(s), u8, NULL, NULL )
+    WideCharToMultiByte( CP_UTF8, 0, w.Wz(), n, strptr(s), u8, NULL, NULL )
     return s
 end function
 
 ' Write raw bytes to a file with the same stream the save path uses.
-private function EncSelfTest_WriteBytes( byref wszPath as wstring, byref sBytes as string ) as boolean
+private function EncSelfTest_WriteBytes( byval wszPath as DWSTRING, byref sBytes as string ) as boolean
     dim pStream as CFileStream
-    if pStream.Open( wszPath, STGM_CREATE or STGM_WRITE ) <> S_OK then return false
+    if pStream.Open( *wszPath.Wz(), STGM_CREATE or STGM_WRITE ) <> S_OK then return false
     if len(sBytes) then pStream.Write strptr(sBytes), len(sBytes)
     pStream.Close
     return true

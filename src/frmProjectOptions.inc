@@ -225,8 +225,7 @@ private sub frmProjectOptions_DoBrowse()
     dim as DWSTRING wszProjectName = ""
     if gApp.IsNewProjectFlag = false then wszProjectName = gApp.ProjectName
 
-    dim pwszName as WString Ptr = AfxIFileSaveDialog( HWND_FRMPROJECTOPTIONS, wszProjectName, _
-                                                      @wstr(APPEXTENSION), IDC_FRMPROJECTOPTIONS_CMDSELECT )
+    dim pwszName as WString Ptr = AfxIFileSaveDialog( HWND_FRMPROJECTOPTIONS, wszProjectName.Wz(),                                                        @wstr(APPEXTENSION), IDC_FRMPROJECTOPTIONS_CMDSELECT )
     if pwszName then
         gPOWork.ProjectPath = *pwszName
         CoTaskMemFree pwszName
@@ -931,10 +930,7 @@ function frmProjectOptions_Show( _
 
     dim pWindow as CWindow ptr = new CWindow
 
-    HWND_FRMPROJECTOPTIONS = pWindow->Create( hwndParent, wszTitle, _
-        @frmProjectOptions_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
+    HWND_FRMPROJECTOPTIONS = pWindow->Create( hwndParent, *wszTitle.Wz(),          @frmProjectOptions_WndProc, 0, 0, 0, 0,          WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN,          WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
     pWindow->SetClientSize( FRMPROJECTOPTIONS_CLIENT_W, FRMPROJECTOPTIONS_CLIENT_H )
     pWindow->Center( pWindow->hWindow, hwndParent )
 

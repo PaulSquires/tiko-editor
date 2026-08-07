@@ -286,7 +286,7 @@ sub PSTABBAR.LayoutTabs()
         dim as integer nChars = PsLen( this.tabs(i).Text )
         if nChars > 0 then
             dim as SIZE sz
-            if GetTextExtentPoint32W( hDC, this.tabs(i).Text.vptr, nChars, @sz ) then
+            if GetTextExtentPoint32W( hDC, this.tabs(i).Text.Wz(), nChars, @sz ) then
                 textW = sz.cx
             end if
         end if

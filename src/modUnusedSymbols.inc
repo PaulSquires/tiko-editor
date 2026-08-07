@@ -52,8 +52,8 @@ end function
 '' DWSTRING, NOT `byref as const wstring`. Pure -- PsUCase and two comparisons.
 private function UnusedSymbols_CmpText( byval a as DWSTRING, byval b as DWSTRING ) as long
     dim as DWSTRING ua = PsUCase( a ), ub = PsUCase( b )
-    if ua < ub then return -1
-    if ua > ub then return 1
+    if (ua < ub) then return -1
+    if (ua > ub) then return 1
     function = 0
 end function
 
@@ -196,7 +196,7 @@ end function
 ' Which rows are only ever "unknown"? Kept apart from ShouldReport: these ARE shown, so
 ' the user can judge them, they are just never labelled dead.
 private function UnusedSymbols_IsUnknown( byval refSym as SYMBOLREF, byval nFlags as long, _
-                                          byref wszName as const wstring ) as boolean
+                                          byval wszName as DWSTRING ) as boolean
     ' reachable from outside anything a scan can see
     if (nFlags and FBCP_SYMBFLAG_EXPORT) <> 0 then return true
 
@@ -314,19 +314,19 @@ end function
 ' right column, that a row click lands on the right line, that the list is readable in
 ' both themes. See frmUnusedSymbols.inc's layout half and the interactive pass.
 ' ========================================================================================
-private sub hUAssert( byval bCond as boolean, byref wszWhat as const wstring, _
+private sub hUAssert( byval bCond as boolean, byval wszWhat as DWSTRING, _
                       byref nPass as long, byref nFail as long )
     if bCond then
         nPass += 1
     else
         nFail += 1
-        dim as string s = "  FAIL " & wszWhat
+        dim as string s = "  FAIL " & wszWhat.Utf8
         print s
     end if
 end sub
 
-private function hMakeRow( byref wszFile as const wstring, byval nLine as long, _
-                           byval nKind as long, byref wszName as const wstring, _
+private function hMakeRow( byval wszFile as DWSTRING, byval nLine as long, _
+                           byval nKind as long, byval wszName as DWSTRING, _
                            byval nStatus as long, byval nWrites as long ) as UNUSEDROW
     dim as UNUSEDROW r
     r.wszFile = wszFile
@@ -435,9 +435,9 @@ sub UnusedSymbols_RunSelfTest()
                   "kind " & k & " has a non-empty localized name", nPass, nFail )
     next
     ' print them back: len()>0 cannot tell a real translation from the English fallback
-    dim as string sLang = "  langcheck 400=" & UnusedSymbols_KindText( UnusedKindVariable ) & _
-                          " | 401=" & UnusedSymbols_KindText( UnusedKindProcedure ) & _
-                          " | 408=" & UnusedSymbols_StatusText( rv )
+    dim as string sLang = "  langcheck 400=" & UnusedSymbols_KindText( UnusedKindVariable ).Utf8 & _
+                          " | 401=" & UnusedSymbols_KindText( UnusedKindProcedure ).Utf8 & _
+                          " | 408=" & UnusedSymbols_StatusText( rv ).Utf8
     print sLang
 
     dim as string sOut = "--- TIKO_UNUSED_SELFTEST: " & nPass & " passed, " & nFail & " failed ---"

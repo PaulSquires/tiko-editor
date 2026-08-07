@@ -43,7 +43,7 @@ function PsImage.Load( byval wszPath as DWSTRING ) as long
     this.Dispose()
 
     ' A local wstring buffer sidesteps any Right()/ucase() overload ambiguity on DWSTRING.
-    dim as wstring * 520 wPath = wszPath
+    dim as wstring * 520 wPath = *wszPath.Wz()
     dim as wstring * 8    wExt  = ucase( right( wPath, 4 ) )
 
     if wExt = wstr(".ICO") then
@@ -57,7 +57,7 @@ function PsImage.Load( byval wszPath as DWSTRING ) as long
         end if
     end if
 
-    _pBitmap = new CGpBitmap( wszPath.sptr() )
+    _pBitmap = new CGpBitmap( *wszPath.Wz() )
     if this.IsValid() = 0 then
         this.Dispose()
         return 0

@@ -222,7 +222,7 @@ function HelpCenter_IsSearchableWord( byval wszWord as DWSTRING ) as boolean
     dim as long nLen = PsLen( wszWord )
     if nLen = 0 then return false
     for i as long = 1 to nLen
-        dim as ulong c = asc( PsMid( wszWord, i, 1 ) )
+        dim as ulong c = wszWord[i - 1]
         dim as boolean bUpper = (c >= 65) andalso (c <= 90)
         dim as boolean bLower = (c >= 97) andalso (c <= 122)
         ' Anything above ASCII is treated as a letter: accented and CJK identifiers are
@@ -305,7 +305,7 @@ sub frmHelpCenter_ApplySearch( byval wszQuery as DWSTRING )
 
     ' The completion handler is passed explicitly: the default only applies to a direct
     ' call, not through the pointer.
-    gHelpCenter.pWeb->ExecuteScript( wszJS, NULL )
+    gHelpCenter.pWeb->ExecuteScript( wszJS.Wz(), NULL )
 end sub
 
 
@@ -539,8 +539,8 @@ function frmHelpCenter_Show( byval wszSearch as DWSTRING, byval nSite as long ) 
             ' going away. NavigationCompleted delivers it, exactly as on a cold open.
             gHelpCenter.bLoaded = false
             gHelpCenter.wszPendingQuery = wszSearch
-            AfxSetWindowText( HWND_FRMHELPCENTER, HelpCenter_SiteTitle( nSite ) )
-            if gHelpCenter.pWeb then gHelpCenter.pWeb->Navigate( HelpCenter_IndexUrl( nSite ) )
+            AfxSetWindowText( HWND_FRMHELPCENTER, *HelpCenter_SiteTitle( nSite ).Wz() )
+            if gHelpCenter.pWeb then gHelpCenter.pWeb->Navigate( HelpCenter_IndexUrl( nSite ).Wz() )
             exit function
         end if
 
@@ -557,7 +557,7 @@ function frmHelpCenter_Show( byval wszSearch as DWSTRING, byval nSite as long ) 
 
     dim as DWSTRING wszText = HelpCenter_SiteTitle( nSite )
     HWND_FRMHELPCENTER = pWindow->Create( _
-        HWND_DESKTOP, wszText, @frmHelpCenter_WndProc, 0, 0, 0, 0, _
+        HWND_DESKTOP, *wszText.Wz(), @frmHelpCenter_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_OVERLAPPEDWINDOW or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_LEFT )
     ' No WS_EX_CONTROLPARENT, unlike frmHelpViewer: there are no tab-navigable native
@@ -611,7 +611,7 @@ function frmHelpCenter_Show( byval wszSearch as DWSTRING, byval nSite as long ) 
     ' An isolated profile beside the exe rather than the default {exe}.exe.WebView2, so
     ' the cache and cookies are somewhere we name and can delete.
     dim as DWSTRING wszUserData = PsExePath & "settings\webview2"
-    gHelpCenter.pWeb = new CWebView2( gHelpCenter.hWebHost, wszUserData )
+    gHelpCenter.pWeb = new CWebView2( gHelpCenter.hWebHost, *wszUserData.Wz() )
 
     ' IsReady pumps messages while it waits for the environment AND the controller. A
     ' missing Edge WebView2 Runtime and a missing WebView2Loader.dll both land here --
@@ -623,7 +623,7 @@ function frmHelpCenter_Show( byval wszSearch as DWSTRING, byval nSite as long ) 
     if environ("TIKO_HELPCENTER_TRACE") = "1" then
         dim as string sRep = "  helpcenter: IsReady=" & str(bReady) & _
                              " browser=" & gHelpCenter.pWeb->GetBrowserVersion() & _
-                             " url=" & HelpCenter_IndexUrl( nSite )
+                             " url=" & HelpCenter_IndexUrl( nSite ).Utf8
         print sRep
     end if
 
@@ -652,7 +652,7 @@ function frmHelpCenter_Show( byval wszSearch as DWSTRING, byval nSite as long ) 
     gHelpCenter.bLoaded = false
     gHelpCenter.nSite   = nSite
     gHelpCenter.wszPendingQuery = wszSearch
-    gHelpCenter.pWeb->Navigate( HelpCenter_IndexUrl( nSite ) )
+    gHelpCenter.pWeb->Navigate( HelpCenter_IndexUrl( nSite ).Wz() )
 
     frmHelpCenter_PositionWindows()
 
@@ -803,8 +803,8 @@ sub frmHelpCenter_RunSelfTest()
     ' Both under settings\help -- the point of the move, and the thing a future edit to
     ' either branch of RootFolder would break silently.
     HelpCenter_Check( "site: both sites live under settings\help", _
-        (instr( HelpCenter_RootFolder( HELPCENTER_SITE_DOCS ), "settings\help\" ) > 0) andalso _
-        (instr( HelpCenter_RootFolder( HELPCENTER_SITE_TIKO ), "settings\help\" ) > 0) )
+        (PsInStr( HelpCenter_RootFolder( HELPCENTER_SITE_DOCS ), "settings\help\" ) > 0) andalso _
+        (PsInStr( HelpCenter_RootFolder( HELPCENTER_SITE_TIKO ), "settings\help\" ) > 0) )
     ' The captions differ, because the one window wears whichever it is showing. Asserted
     ' on inequality rather than on the literals: they are localized, so a run under another
     ' .lang would fail an assertion written against the English text.
@@ -842,8 +842,8 @@ sub frmHelpCenter_RunSelfTest()
     HelpCenter_Check( "lang: 92 (runtime title) is present", len( LL(88) ) > 0 )
     HelpCenter_Check( "lang: 93 (runtime body) is present",  len( LL(89) ) > 0 )
     HelpCenter_Check( "lang: 94 (files missing) is present", len( LL(90) ) > 0 )
-    dim as string sLang = "  resolved: 90=" & LL(86) & " | 92=" & LL(88) & _
-                          " | 94=" & LL(90)
+    dim as string sLang = "  resolved: 90=" & LL(86).Utf8 & " | 92=" & LL(88).Utf8 & _
+                          " | 94=" & LL(90).Utf8
     print sLang
 
     print "--- TIKO_HELPCENTER_SELFTEST: " & str(gHelpCenterTestPass) & " passed, " & _

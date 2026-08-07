@@ -531,7 +531,7 @@ private sub Theme_TraceLine( byval sText as string )
         bOn = (environ("TIKO_THEME_TRACE") = "1")
     end if
     if bOn = false then exit sub
-    dim as string sPath = PsExePath & "theme_trace.log"
+    dim as string sPath = (PsExePath & "theme_trace.log").Utf8
     dim as long f = freefile
     if open( sPath for append as #f ) <> 0 then exit sub
     print #f, sText
@@ -727,7 +727,7 @@ sub Theme_RunSelfTest()
         end if
         Theme_Restore()
         Theme_DiscardSnapshot()
-        kill( wszTmp )
+        kill( *wszTmp.Wz() )
     end if
 
     ' -- 11. The two colour pages PARTITION the COLOUR keys. -----------------------------
@@ -795,7 +795,7 @@ sub Theme_RunSelfTest()
             dim as long na = Theme_FindEntry( "general.appearance" )
             THASSERT( na >= 0, "writer did not emit general.appearance" )
             if na >= 0 then
-                dim as string sApp = lcase(PsTrim(gTheme(na).keyData))
+                dim as string sApp = PsLCase(PsTrim(gTheme(na).keyData)).Utf8
                 THASSERT( (sApp = "dark") orelse (sApp = "light"), _
                           "general.appearance must be dark or light, got: " & sApp )
                 ' Force the filename sniff to disagree, so this proves the KEY is what is
@@ -814,7 +814,7 @@ sub Theme_RunSelfTest()
     end if
     Theme_Restore()
     Theme_DiscardSnapshot()
-    kill( wszTmp2 )
+    kill( *wszTmp2.Wz() )
 
     ' -- 15. Every key is classified into a real category. -------------------------------
     '    The interface side derives its category from the namespace and cannot drift, but the
@@ -934,7 +934,7 @@ sub Theme_RunSelfTest()
 
     ' -- 20b. AN OLD MACRO-BEARING THEME STILL LOADS. ------------------------------------
     scope
-        dim as string sTmp = *PsExePath() & "_theme_macrocompat.tmp"
+        dim as string sTmp = (PsExePath() & "_theme_macrocompat.tmp").Utf8
         dim as long f = freefile
         if open( sTmp for output encoding "utf-8" as #f ) = 0 then
             print #f, "general.description: legacy macros"
@@ -1182,14 +1182,14 @@ sub Theme_RunSelfTest()
     '
     '    Checked by VALUE, not by len() > 0. A wrong-but-present id passes a non-empty test
     '    perfectly, which is exactly how the bug would have shipped.
-    THASSERT( len( LL(503) ) > 0, "671 (Palette) is empty in this language file" )
-    THASSERT( len( LL(504) ) > 0, "672 (default) is empty in this language file" )
-    THASSERT( instr( LL(503), "document" ) = 0, _
+    THASSERT( PsLen( LL(503) ) > 0, "671 (Palette) is empty in this language file" )
+    THASSERT( PsLen( LL(504) ) > 0, "672 (default) is empty in this language file" )
+    THASSERT( PsInStr( LL(503), "document" ) = 0, _
               "671 is not the Palette caption -- it reads: " & LL(503) )
-    THASSERT( instr( LL(504), "ANSI" ) = 0, _
+    THASSERT( PsInStr( LL(504), "ANSI" ) = 0, _
               "672 is not the default marker -- it reads: " & LL(504) )
-    THASSERT( len( LL(505) ) > 0, "673 (Choose Color) is empty in this language file" )
-    THASSERT( len( LL(506) ) > 0, "674 (Use palette color) is empty in this language file" )
+    THASSERT( PsLen( LL(505) ) > 0, "673 (Choose Color) is empty in this language file" )
+    THASSERT( PsLen( LL(506) ) > 0, "674 (Use palette color) is empty in this language file" )
 
     ' -- 22n. A KEY CAN BE HANDED BACK TO ITS ROLE. --------------------------------------
     '    The half of the palette that was missing. Every edit DETACHES a key, so without a
@@ -1356,7 +1356,7 @@ sub Theme_RunSelfTest()
         '      authored colour from an inherited one and would flatten the whole palette
         '      into hard-coded literals on the first save.
         scope
-            dim as string sTmp = *PsExePath() & "_theme_roletest.tmp"
+            dim as string sTmp = (PsExePath() & "_theme_roletest.tmp").Utf8
 
             ' A theme with ONE authored key and everything else inherited.
             erase gTheme
@@ -1439,7 +1439,7 @@ sub Theme_RunSelfTest()
 
         dim as DWSTRING wszFolder = frmThemes_ThemesFolder()
         dim as WIN32_FIND_DATAW WFD
-        dim as HANDLE hSearch = FindFirstFile( wszFolder & "*.theme", @WFD )
+        dim as HANDLE hSearch = FindFirstFile( (wszFolder & "*.theme").Wz(), @WFD )
         dim as long nThemes
 
         if hSearch <> INVALID_HANDLE_VALUE then

@@ -477,7 +477,7 @@ function PsBufferPaint.PaintText( _
     if _hFont then hOldFont = SelectObject( _memDC, _hFont )
 
     wsStyle = wsStyle or DT_NOPREFIX or DT_VCENTER or DT_SINGLELINE
-    DrawText( _memDC, wszText, -1, cast(lpRect, rc), wsStyle )
+    DrawText( _memDC, wszText.Wz(), -1, cast(lpRect, rc), wsStyle )
 
     SetTextColor( _memDC, oldforecolor )
     if _hFont then SelectObject( _memDC, hOldFont )
@@ -515,7 +515,7 @@ function PsBufferPaint.PaintTextEx( _
     if _hFont then hOldFont = SelectObject( _memDC, _hFont )
 
     wsStyle = wsStyle or DT_NOPREFIX
-    DrawText( _memDC, wszText, -1, cast(lpRect, rc), wsStyle )
+    DrawText( _memDC, wszText.Wz(), -1, cast(lpRect, rc), wsStyle )
 
     SetTextColor( _memDC, oldforecolor )
     if _hFont then SelectObject( _memDC, hOldFont )
@@ -538,7 +538,7 @@ function PsBufferPaint.PaintChar( _
     SetTextColor(_memDC, forecolor)
 
     dim as DWORD wsStyle = DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_NOCLIP
-    DrawText( _memDC, wszChar, -1, cast(lpRect, rc), wsStyle )
+    DrawText( _memDC, wszChar.Wz(), -1, cast(lpRect, rc), wsStyle )
 
     if _hFont then SelectObject( _memDC, hOldFont )
 

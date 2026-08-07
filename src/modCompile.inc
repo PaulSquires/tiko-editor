@@ -75,7 +75,7 @@ function code_Cleanup( byval pCompile as COMPILE_TYPE ptr ) as boolean
     ' nothing undid that, so the editor's own working directory silently became whichever
     ' project was last built -- which then decided where relative paths resolved everywhere
     ' else, and what a bare LoadLibrary would search.
-    if PsLen( pCompile->wszCurDirSave ) then chdir pCompile->wszCurDirSave
+    if PsLen( pCompile->wszCurDirSave ) then chdir *pCompile->wszCurDirSave.Wz()
 
     delete( pCompile )
     pCompile = null
@@ -172,13 +172,13 @@ function code_SetMainFile( byval pCompile as COMPILE_TYPE ptr ) as boolean
 
     ' Need to determine the output filename in order to search for any existing running process.
     pCompile->OutputFilename = pCompile->MainFolder & pCompile->MainName & ".exe"
-    if instr(" " & PsUCase(pCompile->CompileFlags), " -DLL") then
+    if PsInStr(" " & PsUCase(pCompile->CompileFlags), " -DLL") then
         pCompile->OutputFilename = pCompile->MainFolder & pCompile->MainName & ".dll"
     end if
-    if instr(" " & PsUCase(pCompile->CompileFlags), " -DYLIB") then
+    if PsInStr(" " & PsUCase(pCompile->CompileFlags), " -DYLIB") then
         pCompile->OutputFilename = pCompile->MainFolder & pCompile->MainName & ".dll"
     end if
-    if instr(" " & PsUCase(pCompile->CompileFlags), " -LIB") then
+    if PsInStr(" " & PsUCase(pCompile->CompileFlags), " -LIB") then
         pCompile->OutputFilename = pCompile->MainFolder & "lib" & pCompile->MainName & ".a"
     end if
 
@@ -227,7 +227,7 @@ function code_AddPathsToLinkModules( byval pCompile as COMPILE_TYPE ptr ) as lon
     dim as DWSTRING wszCurrentFolder = PsPathDirWithSep(pCompile->MainFilename)
     dim as DWSTRING wszCompilerIncFolder = PsPathDirWithSep(pCompile->CompilerPath) & "inc\"
     
-    dim as DWSTRING wszLinkModules = PsStrShrink(pCompile->LinkModules)  
+    dim as DWSTRING wszLinkModules = PsStrShrink(pCompile->LinkModules, " ")  
     
     dim as long numModules = PsStrParseCount(wszLinkModules, " ")
     for i as long = 1 to numModules
@@ -605,7 +605,7 @@ function code_Compile( byval wID as long ) as boolean
     ' honest test is whether there are module documents -- otherwise compiling one loose
     ' .bas creates an empty .tiko\ directory next to the user's file.
     if code_HasModuleDocument() then
-        SHCreateDirectory( 0, pCompile->ObjFolder )
+        SHCreateDirectory( 0, pCompile->ObjFolder.Wz() )
     end if
 
 
@@ -646,7 +646,7 @@ function code_Compile( byval wID as long ) as boolean
 
 
     ' Change to the output code directory
-    chdir pCompile->MainFolder
+    chdir *pCompile->MainFolder.Wz()
     
     
     ' Start our timer so we can track how long the compile took and display it in the results.

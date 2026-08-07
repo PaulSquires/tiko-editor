@@ -41,18 +41,18 @@ END TYPE
 
 declare function RichEditCenterSingleLineText( byval hRichEdit as HWND ) as long
 declare function CompleteIncludeFilename( byval pDoc as clsDocument ptr, byval wszFilename as string ) as string
-declare function getTextWidth( byval hwnd as HWND, byref wszText as wstring, byval FontIndex as long ) as long
+declare function getTextWidth( byval hwnd as HWND, byval wszText as DWSTRING, byval FontIndex as long ) as long
 declare function SpawnPreviousInstance() as boolean
 ' Bounded read of a WM_COPYDATA payload -- see its header. Pure, so it is assertable
 ' without a second process. Returns "" for anything malformed.
 declare function SafeCopyDataString( byval pData as any ptr, byval cbData as ulong ) as DWSTRING
 declare sub CopyData_RunSelfTest()
-declare function ReloadDocument( byref wszFilename as wstring ) as long
-declare function GetTemporaryFilename( byref wszFolder as wstring, byref wszExtension as wstring) as string
+declare function ReloadDocument( byval wszFilename as DWSTRING ) as long
+declare function GetTemporaryFilename( byval wszFolder as DWSTRING, byval wszExtension as DWSTRING) as string
 declare function GetFontCharSetID(byref wzCharsetName as DWSTRING ) as long
 declare function Scintilla_GetTextBytes( byval hEdit as hwnd ) as string
 declare function Scintilla_StripTrailingWhitespace( byval hEdit as hwnd ) as long
-declare function GetFileToString( byref wszFilename as const wstring, byref txtBuffer as string, byval pDoc as clsDocument ptr ) as boolean
+declare function GetFileToString( byval wszFilename as DWSTRING, byref txtBuffer as string, byval pDoc as clsDocument ptr ) as boolean
 declare function IsCurrentLineIncludeFilename() as boolean
 declare function OpenSelectedDocument( byval wszFilename as DWSTRING, byval wszFunctionName as DWSTRING = "", byval nLineNumber as long = -1 ) as clsDocument ptr
 declare function AfxIFileOpenDialogW( byval hwndOwner as HWND, byval idButton as long) as wstring Ptr

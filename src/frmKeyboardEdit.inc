@@ -88,7 +88,7 @@ private function frmKeyboardEdit_TextWidthPx( byval hwnd as HWND, _
 
     dim as HFONT oldFont
     if hFont then oldFont = SelectObject( hDC, hFont )
-    GetTextExtentPoint32( hDC, wszText.sptr, PsLen(wszText), @sz )
+    GetTextExtentPoint32( hDC, wszText.Wz(), PsLen(wszText), @sz )
     if hFont then SelectObject( hDC, oldFont )
 
     ReleaseDC( hwnd, hDC )
@@ -1004,10 +1004,7 @@ function frmKeyboardEdit_Show( byval hWndParent as HWND ) as LRESULT
     dim pWindow as CWindow ptr = new CWindow
     pWindow->DPI = AfxCWindowOwnerPtr(hWndParent)->DPI
 
-    HWND_FRMKEYBOARDEDIT = pWindow->Create( hWndParent, L(331,"Assign Shortcut"), _
-        @frmKeyboardEdit_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
+    HWND_FRMKEYBOARDEDIT = pWindow->Create( hWndParent, *L(331,"Assign Shortcut").Wz(),          @frmKeyboardEdit_WndProc, 0, 0, 0, 0,          WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN,          WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
     pWindow->SetClientSize( FRMKBEDIT_CLIENT_W, FRMKBEDIT_CLIENT_H )
     pWindow->Center( pWindow->hWindow, hWndParent )
 

@@ -234,7 +234,7 @@ function frmFunctions_TooltipCallback( byval hCtl as HWND, byval row as integer,
         ' outer one was returned. PsListTree reads an empty string as "no tip for this
         ' row", so the panel showed no tooltips at all.
         wszTooltip = PsStrParse(wszCaption, 2, "%")
-        wszTooltip = FormatCodetip( wszTooltip )
+        wszTooltip = FormatCodetip( *wszTooltip.Wz() )
         ' The tip wraps because PsTooltip does it natively (armed once, in
         ' Tooltips_ApplyTheme). This used to hand-send TTM_SETMAXTIPWIDTH to the
         ' comctl32 tip from inside the callback -- i.e. on every single tip.

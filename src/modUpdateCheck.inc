@@ -26,7 +26,7 @@ function ConvertTikoVersion( byval wszVersion as DWSTRING ) as long
    wszPart2 = PsStrLSet( PsStrParse(wszVersion, 2, "."), 3, "0" )
    wszPart3 = PsStrRSet( PsStrParse(wszVersion, 3, "."), 3, "0" )
    
-   function = val(wszPart1 + wszPart2 + wszPart3) 
+   function = PsVal(wszPart1 & wszPart2 & wszPart3) 
 end function
 
 
@@ -95,7 +95,7 @@ sub DoCheckForUpdates( byval param as any ptr )
     dim pWHttp as CWinHttpRequest
 
     ' Open an HTTP connection to an HTTP resource (synchronous mode)
-    if pWHttp.Open( "GET", "https://www.planetsquires.com/" & wszServerFile ) <> S_OK then
+    if pWHttp.Open( "GET", "https://www.planetsquires.com/" & wszServerFile.Wz() ) <> S_OK then
         exit sub
     end if
 

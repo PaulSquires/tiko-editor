@@ -496,6 +496,6 @@ if g_nBad > 0 then
     print "  " & g_nBad & " failure(s) -- 7d cannot proceed on this footing."
     end 1
 end if
-print "  ok      tiko can host a PsSciView: no SDL3, both DWSTRINGs intact"
+print "  ok      tiko can host a PsSciView: no SDL3, one DWSTRING"
 print ""
 end 0

@@ -35,7 +35,7 @@ end sub
 ' ========================================================================================
 function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     dim as DWSTRING wszFilename
-    dim as DWSTRING wszNeedle = AfxGetWindowText( hwndCtl )
+    dim as DWSTRING wszNeedle = AfxW(AfxGetWindowText( hwndCtl ))
 
     gSymbolsCount = 0
     dim as long nextEl = 0
@@ -70,10 +70,17 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
             gSymbols(nextEl).wszFilename = arrFiles(f)
             gSymbols(nextEl).nLineNumber = -1
             gSymbols(nextEl).isEnum      = false
-            gSymbols(nextEl).clrMask     = WSTRING( PsLen(wszFilename), 48 )    ' "0"
-            for i as long = lbound(positions) to ubound(positions)
-                gSymbols(nextEl).clrMask[ positions(i) ] = 49   '  "1"
-            next
+            '' BUILT IN A LOCAL `string`, THEN ASSIGNED ONCE. PsCore's DWSTRING offers []
+            '' for READING only -- a writable index into a buffer whose LENGTH is
+            '' authoritative is exactly how a terminator gets lost. The mask is ASCII
+            '' '0'/'1', so the byte-to-wide assignment at the end is lossless by content.
+            scope
+                dim as string sMask = string( PsLen(wszFilename), 48 )    ' "0"
+                for i as long = lbound(positions) to ubound(positions)
+                    if positions(i) < len(sMask) then sMask[ positions(i) ] = 49   '  "1"
+                next
+                gSymbols(nextEl).clrMask = sMask
+            end scope
 
             nextEl += 1
         end if
@@ -109,10 +116,13 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
                 if nLineNum = 0 then nLineNum = gSymDb.SymLine( rs(s) )
                 gSymbols(nextEl).nLineNumber = iif( nLineNum > 0, nLineNum - 1, 0 )
                 gSymbols(nextEl).isEnum      = ( nKind = FBCP_KIND_ENUM )
-                gSymbols(nextEl).clrMask     = WSTRING( PsLen(wszName), 48 )  ' "0"
-                for i as long = lbound(positions) to ubound(positions)
-                    gSymbols(nextEl).clrMask[ positions(i) ] = 49  ' "1"
-                next
+                scope
+                    dim as string sMask = string( PsLen(wszName), 48 )  ' "0"
+                    for i as long = lbound(positions) to ubound(positions)
+                        if positions(i) < len(sMask) then sMask[ positions(i) ] = 49  ' "1"
+                    next
+                    gSymbols(nextEl).clrMask = sMask
+                end scope
 
                 nextEl += 1
             end if
@@ -378,7 +388,7 @@ sub frmSearchSymbol_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
             ' measure this one character to know how far to advance
             dim as HFONT hOldFont = SelectObject( hDC, ghFont(idFont) ) 
             dim as SIZE sz
-            GetTextExtentPoint32( hDC, wszChar, 1, @sz )
+            GetTextExtentPoint32( hDC, wszChar.Wz(), 1, @sz )
             rcChar.left += sz.cx
             rcChar.right += sz.cx
             SelectObject(hDC, hOldFont) 

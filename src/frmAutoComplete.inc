@@ -281,13 +281,13 @@ private function AutoC_Layout( byval pDoc as clsDocument ptr ) as boolean
         dim as SIZE sz
         dim as long nChars = PsLen( gAutoCItems(nItem).wszName )
         if nChars > 0 then
-            if GetTextExtentPoint32W( hDC, gAutoCItems(nItem).wszName.vptr, nChars, @sz ) then
+            if GetTextExtentPoint32W( hDC, gAutoCItems(nItem).wszName.Wz(), nChars, @sz ) then
                 if sz.cx > maxNameW then maxNameW = sz.cx
             end if
         end if
         nChars = PsLen( gAutoCItems(nItem).wszDetail )
         if nChars > 0 then
-            if GetTextExtentPoint32W( hDC, gAutoCItems(nItem).wszDetail.vptr, nChars, @sz ) then
+            if GetTextExtentPoint32W( hDC, gAutoCItems(nItem).wszDetail.Wz(), nChars, @sz ) then
                 if sz.cx > maxDetailW then maxDetailW = sz.cx
             end if
         end if

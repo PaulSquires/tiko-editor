@@ -114,7 +114,7 @@ sub frmFind_ApplyErrorState( byval bForce as boolean = false )
     ' SEARCH, so the moment the user edits the text it is describing something that has not
     ' been searched for -- and saying "no results" about a phrase nobody has looked for yet
     ' is just wrong. Editing clears it; the next Enter decides again.
-    dim as boolean bSameText  = cbool( AfxGetWindowText( hCtl ) = gFip.wszPhrase )
+    dim as boolean bSameText  = cbool( AfxW(AfxGetWindowText( hCtl )) = gFip.wszPhrase )
 
     dim as boolean bErr = false
     if bOnTab andalso bSearched andalso bHadPhrase andalso bNoHits andalso bSameText then

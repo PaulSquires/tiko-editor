@@ -546,7 +546,7 @@ function OnCommand_FormatAllOpenDocuments() as LRESULT
     dim as long nLines = Format_AllOpenDocuments( nFiles )
     
 
-    dim as string sMsg = L(421,"Formatting complete.") & vbcrlf & vbcrlf & _
+    dim as DWSTRING sMsg = L(421,"Formatting complete.") & vbcrlf & vbcrlf & _
                          L(423,"Documents changed:") & " " & str(nFiles) & vbcrlf & _
                          L(424,"Lines changed:") & " " & str(nLines) & vbcrlf & vbcrlf & _
                          L(425,"Each document can be undone individually with Ctrl+Z.")
@@ -595,7 +595,7 @@ function OnCommand_FormatProject() as LRESULT
         return 0
     end if
 
-    dim as string sAsk = L(427,"Format every FreeBASIC file in this workspace?") & " (" & str(nCandidates) & ")" & vbcrlf & vbcrlf & _
+    dim as DWSTRING sAsk = L(427,"Format every FreeBASIC file in this workspace?") & " (" & str(nCandidates) & ")" & vbcrlf & vbcrlf & _
                          L(428,"Nothing is written to disk. Every file is changed in the editor only, so each one can be undone with Ctrl+Z and you decide what to save.")
     if TikoMsgBox( HWND_FRMMAIN, sAsk, L(465,"Format"), TMB_ICON_QUESTION, TMB_YESNO ) <> IDYES then
         return 0
@@ -621,7 +621,7 @@ function OnCommand_FormatProject() as LRESULT
         pDoc = pNext
     wend
 
-    dim as string sMsg = L(421,"Formatting complete.") & vbcrlf & vbcrlf & _
+    dim as DWSTRING sMsg = L(421,"Formatting complete.") & vbcrlf & vbcrlf & _
                          L(423,"Documents changed:") & " " & str(nChanged) & vbcrlf & _
                          L(424,"Lines changed:") & " " & str(nLines) & vbcrlf & _
                          L(430,"Already formatted:") & " " & str(nUnchanged) & vbcrlf & vbcrlf & _

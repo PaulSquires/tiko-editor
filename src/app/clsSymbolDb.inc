@@ -65,12 +65,12 @@ end function
 '   - ON LINUX PATHS ARE CASE-SENSITIVE, so a portable symbol database cannot
 '     lean on case-insensitive path equality at all. The question is only which
 '     way to be wrong on the way there, and ASCII-folding is the smaller step.
-private function SymDb_FileNameEq( byref a as const wstring, byref b as const wstring ) as boolean
-    return SymDb_NameEqW( @a, @b )
+private function SymDb_FileNameEq( byval a as DWSTRING, byval b as DWSTRING ) as boolean
+    return SymDb_NameEqW( a.Wz(), b.Wz() )
 end function
 
 ' Index of wszFile in pRSet's file table, or -1.
-private function SymDb_FileIndexOf( byval pRSet as PARSERESULTSET ptr, byref wszFile as const wstring ) as long
+private function SymDb_FileIndexOf( byval pRSet as PARSERESULTSET ptr, byval wszFile as DWSTRING ) as long
     if pRSet = 0 then return -1
     if pRSet->pResult = 0 then return -1
     dim as long fc = pRSet->pResult->fileCount
@@ -99,8 +99,8 @@ private function SymDb_EnclosingProc( byval pRSet as PARSERESULTSET ptr, byval n
 end function
 
 ' First meaningful identifier of a type-text ("const Widget ptr" -> "Widget").
-private function SymDb_ExtractBaseType( byref wszTypeText as const wstring ) as DWSTRING
-    dim as DWSTRING wszT = trim( wszTypeText )
+private function SymDb_ExtractBaseType( byval wszTypeText as DWSTRING ) as DWSTRING
+    dim as DWSTRING wszT = PsTrim( wszTypeText )
     if PsLen( wszT ) = 0 then return ""
     dim as long cnt = PsStrParseCount( wszT, " " )
     for i as long = 1 to cnt
@@ -336,21 +336,21 @@ end function
 
 ' ---- clsSymbolDb: lookups --------------------------------------------------------------
 
-function clsSymbolDb.FindInSet( byval pRSet as PARSERESULTSET ptr, byref wszName as const wstring, byval kindMask as long, byval bIgnoreSuppression as boolean = false ) as SYMBOLREF
+function clsSymbolDb.FindInSet( byval pRSet as PARSERESULTSET ptr, byval wszName as DWSTRING, byval kindMask as long, byval bIgnoreSuppression as boolean = false ) as SYMBOLREF
     dim as SYMBOLREF res
     res.idx = -1
     if pRSet = 0 then return res
     if pRSet->pResult = 0 then return res
     if pRSet->hashSize = 0 then return res
 
-    dim as ulong h = SymDb_HashName( @wszName )
+    dim as ulong h = SymDb_HashName( wszName.Wz() )
     dim as long b = clng( h and culng( pRSet->hashSize - 1 ) )
     dim as long s = pRSet->hashHead(b)
     do while s >= 0
         dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[s]
         if (kindMask and (1 shl pSym->kind)) <> 0 then
             dim as wstring ptr pName = @pRSet->pResult->stringPool[ pSym->nameOffset ]
-            if SymDb_NameEqW( pName, @wszName ) then
+            if SymDb_NameEqW( pName, wszName.Wz() ) then
                 dim as boolean bVisible = bIgnoreSuppression
                 if bVisible = false then bVisible = this.FileContributes( pRSet, pSym->fileIndex )
                 if bVisible then
@@ -365,7 +365,7 @@ function clsSymbolDb.FindInSet( byval pRSet as PARSERESULTSET ptr, byref wszName
     return res
 end function
 
-function clsSymbolDb.FindByKindMask( byref wszName as const wstring, byval kindMask as long ) as SYMBOLREF
+function clsSymbolDb.FindByKindMask( byval wszName as DWSTRING, byval kindMask as long ) as SYMBOLREF
     ' buffer first (freshest), then the project set honoring the merge masks,
     ' then the project set IGNORING suppression: a context-starved buffer scan
     ' of a lone .inc drops symbols fbc's error recovery could not parse, and
@@ -378,11 +378,11 @@ function clsSymbolDb.FindByKindMask( byref wszName as const wstring, byval kindM
     return this.FindInSet( m_pProject, wszName, kindMask, true )
 end function
 
-function clsSymbolDb.FindProc( byref wszName as const wstring ) as SYMBOLREF
+function clsSymbolDb.FindProc( byval wszName as DWSTRING ) as SYMBOLREF
     return this.FindByKindMask( wszName, SYMMASK_PROC )
 end function
 
-function clsSymbolDb.FindType( byref wszName as const wstring ) as SYMBOLREF
+function clsSymbolDb.FindType( byval wszName as DWSTRING ) as SYMBOLREF
     dim as SYMBOLREF r = this.FindByKindMask( wszName, SYMMASK_TYPE )
     ' resolve TYPEDEF/ALIAS chains to the concrete TYPE/UNION/ENUM
     dim as long hops = 0
@@ -413,7 +413,7 @@ function clsSymbolDb.GetTypeBase( byval refType as SYMBOLREF ) as SYMBOLREF
     return this.FindType( wszBase )
 end function
 
-function clsSymbolDb.ResolveTypeText( byref wszTypeText as const wstring ) as SYMBOLREF
+function clsSymbolDb.ResolveTypeText( byval wszTypeText as DWSTRING ) as SYMBOLREF
     dim as DWSTRING wszBase = SymDb_ExtractBaseType( wszTypeText )
     if PsLen( wszBase ) = 0 then
         dim as SYMBOLREF miss
@@ -423,7 +423,7 @@ function clsSymbolDb.ResolveTypeText( byref wszTypeText as const wstring ) as SY
     return this.FindType( wszBase )
 end function
 
-function clsSymbolDb.FindMemberOf( byval refType as SYMBOLREF, byref wszMember as const wstring ) as SYMBOLREF
+function clsSymbolDb.FindMemberOf( byval refType as SYMBOLREF, byval wszMember as DWSTRING ) as SYMBOLREF
     dim as SYMBOLREF miss
     miss.idx = -1
     if refType.IsValid = false then return miss
@@ -437,7 +437,7 @@ function clsSymbolDb.FindMemberOf( byval refType as SYMBOLREF, byref wszMember a
             dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[c]
             if (SYMMASK_MEMBER and (1 shl pSym->kind)) <> 0 then
                 dim as wstring ptr pName = @pRSet->pResult->stringPool[ pSym->nameOffset ]
-                if SymDb_NameEqW( pName, @wszMember ) then
+                if SymDb_NameEqW( pName, wszMember.Wz() ) then
                     dim as SYMBOLREF r
                     r.pRSet = pRSet
                     r.idx = c
@@ -452,7 +452,7 @@ function clsSymbolDb.FindMemberOf( byval refType as SYMBOLREF, byref wszMember a
     return miss
 end function
 
-function clsSymbolDb.FindVariable( byref wszName as const wstring, byref wszFile as const wstring, byval nCaretLine as long ) as SYMBOLREF
+function clsSymbolDb.FindVariable( byval wszName as DWSTRING, byval wszFile as DWSTRING, byval nCaretLine as long ) as SYMBOLREF
     dim as SYMBOLREF miss
     miss.idx = -1
 
@@ -473,7 +473,7 @@ function clsSymbolDb.FindVariable( byref wszName as const wstring, byref wszFile
                 dim as long k = pSym->kind
                 dim as boolean bVarKind = ((k = FBCP_KIND_VAR) orelse (k = FBCP_KIND_PARAM) orelse (k = FBCP_KIND_CONST))
                 if bVarKind then
-                    if SymDb_NameEqW( @pRSet->pResult->stringPool[pSym->nameOffset], @wszName ) then
+                    if SymDb_NameEqW( @pRSet->pResult->stringPool[pSym->nameOffset], wszName.Wz() ) then
                         dim as SYMBOLREF r
                         r.pRSet = pRSet
                         r.idx = c
@@ -491,7 +491,7 @@ function clsSymbolDb.FindVariable( byref wszName as const wstring, byref wszFile
             dim as boolean bTop = (pSym->parentIndex = -1)
             dim as boolean bVarKind = ((k = FBCP_KIND_VAR) orelse (k = FBCP_KIND_CONST))
             if bTop andalso bVarKind then
-                if SymDb_NameEqW( @pRSet->pResult->stringPool[pSym->nameOffset], @wszName ) then
+                if SymDb_NameEqW( @pRSet->pResult->stringPool[pSym->nameOffset], wszName.Wz() ) then
                     dim as SYMBOLREF r
                     r.pRSet = pRSet
                     r.idx = s
@@ -558,7 +558,7 @@ end function
 ' Splitting the walk by origin makes the stop truncate toolchain symbols instead of the
 ' user's. It also fixes the popup's own AUTOCOMPLETE_MAX_ITEMS cap for free, since
 ' results arrive in the order the caller appends them.
-function clsSymbolDb.EnumPrefix( byref wszPrefix as const wstring, byval kindMask as long, results() as SYMBOLREF ) as long
+function clsSymbolDb.EnumPrefix( byval wszPrefix as DWSTRING, byval kindMask as long, results() as SYMBOLREF ) as long
     dim as long cnt = 0
     redim results( 0 to 127 )
     dim as long plen = PsLen( wszPrefix )
@@ -602,7 +602,7 @@ function clsSymbolDb.EnumPrefix( byref wszPrefix as const wstring, byval kindMas
                     if bIsToolchain <> bWantToolchain then continue for
                 end if
                 dim as wstring ptr pName = @pRSet->pResult->stringPool[ pSym->nameOffset ]
-                if SymDb_NamePrefixW( pName, @wszPrefix, plen ) then
+                if SymDb_NamePrefixW( pName, wszPrefix.Wz(), plen ) then
                     if cnt > ubound(results) then redim preserve results( 0 to cnt * 2 + 1 )
                     results(cnt).pRSet = pRSet
                     results(cnt).idx = i
@@ -614,7 +614,7 @@ function clsSymbolDb.EnumPrefix( byref wszPrefix as const wstring, byval kindMas
     function = cnt
 end function
 
-function clsSymbolDb.EnumLocalsInScope( byref wszFile as const wstring, byval nCaretLine as long, results() as SYMBOLREF ) as long
+function clsSymbolDb.EnumLocalsInScope( byval wszFile as DWSTRING, byval nCaretLine as long, results() as SYMBOLREF ) as long
     dim as long cnt = 0
     redim results( 0 to 63 )
     for pass as long = 0 to 1
@@ -644,7 +644,7 @@ function clsSymbolDb.EnumLocalsInScope( byref wszFile as const wstring, byval nC
     function = cnt
 end function
 
-function clsSymbolDb.EnumProcsInFile( byref wszFile as const wstring, results() as SYMBOLREF ) as long
+function clsSymbolDb.EnumProcsInFile( byval wszFile as DWSTRING, results() as SYMBOLREF ) as long
     dim as long cnt = 0
     redim results( 0 to 63 )
     for pass as long = 0 to 1
@@ -938,7 +938,7 @@ end function
 
 ' ---- TODO store (flat, keyed by file; UI thread only) ----------------------------------
 
-sub TodoStore_RemoveFile( byref wszFile as const wstring )
+sub TodoStore_RemoveFile( byval wszFile as DWSTRING )
     dim as long nOut = 0
     for i as long = 0 to gTodoCount - 1
         if SymDb_FileNameEq( gTodoItems(i).wszFile, wszFile ) = false then
@@ -955,7 +955,7 @@ sub TodoStore_RemoveFile( byref wszFile as const wstring )
     gTodoCount = nOut
 end sub
 
-sub TodoStore_ReplaceFile( byref wszFile as const wstring, items() as TODOITEM, byval itemCount as long )
+sub TodoStore_ReplaceFile( byval wszFile as DWSTRING, items() as TODOITEM, byval itemCount as long )
     TodoStore_RemoveFile( wszFile )
     if itemCount <= 0 then exit sub
     if gTodoCount + itemCount - 1 > ubound( gTodoItems ) then
@@ -972,7 +972,7 @@ end sub
 
 ' ---- FB intrinsics lookup --------------------------------------------------------------
 
-function FindIntrinsicCalltip( byref wszName as const wstring ) as DWSTRING
+function FindIntrinsicCalltip( byval wszName as DWSTRING ) as DWSTRING
     dim as long hi = ubound( gFBIntrinsics )
     if hi < 0 then return ""
     dim as DWSTRING wszUp = PsUCase( wszName )
@@ -981,7 +981,7 @@ function FindIntrinsicCalltip( byref wszName as const wstring ) as DWSTRING
         dim as long mid_ = (lo + hi) \ 2
         if wszUp = gFBIntrinsics(mid_).wszNameUp then
             return gFBIntrinsics(mid_).wszCalltip
-        elseif wszUp < gFBIntrinsics(mid_).wszNameUp then
+        elseif (wszUp < gFBIntrinsics(mid_).wszNameUp) then
             hi = mid_ - 1
         else
             lo = mid_ + 1

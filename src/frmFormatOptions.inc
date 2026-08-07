@@ -710,10 +710,7 @@ function frmFormatOptions_Show( byval hWndParent as HWND ) as LRESULT
 
     dim pWindow as CWindow ptr = new CWindow
 
-    HWND_FRMFORMATOPTIONS = pWindow->Create( hWndParent, L(470,"Format Options"), _
-        @frmFormatOptions_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
+    HWND_FRMFORMATOPTIONS = pWindow->Create( hWndParent, *L(470,"Format Options").Wz(),          @frmFormatOptions_WndProc, 0, 0, 0, 0,          WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN,          WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
     pWindow->SetClientSize( FRMFORMATOPTIONS_CLIENT_W, FRMFORMATOPTIONS_CLIENT_H )
     pWindow->Center( pWindow->hWindow, hWndParent )
 
@@ -1113,7 +1110,7 @@ sub frmFormatOptions_RunSelfTest( byval bLayoutHalf as boolean )
         for i as long = 0 to gFmtRowCount - 1
             dim as DWSTRING wszLabel = L( gFmtRows(i).nLabelID, "" )
             dim as SIZE sz
-            GetTextExtentPoint32W( hdcM, wszLabel, PsLen(wszLabel), @sz )
+            GetTextExtentPoint32W( hdcM, wszLabel.Wz(), PsLen(wszLabel), @sz )
             dim as long nHave = gFmtRows(i).rcLabel.right - gFmtRows(i).rcLabel.left
             if sz.cx > nHave then
                 bFits = false

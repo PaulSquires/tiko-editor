@@ -49,8 +49,8 @@ end type
 dim shared gTodoItems(any) as TODOITEM
 dim shared gTodoCount as long = 0
 
-declare sub TodoStore_ReplaceFile( byref wszFile as const wstring, items() as TODOITEM, byval itemCount as long )
-declare sub TodoStore_RemoveFile( byref wszFile as const wstring )
+declare sub TodoStore_ReplaceFile( byval wszFile as DWSTRING, items() as TODOITEM, byval itemCount as long )
+declare sub TodoStore_RemoveFile( byval wszFile as DWSTRING )
 
 ' One scan's result plus its indexes. Built on the worker, immutable afterward.
 ' The FBCP_RESULT ptr is owned elsewhere (freed via fbcparser_free on the retire
@@ -115,26 +115,26 @@ type clsSymbolDb
         declare sub RecomputeMerge()
         declare sub InstallProjectTodos( byval pNew as PARSERESULTSET ptr )
         declare function FileContributes( byval pRSet as PARSERESULTSET ptr, byval nFileIdx as long ) as boolean
-        declare function FindByKindMask( byref wszName as const wstring, byval kindMask as long ) as SYMBOLREF
-        declare function FindInSet( byval pRSet as PARSERESULTSET ptr, byref wszName as const wstring, byval kindMask as long, byval bIgnoreSuppression as boolean = false ) as SYMBOLREF
+        declare function FindByKindMask( byval wszName as DWSTRING, byval kindMask as long ) as SYMBOLREF
+        declare function FindInSet( byval pRSet as PARSERESULTSET ptr, byval wszName as DWSTRING, byval kindMask as long, byval bIgnoreSuppression as boolean = false ) as SYMBOLREF
 
     public:
         ' installs a new set for its tier, returns the displaced set (to retire); UI thread
         declare function InstallSet( byval nTier as long, byval pNew as PARSERESULTSET ptr ) as PARSERESULTSET ptr
 
         ' -- lookups (case-insensitive; buffer-first with the merge masks) --
-        declare function FindProc( byref wszName as const wstring ) as SYMBOLREF
-        declare function FindType( byref wszName as const wstring ) as SYMBOLREF
-        declare function FindMemberOf( byval refType as SYMBOLREF, byref wszMember as const wstring ) as SYMBOLREF
+        declare function FindProc( byval wszName as DWSTRING ) as SYMBOLREF
+        declare function FindType( byval wszName as DWSTRING ) as SYMBOLREF
+        declare function FindMemberOf( byval refType as SYMBOLREF, byval wszMember as DWSTRING ) as SYMBOLREF
         declare function GetTypeBase( byval refType as SYMBOLREF ) as SYMBOLREF
-        declare function ResolveTypeText( byref wszTypeText as const wstring ) as SYMBOLREF
-        declare function FindVariable( byref wszName as const wstring, byref wszFile as const wstring, byval nCaretLine as long ) as SYMBOLREF
+        declare function ResolveTypeText( byval wszTypeText as DWSTRING ) as SYMBOLREF
+        declare function FindVariable( byval wszName as DWSTRING, byval wszFile as DWSTRING, byval nCaretLine as long ) as SYMBOLREF
 
         ' -- enumerations (results() redim'd by callee; returns count) --
         declare function EnumMembers( byval refType as SYMBOLREF, results() as SYMBOLREF, byval bWalkExtends as boolean = true ) as long
-        declare function EnumPrefix( byref wszPrefix as const wstring, byval kindMask as long, results() as SYMBOLREF ) as long
-        declare function EnumLocalsInScope( byref wszFile as const wstring, byval nCaretLine as long, results() as SYMBOLREF ) as long
-        declare function EnumProcsInFile( byref wszFile as const wstring, results() as SYMBOLREF ) as long
+        declare function EnumPrefix( byval wszPrefix as DWSTRING, byval kindMask as long, results() as SYMBOLREF ) as long
+        declare function EnumLocalsInScope( byval wszFile as DWSTRING, byval nCaretLine as long, results() as SYMBOLREF ) as long
+        declare function EnumProcsInFile( byval wszFile as DWSTRING, results() as SYMBOLREF ) as long
         declare function EnumUserFiles( results() as DWSTRING ) as long
         declare function EnumAllProcsTypes( results() as SYMBOLREF, byval bUserFilesOnly as boolean ) as long
         declare function EnumDiags( results() as DIAGREF ) as long
@@ -180,4 +180,4 @@ dim shared gSymDb as clsSymbolDb
 
 ' FB intrinsics table, sorted ascending by wszNameUp (binary search).
 dim shared gFBIntrinsics( any ) as FBINTRINSIC_TIP
-declare function FindIntrinsicCalltip( byref wszName as const wstring ) as DWSTRING
+declare function FindIntrinsicCalltip( byval wszName as DWSTRING ) as DWSTRING

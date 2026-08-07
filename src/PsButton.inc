@@ -617,7 +617,7 @@ function PsButton_WndProc( _
         dim as long nLen = PsLen( pBtn->wszText )
         if nLen > (nMax - 1) then nLen = nMax - 1
         if nLen > 0 then
-            dim as ushort ptr pSrc = cast( ushort ptr, pBtn->wszText.vptr )
+            dim as ushort ptr pSrc = cast( ushort ptr, pBtn->wszText.Wz() )
             if pSrc then
                 for i as long = 0 to nLen - 1
                     pDst[i] = pSrc[i]
@@ -645,7 +645,7 @@ function PsButton_WndProc( _
                 ' wszTooltip: that field is the host's authored text, and a callback's answer
                 ' written there would silently become stored state.
                 pBtn->wszTipBuf = PsButton_ResolveTooltipText( pBtn )
-                pdi->lpszText = cast( LPWSTR, pBtn->wszTipBuf.vptr )
+                pdi->lpszText = cast( LPWSTR, pBtn->wszTipBuf.Wz() )
                 pdi->hinst    = NULL
             end if
             return 0
@@ -1783,7 +1783,7 @@ sub PsButton_RunSelfTest( byval hWndParent as HWND )
     dim as wstring * 64 wszWin
     GetWindowTextW( h, @wszWin, 64 )
     dim as wstring * 64 wszApi
-    wszApi = PsButton_GetText( h )
+    wszApi = *(PsButton_GetText( h )).Wz()
     sD = "GetWindowText=[" & str(wszWin) & "] PsButton_GetText=[" & str(wszApi) & "]"
     BTNTest_Check( "GetWindowText agrees with PsButton_GetText", (wszWin = wszApi), sD )
 
@@ -1898,7 +1898,7 @@ sub PsButton_RunSelfTest( byval hWndParent as HWND )
         BTNTest_Check( "an image reserves iconW + gap (same as a glyph)", (w - baseW) = (16 + 8), sD )
 
         ' Either/or: the glyph on that side was cleared by setting an image.
-        dim as wstring * 16 wgl = PsButton_GetGlyphLeft( h )
+        dim as wstring * 16 wgl = *PsButton_GetGlyphLeft( h ).Wz()
         BTNTest_Check( "setting an image clears the glyph on that side", (len(wgl) = 0), "glyph=[" & str(wgl) & "]" )
 
         ' Render: the image reached the left icon cell.

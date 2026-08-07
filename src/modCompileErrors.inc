@@ -157,8 +157,8 @@ function RedirConsoleToFile( _
         ' See BuildChildCommandLine above for why the switches cannot be passed alone.
         dim errCode as long
         errCode = CreateProcessW( _
-                    wszExe,  _          ' Create the child process.
-                    wszFullCmd, _       ' Command line -- argv[0] + switches
+                    wszExe.Wz(),  _     ' Create the child process.
+                    wszFullCmd.Wz(), _  ' Command line -- argv[0] + switches
                     byval 0,     _      ' Process security attributes
                     byval 0,     _      ' Primary thread security attributes
                     true,        _      ' Handles are inherited
@@ -184,9 +184,9 @@ function RedirConsoleToFile( _
         else
             ' The old message here blamed spaces in the path, which was never the cause.
             ' Report what the system actually said instead.
-            AfxMsg( "Could not start the compiler." & vbcrlf & vbcrlf & _
+            AfxMsg( *DWSTRING("Could not start the compiler." & vbcrlf & vbcrlf & _
                     wszExe & vbcrlf & vbcrlf & _
-                    Win32ErrorText( GetLastError() ) )
+                    Win32ErrorText( GetLastError() )).Wz() )
             if hChildStdOutRead  then CloseHandle( hChildStdOutRead )
             if hChildStdOutWrite then CloseHandle( hChildStdOutWrite )
             return 1
@@ -286,8 +286,8 @@ function RunEXE( _
         .fMask        = SEE_MASK_NOCLOSEPROCESS
         .hwnd         = 0
         .lpVerb       = null
-        .lpFile       = wszFileExe
-        .lpParameters = wszParam   
+        .lpFile       = wszFileExe.Wz()
+        .lpParameters = wszParam.Wz()
         .lpDirectory  = 0
         .nShow        = SW_SHOW
         .hInstApp     = 0 
@@ -317,8 +317,8 @@ function SetDocumentErrorPosition ( byval hLV as HWND ) as long
     dim pDoc as clsDocument ptr 
 
     ' Get the line number and filename of the selected item
-    wszErrorLine = PsListTree_GetCellText(hLV, nCurSel, 1)
-    wszErrorFile = PsListTree_GetCellText(hLV, nCurSel, 2)
+    wszErrorLine = *(PsListTree_GetCellText(hLV, nCurSel, 1)).Wz()
+    wszErrorFile = *(PsListTree_GetCellText(hLV, nCurSel, 2)).Wz()
     dim as long nLineNum = val(wszErrorLine) - 1   ' because visually the editor is one based line numbers
 
     ' if we are doing a QuickRun then it must be on the currently loaded
@@ -351,7 +351,7 @@ function SetLogFileTextbox( byval pCompile as COMPILE_TYPE ptr ) as long
         pCompile->wszFullCommandLine + vbcrlf + vbcrlf + _
         pCompile->wszFullLogFile 
                 
-    AfxSetWindowText( GetDlgItem( HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), wszText )
+    AfxSetWindowText( GetDlgItem( HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), *wszText.Wz() )
 
     ' Reset the type parameters so subsequent compiles will not append
     function = 0
@@ -453,7 +453,7 @@ function ParseLogForError ( _
                                             
         ' Check to see if linking failed
         if (PsLeft(wst_ucase, 6) = "ERROR!") or _
-            (left(wst_ucase, 34) = "VERY SORRY, BUT GORC HAD A PROBLEM") then
+            (PsLeft(wst_ucase, 34) = "VERY SORRY, BUT GORC HAD A PROBLEM") then
             wszText = "" & chr(9) & "0" & chr(9) & "" & chr(9) & "compiling resource FAILED: Error Code 1 (refer to log file)"
             ListBox_AddTabbedRow( hLV, wszText )
             fSwitchToLogFile = true
@@ -470,7 +470,7 @@ function ParseLogForError ( _
             NumErrors += 1
         end if
         
-        if instr(wst_ucase, "LINKING FAILED:") then 
+        if PsInStr(wst_ucase, "LINKING FAILED:") then 
             wszText = "" & chr(9) & "0" & chr(9) & "" & chr(9) & wst & " (refer to log file)"
             ListBox_AddTabbedRow( hLV, wszText )
             fSwitchToLogFile = true
@@ -517,9 +517,9 @@ function ParseLogForError ( _
 
             ' Check for any compiler warnings
             Error_Start = 0
-            IsWarning = instr(wst_ucase, ") WARNING ")
+            IsWarning = PsInStr(wst_ucase, ") WARNING ")
             if IsWarning then Error_Start = IsWarning
-            IsError   = instr(wst_ucase, ") ERROR ") 
+            IsError   = PsInStr(wst_ucase, ") ERROR ") 
             if IsError then Error_Start = IsError
             
             if (Error_Start > 0) then 
@@ -533,7 +533,7 @@ function ParseLogForError ( _
                 ' opening parenthesis.
                 ' 2018-08-29: Code updated to handle case of embedded parenthesis in file name
                 Parenthesis_end   = Error_Start
-                Parenthesis_Start = PsInStrRev(wst, "(", Parenthesis_End)
+                Parenthesis_Start = PsInStrRev(PsLeft(wst, Parenthesis_End), "(")
                 
                 if (Parenthesis_Start < Parenthesis_End) andalso _
                     (Parenthesis_end <= Error_Start) then
@@ -735,7 +735,7 @@ end function
 ' quotes group. Independent of the composer, so a shared bug cannot hide behind both.
 private sub CompileCmd_Tokenize( byval wszCmd as DWSTRING, tokens() as DWSTRING, byref nCount as long )
     nCount = 0
-    dim as string s = wszCmd
+    dim as string s = wszCmd.Utf8
     dim as long i = 1, n = len(s)
     dim as boolean bInQuote
     dim as string cur

@@ -185,7 +185,7 @@ function SpawnPreviousInstance() as boolean
 
         dim as long i = 1
         do
-            wszArg = AfxCommand(i)
+            wszArg = AfxW(AfxCommand(i))
             if PsLen(wszArg) = 0 then exit do
             
             ' Remove any double quotes from the argument.
@@ -204,7 +204,7 @@ function SpawnPreviousInstance() as boolean
         dim as COPYDATASTRUCT cds
         cds.dwData = IDM_COPYDATA_COMMANDLINE
         cds.cbData = (PsLen(wszSendString) + 1) * 2  ' unicode
-        cds.lpData = wszSendString.vptr
+        cds.lpData = wszSendString.Wz()
         SendMessage(hWindow, WM_COPYDATA, 0, cast(LPARAM, @cds))
         return true
     end if
@@ -279,7 +279,7 @@ end function
 ' - Used in Replace in Files
 ' - Used in WM_ACTIVATEAPP to reload externally modified file.
 ' ========================================================================================
-function ReloadDocument( byref wszFilename as wstring ) as long
+function ReloadDocument( byval wszFilename as DWSTRING ) as long
     dim pDoc as clsDocument ptr
     pDoc = gApp.GetDocumentPtrByFilename( wszFilename )
 
@@ -301,7 +301,7 @@ end function
 ' ========================================================================================
 function getTextWidth( _
             byval hwnd as HWND, _
-            byref wszText as wstring, _
+            byval wszText as DWSTRING, _
             byval FontIndex as long _
             ) as long
     
@@ -316,7 +316,7 @@ function getTextWidth( _
     
     SaveDC(hDC)
     if _hFont then oldFont = SelectObject(hDC, _hFont)
-    GetTextExtentpoint32( hDC, @wszText, PsLen(wszText), @size )
+    GetTextExtentpoint32( hDC, wszText.Wz(), PsLen(wszText), @size )
     SelectObject(hDC, oldFont)
     RestoreDC(hDC, -1)
     
@@ -331,17 +331,17 @@ end function
 ' return temporary file name
 ' ========================================================================================
 function GetTemporaryFilename( _
-            byref wszFolder as wstring, _
-            byref wszExtension as wstring _
+            byval wszFolder as DWSTRING, _
+            byval wszExtension as DWSTRING _
             ) as string
 
     dim wszTempFilename as wstring * MAX_PATH
-    if GetTempFileName( @wszFolder, "TMP", 0, @wszTempFilename ) then
+    if GetTempFileName( wszFolder.Wz(), "TMP", 0, @wszTempFilename ) then
         ' Delete the temp file that gets created b/c we will create it ourselves based on the 
         ' returned filename.
         PsFileDelete( wszTempFilename )
-        if len(wszExtension) then 
-            wszTempFilename = left(wszTempFilename, len(wszTempFilename) -  3) & wszExtension
+        if PsLen(wszExtension) then 
+            wszTempFilename = *(PsLeft(wszTempFilename, PsLen(wszTempFilename) -  3) & wszExtension).Wz()
         end if
     end if      
     function = wszTempFilename
@@ -473,7 +473,7 @@ end function
 ' Open a disk file and read it into a string (ANSI or UTF8)
 ' ========================================================================================
 function GetFileToString( _
-            byref wszFilename as const wstring, _
+            byval wszFilename as DWSTRING, _
             byref txtBuffer as string, _
             byval pDoc as clsDocument ptr _
             ) as boolean
@@ -483,7 +483,7 @@ function GetFileToString( _
     
     ' Load the entire file into a string
     dim dwCount as DWORD, dwFileSize as DWORD, dwHighSize as DWORD, dwBytesRead as DWORD
-    dim hFile as HANDLE = CreateFileW(@wszFileName, GENERIC_READ, FILE_SHARE_READ, null, _
+    dim hFile as HANDLE = CreateFileW(wszFileName.Wz(), GENERIC_READ, FILE_SHARE_READ, null, _
                             OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, null)
     if hFile = INVALID_HANDLE_VALUE then return true
     dwFileSize = GetFileSize(hFile, @dwHighSize)
@@ -609,7 +609,7 @@ function CompleteIncludeFilename( byval pDoc as clsDocument ptr, byval sFilename
     wszCompleteFilename = PsStrReplace(wszCompleteFilename, "/", "\")
     wszCompleteFilename = PsStrReplace(wszCompleteFilename, "\\", "\")
  
-    function = wszCompleteFilename
+    function = *(wszCompleteFilename).Wz()
 end function
 
 
@@ -764,25 +764,25 @@ function AfxIFileOpenDialogW( _
 
     select case idButton
         case IDM_PROJECTOPEN
-            ' .sptr, NOT @. LL is a DWSTRING array now, so the address of an element is a
+            ' .Wz(), NOT @. LL is a DWSTRING array now, so the address of an element is a
             ' DWSTRING ptr rather than the WSTRING ptr pszName wants -- fbc reports that as
             ' "Suspicious pointer assignment" and carries on. sptr() hands back the buffer
             ' itself, which is the same pointer @ used to yield when the entries were
             ' fixed-width wstrings, and it stays valid as long as LL is not reloaded.
-            rgFileTypes(1).pszName = L(177,"Project files").sptr
+            rgFileTypes(1).pszName = L(177,"Project files").Wz()
             rgFileTypes(1).pszSpec = @wstr("*" & APPEXTENSION)
-            rgFileTypes(2).pszName = L(76,"All files").sptr
+            rgFileTypes(2).pszName = L(76,"All files").Wz()
             rgFileTypes(2).pszSpec = @wstr("*.*")
             pofd->lpVtbl->SetFileTypes(pofd, 2, @rgFileTypes(1))
             ' Set the title of the dialog
-            hr = pofd->lpVtbl->SetTitle(pofd, L(177,"Project files"))
+            hr = pofd->lpVtbl->SetTitle(pofd, L(177,"Project files").Wz())
         
         case IDM_INSERTFILE
-            rgFileTypes(1).pszName = L(102,"Source files").sptr
-            rgFileTypes(2).pszName = L(74,"Code files").sptr
-            rgFileTypes(3).pszName = L(75,"Header files").sptr
-            rgFileTypes(4).pszName = L(170,"Resource files").sptr
-            rgFileTypes(5).pszName = L(76,"All files").sptr
+            rgFileTypes(1).pszName = L(102,"Source files").Wz()
+            rgFileTypes(2).pszName = L(74,"Code files").Wz()
+            rgFileTypes(3).pszName = L(75,"Header files").Wz()
+            rgFileTypes(4).pszName = L(170,"Resource files").Wz()
+            rgFileTypes(5).pszName = L(76,"All files").Wz()
             rgFileTypes(1).pszSpec = @wstr("*.bas;*.bi;*.inc;*.rc")
             rgFileTypes(2).pszSpec = @wstr("*.bas;*.inc")
             rgFileTypes(3).pszSpec = @wstr("*.bi")
@@ -790,20 +790,20 @@ function AfxIFileOpenDialogW( _
             rgFileTypes(5).pszSpec = @wstr("*.*")
             pofd->lpVtbl->SetFileTypes(pofd, 5, @rgFileTypes(1))
             ' Set the title of the dialog
-            hr = pofd->lpVtbl->SetTitle(pofd, L(77,"Insert File"))
+            hr = pofd->lpVtbl->SetTitle(pofd, L(77,"Insert File").Wz())
 
         case IDC_FRMOPTIONSLOCAL_CMDLOCALIZATION  '1012
-            rgFileTypes(1).pszName = L(98,"Localization files").sptr
+            rgFileTypes(1).pszName = L(98,"Localization files").Wz()
             rgFileTypes(1).pszSpec = @wstr("*.lang")
-            rgFileTypes(2).pszName = L(76,"All files").sptr
+            rgFileTypes(2).pszName = L(76,"All files").Wz()
             rgFileTypes(2).pszSpec = @wstr("*.*")
             pofd->lpVtbl->SetFileTypes(pofd, 2, @rgFileTypes(1))
             ' Set the title of the dialog
-            hr = pofd->lpVtbl->SetTitle(pofd, L(99,"Open Localization File"))
+            hr = pofd->lpVtbl->SetTitle(pofd, L(99,"Open Localization File").Wz())
     
             dim as DWSTRING wszDefaultFolder = PsExePath & wstr("settings\languages\") 
             dim pFolder as IShellItem ptr
-            SHCreateItemFromParsingName (wszDefaultFolder, null, @IID_IShellItem, @pFolder)
+            SHCreateItemFromParsingName (wszDefaultFolder.Wz(), null, @IID_IShellItem, @pFolder)
             if pFolder then
                 hr = pofd->lpVtbl->SetFolder(pofd, pFolder)
                 if SUCCEEDED(hr) then
@@ -812,15 +812,15 @@ function AfxIFileOpenDialogW( _
             end if
 
         case IDC_FRMUSERTOOLS_CMDBROWSEEXE
-            rgFileTypes(1).pszName = L(76,"All files").sptr
+            rgFileTypes(1).pszName = L(76,"All files").Wz()
             rgFileTypes(1).pszSpec = @wstr("*.*")
             pofd->lpVtbl->SetFileTypes(pofd, 1, @rgFileTypes(1))
             ' Set the title of the dialog
-            hr = pofd->lpVtbl->SetTitle(pofd, L(4,"Open File"))
+            hr = pofd->lpVtbl->SetTitle(pofd, L(4,"Open File").Wz())
     
             dim as DWSTRING wszDefaultFolder = PsExePath & wstr("settings\tools\") 
             dim pFolder as IShellItem ptr
-            SHCreateItemFromParsingName (wszDefaultFolder, null, @IID_IShellItem, @pFolder)
+            SHCreateItemFromParsingName (wszDefaultFolder.Wz(), null, @IID_IShellItem, @pFolder)
             if pFolder then
                 hr = pofd->lpVtbl->SetFolder(pofd, pFolder)
                 if SUCCEEDED(hr) then
@@ -877,11 +877,11 @@ function AfxIFileOpenDialogMultiple( _
 
     select case idButton
         case IDM_FILEOPEN
-            rgFileTypes(1).pszName = L(102,"Source files").sptr
-            rgFileTypes(2).pszName = L(74,"Code files").sptr
-            rgFileTypes(3).pszName = L(75,"Header files").sptr
-            rgFileTypes(4).pszName = L(170,"Resource files").sptr
-            rgFileTypes(5).pszName = L(76,"All files").sptr
+            rgFileTypes(1).pszName = L(102,"Source files").Wz()
+            rgFileTypes(2).pszName = L(74,"Code files").Wz()
+            rgFileTypes(3).pszName = L(75,"Header files").Wz()
+            rgFileTypes(4).pszName = L(170,"Resource files").Wz()
+            rgFileTypes(5).pszName = L(76,"All files").Wz()
             rgFileTypes(1).pszSpec = @wstr("*.bas;*.bi;*.inc;*.rc")
             rgFileTypes(2).pszSpec = @wstr("*.bas;*.inc")
             rgFileTypes(3).pszSpec = @wstr("*.bi")
@@ -891,18 +891,18 @@ function AfxIFileOpenDialogMultiple( _
     end select
 
     ' Set the title of the dialog
-    hr = pofd->lpVtbl->SetTitle(pofd, L(196,"Open file"))
+    hr = pofd->lpVtbl->SetTitle(pofd, L(196,"Open file").Wz())
 
     ' Set the default folder to display in the open dialog
     dim wszDefaultFolder as wstring * MAX_PATH
     if gApp.wszLastOpenFolder = "" then 
         if PsFileExists( gApp.ProjectFilename ) then 
-            wszDefaultFolder = PsPathDirWithSep(gApp.ProjectFilename )
+            wszDefaultFolder = *(PsPathDirWithSep(gApp.ProjectFilename )).Wz()
         else
-            wszDefaultFolder = PsCurDir
+            wszDefaultFolder = *(PsCurDir).Wz()
         end if
     else
-        wszDefaultFolder = gApp.wszLastOpenFolder
+        wszDefaultFolder = *(gApp.wszLastOpenFolder).Wz()
     end if
     
     dim pFolder as IShellItem ptr
@@ -983,32 +983,32 @@ function AfxIFileSaveDialog( _
     ' Set the file types
     select case id
         case IDM_FILERENAME
-            rgFileTypes(1).pszName = L(76,"All files").sptr
+            rgFileTypes(1).pszName = L(76,"All files").Wz()
             rgFileTypes(1).pszSpec = @wstr("*.*")
             psfd->lpVtbl->SetFileTypes(psfd, 1, @rgFileTypes(1))
             ' // Set the title of the dialog
-            hr = psfd->lpVtbl->SetTitle(psfd, L(21,"Rename"))
+            hr = psfd->lpVtbl->SetTitle(psfd, L(21,"Rename").Wz())
 
         case IDC_FRMPROJECTOPTIONS_CMDSELECT, IDM_PROJECTSAVE, IDM_PROJECTSAVEAS
-            rgFileTypes(1).pszName = L(177,"Project files").sptr
+            rgFileTypes(1).pszName = L(177,"Project files").Wz()
             rgFileTypes(1).pszSpec = @wstr("*" & APPEXTENSION)
-            rgFileTypes(2).pszName = L(76,"All files").sptr
+            rgFileTypes(2).pszName = L(76,"All files").Wz()
             rgFileTypes(2).pszSpec = @wstr("*.*")
             psfd->lpVtbl->SetFileTypes(psfd, 2, @rgFileTypes(1))
             ' // Set the title of the dialog
-            hr = psfd->lpVtbl->SetTitle(psfd, L(149,"Save Project As..."))
+            hr = psfd->lpVtbl->SetTitle(psfd, L(149,"Save Project As...").Wz())
 
         case IDC_FRMOPTIONSLOCAL_CMDNEW
-            rgFileTypes(1).pszName = L(98,"Localization files").sptr
+            rgFileTypes(1).pszName = L(98,"Localization files").Wz()
             rgFileTypes(1).pszSpec = @wstr("*.lang")
-            rgFileTypes(2).pszName = L(76,"All files").sptr
+            rgFileTypes(2).pszName = L(76,"All files").Wz()
             rgFileTypes(2).pszSpec = @wstr("*.*")
             psfd->lpVtbl->SetFileTypes(psfd, 2, @rgFileTypes(1))
-            psfd->lpVtbl->SetTitle(psfd, L(8,"Save As..."))
+            psfd->lpVtbl->SetTitle(psfd, L(8,"Save As...").Wz())
 
             dim as DWSTRING wszDefaultFolder = PsExePath & wstr("settings\languages\") 
             dim pFolder as IShellItem ptr
-            SHCreateItemFromParsingName (wszDefaultFolder, null, @IID_IShellItem, @pFolder)
+            SHCreateItemFromParsingName (wszDefaultFolder.Wz(), null, @IID_IShellItem, @pFolder)
             if pFolder then
                 hr = psfd->lpVtbl->SetFolder(psfd, pFolder)
                 if SUCCEEDED(hr) then
@@ -1017,16 +1017,16 @@ function AfxIFileSaveDialog( _
             end if
 
         case IDC_THEMES_SAVEAS
-            rgFileTypes(1).pszName = L(318,"Themes").sptr
+            rgFileTypes(1).pszName = L(318,"Themes").Wz()
             rgFileTypes(1).pszSpec = @wstr("*.theme")
-            rgFileTypes(2).pszName = L(76,"All files").sptr
+            rgFileTypes(2).pszName = L(76,"All files").Wz()
             rgFileTypes(2).pszSpec = @wstr("*.*")
             psfd->lpVtbl->SetFileTypes(psfd, 2, @rgFileTypes(1))
-            psfd->lpVtbl->SetTitle(psfd, L(8,"Save As..."))
+            psfd->lpVtbl->SetTitle(psfd, L(8,"Save As...").Wz())
 
             dim as DWSTRING wszDefaultFolder = PsExePath & wstr("settings\themes\")
             dim pFolder as IShellItem ptr
-            SHCreateItemFromParsingName (wszDefaultFolder, null, @IID_IShellItem, @pFolder)
+            SHCreateItemFromParsingName (wszDefaultFolder.Wz(), null, @IID_IShellItem, @pFolder)
             if pFolder then
                 hr = psfd->lpVtbl->SetFolder(psfd, pFolder)
                 if SUCCEEDED(hr) then
@@ -1035,18 +1035,18 @@ function AfxIFileSaveDialog( _
             end if
 
         case else
-            rgFileTypes(1).pszName = L(102,"Source files").sptr
-            rgFileTypes(2).pszName = L(74,"Code files").sptr
-            rgFileTypes(3).pszName = L(75,"Header files").sptr
-            rgFileTypes(4).pszName = L(170,"Resource files").sptr
-            rgFileTypes(5).pszName = L(76,"All files").sptr
+            rgFileTypes(1).pszName = L(102,"Source files").Wz()
+            rgFileTypes(2).pszName = L(74,"Code files").Wz()
+            rgFileTypes(3).pszName = L(75,"Header files").Wz()
+            rgFileTypes(4).pszName = L(170,"Resource files").Wz()
+            rgFileTypes(5).pszName = L(76,"All files").Wz()
             rgFileTypes(1).pszSpec = @wstr("*.bas;*.bi;*.inc;*.rc")
             rgFileTypes(2).pszSpec = @wstr("*.bas;*.inc")
             rgFileTypes(3).pszSpec = @wstr("*.bi")
             rgFileTypes(4).pszSpec = @wstr("*.rc")
             rgFileTypes(5).pszSpec = @wstr("*.*")
             psfd->lpVtbl->SetFileTypes(psfd, 5, @rgFileTypes(1))
-            psfd->lpVtbl->SetTitle(psfd, L(8,"Save As..."))
+            psfd->lpVtbl->SetTitle(psfd, L(8,"Save As...").Wz())
             if pwszDefExt then 
                 if *pwszDefExt = "inc" then
                     psfd->lpVtbl->SetFileTypeIndex(psfd, 2)
@@ -1055,7 +1055,7 @@ function AfxIFileSaveDialog( _
     end select
     
     ' // Set the file name
-    hr = psfd->lpVtbl->SetFileName(psfd, wszFileName)
+    hr = psfd->lpVtbl->SetFileName(psfd, wszFileName.Wz())
     ' // Set the extension
     hr = psfd->lpVtbl->SetDefaultExtension(psfd, pwszDefExt)
 
@@ -1063,7 +1063,7 @@ function AfxIFileSaveDialog( _
     if (id <> IDC_FRMOPTIONSLOCAL_CMDNEW) andalso (id <> IDC_THEMES_SAVEAS) then
         if len(wszFilePath ) then
             dim pFolder as IShellItem ptr
-            SHCreateItemFromParsingName (wszFilePath, null, @IID_IShellItem, @pFolder)
+            SHCreateItemFromParsingName (wszFilePath.Wz(), null, @IID_IShellItem, @pFolder)
             if pFolder then
                 hr = psfd->lpVtbl->SetFolder(psfd, pFolder)
                 if SUCCEEDED(hr) then
@@ -1107,7 +1107,10 @@ function LoadLocalizationFile( _
     function = false
     if PsFileExists( wszFileName ) = 0 then exit function
 
-    dim as BSTRING wst, wKey, wData
+''  DWSTRING, NOT AfxNova's BSTRING. The `**` double-deref that used to appear below was
+''  BSTRING's way of reaching the raw buffer so fbc's RTRIM would not mangle Cyrillic --
+''  PsStrTrimAny takes a DWSTRING and needs no such thing.
+    dim as DWSTRING wst, wKey, wData
     dim nKey  as long
     dim nData as long  
     dim i     as long
@@ -1127,10 +1130,10 @@ function LoadLocalizationFile( _
         wKey = "": wData = "": nData = 0
 
         wKey  = PsLeft(wst, i-1)
-        wData = mid(**wst, i+1)    ' MID causes problems with Chinese data so ** is used.
+        wData = PsMid(wst, i+1)
         
-        nKey  = val(wKey)
-        nData = val(wData)
+        nKey  = PsVal(wKey)
+        nData = PsVal(wData)
 
         if PsUCase(wKey) = "MAXIMUM" then
             ' resize the global dynamic array
@@ -1158,7 +1161,7 @@ function LoadLocalizationFile( _
                 if (nKey >= lbound(gLangEnglish)) andalso (nKey <= ubound(gLangEnglish)) then
                     ' Use ** to ensure that cyrillic langauge gets converted correctly. FB intrinsic
                     ' functions (RTRIM) automatically convert those incorrectly when using CBSTR or DWSTRING.
-                    gLangEnglish(nKey) = rtrim(**PsStrParse(wData, 1, ";"), any chr(9,32))
+                    gLangEnglish(nKey) = PsStrTrimAny(PsStrParse(wData, 1, ";"), chr(9,32))
                 end if
             else
                 if (nKey >= lbound(LL)) andalso (nKey <= ubound(LL)) then
@@ -1166,9 +1169,9 @@ function LoadLocalizationFile( _
                     ' a semicolon character.
                     ' Use ** to ensure that cyrillic langauge gets converted correctly. FB intrinsic
                     ' functions (RTRIM) automatically convert those incorrectly when using CBSTR or DWSTRING.
-                    LL(nKey) = rtrim(**PsStrParse(wData, 1, ";"), any chr(9,32))
+                    LL(nKey) = PsStrTrimAny(PsStrParse(wData, 1, ";"), chr(9,32))
                     ' if the local phrase is empty then fill it using the English version.
-                    if len(LL(nKey)) = 0 then 
+                    if PsLen(LL(nKey)) = 0 then 
                         if (nKey >= lbound(gLangEnglish)) andalso (nKey <= ubound(gLangEnglish)) then
                             LL(nKey) = gLangEnglish(nKey)
                         end if
@@ -1247,7 +1250,7 @@ end function
 function IsProcessRunning( byval wszExeFileName as DWSTRING ) as boolean
     wszExeFileName = PsPathName(wszExeFileName)
     if PsUCase(wszExeFileName) = "TIKO.EXE" then return false
-    dim as dword pid = findprocessid( wszExeFileName )
+    dim as dword pid = findprocessid( wszExeFileName.Wz() )
     dim as HANDLE hprocess = OpenProcess(SYNCHRONIZE, FALSE, pid)
     dim as boolean bExists = iif( hprocess = 0, false, true )
     CloseHandle( hprocess )

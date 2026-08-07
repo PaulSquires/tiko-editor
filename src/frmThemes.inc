@@ -105,7 +105,7 @@ end function
 private function frmThemes_TextW( byval hdc as HDC, byval hFont as HFONT, byval wsz as DWSTRING ) as long
     dim as HGDIOBJ hOld = SelectObject( hdc, hFont )
     dim as SIZE sz
-    GetTextExtentPoint32W( hdc, wsz, PsLen(wsz), @sz )
+    GetTextExtentPoint32W( hdc, wsz.Wz(), PsLen(wsz), @sz )
     SelectObject( hdc, hOld )
     return sz.cx
 end function
@@ -132,7 +132,7 @@ private sub frmThemes_EnsureThemeExists()
     dim hSearch as HANDLE
     dim WFD as WIN32_FIND_DATAW
 
-    hSearch = FindFirstFile( wszFolder & "*.theme", @WFD )
+    hSearch = FindFirstFile( (wszFolder & "*.theme").Wz(), @WFD )
     if hSearch <> INVALID_HANDLE_VALUE then
         do
             if (WFD.cFileName <> ".") andalso (WFD.cFileName <> "..") then nCount += 1
@@ -171,7 +171,7 @@ private function frmThemes_LoadThemes() as long
     dim WFD as WIN32_FIND_DATAW
     dim as DWSTRING wszPath = frmThemes_ThemesFolder()
 
-    hSearch = FindFirstFile( wszPath & "*.theme", @WFD )
+    hSearch = FindFirstFile( (wszPath & "*.theme").Wz(), @WFD )
     if hSearch <> INVALID_HANDLE_VALUE then
         do
             if (WFD.cFileName <> ".") andalso (WFD.cFileName <> "..") then
@@ -207,7 +207,7 @@ private sub frmThemes_MarkActiveRow()
     if ghThemesList = 0 then exit sub
     PsListTree_BeginUpdate( ghThemesList )
     for i as long = lbound(gThemeFilenames) to ubound(gThemeFilenames)
-        dim as boolean bActive = (ucase(gThemeFilenames(i)) = PsUCase(gConfig.ThemeShortFilename))
+        dim as boolean bActive = (PsUCase(gThemeFilenames(i)) = PsUCase(gConfig.ThemeShortFilename))
         dim as DWSTRING wszMark = ""
         if bActive then wszMark = L(324,"Active")
         PsListTree_SetCellText( ghThemesList, i, THEMECOL_ACTIVE, wszMark )
@@ -244,7 +244,7 @@ sub frmThemes_RefreshThemeList()
 
     dim as long sel = -1
     for i as long = lbound(gThemeFilenames) to ubound(gThemeFilenames)
-        if ucase(gThemeFilenames(i)) = ucase(gThemesWorkFile) then sel = i : exit for
+        if PsUCase(gThemeFilenames(i)) = PsUCase(gThemesWorkFile) then sel = i : exit for
     next
     if sel < 0 then sel = idxActive
     if (sel < 0) andalso (ubound(gThemeFilenames) >= 0) then sel = 0
@@ -671,7 +671,7 @@ private sub frmThemes_CloneClick( byval hButton as HWND, byval id as long )
     ' Prompt for the filename, pre-filled with a unique suggestion. The dialog defaults to the
     ' themes folder and the *.theme filter (modRoutines, keyed on IDC_THEMES_SAVEAS).
     dim wzFilename as wstring * MAX_PATH
-    wzFilename = frmThemes_MakeForkName( wszSrc )
+    wzFilename = *frmThemes_MakeForkName( wszSrc ).Wz()
     dim pwszName as wstring ptr = AfxIFileSaveDialog( HWND_FRMTHEMES, @wzFilename, @wstr("theme"), IDC_THEMES_SAVEAS )
     if pwszName = 0 then exit sub                 ' cancelled
 
@@ -1009,9 +1009,7 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
     pWindow->DPI = AfxCWindowOwnerPtr(hWndParent)->DPI
 
     ' FIXED SIZE -- no WS_THICKFRAME. The colour page's three columns have to fit one known width.
-    HWND_FRMTHEMES = pWindow->Create( hWndParent, L(318,"Themes"), @frmThemes_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT )
+    HWND_FRMTHEMES = pWindow->Create( hWndParent, *L(318,"Themes").Wz(), @frmThemes_WndProc, 0, 0, 0, 0,          WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN,          WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT )
     pWindow->SetClientSize( FRMTHEMES_CLIENT_W, FRMTHEMES_CLIENT_H )
     pWindow->Center()
 

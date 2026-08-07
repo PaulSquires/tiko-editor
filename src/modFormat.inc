@@ -1316,7 +1316,7 @@ function Format_TextAtDepth( byref sText as string, _
                         exit for
                     next
                     if nSig >= 0 then
-                        select case PsLCase(tokens(nSig).text)
+                        select case PsLCase(tokens(nSig).text).Utf8
                             case "sub", "function", "type", "property", "operator", _
                                  "constructor", "destructor", "public", "private", "static"
                                 bIsProc = true

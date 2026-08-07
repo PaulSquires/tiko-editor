@@ -590,7 +590,7 @@ function PsCheckBox_WndProc( _
         dim as long nLen = PsLen( pChk->wszText )
         if nLen > (nMax - 1) then nLen = nMax - 1
         if nLen > 0 then
-            dim as ushort ptr pSrc = cast( ushort ptr, pChk->wszText.vptr )
+            dim as ushort ptr pSrc = cast( ushort ptr, pChk->wszText.Wz() )
             if pSrc then
                 for i as long = 0 to nLen - 1
                     pDst[i] = pSrc[i]
@@ -618,7 +618,7 @@ function PsCheckBox_WndProc( _
                 ' wszTooltip: that field is the host's authored text, and a callback's answer
                 ' written there would silently become stored state.
                 pChk->wszTipBuf = PsCheckBox_ResolveTooltipText( pChk )
-                pdi->lpszText = cast( LPWSTR, pChk->wszTipBuf.vptr )
+                pdi->lpszText = cast( LPWSTR, pChk->wszTipBuf.Wz() )
                 pdi->hinst    = NULL
             end if
             return 0
@@ -1807,7 +1807,7 @@ sub PsCheckBox_RunSelfTest( byval hWndParent as HWND )
     dim as wstring * 64 wszWin
     GetWindowTextW( h, @wszWin, 64 )
     dim as wstring * 64 wszApi
-    wszApi = PsCheckBox_GetText( h )
+    wszApi = *(PsCheckBox_GetText( h )).Wz()
     sD = "GetWindowText=[" & str(wszWin) & "] PsCheckBox_GetText=[" & str(wszApi) & "]"
     CHKTest_Check( "GetWindowText agrees with PsCheckBox_GetText", (wszWin = wszApi), sD )
 

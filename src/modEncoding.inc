@@ -97,51 +97,35 @@ end function
 
 
 ' ---------------------------------------------------------------------------
-' The writer. PsFileWriteAll verifies EVERY byte landed -- a short write is a
-' full disk, and reporting success for one is how a truncated file reaches the
-' user looking saved.
+' PsFileWriteAll AND PsFileReplace WERE HERE AND ARE GONE.
+'
+' They were tiko-local implementations on CFileStream and ReplaceFileW, written
+' while PsCore's DWSTRING was still behind `namespace PsC` and its PsFile could
+' not be reached unqualified. The swap makes PsCore's the ones in scope, and two
+' definitions of the same name in one unity build is a hard error rather than a
+' silent shadow -- which is the good outcome, because the alternative was two
+' writers with the same name and different atomicity guarantees.
+'
+' PsFile.inc's versions do the same two jobs: verify every byte landed (a short
+' write is a full disk, and reporting success for one is how a truncated file
+' reaches the user looking saved), and prefer ReplaceFileW so the destination's
+' ACLs, alternate data streams, creation time and object id survive.
 ' ---------------------------------------------------------------------------
-private function PsFileWriteAll(byref wszPath as wstring, byref sBytes as string) as boolean
-    dim pStream as CFileStream
-    if pStream.Open(wszPath, STGM_CREATE or STGM_WRITE) <> S_OK then return false
-
-    ' An empty document is a legal save. CFileStream.Write rejects a null pv
-    ' with E_INVALIDARG, and STRPTR of a zero-length string may well be null,
-    ' so the zero-byte case skips the call rather than failing on it.
-    if len(sBytes) = 0 then return true
-
-    dim as ulong cbWrote = pStream.Write(strptr(sBytes), len(sBytes))
-    return (cbWrote = culng(len(sBytes)))
-end function
-
-' Atomic replace. ReplaceFileW first, because it carries the destination's
-' ACLs, alternate data streams, creation time and object id across; it refuses
-' a destination that does not exist, which is every Save As and every new file,
-' hence the MoveFileExW fallback rather than an error.
-private function PsFileReplace(byref wszFrom as wstring, byref wszTo as wstring) as boolean
-    if AfxFileExists(wszTo) then
-        if ReplaceFileW(wszTo, wszFrom, 0, REPLACEFILE_IGNORE_MERGE_ERRORS, 0, 0) <> 0 then
-            return true
-        end if
-    end if
-    return (MoveFileExW(wszFrom, wszTo, _
-                        MOVEFILE_REPLACE_EXISTING or MOVEFILE_WRITE_THROUGH) <> 0)
-end function
 
 
 ' ========================================================================================
 ' tiko's FILE_ENCODING_* to PsCore's PsEncodingId. The two lists were written years and a
 ' project apart and agree one for one, which is why this is a Select Case and not a design.
 ' ========================================================================================
-private function Doc_EncToPs( byval nEnc as long ) as PsC.PsEncodingId
+private function Doc_EncToPs( byval nEnc as long ) as PsEncodingId
     select case nEnc
-        case FILE_ENCODING_ANSI      : return PsC.PSENC_ANSI
-        case FILE_ENCODING_UTF8      : return PsC.PSENC_UTF8
-        case FILE_ENCODING_UTF8_BOM  : return PsC.PSENC_UTF8_BOM
-        case FILE_ENCODING_UTF16_BOM : return PsC.PSENC_UTF16LE_BOM
+        case FILE_ENCODING_ANSI      : return PSENC_ANSI
+        case FILE_ENCODING_UTF8      : return PSENC_UTF8
+        case FILE_ENCODING_UTF8_BOM  : return PSENC_UTF8_BOM
+        case FILE_ENCODING_UTF16_BOM : return PSENC_UTF16LE_BOM
     end select
     ' Same fallback the old code had: an unknown target writes UTF-8.
-    return PsC.PSENC_UTF8
+    return PSENC_UTF8
 end function
 
 
@@ -158,14 +142,14 @@ end function
 ' clsDocument.SaveFile / SaveTempFile and frmMainFile's duplicate-file path all share; it
 ' is also what the Tier-A self-test drives directly.
 '
-' ---- NOW ON PsEncoding, THROUGH PsC.DWSTRING --------------------------------------------
+' ---- NOW ON PsEncoding, THROUGH DWSTRING --------------------------------------------
 '
 ' The first attempt at this used AfxNova's DWSTRING as the intermediate and failed 14
 ' assertions in the encoding self-test -- "embedded NUL truncated: length 0 <> 5" among
 ' them. A document may legitimately contain a NUL, and AfxNova's conversions stop at one.
 '
 ' PsCore's DWSTRING does not: "length is authoritative, not the terminator" is rule 1 of
-' its header, written after exactly this class of bug. It is reached here as PsC.DWSTRING,
+' its header, written after exactly this class of bug. It is reached here as DWSTRING,
 ' because the unqualified name still means AfxNova's for tiko's other 1631 sites -- see
 ' the namespace note in tiko.bas.
 '
@@ -198,10 +182,10 @@ function Doc_EncodeForDisk( _
 
     ' The in-editor buffer carries no BOM -- it is Scintilla's text, not a file -- so it
     ' decodes as the plain form of whichever layout SCI_GETCODEPAGE reports.
-    dim as PsC.DWSTRING dwsText = PsC.PsEncDecode( sBuffer, _
-            iif(bSourceIsUtf8, PsC.PSENC_UTF8, PsC.PSENC_ANSI) )
+    dim as DWSTRING dwsText = PsEncDecode( sBuffer, _
+            iif(bSourceIsUtf8, PSENC_UTF8, PSENC_ANSI) )
 
-    return PsC.PsEncEncode( dwsText, Doc_EncToPs( nTargetEnc ), bLossy )
+    return PsEncEncode( dwsText, Doc_EncToPs( nTargetEnc ), bLossy )
 end function
 
 
@@ -222,7 +206,7 @@ private function Win32ErrorText( byval dwErr as DWORD ) as DWSTRING
     dim as DWSTRING wszOut = *pMsg
     LocalFree( pMsg )
     ' FormatMessage terminates its text with CRLF; a message box adds its own layout.
-    return RTrim( wszOut, any !" \r\n" )
+    return PsStrTrimAny( wszOut, !" \r\n" )
 end function
 
 
@@ -360,17 +344,17 @@ function ConvertTextBuffer( _
 
     ' Decode the current buffer to UTF-16, then re-encode to the wanted layout.
     dim as string sBuffer = Scintilla_GetTextBytes( hEdit )
-    dim as PsC.DWSTRING dwsText = PsC.PsEncDecode( sBuffer, _
-            iif(bHaveUtf8, PsC.PSENC_UTF8, PsC.PSENC_ANSI) )
+    dim as DWSTRING dwsText = PsEncDecode( sBuffer, _
+            iif(bHaveUtf8, PSENC_UTF8, PSENC_ANSI) )
 
     dim as string sNew
     dim as long nNewCodePage
     dim as boolean bLossy
     if bWantUtf8 then
-        sNew = PsC.PsEncEncode( dwsText, PsC.PSENC_UTF8, bLossy )
+        sNew = PsEncEncode( dwsText, PSENC_UTF8, bLossy )
         nNewCodePage = SC_CP_UTF8
     else
-        sNew = PsC.PsEncEncode( dwsText, PsC.PSENC_ANSI, bLossy )
+        sNew = PsEncEncode( dwsText, PSENC_ANSI, bLossy )
         if bLossy then
             ' Converting to ANSI will destroy characters outside the system ANSI codepage,
             ' and SetText empties the undo buffer, so there is no going back. Confirm first.

@@ -457,7 +457,7 @@ sub PSBUTTON.LayoutButton()
 
     if bText then
         dim as SIZE sz
-        if GetTextExtentPoint32W( hDC, this.wszText.vptr, PsLen( this.wszText ), @sz ) then
+        if GetTextExtentPoint32W( hDC, this.wszText.Wz(), PsLen( this.wszText ), @sz ) then
             this.nTextWidth = sz.cx
         end if
     end if

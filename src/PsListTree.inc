@@ -2299,7 +2299,7 @@ function PsListTree_WndProc( _
                 dim as integer modelRow = pList->VisibleToModel( pList->nLastHotIdx )
                 ' store in an instance-lifetime buffer and point lpszText at it
                 pList->wszTooltip = PsListTree_ResolveTooltipText( pList, modelRow, pList->nLastHotCol )
-                pdi->lpszText = cast( LPWSTR, pList->wszTooltip.vptr )
+                pdi->lpszText = cast( LPWSTR, pList->wszTooltip.Wz() )
                 pdi->hinst    = NULL
             end if
             return 0

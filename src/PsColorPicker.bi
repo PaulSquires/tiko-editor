@@ -888,7 +888,7 @@ function PSCOLORPICKER.MeasureTabWidth( byval idx as long ) as long
             if hFontUse = 0 then hFontUse = cast( HFONT, GetStockObject( DEFAULT_GUI_FONT ) )
             dim as HFONT hOld = cast( HFONT, SelectObject( hDC, hFontUse ) )
             dim as SIZE sz
-            GetTextExtentPoint32W( hDC, wszCaption.vptr, PsLen(wszCaption), @sz )
+            GetTextExtentPoint32W( hDC, wszCaption.Wz(), PsLen(wszCaption), @sz )
             nTextW = sz.cx
             SelectObject( hDC, hOld )
             ReleaseDC( this.hWin, hDC )

@@ -1882,7 +1882,7 @@ sub frmFindInProject_RunSelfTest()
             ' what was searched -- that is what makes editing clear it -- so a test that
             ' searches without putting the phrase in the field is not reproducing anything
             ' the user can do. Real searches always come from this field.
-            AfxSetWindowText( GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND ), wszNeedle )
+            AfxSetWindowText( GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND ), *wszNeedle.Wz() )
             FindProject_Search( wszNeedle, true, false )
             frmFind_ApplyErrorState()
             frmFindInProject_Check( "noresults: a search with NO hits reddens the field", _
@@ -1892,7 +1892,7 @@ sub frmFindInProject_RunSelfTest()
             ' reports the outcome of a search, so once the text differs from what was
             ' searched it is describing something nobody has looked for yet.
             dim as HWND hFld = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND )
-            AfxSetWindowText( hFld, gFip.wszPhrase & "x" )
+            AfxSetWindowText( hFld, *(gFip.wszPhrase & "x").Wz() )
             frmFind_ApplyErrorState()
             frmFindInProject_Check( "noresults: editing the phrase clears the red", _
                 gFindTextIsError = false )
@@ -1900,7 +1900,7 @@ sub frmFindInProject_RunSelfTest()
             ' ...and putting the failed phrase back makes it red again WITHOUT a new search,
             ' which is what proves the test is keyed on the text rather than on having just
             ' typed something.
-            AfxSetWindowText( hFld, gFip.wszPhrase )
+            AfxSetWindowText( hFld, *gFip.wszPhrase.Wz() )
             frmFind_ApplyErrorState()
             frmFindInProject_Check( "noresults: restoring the failed phrase reddens it again", _
                 gFindTextIsError = true )
@@ -2534,7 +2534,7 @@ private sub FipBar_UpdateStatus()
         if hdcM then
             dim as HGDIOBJ hOldFont = SelectObject( hdcM, ghFont(GUIFONT_10) )
             dim as SIZE sz
-            GetTextExtentPoint32( hdcM, wszCap.sptr, PsLen(wszCap), @sz )
+            GetTextExtentPoint32( hdcM, wszCap.Wz(), PsLen(wszCap), @sz )
             SelectObject( hdcM, hOldFont )
             ReleaseDC( gTTabCtl.hWindow, hdcM )
             ' text + the magnifier + what the control reserves for its own close/padding. No
@@ -2651,7 +2651,7 @@ end sub
 ' Run the search for whatever is in the find box.
 private sub FipBar_RunSearch()
     dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND )
-    dim as DWSTRING wszPhrase = AfxGetWindowText( hCtl )
+    dim as DWSTRING wszPhrase = AfxW(AfxGetWindowText( hCtl ))
     gFind.txtFind = wszPhrase
 
     if PsLen(wszPhrase) = 0 then
@@ -2705,7 +2705,7 @@ function frmFindInProject_BarAction( byval id as long ) as boolean
     if frmFindInProject_IsActive() = false then return false
 
     dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND )
-    dim as DWSTRING wszPhrase = AfxGetWindowText( hCtl )
+    dim as DWSTRING wszPhrase = AfxW(AfxGetWindowText( hCtl ))
 
     select case id
         case IDM_FINDNEXT, IDM_FINDNEXTACCEL, IDM_FINDPREV, IDM_FINDPREVACCEL
@@ -2729,8 +2729,8 @@ function frmFindInProject_BarAction( byval id as long ) as boolean
             return true
 
         case IDM_REPLACENEXT, IDM_REPLACEPREV
-            dim as DWSTRING wszRep = AfxGetWindowText( _
-                    GetDlgItem( HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE ) )
+            dim as DWSTRING wszRep = AfxW(AfxGetWindowText( _
+                    GetDlgItem( HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE ) ))
             if gFipCurrent >= 0 then
                 FindProject_ReplaceOne( gFipCurrent, wszRep )
                 ' The replaced match is dead now; move to the next live one.
@@ -2742,8 +2742,8 @@ function frmFindInProject_BarAction( byval id as long ) as boolean
             return true
 
         case IDM_REPLACEALL
-            dim as DWSTRING wszRep = AfxGetWindowText( _
-                    GetDlgItem( HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE ) )
+            dim as DWSTRING wszRep = AfxW(AfxGetWindowText( _
+                    GetDlgItem( HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE ) ))
             FindProject_ReplaceAll( wszRep )
             gFipCurrent = -1
             frmFindInProject_Refresh( false )
@@ -3065,7 +3065,7 @@ sub frmFindInProject_RunReplaceTest()
     dim pStale as clsDocument ptr = gApp.pDocList
     do until pStale = 0
         dim pNextStale as clsDocument ptr = pStale->pDocNext
-        if ucase(str(pStale->DiskFilename)) = ucase(str(wszFile)) then
+        if PsUCase(pStale->DiskFilename) = PsUCase(wszFile) then
             ' Silence the save prompt: this buffer is about to be overwritten anyway.
             if IsWindow( DocView(pStale, 0) ) then
                 SciExec( DocView(pStale, 0), SCI_SETSAVEPOINT, 0, 0 )
@@ -3079,8 +3079,8 @@ sub frmFindInProject_RunReplaceTest()
     FipRepro_Pump()
 
     dim as long f = freefile
-    if open( str(wszFile) for output as #f ) <> 0 then
-        print "  FAIL: could not create " & str(wszFile)
+    if open( *wszFile.Wz() for output as #f ) <> 0 then
+        print "  FAIL: could not create " & wszFile.Utf8
         exit sub
     end if
     print #f, "' Wbeta Wbeta Wbeta WbetaBeta Wbeta2"
@@ -3088,7 +3088,7 @@ sub frmFindInProject_RunReplaceTest()
     print #f, "print ""Wbeta"""
     close #f
 
-    dim as wstring * MAX_PATH wszOpen = wszFile
+    dim as wstring * MAX_PATH wszOpen = *wszFile.Wz()
     dim as clsDocument ptr pT = OpenSelectedDocument( wszOpen )
     if pT = 0 then
         print "  FAIL: could not open the temporary file"
@@ -3269,7 +3269,7 @@ sub frmFindInProject_RunReplaceTest()
                 ' The only proof that matters: the bytes on disk.
                 dim as long f2 = freefile
                 dim as string sDisk
-                if open( str(wszFile) for input as #f2 ) = 0 then
+                if open( *wszFile.Wz() for input as #f2 ) = 0 then
                     sDisk = space( lof(f2) )
                     if len(sDisk) then get #f2, , sDisk
                     close #f2
@@ -3363,7 +3363,7 @@ sub frmFindInProject_RunReplaceTest()
     idxDoc = gTTabCtl.GetTabIndexByDocumentPtr( pT )
     if idxDoc <> -1 then gTTabCtl.CloseTab( idxDoc )
     FipRepro_Pump()
-    kill( str(wszFile) )
+    kill( *wszFile.Wz() )
 
     print "--- TIKO_FINDPROJ_REPLACETEST: " & str(gFipTestPass) & " passed, " & _
           str(gFipTestFail) & " failed ---"

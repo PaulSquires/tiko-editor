@@ -324,7 +324,7 @@ end sub
 private sub SpacesContextMenu_OnSelect( byval hPopup as HWND, byval idMenu as long )
     if (idMenu < IDM_SPACES) orelse (idMenu > IDM_SPACES + 8) then exit sub
 
-    gConfig.TabSize = idMenu - IDM_SPACES
+    gConfig.TabSize = str(idMenu - IDM_SPACES)
     dim as DWSTRING wszText = "Spaces: " & gConfig.TabSize
     PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, SPACES_PANEL, wszText )
 
@@ -342,9 +342,9 @@ sub ShowSpacesContextMenu()
     PsPopupMenu_Clear( ghPopupSpaces )
     for i as long = 0 to 8
         dim as DWSTRING wszCaption = str(i)
-        if i = PsVal(gConfig.TabSize) then wszCaption = wszCaption & "  (Current Tab Size)"
+        if str(i) = gConfig.TabSize then wszCaption = wszCaption & "  (Current Tab Size)"
         PsPopupMenu_AddItem( ghPopupSpaces, IDM_SPACES + i, wszCaption, "", false, _
-                            (i = gConfig.TabSize) )
+                            (str(i) = gConfig.TabSize) )
     next
 
     ContextMenu_ShowAtCursor( ghPopupSpaces )
@@ -742,7 +742,7 @@ private sub OutputResultsContextMenu_OnSelect( byval hPopup as HWND, byval id as
                 wszOut = wszOut & wszRow
             next
 
-            AfxSetClipboardText( wszOut )
+            AfxSetClipboardText( *wszOut.Wz() )
     end select
 end sub
 

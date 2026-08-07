@@ -533,7 +533,7 @@ function OnCommand_ProjectClose( byval hwnd As HWND ) As LRESULT
     gConfig.SaveConfigFile()
 
     ' Show the (now untitled) workspace's notes.
-    AfxSetWindowText(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), gApp.ProjectNotes)
+    AfxSetWindowText(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), *gApp.ProjectNotes.Wz())
 
     ' Evict the closed project's scans from the symbol database BEFORE reloading
     ' the panels below - they repopulate from gSymDb, so a still-installed set

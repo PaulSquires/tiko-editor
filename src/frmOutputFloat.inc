@@ -217,7 +217,7 @@ private function frmOutputFloat_CreateWindow() as boolean
     ' documents why it omits it -- because this frame really does host tab-navigable
     ' children, and it is what lets IsDialogMessage recurse down into the panel.
     HWND_FRMOUTPUTFLOAT = pWindow->Create( _
-        HWND_FRMMAIN, wszText, @frmOutputFloat_WndProc, 0, 0, 0, 0, _
+        HWND_FRMMAIN, *wszText.Wz(), @frmOutputFloat_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_OVERLAPPEDWINDOW or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_TOOLWINDOW or WS_EX_CONTROLPARENT or WS_EX_LEFT )
     if HWND_FRMOUTPUTFLOAT = 0 then

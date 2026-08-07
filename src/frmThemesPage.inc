@@ -1092,9 +1092,9 @@ private sub frmThemes_RGBChanged( byval hTextBox as HWND )
     if gThemeCurPage = THEMEPAGE_PALETTE then
         dim as long nr = frmThemes_SelectedRole()
         if nr < 0 then exit sub
-        dim as long rr = frmThemes_ClampByte( val( PsTextBox_GetText( ghThemeR ) ) )
-        dim as long rg = frmThemes_ClampByte( val( PsTextBox_GetText( ghThemeG ) ) )
-        dim as long rb = frmThemes_ClampByte( val( PsTextBox_GetText( ghThemeB ) ) )
+        dim as long rr = frmThemes_ClampByte( PsVal( PsTextBox_GetText( ghThemeR ) ) )
+        dim as long rg = frmThemes_ClampByte( PsVal( PsTextBox_GetText( ghThemeG ) ) )
+        dim as long rb = frmThemes_ClampByte( PsVal( PsTextBox_GetText( ghThemeB ) ) )
         if frmThemes_EnsureForked() = false then exit sub
         dim as ulong nMaskR = Theme_SetRole( nr, RGB( rr, rg, rb ) )
         gThemeEdited = true
@@ -1121,9 +1121,9 @@ private sub frmThemes_RGBChanged( byval hTextBox as HWND )
     dim as HWND hR = iif( bIsBack, ghThemeR2, ghThemeR )
     dim as HWND hG = iif( bIsBack, ghThemeG2, ghThemeG )
     dim as HWND hB = iif( bIsBack, ghThemeB2, ghThemeB )
-    dim as long r = frmThemes_ClampByte( val( PsTextBox_GetText( hR ) ) )
-    dim as long g = frmThemes_ClampByte( val( PsTextBox_GetText( hG ) ) )
-    dim as long b = frmThemes_ClampByte( val( PsTextBox_GetText( hB ) ) )
+    dim as long r = frmThemes_ClampByte( PsVal( PsTextBox_GetText( hR ) ) )
+    dim as long g = frmThemes_ClampByte( PsVal( PsTextBox_GetText( hG ) ) )
+    dim as long b = frmThemes_ClampByte( PsVal( PsTextBox_GetText( hB ) ) )
     dim as COLORREF clr = RGB( r, g, b )
 
     if frmThemes_EnsureForked() = false then exit sub     ' defaults are blocked from Edit -> a no-op
