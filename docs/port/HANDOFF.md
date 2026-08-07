@@ -77,6 +77,10 @@ both split and unsplit, and Ctrl+wheel zoom.
 **Also confirmed by hand, after the fix below:** the horizontal scrollbar — thumb drag, track
 paging, Shift+wheel and caret tracking off the right edge.
 
+**And after item 4:** saving a theme to disk from the Options dialog. That path is
+`Theme_WriteFile`, which stopped using fbc's `open` — the suites prove the write/parse round
+trip but not the dialog that drives it.
+
 **Not verified:** teardown. If Shift+wheel ever looks wrong, the asymmetry is deliberate: the
 H bar's own wheel step honours
 `SPI_GETWHEELSCROLLCHARS`, while PsCore's Shift+wheel hard-codes 3 columns so both platforms
