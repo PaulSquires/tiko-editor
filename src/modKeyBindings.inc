@@ -418,12 +418,27 @@ function frmKeyboard_AccelKeyToValue( byval wszString as DWSTRING ) as long
         ' after PsUCase and then returns asc("a") = 97, not 65. Both reachable arms
         ' are ASCII, where the first UTF-8 byte and the first wide character agree.
         '
-        ' THE RANGES THEMSELVES ARE THE TRAP WRITTEN UP IN Learnings.md: `case "A" to
-        ' "Z"` is a LEXICOGRAPHIC range over the whole string, so an unrecognised
-        ' multi-character name still resolves to its own initial. Left alone here --
-        ' that is a vocabulary question, not a string-type one.
-        case "0" to "9": return asc(wszString.Utf8)
-        case "A" to "Z": return asc(wszString.Utf8)
+        ' SINGLE CHARACTERS ONLY, AND THE LENGTH TEST IS THE WHOLE POINT OF THESE ARMS.
+        '
+        ' `case "A" to "Z"` is a LEXICOGRAPHIC range over the WHOLE string -- the trap
+        ' written up in Learnings.md -- so without the test below "PAGEUP" is in range
+        ' (it sorts after "A" and before "Z") and this returned asc("P") = 80 = VK_P.
+        ' Any unrecognised name beginning A-Y, or 0-8, silently became its own initial.
+        '
+        ' THAT WAS LIVE, not just a self-test curiosity. KeyBindings_ApplyAccelerators
+        ' feeds this the last "+"-separated token straight out of keybindings.ini, so a
+        ' file carrying the historical spelling "PageUp" -- which the combobox this
+        ' vocabulary replaced really did offer -- installed a working accelerator on
+        ' plain P. Returning 0 makes the caller skip it, which is what it already does
+        ' for every other name this function does not know.
+        '
+        ' The vocabulary itself is unchanged and still not decided here: gKeyNames only
+        ' ever supplies wchr(48..57) and wchr(65..90) to these two arms, so nothing that
+        ' used to resolve correctly stops. Whether "PageUp" SHOULD be an accepted alias
+        ' for "PgUp" is the separate question, and it stays open.
+        case "0" to "9", "A" to "Z"
+            if PsLen(wszString) <> 1 then return 0
+            return asc(wszString.Utf8)
     end select
     function = 0
 end function
@@ -559,20 +574,21 @@ end function
 ' rather than a missing one -- so neither has a visible symptom:
 '
 '   (1) "None" IS A PICK-LIST ENTRY. frmAssignKey and frmKeyboardEdit prepend it, and both
-'       write it straight back into gConfig as the stored key meaning "no shortcut". Handed
-'       to AccelKeyToValue it does not fall through to zero: that function ends with
-'             case "A" to "Z": return asc(wszString)
-'       which in FreeBASIC is a LEXICOGRAPHIC RANGE over the whole string, not a test for a
-'       single letter. "NONE" sorts between "A" and "Z", so asc() takes its first character
-'       and every keyless build configuration would quietly claim plain N.
+'       write it straight back into gConfig as the stored key meaning "no shortcut".
 '
-'   (2) The same range swallows any stale or hand-edited name. A config carrying "PageUp"
-'       from an older tiko resolves to VK_P -- colliding with Ctrl+P (Search Symbol) --
-'       instead of doing nothing.
+'   (2) A stale or hand-edited name -- a config carrying "PageUp" from an older tiko --
+'       must not become an accelerator on some other key.
 '
-' So MEMBERSHIP IN gKeyNames() is the validity test here, never "the return is non-zero". A
-' name this function cannot find in the vocabulary yields 0 and no accelerator is registered,
-' which is the honest outcome for a name the pick-list does not offer.
+' BOTH OF THOSE USED TO BE HANDLED HERE ALONE, because AccelKeyToValue's `case "A" to "Z"`
+' is a LEXICOGRAPHIC RANGE over the whole string rather than a test for a single letter:
+' "NONE" and "PAGEUP" both sort between "A" and "Z", so asc() took the first character and
+' they became plain N and plain P. AccelKeyToValue now requires a single character in that
+' arm, so it returns 0 for both on its own and this function is no longer the only guard.
+'
+' IT IS STILL THE RIGHT FUNCTION TO CALL, and still not a wrapper. MEMBERSHIP IN
+' gKeyNames() is the validity test here, never "the return is non-zero" -- AccelKeyToValue
+' deliberately understands names the pick list does not offer (the bare "+", for one), and
+' a host that stores what the pick list showed must accept only what the pick list showed.
 ' ========================================================================================
 ' ========================================================================================
 ' Which live editor command owns this keystroke? See the declaration for the contract.
@@ -844,12 +860,35 @@ sub KeyBindings_RunSelfTest()
     KBASSERT( KeyBindings_PickListKeyToValue( "" ) = 0,     "pick-list """" must resolve to 0" )
     KBASSERT( KeyBindings_PickListKeyToValue( "   " ) = 0,  "pick-list all-blank must resolve to 0" )
 
-    ' A name the pick-list does NOT offer must resolve to 0 -- not to its own first letter.
-    ' frmKeyboard_AccelKeyToValue("PageUp") returns 80 (VK_P) because of the "A" to "Z"
-    ' lexicographic range described at TEST 1; going through the vocabulary is the only thing
-    ' stopping that from becoming a live accelerator on plain P. "PageUp"/"PageDn" are the
-    ' real historical spellings -- they were in the hardcoded combobox list this vocabulary
-    ' replaced, so a user's settings.ini can still be carrying them today.
+    ' ---- THE LEXICOGRAPHIC RANGE, ASSERTED WHERE IT ACTUALLY BIT --------------------
+    ' AccelKeyToValue's `case "A" to "Z"` sorts the WHOLE string, so every name below used
+    ' to come back as its own first character. That was not confined to the pick-list
+    ' hosts: KeyBindings_ApplyAccelerators hands this function the last "+"-separated token
+    ' straight out of keybindings.ini, so a file carrying the historical spelling "PageUp"
+    ' -- the combobox this vocabulary replaced really did offer it -- installed a WORKING
+    ' accelerator on plain P, colliding with Ctrl+P. Asserted against AccelKeyToValue
+    ' DIRECTLY, because routing it through the vocabulary tests the guard, not the defect.
+    KBASSERT( frmKeyboard_AccelKeyToValue( "PageUp" ) = 0, "stale PageUp must not become VK_P" )
+    KBASSERT( frmKeyboard_AccelKeyToValue( "PageDn" ) = 0, "stale PageDn must not become VK_P" )
+    KBASSERT( frmKeyboard_AccelKeyToValue( "None" )   = 0, "None must not become VK_N" )
+    KBASSERT( frmKeyboard_AccelKeyToValue( "Insert" ) = 0, "Insert must not become VK_I" )
+    ' The "0" to "9" arm has the identical trap and is easy to fix only one of.
+    KBASSERT( frmKeyboard_AccelKeyToValue( "0Bogus" ) = 0, "a digit-initial name must not become VK_0" )
+    ' ...while every SINGLE character the vocabulary really offers still resolves. That is
+    ' the half a length test could break, so it is pinned across the whole of both ranges.
+    for i as long = 65 to 90        ' A-Z
+        KBASSERT( frmKeyboard_AccelKeyToValue( wchr(i) ) = i, _
+                  "letter " & chr(i) & " no longer resolves to its own virtual key" )
+    next
+    for i as long = 48 to 57        ' 0-9
+        KBASSERT( frmKeyboard_AccelKeyToValue( wchr(i) ) = i, _
+                  "digit " & chr(i) & " no longer resolves to its own virtual key" )
+    next
+
+    ' A name the pick-list does NOT offer must resolve to 0 through the vocabulary too.
+    ' "PageUp"/"PageDn" are the real historical spellings, so a user's settings.ini can
+    ' still be carrying them today. Whether they SHOULD be accepted aliases for
+    ' "PgUp"/"PgDn" is a vocabulary question and is deliberately still open.
     KBASSERT( KeyBindings_PickListKeyToValue( "PageUp" ) = 0, "stale name ""PageUp"" must resolve to 0" )
     KBASSERT( KeyBindings_PickListKeyToValue( "PageDn" ) = 0, "stale name ""PageDn"" must resolve to 0" )
     KBASSERT( KeyBindings_PickListKeyToValue( "Insert" ) = 0, "unoffered name ""Insert"" must resolve to 0" )
