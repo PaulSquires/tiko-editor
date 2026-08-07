@@ -215,9 +215,17 @@ PsCore now declares `operator len`, so unconverted sites are right rather than q
 * **Format Options' lang ids.** 39 ids (593–669) are asserted by tests and **do not exist in
   `english.lang`**, so those labels render blank in the UI. The tests now fail loudly instead
   of reading garbage. Adding them means real translations in six files.
-* **`modKeyBindings`' `case "A" to "Z"`.** The lexicographic-range trap from `Learnings.md` is
-  still live: an unrecognised multi-character key name resolves to its own initial. A
-  vocabulary question, deliberately left alone.
+* ~~**`modKeyBindings`' `case "A" to "Z"`.**~~ **Fixed — and it was not the vocabulary
+  question this page called it.** The trap was live, not confined to the self-tests:
+  `KeyBindings_ApplyAccelerators` feeds `AccelKeyToValue` the last `+`-separated token
+  straight out of `keybindings.ini`, so a file carrying the historical spelling `"PageUp"`
+  installed a **working accelerator on plain P**, colliding with Ctrl+P. Only the pick-list
+  hosts were safe, and only because `KeyBindings_PickListKeyToValue` tests membership in
+  `gKeyNames()` rather than trusting a non-zero return. The two range arms now require a
+  single character; `gKeyNames` only ever supplied single characters to them, so nothing
+  that resolved correctly stopped. **The vocabulary question that remains is the narrow
+  one:** should `"PageUp"`/`"PageDn"` be accepted *aliases* for `"PgUp"`/`"PgDn"`? Today
+  they resolve to 0 and the binding is skipped. Still yours.
 * **Non-ASCII path case-folding.** `SymDb_FileNameEq` folded the full Unicode range via
   `lstrcmpiW` and now folds ASCII, matching PsCore and the fact that Linux paths are
   case-sensitive. Recorded in the file.
