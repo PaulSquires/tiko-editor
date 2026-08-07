@@ -54,3 +54,12 @@ un-shippable in the middle: there is nothing to bridge a half-converted shell
 to. That was decided as a forecast. Gate 6 has now landed on all three targets,
 so it can be re-decided on evidence instead, and it should be, before 45,000
 lines are committed to one shape.
+
+> **Re-decided in [`d2-decision.md`](d2-decision.md), and the answer is "not yet".**
+> Two premises on this page have since gone stale: `PsWin32Host` now exists and
+> hosts tiko's editor, so there *is* something to bridge a half-converted shell
+> with; and the 25-control port is done rather than pending. The memo lays out
+> both shapes and finds the next several weeks identical under either, so it
+> names three shared prerequisites instead of taking the decision early. The one
+> irreducible constraint it identifies is WebView2, which needs a real HWND
+> permanently.

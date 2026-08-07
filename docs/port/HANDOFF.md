@@ -16,11 +16,27 @@ in a Win32 window through PsPlatform's bridge. `DWSTRING` means PsCore's everywh
 `PsCompat.bi` is deleted. All five gates are green, including `_check_app_standalone` at
 **7 clean / 0 with errors**.
 
-**THE NEXT STEP IS A PHASE, NOT A CLEANUP: `frmMain` becoming a `PsSurface`.** That is the
-one thing that retires `PsWin32Host` and the last 30 `PsC.` prefixes, and nothing smaller
-does. Everything this page previously listed as the next step turned out to be already done,
-already impossible, or already wrong — see the two struck sections below, and read that as a
-statement about handoff pages rather than about these particular items.
+**THE NEXT STEP IS NOT `frmMain`, AND IT IS NOT A DECISION EITHER.** `frmMain` becoming a
+`PsSurface` is phase 7c — 48 forms, ~45,000 lines, 14–20 weeks — and it hangs on decision
+**D2**, which `7c-starting-position.md` says should be re-decided on evidence before that much
+code is committed to one shape. [`d2-decision.md`](d2-decision.md) is that re-decision, and its
+answer is **not yet**: the next several weeks are identical under either answer, so three
+shared prerequisites come first, none of them wasted whichever way D2 lands.
+
+1. **A timer / frame scheduler in PsPlatform.** `AddTimer` returns 0 and does nothing. tiko has
+   43 `SetTimer` sites across 27 files and 20 of its 24 controls need timers. Nothing
+   shell-shaped is worth starting before this.
+2. **A theme engine (`PsTheme`).** Does not exist; the host sets every colour field by hand.
+3. **An IDE-shell composition demo** — menubar + splitters + docked panels + statusbar in one
+   layout. No demo does this yet, and it is what a converted `frmMain` does first.
+
+Two facts that made this look otherwise were stale and are now fixed: **Gate 5 is done, not
+"not started"** (26 widgets exist), and `PsWin32Host` — which D2 assumed could not exist — is
+running tiko's editor today.
+
+Everything this page previously listed as the next step turned out to be already done, already
+impossible, or already wrong — see the two struck sections below, and read that as a statement
+about handoff pages rather than about these particular items.
 
 ---
 
