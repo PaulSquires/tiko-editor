@@ -173,8 +173,20 @@ PsCore now declares `operator len`, so unconverted sites are right rather than q
 1. **An interactive pass on the swapped editor.** First, for the reason above: the swap
    changed the string type under ~1600 sites, and the suites said everything was fine while
    the context menu and the wheel were both dead.
-2. **Delete the scaffolding the swap frees up.** `PsWin32Host` goes; `DocView`'s forwarding
-   goes. `namespace PsC` does **not** — see above.
+2. ~~**Delete the scaffolding the swap frees up.**~~ **Checked, and there is none.** An
+   earlier version of this list said `PsWin32Host` and `DocView`'s forwarding both go. Neither
+   does, and both headers now say so on themselves:
+   * **`PsWin32Host` is the editor.** Its own header said "deleted when 7c completes", which
+     assumed 7c completing meant the shell flipping to SDL3. It didn't — tiko still creates
+     its own HWNDs. Today the bridge is the editor's only paint and input path (13 calls in
+     `frmSciHost.inc`: `Attach`, `Resize`, `PaintTo`, `Detach`, and `HandleMessage` for every
+     mouse, key and wheel message). The real trigger is **frmMain becoming a `PsSurface`**.
+   * **`DocView`'s "step 2" is moot.** It existed because `clsDocument` was said to still
+     declare its views as `HWND`. It doesn't — both members are `any ptr`, and
+     `_check_app_standalone` at 7 clean is the proof. `DocView` is now permanent: the one
+     place the portable `any ptr` becomes a shell HWND, and the one null/bounds guard 142
+     sites rely on. Inlining it would delete that guard and scatter the cast.
+   * `namespace PsC` does **not** go either — see above.
 3. **Shrink `modAfxBridge.bi` to nothing.** 26 sites.
 4. **The three sites deliberately left alone during the `.Utf8` work** — the `open`/`kill`
    paths in `frmFindInProject` and `modThemeApply`, and `CompileCmd_Tokenize`, which
