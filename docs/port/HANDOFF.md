@@ -1,28 +1,29 @@
 # Handoff — the tiko → PsPlatform port
 
-Written 2026-08-06. Branch `feat/cross-platform` @ `b0de22ee`; PsPlatform `master` @ `0739fa3`.
-Both push cleanly, both build warning-free, and tiko runs.
+tiko `feat/cross-platform` @ `ebea00ca`; PsPlatform `master` @ `46b0255`. Both build
+warning-free, both push cleanly, and tiko runs.
 
 Read [Learnings.md](../../../Learnings.md) first — the run-derived traps are there, not here.
-This page is where the work stands and what to pick up.
+This page is where the work stands, what is proven, and what to pick up.
 
 ---
 
 ## The one-paragraph version
 
-Phase 7d is **done**: tiko's editor is a `PsSciView` rendered with Blend2D, hosted in a Win32
-window through PsPlatform's bridge. **The DWSTRING type swap has landed** — `DWSTRING` means
-PsCore's everywhere, `PsCompat.bi` is deleted, and with it Phase 7c's last blocker: the
-standalone gate is **7 clean / 0 with errors**. gas64 builds warning-free, tiko runs, and all
-27 suites are byte-identical to the pre-swap capture. The swap cost 501 errors and, far more
-to the point, **four defects in PsCore's string type, three of which compiled cleanly** — see
-`type-swap-scope.md`. What remains is deleting the scaffolding the swap frees up.
+**Phases 7c and 7d are done, and the DWSTRING type swap has landed.** tiko's editor is a
+`PsSciView` rendered with Blend2D, hosted in a Win32 window through PsPlatform's bridge.
+`DWSTRING` means PsCore's everywhere; `PsCompat.bi` is deleted. All five gates are green,
+including `_check_app_standalone` at **7 clean / 0 with errors** — `src/app` now compiles
+against PsCore with nothing else in scope, which was 7c's last blocker. What is left is
+deleting the scaffolding the swap frees up, and an interactive pass on the swapped editor.
+
+---
 
 ## What is verified, and how
 
-Every change below was checked against the **27-suite oracle**, compared **paired** — capture
-before, capture after, diff. Not against a stored baseline: several suites read `settings/`,
-so an old capture reports yesterday rather than the change.
+Every change is checked against the **27-suite oracle**, compared **paired** — capture before,
+capture after, diff. Never against a stored baseline: several suites read `settings/`, so an
+old capture reports yesterday rather than the change.
 
 ```bash
 powershell -File _selftest_all.ps1 -Out before.txt     # ... rebuild ...
@@ -40,20 +41,23 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | --- | --- | --- |
 | `_compile_fast.bat` | gas64 build, zero warnings | green |
 | `_check_scihost.bat` | the editor works — 26 assertions, incl. an **A/B against a stock Scintilla window in the same process** | green |
-| `_check_package.bat` | tiko runs with **only the Windows directories on PATH** | green |
-| ^ | it killed only tiko, and `-NoNewWindow` means every child it spawned inherited this console and the redirected handles — so the tree survived holding them and cmd waited for a console nobody released. `taskkill /T` plus a `WaitForExit`; it also stops as soon as the line appears, so a healthy package costs ~1s rather than a flat 20 | |
-| `_check_app_layer.bat` | `src/app` names no Win32 or AfxNova token (26 files) | green |
-| `_check_app_standalone.bat` | `src/app` **compiles** against PsCore alone | green — **7 clean, 0 with errors** |
+| `_check_package.bat` | tiko runs with **only the Windows directories on PATH** | green, ~1s |
+| `_check_app_layer.bat` | `src/app` names no Win32 or AfxNova token (30 files) | green |
+| `_check_app_standalone.bat` | `src/app` **compiles** against PsCore alone | green — 7 clean, 0 errors |
 
-The ratchet is the weak one and knows it: it greps a hand-written vocabulary. Three gaps in
-three audits. The standalone compile is the real test — read a green ratchet as evidence,
-never as proof.
+The ratchet is the weak one and knows it: it greps a hand-written vocabulary, and has had
+three gaps in three audits. The standalone compile is the real test — read a green ratchet as
+evidence, never as proof.
+
+**And read every green tick above as evidence too.** All 27 suites and all five gates were
+green throughout the period when the editor had no right-click menu and no mouse wheel. The
+suites test the model; nothing here tests the window.
 
 ---
 
 ## Where the phases stand
 
-### 7d — the editor. Done.
+### 7d — the editor. Done, and hand-checked.
 
 `tikoSciHost` (`src/frmSciHost.*`) is a window class wrapping a `PsSurface` + `PsSciView`.
 Four `CreateWindowEx(0, "Scintilla", …)` sites became `SciHost_Create`, and **no other call
@@ -64,91 +68,107 @@ if (nMsg >= SCI_START) andalso (nMsg < 5000) then
     return SciPs_Send(pSt->pView->pSci, nMsg, wParam, lParam)
 ```
 
-because `SciExec` is `SendMessage`. Confirmed by hand: rendering, typing, caret, syntax
-colouring, font size.
+because `SciExec` is `SendMessage`.
 
-**The interactive pass has now been done, and it found three defects.** Confirmed working by
-hand afterwards: selection, autocompletion, the context menu, the split view,
-Find-in-Project, the wheel in both split and unsplit, and Ctrl+wheel zoom. Teardown is still
-not asserted — the obvious assertion was vacuous and was deleted rather than reworded.
+**Confirmed by hand:** rendering, typing, caret, syntax colouring, font size, selection,
+autocompletion, the context menu, scrolling, the split view, Find-in-Project, the wheel in
+both split and unsplit, and Ctrl+wheel zoom.
 
-**Shift+wheel is the one thing still untried.** It should scroll sideways and the horizontal
-thumb should follow: `frmEditorHScroll_UpdateScrollBars` is driven from the message pump's
-`handleMouseShowScrollBar`, which polls `SCI_GETXOFFSET` on every mouse message, and a wheel
-is one. Note the deliberate asymmetry if it ever looks wrong — the H bar's own wheel step
-honours `SPI_GETWHEELSCROLLCHARS`, while PsCore's Shift+wheel hard-codes 3 columns so both
-platforms scroll identically from the same event. On a machine where that setting is not 3,
-the two paths move by different amounts.
+**Not verified:** Shift+wheel, and teardown. On Shift+wheel the horizontal thumb should
+follow — `frmEditorHScroll_UpdateScrollBars` runs from the pump's `handleMouseShowScrollBar`,
+which polls `SCI_GETXOFFSET` on every mouse message, and a wheel is one. If it ever looks
+wrong, the asymmetry is deliberate: the H bar's own wheel step honours
+`SPI_GETWHEELSCROLLCHARS`, while PsCore's Shift+wheel hard-codes 3 columns so both platforms
+move identically from the same event. Teardown has no assertion because the obvious one was
+vacuous and was deleted rather than reworded.
 
-**The mouse wheel did nothing in the editor.** `PsSciDispatch` had no `PSEV_MOUSE_WHEEL`
-case, so the Win32 host translated the message correctly, `PsSciView` forwarded it correctly,
-and the dispatcher fell straight through to `return FALSE`. Scintilla has no
-`SciPs_MouseWheel` and never has — wheel behaviour is not in ScintillaBase at all, because
-"how far is a notch" is a system setting. Every platform layer builds it on `SCI_LINESCROLL`,
-and now so does this one, with Ctrl to zoom and Shift for sideways. Fractional notches
-accumulate, or a precision touchpad floors every message to zero and looks dead.
+#### The three defects the interactive pass found
 
-**And the wheel did nothing over the editor's HORIZONTAL scrollbar** while working over the
-vertical one. `PsHScrollBar` deliberately has no `WM_MOUSEWHEEL` case — "a horizontal bar
-answers horizontal gestures only" — so it fell through to `DefWindowProc` and bubbled up to
-`frmMain`, which ignored it. `frmMain` now routes it to the editor, **guarded by cursor
-position**: it is the parent of every panel in the window, so forwarding every bubbled wheel
-would make a roll over an unrelated pane scroll the document.
+All three were invisible to every suite.
 
-**The context menu was one of these, and it WAS broken.** An interactive pass found no
-right-click menu in the editor. Nothing sends `WM_CONTEXTMENU` — `DefWindowProc` synthesises
-it from the right-button release and walks it up to the parent, and `tikoSciHost` returned 0
-for the whole button-up group, so the chain stopped at the editor and `frmMain_OnContextMenu`
-never fired. `WM_RBUTTONUP` now returns `DefWindowProc` after the bridge has had it. **This is
-exactly the class of defect the suites cannot see** — every assertion passed throughout.
+1. **No right-click menu.** Nothing *sends* `WM_CONTEXTMENU` — `DefWindowProc` synthesises it
+   from the right-button release and walks it to the parent. `tikoSciHost` returned 0 for the
+   whole button-up group, so the chain stopped at the editor. `WM_RBUTTONUP` is now its own
+   case and returns `DefWindowProc` after the bridge has had the message.
+2. **The wheel did nothing.** `PsSciDispatch` had no `PSEV_MOUSE_WHEEL` case at all: the host
+   translated it correctly, `PsSciView` forwarded it correctly, and the dispatcher fell
+   through to `return FALSE`. There is no `SciPs_MouseWheel` and there should not be —
+   Scintilla puts wheel behaviour in the platform layer because "how far is a notch" is a
+   system setting. Built on `SCI_LINESCROLL`, with Ctrl to zoom and Shift for sideways;
+   fractional notches accumulate, or a precision touchpad floors every message to zero.
+3. **The wheel did nothing over the H scrollbar** while working over the V one.
+   `PsHScrollBar` deliberately has no `WM_MOUSEWHEEL` case, so it bubbled to `frmMain`, which
+   ignored it. `frmMain` now routes it — **guarded by cursor position**, because it is the
+   parent of every panel and forwarding every bubbled wheel would scroll the document from an
+   unrelated pane.
 
 ### 7c — the app layer. Done.
 
-`clsDocument.bi` is free of Win32; the menu vocabulary, localization and two `gApp` flags moved
-into `app/`; `clsConfig`'s UI defaults split out. `clsSymbolDb.inc` was the one left, and its
-11 errors were **the type swap** — they went with it. The gate is 7 clean, 0 with errors.
+`clsDocument.bi` is free of Win32; the menu vocabulary, localization and two `gApp` flags
+moved into `app/`; `clsConfig`'s UI defaults split out. `clsSymbolDb.inc` was the last file,
+and its 11 errors were the type swap — they went with it.
 
-### The DWSTRING swap. LANDED.
-
-`docs/port/type-swap-scope.md` has the whole measurement. The arc:
+### The DWSTRING swap. Landed.
 
     1010  before any of this work
      711  after work that stood on its own and was committed
      512  after four scripted passes
-     501  after the .Utf8 class and 14 pure signatures landed ahead of it
+     501  after the .Utf8 class and 14 pure signatures landed ahead of the swap
        0  the swap itself
 
-`DWSTRING` means PsCore's everywhere. `PsCompat.bi` is deleted. `namespace PsC` SURVIVES, for
-a reason nobody had written down: it was also fencing PsCore's UI layer off from tiko's, and
-both sides have a `PsBufferPaint`.
+[`type-swap-scope.md`](type-swap-scope.md) has every pass, every count and every judgement
+call. The three things worth knowing before touching any of it:
 
-**THE SWAP'S REAL COST WAS NOT THE 501 ERRORS.** It was four defects in PsCore's DWSTRING,
-**three of which compiled cleanly**:
+**`namespace PsC` SURVIVES.** It was introduced so two types called DWSTRING could coexist,
+so the swap should have deleted it — but it was also, undocumented until it was removed,
+fencing PsCore's UI layer off from tiko's. Both sides have a `PsBufferPaint`; PsCore's paint
+backend and tiko's `PsImage` both define `PsBgrToArgb`. The **core** headers are global, which
+is what makes DWSTRING one type; only the UI is fenced. 30 `PsC.` prefixes remain, all in
+`frmSciHost.*`.
 
-* **no constructor from a native `wstring`** — fbc silently used the `zstring ptr` overload
-  and the process died of `STATUS_HEAP_CORRUPTION` far from any string
-* **`Wz()` returned NULL for an empty string**, so `*s.Wz()` dereferenced null
-* **`len(<DWSTRING>)` returned 24**, the descriptor size, at every unconverted site
-* no ordering operators, which was the one that failed to build
+**`.Wz()` has two spellings and they are not interchangeable.** It returns a `wstring ptr`.
+That binds to a Win32 `LPCWSTR` parameter and **not** to AfxNova's `byref as wstring`, which
+needs `*x.Wz()`. 253 sites.
 
-All four are fixed in PsPlatform. The lesson for the rest of the port is on the tin: a clean
-build of a swapped tree is the START of the verification, not the end of it.
+**`modAfxBridge.bi` is the way back.** AfxNova still owns the windows and returns its *own*
+DWSTRING; fbc will not chain that to PsCore's. `AfxW()` is the one named conversion, and
+`git grep -c "AfxW("` — **26 today** — is the honest measure of how much AfxNova text still
+crosses into tiko. The file is deleted, not rewritten, when that reaches zero.
+
+---
+
+## THE MOST IMPORTANT THING ON THIS PAGE
+
+**The swap cost 501 compile errors and four defects in PsCore's DWSTRING. Three of the four
+compiled cleanly.** All are fixed in PsPlatform `46b0255`; they are listed here because the
+same shape will recur wherever this type meets new code.
+
+| defect | what it looked like |
+| --- | --- |
+| **no constructor from a native `wstring`** | fbc silently used the `zstring ptr` overload. Not mojibake — **heap corruption**. tiko built clean, ran to the sixth popup menu, died with `STATUS_HEAP_CORRUPTION` in an allocation nowhere near a string, and **the crash site moved every time a print was added to find it** |
+| **`Wz()` returned NULL for an empty string** | `m_buf` is 0 until something is appended, so `*s.Wz()` — the spelling the whole boundary uses — dereferenced null for every untitled window and empty filter |
+| **`len(<DWSTRING>)` returned 24** | fbc falls back to `SizeOf` and yields the descriptor size, silently, at every unconverted site. Found through five keyboard assertions reading `len(VKToName(vk)) = 0` that were all reporting a defect that did not exist; the `len(x) > 0` sites had the mirror problem and reported nothing |
+| no ordering operators | the only one that failed to build |
+
+`PsCompat.bi` had warned about the `len` trap three phases ago and it still landed, because
+the warning was about sites being *converted* and these were sites nobody had converted.
+PsCore now declares `operator len`, so unconverted sites are right rather than quietly wrong.
+**A clean build of a swapped tree is the start of the verification, not the end of it.**
 
 ---
 
 ## What I would do next, in order
 
-1. **An interactive pass on the swapped editor**, and it is first for a reason. The swap
-   changed the string type under 1600 sites; the suites say the model is unmoved and they
-   said exactly that while the context menu and the mouse wheel were both broken.
+1. **An interactive pass on the swapped editor.** First, for the reason above: the swap
+   changed the string type under ~1600 sites, and the suites said everything was fine while
+   the context menu and the wheel were both dead.
 2. **Delete the scaffolding the swap frees up.** `PsWin32Host` goes; `DocView`'s forwarding
-   goes. `namespace PsC` does NOT — see above.
-3. **Shrink `modAfxBridge.bi` to nothing.** `git grep -c "AfxW("` is the honest count of how
-   much AfxNova text still crosses into tiko, and the file is deleted rather than rewritten
-   when it reaches zero.
-4. **The three sites left alone during the `.Utf8` work** — the `open`/`kill` paths and
-   `CompileCmd_Tokenize`, which byte-tokenises a command line. `type-swap-scope.md` says what
-   each needs. `PsText` is the trap: `str()` in the old `PsCompat.bi`, `.Utf8` in PsCore.
+   goes. `namespace PsC` does **not** — see above.
+3. **Shrink `modAfxBridge.bi` to nothing.** 26 sites.
+4. **The three sites deliberately left alone during the `.Utf8` work** — the `open`/`kill`
+   paths in `frmFindInProject` and `modThemeApply`, and `CompileCmd_Tokenize`, which
+   byte-tokenises a command line and would corrupt a non-ASCII compiler path if converted
+   naively. `type-swap-scope.md` says what each needs.
 
 ## Open decisions, not mine to take
 
@@ -164,15 +184,28 @@ build of a swapped tree is the START of the verification, not the end of it.
 
 ## Things that will bite
 
-Beyond `Learnings.md`, three specific to this tree:
+Beyond `Learnings.md`, four specific to this tree:
 
+* **`PsText` is not the same function on both sides of the swap.** The old `PsCompat.bi`'s
+  returned `str()` — the ANSI codepage. PsCore's returns `.Utf8`. Anything that reads like a
+  behaviour-preserving rename to `PsText` is an encoding change.
 * **`modDeclares.bi`'s enum ends at 1038 and `app/modMenuIds.bi` starts at 1039.** They were
   one enum, and the menu ids are persisted in `keybindings.ini` **as numbers**. Adding a
   `MSG_USER_*` message collides with `IDM_FILE_START` and silently reassigns every shortcut
   every user has set. There is no compile-time guard — fbc's preprocessor cannot evaluate an
   enum constant. Both files say so.
 * **Include order is load-bearing.** `modScintilla.bi` before PsPlatform's bind headers;
-  `vbcompat.bi` hoisted before `namespace PsC`; C and runtime externs at **global scope**,
+  PsCore's core headers **after** AfxNova's, because both declare a DWSTRING and the
+  unqualified name means whichever came last — moving that block up silently gives ~1600
+  sites the other type with no error anywhere. C and runtime externs stay at **global scope**,
   because a namespace mangles them to `PSC::…` and fails at link with a clean compile.
 * **Packaging is `PATH`-free but hand-rolled.** `_package.bat` stages five DLLs derived from
-  `objdump -p`; re-derive rather than edit by hand. `_check_package.bat` is the proof.
+  `objdump -p`; re-derive rather than edit by hand. `_check_package.bat` is the proof — and it
+  kills the process **tree**, because `-NoNewWindow` means every child inherits this console
+  and the redirected handles, and killing only tiko left cmd waiting on a console nobody had
+  released.
+
+## Loose ends in the working tree
+
+`toolchains/fbc-win-USTRING/` is untracked and is not mine — it predates this run. Nothing in
+the build references it.
