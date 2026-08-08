@@ -22,11 +22,11 @@ tiko is the successor to [WinFBE](https://github.com/PaulSquires/WinFBE).
 Most editors understand your code through regular expressions and heuristics.
 tiko doesn't.
 
-`fbcParser` is the FreeBASIC compiler's own front end — lexer, preprocessor,
-parser — built as a DLL with the code generator removed behind a null IR
-backend. When tiko resolves a symbol, the thing answering is the same parser
-that compiles the file. It sees what `fbc` sees, including declarations behind
-`#if`, because the preprocessor and the expression parser are the real ones.
+Its symbol engine is the FreeBASIC compiler's own front end — lexer,
+preprocessor, parser — built as a library with the code generator removed behind
+a null IR backend. When tiko resolves a symbol, the thing answering is the same
+parser that compiles the file. It sees what `fbc` sees, including declarations
+behind `#if`, because the preprocessor and the expression parser are the real ones.
 
 It is fast enough to do this continuously: `windows.bi` yields roughly 33,000
 symbols in about 0.4 seconds. Unsaved buffers are parsed in memory, so
@@ -42,8 +42,8 @@ read. Every FreeBASIC editor has worked around this the same way — quietly
 switching the build to a different code generator when you press F5, so the
 program you debug is not the program you built.
 
-`debugParser` reads that format directly. Debug builds stay on the backend your
-project actually uses. Beyond removing the lie, that also makes debug builds
+tiko's debug engine reads that format directly. Debug builds stay on the backend
+your project actually uses. Beyond removing the lie, that also makes debug builds
 several times faster to produce.
 
 - Breakpoints, stepping, pause, and a live call stack
@@ -109,31 +109,9 @@ resolves settings, themes, keywords, and help relative to its own directory.
 
 ## License
 
-tiko is dual-licensed, and it is worth being precise about which part is which.
-
 **The editor is free software.** Copyright © 2016-2026 Paul Squires,
 PlanetSquires Software, licensed under the **GNU General Public License version
 3 or later** ([LICENSE](LICENSE)). That covers the entire published source tree.
-
-**Two components are proprietary.** `fbcParser` and `debugParser` — the symbol
-engine and the debug engine described above — are closed source. Their source is
-not published and is not part of this repository. They ship as DLLs with their
-public headers under the
-[PlanetSquires Proprietary Component License](LICENSE-PROPRIETARY.txt), which
-grants you free, unlimited, perpetual use of them, including commercially, and
-permits redistributing them verbatim as part of tiko or a fork of tiko. It does
-not permit reverse engineering them or lifting them into unrelated products.
-
-**Linking the two is expressly permitted.** Because GPLv3 would otherwise
-prevent you from redistributing the combination, the copyright holder grants an
-additional permission under GPLv3 section 7 ([LICENSE-EXCEPTION.txt](LICENSE-EXCEPTION.txt)).
-Fork tiko, ship it, sell what you build with it.
-
-**And you can drop them.** The GPL portion of tiko is a complete, working editor
-on its own. Without the proprietary engines you lose code intelligence and the
-debugger; everything else — editing, building, projects, theming — continues to
-work. A fork that wants to carry no proprietary code at all can remove them and
-remains fully distributable under the GPL alone.
 
 Third-party components retain their own licenses: Scintilla and Lexilla
 (Neil Hodgson), AfxNova (José Roca), and the FreeBASIC compiler and runtime.
