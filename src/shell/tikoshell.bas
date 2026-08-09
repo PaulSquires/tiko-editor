@@ -1,5 +1,5 @@
 '' ========================================================================================
-'' tikoshell -- phase 7c's shell binary. COMMIT 1: it links and it starts. Nothing else yet.
+'' tikoshell -- phase 7c's shell binary. A window, tiko's menubar, and one stubbed body.
 ''
 '' ---- WHAT THIS BINARY IS FOR -----------------------------------------------------------
 ''
@@ -31,14 +31,37 @@
 '' the shell gets PsPlatform's UI at global scope and carries zero PsC. prefixes on day one.
 '' That is 7c's end state, obtained free, and it is unobtainable inside tiko.bas.
 ''
-'' ---- WHAT COMMIT 1 DELIBERATELY DOES NOT DO --------------------------------------------
+'' ---- SDL3, WHICH tiko HAS NEVER LINKED ------------------------------------------------
 ''
-'' No window, no widgets, no event loop, no app layer. Its entire job is to retire one
-'' unknown -- whether tiko's build can link SDL3 at all -- BEFORE anything is written that
-'' depends on the answer. tiko has never linked SDL3: the Win32 host bridge exists precisely
-'' so tiko keeps its own window and message loop, and tiko.exe does not call PsPlatformInit
-'' at any point. It turns out to need one extra include root and no new library flag; see
-'' _compile_shell.bat.
+'' The Win32 host bridge exists precisely so tiko keeps its own window and message loop, and
+'' tiko.exe does not call PsPlatformInit at any point. This binary needs one extra include
+'' root and no new library flag -- see _compile_shell.bat.
+''
+'' ---- WHAT IS HERE, AND WHAT IS NOT -----------------------------------------------------
+''
+'' HERE: the seven-step pump, a window sized and scaled from the display, tiko's own eight
+'' menu titles built out of app/modMenuDefinitions, a status bar, a tab bar, and ONE stub
+'' standing in for the whole document area.
+''
+'' NOT HERE: any real dock panel, the editor, accelerators, modal dialogs, or a document
+'' model. The layout is three docked bands, not frmMain's band walk -- that is commit 8.
+''
+'' ---- THREE DEFECTS COPIED FROM demos/ideshell, AND FOUND THE HARD WAY ------------------
+''
+'' ideshell is the nearest prior art and this file started as a copy of its setup. It has
+'' three bugs, all of which came across, and each was found by something different:
+''
+''   1. IT NEVER ANSWERS OnOpenRequest, so its menubar drops nothing. Found by reading
+''      PsMenuBar.bi, which says the bar asks rather than opens. Fixed from gallery2.
+''   2. IT NEVER SETS surf.hWin. Found by reading PsModalHost, which needs it to parent a
+''      dialog. Costs nothing today and would cost a parentless message box later.
+''   3. IT NEVER SCALES. Found by LOOKING AT THE WINDOW -- nothing else would have. The
+''      bands were right, because PsDocker takes the factor as an argument; the font and
+''      every widget's internal metrics were not. See ApplyScale.
+''
+'' The third is the one worth remembering: the self-test was 21 green while the UI was
+'' visibly wrong, because everything it asserted was a RELATION between rectangles and all
+'' of those relations hold perfectly at the wrong scale.
 '' ========================================================================================
 
 #include once "crt/stddef.bi"
@@ -159,6 +182,11 @@ const SH_MENUBAR_H = 30
 const SH_TABS_H    = 36
 const SH_STATUS_H  = 26
 
+'' The UI font, in DESIGN pixels. Reopened at PsScaleBy(SH_FONT_PX, scale) once the window
+'' reports its display's factor -- the text engine rasterises at a fixed pixel size and has
+'' no idea what scale means, so this is the host's job and nothing else does it.
+const SH_FONT_PX = 14
+
 dim shared as PsTextEngine  g_te
 dim shared as PsBufferPaint g_pnt
 dim shared as PsSurface ptr g_pSurf
@@ -169,6 +197,14 @@ dim shared as long g_nPass, g_nFail
 '' thing a windowless run can check is that something answered, and with what.
 dim shared as long g_nBarOpenCalls
 dim shared as any ptr g_pLastBarMenu
+
+'' The font path, shared because ApplyScale reopens the engine and both the windowed path
+'' and the self-test go through it.
+dim shared as string g_sFont
+'' The pixel size the engine is currently open at. Tracked here because the text engine has
+'' no query for it -- and reopening it unconditionally on every resize would rebuild the
+'' atlas for nothing.
+dim shared as long g_nFontPx
 
 
 '' ---------------------------------------------------------------------------------------
@@ -358,6 +394,37 @@ sub LayoutAll( byref surf as PsSurface )
     if g_body then g_body->SetBounds( rcWork )
 end sub
 
+'' ---------------------------------------------------------------------------------------
+'' APPLYING A SCALE IS THREE THINGS, AND MISSING ANY ONE READS AS "the UI is not scaled".
+''
+'' Written once and called from BOTH the windowed path and the self-test, deliberately. An
+'' assertion that drives its own copy of the steps proves the steps work; it does not prove
+'' the application performs them, which is exactly the bug this shell shipped with in its
+'' first windowed run.
+''
+''   1. the FONT reopens at the scaled pixel size -- the text engine rasterises at a fixed
+''      size and has no notion of scale, so nothing else will do this
+''   2. surf.fScale, which is what PsDocker multiplies the band constants by
+''   3. PropagateScaleChanged, because each widget caches its own factor and scales its
+''      internal metrics from that -- a tree never told keeps 1.0 and paints unscaled
+''      padding inside perfectly scaled bands
+'' ---------------------------------------------------------------------------------------
+sub ApplyScale( byref surf as PsSurface, byval f as single )
+    if f <= 0 then f = 1.0
+
+    dim as long px = PsScaleBy( SH_FONT_PX, f )
+    if px <> g_nFontPx then
+        TE_Free( g_te )
+        if TE_Init( g_te, strptr(g_sFont), px ) = 0 then
+            print "tikoshell: could not reopen the font at " & str(px) & "px"
+        end if
+        g_nFontPx = px
+    end if
+
+    surf.fScale = f
+    if surf.pRoot then surf.pRoot->PropagateScaleChanged( f )
+end sub
+
 sub Check( byref sWhat as string, byval bOk as boolean, byref sNote as string = "" )
     if bOk then
         g_nPass += 1
@@ -395,11 +462,12 @@ end function
         end 1
     end if
     PsTextEngineInstallApi()
-    dim as string sFont = FontPath()
-    if TE_Init( g_te, strptr(sFont), 14 ) = 0 then
-        print "tikoshell: the text engine would not start -- " & sFont
+    g_sFont = FontPath()
+    if TE_Init( g_te, strptr(g_sFont), SH_FONT_PX ) = 0 then
+        print "tikoshell: the text engine would not start -- " & g_sFont
         end 1
     end if
+    g_nFontPx = SH_FONT_PX
 
     '' ---- THE LANGUAGE TABLE, BEFORE THE TREE -----------------------------------------
     '' Not optional and not cosmetic. L(id,"default") is `#Define L(e,s) LL(e)` -- a raw
@@ -519,6 +587,37 @@ end function
         surf.Resize( SH_W, SH_H )
         LayoutAll( surf )
 
+        '' ---- DPI. EVERY BAND SCALES, AND SO DOES WHAT IS INSIDE IT --------------------
+        '' The first windowed run of this shell was visibly unscaled, and the reason is a
+        '' class of bug that is invisible at 1.0: the bands came from PsDocker, which takes
+        '' the factor as an argument and was right, while every widget kept its own cached
+        '' 1.0 and painted unscaled padding inside them. So both halves are asserted --
+        '' the band heights AND the tree's own idea of the scale.
+        scope
+            dim as long hMenu1 = g_menubar->bounds.h
+            ApplyScale( surf, 1.5 )
+            LayoutAll( surf )
+
+            Check "at 1.5 the menubar band scales", _
+                  (g_menubar->bounds.h = PsScaleBy(SH_MENUBAR_H, 1.5)), _
+                  str(hMenu1) & " -> " & str(g_menubar->bounds.h)
+            Check "  the status bar still owns the bottom", _
+                  (g_status->bounds.y + g_status->bounds.h = surf.h)
+            Check "  the bands still tile exactly", _
+                  (g_menubar->bounds.h + g_tabs->bounds.h + g_body->bounds.h + _
+                   g_status->bounds.h = surf.h)
+            '' THE HALF THAT WAS ACTUALLY BROKEN. A widget scales its own metrics from the
+            '' factor it was told, so a tree that is never told reports 1.0 forever while
+            '' the layout around it grows.
+            Check "  and the WIDGETS were told, not just the layout", _
+                  (g_menubar->ScaleY(100) = PsScaleBy(100, 1.5)), _
+                  str(g_menubar->ScaleY(100)) & " vs " & str(PsScaleBy(100, 1.5))
+
+            ApplyScale( surf, 1.0 )
+            LayoutAll( surf )
+            Check "  back at 1.0 the band returns", (g_menubar->bounds.h = hMenu1)
+        end scope
+
         '' NO WINDOW WAS CREATED, and the surface says so. hWin is the marker PsModalHost
         '' reads to find a dialog's parent, so a surface that acquired one by accident here
         '' would be a real defect rather than an untidy test.
@@ -533,13 +632,41 @@ end function
     end if
 
     '' ---------------------------------------------------------------------- the window
-    '' THE REQUESTED SIZE IS CLAMPED TO THE DISPLAY. SH_W/SH_H are DESIGN units and the
-    '' platform takes them as its own, so on a 1.75-scale display 1100x700 comes back as
-    '' 1925x1225 -- larger than the screen, with the bottom edge unreachable and no way to
-    '' drag it into view. Copied from ideshell, which is the only demo in that tree that
-    '' does this; the others get away with it only because their defaults are small enough.
-    dim as long nWantW = SH_W, nWantH = SH_H
+    dim as PsSurfaceDesc desc
+    desc.kind        = PSSURF_TOPLEVEL
+    desc.w           = SH_W
+    desc.h           = SH_H
+    desc.title.Utf8  = "tiko -- phase 7c shell"
+    desc.bResizable  = true
+    dim as PsSurfaceHandle win = g_plat.window.Create( @desc )
+    if win = 0 then
+        print "tikoshell: no window"
+        end 1
+    end if
+
+    '' MARRYING THE SURFACE TO THE WINDOW IS FOUR STEPS, AND THE FIRST VERSION OF THIS FILE
+    '' GOT TWO OF THEM WRONG -- both copied from ideshell, which has the same defects today.
+    ''
+    '' SH_W/SH_H are DESIGN units. PsSurfaceDesc takes PIXELS, so a 1100x700 request lands
+    '' as 1100x700 physical, which on this 1.75 display is 629x400 design units -- a window
+    '' two-thirds the size asked for, whose chrome then looks tiny inside it. What the
+    '' window wants is the design size SCALED.
+    surf.hWin = win
+
+    dim as single f = g_plat.window.ScaleOf( win )
+    if f <= 0 then f = 1.0
+
+    '' 1. FONT, fScale AND THE TREE, all three, through the one routine the self-test also
+    ''    calls -- see ApplyScale. Doing it by hand here is how the first version missed
+    ''    two of the three.
+    ApplyScale( surf, f )
+
+    '' 2. THE WINDOW IS SIZED FROM THE DESIGN SIZE TIMES THE SCALE, then clamped to the
+    ''    display. The clamp compares PIXELS with PIXELS -- ideshell clamps its DESIGN size
+    ''    against usable PIXELS, which are only the same number at 100%.
     scope
+        dim as long nWantW = PsScaleBy( SH_W, f )
+        dim as long nWantH = PsScaleBy( SH_H, f )
         dim as PsMonitorInfo mi
         if g_plat.monitors.Describe(0, @mi) then
             '' 90% of the USABLE area, not the full bounds: usable already has the taskbar
@@ -549,33 +676,16 @@ end function
             if (wMax > 320) andalso (nWantW > wMax) then nWantW = wMax
             if (hMax > 240) andalso (nWantH > hMax) then nWantH = hMax
         end if
+        g_plat.window.SetSize( win, nWantW, nWantH )
     end scope
 
-    dim as PsSurfaceDesc desc
-    desc.kind        = PSSURF_TOPLEVEL
-    desc.w           = nWantW
-    desc.h           = nWantH
-    desc.title.Utf8  = "tiko -- phase 7c shell"
-    desc.bResizable  = true
-    dim as PsSurfaceHandle win = g_plat.window.Create( @desc )
-    if win = 0 then
-        print "tikoshell: no window"
-        end 1
-    end if
-
-    '' MARRYING THE SURFACE TO THE WINDOW IS THREE MANUAL STEPS and hWin is the one ideshell
-    '' forgets. PsModalHost reads it to parent a dialog, so a shell that skips it gets
-    '' parentless message boxes much later and for no visible reason.
-    surf.hWin = win
-    scope
-        dim as single sc = g_plat.window.ScaleOf(win)
-        if sc > 0 then surf.fScale = sc
-    end scope
+    '' 3. The surface takes the size the window ACTUALLY got, not the size requested.
     scope
         dim as PsSize sz
         g_plat.window.GetSize( win, @sz )
         surf.Resize( sz.w, sz.h )
     end scope
+
     LayoutAll( surf )
     surf.InvalidateAll()
 
@@ -616,7 +726,15 @@ end function
 
                 case PSEV_RESIZE
                     if bMine then
+                        '' Dispatch updates surf.fScale and re-propagates the tree when the
+                        '' window has moved to a display with another factor -- but it
+                        '' cannot reopen the FONT, which the text engine holds at a fixed
+                        '' pixel size. So the scale is read back afterwards and the font
+                        '' follows it. Without this, dragging the window between a 100% and
+                        '' a 175% monitor rescales every rect and leaves the text behind.
+                        dim as single fWas = surf.fScale
                         surf.Dispatch( @ev )
+                        if surf.fScale <> fWas then ApplyScale( surf, surf.fScale )
                         if (surf.w <> bufW) orelse (surf.h <> bufH) then
                             bufW = surf.w : bufH = surf.h
                             if pix <> 0 then deallocate(pix)
