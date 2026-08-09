@@ -130,9 +130,13 @@ because `SciExec` is `SendMessage`.
 autocompletion, the context menu, scrolling, the split view, Find-in-Project, the wheel in
 both split and unsplit, and Ctrl+wheel zoom.
 
-**TWO THINGS THAT LIST DOES NOT CONTAIN, AND BOTH WERE BROKEN.** Read the gap as the
-warning it is: "caret" above means the caret is drawn and moves, not that it blinks, and
-copy/paste is simply absent from the list. Reported by the author, not found here.
+**TWO THINGS THAT LIST DID NOT CONTAIN, AND BOTH WERE BROKEN.** Read the gap as the warning
+it is: "caret" above means the caret is drawn and moves, not that it blinks, and copy/paste
+was simply absent from the list. Reported by the author, not found here.
+
+**Both fixed, and CONFIRMED BY HAND on 2026-08-09** — the caret blinks, and cut, copy and
+paste all work. That confirmation is the evidence; the suites were green throughout the
+period both were dead.
 
 * **Copy and paste did nothing.** `ScintillaPs.cxx` had `void Paste() override {}`, and
   `CopyToClipboard` assigned to a process-local `std::string` whose only reader was declared
