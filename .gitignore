@@ -58,3 +58,12 @@ _check_app_layer.exe
 # The app-standalone gate scratch files.
 src/_standalone.*
 src/_prelude.txt
+
+# Phase 7c's shell binary and its output directory. UNLIKE tiko.exe, which is tracked: this
+# one is a mid-conversion artifact on a branch that is un-shippable by construction and will
+# never be merged in this state, so a committed copy would only ever be stale. It also has
+# to stay OUT of the project root -- libpsscintilla.dll sits beside tiko.exe and Windows
+# loads that copy in preference to anything on PATH, so two exes in one directory would
+# share a shim that only one of them is rebuilt against. Build it with _compile_shell.bat,
+# run it with _run_shell.bat.
+/_shell/
