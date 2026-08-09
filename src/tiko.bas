@@ -150,6 +150,10 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 #include once "app/modMenuDefinitions.bi"
 #include once "app/modAppState.bi"
 #include once "modDeclares.bi"
+' The 7c layout oracle. Declaration only and up here, because frmMain.inc calls it from the
+' MSG_USER_PROCESS_COMMANDLINE handler; the body has to come in after frmMain.inc, since it
+' drives frmMain_PositionWindows.
+#include once "modLayoutDump.bi"
 ' Declarations only, and deliberately naming no Ps* type: clsConfig.inc calls
 ' NavHistory_Clear from both of its session-load paths, well ahead of the frm* block. The
 ' implementation goes in after modRoutines.inc, whose OpenSelectedDocument it drives.
@@ -422,6 +426,9 @@ dim shared gTTabCtl as clsTopTabCtl
 ' TikoMsgBox (modMsgBox.inc, immediately above) which needs PsMessageBox.
 #include once "modFormatApply.inc"
 #include once "frmMain.inc"
+' AFTER frmMain.inc, not with the rest: it calls frmMain_PositionWindows and reads the child
+' HWND globals, so it needs the whole shell in scope. Declared back at modLayoutDump.bi.
+#include once "modLayoutDump.inc"
 
 
 ' ========================================================================================

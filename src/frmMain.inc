@@ -1602,6 +1602,11 @@ function frmMain_WndProc( _
             ' that is killed rather than exited loses every line the suites printed.
             if environ("TIKO_FINDPROJ_AUTOEXIT") = "1" then end 0
 
+            ' TIKO_LAYOUT_DUMP=1: the 7c layout oracle. HERE for the same reason as the
+            ' three above -- the session has to be restored first, because two of its
+            ' states need a real document to split. It ends the process when it is done.
+            LayoutDump_Run()
+
             ' Same reasoning, and for the same reason it cannot live anywhere earlier:
             ' the workspace is not established until ProcessCommandLine returns.
             Workspace_RunSelfTest()
