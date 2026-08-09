@@ -1,0 +1,6 @@
+REFACTOR_PLAN*.md
+*.dll
+*.exe
+*.a
+*.o
+_scratch/

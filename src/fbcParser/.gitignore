@@ -1,0 +1,11 @@
+# Build artifacts
+*.o
+*.a
+*.exe
+*.dll
+*.def
+*.asm
+*.map
+# stage-1 backend output produced when scanning a test file (removed in phase 1)
+*.c
+
