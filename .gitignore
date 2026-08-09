@@ -42,12 +42,6 @@ REFACTOR_PLAN*.md
 # churn on every Python upgrade.
 __pycache__/
 
-# Point-in-time engineering audits (markdown + the PDF rendered from it). Kept on disk as
-# a record of what a review said on the day, but they are a SNAPSHOT of a tree that has
-# moved on since -- tracking them would invite them being read as current, and the status
-# pages under C:\dev\docs\status are what say where things actually stand.
-/audit/
-
 # Local staging helpers and point-in-time notes, untracked on request. The .bat files copy
 # built DLLs / the generated Help Center in from their own repos under C:\dev, so they are
 # only meaningful on a machine that has those trees; THEMES.md and CODE_REVIEW.md are
