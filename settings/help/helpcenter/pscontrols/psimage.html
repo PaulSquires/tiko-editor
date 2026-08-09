@@ -82,8 +82,12 @@ end if</code></pre>
 <pre class="code" data-lang="freebasic"><code>b.PaintImage( pImage as CGpImage ptr, rc as RECT ptr, nFit as long = PS_IMGFIT_ASPECT )</code></pre>
 <div class="table-wrap"><table><thead><tr><th><code>nFit</code></th><th>Placement</th></tr></thead><tbody><tr><td><code>PS_IMGFIT_ASPECT</code> (default)</td><td>Scale to fit inside <code>rc</code>, aspect preserved, then centre (letterbox).</td></tr><tr><td><code>PS_IMGFIT_STRETCH</code></td><td>Fill <code>rc</code> exactly, aspect ignored.</td></tr><tr><td><code>PS_IMGFIT_CENTER</code></td><td>Natural size, centred, clipped by <code>rc</code> if larger. No scaling.</td></tr></tbody></table></div>
 <p><code>PaintImage</code> lives on <code>PsBufferPaint</code> rather than on PsImage because it must draw through the buffer's own GDI+ graphics — a control building a second graphics object on the same device context would put two independently-batching GDI+ objects on one surface with nothing coordinating them.</p>
+<h3 id="licence">Licence</h3>
+<p>Mozilla Public License 2.0.</p>
+<p>MPL-2.0 is file-level copyleft, chosen deliberately for a drop-in control:</p>
+<ul><li><strong>You may use this in closed-source software</strong>, commercial or otherwise. §3.2 permits static linking with no additional conditions.</li><li><strong>If you modify these files, publish those files' changes.</strong> The obligation is per-file — your own sources are unaffected however tightly they are combined with these.</li><li>The Exhibit B "Incompatible With Secondary Licenses" notice is <strong>not applied</strong>, which keeps this GPL-compatible.</li></ul>
     <footer class="foot">
-      <p>PlanetSquires owner-drawn controls for FreeBASIC / AfxNova. Copyright © Paul Squires, distributed under the MIT License. Documentation generated from each control&#x27;s own README. <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p>PlanetSquires owner-drawn controls for FreeBASIC / AfxNova. Copyright © Paul Squires, distributed under the Mozilla Public License 2.0. Documentation generated from each control&#x27;s own README. <a href="https://www.mozilla.org/en-US/MPL/2.0/" target="_blank" rel="noopener">Mozilla Public License 2.0</a>.</p>
       <p><a href="../index.html">Home</a> ·
          <a href="../licenses.html">Licences &amp; attribution</a></p>
     </footer>
@@ -91,7 +95,7 @@ end if</code></pre>
 </div>
 <script src="../nav.js?v=70a6b70236"></script>
 <script src="../search-index.js"></script>
-<script src="../assets/app.js?v=456d079659"></script>
+<script src="../assets/app.js?v=4045468edb"></script>
 <script src="../assets/fbhl.js?v=83ee66c16e"></script>
 </body>
 </html>

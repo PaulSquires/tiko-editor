@@ -33,10 +33,6 @@
 #include once "AfxNova\CImageCtx.inc"
 #include once "AfxNova\AfxStr.inc"
 #include once "AfxNova\CWinHttpRequest.inc"
-' The Help Center pane. Note this brings in AfxWebView2.bi, which resolves the five loader
-' entrypoints out of WebView2Loader.dll at RUNTIME by plain name -- there is no import lib
-' and no link flag, so the DLL has to sit beside tiko.exe (see _copy_webview2.bat).
-#include once "AfxNova\CWebView2.inc"
 
 using AfxNova
 
@@ -188,9 +184,9 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 ' well before PsTooltip.inc. This header names no Ps* type; the implementation goes in
 ' immediately after PsTooltip.inc.
 #include once "modCodetipTip.bi"
-' Up here rather than beside its .inc because clsConfig.inc calls
-' frmHelpCenter_CaptureState() from the top of SaveConfigFile. This header names CWebView2
-' (hence its position after the AfxNova include above) but no Ps* type.
+' The Help Center: a URL builder and one ShellExecute since WebView2 was removed. It no
+' longer needs to sit up here -- clsConfig no longer calls into it -- but the position is
+' harmless and moving includes in this file has its own history.
 #include once "frmHelpCenter.bi"
 ' Same reason: clsConfig.inc calls frmOutputFloat_IsFloating / _CaptureState from the
 ' frmOutput_CaptureState guard, and that runs from the top of SaveConfigFile. This header
@@ -443,14 +439,15 @@ function WinMain( _
 
     ' ---- DLL SEARCH HARDENING, before anything can load a library --------------------
     ' By default LoadLibrary with a bare name searches the CURRENT DIRECTORY and then PATH.
-    ' tiko is exposed to both: it loads Lexilla64/Scintilla64 by plain name, AfxWebView2
-    ' resolves WebView2Loader.dll by plain name at runtime, and code_Compile chdir's the
-    ' whole process into whichever project is being built.
+    ' tiko is exposed to both: it loads Lexilla64/Scintilla64 by plain name, and
+    ' code_Compile chdir's the whole process into whichever project is being built.
+    '
+    ' (WebView2Loader.dll used to be the third of these. It is gone with the Help Center's
+    ' embedded pane -- see frmHelpCenter.bi.)
     '
     ' LOAD_LIBRARY_SEARCH_DEFAULT_DIRS drops the current directory and PATH, leaving the
     ' application directory, System32 and any explicitly added user directories -- which is
-    ' where every DLL tiko actually wants already lives (WebView2Loader.dll sits beside
-    ' tiko.exe by _copy_webview2.bat, and the application directory IS searched).
+    ' where every DLL tiko actually wants already lives.
     '
     ' Resolved through GetProcAddress rather than called directly: a direct call would put a
     ' static import to it in the exe, and an OS without the export would then fail to start

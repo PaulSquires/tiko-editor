@@ -282,8 +282,17 @@ end enum</code></pre>
 <h3 id="related-controls">Related controls</h3>
 <p><strong>PsButton</strong> — the footer buttons are PsButtons, created and owned by the box. Everything about how they look and behave is documented there: the mood precedence, the accent border that <code>PsMessageBox_SetDefaultButton</code> switches on, the focus ring, the press-and-slide-off gesture, and the <code>PSBUTTON_COLORS</code> struct that <code>PsMessageBox_SetButtonColors</code> takes. <code>PsMessageBox_AddButton</code> returns each button's <code>HWND</code>, so any PsButton function — a left glyph, a tooltip, a different colour set for a destructive choice — is reachable directly.</p>
 <p><code>PsMessageBox.bi</code> includes <code>PsButton.bi</code> for you; you only need both <code>.inc</code> files in your build.</p>
+<h3 id="running-the-demo">Running the demo</h3>
+<p>The demo loads <strong>Segoe Fluent Icons</strong> at startup via <code>AddFontResourceEx</code>, and <strong>aborts if the font is absent</strong> — the control family draws its glyphs from it.</p>
+<p>The font ships with Windows 11 but is Microsoft's, not ours, so it is not redistributed here. Copy it in once before building:</p>
+<pre class="code" data-lang="bash"><code>copy C:\Windows\Fonts\SegoeIcons.ttf SegoeFluentIcons.ttf</code></pre>
+<p>Note the rename: Windows stores the file as <code>SegoeIcons.ttf</code>, while the family name is "Segoe Fluent Icons". On Windows 10 the font is not present at all.</p>
+<h3 id="licence">Licence</h3>
+<p>Mozilla Public License 2.0.</p>
+<p>MPL-2.0 is file-level copyleft, chosen deliberately for a drop-in control:</p>
+<ul><li><strong>You may use this in closed-source software</strong>, commercial or otherwise. §3.2 permits static linking with no additional conditions.</li><li><strong>If you modify these files, publish those files' changes.</strong> The obligation is per-file — your own sources are unaffected however tightly they are combined with these.</li><li>The Exhibit B "Incompatible With Secondary Licenses" notice is <strong>not applied</strong>, which keeps this GPL-compatible.</li></ul>
     <footer class="foot">
-      <p>PlanetSquires owner-drawn controls for FreeBASIC / AfxNova. Copyright © Paul Squires, distributed under the MIT License. Documentation generated from each control&#x27;s own README. <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p>PlanetSquires owner-drawn controls for FreeBASIC / AfxNova. Copyright © Paul Squires, distributed under the Mozilla Public License 2.0. Documentation generated from each control&#x27;s own README. <a href="https://www.mozilla.org/en-US/MPL/2.0/" target="_blank" rel="noopener">Mozilla Public License 2.0</a>.</p>
       <p><a href="../index.html">Home</a> ·
          <a href="../licenses.html">Licences &amp; attribution</a></p>
     </footer>
@@ -291,7 +300,7 @@ end enum</code></pre>
 </div>
 <script src="../nav.js?v=70a6b70236"></script>
 <script src="../search-index.js"></script>
-<script src="../assets/app.js?v=456d079659"></script>
+<script src="../assets/app.js?v=4045468edb"></script>
 <script src="../assets/fbhl.js?v=83ee66c16e"></script>
 </body>
 </html>

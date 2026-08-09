@@ -262,8 +262,10 @@ function clsConfig.SaveConfigFileBody() as long
         if this.StartupBottom <> rc.Bottom then this.StartupBottom = rc.Bottom
     end if
 
-    ' The Help Center's geometry, refreshed the same way and for the same reason.
-    frmHelpCenter_CaptureState()
+    ' The Help Center HAS NO GEOMETRY TO CAPTURE any more -- it opens in the user's
+    ' browser, which owns its own window. The HelpStartup* fields below are left in place
+    ' and inert rather than deleted: removing them would change the settings file's shape
+    ' for every existing install to retire four numbers that cost nothing.
 
     ' Refresh the Output panel's four persisted fields from the live windows. This MUST
     ' happen on every save, not just the one in frmMain_OnClose: visibility and tab index

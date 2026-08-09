@@ -2143,7 +2143,9 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         ' filters below, or clicking the Help Center would leave an open tiko menu on
         ' screen. It sits FIRST for that reason -- it is a destination test, not a
         ' feature filter, so nothing else should get a look at these keystrokes.
-        if frmHelpCenter_FilterMessage( @uMsg ) then continue do
+        ' The Help Center's message filter is GONE with its window. It existed to close
+        ' tiko's open menu when a click landed on that window; the browser is another
+        ' process, so the click never reaches this pump at all.
 
         ' The whole topmenu system (bar highlight, dropdowns, submenus): keyboard
         ' navigation, and dismissal on outside clicks. Consumes every plain key while

@@ -304,8 +304,17 @@ enum
     BTN_PART_ICONRIGHT      ' rcIconRight
 end enum</code></pre>
 <div class="table-wrap"><table><thead><tr><th>Constant</th><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><code>PSBUTTON_DEFAULT_PADLEFT</code></td><td>12</td><td>Default left padding, DPI-scaled at create</td></tr><tr><td><code>PSBUTTON_DEFAULT_PADRIGHT</code></td><td>12</td><td>Default right padding, DPI-scaled at create</td></tr><tr><td><code>PSBUTTON_DEFAULT_PADTOP</code></td><td>6</td><td>Default top padding, DPI-scaled at create</td></tr><tr><td><code>PSBUTTON_DEFAULT_PADBOTTOM</code></td><td>6</td><td>Default bottom padding, DPI-scaled at create</td></tr><tr><td><code>PSBUTTON_DEFAULT_ICONGAP</code></td><td>8</td><td>Default icon-to-caption gap, DPI-scaled at create</td></tr><tr><td><code>PSBUTTON_DEFAULT_ICONWIDTH</code></td><td>16</td><td>Default icon cell width, DPI-scaled at create</td></tr><tr><td><code>PSBUTTON_DEFAULT_ICONHEIGHT</code></td><td>16</td><td>Default icon cell height, DPI-scaled at create</td></tr><tr><td><code>PSBUTTON_DEFAULT_CURVATURE</code></td><td>12</td><td>Default corner ellipse <strong>diameter</strong>, DPI-scaled at create</td></tr><tr><td><code>PSBUTTON_DEFAULT_BORDERTHICK</code></td><td>1</td><td>Default border thickness, never DPI-scaled</td></tr><tr><td><code>PSBUTTON_DEFAULT_FOCUSGAP</code></td><td>2</td><td>Default focus-ring gap, DPI-scaled at create</td></tr><tr><td><code>PSBUTTON_DEFAULT_FOCUSTHICK</code></td><td>1</td><td>Default focus-ring thickness, never DPI-scaled</td></tr><tr><td><code>IDT_CBUTTON_HOTTRACK</code></td><td><code>&amp;hCB90</code></td><td>Timer id for the hover-tracking safety net. Timer ids are per-window, so every instance shares it</td></tr><tr><td><code>PSBUTTON_HOTTRACK_MS</code></td><td>100</td><td>Hover poll interval, in milliseconds</td></tr></tbody></table></div>
+<h3 id="running-the-demo">Running the demo</h3>
+<p>The demo loads <strong>Segoe Fluent Icons</strong> at startup via <code>AddFontResourceEx</code>, and <strong>aborts if the font is absent</strong> — the control family draws its glyphs from it.</p>
+<p>The font ships with Windows 11 but is Microsoft's, not ours, so it is not redistributed here. Copy it in once before building:</p>
+<pre class="code" data-lang="bash"><code>copy C:\Windows\Fonts\SegoeIcons.ttf SegoeFluentIcons.ttf</code></pre>
+<p>Note the rename: Windows stores the file as <code>SegoeIcons.ttf</code>, while the family name is "Segoe Fluent Icons". On Windows 10 the font is not present at all.</p>
+<h3 id="licence">Licence</h3>
+<p>Mozilla Public License 2.0.</p>
+<p>MPL-2.0 is file-level copyleft, chosen deliberately for a drop-in control:</p>
+<ul><li><strong>You may use this in closed-source software</strong>, commercial or otherwise. §3.2 permits static linking with no additional conditions.</li><li><strong>If you modify these files, publish those files' changes.</strong> The obligation is per-file — your own sources are unaffected however tightly they are combined with these.</li><li>The Exhibit B "Incompatible With Secondary Licenses" notice is <strong>not applied</strong>, which keeps this GPL-compatible.</li></ul>
     <footer class="foot">
-      <p>PlanetSquires owner-drawn controls for FreeBASIC / AfxNova. Copyright © Paul Squires, distributed under the MIT License. Documentation generated from each control&#x27;s own README. <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p>PlanetSquires owner-drawn controls for FreeBASIC / AfxNova. Copyright © Paul Squires, distributed under the Mozilla Public License 2.0. Documentation generated from each control&#x27;s own README. <a href="https://www.mozilla.org/en-US/MPL/2.0/" target="_blank" rel="noopener">Mozilla Public License 2.0</a>.</p>
       <p><a href="../index.html">Home</a> ·
          <a href="../licenses.html">Licences &amp; attribution</a></p>
     </footer>
@@ -313,7 +322,7 @@ end enum</code></pre>
 </div>
 <script src="../nav.js?v=70a6b70236"></script>
 <script src="../search-index.js"></script>
-<script src="../assets/app.js?v=456d079659"></script>
+<script src="../assets/app.js?v=4045468edb"></script>
 <script src="../assets/fbhl.js?v=83ee66c16e"></script>
 </body>
 </html>

@@ -229,8 +229,12 @@ end sub</code></pre>
 <h3 id="constants">Constants</h3>
 <div class="table-wrap"><table><thead><tr><th>Constant</th><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><code>CVSCROLL_MIN_THUMB</code></td><td>20</td><td>Minimum thumb height in pixels. Used by the control, DPI-scaled at the point of use</td></tr><tr><td><code>CVSCROLL_DEFAULT_WIDTH</code></td><td>12</td><td>Suggested track width in pixels. <strong>The control never reads this</strong> — scale it yourself and pass it to <code>SetWindowPos</code></td></tr><tr><td><code>CVSCROLL_HOTTRACK_MS</code></td><td>100</td><td>Hover poll interval in ms, the safety net for unreliable <code>WM_MOUSELEAVE</code></td></tr><tr><td><code>CVSCROLL_REPEAT_DELAY</code></td><td>400</td><td>Delay in ms before a held track click starts auto-repeating</td></tr><tr><td><code>CVSCROLL_REPEAT_MS</code></td><td>80</td><td>Auto-repeat interval in ms while the button is held on the track</td></tr></tbody></table></div>
 <p>Two timer ids are also defined, <code>IDT_CVSCROLL_HOTTRACK</code> (<code>&amp;hCB10</code>) and <code>IDT_CVSCROLL_REPEAT</code> (<code>&amp;hCB11</code>). Timer ids are per-window, so every instance can safely share these values — but avoid reusing them for your own timers on the bar's own window.</p>
+<h3 id="licence">Licence</h3>
+<p>Mozilla Public License 2.0.</p>
+<p>MPL-2.0 is file-level copyleft, chosen deliberately for a drop-in control:</p>
+<ul><li><strong>You may use this in closed-source software</strong>, commercial or otherwise. §3.2 permits static linking with no additional conditions.</li><li><strong>If you modify these files, publish those files' changes.</strong> The obligation is per-file — your own sources are unaffected however tightly they are combined with these.</li><li>The Exhibit B "Incompatible With Secondary Licenses" notice is <strong>not applied</strong>, which keeps this GPL-compatible.</li></ul>
     <footer class="foot">
-      <p>PlanetSquires owner-drawn controls for FreeBASIC / AfxNova. Copyright © Paul Squires, distributed under the MIT License. Documentation generated from each control&#x27;s own README. <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p>PlanetSquires owner-drawn controls for FreeBASIC / AfxNova. Copyright © Paul Squires, distributed under the Mozilla Public License 2.0. Documentation generated from each control&#x27;s own README. <a href="https://www.mozilla.org/en-US/MPL/2.0/" target="_blank" rel="noopener">Mozilla Public License 2.0</a>.</p>
       <p><a href="../index.html">Home</a> ·
          <a href="../licenses.html">Licences &amp; attribution</a></p>
     </footer>
@@ -238,7 +242,7 @@ end sub</code></pre>
 </div>
 <script src="../nav.js?v=70a6b70236"></script>
 <script src="../search-index.js"></script>
-<script src="../assets/app.js?v=456d079659"></script>
+<script src="../assets/app.js?v=4045468edb"></script>
 <script src="../assets/fbhl.js?v=83ee66c16e"></script>
 </body>
 </html>

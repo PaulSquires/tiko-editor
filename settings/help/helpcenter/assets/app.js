@@ -237,6 +237,26 @@
     if (input.value.trim()) render(input.value.trim().toLowerCase());
   });
 
+  // ?q=CreateWindowEx pre-fills the box and runs the search. This is how F1 arrives from
+  // tiko: it opens the user's own browser at index.html?q=<symbol>, and a browser cannot be
+  // scripted from outside, so the URL has to carry the query.
+  //
+  // The hash form (#q=…) is accepted for the same reason ?theme= accepts one — some hosts
+  // drop the query string from a file:// URL — and a fragment always survives navigation.
+  //
+  // The caret goes to the END, not the start: the box is pre-filled, and a user who wants to
+  // narrow the search types the next word rather than overwriting the one they asked for.
+  var seeded = new URLSearchParams(location.search).get("q") ||
+               new URLSearchParams(location.hash.replace(/^#/, "")).get("q");
+  if (seeded) {
+    input.value = seeded;
+    render(seeded.trim().toLowerCase());
+    try {
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    } catch (e) {}
+  }
+
   panel.addEventListener("click", function (ev) {
     var chip = ev.target.closest ? ev.target.closest(".chip") : null;
     if (!chip) return;

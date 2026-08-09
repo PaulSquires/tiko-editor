@@ -6,8 +6,7 @@ rem
 rem Phase 7d made the editor a PsSciView, so tiko.exe now loads the vendored
 rem Scintilla fork and the Blend2D/FreeType/HarfBuzz stack behind it. Those five
 rem files must sit next to the exe, exactly as Scintilla64.dll and Lexilla64.dll
-rem already do -- they are shipped binaries and are committed, per the same rule
-rem the .gitignore states for WebView2Loader.dll.
+rem already do -- they are shipped binaries and are committed.
 rem
 rem ---- THE FIVE, AND WHY IT IS EXACTLY FIVE --------------------------------
 rem
