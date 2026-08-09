@@ -1,7 +1,22 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ `d8b9c0ff`; PsPlatform **`main`** @ `16298a6`. Both build
-warning-free, both are pushed, and tiko runs.
+tiko `feat/cross-platform` @ `fb9f18d60`; PsPlatform **`main`** @ `903d6a2`. Both build
+warning-free and tiko runs.
+
+**BOTH ARE ONE COMMIT AHEAD OF THEIR REMOTE AND NEITHER IS PUSHED.** That is deliberate —
+they were left for review — but it means a fresh clone does not have the WebView2 removal or
+the `PsThemeLoadFile` split, and the two go together: PsPlatform's split is what lets tiko's
+`_check_scihost` build at all.
+
+**`C:\dev\HelpCenter` IS NOT A GIT REPO**, so the `?q=` change in its `app.js` exists on that
+machine and nowhere else. The BUILT site is captured — it is committed inside tiko as the
+bundled copy under `settings/help/helpcenter` — but the generator source is not. If that
+machine is lost, the site can be rebuilt from `helpgen` and the one edit re-made from
+`webview2-decision.md`, which names the file and the parameter.
+
+**The live docs at planetsquires.com/docs still serve the OLD `app.js`.** Publishing was not
+run. `?q=` therefore works from tiko (which reads the bundled copy) and does nothing on the
+public site until someone publishes.
 
 **PsPlatform's default branch was renamed `master` → `main` on 2026-08-09.** Anything of yours
 that names the old one — a script, a checkout, a `git show master:…` — is now silently pointing
@@ -24,13 +39,23 @@ Read in this order, and do not skip the first:
    prerequisites; **all three are now done, so it is due.** Read its two closing sections
    first — what the prerequisites taught, and why the answer is still not written down.
 4. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
-   irreducible, investigated. **It is not a blocker and never was.** Short, and it is the
+   irreducible, investigated. **It was not a blocker and never had been.** Short, and it is the
    clearest example on this whole shelf of a claim that survived because nobody checked it.
+   **Its recommendation has since been implemented**: WebView2 is gone from the tree.
 
-**The one habit worth copying from this run:** every defect found this session came from
-running the program or reading the callers, and none from the gates. When a note here says
-something is done, blocked, or not yours to decide, check it before believing it — that claim
-was true when written and this page's own record is that it stops being true quickly.
+**The one habit worth copying from this run:** every defect found came from running the program
+or reading the callers, and none from the gates. When a note here says something is done,
+blocked, or not yours to decide, check it before believing it — that claim was true when written
+and this page's own record is that it stops being true quickly.
+
+**The sharpest instance, because it cuts the other way:** `PsTheme` landed in PsPlatform with a
+clean build and 43 green suites, and was pushed three times — while carrying a defect that made
+tiko's `_check_scihost` fail to LINK. `PsTheme.inc` is reached from `PsWidget.inc`, so pulling
+`PsFile.inc` into it dragged `vbcompat.bi` inside tiko's `namespace PsC`, where `now()` mangles
+to `PSC::fb_Now`. Clean compile, link failure, invisible in the repo that caused it.
+**That probe is the only coverage PsPlatform has of being CONSUMED rather than built**, and it
+is worth more than its 26 assertions suggest. Run tiko's gates after touching PsPlatform's
+include graph, not just PsPlatform's own suites.
 
 ---
 
@@ -54,13 +79,16 @@ is phase 7c — 48 forms, ~45,000 lines, 14–20 weeks — and it hangs on decis
 identical under either answer. **ALL THREE ARE NOW DONE** (PsPlatform `41e2b6a`), so the reason
 for deferring is gone.
 
-**AND WEBVIEW2 — the thing that page called "the one constraint that cannot be engineered away"
-— turned out not to be a constraint at all.** See
-[`webview2-decision.md`](webview2-decision.md). `frmHelpCenter` is a separate top-level window,
-not a pane; SDL3 hands over the native HWND anyway; and the content is local static HTML this
-project generates, so the portable answer is the user's own browser. **One question is left, and
-it is a judgement rather than a discovery:** a second `IWindowBackend` maintained forever,
-against a 45,000-line jump that is un-shippable in the middle.
+**AND WEBVIEW2 IS GONE FROM THE TREE** — not merely ruled out. `frmHelpCenter` was 970 lines
+hosting an embedded Edge pane; it is now a URL builder and one `ShellExecute`, and with it went
+`CWebView2.inc`, `WebView2Loader.dll`, the `settings/webview2` profile and `_copy_webview2.bat`.
+F1 keeps its search through `index.html?q=<symbol>`, which `helpgen`'s `app.js` now honours —
+a change in OUR generator that DELETES a coupling rather than porting one. See
+[`webview2-decision.md`](webview2-decision.md) for why it was never a blocker.
+
+**So D2 has exactly one question left, and it is a judgement rather than a discovery:** a second
+`IWindowBackend` maintained forever, against a 45,000-line jump that is un-shippable in the
+middle. Every fact it needs is on `d2-decision.md` or the pages it links.
 
 1. ~~**A timer / frame scheduler in PsPlatform.**~~ **DONE** — `src/ui/core/PsTimer.*`, 113
    assertions. **Not** in the backend: `AddTimer`/`KillTimer_` were deleted from
@@ -378,7 +406,15 @@ the code*, and the code moves. Re-check the claim before honouring it.
 
 ## Things that will bite
 
-Beyond `Learnings.md`, six specific to this tree:
+Beyond `Learnings.md`, seven specific to this tree:
+
+* **A PsPlatform CHANGE CAN BREAK tiko WITH BOTH TREES GREEN.** tiko wraps the toolkit in
+  `namespace PsC`, and PsPlatform has nothing that does — so any header reaching PsPlatform's
+  widget layer that declares C or fbc-runtime externs compiles cleanly there and fails at LINK
+  here, mangled to `PSC::…`. `PsTheme` did exactly this by including `PsFile.inc` (which pulls
+  `vbcompat.bi`), and it survived three pushes. **After touching PsPlatform's include graph, run
+  `_check_scihost.bat` — it is the only thing in either tree that compiles the widget layer
+  inside a namespace.**
 
 * **NEVER hand fbc's `open` or `kill` a path.** They take an fbc `string`, and on Windows that
   goes through the **ANSI codepage** — so a `DWSTRING` spelled `*p.Wz()` or `.Utf8` at the call
