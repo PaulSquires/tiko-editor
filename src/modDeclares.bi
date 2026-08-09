@@ -237,7 +237,11 @@ dim shared gFontNames( any ) as DWSTRING
 const MENUITEM_HEIGHT = 24
 const EXPLORERITEM_HEIGHT = 22
 const MENUBAR_HEIGHT = 30
-const OUTPUT_TABS_HEIGHT = 40
+' OUTPUT_TABS_HEIGHT MOVED DOWN to app/modAppConstants.bi, which this file now includes.
+' Not because it stopped being a layout constant -- everything that puts it on screen is
+' still up here -- but because clsConfig's constructor defaults ShowOutputPanelHeight to
+' five of them, and that constructor has to link without the shell. See app/clsConfig.inc.
+#include once "app/modAppConstants.bi"
 ' Floor for the Output panel's USER-SET height (gConfig.ShowOutputPanelHeight), in unscaled
 ' units. Deliberately ABOVE OUTPUT_TABS_HEIGHT: a stored height equal to the tabs row is
 ' indistinguishable from the minimized size, so restoring from it would leave the panel

@@ -42,36 +42,19 @@
 #include once "frmUserTools.bi"
 
 ''
-''  CONSTRUCTOR
+''  THE CONSTRUCTOR IS NOT HERE. It is in app/clsConfig.inc, and that is deliberate.
 ''
-constructor clsConfig
-    dim as DWSTRING exe_path = PsExePath
-    ConfigFilename            = exe_path & "settings\settings.ini"
-    FBKeywordsFilename        = exe_path & "settings\keywords\freebasic_keywords.txt"
-    WinApiKeywordsFilename    = exe_path & "settings\keywords\winapi_keywords.txt"
-    ExtraKeywordsFilename     = exe_path & "settings\keywords\extra_keywords.txt"
-    FBKeywordsDefaultFilename = exe_path & "settings\keywords\freebasic_keywords_default.txt"
-    FBCodetipsFilename        = exe_path & "settings\keywords\codetips.ini"
-    UntitledProjectFilename   = exe_path & "settings\default" & APPEXTENSION
-
-    ' ---- UI LAYOUT DEFAULTS, WHICH LIVE HERE AND NOT IN THE HEADER ------------
-    ' These four were field initialisers in app/clsConfig.bi and named
-    ' OUTPUT_TABS_HEIGHT and FRMDEBUG_DEFPCT*, which are shell constants -- so the
-    ' header could not compile without the shell, and src/app exists precisely to
-    ' be compilable without it.
-    '
-    ' The split is between the FIELD and its DEFAULT. A stored panel height and a
-    ' stored splitter percentage are portable user preferences. How tall the
-    ' output tabs are, and where a debugger splitter should start, are statements
-    ' about the UI. Only the second kind moved.
-    '
-    ' The constructor was already the place every path default is set, so this
-    ' follows the line that was already drawn rather than inventing one.
-    ShowOutputPanelHeight     = OUTPUT_TABS_HEIGHT * 5
-    DebugSplitMain            = FRMDEBUG_DEFPCTMAIN
-    DebugSplitLeft            = FRMDEBUG_DEFPCTLEFT
-    DebugSplitRight           = FRMDEBUG_DEFPCTRIGHT
-end constructor
+''  app/clsConfig.bi carries `dim shared gConfig as clsConfig`, so including the header
+''  INSTANTIATES the object -- which means every consumer of the app layer has to be able to
+''  LINK a constructor. With it in this file, that meant needing the shell: AfxGuid,
+''  HWND_FRMMAIN and the forty-odd frm* headers above.
+''
+''  Nothing else moved. The ~90 methods below read and write real files, rebuild accelerator
+''  tables and talk to frmMain, and none of them is reached by merely declaring the object.
+''
+''  Found by phase 7c's shell binary, the first thing ever to link the app layer, which
+''  failed on exactly one symbol: CLSCONFIG::CLSCONFIG(). See app/clsConfig.inc.
+''
 
 ''
 ''

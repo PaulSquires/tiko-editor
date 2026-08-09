@@ -42,8 +42,55 @@
 '' ========================================================================================
 
 #include once "crt/stddef.bi"
+
+'' ---- PsCore's core layer ---------------------------------------------------------------
+'' The same five tiko.bas takes, and here they need no ordering note: tiko has to put them
+'' AFTER AfxNova's headers because both declare a DWSTRING and the unqualified name means
+'' whichever came last. There is no AfxNova in this TU, so PsCore's is the only DWSTRING
+'' there has ever been and nothing can shadow it.
+#include once "core/DWString.inc"
+#include once "core/PsStr.inc"
+#include once "core/PsPath.inc"
+#include once "core/PsFile.inc"
+#include once "core/PsEncoding.inc"
+
+'' ---- PsPlatform, AT GLOBAL SCOPE -------------------------------------------------------
+'' No `namespace PsC`. See the header above for why this TU can do that and tiko.bas cannot.
 #include once "platform/PlatformInit.inc"
 #include once "ui/core/PsDispatch.inc"
+
+'' ---- tiko's application layer ----------------------------------------------------------
+'' Every app\*.bi that tiko.bas includes, IN tiko.bas's OWN ORDER. That order is
+'' load-bearing and alphabetical is wrong -- modFormat.bi must precede clsConfig.bi, and
+'' clsSymbolDb.bi needs FBCP_KIND_* out of fbcParser.bi. _check_app_standalone.bat does not
+'' hardcode the list either; it greps it back out of tiko.bas for exactly this reason, so
+'' tiko.bas stays the single place that has to get it right.
+''
+'' THIS IS THE FIRST TIME THE LAYER HAS BEEN COMPILED AS ONE TRANSLATION UNIT. The gate
+'' compiles each app\*.inc SEPARATELY, against PsCore alone -- so what it proves is that no
+'' file needs AfxNova, not that the sixteen headers agree with each other, and not that any
+'' of them survives PsPlatform's UI being in scope as well. Both of those are new here.
+#include once "app/fbcParser.bi"
+#include once "app/debugParser.bi"
+#include once "app/modLocalization.bi"
+#include once "app/modPaths.bi"
+#include once "app/modMenuIds.bi"
+#include once "app/modMenuDefinitions.bi"
+#include once "app/modAppState.bi"
+#include once "app/modNavHistory.bi"
+#include once "app/modFormat.bi"
+#include once "app/clsConfig.bi"
+'' The constructor. app/clsConfig.bi carries `dim shared gConfig`, so including the header
+'' instantiates the object and this TU has to link a constructor for it. It used to live in
+'' src/clsConfig.inc -- the shell -- which is what made the app layer unlinkable on its own,
+'' and is the one defect this commit found. See app/clsConfig.inc for the whole story.
+#include once "app/clsConfig.inc"
+#include once "app/modProjectFolders.bi"
+#include once "app/clsSymbolDb.bi"
+#include once "app/modUnusedSymbols.bi"
+#include once "app/modIniParse.bi"
+#include once "app/modEncodingSelfTest.bi"
+#include once "app/modSaveSelfTest.bi"
 
 
     '' Binds g_plat and starts SDL. FALSE here means the backend could not initialise --

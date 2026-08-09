@@ -104,7 +104,12 @@ end namespace
 #define APPNAMESHORT        wstr("Tiko")
 #define APPCLASSNAME        wstr("tiko_editor_class")
 #define APPVERSION          wstr("1.3.2") 
-#define APPEXTENSION        wstr(".tiko") 
+' APPEXTENSION moved to app/modAppConstants.bi -- clsConfig's constructor builds
+' UntitledProjectFilename out of it, and that constructor has to link without the shell.
+' Included HERE, where the #define used to sit, so the effective order is unchanged for
+' everything downstream. modDeclares.bi and frmDebug.bi include it too; #pragma once makes
+' those no-ops and each names it so neither reads as a stray dependency.
+#include once "app/modAppConstants.bi"
 #define APPBITS             wstr(" (64-bit)")
 #define RUNBATCHFILE        wstr("_tiko_runbatch.bat")
 #define QUICKRUNBAS         wstr("_tiko_quickrun.bas")
@@ -175,6 +180,10 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 ' offline Format Project path all drive the exact same code the editor does.
 #include once "app/modFormat.bi"
 #include once "app/clsConfig.bi"
+'' The CONSTRUCTOR, and only the constructor. Immediately after its header because the header
+'' carries `dim shared gConfig`, so including it instantiates the object and something has to
+'' link the constructor. The other ~90 methods stay in the shell's clsConfig.inc at line 225.
+#include once "app/clsConfig.inc"
 #include once "app/modProjectFolders.bi"
 #include once "clsApp.bi"
 #include once "app/clsSymbolDb.bi"

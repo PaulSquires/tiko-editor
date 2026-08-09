@@ -73,7 +73,80 @@ for %%F in (app\*.inc app\*.bas) do (
         for /f %%C in ('%SystemRoot%\system32\find.exe /c "error" ^< _standalone.log') do echo   FAIL  %%~nxF  (%%C errors^)
     )
 )
+rem ---------------------------------------------------------------------------
+rem PART TWO: THE WHOLE LAYER, LINKED.
+rem
+rem Everything above compiles each file SEPARATELY with -c. That answers "does
+rem this file need AfxNova" and nothing else -- and two things it cannot see are
+rem exactly the two that went wrong:
+rem
+rem   1. WHETHER THE SIXTEEN HEADERS AGREE WITH EACH OTHER. Compiled one at a
+rem      time, each gets the prelude fresh; nothing ever puts all of them in one
+rem      translation unit.
+rem   2. WHETHER ANYTHING IS MISSING A BODY. -c never links, so an undefined
+rem      symbol is invisible to it BY CONSTRUCTION.
+rem
+rem The second one was live for months. app/clsConfig.bi declares
+rem `dim shared gConfig as clsConfig`, so including the header instantiates the
+rem object -- but the constructor sat in src\clsConfig.inc, in the SHELL. The
+rem layer could not link on its own, and this gate reported 7 clean / 0 errors
+rem throughout. It was found by phase 7c's shell binary, the first thing that
+rem ever linked the layer, and the fix moved the constructor to app\clsConfig.inc.
+rem
+rem So this half links a real executable out of the prelude plus every app\*.inc,
+rem against PsCore alone. It is cheap -- one fbc invocation -- and it is the only
+rem check in either tree that tests the layer as a LAYER rather than as files.
+rem ---------------------------------------------------------------------------
+rem THE SAME ORDER AS THE PER-FILE HALF ABOVE: PsCore FIRST, then the layer's own
+rem declarations, then the bodies. Getting it backwards is not a subtle failure --
+rem the app headers declare DWSTRING parameters, so with the prelude ahead of
+rem core\ there are two DWSTRINGs in scope and every signature mismatches its own
+rem definition. It reads as dozens of unrelated type errors deep in app\ code.
+echo.
+> _standalone_link.bas echo #include once "core/PsStr.inc"
+>>_standalone_link.bas echo #include once "core/PsPath.inc"
+>>_standalone_link.bas echo #include once "core/PsFile.inc"
+>>_standalone_link.bas echo #include once "core/PsEncoding.inc"
+type _prelude.txt >>_standalone_link.bas
+for %%F in (app\*.inc) do >>_standalone_link.bas echo #include once "%%F"
+>>_standalone_link.bas echo end 0
+
+rem A RATCHET, NOT A PASS/FAIL. Three bodies are still outside the layer and are
+rem named below; the check fails when a FOURTH appears, not while those three
+rem remain. A gate that is red on the day it lands gets switched off, and a debt
+rem that is counted is a debt someone can finish.
+rem
+rem   ProcessFromCurdriveApp          modPaths.inc:103 -- already pure PsCore,
+rem                                   moves down as soon as someone does it
+rem   FilenameOriginalCase            modPaths.inc:55  -- real Win32
+rem                                   (CreateFileW / GetFinalPathNameByHandleW).
+rem                                   Needs a PsCore canonical-path call first
+rem   KeyBindings_PickListKeyToValue  modKeyBindings.inc:622 -- declared in a
+rem                                   SHELL header. An app\*.inc calls a shell
+rem                                   function directly, which the vocabulary
+rem                                   ratchet cannot see because it names no Afx
+rem                                   or Win32 token
+rem
+rem WHEN THE COUNT REACHES 0, delete the baseline and make this a plain failure.
+set /a LINKBASELINE=3
+set /a LINKBAD=0
+%FBC% -i ..\..\PsPlatform\src -maxerr 999 -x _standalone_link.exe _standalone_link.bas > _standalone_link.log 2>&1
+if !errorlevel! neq 0 (
+    rem Distinct symbol names, not error lines -- one symbol is referenced from
+    rem several call sites and ld reports each of them.
+    for /f %%C in ('%SystemRoot%\system32\findstr.exe /c:"undefined reference" _standalone_link.log ^| %SystemRoot%\system32\find.exe /c "undefined"') do set /a LINKREFS=%%C
+    for /f %%C in ('powershell -NoProfile -Command "(Select-String -Path _standalone_link.log -Pattern 'undefined reference to .(.+).$' | ForEach-Object { $_.Matches[0].Groups[1].Value } | Sort-Object -Unique).Count"') do set /a LINKSYMS=%%C
+    if !LINKSYMS! gtr !LINKBASELINE! (
+        set /a LINKBAD=1
+        echo   FAIL    the app layer has !LINKSYMS! bodies outside it, baseline is !LINKBASELINE!:
+        powershell -NoProfile -Command "Select-String -Path _standalone_link.log -Pattern 'undefined reference to .(.+).$' | ForEach-Object { '            ' + $_.Matches[0].Groups[1].Value } | Sort-Object -Unique"
+    ) else (
+        echo   debt    !LINKSYMS! app-layer bodies still live in the shell ^(baseline !LINKBASELINE!, !LINKREFS! call sites^)
+    )
+)
+
 del /q _standalone.bas _standalone.log _standalone.o _prelude.txt 2>nul
+del /q _standalone_link.bas _standalone_link.log _standalone_link.exe 2>nul
 popd
 
 echo.
@@ -82,6 +155,14 @@ if %BAD% neq 0 (
     echo.
     echo   src\app must build against PsCore with nothing else in scope. Until it
     echo   does, the shell binary cannot include it -- that binary has no AfxNova.
+    exit /b 1
+)
+if !LINKBAD! neq 0 (
+    echo.
+    echo   A NEW app-layer body now lives outside the app layer. It compiles
+    echo   cleanly file by file -- -c never links -- and breaks the moment
+    echo   anything builds a binary out of the layer. Either move the body into
+    echo   app\, or raise the baseline in this file and say why.
     exit /b 1
 )
 echo   ok      src\app builds against PsCore alone

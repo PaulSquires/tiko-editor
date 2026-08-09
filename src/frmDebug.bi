@@ -135,9 +135,12 @@ const as long FRMDEBUG_MINPANEV    = 70
 ' column gives locals the larger share; the call stack is usually a handful of frames while
 ' the watch list grows, so the right column splits low.
 const as long FRMDEBUG_PCTSCALE      = 10000
-const as long FRMDEBUG_DEFPCTMAIN    = 6000    ' vertical bar, 60% across
-const as long FRMDEBUG_DEFPCTLEFT    = 3200    ' globals over locals
-const as long FRMDEBUG_DEFPCTRIGHT   = 8300    ' call stack over watch
+' THE THREE DEFAULTS MOVED DOWN to app/modAppConstants.bi. PCTSCALE stays here: it is the
+' unit the debugger's own arithmetic works in, and nothing below the shell uses it. The three
+' DEFAULTS went because clsConfig's constructor seeds DebugSplit* from them, and that
+' constructor has to link without the shell. See app/clsConfig.inc. The reasoning for the
+' asymmetric values is above and did not move with them.
+#include once "app/modAppConstants.bi"
 
 ' ------------------------------------------------------------------------------------------
 ' COLLAPSE, NOT MINIMIZE.  Same rule, and the same reason, as frmUnusedSymbols.
