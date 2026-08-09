@@ -56,12 +56,18 @@
 ''   2. IT NEVER SETS surf.hWin. Found by reading PsModalHost, which needs it to parent a
 ''      dialog. Costs nothing today and would cost a parentless message box later.
 ''   3. IT NEVER SCALES. Found by LOOKING AT THE WINDOW -- nothing else would have. The
-''      bands were right, because PsDocker takes the factor as an argument; the font and
-''      every widget's internal metrics were not. See ApplyScale.
+''      bands were right, because PsDocker takes the factor as an argument; the WINDOW SIZE
+''      and the FONT were not, and the tree was never invalidated. See ApplyScale.
 ''
 '' The third is the one worth remembering: the self-test was 21 green while the UI was
 '' visibly wrong, because everything it asserted was a RELATION between rectangles and all
 '' of those relations hold perfectly at the wrong scale.
+''
+'' AND THE FIRST FIX FOR IT SHIPPED A VACUOUS ASSERTION, which is the same lesson twice.
+'' It checked g_menubar->ScaleY(100) against PsScaleBy(100, 1.5) and called that "the
+'' assertion that would have caught it". It would not have -- ScaleY reads the surface's
+'' scale live and passes regardless of what the tree was told. See the note in the
+'' self-test's scale section for what is and is not covered now.
 '' ========================================================================================
 
 #include once "crt/stddef.bi"
@@ -606,12 +612,24 @@ end function
             Check "  the bands still tile exactly", _
                   (g_menubar->bounds.h + g_tabs->bounds.h + g_body->bounds.h + _
                    g_status->bounds.h = surf.h)
-            '' THE HALF THAT WAS ACTUALLY BROKEN. A widget scales its own metrics from the
-            '' factor it was told, so a tree that is never told reports 1.0 forever while
-            '' the layout around it grows.
-            Check "  and the WIDGETS were told, not just the layout", _
-                  (g_menubar->ScaleY(100) = PsScaleBy(100, 1.5)), _
-                  str(g_menubar->ScaleY(100)) & " vs " & str(PsScaleBy(100, 1.5))
+            '' THE HALF THAT WAS ACTUALLY BROKEN, AND IS ACTUALLY ASSERTABLE.
+            Check "  and the font was reopened at the scaled size", _
+                  (g_nFontPx = PsScaleBy(SH_FONT_PX, 1.5)), str(g_nFontPx) & "px"
+
+            '' NOT ASSERTED, and the reason matters because the obvious assertion is
+            '' VACUOUS. The tempting one is
+            ''     g_menubar->ScaleY(100) = PsScaleBy(100, 1.5)
+            '' and this file carried it for one commit as "the assertion that would have
+            '' caught the bug". It would not have: PsWidget.ScaleY calls SurfaceScale(),
+            '' which reads surf.fScale LIVE (PsWidget.inc:435, :419), so it passes whether
+            '' or not the tree was ever told. It tests the surface, not the tree.
+            ''
+            '' What PropagateScaleChanged actually does is InvalidateLayout across the
+            '' subtree -- OnScaleChanged is an empty base with no override anywhere in
+            '' PsPlatform today. Skipping it leaves a control holding geometry it computed
+            '' at the old factor until something else invalidates it, and nothing exposed
+            '' here can observe that from outside. It is called because the contract says
+            '' to, and the assertion that would prove it does not exist.
 
             ApplyScale( surf, 1.0 )
             LayoutAll( surf )
