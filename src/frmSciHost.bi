@@ -73,6 +73,13 @@ type SciHostState
     '' TrackMouseEvent is one-shot: it must be re-armed after every WM_MOUSELEAVE
     '' or the widget under the pointer never hears that the pointer left.
     bTracking   as boolean
+
+    '' The clipboard text handed back to Scintilla on a paste. IT MUST OUTLIVE
+    '' THE CALL and a local would not: the shim copies the pointer's contents
+    '' during the callback, so a buffer built on the stack is freed underneath
+    '' it. One per window rather than one global, because two editors can be
+    '' asked to paste from two different message loops.
+    sClipUtf8   as string
 end type
 
 declare function SciHost_Register() as boolean

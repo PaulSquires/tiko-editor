@@ -130,6 +130,22 @@ because `SciExec` is `SendMessage`.
 autocompletion, the context menu, scrolling, the split view, Find-in-Project, the wheel in
 both split and unsplit, and Ctrl+wheel zoom.
 
+**TWO THINGS THAT LIST DOES NOT CONTAIN, AND BOTH WERE BROKEN.** Read the gap as the
+warning it is: "caret" above means the caret is drawn and moves, not that it blinks, and
+copy/paste is simply absent from the list. Reported by the author, not found here.
+
+* **Copy and paste did nothing.** `ScintillaPs.cxx` had `void Paste() override {}`, and
+  `CopyToClipboard` assigned to a process-local `std::string` whose only reader was declared
+  in `PsScintilla.bi` and called from nowhere. tiko's Edit menu sends `SCI_COPY`/`SCI_PASTE`
+  straight into those. Fixed in PsPlatform `be58cf8` (host hooks, no default — the two hosts
+  do not share a clipboard) and wired here against the Win32 clipboard.
+* **The caret did not blink.** `SCI_SETCARETPERIOD, 0` was set deliberately, because
+  Scintilla's FineTickers were recorded and never fired. The tickers now call the host; tiko
+  drives them from `WM_TIMER` on the host window, at `GetCaretBlinkTime()`.
+
+**The caret ticker only starts once Scintilla has focus** — `CaretSetPeriod` checks
+`caret.active`. A host that does not forward focus gets no blink whatever period it asks for.
+
 **Also confirmed by hand, after the fix below:** the horizontal scrollbar — thumb drag, track
 paging, Shift+wheel and caret tracking off the right edge.
 
@@ -364,6 +380,13 @@ Beyond `Learnings.md`, six specific to this tree:
   unqualified name means whichever came last — moving that block up silently gives ~1600
   sites the other type with no error anywhere. C and runtime externs stay at **global scope**,
   because a namespace mangles them to `PSC::…` and fails at link with a clean compile.
+* **`libpsscintilla.dll` SITS BESIDE `tiko.exe` AND IS TRACKED IN GIT.** Windows loads that
+  copy in preference to anything on `PATH`, so a clean `_compile_fast.bat` against
+  `PsPlatform\build\out\win64` proves nothing about what the exe will load. Add an export to
+  the shim without refreshing it and tiko **fails to start with exit 127, no message and no
+  dialog** — every self-test then reports "(no result line)", which reads as a broken test
+  harness rather than a broken binary. Copy it whenever the shim's exports change, and
+  commit it. `Learnings.md` has the two-command way to tell a loader failure from a code one.
 * **Packaging is `PATH`-free but hand-rolled.** `_package.bat` stages five DLLs derived from
   `objdump -p`; re-derive rather than edit by hand. `_check_package.bat` is the proof — and it
   kills the process **tree**, because `-NoNewWindow` means every child inherits this console

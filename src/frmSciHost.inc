@@ -158,6 +158,113 @@ private sub SciHost_OnNotify(byval user as any ptr, byref ev as PsC.PsEvent)
 end sub
 
 '' ---------------------------------------------------------------------------
+'' THE CLIPBOARD, and the caret's blink. Both are HOST obligations that the
+'' editor shim deliberately does not default, and until this was written neither
+'' was met -- so Ctrl+C filled a buffer nobody read, Ctrl+V was an empty
+'' override, and the caret was asked to stand still because nothing could have
+'' made it blink.
+''
+'' WHY WIN32 AND NOT PsCore'S. tiko never calls PsPlatformInit: the whole point
+'' of PsWin32Host is that tiko keeps its own window and its own message loop, so
+'' g_plat.clip is not filled in and SDL is not initialised. PsSciClipboard.inc is
+'' the SDL wiring for demos; this is the same two hooks against the Win32
+'' clipboard. Likewise the tickers: PsSciView drives them off PsTimer, which
+'' needs a pump to service it, and a GetMessage loop is not that pump -- a
+'' WM_TIMER is what wakes this loop, so that is what drives them here.
+'' ---------------------------------------------------------------------------
+
+'' Timer ids on the host window. Offset so they cannot collide with anything
+'' else this window might one day set.
+const SCIHOST_TICK_BASE = 700
+
+private function SciHost_ClipGet cdecl (byval user as any ptr) as zstring ptr
+    dim as SciHostState ptr pSt = cast(SciHostState ptr, user)
+    if pSt = 0 then return 0
+    pSt->sClipUtf8 = ""
+
+    if IsClipboardFormatAvailable(CF_UNICODETEXT) = 0 then return strptr(pSt->sClipUtf8)
+    '' A failed open is a normal outcome, not an error worth reporting: another
+    '' process can hold the clipboard for a few milliseconds at a time.
+    if OpenClipboard(pSt->hWnd) = 0 then return strptr(pSt->sClipUtf8)
+
+    dim as HANDLE h = GetClipboardData(CF_UNICODETEXT)
+    if h then
+        dim as wstring ptr pw = cast(wstring ptr, GlobalLock(h))
+        if pw then
+            '' WideCharToMultiByte, NOT DWSTRING. This file is compiled in two
+            '' include orders -- tiko's, where the unqualified name is PsCore's,
+            '' and _check_scihost's probe, where it is AfxNova's -- and the two
+            '' types have different members. The probe exists to prove this file
+            '' stands on PsCore alone, so the answer is to depend on neither and
+            '' use the Win32 call the conversion is, in a Win32 host file.
+            dim as long nBytes = WideCharToMultiByte(CP_UTF8, 0, pw, -1, 0, 0, 0, 0)
+            if nBytes > 1 then
+                '' nBytes counts the terminator; the fbc string does not.
+                pSt->sClipUtf8 = space(nBytes - 1)
+                WideCharToMultiByte(CP_UTF8, 0, pw, -1, strptr(pSt->sClipUtf8), _
+                                    nBytes, 0, 0)
+            end if
+            GlobalUnlock(h)
+        end if
+    end if
+    CloseClipboard()
+    return strptr(pSt->sClipUtf8)
+end function
+
+private sub SciHost_ClipSet cdecl (byval user as any ptr, byval utf8 as const zstring ptr)
+    dim as SciHostState ptr pSt = cast(SciHostState ptr, user)
+    if pSt = 0 then exit sub
+    if utf8 = 0 then exit sub
+
+    '' MultiByteToWideChar for the same reason as the getter -- see there.
+    '' nChars INCLUDES the terminator, which is what -1 asks for and what the
+    '' clipboard requires: a CF_UNICODETEXT block without one is read past its
+    '' end by whatever pastes it.
+    dim as long nChars = MultiByteToWideChar(CP_UTF8, 0, utf8, -1, 0, 0)
+    if nChars < 1 then exit sub
+
+    dim as HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, nChars * 2)
+    if hMem = 0 then exit sub
+
+    dim as wstring ptr pw = cast(wstring ptr, GlobalLock(hMem))
+    if pw = 0 then
+        GlobalFree(hMem)
+        exit sub
+    end if
+    MultiByteToWideChar(CP_UTF8, 0, utf8, -1, pw, nChars)
+    GlobalUnlock(hMem)
+
+    if OpenClipboard(pSt->hWnd) = 0 then
+        '' OWNERSHIP DID NOT TRANSFER, so the block is still ours to free.
+        '' Leaking it here would leak once per failed copy, which is exactly the
+        '' shape that never shows up in a test and grows all afternoon.
+        GlobalFree(hMem)
+        exit sub
+    end if
+    EmptyClipboard()
+    if SetClipboardData(CF_UNICODETEXT, hMem) = 0 then GlobalFree(hMem)
+    CloseClipboard()
+end sub
+
+'' Scintilla starting or stopping a fine ticker. ARM AND RETURN: this is called
+'' from inside an edit, and re-entering the editor here would run TickFor in the
+'' middle of a document modification.
+private sub SciHost_Ticker cdecl (byval user as any ptr, byval nReason as long, _
+                                  byval nMillis as long, byval nRunning as long)
+    dim as SciHostState ptr pSt = cast(SciHostState ptr, user)
+    if pSt = 0 then exit sub
+    if pSt->hWnd = 0 then exit sub
+    if (nReason < 0) orelse (nReason > 4) then exit sub
+
+    if nRunning <> 0 then
+        if nMillis < 1 then nMillis = 1
+        SetTimer(pSt->hWnd, SCIHOST_TICK_BASE + nReason, nMillis, 0)
+    else
+        KillTimer(pSt->hWnd, SCIHOST_TICK_BASE + nReason)
+    end if
+end sub
+
+'' ---------------------------------------------------------------------------
 '' Creation and teardown.
 '' ---------------------------------------------------------------------------
 private function SciHost_OnCreate(byval hWnd as HWND) as boolean
@@ -231,11 +338,21 @@ private function SciHost_OnCreate(byval hWnd as HWND) as boolean
     ' against an unfocused, zero-sized, never-shown pool window.
     pSt->surf.SetFocus(pSt->pView)
 
-    '' STEADY, NOT BLINKING. There is no frame scheduler in this tree, so a
-    '' blinking caret would sit at whatever phase it started in. Asking for
-    '' steady makes that a decision rather than an artefact. A WM_TIMER could
-    '' drive a blink later; it is not needed for correctness.
-    pSt->pView->Msg(SCI_SETCARETPERIOD, 0, 0)
+    '' THE TWO HOST OBLIGATIONS. Both were unmet, and both were reported as
+    '' defects rather than found: copy and paste did nothing, and the caret did
+    '' not blink.
+    SciPs_SetClipboardHooks(pSt->pView->pSci, @SciHost_ClipGet, @SciHost_ClipSet, pSt)
+    SciPs_SetTickerCallback(pSt->pView->pSci, @SciHost_Ticker, pSt)
+
+    '' THE SYSTEM'S BLINK RATE, not a number picked here. A user who has turned
+    '' blinking off in Windows gets 0 back from GetCaretBlinkTime's own
+    '' "infinite" value and must not be given a blinking caret anyway.
+    '' This was 0 -- deliberately steady -- for as long as the fine tickers only
+    '' recorded and nothing could have driven a blink.
+    dim as ulong nBlink = GetCaretBlinkTime()
+    if nBlink = INFINITE then nBlink = 0        '' the user asked for steady
+    if nBlink > 10000 then nBlink = 0           '' and anything absurd is steady too
+    pSt->pView->Msg(SCI_SETCARETPERIOD, nBlink, 0)
 
     return true
 end function
@@ -247,7 +364,19 @@ private sub SciHost_OnDestroy(byval hWnd as HWND)
 
     '' DETACH FIRST. Scintilla notifies during teardown as well as during
     '' editing, so a sink that outlives its registration is a use-after-free
-    '' with a delay on it.
+    '' with a delay on it. The clipboard and ticker hooks carry `pSt` and are
+    '' called from the same teardown, so they go the same way and for the same
+    '' reason -- and the timers are killed, since a WM_TIMER arriving after the
+    '' state is deleted would dispatch through freed memory.
+    if pSt->pView <> 0 then
+        if pSt->pView->pSci <> 0 then
+            SciPs_SetClipboardHooks(pSt->pView->pSci, 0, 0, 0)
+            SciPs_SetTickerCallback(pSt->pView->pSci, 0, 0)
+        end if
+    end if
+    for i as long = 0 to 4
+        KillTimer(hWnd, SCIHOST_TICK_BASE + i)
+    next
     PsC.PsSciNotifyDetach(pSt->sink)
     pSt->bridge.Detach()
     '' pView is NOT deleted here -- the surface owns its tree and destroys it.
@@ -314,6 +443,24 @@ private function SciHost_WndProc stdcall ( byval hWnd as HWND, byval nMsg as UIN
         case WM_DESTROY
             SciHost_OnDestroy(hWnd)
             return 0
+
+        case WM_TIMER
+            '' A fine ticker coming due -- the caret's blink, and Scintilla's
+            '' drag auto-scroll and dwell when they run. SciPs_Tick toggles the
+            '' caret and invalidates it INSIDE Scintilla, which lands as surface
+            '' damage; the flush is what turns that into a WM_PAINT.
+            if pSt then
+                dim as long nReason = clng(wParam) - SCIHOST_TICK_BASE
+                if (nReason >= 0) andalso (nReason <= 4) then
+                    if pSt->pView <> 0 then
+                        SciPs_Tick(pSt->pView->pSci, nReason)
+                        SciHost_FlushDamage(pSt)
+                    end if
+                    return 0
+                end if
+            end if
+            '' NOT OURS: fall through to DefWindowProc rather than swallowing it.
+            exit select
 
         case WM_SIZE
             if pSt then
