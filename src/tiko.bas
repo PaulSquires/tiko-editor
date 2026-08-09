@@ -303,6 +303,11 @@ dim shared gTTabCtl as clsTopTabCtl
 ' (IDM_* / IDC_MENUBAR_*), CWindow and CTextStream, all of which are already in scope. It
 ' must precede frmKeyboardEdit / frmAssignKey / frmUserTools / frmBuildConfig, which call
 ' into the key vocabulary, and frmMain, which builds the table at startup.
+'' The DATA half first -- gKeys and the 112 defaults -- then the vocabulary that reads them.
+'' app/modMenuDefinitions.inc walks gKeys for every menu accelerator label, so the array has
+'' to be declared well before the frm* block either way; splitting it out only moved which
+'' file says so. See app/modKeyBindings.bi.
+#include once "app/modKeyBindings.inc"
 #include once "modKeyBindings.inc"
 
 ' Custom controls

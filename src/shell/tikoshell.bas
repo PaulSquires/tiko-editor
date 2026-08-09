@@ -92,6 +92,7 @@
 #include once "ui/core/PsMenuHost.inc"
 #include once "ui/core/PsTheme.inc"
 #include once "ui/core/PsLayout.inc"
+#include once "ui/core/PsAccel.inc"
 #include once "ui/controls/PsMenuBar.inc"
 #include once "ui/controls/PsStatusBar.inc"
 #include once "ui/controls/PsTabBar.inc"
@@ -140,6 +141,10 @@
 #include once "app/modTextFile.inc"
 #include once "app/modLocalization.inc"
 #include once "app/modAppState.inc"
+'' The binding DATA -- gKeys and the 112 defaults. Split out of src/modKeyBindings.inc for
+'' this commit: getMenuAccelText walks gKeys to caption a menu row, so without it every
+'' accelerator column in the menus above rendered blank.
+#include once "app/modKeyBindings.inc"
 
 '' ---- ONE STUB, AND IT IS TEMPORARY BY DESIGN -------------------------------------------
 '' modMenuDefinitions.inc's createToolsMenuShortcut composes a User Tools shortcut LABEL by
@@ -158,12 +163,27 @@
 '' obligation is recorded rather than only here.
 #include once "app/modMenuDefinitions.inc"
 
+'' ---- THE COMMIT-4 STUB, NOW REAL -------------------------------------------------------
+'' createToolsMenuShortcut composes a User Tools shortcut LABEL by asking what a stored key
+'' name means. In commit 4 this returned 0 and every such row rendered with blank shortcut
+'' text; it is backed by PsAccel now.
+''
+'' IT DOES NOT RETURN A VIRTUAL KEY. The shell's version returns a Win32 VK through
+'' frmKeyboard_AccelKeyToValue and VkKeyScanEx; this returns a PsKey, which is a PHYSICAL
+'' POSITION. Callers that only test it against zero -- which is all createToolsMenuShortcut
+'' does -- cannot tell the difference. Anything that compared it to a VK_ constant would be
+'' wrong, and nothing in this binary does.
+''
 '' NOT `private`, and AFTER the include: app/modMenuDefinitions.inc:22 pulls
 '' ../modKeyBindings.bi -- the app layer reaching UP into the shell by relative path, which
 '' no token ratchet can see because a path is not an identifier -- so the declaration is
 '' already in scope by the time this is reached and a second one would collide.
 function KeyBindings_PickListKeyToValue( byval wszString as DWSTRING ) as long
-    return 0
+    '' "None" is a pick-list entry meaning "no shortcut", not a key. The shell's version
+    '' tests for it explicitly and so must this, or it resolves to nothing anyway but for
+    '' the wrong reason.
+    if PsUCase(PsTrim(wszString)).Utf8 = "NONE" then return 0
+    return PsAccelKeyFromName( wszString )
 end function
 
 
@@ -203,6 +223,16 @@ dim shared as long g_nPass, g_nFail
 '' thing a windowless run can check is that something answered, and with what.
 dim shared as long g_nBarOpenCalls
 dim shared as any ptr g_pLastBarMenu
+
+'' The accelerator table, built from tiko's own 112 default bindings. Consulted in the pump
+'' BETWEEN the menu host and surf.Dispatch -- see the loop for why that order is fixed.
+dim shared as PsAccelTable g_accel
+dim shared as long g_nAccelSkipped
+
+'' The menubar titles' first letters, kept HERE because PsMenuBar has no GetCaption and
+'' should not grow one for this: the host wrote the captions and is the natural owner of a
+'' mnemonic policy it is faking anyway. See TryAltMnemonic.
+dim shared as string g_barInitial(0 to 15)
 
 '' The font path, shared because ApplyScale reopens the engine and both the windowed path
 '' and the self-test go through it.
@@ -343,10 +373,75 @@ sub OnBarOpen( byval pBar as any ptr, byval idx as long, byval pMenu as any ptr,
 end sub
 
 sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any ptr )
-    '' Commit 4 has no commands to dispatch -- the ids are tiko's and every handler behind
-    '' them is in the shell. Printed so the wiring is visible rather than silently inert.
-    print "tikoshell: menu command " & str(nId)
+    '' The ids are tiko's and every handler behind them is still in the shell binary that
+    '' this one will replace. Printed so a command arriving is visible rather than inert.
+    print "tikoshell: command " & str(nId) & "  (" & getMenuText(nId).Utf8 & ")"
 end sub
+
+
+'' ---------------------------------------------------------------------------------------
+'' THE ACCELERATOR TABLE, FROM tiko's OWN BINDINGS.
+''
+'' gKeys carries 112 commands, each with a default chord and an optional user override, and
+'' getMenuAccelText already renders that same pair beside a menu row. Feeding both from one
+'' array is the point: a shortcut that fires and a label that says it fires cannot disagree.
+''
+'' SKIPPED ENTRIES ARE COUNTED RATHER THAN IGNORED. Most of the 112 have no default chord at
+'' all, which is not a failure -- but a chord that fails to PARSE is, and the two would be
+'' indistinguishable if the count were not kept. The self-test asserts it.
+'' ---------------------------------------------------------------------------------------
+sub BuildAccelerators()
+    g_accel.Clear_()
+    g_nAccelSkipped = 0
+
+    for i as long = lbound(gKeys) to ubound(gKeys)
+        '' The user's override wins, exactly as getMenuAccelText resolves it -- and a
+        '' DISABLED default means no binding rather than the default one.
+        dim as DWSTRING sChord = gKeys(i).wszUserKeys
+        if PsLen(sChord) = 0 then
+            if gKeys(i).bDefaultDisabled = false then sChord = gKeys(i).wszDefaultKeys
+        end if
+        if PsLen(sChord) = 0 then continue for
+
+        if g_accel.AddText( sChord, gKeys(i).idAction ) = false then
+            g_nAccelSkipped += 1
+            print "tikoshell: could not parse binding " & gKeys(i).wszMsgString.Utf8 & _
+                  " = " & sChord.Utf8
+        end if
+    next
+end sub
+
+
+'' ---------------------------------------------------------------------------------------
+'' ALT+MNEMONIC, FAKED HOST-SIDE AND DELIBERATELY SO.
+''
+'' PsMenuBar.bi:44-48 makes Alt activation the host's, with the right reason: a global Alt
+'' hook fights whatever else wants the key -- in tiko's case Scintilla -- so the host decides
+'' what Alt means. Promoting a guess into the library is how you get an API you then unpick.
+''
+'' This is the guess: Alt plus the first letter of a title opens it. tiko's real policy is
+'' handleAltKeyMenuBar plus an eight-deep filter chain plus Scintilla's own claim, and none
+'' of that is understood in widget terms yet. The titles carry no "&" markers, so the FIRST
+'' LETTER is all there is to match on -- which is why this is a fake and not a mnemonic
+'' implementation. Two titles starting with the same letter would need the real thing.
+'' ---------------------------------------------------------------------------------------
+function TryAltMnemonic( byval ev as PsEvent ptr ) as boolean
+    if ev = 0 then return false
+    if ev->kind <> PSEV_KEY_DOWN then return false
+    if (ev->key.modifiers and PSMOD_ALT) = 0 then return false
+    if g_menubar = 0 then return false
+    if (ev->key.key < PSKEY_A) orelse (ev->key.key > PSKEY_Z) then return false
+
+    dim as string sWant = chr( asc("A") + (ev->key.key - PSKEY_A) )
+    for i as long = 0 to g_menubar->GetCount() - 1
+        if i > ubound(g_barInitial) then exit for
+        if g_barInitial(i) = sWant then
+            g_menubar->OpenMenu(i)
+            return true
+        end if
+    next
+    return false
+end function
 
 
 '' ---------------------------------------------------------------------------------------
@@ -358,11 +453,16 @@ sub BuildTree( byref surf as PsSurface )
     surf.SetRoot( root )                      '' the surface takes ownership
 
     buildTopMenuDefinitions()
+    frmKeyboard_CreateDefaultKeyBindings()
+    BuildAccelerators()
 
     g_menubar = new PsMenuBar
     for id as long = IDC_MENUBAR_FILE to IDC_MENUBAR_HELP
         dim as DWSTRING sCap, sAccel
         SplitMenuText( id, sCap, sAccel )
+        if (id - IDC_MENUBAR_FILE) <= ubound(g_barInitial) then
+            g_barInitial(id - IDC_MENUBAR_FILE) = ucase(left(sCap.Utf8, 1))
+        end if
         dim as PsPopupMenu ptr pM = BuildDropDown( id )
         pM->OnCommand( @OnMenuCommand )
         '' AddItem TAKES OWNERSHIP of the dropdown, and hands it back through OnOpenRequest
@@ -636,6 +736,85 @@ end function
             Check "  back at 1.0 the band returns", (g_menubar->bounds.h = hMenu1)
         end scope
 
+        '' ---- ACCELERATORS, FROM tiko's OWN 112 BINDINGS -------------------------------
+        Check "the binding table loaded", (ubound(gKeys) > 100), _
+              str(ubound(gKeys) + 1) & " commands"
+        Check "  and every chord in it parsed", (g_nAccelSkipped = 0), _
+              str(g_nAccelSkipped) & " skipped"
+        Check "  producing accelerators", (g_accel.Count() > 30), _
+              str(g_accel.Count()) & " bound"
+
+        '' THE SAME ARRAY FEEDS THE LABEL AND THE SHORTCUT, which is the reason for
+        '' building the table out of gKeys rather than hand-listing chords: a menu row that
+        '' says Ctrl+S and a key that does nothing is the failure this makes unreachable.
+        scope
+            dim as DWSTRING sLabel = getMenuAccelText( IDM_FILESAVE )
+            Check "the Save menu row carries an accelerator label", (PsLen(sLabel) > 0), _
+                  sLabel.Utf8
+            dim as long k, m
+            '' getMenuAccelText prefixes chr(9) -- it packs caption and accel for the
+            '' menu painter -- so the tab has to come off before parsing.
+            Check "  and the SAME chord resolves through PsAccel", _
+                  PsAccelParse( PsMid(sLabel, 2), k, m ), sLabel.Utf8
+            Check "  to the command the menu row names", _
+                  (g_accel.FindKey(k, m) = IDM_FILESAVE), str(g_accel.FindKey(k, m))
+        end scope
+
+        '' A SYNTHETIC KEY PRESS REACHES THE COMMAND. This is the end-to-end claim: an
+        '' event in, a tiko IDM_ id out, through the table the pump consults.
+        scope
+            dim as PsEvent ev
+            ev.kind = PSEV_KEY_DOWN
+            ev.key.key = PSKEY_S
+            ev.key.modifiers = PSMOD_CTRL
+            Check "Ctrl+S finds Save", (g_accel.Find(@ev) = IDM_FILESAVE), _
+                  str(g_accel.Find(@ev))
+
+            '' EXACT MATCHING, ON REAL DATA rather than on a two-entry fixture. Ctrl+Shift+S
+            '' is Save As in tiko's defaults, so these two are a live pair.
+            ev.key.modifiers = PSMOD_CTRL or PSMOD_SHIFT
+            Check "  Ctrl+Shift+S is a DIFFERENT command", _
+                  (g_accel.Find(@ev) <> IDM_FILESAVE), str(g_accel.Find(@ev))
+
+            ev.key.modifiers = PSMOD_CTRL or PSMOD_ALT
+            Check "  Ctrl+Alt+S is neither", (g_accel.Find(@ev) = 0), str(g_accel.Find(@ev))
+
+            '' A key UP must not fire it a second time.
+            ev.kind = PSEV_KEY_UP
+            ev.key.modifiers = PSMOD_CTRL
+            Check "  and the key UP does not fire it again", (g_accel.Find(@ev) = 0)
+        end scope
+
+        '' THE COMMIT-4 STUB IS REAL NOW. It returned 0 for everything, so every User Tools
+        '' row rendered with blank shortcut text.
+        Check "the pick-list resolver answers", _
+              (KeyBindings_PickListKeyToValue(DWSTRING("F5")) = PSKEY_F5)
+        Check "  and still treats None as no key", _
+              (KeyBindings_PickListKeyToValue(DWSTRING("None")) = 0)
+
+        '' ALT+MNEMONIC. Faked host-side; what is asserted is that it CLAIMS the event and
+        '' opens something, not that the policy is tiko's -- it is not, and the file says so.
+        scope
+            g_nBarOpenCalls = 0
+            dim as PsEvent ev
+            ev.kind = PSEV_KEY_DOWN
+            ev.key.key = PSKEY_F
+            ev.key.modifiers = PSMOD_ALT
+            Check "Alt+F claims the event", TryAltMnemonic(@ev)
+            Check "  and asked the host to open a menu", (g_nBarOpenCalls = 1), _
+                  str(g_nBarOpenCalls)
+            g_menus.CloseAll() : g_menubar->NotifyClosed()
+
+            '' A letter no title starts with must NOT be claimed, or Alt+anything swallows
+            '' every keystroke the editor would otherwise get.
+            ev.key.key = PSKEY_Z
+            Check "  Alt+Z is not claimed", (TryAltMnemonic(@ev) = false)
+            '' And without Alt it is an ordinary keypress.
+            ev.key.key = PSKEY_F
+            ev.key.modifiers = PSMOD_NONE
+            Check "  plain F is not claimed", (TryAltMnemonic(@ev) = false)
+        end scope
+
         '' NO WINDOW WAS CREATED, and the surface says so. hWin is the marker PsModalHost
         '' reads to find a dialog's parent, so a surface that acquired one by accident here
         '' would be a real defect rather than an untidy test.
@@ -768,7 +947,30 @@ end function
                     if bMine = false then
                         g_menus.RouteEvent( @ev )
                     else
-                        if g_menus.RouteEvent( @ev ) = false then surf.Dispatch( @ev )
+                        '' THE ORDER IS THE WHOLE DESIGN, and each step is here for a
+                        '' different reason:
+                        ''
+                        ''   1. THE MENU HOST FIRST. An open menu owns the keyboard while
+                        ''      it is up -- its arrows and Escape are navigation, not
+                        ''      shortcuts -- so nothing below sees an event it claims.
+                        ''   2. ALT+MNEMONIC NEXT, because Alt+F is not an accelerator and
+                        ''      no table entry would match it.
+                        ''   3. ACCELERATORS BEFORE Dispatch. A shortcut has to beat the
+                        ''      focused control; put this after Dispatch and the editor
+                        ''      types the character instead of running the command. That
+                        ''      one line is what every host in this toolkit was writing by
+                        ''      hand as an `if ev.key.key = ...` before PsAccel existed.
+                        ''   4. Dispatch last -- the focused widget gets what is left.
+                        if g_menus.RouteEvent( @ev ) = false then
+                            if TryAltMnemonic( @ev ) = false then
+                                dim as long nCmd = g_accel.Find( @ev )
+                                if nCmd <> 0 then
+                                    OnMenuCommand( 0, nCmd, 0 )
+                                else
+                                    surf.Dispatch( @ev )
+                                end if
+                            end if
+                        end if
                     end if
             end select
 

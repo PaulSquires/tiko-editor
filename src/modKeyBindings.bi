@@ -33,25 +33,11 @@
 #pragma once
 
 
-' ========================================================================================
-' One command that can carry a keyboard shortcut.
-'
-' idAction is the IDM_* value; wszMsgString is its NAME ("IDM_FILESAVE"), and that is what
-' keybindings.ini stores -- renumbering an IDM_ constant must not invalidate a user's file.
-' ========================================================================================
-type KEYBINDINGS_TYPE
-    idAction         as long         ' IDM_* message
-    wszMsgString     as DWSTRING     ' "IDM_SAVE", "IDM_SAVEAS", etc
-    wszCategory      as DWSTRING
-    wszDescription   as DWSTRING
-    wszDefaultKeys   as DWSTRING
-    wszUserKeys      as DWSTRING
-    bDefaultDisabled as boolean = false
-end type
-
-' The live bindings. Read by modMenuDefinitions (menu accelerator text) and by
-' frmKeyboard_BuildAcceleratorTable. The dialog edits a STAGING COPY and commits here.
-dim shared gKeys(any) as KEYBINDINGS_TYPE
+' KEYBINDINGS_TYPE and gKeys MOVED to app/modKeyBindings.bi, which this now includes.
+' They are strings and integers; the vocabulary below is not, because its punctuation arms
+' resolve through VkKeyScanEx against the live keyboard layout. Phase 7c's shell binary
+' needed the data half and cannot have the other -- see that header.
+#include once "app/modKeyBindings.bi"
 
 ' The single entry being edited by frmKeyboardEdit, copied in and out by frmKeyboard.
 dim shared gKeysEdit as KEYBINDINGS_TYPE
@@ -73,20 +59,8 @@ end type
 dim shared gKeyNames(any) as KEYNAME_TYPE
 
 
-declare function frmKeyboard_SaveKeyBindings( byval wszFilename as DWSTRING ) as long
-declare function frmKeyBoard_AddKeyBinding ( _
-            byval wszCategory as DWSTRING, _
-            byval idAction as long, _
-            byval wszMsgString as DWSTRING, _
-            byval wszDescription as DWSTRING, _
-            byval wszDefaultKeys as DWSTRING _
-            ) as long
-declare function frmKeyBoard_AddKeyBinding_User ( _
-            byval wszMsgString as DWSTRING, _
-            byval wszUserKeys as DWSTRING, _
-            byval bDisabled as boolean _
-            ) as long
-declare function frmKeyboard_CreateDefaultKeyBindings() as long
+' SaveKeyBindings, AddKeyBinding, AddKeyBinding_User and CreateDefaultKeyBindings are
+' declared in app/modKeyBindings.bi, included above, beside the array they fill.
 declare function frmKeyboard_BuildAcceleratorTable() as long
 
 declare function frmKeyboard_VirtKeyToValue( byval wszString as DWSTRING ) as long
