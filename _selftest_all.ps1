@@ -38,28 +38,36 @@
 # mutable files back before each sweep so both builds see the same starting
 # point.
 #
+# TIKO_FORMAT_SELFTEST IS NO LONGER ON THIS LIST. It used to be, and the reason
+# is kept here rather than deleted, because the old note told you to ignore
+# movement in it -- and anyone who still believes that will wave through a real
+# regression.
+#
+#   What the note said: the suite asserted len(LL(id)) > 0 for ids 593-669, all
+#   of them past ubound(LL) (english.lang carries MAXIMUM:521), FB does not
+#   bounds-check a dynamic array, so pass/fail was decided by whatever sat past
+#   the end -- and underneath it a real bug, those labels rendering BLANK.
+#
+#   Both halves were wrong. Ids 593-669 were never call sites: they had been
+#   renumbered down into the existing range and only the test's stale id list
+#   still named them (see HANDOFF.md, "Open decisions"). Format Options reads
+#   470, 473-478 and 494-502 -- every one populated in all six .lang files,
+#   nothing renders blank. No source file uses an L() id above 521.
+#
+#   And it can no longer read past the end regardless: frmFormatOptions.inc
+#   bounds-tests each id against lbound(LL)/ubound(LL) BEFORE indexing, and an
+#   out-of-range id now fails loudly and identically on every run instead of
+#   returning heap garbage.
+#
+#   So TIKO_FORMAT is deterministic and part of the oracle. MOVEMENT IN IT IS A
+#   REGRESSION, not noise.
+#
 # KNOWN-UNRELIABLE SUITES, which no amount of harness fixing can help:
-#
-#   TIKO_FORMAT_SELFTEST -- IT READS PAST THE END OF AN ARRAY, and the garbage it
-#     finds there decides pass/fail. english.lang carries MAXIMUM:521, so LL is
-#     redim'd to LL(521); the format-apply and frmFormatOptions sub-tests then
-#     assert len(LL(id)) > 0 for ids 593-669, ALL of them beyond that bound. FB
-#     does not bounds-check a dynamic array, so each of those 39 assertions reads
-#     whatever happens to be past the end.
-#
-#     That explains everything it does: nondeterministic within one binary
-#     (25/17, 27/15, 25/17), and systematically different between two binaries
-#     (baseline ~25-27 passing, a rebuilt tiko ~14-15) because the heap beyond
-#     the array differs. It correlates with the build without being caused by it.
-#
-#     UNDERNEATH IT IS A REAL BUG, and not in the test: those ids do not exist in
-#     english.lang at all, so the Format Options labels they name render BLANK in
-#     the UI. The test was written to catch exactly that and cannot report it.
 #
 #   one suite is nondeterministic outright (24/18, 33/9, 23/19 across three runs
 #   of one unchanged binary; see Learnings.md).
 #
-# Movement in those two is noise. The other 25 are the oracle.
+# Movement in that one is noise. The other 26 are the oracle.
 # ---------------------------------------------------------------------------
 param(
     [string]$Out = "",
