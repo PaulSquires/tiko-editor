@@ -55,11 +55,16 @@ to. That was decided as a forecast. Gate 6 has now landed on all three targets,
 so it can be re-decided on evidence instead, and it should be, before 45,000
 lines are committed to one shape.
 
-> **Re-decided in [`d2-decision.md`](d2-decision.md), and the answer is "not yet".**
-> Two premises on this page have since gone stale: `PsWin32Host` now exists and
-> hosts tiko's editor, so there *is* something to bridge a half-converted shell
-> with; and the 25-control port is done rather than pending. The memo lays out
-> both shapes and finds the next several weeks identical under either, so it
-> names three shared prerequisites instead of taking the decision early. The one
-> irreducible constraint it identifies is WebView2, which needs a real HWND
-> permanently.
+> **TAKEN on 2026-08-09: Shape A — D2 HOLDS.** SDL3 on both platforms, no Win32
+> backend. See [`d2-decision.md`](d2-decision.md) for the evidence and the costs.
+>
+> That page went through three answers before this one — "not yet", then "due but
+> not mine", then taken — and the reason it took three is worth more than the
+> result: **each round found that a fact it had reasoned from had moved.** The
+> WebView2 constraint this paragraph used to call irreducible is now *removed from
+> the tree*; `PsWin32Host` was said to have grown into most of a second backend and
+> has not (it implements zero of the 18 entry points, and its own header says so);
+> and the 25-control port was listed as pending when all 26 were done.
+>
+> The paragraph below is left as written, and every claim in it about what is
+> blocked or impossible was wrong within weeks.

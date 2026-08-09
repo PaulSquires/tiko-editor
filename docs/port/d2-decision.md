@@ -236,11 +236,36 @@ at all. **Whatever shape 7c takes inherits all three**, and a half-converted she
 of them twice for as long as the conversion lasts. That is a real cost on Shape B this page did
 not know about when it was written.
 
-**2. `PsWin32Host` HAS GROWN, NOT SHRUNK.** It was 582 lines of scaffolding "deleted when 7c
-completes". It is now the editor's only paint and input path in tiko, **plus** a Win32 clipboard
-and a `WM_TIMER` ticker driver — because a `GetMessage` loop is not a pump that services
-`PsTimer`. Shape B's "second `IWindowBackend`" is no longer hypothetical: a good deal of it
-already exists and is load-bearing.
+**2.** ~~**`PsWin32Host` HAS GROWN, NOT SHRUNK.**~~ **MEASURED ON 2026-08-09, AND IT HAS NOT.**
+Struck rather than deleted because it was the single strongest argument for Shape B, it was
+wrong, and nothing but running `wc` and `grep` was needed to see that.
+
+> ~~It was 582 lines of scaffolding "deleted when 7c completes". It is now the editor's only
+> paint and input path in tiko, **plus** a Win32 clipboard and a `WM_TIMER` ticker driver —
+> because a `GetMessage` loop is not a pump that services `PsTimer`. Shape B's "second
+> `IWindowBackend`" is no longer hypothetical: a good deal of it already exists and is
+> load-bearing.~~
+
+Three things are wrong with that paragraph:
+
+* **582 is TODAY's size, quoted as the historical one.** At introduction (`6aa77eb`) the bridge
+  was 120 + 396 = **516** lines; it is **582** now. The whole of that +66 is a scancode fix
+  (`7b66920`) and GDI imports it could not hand-declare (`0fa614b`). Growth of 13% over the
+  period it was said to have absorbed two subsystems.
+* **It contains NO clipboard and NO ticker code.**
+  `grep -ci 'clipboard\|ticker\|SetTimer\|WM_TIMER' PsWin32Host.*` is **0 in both files**. Those
+  9 sites are in tiko's `frmSciHost.inc`. The bridge did not absorb the two subsystems — *tiko*
+  did, which is the opposite of the claim and points the other way, because tiko-side wiring is
+  exactly what a shell flip replaces.
+* **It fills none of the backend, and its own header has said so all along.**
+  `PsWin32Host.bi:48` — *"NOT a second `IWindowBackend`. It creates no windows, owns no message
+  loop, opens no popups and registers nothing with `g_plat`."* The interface is 13
+  `IWindowBackend` members plus 5 in `IEventBackend`; the bridge implements **zero**, and
+  `PsSdl3.inc` — 1128 lines — is still the only thing that fills either table.
+
+**So Shape B's central cost is NOT partly pre-paid.** It is a Win32 backend written from
+scratch, and the bridge's own header explains why it stays small: it does the two things the
+host cannot, and the host keeps everything else. That asymmetry is what a real backend gives up.
 
 **3. THE SHARED WORK WAS GENUINELY SHARED.** Nothing in the scheduler, the palette or the shell
 demo had to be written twice or thrown away. That is what this page predicted, and it is the one
@@ -253,20 +278,44 @@ regardless, and the content is local static HTML whose portable answer is the us
 browser. **The last thing standing between D2 and a decision turned out not to be standing
 there.**
 
-## Where that leaves D2
+## D2 IS TAKEN: SHAPE A — HOLD D2. SDL3 ON BOTH PLATFORMS, NO WIN32 BACKEND.
 
-**The reason for deferring is gone.** The prerequisites are done, the evidence exists, and the
-choice can be made against a running IDE-shaped layout instead of an estimate.
+**Decided by the author on 2026-08-09.** Every earlier version of this section said the decision
+was not due, then that it was due but not this page's to take. It is taken, and this is the
+record of it.
 
-**It has not been taken here.** This page exists because a forecast was made once and not
-re-checked; picking a side in its closing paragraph — on a question whose deciding constraint is
-WebView2, which nothing in this work touched — would be the same mistake pointing the other way.
-What it can say is that the ground has moved again since the top of this page: the bridge D2
-assumed could not exist is now carrying three subsystems, and the cost of the half-converted
-state is measured rather than guessed.
+**What decided it was not a new argument — it was re-measuring three old ones.** All three had
+moved since they were written, all three moved toward A, and each took one command to check:
 
-**WebView2 is now settled and did not decide anything**, which leaves exactly one question:
-a second `IWindowBackend` maintained forever, against a 45,000-line jump that is un-shippable in
-the middle. That is a judgement about which cost this project would rather carry, and it is the
-author's to make — but it is now the ONLY question left, and every fact it needs is on this page
-or the three it links to.
+1. **WebView2, the "one constraint that cannot be engineered away", is gone from the tree.**
+   Not ruled out — removed. `frmHelpCenter` is a URL builder and one `ShellExecute`.
+2. **Shape B's one new advantage did not survive contact with `wc`.** See the struck item 2
+   above: the bridge implements none of the backend and absorbed neither subsystem.
+3. **The three host obligations are a cost on B, not on A.** Clipboard, caret blink and theming
+   have no default because the two hosts share no implementation. Under B both hosts exist for
+   the whole 14–20 weeks, so each obligation is implemented and maintained **twice** for the
+   duration. Under A, once.
+
+**What Shape A costs, unchanged and not talked down.** The branch is un-shippable from the first
+commit until 7c completes, by construction. And the pump collapse is bigger than this page said:
+
+| | this page said | measured 2026-08-09 |
+| --- | --- | --- |
+| forms | 48 | **49** (`ls src/frm*.inc`) |
+| shell lines | ~45,000 | **45,187** (`cat src/frm*.bi src/frm*.inc \| wc -l`) |
+| message loops | 13 | **15** |
+| `IsDialogMessage` | "and `IsDialogMessage`" | **13 real sites** |
+| `HACCEL` tables | 3 | 3, confirmed — `frmMain.inc:2214-2216` |
+
+**The two extra pumps are the ones worth knowing about**, because they are not forms and a
+form-by-form plan will not find them: `PsMessageBox.inc` and `PsColorPicker.inc` each own a
+`GetMessage` loop. Count pumps with
+`grep -rn 'GetMessage' src/*.inc src/*.bi | grep -viE ":[0-9]+:\s*('|rem\b)"` and read the
+result per file — `PsMessageBox.inc` reports 57 hits of which 56 are `GetMessageBoxPointer`.
+
+**What is NOT verified, and would hurt if it is wrong:** the 14–20 week estimate. The costs above
+were re-measured; that number was not, and it is the one that decides whether A was affordable
+rather than whether it was right.
+
+**The first increment is the plan's own step 1**, unchanged by this decision: `frmMain`'s chrome
+and the editor pane, every dock panel stubbed, as a runnable binary that is not merged.

@@ -35,9 +35,10 @@ Read in this order, and do not skip the first:
 2. This page's **one-paragraph version**, then **"What is verified, and how"**. The second
    matters more than it looks: five green gates and 27 green suites coexisted with an editor
    that had no right-click menu, no mouse wheel, and no horizontal scrolling at all.
-3. [`d2-decision.md`](d2-decision.md) — the decision 7c hangs on. It was deferred behind three
-   prerequisites; **all three are now done, so it is due.** Read its two closing sections
-   first — what the prerequisites taught, and why the answer is still not written down.
+3. [`d2-decision.md`](d2-decision.md) — the decision 7c hangs on. **TAKEN 2026-08-09: Shape A.**
+   Read its two closing sections first — what the prerequisites taught, and the struck item 2,
+   which is the clearest thing on this shelf about what a re-measurement is worth: the strongest
+   argument for the losing shape, refuted by `wc` and `grep`.
 4. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
    irreducible, investigated. **It was not a blocker and never had been.** Short, and it is the
    clearest example on this whole shelf of a claim that survived because nobody checked it.
@@ -73,11 +74,25 @@ forms, ~45,000 lines, a third of tiko (`7c-starting-position.md`). What is finis
 increment that page recommends doing *first*: making `src/app` compile against PsCore alone.
 The app layer closing is 7c's precondition, not 7c.
 
-**THE NEXT STEP IS `frmMain`'S DECISION, AND IT IS NOW DUE.** `frmMain` becoming a `PsSurface`
-is phase 7c — 48 forms, ~45,000 lines, 14–20 weeks — and it hangs on decision **D2**.
-[`d2-decision.md`](d2-decision.md) deferred that decision behind three shared prerequisites,
-identical under either answer. **ALL THREE ARE NOW DONE** (PsPlatform `41e2b6a`), so the reason
-for deferring is gone.
+**D2 IS TAKEN — SHAPE A, AND THE NEXT STEP IS THE SHELL SKELETON.** Decided by the author on
+2026-08-09: **SDL3 on both platforms, no Win32 backend.** `frmMain` becomes a `PsSurface`;
+chrome and editor convert together, every dock panel stubbed, as a runnable binary that is
+**not merged** until 7c completes. [`d2-decision.md`](d2-decision.md) carries the evidence.
+
+**Re-measuring beat re-arguing, and it is the only reason the decision could be taken.** Three
+facts the memo reasoned from had moved, all three toward A, and each cost one command:
+WebView2 is *removed from the tree* rather than merely ruled out; `PsWin32Host` was said to have
+grown into most of a second backend and implements **zero** of the 18 entry points (its own
+header, `PsWin32Host.bi:48`, has said so all along); and the three host obligations are a cost
+on B, which carries each of them twice for the whole conversion.
+
+**Shape A's costs, re-measured rather than quoted:** 49 forms and **45,187** lines, and the pump
+collapse is **15 loops, not 13** — `frmMain`, 12 modal forms, and two that are not forms at all
+and no form-by-form plan will find: `PsMessageBox.inc` and `PsColorPicker.inc` each own a
+`GetMessage` loop. Plus 3 `HACCEL` tables and **13** `IsDialogMessage` sites.
+
+**The 14–20 week estimate was NOT re-measured**, and it is the number that decides whether A was
+affordable rather than whether it was right.
 
 **AND WEBVIEW2 IS GONE FROM THE TREE** — not merely ruled out. `frmHelpCenter` was 970 lines
 hosting an embedded Edge pane; it is now a URL builder and one `ShellExecute`, and with it went
@@ -86,9 +101,11 @@ F1 keeps its search through `index.html?q=<symbol>`, which `helpgen`'s `app.js` 
 a change in OUR generator that DELETES a coupling rather than porting one. See
 [`webview2-decision.md`](webview2-decision.md) for why it was never a blocker.
 
-**So D2 has exactly one question left, and it is a judgement rather than a discovery:** a second
-`IWindowBackend` maintained forever, against a 45,000-line jump that is un-shippable in the
-middle. Every fact it needs is on `d2-decision.md` or the pages it links.
+**That question — a second `IWindowBackend` maintained forever, against a 45,000-line jump that
+is un-shippable in the middle — was answered on 2026-08-09 in favour of the jump.** Not because
+the jump got cheaper: it got dearer, by two message loops. Because the second backend turned out
+never to have been started, and because the half-converted state pays for the three host
+obligations twice.
 
 1. ~~**A timer / frame scheduler in PsPlatform.**~~ **DONE** — `src/ui/core/PsTimer.*`, 113
    assertions. **Not** in the backend: `AddTimer`/`KillTimer_` were deleted from
