@@ -1,7 +1,7 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ `f4496a1d`; PsPlatform `master` @ `337c08c`. Both build
-warning-free, both push cleanly, and tiko runs.
+tiko `feat/cross-platform` @ `bd6fc545`; PsPlatform `master` @ `d1055ef`. Both build
+warning-free and tiko runs. **PsPlatform `d1055ef` is unpushed.**
 
 **Every count on this page was re-verified on 2026-08-07.** Three were stale and are corrected
 below. If you are reading this later, re-run them before quoting them — the commands are
@@ -45,14 +45,25 @@ The app layer closing is 7c's precondition, not 7c.
 **D2**, which `7c-starting-position.md` says should be re-decided on evidence before that much
 code is committed to one shape. [`d2-decision.md`](d2-decision.md) is that re-decision, and its
 answer is **not yet**: the next several weeks are identical under either answer, so three
-shared prerequisites come first, none of them wasted whichever way D2 lands.
+shared prerequisites come first, none of them wasted whichever way D2 lands. **One of the
+three is now done** — the frame scheduler — and the other two have not started.
 
-1. **A timer / frame scheduler in PsPlatform.** `AddTimer` returns 0 and does nothing. tiko has
-   43 `SetTimer` sites across 27 files and 20 of its 24 controls need timers. Nothing
-   shell-shaped is worth starting before this.
+1. ~~**A timer / frame scheduler in PsPlatform.**~~ **DONE** — PsPlatform `d1055ef`,
+   `src/ui/core/PsTimer.*`, 87 assertions in `tests/pstimer`. It is **not** in the backend:
+   `AddTimer`/`KillTimer_` were deleted from `IEventBackend` rather than implemented, because
+   `SDL_AddTimer` fires on its own thread and tiko's real host is `PsWin32Host` — a backend
+   timer would have to be written twice, which is what D2 exists to prevent. Timers are shared
+   code over `Ticks()`, serviced by whoever pumps, and the pump's wait now comes from the next
+   deadline instead of a hard-coded 30ms. `PsTextBox`'s caret is the first client and blinks.
+   **Three things this does NOT mean:** tiko's 43 `SetTimer` sites are untouched; tiko's own
+   message loop does not call `PsTimerService` (nothing in tiko needs it yet); and the
+   spinner's auto-repeat, the list's drag auto-scroll, the marquee and the two hover delays
+   are still host-driven — now unconverted rather than blocked.
 2. **A theme engine (`PsTheme`).** Does not exist; the host sets every colour field by hand.
+   **Not started.**
 3. **An IDE-shell composition demo** — menubar + splitters + docked panels + statusbar in one
    layout. No demo does this yet, and it is what a converted `frmMain` does first.
+   **Not started.**
 
 Two facts that made this look otherwise were stale and are now fixed: **Gate 5 is done, not
 "not started"** (26 widgets exist), and `PsWin32Host` — which D2 assumed could not exist — is

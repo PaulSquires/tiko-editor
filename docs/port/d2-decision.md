@@ -85,10 +85,33 @@ of scaffolding and becomes product code with a maintenance cost.
 nothing and spends evidence that has not been gathered. Three things are required by A and B
 alike, none is wasted either way, and each is bounded and independently verifiable.
 
-### 1. A timer / frame scheduler — by far the largest gap
+**Status: 1 of 3 done.** The scheduler landed; `PsTheme` and the IDE-shell demo have not
+started. D2 is still open, and deliberately so.
 
-`PsSdl3.inc`'s `AddTimer` **returns 0 and does nothing**; `KillTimer_` is empty. Its own
-comment says timers arrive with the frame scheduler.
+### 1. A timer / frame scheduler — ~~by far the largest gap~~ **DONE**
+
+**Landed in PsPlatform `d1055ef`** as `src/ui/core/PsTimer.*`, with 87 assertions in
+`tests/pstimer`. What follows is the gap as it was; read it for the shape of the problem, not
+for the state of the tree.
+
+Three things about the answer are worth carrying forward, because they are not what this page
+assumed:
+
+* **It is not in the backend, and `AddTimer`/`KillTimer_` were DELETED from `IEventBackend`
+  rather than implemented.** `SDL_AddTimer` fires on its own thread, so the UI-thread queue is
+  needed either way; tiko's real host is `PsWin32Host`, so a backend timer would have to be
+  written a second time as `WM_TIMER`; and the only primitive a timer actually needs —
+  `Ticks()` — both backends already had. A second implementation is exactly what D2 exists to
+  prevent, so the scheduler is shared code driven by whoever pumps.
+* **The pump's wait timeout now comes from the next deadline**, replacing the hard-coded 30ms
+  all six pump sites carried.
+* **tiko does not use it yet, and tiko's own pump does not service it.** tiko's 43 `SetTimer`
+  sites are still Win32's, and nothing in tiko has been converted. Wiring `PsTimerService`
+  into tiko's message loop is a one-line change whenever the first converted panel needs it —
+  but it has not been made, and nothing here should be read as saying tiko has timers.
+
+`PsSdl3.inc`'s `AddTimer` **returned 0 and did nothing**; `KillTimer_` was empty. Its own
+comment said timers would arrive with the frame scheduler.
 
 tiko has **43 `SetTimer` sites across 27 files**, and **20 of its 24 controls** need timers —
 hover dwell, auto-repeat, scroll acceleration, caret blink. PsPlatform already carries the
@@ -101,6 +124,12 @@ absence as a list of admitted defects:
 
 **Nothing shell-shaped is worth starting before this lands.** A converted panel without timers
 is not a converted panel; it is a screenshot.
+
+**Of that list, only the caret is fixed.** `PsTextBox` blinks at 530ms on the scheduler and is
+its first client. The spinner's auto-repeat, the list's drag auto-scroll, the marquee and the
+two hover delays are all **still host-driven** — each is now an unconverted control rather than
+a blocked one, and each file says so on itself. Converting them is small, independent work;
+none of it blocks prerequisites 2 or 3.
 
 ### 2. A theme engine (`PsTheme`)
 
