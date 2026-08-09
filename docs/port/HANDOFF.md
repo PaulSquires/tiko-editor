@@ -1,10 +1,10 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ `bd6fc545`; PsPlatform `master` @ `d1055ef`. Both build
-warning-free and tiko runs. **PsPlatform `d1055ef` is unpushed.**
+tiko `feat/cross-platform` @ `5af117da`; PsPlatform `master` @ `41e2b6a`. Both build
+warning-free, both are pushed, and tiko runs.
 
-**Every count on this page was re-verified on 2026-08-07.** Three were stale and are corrected
-below. If you are reading this later, re-run them before quoting them — the commands are
+**Every count on this page was re-verified on 2026-08-07**, and the D2 sections again on
+2026-08-09. If you are reading this later, re-run them before quoting them — the commands are
 beside each number, and this page's record is that its numbers rot faster than its prose.
 
 ## If you are picking this up cold
@@ -16,8 +16,9 @@ Read in this order, and do not skip the first:
 2. This page's **one-paragraph version**, then **"What is verified, and how"**. The second
    matters more than it looks: five green gates and 27 green suites coexisted with an editor
    that had no right-click menu, no mouse wheel, and no horizontal scrolling at all.
-3. [`d2-decision.md`](d2-decision.md) — what the next phase is waiting on, and why it is
-   deliberately not started.
+3. [`d2-decision.md`](d2-decision.md) — the decision 7c hangs on. It was deferred behind three
+   prerequisites; **all three are now done, so it is due.** Read its two closing sections
+   first — what the prerequisites taught, and why the answer is still not written down.
 
 **The one habit worth copying from this run:** every defect found this session came from
 running the program or reading the callers, and none from the gates. When a note here says
@@ -40,34 +41,39 @@ forms, ~45,000 lines, a third of tiko (`7c-starting-position.md`). What is finis
 increment that page recommends doing *first*: making `src/app` compile against PsCore alone.
 The app layer closing is 7c's precondition, not 7c.
 
-**THE NEXT STEP IS NOT `frmMain`, AND IT IS NOT A DECISION EITHER.** `frmMain` becoming a
-`PsSurface` is phase 7c — 48 forms, ~45,000 lines, 14–20 weeks — and it hangs on decision
-**D2**, which `7c-starting-position.md` says should be re-decided on evidence before that much
-code is committed to one shape. [`d2-decision.md`](d2-decision.md) is that re-decision, and its
-answer is **not yet**: the next several weeks are identical under either answer, so three
-shared prerequisites come first, none of them wasted whichever way D2 lands. **One of the
-three is now done** — the frame scheduler — and the other two have not started.
+**THE NEXT STEP IS `frmMain`'S DECISION, AND IT IS NOW DUE.** `frmMain` becoming a `PsSurface`
+is phase 7c — 48 forms, ~45,000 lines, 14–20 weeks — and it hangs on decision **D2**.
+[`d2-decision.md`](d2-decision.md) deferred that decision behind three shared prerequisites,
+identical under either answer. **ALL THREE ARE NOW DONE** (PsPlatform `41e2b6a`), so the reason
+for deferring is gone.
 
-1. ~~**A timer / frame scheduler in PsPlatform.**~~ **DONE** — PsPlatform `d1055ef`,
-   `src/ui/core/PsTimer.*`, 87 assertions in `tests/pstimer`. It is **not** in the backend:
-   `AddTimer`/`KillTimer_` were deleted from `IEventBackend` rather than implemented, because
-   `SDL_AddTimer` fires on its own thread and tiko's real host is `PsWin32Host` — a backend
-   timer would have to be written twice, which is what D2 exists to prevent. Timers are shared
-   code over `Ticks()`, serviced by whoever pumps, and the pump's wait now comes from the next
-   deadline instead of a hard-coded 30ms. `PsTextBox`'s caret is the first client and blinks.
-   **Three things this does NOT mean:** tiko's 43 `SetTimer` sites are untouched; tiko's own
-   message loop does not call `PsTimerService` (nothing in tiko needs it yet); and the
-   spinner's auto-repeat, the list's drag auto-scroll, the marquee and the two hover delays
-   are still host-driven — now unconverted rather than blocked.
-2. **A theme engine (`PsTheme`).** Does not exist; the host sets every colour field by hand.
-   **Not started.**
-3. **An IDE-shell composition demo** — menubar + splitters + docked panels + statusbar in one
-   layout. No demo does this yet, and it is what a converted `frmMain` does first.
-   **Not started.**
+1. ~~**A timer / frame scheduler in PsPlatform.**~~ **DONE** — `src/ui/core/PsTimer.*`, 113
+   assertions. **Not** in the backend: `AddTimer`/`KillTimer_` were deleted from
+   `IEventBackend` rather than implemented, because `SDL_AddTimer` fires on its own thread and
+   tiko's real host is `PsWin32Host` — a backend timer would have to be written twice, which is
+   what D2 exists to prevent. All five admitted timer defects are closed; only the marquee stays
+   host-stepped, deliberately, because stepping by call is what makes it assertable.
+2. ~~**A theme engine (`PsTheme`).**~~ **DONE** — `src/ui/core/PsTheme.*`, all 26 controls, 225
+   fields, 84 assertions. **The model is tiko's**: same file format, same role names, same
+   `key → role → built-in` resolution, so a tiko `.theme` file drives PsPlatform's controls with
+   nothing re-authored. All ten of tiko's themes load. **Eight of those ten name no widget keys
+   at all**, which is why the role fallback is the load-bearing half.
+3. ~~**An IDE-shell composition demo.**~~ **DONE** — `demos/ideshell`: menubar and toolbar
+   docked top, status bar bottom, two splitters, an explorer, a tab bar over a `PsSciView`, an
+   output pane. 36 headless assertions, four palettes, verified by hand. **It found three
+   defects nothing headless could see** — see `d2-decision.md`.
+
+**WHAT IS STILL TRUE, AND MATTERS MORE THAN THE TICKS ABOVE:** tiko's 43 `SetTimer` sites are
+untouched, tiko's message loop does not call `PsTimerService`, and **nothing in tiko is themed
+by `PsTheme`**. All of that work landed in PsPlatform. tiko's only stake in it so far is the
+editor: its clipboard, its caret blink and its Scintilla styling are wired by hand in
+`frmSciHost.inc`, because **the editor is not a widget and none of the three reaches it
+automatically**.
 
 Two facts that made this look otherwise were stale and are now fixed: **Gate 5 is done, not
 "not started"** (26 widgets exist), and `PsWin32Host` — which D2 assumed could not exist — is
-running tiko's editor today.
+running tiko's editor today, and has since grown a Win32 clipboard and a `WM_TIMER` ticker
+driver on top.
 
 Everything this page previously listed as the next step turned out to be already done, already
 impossible, or already wrong — see the two struck sections below, and read that as a statement
