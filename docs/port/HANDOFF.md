@@ -1,7 +1,11 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ `5af117da`; PsPlatform `master` @ `41e2b6a`. Both build
+tiko `feat/cross-platform` @ `d8b9c0ff`; PsPlatform **`main`** @ `16298a6`. Both build
 warning-free, both are pushed, and tiko runs.
+
+**PsPlatform's default branch was renamed `master` → `main` on 2026-08-09.** Anything of yours
+that names the old one — a script, a checkout, a `git show master:…` — is now silently pointing
+at nothing. tiko's own branches are unaffected: `main`, `development`, `feat/cross-platform`.
 
 **Every count on this page was re-verified on 2026-08-07**, and the D2 sections again on
 2026-08-09. If you are reading this later, re-run them before quoting them — the commands are
