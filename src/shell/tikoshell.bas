@@ -91,12 +91,15 @@
 #include once "ui/core/PsCursorSync.inc"
 #include once "ui/core/PsMenuHost.inc"
 #include once "ui/core/PsTheme.inc"
+#include once "ui/core/PsThemeLoadFile.inc"
 #include once "ui/core/PsLayout.inc"
 #include once "ui/core/PsAccel.inc"
 #include once "ui/controls/PsMenuBar.inc"
 #include once "ui/controls/PsStatusBar.inc"
 #include once "ui/controls/PsTabBar.inc"
 #include once "scintilla/PsTextEngineC.inc"
+#include once "scintilla/PsSciView.inc"
+#include once "scintilla/PsSciClipboard.inc"
 
 '' ---- tiko's application layer ----------------------------------------------------------
 '' Every app\*.bi that tiko.bas includes, IN tiko.bas's OWN ORDER. That order is
@@ -293,6 +296,8 @@ sub ShellStub.OnPaint(byval p as PsBufferPaint_ ptr)
 end sub
 
 
+
+
 '' ---------------------------------------------------------------------------------------
 '' THE MENUS, BUILT FROM tiko's OWN VOCABULARY.
 ''
@@ -324,11 +329,64 @@ dim shared as ShellStub ptr g_tabs, g_topTabsMenu
 dim shared as ShellStub ptr g_panel, g_splitPanel
 dim shared as ShellStub ptr g_barInfo, g_barFind, g_barReplace
 dim shared as ShellStub ptr g_splitOutput, g_output, g_fip
-dim shared as ShellStub ptr g_body
+
+'' THE EDITOR, and the two scrollbars flanking it. tiko replaces Scintilla's own scrollbars
+'' with its PsVScrollBar/PsHScrollBar, so the editor rect is the document rect LESS both --
+'' see the reserve rule in the layout. The bars are stubs here: their GEOMETRY is layout and
+'' belongs in this commit; wiring them to the view is not.
+dim shared as PsSciView ptr g_view
+dim shared as ShellStub ptr g_vscroll, g_hscroll
 
 '' The document rect: the one rectangle every band above conspires to produce. Kept so the
 '' self-test can assert it directly, and commit 9 puts the editor in it.
 dim shared as PsRect g_rcDoc
+
+'' ---------------------------------------------------------------------------------------
+'' THE THEME REACHES THE EDITOR ONLY IF THE HOST TAKES IT THERE.
+''
+'' PsThemeApply walks the WIDGET tree, and Scintilla's colours live in its own style table
+'' behind SCI_* messages -- so the editor is the one thing a themed shell does not theme.
+'' The symptom is a WHITE PANE in the middle of an otherwise perfect window, and it is what
+'' ideshell found the day it was first composed with chrome.
+''
+'' Adapted from ideshell's StyleEditorFromTheme, INCLUDING its margin fix: STYLECLEARALL
+'' does not reach STYLE_LINENUMBER, so an editor themed to the last glyph still shows a
+'' white strip down its left edge. minieditor has that strip to this day.
+'' ---------------------------------------------------------------------------------------
+function ToBgr( byval c as PsColor ) as long
+    '' SCINTILLA WANTS 0x00BBGGRR; PsColor is 0xAARRGGBB. Getting this wrong does not fail,
+    '' it renders a plausible WRONG colour -- the hardest kind to notice in a palette you
+    '' have never seen.
+    return ((c and &hFF) shl 16) or (c and &hFF00) or ((c shr 16) and &hFF)
+end function
+
+sub StyleEditorFromTheme( byref surf as PsSurface )
+    if g_view = 0 then exit sub
+    if g_view->pSci = 0 then exit sub
+
+    dim as long bgrBack = ToBgr( PsThemeRoleColor(PSTHEME_BACKGROUNDALT) )
+    dim as long bgrFore = ToBgr( PsThemeRoleColor(PSTHEME_FOREGROUND) )
+    dim as long bgrSel  = ToBgr( PsThemeRoleColor(PSTHEME_SELECTION) )
+
+    '' STYLE_DEFAULT, THEN STYLECLEARALL, THEN THE REST. Setting style 0 alone leaves every
+    '' other style on Scintilla's built-in white -- a white page with correctly coloured
+    '' text on it.
+    g_view->Msg( SCI_STYLESETFORE, STYLE_DEFAULT, bgrFore )
+    g_view->Msg( SCI_STYLESETBACK, STYLE_DEFAULT, bgrBack )
+    g_view->Msg( SCI_STYLECLEARALL )
+
+    '' The caret and the selection are not styles, and STYLECLEARALL does not touch them.
+    g_view->Msg( SCI_SETCARETFORE, bgrFore )
+    g_view->Msg( SCI_SETSELBACK, 1, bgrSel )
+
+    '' AND NEITHER IS THE MARGIN.
+    g_view->Msg( SCI_STYLESETFORE, STYLE_LINENUMBER, ToBgr(PsThemeRoleColor(PSTHEME_FOREGROUNDDIM)) )
+    g_view->Msg( SCI_STYLESETBACK, STYLE_LINENUMBER, ToBgr(PsThemeRoleColor(PSTHEME_BACKGROUND)) )
+    g_view->Msg( SCI_SETMARGINTYPEN, 0, SC_MARGIN_NUMBER )
+    g_view->Msg( SCI_SETMARGINWIDTHN, 0, PsScaleBy(38, surf.fScale) )
+    g_view->Msg( SCI_SETMARGINWIDTHN, 1, 0 )
+    g_view->Msg( SCI_SETMARGINWIDTHN, 2, 0 )
+end sub
 
 '' getMenuText packs "caption" chr(9) "accel". Split rather than shown raw -- PsPopupMenu
 '' paints the accelerator right-aligned in its own column and takes it as a third argument.
@@ -516,8 +574,30 @@ sub BuildTree( byref surf as PsSurface )
     g_fip         = new ShellStub( @"FINDINPROJECT", PSTHEME_BACKGROUNDALT )
     root->AddChild( g_fip )
 
-    g_body = new ShellStub( @"EDIT0", PSTHEME_BACKGROUND )
-    root->AddChild( g_body )
+    g_vscroll = new ShellStub( @"", PSTHEME_BACKGROUNDRAISED )
+    root->AddChild( g_vscroll )
+    g_hscroll = new ShellStub( @"", PSTHEME_BACKGROUNDRAISED )
+    root->AddChild( g_hscroll )
+
+    '' A REAL PsSciView. Created at a nominal size -- OnLayout tells Scintilla the real one,
+    '' and Scintilla is TOLD its size rather than asked (PsSciView.inc:34-38).
+    g_view = new PsSciView
+    if g_view->Create( g_sFont, 400, 300 ) then
+        PsSciUseSystemClipboard( g_view )
+        dim as string sDoc = _
+            "' tiko shell -- phase 7c" & chr(10) & _
+            "'" & chr(10) & _
+            "' The editor is a PsSciView in frmMain's document rect." & chr(10) & _
+            "' The split modes are commit 10." & chr(10) & _
+            "" & chr(10) & _
+            "sub Main()" & chr(10) & _
+            "    print " & chr(34) & "hello" & chr(34) & chr(10) & _
+            "end sub" & chr(10)
+        g_view->Msg( SCI_SETTEXT, 0, cast(integer, strptr(sDoc)) )
+        g_view->Msg( SCI_SETCARETPERIOD, 530 )
+        g_view->Msg( SCI_EMPTYUNDOBUFFER )
+    end if
+    root->AddChild( g_view )
 
     g_status = new PsStatusBar
     '' tiko's statusbar has seven panels; their CONTENT is frmMain_SetStatusbar's job and
@@ -582,6 +662,13 @@ type ShellLayoutState
     nStatusH       as long = 46
     nTabsH         as long = 63
     nTopTabsMenuW  as long = 186
+    '' The editor's vertical scrollbar width, measured too -- AfxGetWindowWidth in tiko.
+    nVScrollW      as long = 23
+
+    '' tiko shows the H bar only when the document is wider than the pane, which is a
+    '' MODEL question this shell has no answer to. Its height is reserved either way; only
+    '' whether the bar is painted follows this.
+    bHScrollVisible as boolean = false
 end type
 
 dim shared as ShellLayoutState g_state
@@ -600,6 +687,7 @@ const SH_TOPTABS_REPLACE_HEIGHT = 40
 '' The top margin the info band's ELSE arm adds (frmMain.inc:915). Real behaviour, trivially
 '' lost in a transliteration, and invisible without an assertion.
 const SH_INFO_ABSENT_MARGIN   = 8
+const SH_SCROLLBAR_HEIGHT     = 12
 
 '' Clamp helper. THE CLAMP LIVES IN THE LAYOUT, NOT THE SPLITTER -- ideshell's contract,
 '' and tiko's too: PsSplitter_SetRange/SetPos/GetPos is frmMain handing the control limits
@@ -792,12 +880,44 @@ sub Shell_LayoutAll( byref surf as PsSurface, byref st as ShellLayoutState )
     if st.bFipActive then
         g_fip->SetBounds( g_rcDoc )
         g_fip->bVisible = true
-        g_body->bVisible = false
-    else
-        g_fip->bVisible = false
-        g_body->SetBounds( g_rcDoc )
-        g_body->bVisible = true
+        g_view->bVisible  = false
+        g_vscroll->bVisible = false
+        g_hscroll->bVisible = false
+        exit sub
     end if
+    g_fip->bVisible = false
+
+    '' ---- THE EDITOR AND ITS TWO SCROLLBARS ---------------------------------------------
+    '' frmMain_PositionMainDocBottom (frmMain.inc:743), the SplitNone arm. The split modes
+    '' are commit 10; until then the whole document rect is one view.
+    ''
+    '' THE HORIZONTAL SCROLLBAR'S HEIGHT IS ALWAYS RESERVED, VISIBLE OR NOT, and the comment
+    '' at frmMain.inc:759-762 says why: otherwise the VERTICAL scrollbar changes length every
+    '' time the H bar appears, and it visibly jumps. A reserve that depends on visibility is
+    '' the bug, not the fix.
+    ''
+    '' The vertical bar's WIDTH is measured -- AfxGetWindowWidth in tiko -- so it is state,
+    '' like the six sizes above. Its height is the editor's PLUS the reserved H strip, so the
+    '' two bars meet in the corner rather than leaving a notch.
+    dim as long nVScrollW = st.nVScrollW
+    dim as long nHScrollH = PsScaleBy( SH_SCROLLBAR_HEIGHT, f )
+
+    dim as long nEditW = g_rcDoc.w - nVScrollW
+    dim as long nEditH = g_rcDoc.h - nHScrollH
+    if nEditW < 0 then nEditW = 0
+    if nEditH < 0 then nEditH = 0
+
+    g_view->SetBounds( PsRc(g_rcDoc.x, g_rcDoc.y, nEditW, nEditH) )
+    g_view->bVisible = true
+
+    g_vscroll->SetBounds( PsRc(g_rcDoc.x + nEditW, g_rcDoc.y, nVScrollW, nEditH + nHScrollH) )
+    g_vscroll->bVisible = true
+
+    '' The H bar occupies the strip its height reserved. tiko only SHOWS it when the document
+    '' is wider than the pane -- a model question this shell has no answer to yet -- so it is
+    '' laid out unconditionally and its visibility follows the state flag.
+    g_hscroll->SetBounds( PsRc(g_rcDoc.x, g_rcDoc.y + nEditH, nEditW, nHScrollH) )
+    g_hscroll->bVisible = st.bHScrollVisible
 end sub
 
 '' The pump and the self-test both call this, so the live state is threaded from one place.
@@ -851,7 +971,9 @@ sub DumpState( byref surf as PsSurface, byval szState as zstring ptr )
     DumpChild( @"SPLITOUTPUT",   g_splitOutput )
     DumpChild( @"OUTPUT",        g_output )
     DumpChild( @"FINDINPROJECT", g_fip )
-    DumpChild( @"EDIT0",         g_body )
+    DumpChild( @"EDIT0",         g_view )
+    DumpChild( @"VSCROLL0",      g_vscroll )
+    DumpChild( @"HSCROLL0",      g_hscroll )
 end sub
 
 sub RunLayoutDump( byref surf as PsSurface )
@@ -998,7 +1120,7 @@ end function
     '' PsExePath is _shell\, so settings\ is one level UP. tiko.exe sits in the project root
     '' and resolves it directly; this binary deliberately does not, because two executables
     '' in one directory would share libpsscintilla.dll -- see _compile_shell.bat.
-    dim as DWSTRING sLangDir = PsExePath & "..\settings\languages\"
+    dim as DWSTRING sLangDir = PsExePath & "../settings/languages/"
     if LoadLocalizationFile( sLangDir & "english.lang", true ) = false then
         print "tikoshell: could not load " & (sLangDir & "english.lang").Utf8
         end 1
@@ -1015,6 +1137,27 @@ end function
     g_pnt.pText = @g_te
     surf.Resize( SH_W, SH_H )
     BuildTree( surf )
+
+    '' ---- A REAL tiko THEME, not an inline palette -----------------------------------
+    '' PsTheme reads tiko's own .theme format unchanged -- same keys, same roles, same
+    '' key -> role -> built-in resolution -- so this is the whole point of that being
+    '' true, exercised rather than asserted in the abstract. arctic.theme names no widget
+    '' keys at all, which is the path EIGHT of tiko's ten themes take.
+    scope
+        '' FORWARD SLASHES, and not for portability. fbc is processing backslash escapes
+        '' in this translation unit, so "..\settings	hemesrctic.theme" arrives with a TAB
+        '' where 	 was and a BELL where  was -- the path in the error message reads
+        '' "..\settings<tab>hemes<bell>rctic.theme". Windows takes / everywhere, and the
+        '' sLangDir above got away with it only because none of its letters is an escape.
+        dim as DWSTRING sTheme = PsExePath & "../settings/themes/arctic.theme"
+        dim as long n = PsThemeLoadFile( sTheme )
+        if n = 0 then
+            print "tikoshell: no theme loaded from " & sTheme.Utf8
+        end if
+        PsThemeApply( surf.pRoot )
+        StyleEditorFromTheme( surf )
+    end scope
+
     LayoutAll( surf )
 
     '' ---------------------------------------------------------------------- dump
@@ -1030,10 +1173,10 @@ end function
         print "--- tikoshell selftest ---"
 
         Check "the tree is built", (surf.pRoot <> 0)
-        '' Thirteen: the real menubar and statusbar, plus the eleven stubs standing in for
-        '' every other child frmMain_PositionWindows places. Two more arrive with the split
-        '' bars in commit 10.
-        Check "  thirteen children", (surf.pRoot->ChildCount() = 13), _
+        '' Fifteen: the real menubar, statusbar and PsSciView, plus twelve stubs standing
+        '' in for every other child frmMain_PositionWindows places. Two more arrive with
+        '' the split bars in commit 10.
+        Check "  fifteen children", (surf.pRoot->ChildCount() = 15), _
               str(surf.pRoot->ChildCount())
 
         '' ---- THE MENU VOCABULARY CAME FROM tiko ---------------------------------------
@@ -1278,9 +1421,10 @@ end function
         '' layout with a hole in it or two children on top of each other; this is not.
         '' It also scales -- thirteen children now, and the same helper covers twenty.
         scope
-            dim as PsWidget ptr kids(0 to 12) = { _
+            dim as PsWidget ptr kids(0 to 13) = { _
                 g_menubar, g_status, g_panel, g_splitPanel, g_tabs, g_topTabsMenu, _
-                g_barInfo, g_barFind, g_barReplace, g_splitOutput, g_output, g_fip, g_body }
+                g_barInfo, g_barFind, g_barReplace, g_splitOutput, g_output, g_fip, _
+                g_view, g_vscroll }
 
             dim as long nOverlap = 0
             dim as string sFirst = ""
@@ -1325,10 +1469,22 @@ end function
                                      * clngint(g_tabs->bounds.h)
             dim as longint nMargin = clngint(surf.w - g_rcDoc.x) _
                                      * clngint(PsScaleBy(SH_INFO_ABSENT_MARGIN, 1.75))
-            Check "  they cover the surface but for two deliberate gaps", _
-                  (nArea + nStrip + nMargin = clngint(surf.w) * clngint(surf.h)), _
-                  str(nArea) & " + " & str(nStrip) & " + " & str(nMargin) & _
-                  " vs " & str(clngint(surf.w) * clngint(surf.h))
+
+            '' THE THIRD GAP, AND IT IS THIS COMMIT'S MOST INTERESTING RULE. The horizontal
+            '' scrollbar's height is reserved out of the editor WHETHER OR NOT THE BAR IS
+            '' SHOWN (frmMain.inc:759-762) -- otherwise the VERTICAL bar changes length every
+            '' time the H bar appears and visibly jumps. So with the bar hidden, its strip is
+            '' a hole by design. A reserve that depended on visibility would close this gap
+            '' and reintroduce the jank.
+            dim as longint nHStrip = 0
+            if g_hscroll->bVisible = false then
+                nHStrip = clngint(g_view->bounds.w) * clngint(PsScaleBy(SH_SCROLLBAR_HEIGHT, 1.75))
+            end if
+
+            Check "  they cover the surface but for three deliberate gaps", _
+                  (nArea + nStrip + nMargin + nHStrip = clngint(surf.w) * clngint(surf.h)), _
+                  str(nArea) & " + " & str(nStrip) & " + " & str(nMargin) & " + " & _
+                  str(nHStrip) & " vs " & str(clngint(surf.w) * clngint(surf.h))
             Check "    the strip right of the icon panel is the scrollbar reserve", _
                   (surf.w - (g_topTabsMenu->bounds.x + g_topTabsMenu->bounds.w) = _
                    PsScaleBy(SH_SCROLLBAR_WIDTH_EDITOR, 1.75)), _
@@ -1394,7 +1550,8 @@ end function
             Check "Find in Project occupies the document rect", _
                   (g_fip->bounds.x = g_rcDoc.x) andalso (g_fip->bounds.y = g_rcDoc.y) andalso _
                   (g_fip->bounds.w = g_rcDoc.w) andalso (g_fip->bounds.h = g_rcDoc.h)
-            Check "  and the editor is not shown", (g_body->bVisible = false)
+            Check "  and the editor is not shown", (g_view->bVisible = false)
+            Check "  nor its scrollbars", (g_vscroll->bVisible = false)
             g_state.bFipActive = false : LayoutAll( surf )
         end scope
 
@@ -1403,6 +1560,83 @@ end function
         surf.Resize( SH_W, SH_H )
         if surf.pRoot then surf.pRoot->PropagateScaleChanged( 1.0 )
         LayoutAll( surf )
+
+        '' ---- THE EDITOR SEAM ----------------------------------------------------------
+        '' PsThemeApply walks the WIDGET tree and Scintilla's colours are behind SCI_*
+        '' messages, so the editor is the one thing a themed shell does not theme. The
+        '' symptom is a WHITE PANE in the middle of an otherwise perfect window, and no
+        '' assertion about widgets can see it.
+        Check "the editor was created", (g_view <> 0) andalso (g_view->pSci <> 0)
+
+        '' EXACT, AND ON A COLOUR WHOSE CHANNELS ALL DIFFER. arctic.theme's backgroundalt is
+        '' 59,66,82 -- as Scintilla BGR that is &h52423B and as RGB it would be &h3B4252.
+        '' Asserting against a grey, a white or a black would pass with the channels
+        '' swapped and leave every real theme reversed.
+        Check "the editor background is the role, in Scintilla's BGR", _
+              (g_view->Msg(SCI_STYLEGETBACK, STYLE_DEFAULT) = &h52423B), _
+              hex(g_view->Msg(SCI_STYLEGETBACK, STYLE_DEFAULT))
+
+        '' AND THE MARGIN, which STYLECLEARALL does not reach. An editor themed to the last
+        '' glyph still shows a white strip down its left edge without this -- minieditor has
+        '' that strip today, and it took composing an editor with chrome to notice, because
+        '' filling the window makes it read as a border.
+        Check "  and the MARGIN is themed too", _
+              (g_view->Msg(SCI_STYLEGETBACK, STYLE_LINENUMBER) <> &hFFFFFF), _
+              hex(g_view->Msg(SCI_STYLEGETBACK, STYLE_LINENUMBER))
+        Check "    from the background role, not the editor's", _
+              (g_view->Msg(SCI_STYLEGETBACK, STYLE_LINENUMBER) = _
+               ToBgr(PsThemeRoleColor(PSTHEME_BACKGROUND)))
+
+        '' ---- THE SCROLLBAR RESERVE ----------------------------------------------------
+        scope
+            surf.fScale = 1.75
+            surf.Resize( 1400, 900 )
+            g_state.nMenubarH = 52 : g_state.nStatusH = 46 : g_state.nPanelW = 413
+            g_state.nTopTabsMenuW = 186 : g_state.nTabsH = 63 : g_state.nOutputH = 194
+            g_state.nTabCount = 3 : g_state.bHScrollVisible = false
+            LayoutAll( surf )
+
+            '' THE RULE, NOT THE ABSOLUTE NUMBER. tiko puts the unsplit editor at 954x500 in
+            '' this state and the shell puts it at 953x499 -- one pixel in each direction,
+            '' inherited from the splitter-grab rounding that shifts the document rect
+            '' itself (difference class 1 in docs/port/layout-oracle/README.md). Asserting
+            '' 954 here would be asserting the oracle's ROUNDING, not the layout, and the
+            '' checked-in dumps are where absolute numbers get compared.
+            Check "the editor is the document rect less BOTH scrollbars", _
+                  (g_view->bounds.w = g_rcDoc.w - g_state.nVScrollW) andalso _
+                  (g_view->bounds.h = g_rcDoc.h - PsScaleBy(SH_SCROLLBAR_HEIGHT, 1.75)), _
+                  str(g_view->bounds.w) & "x" & str(g_view->bounds.h) & _
+                  " from " & str(g_rcDoc.w) & "x" & str(g_rcDoc.h)
+            Check "  the vertical bar takes the width", _
+                  (g_rcDoc.w - g_view->bounds.w = g_state.nVScrollW)
+            Check "  and the horizontal one takes the height", _
+                  (g_rcDoc.h - g_view->bounds.h = PsScaleBy(SH_SCROLLBAR_HEIGHT, 1.75))
+
+            '' THE RESERVE DOES NOT DEPEND ON VISIBILITY. This is the assertion that would
+            '' catch someone "fixing" the gap the coverage check names: the editor must be
+            '' the same size with the bar shown and hidden, or the vertical bar jumps every
+            '' time the document gets wider than the pane.
+            dim as long hHidden = g_view->bounds.h
+            g_state.bHScrollVisible = true
+            LayoutAll( surf )
+            Check "  and showing the H bar does NOT resize the editor", _
+                  (g_view->bounds.h = hHidden), str(hHidden) & " -> " & str(g_view->bounds.h)
+            g_state.bHScrollVisible = false
+            LayoutAll( surf )
+
+            '' The vertical bar spans the editor PLUS the reserved strip, so the two meet in
+            '' the corner instead of leaving a notch.
+            Check "the vertical bar reaches the corner", _
+                  (g_vscroll->bounds.h = g_view->bounds.h + PsScaleBy(SH_SCROLLBAR_HEIGHT, 1.75)), _
+                  str(g_vscroll->bounds.h)
+            Check "  and sits against the editor's right edge", _
+                  (g_vscroll->bounds.x = g_view->bounds.x + g_view->bounds.w)
+
+            surf.fScale = 1.0
+            surf.Resize( SH_W, SH_H )
+            if surf.pRoot then surf.pRoot->PropagateScaleChanged( 1.0 )
+            LayoutAll( surf )
+        end scope
 
         '' NO WINDOW WAS CREATED, and the surface says so. hWin is the marker PsModalHost
         '' reads to find a dialog's parent, so a surface that acquired one by accident here

@@ -81,12 +81,18 @@ The shell keeps PsPlatform's rule rather than reimplementing tiko's. Reproducing
 half-to-even inside the shell would make its bands disagree with the rounding every control
 uses internally — trading a visible one-pixel difference for an invisible one.
 
-**2. `EDIT0` is the DOCUMENT RECT, not the editor.** The oracle's `EDIT0` has the vertical
-scrollbar (23px) and the always-reserved horizontal scrollbar height (21px) taken out of it;
-the shell has no editor chrome until commit 9 and no split helpers until commit 10, so it
-reports the whole rect. Expect the right edge and bottom to differ by exactly those.
+~~**2. `EDIT0` is the DOCUMENT RECT, not the editor.**~~ **CLOSED by commit 9.** The editor
+now takes both scrollbar reserves out of the document rect exactly as
+`frmMain_PositionMainDocBottom` does, and the numbers agree: `EDIT0`'s right edge is 1377 on
+both sides in `BASE`, and its bottom is 833 on both in `OUTPUT_HIDDEN`. What remains of this
+class is only class 1 arriving second-hand — the document rect is itself one pixel off, so
+the editor computed from it is too.
 
-**A difference outside these two classes is a real one.** That is what this file is for.
+**So there is ONE difference class left, and it is the rounding.** All 47 differing fields
+across the eight states are a one-pixel shift traceable to `SPLITTER_GRAB`. Every Y
+coordinate and every height that does not depend on `nLeft` matches exactly.
+
+**A difference outside that class is a real one.** That is what this file is for.
 
 ## States, and what each is for
 
