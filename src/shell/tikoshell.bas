@@ -310,10 +310,25 @@ end sub
 '' more than 128 user tools would overflow the Tools popup. Recorded, not fixed: it is a
 '' pre-existing property of tiko's own menu and nothing here makes it worse.
 '' ---------------------------------------------------------------------------------------
-dim shared as ShellStub  ptr g_body
 dim shared as PsMenuBar  ptr g_menubar
 dim shared as PsStatusBar ptr g_status
-dim shared as PsTabBar   ptr g_tabs
+
+'' EVERY OTHER CHILD IS A STUB, and each is named as the ORACLE names it -- so a dump and a
+'' self-test failure can be read against each other without a translation table.
+''
+'' g_tabs was a real PsTabBar in commit 4 and is a stub from this one. The layout now needs
+'' a band whose height IT controls rather than one the control decides, and a stub paints
+'' its own bounds, which is what makes a misplaced band visible without reading an
+'' assertion. The real control returns when the tab MODEL does, well past step 1.
+dim shared as ShellStub ptr g_tabs, g_topTabsMenu
+dim shared as ShellStub ptr g_panel, g_splitPanel
+dim shared as ShellStub ptr g_barInfo, g_barFind, g_barReplace
+dim shared as ShellStub ptr g_splitOutput, g_output, g_fip
+dim shared as ShellStub ptr g_body
+
+'' The document rect: the one rectangle every band above conspires to produce. Kept so the
+'' self-test can assert it directly, and commit 9 puts the editor in it.
+dim shared as PsRect g_rcDoc
 
 '' getMenuText packs "caption" chr(9) "accel". Split rather than shown raw -- PsPopupMenu
 '' paints the accelerator right-aligned in its own column and takes it as a third argument.
@@ -472,10 +487,36 @@ sub BuildTree( byref surf as PsSurface )
     g_menubar->OnOpenRequest( @OnBarOpen )
     root->AddChild( g_menubar )
 
-    g_tabs = new PsTabBar
+    '' THE TAB BAR IS A STUB TOO, from this commit on. PsTabBar is a real control and was
+    '' real in commit 4, but the layout now needs a band whose height it CONTROLS rather
+    '' than one the control decides -- and a stub prints its own bounds, which is what makes
+    '' a misplaced band visible without reading an assertion. The real PsTabBar comes back
+    '' when the tab MODEL does, which is well past step 1.
+    g_tabs = new ShellStub( @"TOPTABS", PSTHEME_BACKGROUNDRAISED )
     root->AddChild( g_tabs )
 
-    g_body = new ShellStub( @"document area", PSTHEME_BACKGROUND )
+    '' Every remaining child frmMain_PositionWindows places, named as the ORACLE names them
+    '' so a dump and a self-test failure can be read against each other.
+    g_topTabsMenu = new ShellStub( @"TOPTABSMENU", PSTHEME_BACKGROUNDRAISED )
+    root->AddChild( g_topTabsMenu )
+    g_panel       = new ShellStub( @"PANEL",       PSTHEME_BACKGROUNDALT )
+    root->AddChild( g_panel )
+    g_splitPanel  = new ShellStub( @"",            PSTHEME_BORDER )
+    root->AddChild( g_splitPanel )
+    g_barInfo     = new ShellStub( @"TOPTABSINFO", PSTHEME_BACKGROUNDRAISED )
+    root->AddChild( g_barInfo )
+    g_barFind     = new ShellStub( @"FIND",        PSTHEME_BACKGROUNDRAISED )
+    root->AddChild( g_barFind )
+    g_barReplace  = new ShellStub( @"REPLACE",     PSTHEME_BACKGROUNDRAISED )
+    root->AddChild( g_barReplace )
+    g_splitOutput = new ShellStub( @"",            PSTHEME_BORDER )
+    root->AddChild( g_splitOutput )
+    g_output      = new ShellStub( @"OUTPUT",      PSTHEME_BACKGROUNDALT )
+    root->AddChild( g_output )
+    g_fip         = new ShellStub( @"FINDINPROJECT", PSTHEME_BACKGROUNDALT )
+    root->AddChild( g_fip )
+
+    g_body = new ShellStub( @"EDIT0", PSTHEME_BACKGROUND )
     root->AddChild( g_body )
 
     g_status = new PsStatusBar
@@ -485,19 +526,387 @@ sub BuildTree( byref surf as PsSurface )
     root->AddChild( g_status )
 end sub
 
-sub LayoutAll( byref surf as PsSurface )
+
+'' ========================================================================================
+'' ShellLayoutState -- WHAT frmMain's LAYOUT ACTUALLY DEPENDS ON.
+''
+'' THE INVERSION IS THE WORK IN THIS COMMIT, and it reads smaller than it is.
+'' frmMain_PositionWindows reads its own inputs OUT OF ITS OWN WINDOWS --
+'' AfxGetWindowHeight(HWND_FRMOUTPUT), IsWindowVisible(HWND_FRMPANEL),
+'' AfxGetWindowWidth(HWND_FRMPANEL). The windows ARE the model, so the function cannot be
+'' asked what it would do in a state that is not on screen right now.
+''
+'' Here the state is an argument. Shell_LayoutAll is a pure function of (w, h, fScale,
+'' state), which is what makes twenty children assertable in sixteen configurations
+'' without a display -- and it is what lets the self-test diff against the oracle.
+''
+'' EVERYTHING IS IN DESIGN UNITS. The four sizes below are stored unscaled and scaled at
+'' use, exactly as ideshell stores splitter positions, so a DPI change moves no furniture.
+'' ========================================================================================
+type ShellLayoutState
+    '' ---- PIXELS, NOT DESIGN UNITS, AND THAT IS NOT A CHOICE --------------------------
+    '' frmMain reads all six of the sizes below with AfxGetWindowHeight/Width and uses them
+    '' UNSCALED; only the layout CONSTANTS go through pWindow->ScaleX/Y. Storing these in
+    '' design units and scaling them here would be a different layout, and the first
+    '' version of this file did exactly that.
+    ''
+    '' The consequence is tiko's, not this port's: gConfig.ShowPanelWidth is written from a
+    '' live pixel width, so a panel sized at 175% and reopened at 100% comes back a third
+    '' narrower. Reproduced because the oracle records it; worth fixing one day, and not
+    '' here.
+    nPanelW        as long = 413      '' gConfig.ShowPanelWidth, as measured
+    nOutputH       as long = 194      '' gConfig.ShowOutputPanelHeight, as measured
+
+    '' Visibility, which frmMain reads with IsWindowVisible on the real windows.
+    bPanelVisible  as boolean = true      '' gConfig.ShowPanel
+    bExplorerRight as boolean = false     '' gConfig.ExplorerPositionRight
+    bOutputVisible as boolean = true      '' gConfig.ShowOutputPanel
+    '' ORTHOGONAL to bOutputVisible, and frmMain.inc:963-970 explains why: while undocked
+    '' the panel IS visible -- it fills its own frame -- so IsWindowVisible alone would keep
+    '' reserving space at the bottom of frmMain for a window that is no longer there.
+    bOutputFloating as boolean = false
+
+    bShowInfo      as boolean = false     '' gFind.bShowInfoPanel
+    bShowFind      as boolean = false     '' gFind.bShowFindPanel
+    bShowReplace   as boolean = false     '' gFind.bShowReplacePanel
+
+    nTabCount      as long = 1            '' gTTabCtl.GetItemCount()
+    bFipActive     as boolean = false     '' frmFindInProject_IsActive()
+
+    '' MEASURED, NOT CONSTANT, and pixels for the same reason as the two above. frmMain
+    '' reads these four out of the controls because each sizes itself from its font, and a
+    '' widget tree cannot ask before it has laid out. The oracle prints all six in its
+    '' header for exactly this reason: they are INPUTS to any comparison, not results of it.
+    '' The defaults here are this machine at 1.75.
+    nMenubarH      as long = 52
+    nStatusH       as long = 46
+    nTabsH         as long = 63
+    nTopTabsMenuW  as long = 186
+end type
+
+dim shared as ShellLayoutState g_state
+
+'' tiko's own layout constants, design units, from frmMain.bi and modDeclares.bi. Named
+'' identically so the transliteration below can be read beside frmMain.inc:796-1092.
+const SH_SPLITTER_GRAB        = 6
+const SH_PANEL_MIN_WIDTH      = 236
+const SH_PANEL_MIN_CONTENT    = 240
+const SH_OUTPUT_MIN_EDITOR    = 120
+const SH_OUTPUT_TABS_HEIGHT   = 40
+const SH_SCROLLBAR_WIDTH_EDITOR = 12
+const SH_TOPTABS_INFO_HEIGHT    = 40
+const SH_TOPTABS_FIND_HEIGHT    = 40
+const SH_TOPTABS_REPLACE_HEIGHT = 40
+'' The top margin the info band's ELSE arm adds (frmMain.inc:915). Real behaviour, trivially
+'' lost in a transliteration, and invisible without an assertion.
+const SH_INFO_ABSENT_MARGIN   = 8
+
+'' Clamp helper. THE CLAMP LIVES IN THE LAYOUT, NOT THE SPLITTER -- ideshell's contract,
+'' and tiko's too: PsSplitter_SetRange/SetPos/GetPos is frmMain handing the control limits
+'' it computed and then taking the clamped value back ("take back the clamp", twice in
+'' frmMain.inc). The control cannot know about the editor scrollbars flanking the panes.
+function ClampTo( byval v as long, byval lo as long, byval hi as long ) as long
+    if hi < lo then return lo
+    if v < lo then return lo
+    if v > hi then return hi
+    return v
+end function
+
+'' ========================================================================================
+'' Shell_LayoutAll -- frmMain_PositionWindows (frmMain.inc:796-1092), as a pure function.
+''
+'' A TRANSLITERATION, deliberately, and it is meant to be read beside the original. The band
+'' order, the clamp-and-re-derive dance, the reserve arithmetic and the two mirrorings are
+'' the same; what changed is that the inputs arrive in `st` instead of being read back out
+'' of the windows, and SetWindowPos became SetBounds.
+''
+'' NOT HERE: the three document split modes. frmMain delegates those to four helpers at
+'' :608, :651, :696 and :743; they are commit 10, and until then the whole document rect
+'' goes to one stub.
+'' ========================================================================================
+sub Shell_LayoutAll( byref surf as PsSurface, byref st as ShellLayoutState )
     dim as single f = surf.fScale
-    dim as PsDocker dk = PsDocker( PsRc(0, 0, surf.w, surf.h), f )
+    dim as long W = surf.w
+    dim as long H = surf.h
 
-    '' The three docked bands, top and bottom, exactly as frmMain_PositionWindows does them:
-    '' menubar pinned full width at the top, statusbar full width at the bottom, tab bar
-    '' under the menubar. What is left is the document area.
-    dk.DockTop( g_menubar, SH_MENUBAR_H )
-    dk.DockTop( g_tabs, SH_TABS_H )
-    dk.DockBottom( g_status, SH_STATUS_H )
+    '' The six measured sizes are PIXELS and are used as they arrive; only the SH_*
+    '' constants below go through PsScaleBy. That asymmetry is frmMain's, exactly.
+    dim as long nMenubarH = st.nMenubarH
+    dim as long nStatusH  = st.nStatusH
 
-    dim as PsRect rcWork = dk.Fill()
-    if g_body then g_body->SetBounds( rcWork )
+    '' ---- the two pinned bands ----------------------------------------------------------
+    g_menubar->SetBounds( PsRc(0, 0, W, nMenubarH) )
+    g_status->SetBounds( PsRc(0, H - nStatusH, W, nStatusH) )
+
+    dim as long nLeft = 0
+    dim as long nTop  = nMenubarH
+
+    '' ---- the side panel and its splitter, mirrorable -----------------------------------
+    '' The bar sits on the panel's INNER edge, and its strip is taken from the CONTENT area
+    '' so the panel keeps its width and ShowPanelWidth round-trips unchanged. nPanelW keeps
+    '' meaning the true panel width; nPanelReserve (panel + bar) is what the content gives up.
+    dim as long nGrabPanel    = PsScaleBy( SH_SPLITTER_GRAB, f )
+    dim as long nPanelReserve = 0
+    dim as long nPanelW       = st.nPanelW
+
+    if st.bPanelVisible then
+        dim as long nBarPos
+        if st.bExplorerRight then
+            nBarPos = ClampTo( W - nPanelW - nGrabPanel, _
+                               PsScaleBy(SH_PANEL_MIN_CONTENT, f), _
+                               W - nGrabPanel - PsScaleBy(SH_PANEL_MIN_WIDTH, f) )
+            nPanelW = W - nBarPos - nGrabPanel
+        else
+            nBarPos = ClampTo( nPanelW, _
+                               PsScaleBy(SH_PANEL_MIN_WIDTH, f), _
+                               W - nGrabPanel - PsScaleBy(SH_PANEL_MIN_CONTENT, f) )
+            nPanelW = nBarPos
+        end if
+        if nPanelW < 0 then nPanelW = 0
+
+        dim as long nPanelX = nLeft
+        if st.bExplorerRight then nPanelX = W - nPanelW
+        dim as long nPanelH = H - nStatusH - nMenubarH
+
+        g_panel->SetBounds( PsRc(nPanelX, nTop, nPanelW, nPanelH) )
+        g_splitPanel->SetBounds( PsRc(nBarPos, nTop, nGrabPanel, nPanelH) )
+        g_panel->bVisible = true
+        g_splitPanel->bVisible = true
+
+        nPanelReserve = nPanelW + nGrabPanel
+        nLeft = nPanelReserve
+        if st.bExplorerRight then nLeft = 0
+    else
+        nPanelW = 0
+        g_panel->bVisible = false
+        g_splitPanel->bVisible = false
+    end if
+
+    '' ---- the tab bar and its icon strip ------------------------------------------------
+    dim as long nTabsH = 0
+    if st.nTabCount = 0 then
+        g_tabs->bVisible = false
+        g_topTabsMenu->bVisible = false
+    else
+        nTabsH = st.nTabsH
+        dim as long nMenuW = st.nTopTabsMenuW
+
+        '' ------------------------------------------------------------------------------
+        '' THIS REPRODUCES A DEFECT, ON PURPOSE. nLeftMenu is computed from the FULL client
+        '' width regardless of dock side, and the tab bar width is then
+        '' nLeftMenu - nPanelReserve. Both are right only when the panel is docked LEFT,
+        '' where the content area really does run to the right edge.
+        ''
+        '' With the panel docked RIGHT the icon strip lands ON TOP OF THE PANEL and the tab
+        '' bar leaves a hole beside it -- docs/port/layout-oracle/README.md has the numbers.
+        '' The general form is nLeft + (W - nPanelReserve) for the strip and nLeftMenu - nLeft
+        '' for the bar, and both reduce to these when docked left.
+        ''
+        '' Reproduced rather than fixed because this commit is a PORT: the oracle records
+        '' what tiko does, the diff against it is the evidence the port is faithful, and
+        '' changing tiko's behaviour is a separate decision with its own verification.
+        '' ------------------------------------------------------------------------------
+        dim as long nLeftMenu = W - PsScaleBy(SH_SCROLLBAR_WIDTH_EDITOR, f) - nMenuW
+
+        g_topTabsMenu->SetBounds( PsRc(nLeftMenu, nTop, nMenuW, nTabsH) )
+        g_tabs->SetBounds( PsRc(nLeft, nTop, nLeftMenu - nPanelReserve, nTabsH) )
+        g_topTabsMenu->bVisible = true
+        g_tabs->bVisible = true
+        nTop += nTabsH
+    end if
+
+    '' ---- the three conditional bands ---------------------------------------------------
+    '' Each spans the CONTENT width and advances nTop by its own height. The info band's
+    '' ELSE arm is NOT a no-op: it adds a top margin so the find band is not flush against
+    '' the tab bar. Trivially lost in a transliteration and invisible without an assertion.
+    if st.bShowInfo then
+        dim as long hBand = PsScaleBy( SH_TOPTABS_INFO_HEIGHT, f )
+        g_barInfo->SetBounds( PsRc(nLeft, nTop, W - nPanelReserve, hBand) )
+        g_barInfo->bVisible = true
+        nTop += hBand
+    else
+        g_barInfo->bVisible = false
+        nTop += PsScaleBy( SH_INFO_ABSENT_MARGIN, f )
+    end if
+
+    if st.bShowFind then
+        dim as long hBand = PsScaleBy( SH_TOPTABS_FIND_HEIGHT, f )
+        g_barFind->SetBounds( PsRc(nLeft, nTop, W - nPanelReserve, hBand) )
+        g_barFind->bVisible = true
+        nTop += hBand
+    else
+        g_barFind->bVisible = false
+    end if
+
+    if st.bShowReplace then
+        dim as long hBand = PsScaleBy( SH_TOPTABS_REPLACE_HEIGHT, f )
+        g_barReplace->SetBounds( PsRc(nLeft, nTop, W - nPanelReserve, hBand) )
+        g_barReplace->bVisible = true
+        nTop += hBand
+    else
+        g_barReplace->bVisible = false
+    end if
+
+    '' ---- the output panel and its splitter ---------------------------------------------
+    '' Same clamp-and-re-derive as the side panel, and the same reason: the bar and the
+    '' panel must not be able to disagree about where the boundary is.
+    dim as long nGrabOut       = PsScaleBy( SH_SPLITTER_GRAB, f )
+    dim as long nOutputReserve = 0
+    dim as long nOutputH       = st.nOutputH
+
+    '' A FLOATING panel reserves nothing and takes the else branch. The test is explicit
+    '' rather than folded into the visibility one -- see the note on ShellLayoutState.
+    dim as boolean bDockedAndVisible = (st.bOutputFloating = false) andalso st.bOutputVisible
+    if bDockedAndVisible then
+        dim as long nBarPos = ClampTo( H - nStatusH - nOutputH - nGrabOut, _
+                                       nTop + PsScaleBy(SH_OUTPUT_MIN_EDITOR, f), _
+                                       H - nStatusH - PsScaleBy(SH_OUTPUT_TABS_HEIGHT, f) - nGrabOut )
+        nOutputH = H - nStatusH - (nBarPos + nGrabOut)
+        if nOutputH < 0 then nOutputH = 0
+
+        g_splitOutput->SetBounds( PsRc(nLeft, nBarPos, W - nLeft, nGrabOut) )
+        g_output->SetBounds( PsRc(nLeft, nBarPos + nGrabOut, W - nLeft, nOutputH) )
+        g_splitOutput->bVisible = true
+        g_output->bVisible = true
+        nOutputReserve = nOutputH + nGrabOut
+    else
+        nOutputH = 0
+        g_splitOutput->bVisible = false
+        g_output->bVisible = false
+    end if
+
+    '' ---- the document rect, which every band above exists to produce -------------------
+    '' Computed for BOTH branches. frmMain used to build this inside its `if pDoc then`,
+    '' which meant that with a document-less tab active nothing computed it at all.
+    g_rcDoc.x = nLeft
+    g_rcDoc.y = nTop
+    dim as long nDocRight = W
+    if st.bExplorerRight then nDocRight = W - nPanelReserve
+    g_rcDoc.w = nDocRight - nLeft
+    g_rcDoc.h = (H - nStatusH - nOutputReserve) - nTop
+    if g_rcDoc.w < 0 then g_rcDoc.w = 0
+    if g_rcDoc.h < 0 then g_rcDoc.h = 0
+
+    '' Find in Project occupies exactly the document rect when its tab is active, and the
+    '' editor is not shown at all then.
+    if st.bFipActive then
+        g_fip->SetBounds( g_rcDoc )
+        g_fip->bVisible = true
+        g_body->bVisible = false
+    else
+        g_fip->bVisible = false
+        g_body->SetBounds( g_rcDoc )
+        g_body->bVisible = true
+    end if
+end sub
+
+'' The pump and the self-test both call this, so the live state is threaded from one place.
+sub LayoutAll( byref surf as PsSurface )
+    Shell_LayoutAll( surf, g_state )
+end sub
+
+
+'' ========================================================================================
+'' --dump-layout: THE SAME STATES THE ORACLE DUMPS, IN THE ORACLE'S FORMAT.
+''
+'' The self-test asserts RELATIONS -- this band above that one, the children tiling the
+'' client area -- and relations are satisfied by a wrong-but-self-consistent layout. This
+'' prints NUMBERS, so `diff` against docs/port/layout-oracle/ answers the question relations
+'' cannot: are the bands where tiko puts them.
+''
+'' The state's six MEASURED sizes are set from the oracle's header rather than guessed. They
+'' are inputs -- read out of live controls in tiko, and unavailable to a widget tree before
+'' it lays out -- so a comparison that did not take them from the same place would be
+'' comparing two different questions.
+'' ========================================================================================
+sub DumpChild( byval szName as zstring ptr, byval p as PsWidget ptr )
+    if p = 0 then
+        print "  " & *szName & " absent"
+        exit sub
+    end if
+    if p->bVisible = false then
+        print "  " & *szName & " hidden"
+        exit sub
+    end if
+    '' The oracle prints left,top,RIGHT,BOTTOM and then the extent. PsRect is x,y,w,h.
+    print "  " & *szName & " " & _
+          str(p->bounds.x) & "," & str(p->bounds.y) & "," & _
+          str(p->bounds.x + p->bounds.w) & "," & str(p->bounds.y + p->bounds.h) & _
+          " (" & str(p->bounds.w) & "x" & str(p->bounds.h) & ")"
+end sub
+
+sub DumpState( byref surf as PsSurface, byval szState as zstring ptr )
+    Shell_LayoutAll( surf, g_state )
+    print
+    print "[" & *szState & "]"
+    DumpChild( @"MENUBAR",       g_menubar )
+    DumpChild( @"STATUSBAR",     g_status )
+    DumpChild( @"PANEL",         g_panel )
+    DumpChild( @"SPLITPANEL",    g_splitPanel )
+    DumpChild( @"TOPTABS",       g_tabs )
+    DumpChild( @"TOPTABSMENU",   g_topTabsMenu )
+    DumpChild( @"TOPTABSINFO",   g_barInfo )
+    DumpChild( @"FIND",          g_barFind )
+    DumpChild( @"REPLACE",       g_barReplace )
+    DumpChild( @"SPLITOUTPUT",   g_splitOutput )
+    DumpChild( @"OUTPUT",        g_output )
+    DumpChild( @"FINDINPROJECT", g_fip )
+    DumpChild( @"EDIT0",         g_body )
+end sub
+
+sub RunLayoutDump( byref surf as PsSurface )
+    '' The oracle's own inputs, from its header. Six measured sizes and the client size.
+    surf.fScale = 1.75
+    surf.Resize( 1400, 900 )
+    g_state.nMenubarH     = 52
+    g_state.nStatusH      = 46
+    g_state.nPanelW       = 413
+    g_state.nTopTabsMenuW = 186
+    g_state.nTabsH        = 63
+    g_state.nOutputH      = 194
+    g_state.nTabCount     = 3
+    if surf.pRoot then surf.pRoot->PropagateScaleChanged( surf.fScale )
+
+    print "TIKO SHELL LAYOUT"
+    print "client " & str(surf.w) & "x" & str(surf.h)
+    print "scale " & str(surf.fScale)
+
+    g_state.bPanelVisible = true : g_state.bExplorerRight = false
+    g_state.bOutputVisible = true : g_state.bOutputFloating = false
+    g_state.bShowInfo = false : g_state.bShowFind = false : g_state.bShowReplace = false
+    g_state.bFipActive = false
+    DumpState( surf, @"BASE panel=left output=docked bars=none" )
+
+    g_state.bPanelVisible = false
+    DumpState( surf, @"PANEL_HIDDEN" )
+    g_state.bPanelVisible = true
+
+    g_state.bExplorerRight = true
+    DumpState( surf, @"PANEL_RIGHT" )
+    g_state.bExplorerRight = false
+
+    g_state.bOutputVisible = false
+    DumpState( surf, @"OUTPUT_HIDDEN" )
+    g_state.bOutputVisible = true
+
+    g_state.bShowInfo = true
+    DumpState( surf, @"BAR_INFO" )
+    g_state.bShowInfo = false
+
+    g_state.bShowFind = true
+    DumpState( surf, @"BAR_FIND" )
+    g_state.bShowFind = false
+
+    g_state.bShowReplace = true
+    DumpState( surf, @"BAR_REPLACE" )
+    g_state.bShowReplace = false
+
+    g_state.bShowInfo = true : g_state.bShowFind = true : g_state.bShowReplace = true
+    DumpState( surf, @"BAR_ALL" )
+    g_state.bShowInfo = false : g_state.bShowFind = false : g_state.bShowReplace = false
+
+    print
+    print "LAYOUT DUMP COMPLETE"
 end sub
 
 '' ---------------------------------------------------------------------------------------
@@ -555,8 +964,10 @@ end function
 
 '' ======================================================================== main
     dim as boolean bSelfTest = false
+    dim as boolean bDumpLayout = false
     for i as integer = 1 to __FB_ARGC__ - 1
         if command(i) = "--selftest" then bSelfTest = true
+        if command(i) = "--dump-layout" then bDumpLayout = true
     next
 
     if PsPlatformInit() = false then
@@ -606,12 +1017,23 @@ end function
     BuildTree( surf )
     LayoutAll( surf )
 
+    '' ---------------------------------------------------------------------- dump
+    if bDumpLayout then
+        RunLayoutDump( surf )
+        TE_Free( g_te )
+        PsPlatformShutdown()
+        end 0
+    end if
+
     '' ---------------------------------------------------------------------- selftest
     if bSelfTest then
         print "--- tikoshell selftest ---"
 
         Check "the tree is built", (surf.pRoot <> 0)
-        Check "  menubar, tabs, body, statusbar", (surf.pRoot->ChildCount() = 4), _
+        '' Thirteen: the real menubar and statusbar, plus the eleven stubs standing in for
+        '' every other child frmMain_PositionWindows places. Two more arrive with the split
+        '' bars in commit 10.
+        Check "  thirteen children", (surf.pRoot->ChildCount() = 13), _
               str(surf.pRoot->ChildCount())
 
         '' ---- THE MENU VOCABULARY CAME FROM tiko ---------------------------------------
@@ -664,34 +1086,21 @@ end function
               (g_status->bounds.y + g_status->bounds.h = surf.h), _
               str(g_status->bounds.y + g_status->bounds.h) & " vs " & str(surf.h)
 
-        '' NO GAP AND NO OVERLAP down the middle. The weak version of commit 8's
-        '' coverage/disjointness pair, on the four children that exist so far.
-        Check "the body starts at the tab bar's bottom", _
-              (g_body->bounds.y = g_tabs->bounds.y + g_tabs->bounds.h), _
-              str(g_body->bounds.y)
-        Check "  and ends at the status bar's top", _
-              (g_body->bounds.y + g_body->bounds.h = g_status->bounds.y), _
-              str(g_body->bounds.y + g_body->bounds.h) & " vs " & str(g_status->bounds.y)
-        Check "  the four bands tile the surface exactly", _
-              (g_menubar->bounds.h + g_tabs->bounds.h + g_body->bounds.h + _
-               g_status->bounds.h = surf.h), _
-              str(g_menubar->bounds.h) & "+" & str(g_tabs->bounds.h) & "+" & _
-              str(g_body->bounds.h) & "+" & str(g_status->bounds.h) & " vs " & str(surf.h)
-
-        '' A RESIZE MUST RE-LAY-OUT, and the bands must still tile. The chrome heights are
-        '' fixed, so the body is what absorbs the change -- which is the invariant the
-        '' document area depends on and commit 8 extends to twenty children.
-        surf.Resize( 640, 480 )
-        LayoutAll( surf )
-        Check "a resize re-lays out", (g_body->bounds.w = 640), str(g_body->bounds.w)
-        Check "  the chrome heights did not move", _
-              (g_menubar->bounds.h = SH_MENUBAR_H) andalso _
-              (g_status->bounds.h = SH_STATUS_H)
-        Check "  and the body absorbed the difference", _
-              (g_body->bounds.h = 480 - SH_MENUBAR_H - SH_TABS_H - SH_STATUS_H), _
-              str(g_body->bounds.h)
-        surf.Resize( SH_W, SH_H )
-        LayoutAll( surf )
+        '' A RESIZE MUST RE-LAY-OUT, and the DOCUMENT RECT is what absorbs the change --
+        '' every band above it is either pinned or a measured height.
+        scope
+            dim as long hDocBefore = g_rcDoc.h
+            surf.Resize( 640, 480 )
+            LayoutAll( surf )
+            Check "a resize re-lays out", _
+                  (g_menubar->bounds.w = 640), str(g_menubar->bounds.w)
+            Check "  the statusbar follows the bottom edge", _
+                  (g_status->bounds.y + g_status->bounds.h = 480)
+            Check "  and the document rect absorbed the change", _
+                  (g_rcDoc.h <> hDocBefore)
+            surf.Resize( SH_W, SH_H )
+            LayoutAll( surf )
+        end scope
 
         '' ---- DPI. EVERY BAND SCALES, AND SO DOES WHAT IS INSIDE IT --------------------
         '' The first windowed run of this shell was visibly unscaled, and the reason is a
@@ -704,14 +1113,22 @@ end function
             ApplyScale( surf, 1.5 )
             LayoutAll( surf )
 
-            Check "at 1.5 the menubar band scales", _
-                  (g_menubar->bounds.h = PsScaleBy(SH_MENUBAR_H, 1.5)), _
+            '' THE MENUBAR BAND DOES NOT SCALE, AND THAT IS CORRECT NOW. Its height is a
+            '' MEASURED pixel size -- frmMain reads it with AfxGetWindowHeight and uses it
+            '' unscaled -- so a scale change moves the constants around it, not it. The
+            '' assertion that stood here expected PsScaleBy(SH_MENUBAR_H, 1.5) and was
+            '' describing the commit-4 layout, where the band was a design constant.
+            Check "at 1.5 the MEASURED menubar height is unchanged", _
+                  (g_menubar->bounds.h = hMenu1), _
                   str(hMenu1) & " -> " & str(g_menubar->bounds.h)
             Check "  the status bar still owns the bottom", _
                   (g_status->bounds.y + g_status->bounds.h = surf.h)
-            Check "  the bands still tile exactly", _
-                  (g_menubar->bounds.h + g_tabs->bounds.h + g_body->bounds.h + _
-                   g_status->bounds.h = surf.h)
+            '' What DOES move is everything expressed as a design constant. The info-absent
+            '' margin is the smallest of them and the easiest to lose.
+            Check "  but the scaled constants do move", _
+                  (g_rcDoc.y = g_tabs->bounds.y + g_tabs->bounds.h + _
+                               PsScaleBy(SH_INFO_ABSENT_MARGIN, 1.5)), _
+                  str(g_rcDoc.y)
             '' THE HALF THAT WAS ACTUALLY BROKEN, AND IS ACTUALLY ASSERTABLE.
             Check "  and the font was reopened at the scaled size", _
                   (g_nFontPx = PsScaleBy(SH_FONT_PX, 1.5)), str(g_nFontPx) & "px"
@@ -733,7 +1150,9 @@ end function
 
             ApplyScale( surf, 1.0 )
             LayoutAll( surf )
-            Check "  back at 1.0 the band returns", (g_menubar->bounds.h = hMenu1)
+            Check "  back at 1.0 the margin returns", _
+                  (g_rcDoc.y = g_tabs->bounds.y + g_tabs->bounds.h + _
+                               PsScaleBy(SH_INFO_ABSENT_MARGIN, 1.0)), str(g_rcDoc.y)
         end scope
 
         '' ---- ACCELERATORS, FROM tiko's OWN 112 BINDINGS -------------------------------
@@ -814,6 +1233,176 @@ end function
             ev.key.modifiers = PSMOD_NONE
             Check "  plain F is not claimed", (TryAltMnemonic(@ev) = false)
         end scope
+
+        '' ---- THE BAND WALK ------------------------------------------------------------
+        '' Driven at the ORACLE's inputs so a failure here and a line in
+        '' docs/port/layout-oracle/ are the same numbers.
+        scope
+            surf.fScale = 1.75
+            surf.Resize( 1400, 900 )
+            g_state.nMenubarH = 52 : g_state.nStatusH = 46 : g_state.nPanelW = 413
+            g_state.nTopTabsMenuW = 186 : g_state.nTabsH = 63 : g_state.nOutputH = 194
+            g_state.nTabCount = 3
+            g_state.bPanelVisible = true : g_state.bExplorerRight = false
+            g_state.bOutputVisible = true : g_state.bOutputFloating = false
+            g_state.bShowInfo = false : g_state.bShowFind = false : g_state.bShowReplace = false
+            g_state.bFipActive = false
+            LayoutAll( surf )
+
+            Check "menubar full width at the top", _
+                  (g_menubar->bounds.y = 0) andalso (g_menubar->bounds.w = 1400)
+            Check "statusbar owns the bottom", _
+                  (g_status->bounds.y + g_status->bounds.h = 900)
+            Check "the panel starts under the menubar", (g_panel->bounds.y = 52)
+            Check "  and stops above the statusbar", _
+                  (g_panel->bounds.y + g_panel->bounds.h = 854)
+            Check "the splitter is on the panel's inner edge", _
+                  (g_splitPanel->bounds.x = g_panel->bounds.x + g_panel->bounds.w), _
+                  str(g_splitPanel->bounds.x)
+            Check "the tab bar starts after the reserve", _
+                  (g_tabs->bounds.x = g_splitPanel->bounds.x + g_splitPanel->bounds.w)
+            Check "the output sits below its splitter", _
+                  (g_output->bounds.y = g_splitOutput->bounds.y + g_splitOutput->bounds.h), _
+                  str(g_output->bounds.y)
+            Check "  and reaches the statusbar", _
+                  (g_output->bounds.y + g_output->bounds.h = g_status->bounds.y)
+            '' THE ORACLE'S OWN NUMBERS, not a relation: these are what tiko produces.
+            Check "the document rect starts where tiko puts it", _
+                  (g_rcDoc.y = 129), str(g_rcDoc.y)
+            Check "  and ends where tiko ends it", _
+                  (g_rcDoc.y + g_rcDoc.h = 649), str(g_rcDoc.y + g_rcDoc.h)
+        end scope
+
+        '' ---- COVERAGE AND DISJOINTNESS ------------------------------------------------
+        '' THE LOAD-BEARING ASSERTION. Every per-widget relation above is satisfied by a
+        '' layout with a hole in it or two children on top of each other; this is not.
+        '' It also scales -- thirteen children now, and the same helper covers twenty.
+        scope
+            dim as PsWidget ptr kids(0 to 12) = { _
+                g_menubar, g_status, g_panel, g_splitPanel, g_tabs, g_topTabsMenu, _
+                g_barInfo, g_barFind, g_barReplace, g_splitOutput, g_output, g_fip, g_body }
+
+            dim as long nOverlap = 0
+            dim as string sFirst = ""
+            for i as long = 0 to ubound(kids)
+                if kids(i)->bVisible = false then continue for
+                for j as long = i + 1 to ubound(kids)
+                    if kids(j)->bVisible = false then continue for
+                    dim as long ax1 = kids(i)->bounds.x, ax2 = ax1 + kids(i)->bounds.w
+                    dim as long ay1 = kids(i)->bounds.y, ay2 = ay1 + kids(i)->bounds.h
+                    dim as long bx1 = kids(j)->bounds.x, bx2 = bx1 + kids(j)->bounds.w
+                    dim as long by1 = kids(j)->bounds.y, by2 = by1 + kids(j)->bounds.h
+                    if (ax1 < bx2) andalso (bx1 < ax2) andalso _
+                       (ay1 < by2) andalso (by1 < ay2) then
+                        nOverlap += 1
+                        if len(sFirst) = 0 then sFirst = str(i) & " x " & str(j)
+                    end if
+                next
+            next
+            Check "no two visible children overlap", (nOverlap = 0), _
+                  iif(nOverlap > 0, "first: " & sFirst, "")
+
+            '' COVERAGE, WITH THE TWO HOLES NAMED. Exact coverage is NOT an invariant of
+            '' tiko's layout and asserting it was wrong -- the first version of this check
+            '' failed by 14987 pixels, which turned out to be two DELIBERATE gaps:
+            ''
+            ''   the strip right of the top-tabs icon panel, SCROLLBAR_WIDTH_EDITOR wide.
+            ''   frmMain_OnPaint paints it explicitly (frmMain.inc:539), so it is background
+            ''   on purpose rather than a missing child.
+            ''
+            ''   the info band's top margin, ScaleY(8) tall, which its ELSE arm adds so the
+            ''   find bar is not flush against the tab bar.
+            ''
+            '' Naming them is stronger than tolerating a shortfall: a THIRD hole is a
+            '' failure, and each of these two is asserted at its own size.
+            dim as longint nArea = 0
+            for i as long = 0 to ubound(kids)
+                if kids(i)->bVisible then
+                    nArea += clngint(kids(i)->bounds.w) * clngint(kids(i)->bounds.h)
+                end if
+            next
+            dim as longint nStrip  = clngint(surf.w - (g_topTabsMenu->bounds.x + g_topTabsMenu->bounds.w)) _
+                                     * clngint(g_tabs->bounds.h)
+            dim as longint nMargin = clngint(surf.w - g_rcDoc.x) _
+                                     * clngint(PsScaleBy(SH_INFO_ABSENT_MARGIN, 1.75))
+            Check "  they cover the surface but for two deliberate gaps", _
+                  (nArea + nStrip + nMargin = clngint(surf.w) * clngint(surf.h)), _
+                  str(nArea) & " + " & str(nStrip) & " + " & str(nMargin) & _
+                  " vs " & str(clngint(surf.w) * clngint(surf.h))
+            Check "    the strip right of the icon panel is the scrollbar reserve", _
+                  (surf.w - (g_topTabsMenu->bounds.x + g_topTabsMenu->bounds.w) = _
+                   PsScaleBy(SH_SCROLLBAR_WIDTH_EDITOR, 1.75)), _
+                  str(surf.w - (g_topTabsMenu->bounds.x + g_topTabsMenu->bounds.w))
+        end scope
+
+        '' ---- THE CONDITIONAL BANDS ----------------------------------------------------
+        scope
+            '' Each hidden bar contributes ZERO and the next band moves up by exactly its
+            '' height -- asserted as a difference, so a band that is off by its own height
+            '' cannot hide behind a neighbour absorbing the error.
+            dim as long yBase = g_rcDoc.y
+            g_state.bShowFind = true : LayoutAll( surf )
+            Check "showing the find bar pushes the document down by its height", _
+                  (g_rcDoc.y = yBase + PsScaleBy(SH_TOPTABS_FIND_HEIGHT, 1.75)), _
+                  str(yBase) & " -> " & str(g_rcDoc.y)
+            g_state.bShowFind = false : LayoutAll( surf )
+            Check "  and hiding it puts it back", (g_rcDoc.y = yBase)
+
+            '' THE INFO BAND'S ELSE ARM IS NOT A NO-OP. It adds a top margin, so showing
+            '' the info bar moves the document by its height MINUS that margin. This is the
+            '' single most losable line in the transliteration.
+            g_state.bShowInfo = true : LayoutAll( surf )
+            Check "the info bar's margin is accounted for, not just its height", _
+                  (g_rcDoc.y = yBase + PsScaleBy(SH_TOPTABS_INFO_HEIGHT, 1.75) _
+                                     - PsScaleBy(SH_INFO_ABSENT_MARGIN, 1.75)), _
+                  str(g_rcDoc.y)
+            g_state.bShowInfo = false : LayoutAll( surf )
+
+            '' THE MIRROR. gConfig.ShowPanelWidth must round-trip: the splitter strip comes
+            '' off the CONTENT area on both sides, so the panel keeps its width.
+            dim as long wLeft = g_panel->bounds.w
+            g_state.bExplorerRight = true : LayoutAll( surf )
+            Check "the panel keeps its width when mirrored", (g_panel->bounds.w = wLeft), _
+                  str(wLeft) & " -> " & str(g_panel->bounds.w)
+            Check "  and takes the right edge", _
+                  (g_panel->bounds.x + g_panel->bounds.w = surf.w)
+            Check "  with the splitter still on its INNER edge", _
+                  (g_splitPanel->bounds.x + g_splitPanel->bounds.w = g_panel->bounds.x)
+            Check "  and the document starting at 0", (g_rcDoc.x = 0)
+            g_state.bExplorerRight = false : LayoutAll( surf )
+
+            '' Tab count 0 hides both tab widgets and the document starts at the menubar
+            '' plus the info band's margin.
+            g_state.nTabCount = 0 : LayoutAll( surf )
+            Check "no tabs hides the tab bar", (g_tabs->bVisible = false)
+            Check "  and its icon strip", (g_topTabsMenu->bVisible = false)
+            g_state.nTabCount = 3 : LayoutAll( surf )
+
+            '' A FLOATING output reserves nothing -- the case IsWindowVisible alone gets
+            '' wrong, because an undocked panel is still visible in its own frame.
+            dim as long yDocked = g_rcDoc.y + g_rcDoc.h
+            g_state.bOutputFloating = true : LayoutAll( surf )
+            Check "a floating output reserves nothing", _
+                  (g_rcDoc.y + g_rcDoc.h = surf.h - g_state.nStatusH), _
+                  str(g_rcDoc.y + g_rcDoc.h)
+            Check "  which is NOT what docked does", _
+                  ((g_rcDoc.y + g_rcDoc.h) <> yDocked)
+            g_state.bOutputFloating = false : LayoutAll( surf )
+
+            '' Find in Project takes the document rect exactly, and the editor goes away.
+            g_state.bFipActive = true : LayoutAll( surf )
+            Check "Find in Project occupies the document rect", _
+                  (g_fip->bounds.x = g_rcDoc.x) andalso (g_fip->bounds.y = g_rcDoc.y) andalso _
+                  (g_fip->bounds.w = g_rcDoc.w) andalso (g_fip->bounds.h = g_rcDoc.h)
+            Check "  and the editor is not shown", (g_body->bVisible = false)
+            g_state.bFipActive = false : LayoutAll( surf )
+        end scope
+
+        '' Put the surface back for the checks that follow.
+        surf.fScale = 1.0
+        surf.Resize( SH_W, SH_H )
+        if surf.pRoot then surf.pRoot->PropagateScaleChanged( 1.0 )
+        LayoutAll( surf )
 
         '' NO WINDOW WAS CREATED, and the surface says so. hWin is the marker PsModalHost
         '' reads to find a dialog's parent, so a surface that acquired one by accident here

@@ -55,6 +55,39 @@ and whether the shell reproduces tiko's behaviour or tiko's intent is the author
 side effect of building an oracle. Until it is taken, `PANEL_RIGHT` is the one state in this file
 that records a bug rather than a specification.
 
+## The shell's side, and the two differences that are expected
+
+`_shell\tikoshell.exe --dump-layout` prints the same states in the same format, driven from
+the header values above so both sides answer the same question.
+
+```bash
+./_run_shell.bat --dump-layout > shell.txt
+```
+
+As of commit 8 every difference falls into exactly two classes, and **nothing else differs —
+every band's Y coordinate and height matches to the pixel**, including the `ScaleY(8)`
+info-absent margin, the output clamp, the three stacked bars and the mirror.
+
+**1. The splitter grab is 10 in tiko and 11 in the shell**, and everything downstream of
+`nLeft` shifts by one with it. Neither is wrong; the two scaling functions round differently
+on exact halves, and `SPLITTER_GRAB` × 1.75 = 10.5 lands on one.
+
+* `CWindow.ScaleX` returns a **SINGLE** (`cx * m_rx`, `CWindow.inc:994`) and the caller's
+  implicit conversion to `long` rounds **half to even** — 10.5 → 10.
+* `PsScaleBy` rounds **half away from zero** (`PsScale.inc:29`), deliberately, so that
+  `ScaleBy(-4)` is exactly `-ScaleBy(4)`.
+
+The shell keeps PsPlatform's rule rather than reimplementing tiko's. Reproducing FB's
+half-to-even inside the shell would make its bands disagree with the rounding every control
+uses internally — trading a visible one-pixel difference for an invisible one.
+
+**2. `EDIT0` is the DOCUMENT RECT, not the editor.** The oracle's `EDIT0` has the vertical
+scrollbar (23px) and the always-reserved horizontal scrollbar height (21px) taken out of it;
+the shell has no editor chrome until commit 9 and no split helpers until commit 10, so it
+reports the whole rect. Expect the right edge and bottom to differ by exactly those.
+
+**A difference outside these two classes is a real one.** That is what this file is for.
+
 ## States, and what each is for
 
 | state | what it pins |
