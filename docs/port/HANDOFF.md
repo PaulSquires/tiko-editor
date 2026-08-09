@@ -1,18 +1,18 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ `fb9f18d60`; PsPlatform **`main`** @ `903d6a2`. Both build
-warning-free and tiko runs.
+tiko `feat/cross-platform` @ `6d79912f1`; PsPlatform **`main`** @ `903d6a2`;
+HelpCenter **`main`** @ `02a4c18`. All build warning-free, all are pushed, and tiko runs.
 
-**BOTH ARE ONE COMMIT AHEAD OF THEIR REMOTE AND NEITHER IS PUSHED.** That is deliberate —
-they were left for review — but it means a fresh clone does not have the WebView2 removal or
-the `PsThemeLoadFile` split, and the two go together: PsPlatform's split is what lets tiko's
-`_check_scihost` build at all.
+**THREE REPOS NOW, NOT TWO.** `C:\dev\HelpCenter` was version-controlled on 2026-08-09 and
+lives at `PaulSquires/HelpCenter`. The GENERATOR is tracked; the OUTPUT is not — `site/`,
+`cache/` and `data/` are 300 MB of derived files that a deterministic rebuild reproduces
+byte-for-byte, and `publish.config.json` holds SFTP credentials and is the `.gitignore`'s
+first rule. The rendered site is still captured, inside tiko, as the bundled copy under
+`settings/help/helpcenter`.
 
-**`C:\dev\HelpCenter` IS NOT A GIT REPO**, so the `?q=` change in its `app.js` exists on that
-machine and nowhere else. The BUILT site is captured — it is committed inside tiko as the
-bundled copy under `settings/help/helpcenter` — but the generator source is not. If that
-machine is lost, the site can be rebuilt from `helpgen` and the one edit re-made from
-`webview2-decision.md`, which names the file and the parameter.
+**tiko's WebView2 removal and PsPlatform's `PsThemeLoadFile` split go together.** The split is
+what lets tiko's `_check_scihost` build at all; a tree with one and not the other does not
+compile. Both are pushed, so this is a note for anyone rewinding rather than a live hazard.
 
 **The live docs at planetsquires.com/docs still serve the OLD `app.js`.** Publishing was not
 run. `?q=` therefore works from tiko (which reads the bundled copy) and does nothing on the
