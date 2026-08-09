@@ -66,11 +66,25 @@ stubbed, as a runnable binary not merged until 7c completes.
 12 modal dialogs, each with its own `GetMessage` — collapse into one event loop in a single
 step. The three `HACCEL` tables and `IsDialogMessage` have no PsPlatform analogue.
 
-**The hard blocker is WebView2.** `frmHelpCenter.inc` parents an AfxNova `CWebView2` to a
-`CreateWindowExW(0, "STATIC", …)` host. It needs a real HWND permanently and there is no SDL3
-path. Under A the Help Center becomes an embedded native child window or it is dropped.
-**This is the one constraint that cannot be engineered away**, and it deserves to drive the
-answer rather than be discovered halfway.
+~~**The hard blocker is WebView2.**~~ **CHECKED, AND IT IS NOT A BLOCKER — see
+[`webview2-decision.md`](webview2-decision.md).** Three of the four sentences that stood here
+were wrong, and they are kept struck rather than deleted because the shape of the error is the
+lesson:
+
+> ~~It needs a real HWND permanently and there is no SDL3 path. Under A the Help Center becomes
+> an embedded native child window or it is dropped. This is the one constraint that cannot be
+> engineered away.~~
+
+`frmHelpCenter` is created `WS_POPUP or WS_OVERLAPPEDWINDOW` — **a separate top-level window**,
+opened on demand from Help and F1. It is not a pane inside `frmMain`, so under Shape A it stays
+exactly what it is and nothing embeds anything. SDL3 hands over the native HWND anyway
+(`SDL_PROP_WINDOW_WIN32_HWND_POINTER`, already in the binding). And the content is **local static
+HTML this project generates itself**, so the Linux answer is the default browser via
+`SDL_OpenURL` rather than a second engine.
+
+**One form uses WebView2 in the whole of tiko**, and the only tiko-side coupling worth removing —
+one `ExecuteScript` that fills the site's search box — is replaced by a `?q=` parameter in
+`helpgen`, a repository we own.
 
 ## Shape B — promote `PsWin32Host` to a real Win32 `IWindowBackend`
 
@@ -232,10 +246,12 @@ already exists and is load-bearing.
 demo had to be written twice or thrown away. That is what this page predicted, and it is the one
 prediction it is fair to call confirmed.
 
-**4. WEBVIEW2 IS UNTOUCHED.** No part of this work went near it. `frmHelpCenter` still parents a
-`CWebView2` to a real HWND and there is still no SDL3 path. **It remains the only genuinely
-irreducible constraint**, and it should still drive the answer rather than be discovered
-halfway.
+**4. WEBVIEW2 IS SETTLED, AND IT WAS NEVER THE BLOCKER.** Investigated in
+[`webview2-decision.md`](webview2-decision.md) after the prerequisites landed. It constrains
+neither shape: the Help Center is already its own top-level window, SDL3 exposes the HWND
+regardless, and the content is local static HTML whose portable answer is the user's own
+browser. **The last thing standing between D2 and a decision turned out not to be standing
+there.**
 
 ## Where that leaves D2
 
@@ -249,4 +265,8 @@ What it can say is that the ground has moved again since the top of this page: t
 assumed could not exist is now carrying three subsystems, and the cost of the half-converted
 state is measured rather than guessed.
 
-**Next: settle WebView2 on its own, then choose.**
+**WebView2 is now settled and did not decide anything**, which leaves exactly one question:
+a second `IWindowBackend` maintained forever, against a 45,000-line jump that is un-shippable in
+the middle. That is a judgement about which cost this project would rather carry, and it is the
+author's to make — but it is now the ONLY question left, and every fact it needs is on this page
+or the three it links to.

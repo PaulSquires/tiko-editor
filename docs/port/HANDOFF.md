@@ -23,6 +23,9 @@ Read in this order, and do not skip the first:
 3. [`d2-decision.md`](d2-decision.md) — the decision 7c hangs on. It was deferred behind three
    prerequisites; **all three are now done, so it is due.** Read its two closing sections
    first — what the prerequisites taught, and why the answer is still not written down.
+4. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
+   irreducible, investigated. **It is not a blocker and never was.** Short, and it is the
+   clearest example on this whole shelf of a claim that survived because nobody checked it.
 
 **The one habit worth copying from this run:** every defect found this session came from
 running the program or reading the callers, and none from the gates. When a note here says
@@ -50,6 +53,14 @@ is phase 7c — 48 forms, ~45,000 lines, 14–20 weeks — and it hangs on decis
 [`d2-decision.md`](d2-decision.md) deferred that decision behind three shared prerequisites,
 identical under either answer. **ALL THREE ARE NOW DONE** (PsPlatform `41e2b6a`), so the reason
 for deferring is gone.
+
+**AND WEBVIEW2 — the thing that page called "the one constraint that cannot be engineered away"
+— turned out not to be a constraint at all.** See
+[`webview2-decision.md`](webview2-decision.md). `frmHelpCenter` is a separate top-level window,
+not a pane; SDL3 hands over the native HWND anyway; and the content is local static HTML this
+project generates, so the portable answer is the user's own browser. **One question is left, and
+it is a judgement rather than a discovery:** a second `IWindowBackend` maintained forever,
+against a 45,000-line jump that is un-shippable in the middle.
 
 1. ~~**A timer / frame scheduler in PsPlatform.**~~ **DONE** — `src/ui/core/PsTimer.*`, 113
    assertions. **Not** in the backend: `AddTimer`/`KillTimer_` were deleted from
