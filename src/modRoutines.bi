@@ -58,7 +58,9 @@ declare function OpenSelectedDocument( byval wszFilename as DWSTRING, byval wszF
 declare function AfxIFileOpenDialogW( byval hwndOwner as HWND, byval idButton as long) as wstring Ptr
 declare function AfxIFileOpenDialogMultiple( byval hwndOwner as HWND, byval idButton as long) as IShellItemArray ptr
 declare function AfxIFileSaveDialog( byval hwndOwner as HWND, byval pwszFileName as wstring Ptr, byval pwszDefExt as wstring Ptr, byval id as long = 0, byval sigdnName as SIGDN = SIGDN_FILESYSPATH ) as wstring Ptr
-declare function LoadLocalizationFile( byref wszFileName as DWSTRING, byval IsEnglish as boolean = false ) as boolean
+' LoadLocalizationFile's DECLARATION moved with its body to app/modLocalization.bi/.inc.
+' Left as a note rather than deleted silently: this file is where callers look for it, and
+' the reason it is no longer here is the reason the app layer exists.
 declare function GetProcessImageName( byval pe32w as PROCESSENTRY32W ptr, byval pwszExeName as wstring ptr ) as long
 declare function IsProcessRunning( byval wszExeFileName as DWSTRING ) as boolean
 declare function GetRunExecutableFilename() as DWSTRING

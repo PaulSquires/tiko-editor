@@ -63,6 +63,9 @@
 #include once "ui/core/PsMenuHost.inc"
 #include once "ui/core/PsTheme.inc"
 #include once "ui/core/PsLayout.inc"
+#include once "ui/controls/PsMenuBar.inc"
+#include once "ui/controls/PsStatusBar.inc"
+#include once "ui/controls/PsTabBar.inc"
 #include once "scintilla/PsTextEngineC.inc"
 
 '' ---- tiko's application layer ----------------------------------------------------------
@@ -98,6 +101,42 @@
 #include once "app/modEncodingSelfTest.bi"
 #include once "app/modSaveSelfTest.bi"
 
+'' ---- app-layer BODIES the shell drives directly ----------------------------------------
+'' modTextFile and modLocalization are what turn L(id) from an empty string into a phrase;
+'' modMenuDefinitions is the menu vocabulary itself -- getMenuText, getMenuAccelText and
+'' buildTopMenuDefinitions, which fill gTopMenu with the whole static structure.
+''
+'' All three moved into app/ for this commit, and all three were already PsCore-only. See
+'' app/modLocalization.inc for why the loader in particular had to come down.
+#include once "app/modTextFile.inc"
+#include once "app/modLocalization.inc"
+#include once "app/modAppState.inc"
+
+'' ---- ONE STUB, AND IT IS TEMPORARY BY DESIGN -------------------------------------------
+'' modMenuDefinitions.inc's createToolsMenuShortcut composes a User Tools shortcut LABEL by
+'' asking the key vocabulary what a stored key name means. That lives in modKeyBindings.inc,
+'' shell-side, and it is NOT movable the way the localization loader was: it reaches
+'' frmKeyboard_AccelKeyToValue, which resolves OEM key names through
+'' VkKeyScanEx(GetKeyboardLayout(0)) -- live Win32, and layout-dependent besides.
+''
+'' That function is exactly what commits 5-7 replace. PsKey grows the missing numpad and
+'' punctuation keys, PsAccel takes over the vocabulary with PHYSICAL rather than
+'' layout-dependent semantics (the decision taken on 2026-08-09), and this stub goes with it.
+''
+'' UNTIL THEN, USER TOOL MENU ROWS RENDER WITH NO SHORTCUT TEXT. Returning 0 is what the real
+'' function returns for an unrecognised name, so the label is blank rather than wrong. It is
+'' also the third entry on _check_app_standalone's link-debt baseline, which is where the
+'' obligation is recorded rather than only here.
+#include once "app/modMenuDefinitions.inc"
+
+'' NOT `private`, and AFTER the include: app/modMenuDefinitions.inc:22 pulls
+'' ../modKeyBindings.bi -- the app layer reaching UP into the shell by relative path, which
+'' no token ratchet can see because a path is not an identifier -- so the declaration is
+'' already in scope by the time this is reached and a second one would collide.
+function KeyBindings_PickListKeyToValue( byval wszString as DWSTRING ) as long
+    return 0
+end function
+
 
 '' ========================================================================================
 '' MODES
@@ -111,11 +150,25 @@
 const SH_W = 1100
 const SH_H = 700
 
+'' Band heights, DESIGN units. tiko does not carry constants for these -- frmMain reads the
+'' heights back OUT of the windows with AfxGetWindowHeight, because each control sizes itself
+'' from its font. A widget tree cannot do that before it is laid out, so the shell states
+'' them, and commit 8 reconciles them against the oracle's measured menubar-h / statusbar-h /
+'' toptabs-h rather than against these guesses.
+const SH_MENUBAR_H = 30
+const SH_TABS_H    = 36
+const SH_STATUS_H  = 26
+
 dim shared as PsTextEngine  g_te
 dim shared as PsBufferPaint g_pnt
 dim shared as PsSurface ptr g_pSurf
 dim shared as PsMenuHost    g_menus
 dim shared as long g_nPass, g_nFail
+
+'' Set by OnBarOpen. The menubar does not open anything itself -- it ASKS -- so the only
+'' thing a windowless run can check is that something answered, and with what.
+dim shared as long g_nBarOpenCalls
+dim shared as any ptr g_pLastBarMenu
 
 
 '' ---------------------------------------------------------------------------------------
@@ -169,20 +222,140 @@ end sub
 
 
 '' ---------------------------------------------------------------------------------------
-'' The tree. ONE full-window stub for now; commit 8 replaces this with the real band walk.
+'' THE MENUS, BUILT FROM tiko's OWN VOCABULARY.
+''
+'' gTopMenu is a FLAT array of (nParentID, nID, nChildID, isDisabled, isSeparator) rows that
+'' buildTopMenuDefinitions fills; the tree is implied by nParentID. Captions come from
+'' getMenuText(id), which returns caption and accelerator packed with a chr(9) between them,
+'' and which resolves through L() -- so nothing here renders until a .lang file is loaded.
+''
+'' CAPS CHECKED BEFORE BUILDING AGAINST THEM, because overflowing one silently drops rows:
+''   8 bar titles          vs PSMB_MAX_ITEMS   = 32
+''   20 items (View, the largest dropdown) vs PSMENU_MAX_ITEMS = 128
+''   3 levels deep         vs PSMENU_MAX_DEPTH = 8
+'' MRU is a SUBMENU rather than an inline block, and gConfig.MRU is fixed at 10, so the File
+'' menu does not grow with use. gConfig.Tools IS unbounded -- `Tools(any)` -- so a user with
+'' more than 128 user tools would overflow the Tools popup. Recorded, not fixed: it is a
+'' pre-existing property of tiko's own menu and nothing here makes it worse.
 '' ---------------------------------------------------------------------------------------
-dim shared as ShellStub ptr g_body
+dim shared as ShellStub  ptr g_body
+dim shared as PsMenuBar  ptr g_menubar
+dim shared as PsStatusBar ptr g_status
+dim shared as PsTabBar   ptr g_tabs
 
+'' getMenuText packs "caption" chr(9) "accel". Split rather than shown raw -- PsPopupMenu
+'' paints the accelerator right-aligned in its own column and takes it as a third argument.
+sub SplitMenuText( byval nId as long, byref sCap as DWSTRING, byref sAccel as DWSTRING )
+    dim as DWSTRING wszText = getMenuText( nId )
+    dim as long i = PsInStr( wszText, chr(9) )
+    if i > 0 then
+        sCap   = PsLeft( wszText, i - 1 )
+        sAccel = PsMid( wszText, i + 1 )
+    else
+        sCap   = wszText
+        sAccel = ""
+    end if
+end sub
+
+function BuildDropDown( byval nParentId as long ) as PsPopupMenu ptr
+    dim as PsPopupMenu ptr pM = new PsPopupMenu
+    for i as long = lbound(gTopMenu) to ubound(gTopMenu)
+        if gTopMenu(i).nParentID <> nParentId then continue for
+        if gTopMenu(i).isSeparator then
+            pM->AddSeparator()
+        else
+            dim as DWSTRING sCap, sAccel
+            SplitMenuText( gTopMenu(i).nID, sCap, sAccel )
+            dim as long idx = pM->AddItem( sCap, gTopMenu(i).nID, sAccel )
+            '' A row with a child id is a SUBMENU. Recursion is what makes the depth cap
+            '' relevant; tiko goes three levels and the cap is eight.
+            if (idx >= 0) andalso (gTopMenu(i).nChildID <> 0) then
+                pM->AttachSubMenu( idx, BuildDropDown(gTopMenu(i).nChildID) )
+            end if
+        end if
+    next
+    return pM
+end function
+
+'' THE BAR DOES NOT OPEN ANYTHING ITSELF -- IT ASKS. PsMenuBar.bi:37-42 says so, and this
+'' callback is the half ideshell never wrote, which is why its menubar drops nothing. Taken
+'' from gallery2.bas:326-348, which does it correctly.
+sub OnBarOpen( byval pBar as any ptr, byval idx as long, byval pMenu as any ptr, _
+               byref rcItem as PsRect, byval ud as any ptr )
+    g_nBarOpenCalls += 1
+    g_pLastBarMenu  = pMenu
+    if g_pSurf = 0 then exit sub
+    '' The bar hands over the dropdown it wants shown, so there is nothing to look up --
+    '' AddItem took ownership of it and the bar knows which one belongs to the title.
+    dim as PsPopupMenu ptr pM = cptr( PsPopupMenu ptr, pMenu )
+    if pM = 0 then exit sub
+
+    '' The rect arrives in the BAR's coordinates; the anchor wants the surface's, so add
+    '' where the bar sits. A dropdown belongs directly under the title it came from.
+    dim as PsRect rc = rcItem
+    if g_menubar then
+        rc.x += g_menubar->bounds.x
+        rc.y += g_menubar->bounds.y
+    end if
+    g_menus.OpenRoot( g_pSurf, rc, pM )
+end sub
+
+sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any ptr )
+    '' Commit 4 has no commands to dispatch -- the ids are tiko's and every handler behind
+    '' them is in the shell. Printed so the wiring is visible rather than silently inert.
+    print "tikoshell: menu command " & str(nId)
+end sub
+
+
+'' ---------------------------------------------------------------------------------------
+'' The tree. Chrome is real; the body is still one stub. Commit 8 replaces the body with
+'' the band walk and the rest of the panels.
+'' ---------------------------------------------------------------------------------------
 sub BuildTree( byref surf as PsSurface )
     dim as PsWidget ptr root = new PsWidget
     surf.SetRoot( root )                      '' the surface takes ownership
 
-    g_body = new ShellStub( @"tiko shell -- nothing here yet", PSTHEME_BACKGROUND )
+    buildTopMenuDefinitions()
+
+    g_menubar = new PsMenuBar
+    for id as long = IDC_MENUBAR_FILE to IDC_MENUBAR_HELP
+        dim as DWSTRING sCap, sAccel
+        SplitMenuText( id, sCap, sAccel )
+        dim as PsPopupMenu ptr pM = BuildDropDown( id )
+        pM->OnCommand( @OnMenuCommand )
+        '' AddItem TAKES OWNERSHIP of the dropdown, and hands it back through OnOpenRequest
+        '' when the title is clicked -- so the host keeps no table of its own.
+        g_menubar->AddItem( sCap, pM )
+    next
+    g_menubar->OnOpenRequest( @OnBarOpen )
+    root->AddChild( g_menubar )
+
+    g_tabs = new PsTabBar
+    root->AddChild( g_tabs )
+
+    g_body = new ShellStub( @"document area", PSTHEME_BACKGROUND )
     root->AddChild( g_body )
+
+    g_status = new PsStatusBar
+    '' tiko's statusbar has seven panels; their CONTENT is frmMain_SetStatusbar's job and
+    '' none of that is here. The panels exist so the band has a real height to lay out to.
+    g_status->AddPanel( "" )
+    root->AddChild( g_status )
 end sub
 
 sub LayoutAll( byref surf as PsSurface )
-    if g_body then g_body->SetBounds( PsRc(0, 0, surf.w, surf.h) )
+    dim as single f = surf.fScale
+    dim as PsDocker dk = PsDocker( PsRc(0, 0, surf.w, surf.h), f )
+
+    '' The three docked bands, top and bottom, exactly as frmMain_PositionWindows does them:
+    '' menubar pinned full width at the top, statusbar full width at the bottom, tab bar
+    '' under the menubar. What is left is the document area.
+    dk.DockTop( g_menubar, SH_MENUBAR_H )
+    dk.DockTop( g_tabs, SH_TABS_H )
+    dk.DockBottom( g_status, SH_STATUS_H )
+
+    dim as PsRect rcWork = dk.Fill()
+    if g_body then g_body->SetBounds( rcWork )
 end sub
 
 sub Check( byref sWhat as string, byval bOk as boolean, byref sNote as string = "" )
@@ -228,6 +401,28 @@ end function
         end 1
     end if
 
+    '' ---- THE LANGUAGE TABLE, BEFORE THE TREE -----------------------------------------
+    '' Not optional and not cosmetic. L(id,"default") is `#Define L(e,s) LL(e)` -- a raw
+    '' index into a table this fills, with the default DISCARDED -- so a menubar built
+    '' before this runs renders eight blank titles and says nothing about why.
+    ''
+    '' English first, always, exactly as tiko.bas:497-520 does it: a non-English file with
+    '' a missing entry is filled from the English one, so a partial translation renders as
+    '' English rather than as blanks.
+    ''
+    '' PsExePath is _shell\, so settings\ is one level UP. tiko.exe sits in the project root
+    '' and resolves it directly; this binary deliberately does not, because two executables
+    '' in one directory would share libpsscintilla.dll -- see _compile_shell.bat.
+    dim as DWSTRING sLangDir = PsExePath & "..\settings\languages\"
+    if LoadLocalizationFile( sLangDir & "english.lang", true ) = false then
+        print "tikoshell: could not load " & (sLangDir & "english.lang").Utf8
+        end 1
+    end if
+    if LoadLocalizationFile( sLangDir & "english.lang", false ) = false then
+        print "tikoshell: could not load the active language"
+        end 1
+    end if
+
     dim as PsSurface surf
     g_pSurf     = @surf
     surf.fScale = 1.0
@@ -242,20 +437,85 @@ end function
         print "--- tikoshell selftest ---"
 
         Check "the tree is built", (surf.pRoot <> 0)
-        Check "  one child so far", (surf.pRoot->ChildCount() = 1), _
+        Check "  menubar, tabs, body, statusbar", (surf.pRoot->ChildCount() = 4), _
               str(surf.pRoot->ChildCount())
-        Check "the body fills the surface", _
-              (g_body->bounds.x = 0) andalso (g_body->bounds.y = 0) andalso _
-              (g_body->bounds.w = surf.w) andalso (g_body->bounds.h = surf.h), _
-              str(g_body->bounds.w) & "x" & str(g_body->bounds.h)
 
-        '' A RESIZE MUST RE-LAY-OUT. Cheap to assert and the whole reason the layout is a
-        '' function of the surface rather than of a constant -- commit 8 leans on this.
+        '' ---- THE MENU VOCABULARY CAME FROM tiko ---------------------------------------
+        '' The point of the commit. These titles are read out of app/modMenuDefinitions
+        '' through getMenuText -> L() -> the .lang table, so a caption here is proof that
+        '' all three loaded. A blank one means the language file did not, which is the
+        '' failure L() cannot report on its own.
+        Check "eight menubar titles", (g_menubar->GetCount() = 8), str(g_menubar->GetCount())
+        Check "  built from tiko's own gTopMenu rows", (ubound(gTopMenu) > 100), _
+              "gTopMenu rows: " & str(ubound(gTopMenu) + 1)
+        scope
+            dim as DWSTRING sCap, sAccel
+            SplitMenuText( IDC_MENUBAR_FILE, sCap, sAccel )
+            Check "  the File title resolved through L()", (PsLen(sCap) > 0), sCap.Utf8
+        end scope
+        Check "every title has a dropdown", _
+              (g_menubar->GetMenu(0) <> 0) andalso (g_menubar->GetMenu(7) <> 0)
+
+        '' ---- THE DROP ACTUALLY HAPPENS, AND THIS IS THE ASSERTION ideshell NEEDED ------
+        '' PsMenuBar does not open anything itself -- it ASKS, through OnOpenRequest, and a
+        '' host that never answers has a menubar that looks perfect and drops nothing.
+        '' ideshell is exactly that, to this day. So the wiring is driven here rather than
+        '' left to an interactive pass: OpenMenu -> OnBarOpen -> g_menus.OpenRoot, and the
+        '' host is asked whether a menu is actually up.
+        '' WHAT IS ASSERTED IS THAT THE HOST ANSWERS, not that a popup window appears.
+        '' PsPopupHost.OpenAt returns FALSE when the parent surface has no hWin, so a real
+        '' drop cannot happen windowlessly and this mode has no window by design. That is a
+        '' limit of the toolkit, not of the test, and it is stated rather than worked around.
+        ''
+        '' It still catches ideshell's defect exactly, because ideshell's defect is that the
+        '' callback was never wired at all -- so the bar asks and nothing answers. Here the
+        '' callback records that it ran and which dropdown it was handed.
+        Check "the bar asked the host to open File", (g_nBarOpenCalls = 0)
+        g_menubar->OpenMenu( 0 )
+        Check "  OnOpenRequest fired", (g_nBarOpenCalls = 1), str(g_nBarOpenCalls)
+        Check "  and was handed File's own popup", _
+              (g_pLastBarMenu = g_menubar->GetMenu(0))
+        Check "  the bar considers the menu open", (g_menubar->IsMenuOpen() = true)
+        g_menus.CloseAll()
+        g_menubar->NotifyClosed()
+
+        '' ---- THE DOCKED BANDS, NUMERICALLY -------------------------------------------
+        '' "It looks docked" is not a test, and a bar one pixel short leaves a seam nobody
+        '' sees until something scrolls behind it.
+        Check "the menubar owns the top edge", (g_menubar->bounds.y = 0)
+        Check "  full width", (g_menubar->bounds.w = surf.w), str(g_menubar->bounds.w)
+        Check "the tab bar sits under it", _
+              (g_tabs->bounds.y = g_menubar->bounds.y + g_menubar->bounds.h)
+        Check "the status bar owns the bottom", _
+              (g_status->bounds.y + g_status->bounds.h = surf.h), _
+              str(g_status->bounds.y + g_status->bounds.h) & " vs " & str(surf.h)
+
+        '' NO GAP AND NO OVERLAP down the middle. The weak version of commit 8's
+        '' coverage/disjointness pair, on the four children that exist so far.
+        Check "the body starts at the tab bar's bottom", _
+              (g_body->bounds.y = g_tabs->bounds.y + g_tabs->bounds.h), _
+              str(g_body->bounds.y)
+        Check "  and ends at the status bar's top", _
+              (g_body->bounds.y + g_body->bounds.h = g_status->bounds.y), _
+              str(g_body->bounds.y + g_body->bounds.h) & " vs " & str(g_status->bounds.y)
+        Check "  the four bands tile the surface exactly", _
+              (g_menubar->bounds.h + g_tabs->bounds.h + g_body->bounds.h + _
+               g_status->bounds.h = surf.h), _
+              str(g_menubar->bounds.h) & "+" & str(g_tabs->bounds.h) & "+" & _
+              str(g_body->bounds.h) & "+" & str(g_status->bounds.h) & " vs " & str(surf.h)
+
+        '' A RESIZE MUST RE-LAY-OUT, and the bands must still tile. The chrome heights are
+        '' fixed, so the body is what absorbs the change -- which is the invariant the
+        '' document area depends on and commit 8 extends to twenty children.
         surf.Resize( 640, 480 )
         LayoutAll( surf )
-        Check "a resize re-lays out", _
-              (g_body->bounds.w = 640) andalso (g_body->bounds.h = 480), _
-              str(g_body->bounds.w) & "x" & str(g_body->bounds.h)
+        Check "a resize re-lays out", (g_body->bounds.w = 640), str(g_body->bounds.w)
+        Check "  the chrome heights did not move", _
+              (g_menubar->bounds.h = SH_MENUBAR_H) andalso _
+              (g_status->bounds.h = SH_STATUS_H)
+        Check "  and the body absorbed the difference", _
+              (g_body->bounds.h = 480 - SH_MENUBAR_H - SH_TABS_H - SH_STATUS_H), _
+              str(g_body->bounds.h)
         surf.Resize( SH_W, SH_H )
         LayoutAll( surf )
 

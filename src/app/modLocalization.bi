@@ -71,3 +71,9 @@ dim shared gLocalPhrasesEdit as boolean
 '  rather than made safe because making it a function would put a DWSTRING copy on every one
 '  of those sites; the bounds test belongs in code that computes an id rather than writes one.
 #Define L(e,s) LL(e)
+
+'  THE LOADER, declared here beside the tables it fills. Its body is app/modLocalization.inc.
+'  Both were in modRoutines.inc until 2026-08-09, on the reasoning above that the app layer
+'  reads the table rather than loading it -- true while tiko.exe was the only binary, and no
+'  longer true once phase 7c's shell binary had to load it as well.
+declare function LoadLocalizationFile( byref wszFileName as DWSTRING, byval IsEnglish as boolean = false ) as boolean

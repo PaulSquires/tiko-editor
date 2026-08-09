@@ -141,8 +141,19 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 '' unaffected -- and the app layer can now reach it without the shell.
 '' Whole-file text I/O on PsFile. Early, because modThemes and modIniParse use it
 '' and are included well before clsConfig, where these started.
-#include once "modTextFile.inc"
+''
+'' MOVED INTO app/ (2026-08-09). It was already 105 lines of pure PsCore with not one
+'' AfxNova or Win32 token in it; it sat in src/ only because that is where it was written.
+'' The shell binary needs it, and a file the app layer cannot reach is a file the shell
+'' binary has to duplicate.
+#include once "app/modTextFile.inc"
 #include once "app/modLocalization.bi"
+'' The .lang loader, which fills the tables modLocalization.bi declares. It lived in
+'' modRoutines.inc -- shell-side -- and that header said the app layer "needs to READ the
+'' table, not to load it". True while the shell was the only binary. The shell BINARY has to
+'' load it too, and the function was already PsCore-only, so it moved rather than being
+'' duplicated. See app/modLocalization.inc.
+#include once "app/modLocalization.inc"
 '' The menu vocabulary. Before modDeclares.bi, which is where these declarations
 '' used to live, so nothing downstream sees a different order.
 '' app/modPaths.bi NAMED DIRECTLY. It was reached only through modRoutines.bi, a

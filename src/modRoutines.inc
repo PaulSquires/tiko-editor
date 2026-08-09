@@ -1115,99 +1115,16 @@ function AfxIFileSaveDialog( _
     if psfd then psfd->lpVtbl->Release(psfd)
 
 end function
-
-
 ' ========================================================================================
-' Load a .lang localization file from disk and populate the localization array
-' The IsEnglish parameter is used when we want to populate the gLangEnglish global
-' array that is used in the editor startup code.
+' LoadLocalizationFile MOVED to app/modLocalization.inc (2026-08-09).
+'
+' It lived here because this file is where it was written, and modLocalization.bi said the
+' app layer "needs to READ the table, not to load it". That held while tiko.exe was the
+' only binary. Phase 7c's shell binary has to load it too, and the function was already
+' PsCore-only -- PsFileExists, PsStrParse, TextFile_ReadLines and friends, with no AfxNova
+' and no Win32 -- so it moved rather than being duplicated.
 ' ========================================================================================
-function LoadLocalizationFile( _
-            byref wszFileName as DWSTRING, _
-            byval IsEnglish as boolean = false _
-            ) as boolean
 
-    ' default that the file failed to load
-    function = false
-    if PsFileExists( wszFileName ) = 0 then exit function
-
-''  DWSTRING, NOT AfxNova's BSTRING. The `**` double-deref that used to appear below was
-''  BSTRING's way of reaching the raw buffer so fbc's RTRIM would not mangle Cyrillic --
-''  PsStrTrimAny takes a DWSTRING and needs no such thing.
-    dim as DWSTRING wst, wKey, wData
-    dim nKey  as long
-    dim nData as long  
-    dim i     as long
-    
-    redim as DWSTRING lines_(any)
-    if TextFile_ReadLines( wszFileName, lines_() ) = false then exit function
-    
-    for nLine_ as long = lbound(lines_) to ubound(lines_)
-        wst = lines_(nLine_)
-        
-        if PsLen(wst) = 0 then continue for
-        if PsLeft(wst, 1) = "'" then continue for
-        
-        i = PsInStr(wst, ":")
-        if i = 0 then continue for
-        
-        wKey = "": wData = "": nData = 0
-
-        wKey  = PsLeft(wst, i-1)
-        wData = PsMid(wst, i+1)
-        
-        nKey  = PsVal(wKey)
-        nData = PsVal(wData)
-
-        if PsUCase(wKey) = "MAXIMUM" then
-            ' resize the global dynamic array
-            if IsEnglish then
-                ' NO `as <type>` CLAUSE, AND THAT IS LOAD-BEARING. These said
-                ' `as wstring * MAX_PATH`, restating the element type -- and once
-                ' the shared arrays became DWSTRING, restating the OLD type made
-                ' fbc declare a LOCAL array of that name instead of resizing the
-                ' shared one. The loader then filled the local, the global stayed
-                ' at ubound -1, and every localized string in the program rendered
-                ' blank. Clean build, no warning, no error.
-                '
-                ' A bare redim resizes the array that is in scope, which is the
-                ' one this is meant to fill.
-                redim gLangEnglish(nData)
-            else   
-                redim LL(nData)
-            end if
-        else
-            ' this should be a key/value pair line in the format:
-            ' 00001:value
-            ' Ensure that we add the value to the array within the valid
-            ' boundaries of the array.
-            if IsEnglish then
-                if (nKey >= lbound(gLangEnglish)) andalso (nKey <= ubound(gLangEnglish)) then
-                    ' Use ** to ensure that cyrillic langauge gets converted correctly. FB intrinsic
-                    ' functions (RTRIM) automatically convert those incorrectly when using CBSTR or DWSTRING.
-                    gLangEnglish(nKey) = PsStrTrimAny(PsStrParse(wData, 1, ";"), chr(9,32))
-                end if
-            else
-                if (nKey >= lbound(LL)) andalso (nKey <= ubound(LL)) then
-                    ' Remove any comments from end of the line. Comments begin with
-                    ' a semicolon character.
-                    ' Use ** to ensure that cyrillic langauge gets converted correctly. FB intrinsic
-                    ' functions (RTRIM) automatically convert those incorrectly when using CBSTR or DWSTRING.
-                    LL(nKey) = PsStrTrimAny(PsStrParse(wData, 1, ";"), chr(9,32))
-                    ' if the local phrase is empty then fill it using the English version.
-                    if PsLen(LL(nKey)) = 0 then 
-                        if (nKey >= lbound(gLangEnglish)) andalso (nKey <= ubound(gLangEnglish)) then
-                            LL(nKey) = gLangEnglish(nKey)
-                        end if
-                    end if   
-                end if
-            end if
-        end if   
-            
-    next
-    
-    function = true
-end function
 
 
 ' ========================================================================================
