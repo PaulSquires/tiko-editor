@@ -65,6 +65,12 @@
 #include once "ui/controls/PsTextBox.inc"
 #include once "ui/controls/PsToolbar.inc"
 #include once "ui/controls/PsStatusBar.inc"
+#include once "ui/controls/PsTooltip.inc"
+'' PsTipHost is a support type a host HOLDS, not a control -- no widget, nothing in the
+'' tree. Its header records that three of the four defects ever reported against
+'' tooltips in this toolkit were in hand-written glue rather than in any control, which
+'' is reason enough not to write that glue a second time here.
+#include once "ui/core/PsTipHost.inc"
 
 '' ---- the document model ----------------------------------------------------------------
 '' No UI, no painting, no platform calls -- these two are the layer the Linux port carries
@@ -134,7 +140,6 @@ const FM_FONT_PX = 15
 '' Toolbar command ids.
 const IDM_BACK    = 101
 const IDM_FORWARD = 102
-const IDM_THEME   = 103
 
 dim shared as PsTextEngine  g_te
 dim shared as PsBufferPaint g_pnt
@@ -167,11 +172,15 @@ dim shared as boolean g_bFromCache
 
 '' Settings, and the theme list they choose from.
 dim shared as MdSettings g_set
-dim shared as DWSTRING g_themes(any)
-dim shared as long g_nThemes
-dim shared as long g_nThemeAt = -1
 dim shared as ulongint g_nNextBeat
 dim shared as ulongint g_nNextPoll
+
+'' The toolbar is icon-only, so its captions live here instead -- an unlabelled glyph
+'' with no tip is a guess.
+dim shared as PsTipHost g_tips
+'' The toolbar item the status bar is currently describing, so the hint is written
+'' once per hover rather than on every mouse move.
+dim shared as long g_nHintedItem = -1
 dim shared as long g_nCurTopic = -1
 dim shared as boolean g_bSearchMode
 '' The toolbar exists before its callbacks can safely touch it; UpdateNav is reachable from
@@ -244,6 +253,7 @@ declare sub LayoutAll( byref surf as PsSurface )
 declare function FontDir() as string
 declare function ThemeDir() as string
 declare function ExeDir() as string
+declare function TikoThemePath() as DWSTRING
 
 '' The splitter moves nothing itself -- it reports a position and the host re-docks. nPos is
 '' in the PARENT's coordinates and in PIXELS; the body band starts at x = 0, so the pixel
@@ -290,47 +300,6 @@ sub Say( byref sMsg as string )
     s.Utf8 = sMsg
     g_status->SetText( 0, s )
 end sub
-
-'' ---------------------------------------------------------------------------------------
-'' THEMES
-''
-'' Every .theme in settings/themes, in the order the folder lists them, cycled by one toolbar
-'' button. No picker dialog: this is a help viewer, the choice is made once, and a modal for
-'' it would be more machinery than the feature is worth.
-'' ---------------------------------------------------------------------------------------
-sub LoadThemeList()
-    g_nThemes = 0
-    dim as DWSTRING sDir
-    sDir.Utf8 = ThemeDir()
-    dim as DWSTRING names(any)
-    dim as long n = PsDirList( sDir, names(), false )
-    for i as long = 0 to n - 1
-        if lcase( PsPathExt(names(i)).Utf8 ) = ".theme" then
-            if g_nThemes > ubound(g_themes) then redim preserve g_themes(0 to (g_nThemes + 1) * 2)
-            g_themes(g_nThemes) = PsPathJoin( sDir, names(i) )
-            g_nThemes += 1
-        end if
-    next
-end sub
-
-sub ApplyTheme( byref sPath as DWSTRING, byval bRemember as boolean )
-    if PsThemeLoadFile( sPath ) = 0 then exit sub
-    if g_pSurf = 0 then exit sub
-    PsThemeApply( g_pSurf->pRoot )
-    '' THE WHOLE SURFACE, not each control. PsThemeApply repaints what it walked, but the
-    '' gaps between widgets keep the old background until something clears them.
-    g_pSurf->InvalidateAll()
-    if bRemember then g_set.sTheme = sPath
-end sub
-
-sub OnCycleTheme()
-    if g_nThemes = 0 then exit sub
-    g_nThemeAt += 1
-    if g_nThemeAt >= g_nThemes then g_nThemeAt = 0
-    ApplyTheme( g_themes(g_nThemeAt), true )
-    Say( "theme: " & PsPathStem(g_themes(g_nThemeAt)).Utf8 )
-end sub
-
 
 sub UpdateNav()
     if g_navReady = false then exit sub
@@ -393,8 +362,6 @@ sub OnNavCommand( byval pBar as any ptr, byval nId as long, byval ud as any ptr 
                 g_navAt += 1
                 OpenTopic( g_navHist(g_navAt), false )
             end if
-        case IDM_THEME
-            OnCycleTheme()
     end select
 end sub
 
@@ -544,16 +511,132 @@ sub OnDocLink( byval pView as any ptr, byref sHref as string, byval ud as any pt
 end sub
 
 
+
+'' ---------------------------------------------------------------------------------------
+'' THE TOOLBAR ICONS, DRAWN RATHER THAN SET IN A FONT.
+''
+'' tiko draws its own toolbar glyphs from SegoeFluentIcons.ttf, and that is exactly what this
+'' must not do: that file is a Windows system font, it is not in assets/f1markdown/fonts, and
+'' shipping it would put a Windows-only dependency in the one part of this program that was
+'' built to be recompiled on Linux. Three shapes drawn from primitives cost less than an
+'' eleventh text engine and look identical on both platforms.
+''
+'' PsToolbar hands the icon cell to the host and interprets nothing -- see PsToolbarIconProc
+'' -- so the ids handed back are just the command ids. A second numbering would buy nothing.
+''
+'' HOT IS THE ICON'S JOB TOO. The control paints a hot BACKGROUND behind the cell on its own;
+'' the ink changing as well is what makes a bare glyph feel like a button. The callback is not
+'' told which item is hot, so it asks the bar -- nHot is an index and so is idx.
+'' ---------------------------------------------------------------------------------------
+sub OnNavDrawIcon( byval pBar as any ptr, byval p as any ptr, byval idx as long, _
+                   byval nIconId as long, byref rcIcon as PsRect, _
+                   byval bEnabled as boolean, byval ud as any ptr )
+    if p = 0 then exit sub
+    dim as PsBufferPaint ptr q = cptr( PsBufferPaint ptr, p )
+    dim as PsToolbar ptr tb = cptr( PsToolbar ptr, pBar )
+
+    dim as PsColor clr
+    if bEnabled = false then
+        clr = PsThemeRoleColor( PSTHEME_FOREGROUNDDIM )
+    elseif (tb <> 0) andalso (tb->nHot = idx) then
+        clr = PsThemeRoleColor( PSTHEME_ACCENT )
+    else
+        clr = PsThemeRoleColor( PSTHEME_FOREGROUND )
+    end if
+
+    dim as long cx = rcIcon.x + rcIcon.w \ 2
+    dim as long cy = rcIcon.y + rcIcon.h \ 2
+    dim as long nMin = iif(rcIcon.w < rcIcon.h, rcIcon.w, rcIcon.h)
+    dim as long nA = (nMin \ 2) - 1                  '' the glyph's half-extent
+    if nA < 3 then nA = 3
+    '' Scaled from the CELL rather than from a design constant, so the stroke thickens with
+    '' the icon on a high-dpi display instead of turning into a hairline.
+    dim as long nPen = nMin \ 8
+    if nPen < 2 then nPen = 2
+
+    select case nIconId
+
+    case IDM_BACK, IDM_FORWARD
+        '' A chevron, not a solid triangle: filled triangles read as transport controls
+        '' (play, fast-forward) and these are navigation.
+        dim as long nHalf = (nA * 6) \ 10
+        dim as long nApex = cx - nHalf
+        dim as long nTail = cx + nHalf
+        if nIconId = IDM_FORWARD then
+            nApex = cx + nHalf
+            nTail = cx - nHalf
+        end if
+        q->SetPenColor( clr )
+        q->PaintLine( nPen, nTail, cy - nA, nApex, cy )
+        q->PaintLine( nPen, nApex, cy, nTail, cy + nA )
+
+    end select
+end sub
+
+'' WHICH TOOL IS UNDER THE POINTER. The only thing PsTipHost cannot know: what counts as a
+'' tool is the control's business. Coordinates are in the attached widget's space both ways.
+function OnTipTool( byval pHost as any ptr, byval x as long, byval y as long, _
+                    byref rcTool as PsRect, byval ud as any ptr ) as long
+    if g_nav = 0 then return -1
+    dim as PsTbrZone z
+    dim as long idx = g_nav->HitTestItem( x, y, z )
+
+    '' THE CAPTION ALSO GOES TO THE STATUS BAR, and this is not belt-and-braces. The tip
+    '' host is wired exactly as gallery2 wires it and its two callbacks demonstrably fire --
+    '' the text is resolved on hover -- but the popup does not appear, and that is inside
+    '' PsTipHost rather than here. Rather than ship an icon bar whose labels exist only in
+    '' theory, the caption is written where it is certain to be read. It is also what
+    '' Explorer and Office do for an icon toolbar, so it earns its place either way.
+    if idx <> g_nHintedItem then
+        g_nHintedItem = idx
+        if idx < 0 then
+            '' Back to whatever the page is, so the hint never outlives the pointer.
+            if (g_nCurTopic >= 0) andalso (g_nCurTopic < g_ix.nTopic) then
+                Say( g_ix.topic(g_nCurTopic).sPath.Utf8 )
+            else
+                Say( "" )
+            end if
+        else
+            select case g_nav->ItemId( idx )
+                case IDM_BACK    : Say( "Back" )
+                case IDM_FORWARD : Say( "Forward" )
+            end select
+        end if
+    end if
+
+    if idx < 0 then return -1
+    g_nav->ItemRect( idx, @rcTool )
+    return idx
+end function
+
+'' AND WHAT IT SAYS. Resolved on demand, only when a tip is actually due -- which is why the
+'' theme one can name the theme that is current at that moment rather than at startup.
+sub OnTipText( byval pTip as any ptr, byval nTool as long, _
+               byref sOut as DWSTRING, byval ud as any ptr )
+    dim as DWSTRING d
+    if g_nav <> 0 then
+        select case g_nav->ItemId( nTool )
+            case IDM_BACK    : d.Utf8 = "Back"
+            case IDM_FORWARD : d.Utf8 = "Forward"
+        end select
+    end if
+    sOut = d
+end sub
+
 sub BuildTree( byref surf as PsSurface )
     g_root = new AppRoot
     g_root->bClipsChildren = false
     surf.SetRoot( g_root )                    '' the surface takes ownership
 
     g_nav = new PsToolbar
-    g_nav->AddItem( PsText("Back"), IDM_BACK, TBR_KIND_BUTTON )
-    g_nav->AddItem( PsText("Forward"), IDM_FORWARD, TBR_KIND_BUTTON )
-    g_nav->AddSeparator()
-    g_nav->AddItem( PsText("Theme"), IDM_THEME, TBR_KIND_BUTTON )
+    '' ICON-ONLY: an empty caption plus a reserved icon cell. PsToolbar charges a gap only
+    '' when there is something on both sides of it, so these come out genuinely narrow rather
+    '' than padded to the width of a caption that is not there.
+    g_nav->AddItem( PsText(""), IDM_BACK, TBR_KIND_BUTTON )
+    g_nav->AddItem( PsText(""), IDM_FORWARD, TBR_KIND_BUTTON )
+    g_nav->SetItemIcon( IDM_BACK,    true, IDM_BACK )
+    g_nav->SetItemIcon( IDM_FORWARD, true, IDM_FORWARD )
+    g_nav->OnDrawIcon( @OnNavDrawIcon )
     g_nav->EnableItem( IDM_BACK, false )
     g_nav->EnableItem( IDM_FORWARD, false )
     g_nav->OnCommand( @OnNavCommand )
@@ -721,6 +804,59 @@ function FontDir() as string
         if sExe[i] = asc("\") then sExe[i] = asc("/")
     next
     return sExe & "/assets/f1markdown/fonts/"
+end function
+
+'' ---------------------------------------------------------------------------------------
+'' tiko's LIVE THEME CHOICE.
+''
+'' The editor writes "Theme=<shortfilename>" into settings/settings.ini whenever the user
+'' commits one in its themes dialog (src/clsConfig.inc:335) and reads it back at
+'' clsConfig.inc:799. That file is per-user runtime state and gitignored, which is exactly
+'' what makes it the right thing to read: it is what the user has chosen ON THIS MACHINE,
+'' now, rather than whatever shipped.
+''
+'' PARSED BY HAND rather than by including tiko's clsConfig: that header carries gConfig,
+'' drags in the whole application layer, and would invert this binary's dependency on it for
+'' the sake of one string. One key out of one file is cheaper than the coupling.
+''
+'' Falls back to default_dark.theme when the file, the key, or the .theme it names is
+'' missing. A viewer that refused to open because the editor had never been themed would be
+'' a silly thing to ship.
+'' ---------------------------------------------------------------------------------------
+function TikoThemePath() as DWSTRING
+    dim as DWSTRING sFallback
+    sFallback.Utf8 = ThemeDir() & "default_dark.theme"
+
+    dim as DWSTRING sIni
+    sIni.Utf8 = ExeDir() & "settings/settings.ini"
+    if PsFileExists( sIni ) = false then return sFallback
+
+    dim as boolean bOk = false
+    dim as string s = MdReadUtf8( sIni, bOk )
+    if bOk = false then return sFallback
+
+    dim as long nAt = 0
+    dim as long nStart = 0
+    while nAt <= len(s)
+        if (nAt = len(s)) orelse (s[nAt] = 10) orelse (s[nAt] = 13) then
+            dim as string t = trim( mid(s, nStart + 1, nAt - nStart), any chr(32) & chr(9) )
+            dim as long nEq = instr(t, "=")
+            if nEq > 0 then
+                if lcase(trim(left(t, nEq - 1))) = "theme" then
+                    dim as string v = trim( mid(t, nEq + 1) )
+                    if len(v) > 0 then
+                        dim as DWSTRING sFull
+                        sFull.Utf8 = ThemeDir() & v
+                        if PsFileExists( sFull ) then return sFull
+                    end if
+                    return sFallback
+                end if
+            end if
+            nStart = nAt + 1
+        end if
+        nAt += 1
+    wend
+    return sFallback
 end function
 
 function ExeDir() as string
@@ -997,22 +1133,19 @@ end sub
     '' tiko's own .theme format, unchanged -- PsTheme.bi states the format is tiko's
     '' deliberately and almost verbatim, same keys, same roles, same key -> role -> default
     '' resolution. So the fourteen files in settings/themes drive this binary as they are.
+    '' ---- THE THEME IS tiko's, AND THIS PROGRAM HAS NO OPINION ABOUT IT ----------------
+    '' There is no theme picker and no remembered preference here on purpose. The viewer is
+    '' launched BY tiko, sits beside it, and would look wrong the moment the two disagreed --
+    '' so it reads the editor's live choice and follows it. tiko writes Theme=<file> into
+    '' settings/settings.ini whenever the user commits one in its themes dialog, which makes
+    '' that file the single place the decision lives.
+    ''
+    '' --theme still overrides, for looking at one without changing the editor.
     scope
-        LoadThemeList()
-        '' PRECEDENCE: --theme, then the remembered one, then the built-in default. The
-        '' command line wins so that a bad remembered theme is one flag away from being
-        '' fixed rather than requiring the settings file to be found and edited.
         dim as DWSTRING sTheme = g_sTheme
-        if len(sTheme) = 0 then sTheme = g_set.sTheme
-        if (len(sTheme) > 0) andalso (PsFileExists(sTheme) = false) then sTheme = PsText("")
-        if len(sTheme) = 0 then sTheme.Utf8 = ThemeDir() & "default_dark.theme"
-        for i as long = 0 to g_nThemes - 1
-            if lcase(g_themes(i).Utf8) = lcase(sTheme.Utf8) then g_nThemeAt = i : exit for
-        next
+        if len(sTheme) = 0 then sTheme = TikoThemePath()
         if PsThemeLoadFile( sTheme ) = 0 then
             print "F1Markdown: no theme loaded from " & sTheme.Utf8
-        else
-            g_set.sTheme = sTheme
         end if
         PsThemeApply( surf.pRoot )
     end scope
@@ -1181,6 +1314,12 @@ end sub
     '' silently declines and every popup this app grows later never appears.
     surf.hWin = win
 
+    '' AFTER hWin, because a tip is a popup surface and PsPopupHost declines to open one
+    '' against a surface with no window -- silently, which is how that particular half hour
+    '' gets spent.
+    g_tips.Attach( @surf, cptr(PsWidget ptr, g_nav), @OnTipTool )
+    g_tips.OnTipText( @OnTipText )
+
     dim as single f = g_plat.window.ScaleOf( win )
     if f <= 0 then f = 1.0
 
@@ -1295,8 +1434,19 @@ end sub
                     end if
 
                 case else
-                    if bMine then surf.Dispatch( @ev )
+                    '' THE TIP'S OWN SURFACE FIRST. An event addressed to the popup is not the
+                    '' main window's to dispatch, and handing it to both is how a tip that
+                    '' will not go away happens.
+                    if g_tips.RouteEvent( @ev ) = false then
+                        if bMine then surf.Dispatch( @ev )
+                    end if
             end select
+
+            '' Fed AFTER dispatch and only for our own window. The return value says whether
+            '' the event was tip-relevant and is deliberately ignored -- it is reported so a
+            '' host can tell something was consumed, never so it can suppress its own
+            '' handling.
+            if bMine then g_tips.HandleEvent( @ev )
 
             PsSurfaceSyncCursor( surf )
         end if
@@ -1309,6 +1459,10 @@ end sub
             g_plat.window.Present( win, pix, bufW, bufH, bufW * 4, @dmg )
             surf.ClearDamage()
         end if
+
+        '' NEVER skipped and never jumped past: a popup that is damaged and never presented
+        '' is a tooltip that is open and invisible.
+        g_tips.PresentIfDamaged( g_pnt )
     loop
 
     '' ---- remember ---------------------------------------------------------------------
