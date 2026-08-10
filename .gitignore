@@ -73,3 +73,6 @@ src/_prelude.txt
 # source. The captures that a census actually cites are copied into docs/port/pump-census/
 # deliberately and by hand; anything left lying in the root is the last run, not evidence.
 /pump-trace.txt
+
+# gas64 leaves an .asm beside each source it compiles. A build artefact, never source.
+*.asm
