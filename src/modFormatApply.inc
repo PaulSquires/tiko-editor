@@ -305,7 +305,7 @@ function Format_ApplyToDocument( byval pDoc as clsDocument ptr, _
     else
         ' A selection's block depth cannot be recovered from the selection itself, so it is
         ' computed from the top of the file and handed in.
-        dim as string sWhole = Scintilla_GetTextBytes( hEdit )
+        dim as string sWhole = Scintilla_GetTextBytes( SciHost_DirectPointer(hEdit) )
         dim as long nDepth = Format_DepthAtLine( sWhole, nFirstLine )
         sOut = Format_TextAtDepth( sSrc, rules, nDepth, bChanged, nIndentWidth, bUseTabs )
     end if
@@ -457,7 +457,7 @@ sub Format_OnEnterPressed( byval pDoc as clsDocument ptr )
     rules.MaxBlankLines = 0
     rules.BlankLinesAroundProc = -1
 
-    dim as string sWhole = Scintilla_GetTextBytes( hEdit )
+    dim as string sWhole = Scintilla_GetTextBytes( SciHost_DirectPointer(hEdit) )
     dim as long nDepth = Format_DepthAtLine( sWhole, nLine )
 
     dim as long bChanged = false

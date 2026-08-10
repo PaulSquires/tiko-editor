@@ -408,89 +408,11 @@ function GetFontCharSetID(byref wzCharsetName as DWSTRING ) as long
 end function
 
 
-' ========================================================================================
-' Snapshot the FULL byte extent of a Scintilla buffer.
-'
-' SCI_GETCHARACTERPOINTER hands back a pointer whose valid length is SCI_GETLENGTH, NOT
-' strlen: the buffer can legitimately contain embedded NUL bytes, and reading it with *psz
-' (as every save path used to) truncates silently at the first one. Always copy exactly
-' SCI_GETLENGTH bytes.
-' ========================================================================================
-function Scintilla_GetTextBytes( byval hEdit as hwnd ) as string
-    dim as long nLen = SciExec( hEdit, SCI_GETLENGTH, 0, 0 )
-    if nLen <= 0 then return ""
-    dim as any ptr psz = cast( any ptr, SciExec( hEdit, SCI_GETCHARACTERPOINTER, 0, 0 ) )
-    if psz = 0 then return ""
-    dim as string s = string( nLen, 0 )
-    memcpy( strptr(s), psz, nLen )
-    return s
-end function
-
-
-' ========================================================================================
-' Delete the spaces and tabs sitting between the last non-blank character of every line and
-' that line's end. Returns the number of lines that were changed.
-'
-' It edits the SCINTILLA BUFFER rather than the byte string on its way to disk, and that is
-' the decision here. Stripping only the outgoing bytes would leave the buffer holding
-' whitespace the file no longer has -- the document would look saved while differing from
-' what is on disk, which then reloads differently and shows up in any external diff. Editing
-' the buffer keeps the two identical, and gives the user an undoable edit they can see.
-'
-' Positions are BYTE offsets, and both characters searched for are ASCII, so the scan is
-' safe on a UTF-8 buffer: no continuation byte can be mistaken for a space or a tab.
-' Line positions are re-read on every iteration because each delete shifts everything after
-' it, so walking forwards is correct.
-' ========================================================================================
-function Scintilla_StripTrailingWhitespace( byval hEdit as hwnd ) as long
-    if hEdit = 0 then return 0
-    if SciExec( hEdit, SCI_GETREADONLY, 0, 0 ) then return 0
-
-    dim as long nLines = SciExec( hEdit, SCI_GETLINECOUNT, 0, 0 )
-    if nLines <= 0 then return 0
-
-    ' The caret is restored by LINE and COLUMN rather than by position: a delete before it
-    ' moves the position, and the caret can also be sitting inside the whitespace that is
-    ' about to disappear. Same for the first visible line, which a strip never scrolls.
-    dim as long nCaretPos = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0 )
-    dim as long nCaretLine = SciExec( hEdit, SCI_LINEFROMPOSITION, nCaretPos, 0 )
-    dim as long nCaretCol = SciExec( hEdit, SCI_GETCOLUMN, nCaretPos, 0 )
-    dim as long nFirstVisible = SciExec( hEdit, SCI_GETFIRSTVISIBLELINE, 0, 0 )
-
-    dim as long nChanged = 0
-
-    SciExec( hEdit, SCI_BEGINUNDOACTION, 0, 0 )
-
-    for i as long = 0 to nLines - 1
-        dim as long nStart = SciExec( hEdit, SCI_POSITIONFROMLINE, i, 0 )
-        ' Excludes the line's EOL characters, so the EOL convention is never touched.
-        dim as long nEnd = SciExec( hEdit, SCI_GETLINEENDPOSITION, i, 0 )
-        dim as long nTrim = nEnd
-        do while nTrim > nStart
-            dim as long ch = SciExec( hEdit, SCI_GETCHARAT, nTrim - 1, 0 )
-            if (ch <> 32) andalso (ch <> 9) then exit do
-            nTrim -= 1
-        loop
-        if nTrim < nEnd then
-            SciExec( hEdit, SCI_DELETERANGE, nTrim, nEnd - nTrim )
-            nChanged += 1
-        end if
-    next
-
-    SciExec( hEdit, SCI_ENDUNDOACTION, 0, 0 )
-
-    if nChanged > 0 then
-        dim as long nNewPos = SciExec( hEdit, SCI_FINDCOLUMN, nCaretLine, nCaretCol )
-        ' The caret's column may no longer exist on the shortened line, and FINDCOLUMN then
-        ' answers past the line end; clamp so it never lands on the next line.
-        dim as long nLineEnd = SciExec( hEdit, SCI_GETLINEENDPOSITION, nCaretLine, 0 )
-        if nNewPos > nLineEnd then nNewPos = nLineEnd
-        SciExec( hEdit, SCI_GOTOPOS, nNewPos, 0 )
-        SciExec( hEdit, SCI_SETFIRSTVISIBLELINE, nFirstVisible, 0 )
-    end if
-
-    function = nChanged
-end function
+' Scintilla_GetTextBytes and Scintilla_StripTrailingWhitespace MOVED to
+' app/modSciText.inc (7c step 3, commit 3d). They were the only two things in this file
+' the document model needed, and the only thing tying them here was an editor HWND.
+' Their SciExec calls became SciMsg, which does NOT flush damage -- so the caller now
+' owns the repaint. That is written up at the top of the new file.
 
 
 ' ========================================================================================

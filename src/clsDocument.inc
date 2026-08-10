@@ -420,7 +420,11 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
     ' user is still looking at stay identical. hWindow(0) rather than the active view: the
     ' split views share one document, and this is the handle the byte read below uses.
     if gConfig.StripTrailingWhitespace then
-        Scintilla_StripTrailingWhitespace( this.hWindow(0) )
+        Scintilla_StripTrailingWhitespace( this.pSci(0) )
+        '' THE REPAINT THE STRIP NO LONGER DOES ITSELF. It used to run on SciExec, which
+        '' flushes damage per message; on SciMsg it does not. One invalidate here, after the
+        '' edit is finished, replaces sixteen during it. See app/modSciText.inc.
+        gAppHost.InvalidateView( this.hWindow(0) )
     end if
 
     ' Encode the full Scintilla buffer to the document's target disk encoding (BOM included)
@@ -429,7 +433,7 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
     dim as long sciCodePage = SciMsg(pSci, SCI_GETCODEPAGE, 0, 0)   ' 0 or SC_CP_UTF8
 
     dim as boolean bLossy
-    dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(this.hWindow(0)), _
+    dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(this.pSci(0)), _
                                             (sciCodePage = SC_CP_UTF8), this.FileEncoding, bLossy )
 
     ' bLossy was computed here and discarded for as long as this function has existed.
@@ -487,7 +491,7 @@ function clsDocument.SaveTempFile( byval wszFilename as DWSTRING ) as boolean
     dim as long sciCodePage = SciMsg(pSci, SCI_GETCODEPAGE, 0, 0)   ' 0 or SC_CP_UTF8
 
     dim as boolean bLossy
-    dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(this.hWindow(0)), _
+    dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(this.pSci(0)), _
                                             (sciCodePage = SC_CP_UTF8), this.FileEncoding, bLossy )
 
     ' Quick Run compiles this file, so a silent character replacement here does not merely

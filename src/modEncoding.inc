@@ -343,7 +343,7 @@ function ConvertTextBuffer( _
     dim as long nFirstLine = SciExec( hEdit, SCI_GETFIRSTVISIBLELINE, 0, 0 )
 
     ' Decode the current buffer to UTF-16, then re-encode to the wanted layout.
-    dim as string sBuffer = Scintilla_GetTextBytes( hEdit )
+    dim as string sBuffer = Scintilla_GetTextBytes( SciHost_DirectPointer(hEdit) )
     dim as DWSTRING dwsText = PsEncDecode( sBuffer, _
             iif(bHaveUtf8, PSENC_UTF8, PSENC_ANSI) )
 

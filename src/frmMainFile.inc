@@ -320,7 +320,7 @@ function OnCommand_FileDuplicate( _
     dim as long sciCodePage = SciExec(DocView(pDoc, 0), SCI_GETCODEPAGE, 0, 0)   ' 0 or SC_CP_UTF8
 
     dim as boolean bLossy
-    dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(DocView(pDoc, 0)), _
+    dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(pDoc->pSci(0)), _
                                             (sciCodePage = SC_CP_UTF8), pDoc->FileEncoding, bLossy )
 
     if bLossy then

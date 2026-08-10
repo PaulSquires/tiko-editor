@@ -63,6 +63,9 @@ using AfxNova
 '' first the const already exists and tiko's #Define becomes the duplicate,
 '' which no guard on the library side can prevent.
 #include once "app/modScintilla.bi"
+'' Buffer reads and the whitespace strip. AFTER modScintilla.bi, which declares SciMsg and
+'' the SC_* messages it uses, and this early because clsDocument's save path calls both.
+#include once "app/modSciText.bi"
 
 '' THE C BINDINGS GO OUTSIDE THE NAMESPACE, and this is not a style choice.
 '' fbc mangles an `extern "C"` block declared inside a namespace as
@@ -152,6 +155,7 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 '' AfxNova or Win32 token in it; it sat in src/ only because that is where it was written.
 '' The shell binary needs it, and a file the app layer cannot reach is a file the shell
 '' binary has to duplicate.
+#include once "app/modSciText.inc"
 #include once "app/modTextFile.inc"
 #include once "app/modLocalization.bi"
 '' The .lang loader, which fills the tables modLocalization.bi declares. It lived in

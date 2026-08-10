@@ -50,8 +50,8 @@ declare sub CopyData_RunSelfTest()
 declare function ReloadDocument( byval wszFilename as DWSTRING ) as long
 declare function GetTemporaryFilename( byval wszFolder as DWSTRING, byval wszExtension as DWSTRING) as string
 declare function GetFontCharSetID(byref wzCharsetName as DWSTRING ) as long
-declare function Scintilla_GetTextBytes( byval hEdit as hwnd ) as string
-declare function Scintilla_StripTrailingWhitespace( byval hEdit as hwnd ) as long
+' Scintilla_GetTextBytes / Scintilla_StripTrailingWhitespace moved to
+' app/modSciText.bi -- see there for the repaint the caller now owns.
 declare function GetFileToString( byval wszFilename as DWSTRING, byref txtBuffer as string, byval pDoc as clsDocument ptr ) as boolean
 declare function IsCurrentLineIncludeFilename() as boolean
 declare function OpenSelectedDocument( byval wszFilename as DWSTRING, byval wszFunctionName as DWSTRING = "", byval nLineNumber as long = -1 ) as clsDocument ptr
