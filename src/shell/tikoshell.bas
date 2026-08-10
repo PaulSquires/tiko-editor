@@ -471,8 +471,40 @@ sub StyleOneView( byval pV as PsSciView ptr, byref surf as PsSurface )
     pV->Msg( SCI_STYLESETBACK, STYLE_LINENUMBER, ToBgr(PsThemeRoleColor(PSTHEME_BACKGROUND)) )
     pV->Msg( SCI_SETMARGINTYPEN, 0, SC_MARGIN_NUMBER )
     pV->Msg( SCI_SETMARGINWIDTHN, 0, PsScaleBy(38, surf.fScale) )
-    pV->Msg( SCI_SETMARGINWIDTHN, 1, 0 )
+
+    '' ---- MARGIN 1 IS THE SYMBOL MARGIN, AND ITS WIDTH IS NOT COSMETIC ------------------
+    ''
+    '' REPORTED BY THE AUTHOR: bookmarked lines came out with a highlighted BACKGROUND
+    '' across the whole line. tiko puts a small icon in the margin instead.
+    ''
+    '' Neither is a colour bug. IT IS SCINTILLA'S DOCUMENTED FALLBACK: a marker that no
+    '' margin displays is drawn by changing the background colour of its line. This margin
+    '' had width 0 and the marker had never been defined, so every bookmark painted as a
+    '' stripe -- and it would have done the same for breakpoints and the debugger's current
+    '' line the moment anything set one.
+    ''
+    '' MARGIN 1 IS SC_MARGIN_TEXT HERE BECAUSE IT IS IN tiko (modViewStyle.inc:155-157). A
+    '' margin's default mask is every non-folder marker, which is exactly the set that
+    '' belongs in it, so no SETMARGINMASKN is needed -- and margin 2 keeps SC_MASK_FOLDERS
+    '' for the fold symbols, which is why folding is not affected by any of this.
+    pV->Msg( SCI_SETMARGINTYPEN, 1, SC_MARGIN_TEXT )
+    pV->Msg( SCI_SETMARGINSENSITIVEN, 1, 1 )
+    pV->Msg( SCI_SETMARGINWIDTHN, 1, PsScaleBy(16, surf.fScale) )
     pV->Msg( SCI_SETMARGINWIDTHN, 2, 0 )
+
+    '' ---- THE MARKERS THEMSELVES, WHICH NOTHING IN THIS BINARY HAD EVER DEFINED ---------
+    '' Same shapes tiko uses (modViewStyle.inc:118-140). The COLOURS come from PsTheme
+    '' roles rather than tiko's theme.editor.bookmark fields, because the .theme files this
+    '' shell loads carry no bookmark keys at all -- arctic.theme is one of the eight that
+    '' name no widget keys, so a lookup would fall back to a role regardless. Asking for the
+    '' role directly says so instead of pretending there is a key.
+    pV->Msg( SCI_MARKERDEFINE,  MARKER_BOOKMARK, SC_MARK_VERTICALBOOKMARK )
+    pV->Msg( SCI_MARKERSETFORE, MARKER_BOOKMARK, ToBgr(PsThemeRoleColor(PSTHEME_ACCENTFORE)) )
+    pV->Msg( SCI_MARKERSETBACK, MARKER_BOOKMARK, ToBgr(PsThemeRoleColor(PSTHEME_ACCENT)) )
+
+    pV->Msg( SCI_MARKERDEFINE,  MARKER_BREAKPOINT, SC_MARK_CIRCLE )
+    pV->Msg( SCI_MARKERSETFORE, MARKER_BREAKPOINT, ToBgr(PsThemeRoleColor(PSTHEME_ERROR)) )
+    pV->Msg( SCI_MARKERSETBACK, MARKER_BREAKPOINT, ToBgr(PsThemeRoleColor(PSTHEME_ERROR)) )
 end sub
 
 '' Both panes. A split view showing one document in two colour schemes would be a strange
@@ -4092,6 +4124,31 @@ end function
         Check "    from the background role, not the editor's", _
               (g_view->Msg(SCI_STYLEGETBACK, STYLE_LINENUMBER) = _
                ToBgr(PsThemeRoleColor(PSTHEME_BACKGROUND)))
+
+        '' ---- THE SYMBOL MARGIN HAS A WIDTH, WHICH IS WHY BOOKMARKS ARE ICONS ----------
+        '' REPORTED BY THE AUTHOR: a bookmarked line came out with its whole background
+        '' highlighted, where tiko shows a small icon in the margin.
+        ''
+        '' NOT A COLOUR BUG. Scintilla draws a marker that NO MARGIN DISPLAYS by changing
+        '' the background colour of its line -- documented fallback behaviour. Margin 1 had
+        '' width 0 here, so every marker in this binary painted as a stripe, and breakpoints
+        '' and the debugger's current line would have done the same as soon as anything set
+        '' one.
+        ''
+        '' The width is what the suite can see. The ICON is not: no assertion in either repo
+        '' looks at a pixel, so what SC_MARK_VERTICALBOOKMARK actually renders as is the
+        '' author's to confirm.
+        Check "  the symbol margin has a width, so markers are icons not stripes", _
+              (g_view->Msg(SCI_GETMARGINWIDTHN, 1) > 0), _
+              str(g_view->Msg(SCI_GETMARGINWIDTHN, 1))
+        Check "    and it scales with the surface", _
+              (g_view->Msg(SCI_GETMARGINWIDTHN, 1) = PsScaleBy(16, surf.fScale)), _
+              str(g_view->Msg(SCI_GETMARGINWIDTHN, 1)) & " at " & str(surf.fScale)
+        '' MARGIN 2 STAYS AT ZERO. It carries SC_MASK_FOLDERS in tiko and this binary has no
+        '' folding UI; a width here would put an empty fold strip beside every document.
+        Check "    while the fold margin stays closed", _
+              (g_view->Msg(SCI_GETMARGINWIDTHN, 2) = 0), _
+              str(g_view->Msg(SCI_GETMARGINWIDTHN, 2))
 
         '' ---- THE SCROLLBAR RESERVE ----------------------------------------------------
         scope
