@@ -1,8 +1,14 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ **the commit that added [`7c-step3.md`](7c-step3.md)** — 7c
-step 3 complete, code at `26e4bf8eb`; PsPlatform **`main`** @ **`b4d7371`**; HelpCenter
-**`main`** @ `02a4c18`. All build warning-free and tiko runs.
+tiko `feat/cross-platform` @ **the commit that added [`7c-step4.md`](7c-step4.md)** — 7c
+**step 4 complete**, shell code at `8a9faf89e`; PsPlatform **`main`** @ **`b4d7371`**;
+HelpCenter **`main`** @ `02a4c18`. All build warning-free and tiko runs.
+
+**THIS BRANCH NOW CARRIES TWO UNRELATED WORKSTREAMS.** The 7c port is `src/app` and
+`src/shell`; **F1Markdown** (`src/F1Markdown`, `F1Markdown.exe`) is the author's own and is
+interleaved with it in the log. Neither builds the other. One F1Markdown commit swept up 90
+lines of in-progress `shell/shellpanel.bi`, so `git log -- <path>` is more reliable than
+reading commit subjects when tracing who changed what.
 
 **PsPlatform is pushed. tiko's last commits are NOT** — `origin/feat/cross-platform` was at
 `d79163672` when this was written. **Run `git log origin/feat/cross-platform..HEAD` rather
