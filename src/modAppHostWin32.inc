@@ -140,5 +140,5 @@ sub AppHostW32_Install()
     gAppHost.AskOpenPath    = @AppHostW32_AskOpenPath
     gAppHost.AskSavePath    = @AppHostW32_AskSavePath
     gAppHost.IsFindVisible  = @AppHostW32_IsFindVisible
-    gAppHost.CloseTab       = @AppHostW32_CloseTab
+    gAppNotify.CloseTab     = @AppHostW32_CloseTab
 end sub

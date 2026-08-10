@@ -504,6 +504,15 @@ function WinMain( _
                      "tiko", MB_OK or MB_ICONERROR )
         return 1
     end if
+    ' BOTH records are checked, separately. One check over two records would pass a host
+    ' that filled only one of them -- and "safely no-op-able" does not mean optional: a
+    ' null field is a crash either way.
+    if AppNotify_IsComplete() = false then
+        MessageBoxW( 0, "AppNotify." & AppNotify_FirstMissing() & " is not set." & _
+                        !"\n\nThis is a build error, not a configuration one.", _
+                     "tiko", MB_OK or MB_ICONERROR )
+        return 1
+    end if
 
     ' ---- DLL SEARCH HARDENING, before anything can load a library --------------------
     ' By default LoadLibrary with a bare name searches the CURRENT DIRECTORY and then PATH.

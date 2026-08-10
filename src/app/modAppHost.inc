@@ -2,7 +2,8 @@
 '' modAppHost -- implementation. See modAppHost.bi for what this is and why.
 '' ========================================================================================
 
-dim shared gAppHost as AppHostServices
+dim shared gAppHost   as AppHostServices
+dim shared gAppNotify as AppHostNotify
 
 '' The completeness check is written as a LIST rather than one long `andalso` chain, so that
 '' a missing field can be NAMED. "The host is incomplete" sends a reader through eleven
@@ -24,10 +25,19 @@ function AppHost_FirstMissing() as string
     if gAppHost.AskOpenPath    = 0 then return "AskOpenPath"
     if gAppHost.AskSavePath    = 0 then return "AskSavePath"
     if gAppHost.IsFindVisible  = 0 then return "IsFindVisible"
-    if gAppHost.CloseTab       = 0 then return "CloseTab"
     return ""
 end function
 
 function AppHost_IsComplete() as boolean
     return (len(AppHost_FirstMissing()) = 0)
+end function
+
+
+function AppNotify_FirstMissing() as string
+    if gAppNotify.CloseTab = 0 then return "CloseTab"
+    return ""
+end function
+
+function AppNotify_IsComplete() as boolean
+    return (len(AppNotify_FirstMissing()) = 0)
 end function

@@ -98,16 +98,41 @@ type AppHostServices
     '' Whether the Find bar is up. The tab control clears selection highlighting on a switch
     '' unless a find is active.
     IsFindVisible  as function() as boolean
-
-    '' Close the tab at this index, with everything that implies -- prompting to save, and
-    '' removing the document. THE ONE FIELD HERE THAT IS A COMMAND RATHER THAN A SERVICE, and
-    '' it is worth watching: if it turns out to need more of the shell than an index, the tab
-    '' control is less portable than it measures and that is a reason to stop rather than to
-    '' widen this record until it fits.
-    CloseTab       as sub(byval nTabIdx as long)
 end type
 
 extern gAppHost as AppHostServices
+
+
+'' ========================================================================================
+'' AppHostNotify -- what the model TELLS the host, expecting nothing back.
+''
+'' ---- WHY THIS IS A SEPARATE RECORD, and it is not tidiness ----------------------------
+''
+'' EVERY FIELD HERE CAN BE SAFELY NO-OP'D. NOT ONE FIELD OF AppHostServices CAN.
+''
+'' That is the whole distinction, and it is the question a host actually has to answer while
+'' being built. A binary with no TODO pane can leave RefreshTodoList empty and be CORRECT; a
+'' binary that leaves CreateView empty presents an editor with no editor in it. Before the
+'' split both kinds sat in one record behind one completeness check that said "all present"
+'' and nothing about which mattered.
+''
+'' It also resolves a note this file already carried. CloseTab was flagged in AppHostServices
+'' as "the one field here that is a command rather than a service" -- it is here now, which
+'' is where a command belongs.
+''
+'' ---- STILL REQUIRED, STILL CHECKED ----------------------------------------------------
+''
+'' Safely no-op-able does NOT mean optional. A null field is still a crash, so the same
+'' all-fields-set check applies; what changes is that a host filling these in knows an empty
+'' body is a legitimate answer and an empty body in the other record never is.
+'' ========================================================================================
+type AppHostNotify
+    '' Close the tab at this index, with everything that implies -- prompting to save, and
+    '' removing the document.
+    CloseTab       as sub(byval nTabIdx as long)
+end type
+
+extern gAppNotify as AppHostNotify
 
 '' TRUE only when every field is set. Called once at startup by both binaries -- see the note
 '' above about why there is no per-call fallback.
@@ -115,3 +140,8 @@ declare function AppHost_IsComplete() as boolean
 
 '' Which field is missing, for the message. Empty when the record is complete.
 declare function AppHost_FirstMissing() as string
+
+'' The same pair for the notification record. Two checks rather than one, because two
+'' records: a host that filled only one of them would otherwise pass.
+declare function AppNotify_IsComplete() as boolean
+declare function AppNotify_FirstMissing() as string

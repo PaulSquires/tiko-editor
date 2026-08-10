@@ -331,7 +331,7 @@ end function
 ''
 function clsTopTabCtl.CloseTab( byval nTabIdx as long = -1) as long
     ' Invoked by clicking "X" on tab
-    gAppHost.CloseTab( nTabIdx )
+    gAppNotify.CloseTab( nTabIdx )
     function = 0
 end function
 
