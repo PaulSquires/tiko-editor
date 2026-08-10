@@ -1,6 +1,6 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ `dc194e79e`; PsPlatform **`main`** @ `32b846c`;
+tiko `feat/cross-platform` @ `e285254a1`; PsPlatform **`main`** @ `be10064`;
 HelpCenter **`main`** @ `02a4c18`. All build warning-free, all are pushed, and tiko runs.
 
 **THERE ARE TWO BINARIES IN tiko NOW.** `tiko.exe` from `tiko.bas`, unchanged and building at
@@ -54,7 +54,13 @@ Read in this order, and do not skip the first:
 4. [`7c-step1.md`](7c-step1.md) — what the shell binary is, and what it is evidence FOR. Read
    its "what is NOT verified" section, which is deliberately the longer half. Its results
    section is four lines and its caveats are twenty, and that ratio is the honest one.
-5. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
+5. [`7c-step2.md`](7c-step2.md) — **the pump collapse, measured.** The largest named unknown
+   in `d2-decision.md`, closed: seventeen pumps become one loop and a call, and the whole
+   residue is a four-line dialog policy. Read it beside
+   [`pump-census.md`](pump-census.md), which is the evidence, and note that its
+   not-verified section is again the longer half — this time because NOTHING about a modal
+   dialog is asserted anywhere in either repo.
+6. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
    irreducible, investigated. **It was not a blocker and never had been.** Short, and it is the
    clearest example on this whole shelf of a claim that survived because nobody checked it.
    **Its recommendation has since been implemented**: WebView2 is gone from the tree.
@@ -153,7 +159,22 @@ against the oracle and **no edge differs from tiko's by more than 2 pixels**. Se
 [`7c-step1.md`](7c-step1.md) — read its "what is NOT verified" section, which is longer than
 its results and is the more useful half.
 
-**That is ONE FORM. 7c is 48 of them and ~45,000 lines**, so read step 1 as a measurement of
+**STEP 2 IS DONE TOO, AND IT CLOSED THE PUMP.** `frmMain`'s message loop was the largest
+unknown `d2-decision.md` named. It collapses: seventeen pumps become one `PsSurface` loop,
+fourteen `PsModalHost.Run` calls and two drains, and the sixteen ordered claim points in
+`frmMain` become four host `RouteEvent` calls the shell already makes, three `PsAccelTable`s
+in a loop, one precedence rule and two rows deferred with the Find bars. The residue everyone
+expected to be large — the `IsDialogMessage` replacement — is **four lines**, because
+`PsDispatch` already does Tab and only Enter and Escape were missing.
+
+**AND IT COST TWO DEFECTS IN `PsModalHost`, BOTH BECAUSE THE SHELL WAS ITS FIRST CALLER
+ANYWHERE.** `Run` deleted its caller's dialog on every dismissal — `SetRoot(0)` deletes, under
+a comment saying it detaches — which killed the process silently; and no dialog it raised had
+ever had initial keyboard focus. Fixed in `61f56bb` and `be10064`. **Neither fix is asserted
+anywhere**: restoring either bug leaves all 46 PsPlatform suites and all 194 shell assertions
+green, checked both times. `Run` needs a compositor and `build check` is headless by design.
+
+**That is ONE FORM AND TWO DIALOGS. 7c is 48 forms and ~45,000 lines**, so read step 1 as a measurement of
 the approach rather than of the progress. An earlier version of this page said 7c was *done*,
 which was the most consequential error it has carried; the correction is not an excuse to
 overclaim in the other direction.

@@ -184,3 +184,12 @@ says the pump DECIDES correctly, not that the dialog works and not that modality
 
 So the remaining risk is now specific rather than diffuse: it is `Run()`'s ordering
 constraints, and the only thing that will exercise them is tiko's first real modal dialog.
+
+> **STEP 2 DID THAT, and the sentence above turned out to be exactly right.** The first modal
+> dialog ever raised through `Run` found two defects in it within minutes — it deleted its
+> caller's dialog on every dismissal, and no dialog it raised had ever had initial keyboard
+> focus. Both are in `PsModalHost`, both were invisible because `Run` had **no caller anywhere
+> in either tree**, and neither is asserted even now: restoring either bug leaves every suite
+> in both repos green.
+>
+> The pump itself collapsed rather than ported. See [`7c-step2.md`](7c-step2.md).
