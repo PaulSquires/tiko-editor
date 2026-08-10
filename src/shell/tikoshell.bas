@@ -1802,6 +1802,29 @@ sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any pt
                 end if
             end scope
 
+        '' ---- OPEN AND SAVE, THROUGH THE DOCUMENT MODEL -----------------------------------
+        '' The point of these three is that NONE of the work is here. Open asks the host for
+        '' a path and hands it to the tab model; Save calls clsDocument.SaveFile, which is
+        '' app-layer code shared with tiko byte for byte and reaches the disk, the encoder,
+        '' the lossy prompt and the write-failure report entirely through the seam.
+        ''
+        '' tiko's OnCommand_FileOpen (frmMainFile.inc:46) opens MULTIPLE files and this opens
+        '' one: g_plat.dialogs.OpenFile is asked with bMultiple = false, because ShellAskPath
+        '' returns a single path. A real difference, said here rather than left to be found.
+        case IDM_FILEOPEN
+            scope
+                dim as DWSTRING sPick
+                if ShellAskPath( false, sPick ) then ShellTabs_Open( sPick )
+            end scope
+
+        '' SAVE AS IS THE SAME CALL WITH ONE FLAG, exactly as tiko routes it
+        '' (frmMainOnCommand.inc:209-221). SaveFile raises the Save As dialog itself, through
+        '' gAppHost.AskSavePath -- so the shell never opens it here, and an UNTITLED document
+        '' saved with plain Save still gets the picker, because SaveFile forces bSaveAs on a
+        '' new document before anything else.
+        case IDM_FILESAVE   : ShellTabs_Save( false )
+        case IDM_FILESAVEAS : ShellTabs_Save( true )
+
         case IDM_EXPLORERPOSITION : g_state.bExplorerRight = not g_state.bExplorerRight
         case IDM_VIEWSIDEPANEL    : g_state.bPanelVisible  = not g_state.bPanelVisible
         case IDM_VIEWOUTPUT       : g_state.bOutputVisible = not g_state.bOutputVisible
@@ -3029,10 +3052,124 @@ end function
             Check "  the view's Scintilla pointer is the view's own", _
                   (gAppHost.ViewSciPointer(g_view) = g_view->pSci)
 
-            '' THE SHELL REFUSES A LOSSY SAVE, and that is the safe answer rather than the
-            '' convenient one -- saying yes would discard characters nobody agreed to lose.
-            Check "  a lossy save is refused while there is no prompt to ask with", _
-                  (gAppHost.ConfirmLossySave(0, DWSTRING("x"), 0) = false)
+            '' ---- THE LOSSY-SAVE PROMPT -------------------------------------------------
+            '' THIS ASSERTION WAS A HANG WAITING TO HAPPEN and commit 7 is what armed it. It
+            '' used to read `ConfirmLossySave(0, "x", 0) = false` against the LIVE g_pSurf,
+            '' which was safe only because the implementation printed and returned. Now it
+            '' raises a real modal, and a real modal in a windowless run blocks forever
+            '' waiting for a button nobody will press -- the identical trap ConfirmExit
+            '' documents forty lines below. The surface is nulled, or the hook is set, in
+            '' every case here.
+            scope
+                dim as PsSurface ptr pWas = g_pSurf
+
+                '' THE TEST HOOK, WHICH IS THE APP LAYER'S, NOT THE SHELL'S.
+                '' gLossySaveTestAnswer lives in app/modEncoding.bi and TIKO_SAVE_SELFTEST
+                '' drives tiko's save path through it. Honouring it here is what lets that
+                '' suite mean the same thing against either host.
+                gLossySaveTestAnswer = -1
+                Check "  the lossy-save hook can force a refusal", _
+                      (gAppHost.ConfirmLossySave(0, DWSTRING("x"), 0) = false)
+                gLossySaveTestAnswer = 1
+                Check "    and an acceptance, without a box either way", _
+                      gAppHost.ConfirmLossySave(0, DWSTRING("x"), 0)
+                gLossySaveTestAnswer = 0
+
+                '' NO SURFACE MEANS REFUSE, NOT ASSUME. The convenient answer here discards
+                '' characters the user never agreed to lose, so the fallback is the safe one.
+                g_pSurf = 0
+                Check "  and with nothing to ask with, a lossy save is refused", _
+                      (gAppHost.ConfirmLossySave(0, DWSTRING("x"), 0) = false)
+
+                '' THE COMPOSITION, which is everything about these two boxes that does not
+                '' need a compositor: captions, buttons, the default and the cancel id. Split
+                '' out of the show for exactly this reason -- see shellhost.bi.
+                scope
+                    dim as PsMessageBox box
+                    BuildLossySaveBox( box, DWSTRING("C:\x\a.bas"), 0 )
+                    Check "  the lossy box offers OK and Cancel", _
+                          (box.GetButtonCount() = 2), str(box.GetButtonCount())
+                    Check "    with OK first", (box.ButtonId(0) = MBX_ID_OK)
+                    '' THE LOAD-BEARING ONE. A destructive box whose default is OK loses
+                    '' characters to a reflexive Return, and nothing on screen would say so.
+                    Check "    and CANCEL as the default, because this one destroys text", _
+                          (box.ButtonId(box.GetDefaultButton()) = MBX_ID_CANCEL), _
+                          str(box.GetDefaultButton())
+                    Check "    Escape cancels", (box.ResolveCancelId() = MBX_ID_CANCEL)
+                    '' L(516) and L(518) are ids 516/518 in all six .lang files. An id that
+                    '' was NOT would render blank with nothing to say so -- the failure mode
+                    '' the localization rule exists for -- so the text is checked non-empty
+                    '' rather than assumed.
+                    Check "    and neither caption nor text is blank", _
+                          (len(box.sCaption) > 0) andalso (len(box.sText) > 0)
+                end scope
+
+                scope
+                    dim as PsMessageBox box
+                    BuildWriteFailedBox( box, DWSTRING("C:\x\a.bas"), DWSTRING("locked") )
+                    Check "  the write-failure box is OK-only", _
+                          (box.GetButtonCount() = 1), str(box.GetButtonCount())
+                    Check "    and Escape dismisses it", (box.ResolveCancelId() = MBX_ID_OK)
+                    '' The error text is what tells the user WHICH file and WHY, and it is
+                    '' the argument rather than a fixed string, so it is checked for.
+                    Check "    it names the file and the reason", _
+                          (instr(box.sText.Utf8, "a.bas") > 0) andalso _
+                          (instr(box.sText.Utf8, "locked") > 0)
+                end scope
+
+                g_pSurf = pWas
+            end scope
+
+            '' ---- GROUP L: OPEN AND SAVE ------------------------------------------------
+            '' The commands themselves reach disk and a file dialog, so what is asserted is
+            '' the part that decides WHETHER they do: the duplicate lookup, and the refusal
+            '' to save when nothing is open.
+            scope
+                dim as long nWasCount = g_nTabDocs
+                dim as long nWasCur   = g_nTabCur
+                '' PUT BACK WHAT WAS THERE, rather than blanked. `--selftest` takes file
+                '' arguments like any other run, so tabs 0 and 1 can be real open documents,
+                '' and clearing their paths would leave the binary able to open the same file
+                '' twice for the rest of the session.
+                dim as DWSTRING sWas0 = g_tabDocs(0).sPath
+                dim as DWSTRING sWas1 = g_tabDocs(1).sPath
+
+                '' SEEDED, NOT OPENED. ShellTabs_FindByPath reads nothing but this array,
+                '' which is why sPath is stored in the entry at all -- walking
+                '' pDoc->DiskFilename instead would have needed a live document per case.
+                g_tabDocs(0).sPath = DWSTRING("C:\dev\one.bas")
+                g_tabDocs(1).sPath = DWSTRING("C:\dev\two.bas")
+                g_nTabDocs = 2
+
+                Check "an open file is found by path", _
+                      (ShellTabs_FindByPath(DWSTRING("C:\dev\two.bas")) = 1), _
+                      str(ShellTabs_FindByPath(DWSTRING("C:\dev\two.bas")))
+                '' WINDOWS PATHS ARE CASE-INSENSITIVE, and a case-sensitive compare would
+                '' open the same file twice under two spellings -- two documents over one
+                '' path, where saving either silently discards the other's edits.
+                Check "  whatever case it is spelled in", _
+                      (ShellTabs_FindByPath(DWSTRING("c:\DEV\Two.BAS")) = 1)
+                Check "  a file that is not open is not found", _
+                      (ShellTabs_FindByPath(DWSTRING("C:\dev\three.bas")) = -1)
+                '' An empty path matches an empty slot on a naive compare, and every slot
+                '' past g_nTabDocs is empty.
+                Check "  and an empty path matches nothing", _
+                      (ShellTabs_FindByPath(DWSTRING("")) = -1)
+
+                g_tabDocs(0).sPath = sWas0
+                g_tabDocs(1).sPath = sWas1
+                g_nTabDocs = nWasCount
+                g_nTabCur  = nWasCur
+
+                '' SAVE WITH NOTHING OPEN. The document model would fault on a null pDoc,
+                '' and Ctrl+S is reachable from the very first frame -- before any file is.
+                g_nTabCur = -1
+                Check "saving with no document open is refused, not faulted on", _
+                      (ShellTabs_Save(false) = false)
+                Check "  and so is Save As", (ShellTabs_Save(true) = false)
+                Check "  with no document to hand back", (ShellTabs_CurrentDoc() = 0)
+                g_nTabCur = nWasCur
+            end scope
 
             '' ---- GROUP J: THE FILE DIALOG'S NESTED PUMP --------------------------------
             '' A THIRD nested pump, in a process whose previous two produced two silent
@@ -3516,9 +3653,20 @@ end function
             '' AN ID WITH NO HANDLER MUST NOT TOUCH THE LAYOUT. Most ids are in that state
             '' and will be for the whole of 7c; a fall-through that re-laid out anyway would
             '' hide a missing handler behind a working-looking repaint.
+            ''
+            '' IDM_FILENEW, NOT IDM_FILESAVE. This drove Save until commit 7 gave Save a
+            '' handler -- at which point it still PASSED, because the layout does not move
+            '' either way, and would have gone on passing while asserting nothing about the
+            '' thing it names. New File is genuinely unhandled here; when it stops being,
+            '' this line has to move again.
             dim as long yWas = g_rcDoc.y
-            OnMenuCommand( 0, IDM_FILESAVE, 0 )
+            OnMenuCommand( 0, IDM_FILENEW, 0 )
             Check "an unhandled command changes nothing", (g_rcDoc.y = yWas)
+
+            '' SAVE WITH NOTHING OPEN IS REACHED THROUGH THE COMMAND, not just through
+            '' ShellTabs_Save -- Ctrl+S is live from the first frame, before any file is.
+            OnMenuCommand( 0, IDM_FILESAVE, 0 )
+            Check "  and neither does Save with no document", (g_rcDoc.y = yWas)
         end scope
 
         '' NO WINDOW WAS CREATED, and the surface says so. hWin is the marker PsModalHost

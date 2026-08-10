@@ -68,32 +68,10 @@ private function WideToUtf8( byref sWide as string, byval nWideChars as long ) a
 end function
 
 
-' ========================================================================================
-' The display name of a FILE_ENCODING_* value -- the SINGLE source for all four strings.
-'
-' There were two hardcoded copies of this list before (the statusbar panel in
-' frmMain_SetStatusbar and the statusbar popup in ShowFileEncodingContextMenu), and the
-' Options page's "encoding for new files" combo would have made a third. They are now all
-' driven from here, which is what makes the combo's ITEM ORDER and the FILE_ENCODING_*
-' VALUES provably the same thing: the combo is filled by walking ANSI..UTF16_BOM through
-' this function, so the selected index IS the encoding constant and there is no mapping
-' table anywhere to fall out of step.
-'
-' NOT localized, deliberately: these are the encodings' own names, and both call sites this
-' replaces spelled them in English under every language file. Changing that is a separate
-' decision from adding a setting, and would need all six .lang files either way.
-'
-' An unknown value answers "ANSI", matching the `case else` the statusbar has always had --
-' encoding 0 is the one a zeroed/garbage field lands on.
-' ========================================================================================
-function Doc_EncodingName( byval nEnc as long ) as DWSTRING
-    select case nEnc
-        case FILE_ENCODING_UTF8      : return "UTF-8"
-        case FILE_ENCODING_UTF8_BOM  : return "UTF-8 (BOM)"
-        case FILE_ENCODING_UTF16_BOM : return "UTF-16 (BOM)"
-        case else                    : return "ANSI"
-    end select
-end function
+' Doc_EncodingName MOVED to app/modEncoding.inc (7c step 3, commit 7). Its declaration was
+' already in app/modEncoding.bi and its body is a Select Case over FILE_ENCODING_* -- it was
+' shell-side for proximity, like Doc_EncToPs before it. The shell's lossy-save prompt names
+' the encoding, and this was the only unresolved symbol in that whole commit.
 ' Doc_EncToPs moved to app/modEncoding.inc with the two functions that use it -- it is a
 ' Select Case over constants and was never shell-side for any reason but proximity.
 ' Doc_EncodeForDisk and Doc_WriteToDisk MOVED to app/modEncoding.inc (7c step 3,

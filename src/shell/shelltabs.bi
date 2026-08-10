@@ -47,6 +47,11 @@ type ShellTabEntry
     pSciDoc  as any ptr
     nPos     as long          '' caret, saved on the way out
     nFirst   as long          '' first visible line, likewise
+    '' The path this tab is showing, HELD HERE rather than only in pDoc->DiskFilename, so
+    '' ShellTabs_FindByPath is a pure function of this array and can be driven windowlessly.
+    '' It is re-read from the document after a Save As, which is the one thing that renames
+    '' a tab in place.
+    sPath    as DWSTRING
 end type
 
 dim shared g_tabDocs(0 to SH_MAX_DOCS - 1) as ShellTabEntry
@@ -107,8 +112,44 @@ private sub ShellTabs_OnSelect( byval pBar as any ptr, byval idx as long, byval 
 end sub
 
 
+'' The index already showing this path, or -1. CASE-INSENSITIVE, because Windows paths are
+'' and "C:\x\a.bas" opened twice under two spellings is two documents over one file.
+''
+'' PURE, and deliberately so: it reads nothing but this array, so --selftest can seed the
+'' table and drive it without a window. The alternative -- walking pDoc->DiskFilename -- would
+'' have needed a live document per case.
+function ShellTabs_FindByPath( byval wszPath as DWSTRING ) as long
+    if len( wszPath ) = 0 then return -1
+    dim as DWSTRING sWant = PsUCase( wszPath )
+    for i as long = 0 to g_nTabDocs - 1
+        if PsUCase( g_tabDocs(i).sPath ) = sWant then return i
+    next
+    return -1
+end function
+
+
+'' The document the user is looking at, or null when nothing is open.
+function ShellTabs_CurrentDoc() as clsDocument ptr
+    if (g_nTabCur < 0) orelse (g_nTabCur >= g_nTabDocs) then return 0
+    return g_tabDocs(g_nTabCur).pDoc
+end function
+
+
 '' Opens a file as a new tab. Returns its index, or -1.
+''
+'' AN ALREADY-OPEN FILE IS SHOWN, NOT REOPENED, which is what tiko does through
+'' gApp.GetDocumentPtrByFilename (frmMainFile.inc:110). Without it the same file gets two
+'' clsDocuments and two Scintilla documents, and saving one silently discards the other's
+'' edits -- there is no conflict to notice, because both believe they own the path.
 function ShellTabs_Open( byval wszPath as DWSTRING ) as long
+    dim as long idxOpen = ShellTabs_FindByPath( wszPath )
+    if idxOpen >= 0 then
+        ShellTabs_Show( idxOpen )
+        if g_tabs <> 0 then g_tabs->SetCurSel( idxOpen )
+        print "tikoshell: " & PsPathName( wszPath ).Utf8 & " is already open (tab " & idxOpen & ")"
+        return idxOpen
+    end if
+
     if g_nTabDocs >= SH_MAX_DOCS then
         print "tikoshell: too many open documents (cap " & SH_MAX_DOCS & ")"
         return -1
@@ -160,6 +201,10 @@ function ShellTabs_Open( byval wszPath as DWSTRING ) as long
     g_tabDocs(idx).pDoc   = pDoc
     g_tabDocs(idx).nPos   = 0
     g_tabDocs(idx).nFirst = 0
+    '' FROM THE DOCUMENT, not from the argument. LoadDiskFile is what decides the path a
+    '' document believes it has, and a lookup that disagreed with the save path would let a
+    '' file be opened twice under two spellings of the same name.
+    g_tabDocs(idx).sPath  = pDoc->DiskFilename
     g_nTabDocs += 1
 
     if g_tabs <> 0 then
@@ -170,6 +215,39 @@ function ShellTabs_Open( byval wszPath as DWSTRING ) as long
     end if
 
     return idx
+end function
+
+
+'' Saves the current tab. TRUE when the bytes reached disk.
+''
+'' ---- clsDocument.SaveFile's RESULT IS INVERTED, and this is the only place in the shell
+'' that has to know it. FALSE means the save SUCCEEDED; TRUE means cancelled, or refused, or
+'' failed to write. The convention is tiko's and app/clsDocument.inc:452-458 states it in
+'' place ("Same inverted convention as SaveFile: FALSE = the bytes are on disk"), so it is
+'' translated here rather than propagated -- every caller above this line reads TRUE as good.
+''
+'' NOTHING IS REPORTED ON FAILURE HERE, and that is not a hole: the document model has
+'' already said so through the host, either as the lossy-save prompt the user cancelled or as
+'' ReportWriteFailure. A second message would be the shell guessing which one happened.
+function ShellTabs_Save( byval bIsSaveAs as boolean ) as boolean
+    dim as clsDocument ptr pDoc = ShellTabs_CurrentDoc()
+    if pDoc = 0 then
+        print "tikoshell: nothing to save -- no document is open"
+        return false
+    end if
+
+    if pDoc->SaveFile( bIsSaveAs ) then return false
+
+    '' RE-READ AFTER THE SAVE, because Save As is a RENAME: SaveFile writes the picked path
+    '' into DiskFilename, and a tab left captioned with the old name is a tab that lies about
+    '' which file the next Ctrl+S overwrites.
+    g_tabDocs(g_nTabCur).sPath = pDoc->DiskFilename
+    if g_tabs <> 0 then
+        g_tabs->SetText( g_nTabCur, PsPathName( g_tabDocs(g_nTabCur).sPath ) )
+    end if
+
+    print "tikoshell: saved " & g_tabDocs(g_nTabCur).sPath.Utf8
+    return true
 end function
 
 

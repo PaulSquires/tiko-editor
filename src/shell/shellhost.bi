@@ -157,18 +157,87 @@ private function ShellHost_ResolveIncludePath( byval pDoc as clsDocument ptr, _
     return sFilename
 end function
 
+'' ---- THE TWO BOXES THE SAVE PATH RAISES ------------------------------------------------
+'' COMPOSED SEPARATELY FROM BEING SHOWN, the same split BuildExitBox uses and for the same
+'' reason: the captions, the button ids, the default and the cancel id are all decided
+'' windowlessly and are therefore assertable, while PsMessageBoxShowModal needs a compositor
+'' and is not. Without the split, the only part a suite can reach would sit behind the part
+'' it cannot.
+''
+'' EVERY L() ID HERE ALREADY EXISTS IN ALL SIX .lang FILES -- 0, 1, 507-509, 516-518, taken
+'' from tiko's own modEncodingUi.inc. No id is added, so nothing here can render blank.
+sub BuildLossySaveBox( byref box as PsMessageBox, _
+                       byval wszPath as DWSTRING, _
+                       byval nEncoding as long )
+    box.SetCaption( L(518, "Characters will be lost") )
+    box.SetText( L(516, "Some characters in this document cannot be represented in") & _
+                 " " & Doc_EncodingName( nEncoding ) & "." & vbcrlf & vbcrlf & _
+                 wszPath & vbcrlf & vbcrlf & _
+                 L(517, "Saving will replace them and cannot be undone. Change the file's " & _
+                        "encoding first to keep them.") )
+    box.SetIcon( MBX_ICON_WARNING )
+    box.AddButton( L(0, "OK"),     MBX_ID_OK )
+    box.AddButton( L(1, "Cancel"), MBX_ID_CANCEL )
+    '' DEFAULT = CANCEL, index 1. This is the destructive answer's box, and tiko passes the
+    '' same default for the same reason (modEncodingUi.inc:71). Leaning on the button order
+    '' would put OK under a reflexive Return.
+    box.SetDefaultButton( 1 )
+    box.SetCancelId( MBX_ID_CANCEL )
+end sub
+
+sub BuildWriteFailedBox( byref box as PsMessageBox, _
+                         byval wszPath as DWSTRING, _
+                         byval wszErr as DWSTRING )
+    box.SetCaption( L(509, "Save failed") )
+    box.SetText( L(507, "The file could not be saved.") & vbcrlf & vbcrlf & _
+                 wszPath & vbcrlf & vbcrlf & _
+                 wszErr & vbcrlf & vbcrlf & _
+                 L(508, "The file on disk has not been changed.") )
+    box.SetIcon( MBX_ICON_ERROR )
+    box.AddButton( L(0, "OK"), MBX_ID_OK )
+    box.SetDefaultButton( 0 )
+    box.SetCancelId( MBX_ID_OK )
+end sub
+
+
 private function ShellHost_ConfirmLossySave( byval pDoc as clsDocument ptr, _
                                              byval wszPath as DWSTRING, _
                                              byval nEncoding as long ) as boolean
-    '' REFUSES, and that is the safe answer rather than the convenient one. Saying yes would
-    '' discard characters the user never agreed to lose. A real box goes here when the shell
-    '' saves for real -- commit 7.
-    print "tikoshell: refusing a lossy save of " & wszPath.Utf8 & " (no prompt yet)"
-    return false
+    '' THE TEST HOOK FIRST, and it is not the shell's -- gLossySaveTestAnswer lives in
+    '' app/modEncoding.bi and TIKO_SAVE_SELFTEST drives the save path through it. Honoured
+    '' here so that suite means the same thing against either host; a shell that ignored it
+    '' would raise a real modal in the middle of a headless run and block forever.
+    if gLossySaveTestAnswer <> 0 then return (gLossySaveTestAnswer > 0)
+
+    '' ASKED ONCE PER DOCUMENT. tiko sets the same sticky flag (modEncodingUi.inc:62): a user
+    '' who has accepted the loss for this file is not asked again on every subsequent save.
+    if (pDoc <> 0) andalso pDoc->bLossySaveAccepted then return true
+
+    '' NO SURFACE MEANS REFUSE, not assume. Same rule as ConfirmExit, and it matters more
+    '' here: the convenient answer discards characters the user never agreed to lose.
+    if g_pSurf = 0 then
+        print "tikoshell: refusing a lossy save of " & wszPath.Utf8 & " (nothing to ask with)"
+        return false
+    end if
+
+    dim as PsMessageBox box
+    BuildLossySaveBox( box, wszPath, nEncoding )
+    if PsMessageBoxShowModal( g_pSurf, box ) <> MBX_ID_OK then return false
+
+    if pDoc <> 0 then pDoc->bLossySaveAccepted = true
+    return true
 end function
 
 private sub ShellHost_ReportWriteFailure( byval wszPath as DWSTRING, byval wszErr as DWSTRING )
+    '' PRINTED AS WELL AS SHOWN. The console line is what a headless run leaves behind, and a
+    '' failed save that says nothing anywhere is the defect the whole save contract exists to
+    '' prevent.
     print "tikoshell: could not write " & wszPath.Utf8 & " -- " & wszErr.Utf8
+    if g_pSurf = 0 then exit sub
+
+    dim as PsMessageBox box
+    BuildWriteFailedBox( box, wszPath, wszErr )
+    PsMessageBoxShowModal( g_pSurf, box )
 end sub
 
 private function ShellHost_AskOpenPath( byref sOut as DWSTRING ) as boolean
@@ -190,7 +259,13 @@ end function
 '' correct rather than lazy: this binary has no TODO pane, no Explorer and no MRU lists.
 '' ---------------------------------------------------------------------------------------
 private sub ShellHost_CloseTab( byval nTabIdx as long )
-    print "tikoshell: close tab " & nTabIdx & " (no tab model yet -- commit 6)"
+    '' STILL A REPORT RATHER THAN A CLOSE, and now for a different reason than "there is no
+    '' tab model" -- commit 6 built one. Closing means releasing the tab's Scintilla document,
+    '' deleting its clsDocument, compacting the array and re-indexing every itemData in the
+    '' bar, and NOTHING in this binary calls this today: the document model reaches it only
+    '' from the close-prompt path, which the shell has no command for. Wiring it unexercised
+    '' would be untested code behind a working-looking name.
+    print "tikoshell: close tab " & nTabIdx & " (this binary has no close command)"
 end sub
 
 private sub ShellHost_OnDocumentClosing( byval pDoc as clsDocument ptr )
