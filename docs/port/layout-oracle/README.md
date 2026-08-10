@@ -32,12 +32,11 @@ Everything a comparison depends on that is not a rectangle:
 is equally valid and will differ in every number; compare like with like, and regenerate rather
 than reinterpret.
 
-## A defect this found on its first run — NOT FIXED, and the dump records it
+## A defect this found on its first run — FIXED, and the fix cost one rectangle
 
-**With the side panel docked right, the top-tabs icon strip is drawn over the panel, and the tab
-bar leaves a hole beside it.** See the `PANEL_RIGHT` state: `PANEL` occupies x 987–1400 and
-`TOPTABSMENU` sits at 1193–1379, entirely inside it, while `TOPTABS` stops at 770 and nothing
-covers 770–977.
+**With the side panel docked right, the top-tabs icon strip was drawn over the panel, and the
+tab bar left a hole beside it.** `PANEL` occupies x 987–1400 and `TOPTABSMENU` sat at
+1193–1379, entirely inside it, while `TOPTABS` stopped at 770 and nothing covered 770–977.
 
 One cause, at `frmMain.inc:896`:
 
@@ -45,15 +44,25 @@ One cause, at `frmMain.inc:896`:
 dim as integer nLeftMenu = rc.right - pWindow->ScaleX(SCROLLBAR_WIDTH_EDITOR) - nWidthTopTabsMenu
 ```
 
-`rc.right` is the full client width regardless of dock side, and the tab bar's width is then
-`nLeftMenu - nPanelReserve`. Both are correct only when the panel is on the left, where the
-content area does run to `rc.right`. The general form is `nLeft + (rc.right - nPanelReserve)` for
-the strip and `nLeftMenu - nLeft` for the bar; both reduce to today's values when docked left.
+`rc.right` is the full client width regardless of dock side, and the tab bar's width was then
+`nLeftMenu - nPanelReserve` — which is only `nLeftMenu - nLeft` when the panel is on the left,
+where the content area does run to `rc.right`. Both now come off the CONTENT's right edge,
+computed the same way `rcDoc` computes its own ten lines further down.
 
-**It is left alone deliberately.** Fixing it changes tiko's live UI and this file's own numbers,
-and whether the shell reproduces tiko's behaviour or tiko's intent is the author's call, not a
-side effect of building an oracle. Until it is taken, `PANEL_RIGHT` is the one state in this file
-that records a bug rather than a specification.
+**THE ORACLE IS WHAT MADE THE FIX SAFE, and this is the clearest thing on this page about why
+it exists.** Re-running it after the change moved **exactly one line**:
+
+```
+-  TOPTABSMENU 1193,52,1379,115 (186x63)
++  TOPTABSMENU  770,52, 956,115 (186x63)
+```
+
+Nothing else in any of the ten states moved — not the left-docked layout, not `TOPTABS`'s
+width (which was already 770, correct by accident), not a single other child. A change to a
+band that every other band's position depends on, verified as surgical rather than hoped to be.
+
+The shell carries the same fix, and its dump moved the same one line. The divergence bound is
+unchanged at 2px.
 
 ## The shell's side, and the two differences that are expected
 

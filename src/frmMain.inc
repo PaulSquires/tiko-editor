@@ -893,14 +893,30 @@ function frmMain_PositionWindows() as LRESULT
 
     if (gTTabCtl.GetItemCount() > 0) then
         nHeightTabControl = AfxGetWindowHeight(HWND_FRMMAIN_TOPTABS)
-        dim as integer nLeftMenu = rc.right - pWindow->ScaleX(SCROLLBAR_WIDTH_EDITOR) - nWidthTopTabsMenu
+
+        ' THE CONTENT AREA'S RIGHT EDGE, WHICH IS NOT ALWAYS rc.right. Docked left the
+        ' content really does run to the client edge; docked RIGHT it stops at the panel.
+        ' This is the same line rcDoc computes for itself below, and it is here for the
+        ' same reason -- everything on this band belongs inside the content, not inside
+        ' the window.
+        '
+        ' IT USED TO READ rc.right UNCONDITIONALLY, and the tab strip's width was
+        ' nLeftMenu - nPanelReserve, which is only nLeftMenu - nLeft when the panel is on
+        ' the left. With the panel docked RIGHT that put the icon strip ON TOP OF THE
+        ' PANEL and left a SCROLLBAR_WIDTH_EDITOR + nWidthTopTabsMenu hole in the tab bar
+        ' beside it. Both forms below reduce to the old values when docked left, so the
+        ' left-hand layout is unchanged to the pixel.
+        dim as long nContentRight = rc.right
+        if gConfig.ExplorerPositionRight then nContentRight = rc.right - nPanelReserve
+
+        dim as integer nLeftMenu = nContentRight - pWindow->ScaleX(SCROLLBAR_WIDTH_EDITOR) - nWidthTopTabsMenu
         SetWindowPos( HWND_FRMMAIN_TOPTABSMENU, 0, _
                     nLeftMenu, nTop, _
                     nWidthTopTabsMenu, nHeightTabControl, _
                     SWP_SHOWWINDOW or SWP_NOZORDER )
         SetWindowPos( HWND_FRMMAIN_TOPTABS, 0, _
                     nLeft, nTop, _
-                    nLeftMenu - nPanelReserve, nHeightTabControl, _
+                    nLeftMenu - nLeft, nHeightTabControl, _
                     SWP_SHOWWINDOW or SWP_NOZORDER )
         nTop += nHeightTabControl
     end if

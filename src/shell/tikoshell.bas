@@ -834,25 +834,23 @@ sub Shell_LayoutAll( byref surf as PsSurface, byref st as ShellLayoutState )
         nTabsH = st.nTabsH
         dim as long nMenuW = st.nTopTabsMenuW
 
-        '' ------------------------------------------------------------------------------
-        '' THIS REPRODUCES A DEFECT, ON PURPOSE. nLeftMenu is computed from the FULL client
-        '' width regardless of dock side, and the tab bar width is then
-        '' nLeftMenu - nPanelReserve. Both are right only when the panel is docked LEFT,
-        '' where the content area really does run to the right edge.
+        '' THE CONTENT AREA'S RIGHT EDGE, WHICH IS NOT ALWAYS W. Docked left the content
+        '' runs to the client edge; docked RIGHT it stops at the panel. Same line the
+        '' document rect computes for itself below, and here for the same reason.
         ''
-        '' With the panel docked RIGHT the icon strip lands ON TOP OF THE PANEL and the tab
-        '' bar leaves a hole beside it -- docs/port/layout-oracle/README.md has the numbers.
-        '' The general form is nLeft + (W - nPanelReserve) for the strip and nLeftMenu - nLeft
-        '' for the bar, and both reduce to these when docked left.
-        ''
-        '' Reproduced rather than fixed because this commit is a PORT: the oracle records
-        '' what tiko does, the diff against it is the evidence the port is faithful, and
-        '' changing tiko's behaviour is a separate decision with its own verification.
-        '' ------------------------------------------------------------------------------
-        dim as long nLeftMenu = W - PsScaleBy(SH_SCROLLBAR_WIDTH_EDITOR, f) - nMenuW
+        '' BOTH OF THESE USED TO BE WRONG, and the port reproduced it deliberately for two
+        '' commits while the oracle recorded it: nLeftMenu came off the full client width
+        '' and the bar's width was nLeftMenu - nPanelReserve, which is only nLeftMenu - nLeft
+        '' when the panel is on the left. Docked right that put the icon strip ON TOP OF THE
+        '' PANEL. Fixed in frmMain.inc first, then here; the oracle moved exactly one
+        '' rectangle, which is how both sides are known to agree.
+        dim as long nContentRight = W
+        if st.bExplorerRight then nContentRight = W - nPanelReserve
+
+        dim as long nLeftMenu = nContentRight - PsScaleBy(SH_SCROLLBAR_WIDTH_EDITOR, f) - nMenuW
 
         g_topTabsMenu->SetBounds( PsRc(nLeftMenu, nTop, nMenuW, nTabsH) )
-        g_tabs->SetBounds( PsRc(nLeft, nTop, nLeftMenu - nPanelReserve, nTabsH) )
+        g_tabs->SetBounds( PsRc(nLeft, nTop, nLeftMenu - nLeft, nTabsH) )
         g_topTabsMenu->bVisible = true
         g_tabs->bVisible = true
         nTop += nTabsH
@@ -1738,7 +1736,28 @@ end function
             Check "  with the splitter still on its INNER edge", _
                   (g_splitPanel->bounds.x + g_splitPanel->bounds.w = g_panel->bounds.x)
             Check "  and the document starting at 0", (g_rcDoc.x = 0)
+
+            '' THE ICON STRIP MIRRORS TOO, and for two commits it did not. It came off the
+            '' full client width, so docked right it was drawn ON TOP OF THE PANEL while the
+            '' tab bar stopped short and left a hole. Nothing asserted the mirrored case at
+            '' all -- the coverage check runs at the default state -- so the oracle found it
+            '' and nothing else would have.
+            Check "  the icon strip stays inside the content when mirrored", _
+                  (g_topTabsMenu->bounds.x + g_topTabsMenu->bounds.w <= _
+                   g_panel->bounds.x), _
+                  str(g_topTabsMenu->bounds.x + g_topTabsMenu->bounds.w) & _
+                  " vs panel at " & str(g_panel->bounds.x)
+            Check "    with the tab bar meeting it, not stopping short", _
+                  (g_tabs->bounds.x + g_tabs->bounds.w = g_topTabsMenu->bounds.x), _
+                  str(g_tabs->bounds.x + g_tabs->bounds.w) & " vs " & _
+                  str(g_topTabsMenu->bounds.x)
+            '' And the same relation must still hold docked LEFT, which is the half the fix
+            '' had to leave alone to the pixel.
             g_state.bExplorerRight = false : LayoutAll( surf )
+            Check "    and the same holds docked left", _
+                  (g_tabs->bounds.x + g_tabs->bounds.w = g_topTabsMenu->bounds.x), _
+                  str(g_tabs->bounds.x + g_tabs->bounds.w) & " vs " & _
+                  str(g_topTabsMenu->bounds.x)
 
             '' Tab count 0 hides both tab widgets and the document starts at the menubar
             '' plus the info band's margin.
