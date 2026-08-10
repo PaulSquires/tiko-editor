@@ -47,6 +47,16 @@ includes must already build that way.
 Only then the plan's own step 1 — `frmMain`'s chrome and the editor pane, every
 dock panel stubbed, as a runnable binary that is not merged.
 
+> **BOTH ARE NOW DONE.** The app layer closed, and step 1 is
+> `_shell\tikoshell.exe` — see [`7c-step1.md`](7c-step1.md).
+>
+> The recommendation above was right about the ORDER and wrong about what the
+> first increment would prove. It said `src/app` compiling standalone was the
+> precondition; it was, and it was also **not enough** — the layer had never
+> been LINKED, and the gate could not tell, because `fbc -c` never links. Four
+> more things had to move down before the shell could build, each found by the
+> shell needing it rather than by reading.
+
 ## The decision that is still open
 
 The plan's **D2** — SDL3 on both platforms, no Win32 backend — is what makes 7c

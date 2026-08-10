@@ -68,11 +68,21 @@ Blend2D, hosted in a Win32 window through PsPlatform's bridge. `DWSTRING` means 
 everywhere; `PsCompat.bi` is deleted. All five gates are green, including
 `_check_app_standalone` at **7 clean / 0 with errors**.
 
-**7c ITSELF HAS NOT STARTED, and an earlier version of this page said it was done.** That was
-wrong and it is the most consequential error this page has carried. 7c is *the shell* — 48
-forms, ~45,000 lines, a third of tiko (`7c-starting-position.md`). What is finished is the
-increment that page recommends doing *first*: making `src/app` compile against PsCore alone.
-The app layer closing is 7c's precondition, not 7c.
+**7c's STEP 1 IS DONE AND 7c IS NOT.** `_shell\tikoshell.exe` runs: `frmMain`'s chrome, the
+editor, and every dock panel stubbed, in one binary that is not merged. Its layout is checked
+against the oracle and **no edge differs from tiko's by more than 2 pixels**. See
+[`7c-step1.md`](7c-step1.md) — read its "what is NOT verified" section, which is longer than
+its results and is the more useful half.
+
+**That is ONE FORM. 7c is 48 of them and ~45,000 lines**, so read step 1 as a measurement of
+the approach rather than of the progress. An earlier version of this page said 7c was *done*,
+which was the most consequential error it has carried; the correction is not an excuse to
+overclaim in the other direction.
+
+**The next real question is the one step 1 does not touch:** the pump collapse — 15 message
+loops, 13 `IsDialogMessage` sites, eight ordered filter claims — and `PsModalHost`, still
+proven exactly once, interactively, for one message box, with no headless test. That is where
+`d2-decision.md` said the estimate's variance lives, and nothing in step 1 moved it.
 
 **D2 IS TAKEN — SHAPE A, AND THE NEXT STEP IS THE SHELL SKELETON.** Decided by the author on
 2026-08-09: **SDL3 on both platforms, no Win32 backend.** `frmMain` becomes a `PsSurface`;
