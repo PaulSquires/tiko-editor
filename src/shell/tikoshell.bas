@@ -227,9 +227,22 @@ dim shared as long g_nPass, g_nFail
 dim shared as long g_nBarOpenCalls
 dim shared as any ptr g_pLastBarMenu
 
-'' The accelerator table, built from tiko's own 109 default bindings, 85 of which carry a chord. Consulted in the pump
-'' BETWEEN the menu host and surf.Dispatch -- see the loop for why that order is fixed.
-dim shared as PsAccelTable g_accel
+'' ---------------------------------------------------------------------------------------
+'' THREE ACCELERATOR TABLES, IN tiko's PRECEDENCE ORDER.
+''
+'' frmMain.inc walks pWindow->AccelHandle, then ghAccelUserTools, then
+'' ghAccelBuildConfigurations, as three nested `orelse` conditions. PsAccelTable is a TYPE,
+'' so the nesting disappears: three instances and a loop, and the precedence IS the order.
+''
+'' THE SECOND AND THIRD ARE EMPTY IN THIS BINARY, and that is worth stating rather than
+'' discovering. They are built from gConfig.Tools and gConfig.Builds, and the shell does not
+'' load settings.ini -- so the code below is exercised only by the self-test, which fills
+'' them synthetically to assert the precedence rule. The census found both tables cold in two
+'' driven sessions of the real editor as well (docs/port/pump-census.md), so an empty table
+'' here costs no coverage that the editor was providing.
+dim shared as PsAccelTable g_accel        '' tiko's pWindow->AccelHandle, from gKeys
+dim shared as PsAccelTable g_accelTools   '' tiko's ghAccelUserTools, from gConfig.Tools
+dim shared as PsAccelTable g_accelBuilds  '' tiko's ghAccelBuildConfigurations, from gConfig.Builds
 dim shared as long g_nAccelSkipped
 
 '' The menubar titles' first letters, kept HERE because PsMenuBar has no GetCaption and
@@ -482,6 +495,27 @@ end sub
 '' all, which is not a failure -- but a chord that fails to PARSE is, and the two would be
 '' indistinguishable if the count were not kept. The self-test asserts it.
 '' ---------------------------------------------------------------------------------------
+'' "Ctrl+Shift+F5" from the three booleans and the stored name, in PsAccelParse's own order.
+'' Returns an empty string for the two cases that mean NO BINDING: a blank name, and the
+'' literal "None", which tiko's pick list offers as an affordance and
+'' KeyBindings_PickListKeyToValue maps to zero for the same reason.
+function ComposeChord( byval bCtrl as boolean, _
+                       byval bAlt as boolean, _
+                       byval bShift as boolean, _
+                       byval sKey as DWSTRING ) as DWSTRING
+    dim as DWSTRING sName = PsTrim(sKey)
+    if PsLen(sName) = 0 then return ""
+    if PsUCase(sName) = "NONE" then return ""
+
+    dim as DWSTRING sOut
+    if bCtrl  then sOut &= "Ctrl+"
+    if bAlt   then sOut &= "Alt+"
+    if bShift then sOut &= "Shift+"
+    return sOut & sName
+end function
+
+declare sub BuildAccelTable2and3()
+
 sub BuildAccelerators()
     g_accel.Clear_()
     g_nAccelSkipped = 0
@@ -501,7 +535,97 @@ sub BuildAccelerators()
                   " = " & sChord.Utf8
         end if
     next
+
+    BuildAccelTable2and3()
 end sub
+
+
+'' ---------------------------------------------------------------------------------------
+'' TABLES 2 AND 3, COMPOSED AS CHORD TEXT RATHER THAN RESOLVED TO KEY CODES.
+''
+'' tiko builds these with KeyBindings_PickListKeyToValue, which turns a pick-list name into a
+'' Win32 VK for CreateAcceleratorTable. There is no VK here, so the modifier booleans and the
+'' stored name are recomposed into the chord string PsAccelParse already reads.
+''
+'' THAT REUSE IS SAFE FOR A REASON ALREADY ON RECORD, not by assumption:
+'' KeyBindings_PickListKeyToValue resolves against gKeyNames, and the self-test's group F
+'' asserts that EVERY gKeyNames entry parses to a non-zero PsKey. The two vocabularies were
+'' checked against each other in step 1; this only spends that evidence.
+''
+'' A name that does not parse is COUNTED, like the main table's, because the failure tiko
+'' documents here is silent: frmBuildConfig.inc:501 records that an unresolved name made
+'' CreateAcceleratorTable skip the entry, so the shortcut saved, displayed and reloaded
+'' perfectly while never once firing.
+sub BuildAccelTable2and3()
+    g_accelTools.Clear_()
+    g_accelBuilds.Clear_()
+
+    for y as long = lbound(gConfig.Tools) to ubound(gConfig.Tools)
+        dim as DWSTRING sChord = ComposeChord( gConfig.Tools(y).IsCtrl, _
+                                               gConfig.Tools(y).IsAlt, _
+                                               gConfig.Tools(y).IsShift, _
+                                               gConfig.Tools(y).wszKey )
+        if PsLen(sChord) = 0 then continue for
+        if g_accelTools.AddText( sChord, IDM_USERTOOLSBASE + y ) = false then
+            g_nAccelSkipped += 1
+        end if
+    next
+
+    for y as long = lbound(gConfig.Builds) to ubound(gConfig.Builds)
+        dim as DWSTRING sChord = ComposeChord( gConfig.Builds(y).IsCtrl, _
+                                               gConfig.Builds(y).IsAlt, _
+                                               gConfig.Builds(y).IsShift, _
+                                               gConfig.Builds(y).wszKey )
+        if PsLen(sChord) = 0 then continue for
+        if g_accelBuilds.AddText( sChord, IDM_BUILDCONFIGBASE + y ) = false then
+            g_nAccelSkipped += 1
+        end if
+    next
+end sub
+
+
+'' ---------------------------------------------------------------------------------------
+'' THE CONSUMED-KEY RULE, AND IT IS tiko's WM_CHAR GUARD PORTED -- as something else.
+''
+'' frmMain.inc:2239 drops any WM_CHAR below 32 that is not backspace, or Scintilla renders it
+'' as an embedded control graphic. That guard exists because Win32 manufactures the character
+'' message from the keystroke INDEPENDENTLY of who handled the key, so a chord claimed by an
+'' accelerator still produces a WM_CHAR for whoever holds focus.
+''
+'' PsEvent.bi:17-21 says that whole bug class is deleted here, and it is -- but only for
+'' claims made INSIDE the surface. PsSurface.bKeyConsumed is set by PsDispatch when a widget
+'' consumes a PSEV_KEY_DOWN, and the next PSEV_TEXT_INPUT is then dropped
+'' (PsDispatch.inc:266-276).
+''
+'' THIS PUMP CLAIMS KEYS OUTSIDE THE SURFACE. The menu host, the Alt mnemonic and the
+'' accelerator tables all run BEFORE surf.Dispatch, so the surface never sees those key-downs,
+'' never sets the flag, and the paired text event is delivered to the editor anyway. The rule
+'' is not deleted for a host that filters ahead of dispatch -- it is inherited, and it has to
+'' be honoured by hand.
+''
+'' A `< 32` test would be the WRONG port. SDL's text-input path commits printable text, not
+'' control characters, so the literal symptom tiko guards against cannot arise here. What can
+'' arise is a bound letter chord firing its command AND typing its letter.
+sub NoteKeyConsumed( byref surf as PsSurface, byval ev as PsEvent ptr )
+    if ev = 0 then exit sub
+    if ev->kind <> PSEV_KEY_DOWN then exit sub
+    surf.bKeyConsumed = true
+end sub
+
+
+'' ---------------------------------------------------------------------------------------
+'' THE PRECEDENCE WALK. tiko's three nested `orelse` conditions, flattened.
+''
+'' Returns the first non-zero id, so a chord bound in more than one table fires the EARLIER
+'' table's command -- which is what the nesting did and is not incidental: a user tool bound
+'' to a chord the main table already owns is shadowed, not ambiguous.
+function AccelFind( byval ev as PsEvent ptr ) as long
+    dim as long nCmd = g_accel.Find( ev )
+    if nCmd <> 0 then return nCmd
+    nCmd = g_accelTools.Find( ev )
+    if nCmd <> 0 then return nCmd
+    return g_accelBuilds.Find( ev )
+end function
 
 
 '' ---------------------------------------------------------------------------------------
@@ -1768,6 +1892,116 @@ end function
             Check "  plain F is not claimed", (TryAltMnemonic(@ev) = false)
         end scope
 
+        '' ---- GROUP G: THREE TABLES, AND WHAT THE PUMP OWES THE SURFACE ----------------
+        '' tiko stacks three HACCELs in a fixed order (frmMain.inc:2235-2237). The census
+        '' found tables 2 and 3 cold in two driven sessions, and they are EMPTY in this
+        '' binary because the shell does not load settings.ini -- so the precedence rule is
+        '' asserted against tables filled here, or it is not asserted at all.
+        scope
+            g_accelTools.Clear_()
+            g_accelBuilds.Clear_()
+
+            '' Ctrl+S is already the MAIN table's, for IDM_FILESAVE. Binding it in table 2
+            '' as well is the case the nesting decides: earlier table wins, and the later
+            '' binding is SHADOWED rather than ambiguous.
+            Check "table 2 accepts a chord the main table already owns", _
+                  g_accelTools.AddText( DWSTRING("Ctrl+S"), IDM_USERTOOLSBASE + 0 )
+            '' THE CHORD IS ASSERTED FREE BEFORE IT IS USED. Ctrl+Shift+F9 was the first
+            '' pick and the main table already owns it (id 1206) -- so the two assertions
+            '' below failed on a correct walk. A test that hard-codes an "obviously unused"
+            '' chord is a test that breaks when gKeys grows, and reports it as a defect in
+            '' the walk.
+            Check "  Ctrl+Alt+Shift+F12 is unbound in the main table", _
+                  (g_accel.FindKey(PSKEY_F12, PSMOD_CTRL or PSMOD_ALT or PSMOD_SHIFT) = 0)
+            Check "  table 3 takes one of its own", _
+                  g_accelBuilds.AddText( DWSTRING("Ctrl+Alt+Shift+F12"), IDM_BUILDCONFIGBASE + 0 )
+
+            dim as PsEvent ev
+            ev.kind = PSEV_KEY_DOWN
+            ev.key.key = PSKEY_S
+            ev.key.modifiers = PSMOD_CTRL
+            Check "  and the MAIN table still wins Ctrl+S", _
+                  (AccelFind(@ev) = IDM_FILESAVE), str(AccelFind(@ev))
+
+            '' The shadowed entry is still THERE -- the walk skipped it, it was not dropped.
+            '' Asserted because "table 2 never got the event" and "table 2 has no entry" are
+            '' different bugs with the same symptom.
+            Check "  the shadowed table-2 entry still exists", _
+                  (g_accelTools.FindKey(PSKEY_S, PSMOD_CTRL) = IDM_USERTOOLSBASE + 0)
+
+            ev.key.key = PSKEY_F12
+            ev.key.modifiers = PSMOD_CTRL or PSMOD_ALT or PSMOD_SHIFT
+            Check "  a table-3 chord reaches table 3", _
+                  (AccelFind(@ev) = IDM_BUILDCONFIGBASE + 0), str(AccelFind(@ev))
+
+            '' Table 2 unshadowed, to prove the walk reaches it at all rather than merely
+            '' falling through to 3.
+            Check "  Ctrl+Alt+F11 is unbound in the main table too", _
+                  (g_accel.FindKey(PSKEY_F11, PSMOD_CTRL or PSMOD_ALT) = 0)
+            Check "  table 2 takes a chord nobody else has", _
+                  g_accelTools.AddText( DWSTRING("Ctrl+Alt+F11"), IDM_USERTOOLSBASE + 1 )
+            ev.key.key = PSKEY_F11
+            ev.key.modifiers = PSMOD_CTRL or PSMOD_ALT
+            Check "  and the walk finds it", _
+                  (AccelFind(@ev) = IDM_USERTOOLSBASE + 1), str(AccelFind(@ev))
+
+            g_accelTools.Clear_()
+            g_accelBuilds.Clear_()
+            ev.key.key = PSKEY_F12
+            ev.key.modifiers = PSMOD_CTRL or PSMOD_ALT or PSMOD_SHIFT
+            Check "  cleared, the walk finds nothing", (AccelFind(@ev) = 0), str(AccelFind(@ev))
+        end scope
+
+        '' ComposeChord, which is what makes tables 2 and 3 reuse PsAccelParse instead of
+        '' resolving to a VK the way tiko must.
+        scope
+            Check "a chord composes in PsAccelParse's order", _
+                  (ComposeChord(true, true, true, DWSTRING("F5")) = DWSTRING("Ctrl+Alt+Shift+F5"))
+            Check "  no modifiers is the bare name", _
+                  (ComposeChord(false, false, false, DWSTRING("F5")) = DWSTRING("F5"))
+            '' Both of tiko's no-binding spellings, which are NOT the same case: an empty
+            '' cell, and the literal the pick list offers.
+            Check "  a blank name is no binding", _
+                  (PsLen(ComposeChord(true, false, false, DWSTRING(""))) = 0)
+            Check "  and None is no binding either", _
+                  (PsLen(ComposeChord(true, false, false, DWSTRING("None"))) = 0)
+            '' The composed text has to survive the round trip, or table 2 silently holds
+            '' nothing -- the exact failure frmBuildConfig.inc:501 records.
+            dim as PsAccelTable t
+            Check "  and what it composes, PsAccel parses", _
+                  t.AddText( ComposeChord(true, false, true, DWSTRING("F5")), 4242 )
+            Check "    to the chord it named", _
+                  (t.FindKey(PSKEY_F5, PSMOD_CTRL or PSMOD_SHIFT) = 4242)
+        end scope
+
+        '' THE CONSUMED-KEY RULE. This is the one that would have caught the real defect:
+        '' the pump claims keys BEFORE surf.Dispatch, so PsDispatch never sets bKeyConsumed
+        '' and the paired PSEV_TEXT_INPUT still reaches the editor.
+        scope
+            dim as PsEvent ev
+            ev.kind = PSEV_KEY_DOWN
+            ev.key.key = PSKEY_S
+            ev.key.modifiers = PSMOD_CTRL
+
+            surf.bKeyConsumed = false
+            NoteKeyConsumed( surf, @ev )
+            Check "a key claimed outside the surface is reported to it", surf.bKeyConsumed
+
+            '' A key UP is not a claim. Reporting one would suppress the NEXT keystroke's
+            '' text, which is a dropped character rather than a doubled one -- the same rule
+            '' failing the other way.
+            surf.bKeyConsumed = false
+            ev.kind = PSEV_KEY_UP
+            NoteKeyConsumed( surf, @ev )
+            Check "  but a key UP is not", (surf.bKeyConsumed = false)
+
+            surf.bKeyConsumed = false
+            ev.kind = PSEV_TEXT_INPUT
+            NoteKeyConsumed( surf, @ev )
+            Check "  and neither is a text event", (surf.bKeyConsumed = false)
+            surf.bKeyConsumed = false
+        end scope
+
         '' ---- THE BAND WALK ------------------------------------------------------------
         '' Driven at the ORACLE's inputs so a failure here and a line in
         '' docs/port/layout-oracle/ are the same numbers.
@@ -2317,13 +2551,18 @@ end function
                         ''   4. Dispatch last -- the focused widget gets what is left.
                         if g_menus.RouteEvent( @ev ) = false then
                             if TryAltMnemonic( @ev ) = false then
-                                dim as long nCmd = g_accel.Find( @ev )
+                                dim as long nCmd = AccelFind( @ev )
                                 if nCmd <> 0 then
+                                    NoteKeyConsumed( surf, @ev )
                                     OnMenuCommand( 0, nCmd, 0 )
                                 else
                                     surf.Dispatch( @ev )
                                 end if
+                            else
+                                NoteKeyConsumed( surf, @ev )
                             end if
+                        else
+                            NoteKeyConsumed( surf, @ev )
                         end if
                     end if
             end select
