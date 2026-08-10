@@ -161,3 +161,72 @@ Adding up this page, with everything measured rather than estimated:
 four more record fields, two file moves, and one decision about `modRoutines`. That is a smaller
 answer than step 3's plan assumed in either direction, and it is the first number on this page
 that came from compiling everything involved rather than from reading it.
+
+
+---
+
+# `modRoutines`, measured — and the answer is SPLIT
+
+The open question was whether the four functions `clsDocument` needs are among `modRoutines.bi`'s
+twelve violations or clear of them. **Two are clear; two are not, and both convert mechanically.**
+
+`modRoutines.bi` is 76 lines holding **25 unrelated declarations** — rich-edit centring, process
+enumeration, a WM_COPYDATA reader, the AfxNova file-dialog wrappers, a listbox row helper. The 12
+violations sit on 9 of those declarations. It is a grab-bag, and nothing about it wants moving
+wholesale.
+
+| what `clsDocument` needs | where | state |
+| --- | --- | --- |
+| `CompleteIncludeFilename` | `.bi:43` | **clean** |
+| `GetFileToString` | `.bi:55` | **clean** |
+| `Scintilla_GetTextBytes` | `.bi:53` | `hEdit as hwnd`; body makes **4** `SciExec` calls |
+| `Scintilla_StripTrailingWhitespace` | `.bi:54` | `hEdit as hwnd`; body makes **14** `SciExec` calls |
+
+**`SciExec` is a MACRO, not a function**: `#Define SciExec(h, m, w, l) SendMessage(h, m, w, CAST(LPARAM, l))`
+(`modDeclares.bi:143`). So every one of those 18 sites is a `SendMessage` to an editor window, and
+that — not the parameter type — is what binds these two functions to the shell.
+
+The conversion is the same one commit 2 applied inside `clsDocument`: take the view POINTER and
+call `SciMsg` instead. 18 mechanical edits, plus the signature.
+
+**`Scintilla_GetTextBytes` has six call sites in four files** — `clsDocument` ×3, `frmMainFile`,
+`modEncoding`, `modFormatApply` ×2 — so the signature change ripples to three other files. All are
+shell-side and all have a document or a view in hand.
+
+**Verdict: SPLIT, not route.** These are pure Scintilla and file logic, not host services; putting
+them behind `AppHostServices` would be the wrong shape — that record is for things only the host
+can answer, and "strip trailing whitespace from a buffer" is not one of them.
+
+## The number nobody has counted: 420 `SciExec` sites
+
+Measured across every `.inc` and `.bi`, excluding comments and the `#Define` itself:
+
+| wrapper | sites | binds to | portability |
+| --- | --- | --- | --- |
+| `SciMsg(pSci, …)` | **374** | the view POINTER | free — `PsScintilla.bi` keeps the signature deliberately so these "are not edited, they are relinked" |
+| `SciExec(hWnd, …)` | **420** | an editor **HWND**, via `SendMessage` | each one ties its file to a window |
+
+Concentrated in `frmFindInProject` (92), `modFormatApply` (56), `modFindReplace` (39),
+`modFindProject` (39), `modAutoInsert` (25) and `modRoutines` (21).
+
+**Only 18 of the 420 matter for the document model**, and they are the two functions above.
+The other 402 are in shell-side files that are not moving. But they are the port's real Scintilla
+debt and no plan has counted them, so they are counted here.
+
+**Two existing figures do not match the tree, and the arithmetic suggests why.** `modDocViews.bi`
+says "~212 SciExec"; `PsScintilla.bi` says "801 SciMsg sites across 34 files". Today it is 420 and
+374 — and 420 + 374 = 794, which is close enough to 801 that the second figure almost certainly
+counted BOTH wrappers rather than `SciMsg` alone. Neither number should be quoted as the count of
+one wrapper without re-deriving it.
+
+## Updated cost of the move
+
+| | |
+| --- | --- |
+| `clsDocument` A, B, E | B does not exist; E is 7 edits against an existing field; A is 4 edits plus a file move |
+| `clsDocument` C | **split `modRoutines`**: 2 functions move as they are, 2 convert (18 `SciExec` → `SciMsg`, 6 call sites) |
+| `clsApp` | 7 mechanical sites, 3 new notification fields |
+| `clsScanMgr` | stays in the shell; one more notification field |
+| PsPlatform | no new capability required |
+
+Everything the move needs is now measured. Nothing in it is unknown, and nothing in it says no.
