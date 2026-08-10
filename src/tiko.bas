@@ -110,6 +110,12 @@ end namespace
 ' everything downstream. modDeclares.bi and frmDebug.bi include it too; #pragma once makes
 ' those no-ops and each names it so neither reads as a stray dependency.
 #include once "app/modAppConstants.bi"
+'' The app-host seam: how clsDocument and clsTopTabCtl ask the shell to make an editor view,
+'' redraw one, or put a file dialog up, without naming Win32. Declaration and body together
+'' and this early because the layer's own files reference gAppHost; the WIN32 BODIES that
+'' fill it are a separate file, included far below where frmMain's functions exist.
+#include once "app/modAppHost.bi"
+#include once "app/modAppHost.inc"
 #define APPBITS             wstr(" (64-bit)")
 #define RUNBATCHFILE        wstr("_tiko_runbatch.bat")
 #define QUICKRUNBAS         wstr("_tiko_quickrun.bas")
@@ -459,6 +465,10 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "frmMain.inc"
 ' AFTER frmMain.inc, not with the rest: it calls frmMain_PositionWindows and reads the child
 ' HWND globals, so it needs the whole shell in scope. Declared back at modLayoutDump.bi.
+'' tiko's half of the app-host seam. HERE, near the end, because its bodies call
+'' SciHost_Create, OnCommand_FileClose and the HWND_FRM* globals -- everything the shell
+'' declares. app/modAppHost.* is the portable half and went in near the top.
+#include once "modAppHostWin32.inc"
 #include once "modLayoutDump.inc"
 
 
@@ -481,6 +491,19 @@ function WinMain( _
     ' pump before frmMain has one. Armed later, the trace would silently omit exactly the
     ' loops that ran earliest.
     PumpTrace_Init()
+
+    ' The app-host seam, filled before anything can open a document. CHECKED rather than
+    ' assumed: every field is required and there is no per-call fallback anywhere, so a
+    ' missing one would surface as an empty editor or a silent no-op rather than an error.
+    ' The check names the field, because "the host is incomplete" sends a reader through ten
+    ' of them by hand.
+    AppHostW32_Install()
+    if AppHost_IsComplete() = false then
+        MessageBoxW( 0, "AppHost." & AppHost_FirstMissing() & " is not set." & _
+                        !"\n\nThis is a build error, not a configuration one.", _
+                     "tiko", MB_OK or MB_ICONERROR )
+        return 1
+    end if
 
     ' ---- DLL SEARCH HARDENING, before anything can load a library --------------------
     ' By default LoadLibrary with a bare name searches the CURRENT DIRECTORY and then PATH.
