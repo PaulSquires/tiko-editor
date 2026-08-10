@@ -59,6 +59,15 @@
 '' modIniParse.inc into app/ with a `dim pS as CTextStream` in it -- found when
 '' src/app was compiled WITHOUT AfxNova in scope for the first time, which is
 '' the thing the boundary was supposed to guarantee and had never been tested.
+'' IsWindow, SetWindowRedraw, DestroyWindow, MapWindowPoints and CoTaskMemFree
+'' were ADDED 2026-08-10, and the reason is worth more than the names. 7c step 3
+'' commit 2 converted clsDocument's Win32 vocabulary by fixing what THIS LIST
+'' reported, and stopping there. Five IsWindow calls and two SetWindowRedraw calls
+'' survived -- because IsWindowVisible was here and IsWindow was not.
+''
+'' That is the same mistake as trusting a grep, one layer up: a checker is evidence
+'' about the names it knows and says nothing whatever about the rest. The paragraph
+'' above already said so, and it happened anyway.
 dim shared as zstring * 24 g_banned(...) = { _
     "HWND", "HDC", "HMENU", "HBITMAP", "HICON", "HFONT", "HBRUSH", "HPEN", _
     "HINSTANCE", "WPARAM", "LPARAM", "LRESULT", "CWindow", "SendMessage", _
@@ -70,6 +79,8 @@ dim shared as zstring * 24 g_banned(...) = { _
     "DWORD", "LPWSTR", "LPCWSTR", "LPSTR", "HGLOBAL", "GlobalAlloc", _
     "GlobalLock", "CP_UTF8", "CP_ACP", "IDOK", "IDCANCEL", "IDYES", "IDNO", _
     "SciExec", _
+    "IsWindow", "SetWindowRedraw", "DestroyWindow", "MapWindowPoints", _
+    "CoTaskMemFree", _
     _
     "CTextStream", "CFileStream", "CWinHttpRequest", "CImageCtx", "CGdiPlus", _
     "CWebView2", "CBSTR", "CWSTR" }

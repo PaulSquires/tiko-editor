@@ -34,6 +34,11 @@ private sub AppHostW32_InvalidateView( byval pView as any ptr )
     AfxRedrawWindow( cast(HWND, pView) )
 end sub
 
+private sub AppHostW32_SetViewRedraw( byval pView as any ptr, byval bOn as boolean )
+    if pView = 0 then exit sub
+    SetWindowRedraw( cast(HWND, pView), bOn )
+end sub
+
 private sub AppHostW32_ViewScale( byval pView as any ptr, _
                                   byref rx as single, byref ry as single )
     '' Defaults first: a view parented somewhere without a CWindow answers 1.0 rather than
@@ -127,6 +132,7 @@ sub AppHostW32_Install()
     gAppHost.DestroyView    = @AppHostW32_DestroyView
     gAppHost.IsViewAlive    = @AppHostW32_IsViewAlive
     gAppHost.InvalidateView = @AppHostW32_InvalidateView
+    gAppHost.SetViewRedraw  = @AppHostW32_SetViewRedraw
     gAppHost.ViewScale      = @AppHostW32_ViewScale
     gAppHost.ViewHeight     = @AppHostW32_ViewHeight
     gAppHost.ViewUiFontName = @AppHostW32_ViewUiFontName

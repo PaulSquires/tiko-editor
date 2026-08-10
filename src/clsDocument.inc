@@ -103,7 +103,7 @@ end function
 ' ========================================================================================
 function clsDocument.SetDocInfo() as long
     this.docData.bIsValidData = true
-    if IsWindow(this.hWindow(0)) then    
+    if gAppHost.IsViewAlive(this.hWindow(0)) then    
        this.docData.wszBookmarks = this.GetBookmarks()
        this.docData.wszBreakPoints = this.GetBreakPoints()
        this.docData.wszFoldPoints =this.GetFoldPoints()
@@ -116,7 +116,7 @@ function clsDocument.SetDocInfo() as long
        this.docData.nSplitPositionY = this.SplitY
        this.docData.nFocusEdit = iif(this.hWndActiveScintilla = this.hWindow(0), 0, 1)
     end if
-    if IsWindow(this.hWindow(1)) then    
+    if gAppHost.IsViewAlive(this.hWindow(1)) then    
        this.docData.nFirstLine1 = SciMsg( pSci(1), SCI_GETFIRSTVISIBLELINE, 0, 0) 
        this.docData.nPosition1 = SciMsg( pSci(1), SCI_GETCURRENTPOS, 0, 0)  
     end if
@@ -228,9 +228,9 @@ function clsDocument.AssignTextBuffer() as long
     ' If a valid scintilla window already exists then this means that a previous
     ' function has already assigned the buffer text to the scintilla window so we
     ' can not do it a second time/
-    if IsWindow(this.hWindow(0)) then exit function
+    if gAppHost.IsViewAlive(this.hWindow(0)) then exit function
     
-    if IsWindow(this.hWindow(0)) = 0 then
+    if gAppHost.IsViewAlive(this.hWindow(0)) = false then
         this.CreateScintillaWindows()
         ' Take this opportunity to determine the text line endings
         if instr(this.TextBuffer, chr(13,10)) then
@@ -241,7 +241,7 @@ function clsDocument.AssignTextBuffer() as long
             SciMsg( pSci(0), SCI_SETEOLMODE, SC_EOL_CR, 0)
         end if
     end if
-    if IsWindow(this.hWindow(0)) then
+    if gAppHost.IsViewAlive(this.hWindow(0)) then
         ' Establish the codepage on the still-EMPTY buffer before inserting text, so the
         ' bytes are never interpreted under the wrong layout (INVARIANT E1). ApplyProperties
         ' below sets the same value again idempotently; doing it here removes the reliance on
@@ -1034,7 +1034,7 @@ function clsDocument.BlockComment( byval flagBlock as boolean ) as long
     this.GetSelectedLineRange( startLine, endLine, startPos, endPos )
     
     gApp.SuppressNotify = true
-    SetWindowRedraw( this.hWndActiveScintilla, false )
+    gAppHost.SetViewRedraw( this.hWndActiveScintilla, false )
 
     SciMsg( pSci, SCI_BEGINUNDOACTION, 0, 0)
     for i = startLine to endLine
@@ -1077,7 +1077,7 @@ function clsDocument.BlockComment( byval flagBlock as boolean ) as long
         SciMsg( pSci, SCI_SETSELECTIONEND, endPos + iif(flagBlock, nCount, -nCount), 0)
     end if
 
-    SetWindowRedraw( this.hWndActiveScintilla, true )
+    gAppHost.SetViewRedraw( this.hWndActiveScintilla, true )
     gApp.SuppressNotify = false
     gAppHost.InvalidateView( this.hWndActiveScintilla )
     

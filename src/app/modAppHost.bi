@@ -52,6 +52,16 @@ type AppHostServices
     '' pane stale for a visible moment.
     InvalidateView as sub(byval pView as any ptr)
 
+    '' Suppress repainting across a bulk edit, then restore it. A PERFORMANCE
+    '' AFFORDANCE, not a capability -- and it is carried across rather than dropped
+    '' precisely because no gate in this repo can see flicker. The suites would stay
+    '' green if it vanished; the only symptom is a large file loading visibly.
+    ''
+    '' The shell decides separately whether PsSciView needs an equivalent at all:
+    '' PsSurface repaints from a damage region rather than per control, so it may
+    '' legitimately implement this as a no-op.
+    SetViewRedraw  as sub(byval pView as any ptr, byval bOn as boolean)
+
     '' The view's DPI ratios. Two call sites need these to size margins, and both currently
     '' reach the owning CWindow to get them -- which is also why they cannot simply read a
     '' global: a view parented elsewhere would silently answer 1.0 and put every margin at
