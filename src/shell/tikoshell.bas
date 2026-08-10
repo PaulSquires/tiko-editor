@@ -362,9 +362,9 @@ function ToBgr( byval c as PsColor ) as long
     return ((c and &hFF) shl 16) or (c and &hFF00) or ((c shr 16) and &hFF)
 end function
 
-sub StyleEditorFromTheme( byref surf as PsSurface )
-    if g_view = 0 then exit sub
-    if g_view->pSci = 0 then exit sub
+sub StyleOneView( byval pV as PsSciView ptr, byref surf as PsSurface )
+    if pV = 0 then exit sub
+    if pV->pSci = 0 then exit sub
 
     dim as long bgrBack = ToBgr( PsThemeRoleColor(PSTHEME_BACKGROUNDALT) )
     dim as long bgrFore = ToBgr( PsThemeRoleColor(PSTHEME_FOREGROUND) )
@@ -373,21 +373,28 @@ sub StyleEditorFromTheme( byref surf as PsSurface )
     '' STYLE_DEFAULT, THEN STYLECLEARALL, THEN THE REST. Setting style 0 alone leaves every
     '' other style on Scintilla's built-in white -- a white page with correctly coloured
     '' text on it.
-    g_view->Msg( SCI_STYLESETFORE, STYLE_DEFAULT, bgrFore )
-    g_view->Msg( SCI_STYLESETBACK, STYLE_DEFAULT, bgrBack )
-    g_view->Msg( SCI_STYLECLEARALL )
+    pV->Msg( SCI_STYLESETFORE, STYLE_DEFAULT, bgrFore )
+    pV->Msg( SCI_STYLESETBACK, STYLE_DEFAULT, bgrBack )
+    pV->Msg( SCI_STYLECLEARALL )
 
     '' The caret and the selection are not styles, and STYLECLEARALL does not touch them.
-    g_view->Msg( SCI_SETCARETFORE, bgrFore )
-    g_view->Msg( SCI_SETSELBACK, 1, bgrSel )
+    pV->Msg( SCI_SETCARETFORE, bgrFore )
+    pV->Msg( SCI_SETSELBACK, 1, bgrSel )
 
     '' AND NEITHER IS THE MARGIN.
-    g_view->Msg( SCI_STYLESETFORE, STYLE_LINENUMBER, ToBgr(PsThemeRoleColor(PSTHEME_FOREGROUNDDIM)) )
-    g_view->Msg( SCI_STYLESETBACK, STYLE_LINENUMBER, ToBgr(PsThemeRoleColor(PSTHEME_BACKGROUND)) )
-    g_view->Msg( SCI_SETMARGINTYPEN, 0, SC_MARGIN_NUMBER )
-    g_view->Msg( SCI_SETMARGINWIDTHN, 0, PsScaleBy(38, surf.fScale) )
-    g_view->Msg( SCI_SETMARGINWIDTHN, 1, 0 )
-    g_view->Msg( SCI_SETMARGINWIDTHN, 2, 0 )
+    pV->Msg( SCI_STYLESETFORE, STYLE_LINENUMBER, ToBgr(PsThemeRoleColor(PSTHEME_FOREGROUNDDIM)) )
+    pV->Msg( SCI_STYLESETBACK, STYLE_LINENUMBER, ToBgr(PsThemeRoleColor(PSTHEME_BACKGROUND)) )
+    pV->Msg( SCI_SETMARGINTYPEN, 0, SC_MARGIN_NUMBER )
+    pV->Msg( SCI_SETMARGINWIDTHN, 0, PsScaleBy(38, surf.fScale) )
+    pV->Msg( SCI_SETMARGINWIDTHN, 1, 0 )
+    pV->Msg( SCI_SETMARGINWIDTHN, 2, 0 )
+end sub
+
+'' Both panes. A split view showing one document in two colour schemes would be a strange
+'' thing to ship, and the second pane is created after the first is already styled.
+sub StyleEditorFromTheme( byref surf as PsSurface )
+    StyleOneView( g_view,  surf )
+    StyleOneView( g_view2, surf )
 end sub
 
 '' getMenuText packs "caption" chr(9) "accel". Split rather than shown raw -- PsPopupMenu
@@ -1224,6 +1231,22 @@ sub ApplyScale( byref surf as PsSurface, byval f as single )
 
     surf.fScale = f
     if surf.pRoot then surf.pRoot->PropagateScaleChanged( f )
+
+    '' 4. AND THE EDITOR'S OWN FONT, which is a FOURTH thing and not the same as step 1.
+    ''    PsTextEngine draws the WIDGETS; Scintilla keeps its own style table and its own
+    ''    size, so reopening the engine leaves the editor's text at whatever it was created
+    ''    with. The symptom is a perfectly scaled shell with tiny code in the middle of it,
+    ''    which is what the author saw after commit 9 -- and minieditor is the only demo in
+    ''    PsPlatform that does this, so ideshell has it too.
+    ''
+    ''    ORDER IS LOAD-BEARING: SetFontPixelSize ends in SCI_STYLECLEARALL, which
+    ''    propagates STYLE_DEFAULT over every other style -- including the MARGIN colours
+    ''    StyleEditorFromTheme sets AFTER its own CLEARALL. Font first, theme second, or the
+    ''    white gutter strip comes back.
+    dim as long pxEdit = PsScaleBy( SH_FONT_PX, f )
+    if g_view  then g_view->SetFontPixelSize( pxEdit )
+    if g_view2 then g_view2->SetFontPixelSize( pxEdit )
+    StyleEditorFromTheme( surf )
 end sub
 
 sub Check( byref sWhat as string, byval bOk as boolean, byref sNote as string = "" )
@@ -1439,6 +1462,32 @@ end function
             '' THE HALF THAT WAS ACTUALLY BROKEN, AND IS ACTUALLY ASSERTABLE.
             Check "  and the font was reopened at the scaled size", _
                   (g_nFontPx = PsScaleBy(SH_FONT_PX, 1.5)), str(g_nFontPx) & "px"
+
+            '' AND THE EDITOR'S OWN FONT, WHICH IS A DIFFERENT FONT. Reported by the author
+            '' after commit 9: a perfectly scaled shell with tiny code in the middle of it.
+            '' PsTextEngine draws the widgets; Scintilla keeps its own style table and its
+            '' own size, so nothing above reaches it.
+            ''
+            '' Read back in POINTS, which is what Scintilla stores -- SetFontPixelSize
+            '' converts with (px * 72 + 48) \\ 96, so the assertion has to convert too rather
+            '' than compare a pixel size to a point size and always fail.
+            scope
+                '' Not in PsScintilla.bi -- the toolkit's controls have never read a style
+                '' size back. Scintilla's value, from Scintilla.h.
+                const SCI_STYLEGETSIZE_ = 2485
+                dim as long pxWant = PsScaleBy(SH_FONT_PX, 1.5)
+                dim as long ptWant = (pxWant * 72 + 48) \ 96
+                Check "  and the EDITOR's font scaled too", _
+                      (g_view->Msg(SCI_STYLEGETSIZE_, STYLE_DEFAULT) = ptWant), _
+                      str(g_view->Msg(SCI_STYLEGETSIZE_, STYLE_DEFAULT)) & "pt vs " & str(ptWant)
+                Check "    in BOTH panes", _
+                      (g_view2->Msg(SCI_STYLEGETSIZE_, STYLE_DEFAULT) = ptWant)
+                '' AND THE MARGIN SURVIVED IT. SetFontPixelSize ends in STYLECLEARALL, which
+                '' would wipe STYLE_LINENUMBER if the theme were not reapplied after it.
+                Check "    with the margin still themed", _
+                      (g_view->Msg(SCI_STYLEGETBACK, STYLE_LINENUMBER) = _
+                       ToBgr(PsThemeRoleColor(PSTHEME_BACKGROUND)))
+            end scope
 
             '' NOT ASSERTED, and the reason matters because the obvious assertion is
             '' VACUOUS. The tempting one is
