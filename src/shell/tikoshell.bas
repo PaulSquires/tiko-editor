@@ -1858,6 +1858,18 @@ sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any pt
         case IDM_FILESAVE   : ShellTabs_Save( false )
         case IDM_FILESAVEAS : ShellTabs_Save( true )
 
+        '' ---- THE BOOKMARK COMMANDS, ported from OnCommand_SearchBookmarks --------------
+        '' The first tiko FORM commands this binary answers. Each one is a clsDocument call
+        '' and a panel reload -- see shellpanel.bi, including what did NOT come with them
+        '' (NavHistory, whose body is not linkable here) and the one deliberate divergence
+        '' (Clear All uses MARKER_BOOKMARK where tiko passes -1 and takes the breakpoints
+        '' with it).
+        case IDM_BOOKMARKTOGGLE   : ShellBookmarks_Toggle()
+        case IDM_BOOKMARKNEXT     : ShellBookmarks_Next()
+        case IDM_BOOKMARKPREV     : ShellBookmarks_Prev()
+        case IDM_BOOKMARKCLEARALL : ShellBookmarks_ClearCurrent()
+        case IDM_BOOKMARKCLEARALLDOCS : ShellBookmarks_ClearAllDocs()
+
         case IDM_EXPLORERPOSITION : g_state.bExplorerRight = not g_state.bExplorerRight
         case IDM_VIEWSIDEPANEL    : g_state.bPanelVisible  = not g_state.bPanelVisible
         case IDM_VIEWOUTPUT       : g_state.bOutputVisible = not g_state.bOutputVisible
@@ -3365,6 +3377,57 @@ end function
                         ShellBookmarks_Load()
                         Check "  clearing the bookmark empties the panel", _
                               (g_panel->GetCount() = 0), str(g_panel->GetCount())
+
+                        '' ---- THROUGH THE COMMAND, not through the model. Everything
+                        '' above calls clsDocument directly; this drives OnMenuCommand the
+                        '' way a menu click or an accelerator does, which is the only path
+                        '' that proves the ids are actually wired to something.
+                        ''
+                        '' The caret is at the top in a windowless run, so this toggles line
+                        '' 0 -- which also exercises the packed value ZERO being a real row
+                        '' rather than a hole.
+                        OnMenuCommand( 0, IDM_BOOKMARKTOGGLE, 0 )
+                        Check "  the Toggle COMMAND sets a bookmark", _
+                              (pDoc->GetBookmarks() = "0"), pDoc->GetBookmarks()
+                        Check "    and reloads the panel itself", _
+                              (g_panel->GetCount() = 2), str(g_panel->GetCount())
+                        Check "    with the row packed at line 0", _
+                              (g_panel->GetItemData(1) = 0), str(g_panel->GetItemData(1))
+
+                        '' ---- CLEAR ALL SPARES THE BREAKPOINTS, and this is the assertion
+                        '' for a DELIBERATE DIVERGENCE FROM tiko rather than for a port.
+                        ''
+                        '' frmMainSearch.inc:449 passes -1 to SCI_MARKERDELETEALL, which is
+                        '' Scintilla's "every marker type" -- so tiko's Clear All Bookmarks
+                        '' also deletes breakpoints and the debugger's current-line marker.
+                        '' Its own Clear-All-DOCUMENTS arm four lines below passes
+                        '' MARKER_BOOKMARK, so the two halves disagree with each other.
+                        ''
+                        '' The marker is set directly rather than through ToggleBreakPoint,
+                        '' which routes through the debugger engine when one is attached.
+                        SciMsg( g_view->pSci, SCI_MARKERADD, 1, MARKER_BREAKPOINT )
+                        Check "  a breakpoint marker is set on line 1", _
+                              (bit(SciMsg(g_view->pSci, SCI_MARKERGET, 1, 0), MARKER_BREAKPOINT) <> 0)
+
+                        '' Clear All on the current document, through its command.
+                        OnMenuCommand( 0, IDM_BOOKMARKCLEARALL, 0 )
+                        Check "  the Clear All COMMAND clears them", _
+                              (pDoc->GetBookmarks() = ""), pDoc->GetBookmarks()
+                        Check "    and empties the panel", (g_panel->GetCount() = 0), _
+                              str(g_panel->GetCount())
+                        Check "    but leaves the BREAKPOINT alone, unlike tiko's -1", _
+                              (bit(SciMsg(g_view->pSci, SCI_MARKERGET, 1, 0), MARKER_BREAKPOINT) <> 0)
+                        SciMsg( g_view->pSci, SCI_MARKERDELETEALL, MARKER_BREAKPOINT, 0 )
+
+                        '' NEXT AND PREV WITH NO BOOKMARK AT ALL. Both are reachable from
+                        '' the keyboard at any time -- F2 is bound -- and SCI_MARKERNEXT
+                        '' answers -1, which NextBookmark must not turn into a GOTOLINE.
+                        dim as long nPosWas = SciMsg( g_view->pSci, SCI_GETCURRENTPOS, 0, 0 )
+                        OnMenuCommand( 0, IDM_BOOKMARKNEXT, 0 )
+                        OnMenuCommand( 0, IDM_BOOKMARKPREV, 0 )
+                        Check "  Next and Prev with no bookmarks move nothing", _
+                              (SciMsg(g_view->pSci, SCI_GETCURRENTPOS, 0, 0) = nPosWas), _
+                              str(SciMsg(g_view->pSci, SCI_GETCURRENTPOS, 0, 0))
                     end scope
 
                     '' ---- TWO DOCUMENTS, WHICH IS WHAT THE LOADER EXISTS FOR -------
@@ -3520,6 +3583,48 @@ end function
                       str(ShellPanel_LineOf(ShellPanel_PackRow(3, -1)))
                 Check "    leaving the tab intact", _
                       (ShellPanel_TabOf(ShellPanel_PackRow(3, -1)) = 3)
+            end scope
+
+            '' ---- THE BOOKMARK COMMANDS WITH NOTHING OPEN --------------------------------
+            '' Every one of these is reachable from the keyboard on the first frame -- F2 is
+            '' a bound accelerator in tiko and the menu rows are not disabled here -- so
+            '' each has to survive a null document rather than fault on it. The document
+            '' model would dereference it immediately.
+            scope
+                dim as long nWasCur = g_nTabCur
+                g_nTabCur = -1
+                Check "no document open: Toggle does nothing", (ShellTabs_CurrentDoc() = 0)
+                ShellBookmarks_Toggle()
+                ShellBookmarks_Next()
+                ShellBookmarks_Prev()
+                ShellBookmarks_ClearCurrent()
+                Check "  and Next, Prev and Clear All survive it", true
+                g_nTabCur = nWasCur
+
+                '' NO SURFACE MEANS THE DESTRUCTIVE ONE IS REFUSED, never assumed -- the
+                '' same rule as ConfirmExit and the lossy-save prompt, and the same trap:
+                '' called with a live surface this would raise a real modal in a windowless
+                '' run and block forever.
+                dim as PsSurface ptr pWas = g_pSurf
+                g_pSurf = 0
+                Check "  and Clear-All-Documents refuses with nothing to ask with", _
+                      (ShellBookmarks_ClearAllDocs() = false)
+                g_pSurf = pWas
+
+                '' THE COMPOSITION, which is everything about that box a suite can reach.
+                dim as PsMessageBox box
+                BuildClearAllBookmarksBox( box )
+                Check "  the clear-all box offers Yes, No and Cancel", _
+                      (box.GetButtonCount() = 3), str(box.GetButtonCount())
+                '' THE LOAD-BEARING ONE, and it is a DIVERGENCE FROM tiko: tiko passes no
+                '' explicit default here, so the first button wins and Return deletes every
+                '' bookmark in every open document.
+                Check "    with NO as the default, not Yes", _
+                      (box.ButtonId(box.GetDefaultButton()) = MBX_ID_NO), _
+                      str(box.GetDefaultButton())
+                Check "    and Escape cancels", (box.ResolveCancelId() = MBX_ID_CANCEL)
+                Check "    neither caption nor text is blank", _
+                      (len(box.sCaption) > 0) andalso (len(box.sText) > 0)
             end scope
 
             '' ---- GROUP J: THE FILE DIALOG'S NESTED PUMP --------------------------------

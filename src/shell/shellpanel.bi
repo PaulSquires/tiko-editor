@@ -91,6 +91,133 @@ end sub
 
 '' ---------------------------------------------------------------------------------------
 '' Rebuild the bookmark list from every open document. The port of LoadBookmarksFiles.
+''
+'' FORWARD-DECLARED because the commands below call it and it is defined after them in
+'' reading order -- toggling a bookmark reloads the panel.
+'' ---------------------------------------------------------------------------------------
+declare sub ShellBookmarks_Load()
+
+
+'' ---------------------------------------------------------------------------------------
+'' THE FOUR COMMANDS, ported from OnCommand_SearchBookmarks (frmMainSearch.inc:427).
+''
+'' ---- WHAT DID NOT COME WITH THEM: NavHistory --------------------------------------------
+''
+'' tiko wraps both jumps in NavHistory_RecordJump / NavHistory_NoteArrival so Back and
+'' Forward can retrace them. modNavHistory.inc IS NOT LINKABLE HERE -- it reaches gTTabCtl
+'' (the Win32 tab facade) and pDoc->hWndActiveScintilla, five sites of it. Only the HEADER
+'' is in app/; the body stayed in the shell, and nothing noticed until something tried to
+'' call it from the other binary.
+''
+'' So this shell's Next/Prev jump WITHOUT recording history, and that is a missing feature
+'' rather than a difference of opinion. It is one of the things the per-form cost in
+'' docs/port/7c-step4.md has to count.
+'' ---------------------------------------------------------------------------------------
+sub ShellBookmarks_Toggle()
+    dim as clsDocument ptr pDoc = ShellTabs_CurrentDoc()
+    if pDoc = 0 then exit sub
+    pDoc->ToggleBookmark( pDoc->GetCurrentLineNumber() )
+    '' RELOAD, because the panel is a snapshot. tiko calls LoadBookmarksFiles here for the
+    '' same reason -- there is no notification from the document when a marker changes.
+    ShellBookmarks_Load()
+end sub
+
+
+sub ShellBookmarks_Next()
+    dim as clsDocument ptr pDoc = ShellTabs_CurrentDoc()
+    if pDoc = 0 then exit sub
+    pDoc->NextBookmark()
+    if g_pSurf <> 0 then g_pSurf->InvalidateAll()
+end sub
+
+
+sub ShellBookmarks_Prev()
+    dim as clsDocument ptr pDoc = ShellTabs_CurrentDoc()
+    if pDoc = 0 then exit sub
+    pDoc->PrevBookmark()
+    if g_pSurf <> 0 then g_pSurf->InvalidateAll()
+end sub
+
+
+'' Clear every bookmark in the CURRENT document.
+''
+'' ---- MARKER_BOOKMARK, NOT -1, AND THAT IS A DELIBERATE DIVERGENCE FROM tiko.
+''
+'' frmMainSearch.inc:449 passes -1 to SCI_MARKERDELETEALL, which is Scintilla's "every
+'' marker type" -- so tiko's Clear All Bookmarks also deletes the document's BREAKPOINTS and
+'' the debugger's current-line marker. Its own Clear-All-DOCUMENTS arm four lines below
+'' passes MARKER_BOOKMARK, so the two halves of the same feature disagree.
+''
+'' This is the reading a command called "clear all bookmarks" should have. FLAGGED RATHER
+'' THAN FIXED IN tiko: that is the author's call on their own editor, not a change to make
+'' silently from a port.
+sub ShellBookmarks_ClearCurrent()
+    dim as clsDocument ptr pDoc = ShellTabs_CurrentDoc()
+    if pDoc = 0 then exit sub
+    SciMsg( pDoc->GetActiveScintillaPtr(), SCI_MARKERDELETEALL, MARKER_BOOKMARK, 0 )
+    ShellPanel_Clear()
+end sub
+
+
+'' COMPOSED SEPARATELY FROM BEING SHOWN, like BuildExitBox and the two save boxes: the
+'' captions, the buttons and the cancel id are decided windowlessly and can be asserted;
+'' PsMessageBoxShowModal needs a compositor and cannot.
+''
+'' Ids 248 and 214 exist in all six .lang files already -- no id is added here.
+sub BuildClearAllBookmarksBox( byref box as PsMessageBox )
+    box.SetCaption( L(214, "Confirm") )
+    box.SetText( L(248, "Do you want to delete all bookmarks?") )
+    box.SetIcon( MBX_ICON_QUESTION )
+    box.AddButton( L(94, "Yes"),    MBX_ID_YES )
+    box.AddButton( L(95, "No"),     MBX_ID_NO )
+    box.AddButton( L(1,  "Cancel"), MBX_ID_CANCEL )
+    '' DEFAULT = NO. tiko passes no explicit default here and gets the first button, which
+    '' puts the destructive answer under a reflexive Return. This asks about EVERY open
+    '' document at once, so it is the more destructive of the two.
+    box.SetDefaultButton( 1 )
+    box.SetCancelId( MBX_ID_CANCEL )
+end sub
+
+
+'' Clear bookmarks in EVERY open document. TRUE if it went ahead.
+function ShellBookmarks_ClearAllDocs() as boolean
+    '' NO SURFACE MEANS NO, not "assume yes". Same rule as ConfirmExit and the lossy-save
+    '' prompt: the destructive answer is never the fallback.
+    if g_pSurf = 0 then return false
+    dim as PsMessageBox box
+    BuildClearAllBookmarksBox( box )
+    if PsMessageBoxShowModal( g_pSurf, box ) <> MBX_ID_YES then return false
+
+    '' THE SAME DOC-POINTER WALK THE LOADER DOES, and for the same reason:
+    '' SCI_MARKERDELETEALL acts on the view's CURRENT document, and this binary has one
+    '' view. Without the switch this clears the foreground document N times and leaves every
+    '' other document's bookmarks exactly where they were.
+    dim as any ptr pWasDoc = 0
+    if g_view <> 0 then
+        pWasDoc = cast( any ptr, g_view->Msg(SCI_GETDOCPOINTER, 0, 0) )
+        if pWasDoc <> 0 then g_view->Msg( SCI_ADDREFDOCUMENT, 0, cast(integer, pWasDoc) )
+    end if
+
+    dim pDoc as clsDocument ptr = gApp.pDocList
+    do until pDoc = 0
+        dim as long idxTab = ShellTabs_IndexOfDoc( pDoc )
+        if (idxTab >= 0) andalso (g_view <> 0) then
+            g_view->Msg( SCI_SETDOCPOINTER, 0, cast(integer, g_tabDocs(idxTab).pSciDoc) )
+            SciMsg( g_view->pSci, SCI_MARKERDELETEALL, MARKER_BOOKMARK, 0 )
+        end if
+        pDoc = pDoc->pDocNext
+    loop
+
+    if (g_view <> 0) andalso (pWasDoc <> 0) then
+        g_view->Msg( SCI_SETDOCPOINTER, 0, cast(integer, pWasDoc) )
+        g_view->Msg( SCI_RELEASEDOCUMENT, 0, cast(integer, pWasDoc) )
+    end if
+
+    ShellPanel_Clear()
+    return true
+end function
+
+
 '' ---------------------------------------------------------------------------------------
 sub ShellBookmarks_Load()
     if g_panel = 0 then exit sub
