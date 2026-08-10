@@ -334,8 +334,10 @@ dim shared as ShellStub ptr g_splitOutput, g_output, g_fip
 '' with its PsVScrollBar/PsHScrollBar, so the editor rect is the document rect LESS both --
 '' see the reserve rule in the layout. The bars are stubs here: their GEOMETRY is layout and
 '' belongs in this commit; wiring them to the view is not.
-dim shared as PsSciView ptr g_view
+dim shared as PsSciView ptr g_view, g_view2
 dim shared as ShellStub ptr g_vscroll, g_hscroll
+dim shared as ShellStub ptr g_vscroll2, g_hscroll2
+dim shared as ShellStub ptr g_splitV, g_splitH
 
 '' The document rect: the one rectangle every band above conspires to produce. Kept so the
 '' self-test can assert it directly, and commit 9 puts the editor in it.
@@ -599,6 +601,41 @@ sub BuildTree( byref surf as PsSurface )
     end if
     root->AddChild( g_view )
 
+    '' ---- THE SPLIT PANE, SHARING ONE DOCUMENT ------------------------------------------
+    '' A SPLIT VIEW IS TWO VIEWS OF ONE DOCUMENT, not two documents. Scintilla's own
+    '' mechanism for that is the doc pointer: create the second view, then point it at the
+    '' first one's document. Without this the split shows an empty second file, which looks
+    '' close enough to a split to be believed.
+    ''
+    '' SCI_SETDOCPOINTER ADDREFS, so both views hold the document and neither frees it out
+    '' from under the other.
+    g_view2 = new PsSciView
+    if g_view2->Create( g_sFont, 400, 300 ) then
+        PsSciUseSystemClipboard( g_view2 )
+        '' PsScintilla.bi does not declare these two -- it carries what the toolkit's own
+        '' controls need, and nothing in PsPlatform has wanted a second view of one
+        '' document before. The values are Scintilla's and stable (Scintilla.h).
+        const SCI_GETDOCPOINTER_ = 2357
+        const SCI_SETDOCPOINTER_ = 2358
+        if g_view <> 0 then
+            g_view2->Msg( SCI_SETDOCPOINTER_, 0, g_view->Msg(SCI_GETDOCPOINTER_) )
+        end if
+        g_view2->Msg( SCI_SETCARETPERIOD, 530 )
+    end if
+    root->AddChild( g_view2 )
+
+    g_vscroll2 = new ShellStub( @"", PSTHEME_BACKGROUNDRAISED )
+    root->AddChild( g_vscroll2 )
+    g_hscroll2 = new ShellStub( @"", PSTHEME_BACKGROUNDRAISED )
+    root->AddChild( g_hscroll2 )
+
+    '' Two bars, one per orientation, because orientation is fixed at creation -- tiko keeps
+    '' two PsSplitter instances for the same reason and shows at most one.
+    g_splitV = new ShellStub( @"", PSTHEME_BORDER )
+    root->AddChild( g_splitV )
+    g_splitH = new ShellStub( @"", PSTHEME_BORDER )
+    root->AddChild( g_splitH )
+
     g_status = new PsStatusBar
     '' tiko's statusbar has seven panels; their CONTENT is frmMain_SetStatusbar's job and
     '' none of that is here. The panels exist so the band has a real height to lay out to.
@@ -651,6 +688,13 @@ type ShellLayoutState
     bShowReplace   as boolean = false     '' gFind.bShowReplacePanel
 
     nTabCount      as long = 1            '' gTTabCtl.GetItemCount()
+
+    '' The active document's split. tiko keeps these on clsDocument, not in config:
+    '' EditorSplitMode and SplitX/SplitY, the latter two in PIXELS like everything else
+    '' the layout measures.
+    nSplitMode     as long = 0            '' 0 none, 1 left/right, 2 top/bottom
+    nSplitX        as long = 0
+    nSplitY        as long = 0
     bFipActive     as boolean = false     '' frmFindInProject_IsActive()
 
     '' MEASURED, NOT CONSTANT, and pixels for the same reason as the two above. frmMain
@@ -688,6 +732,10 @@ const SH_TOPTABS_REPLACE_HEIGHT = 40
 '' lost in a transliteration, and invisible without an assertion.
 const SH_INFO_ABSENT_MARGIN   = 8
 const SH_SCROLLBAR_HEIGHT     = 12
+'' clsDocument.bi:102-104, so the state record reads like the original.
+const SH_SPLIT_NONE      = 0
+const SH_SPLIT_LEFTRIGHT = 1
+const SH_SPLIT_TOPBOTTOM = 2
 
 '' Clamp helper. THE CLAMP LIVES IN THE LAYOUT, NOT THE SPLITTER -- ideshell's contract,
 '' and tiko's too: PsSplitter_SetRange/SetPos/GetPos is frmMain handing the control limits
@@ -901,23 +949,106 @@ sub Shell_LayoutAll( byref surf as PsSurface, byref st as ShellLayoutState )
     '' two bars meet in the corner rather than leaving a notch.
     dim as long nVScrollW = st.nVScrollW
     dim as long nHScrollH = PsScaleBy( SH_SCROLLBAR_HEIGHT, f )
+    dim as long nGrabV    = PsScaleBy( SH_SPLITTER_GRAB, f )
+    dim as long nGrabH    = PsScaleBy( SH_SPLITTER_GRAB, f )
 
-    dim as long nEditW = g_rcDoc.w - nVScrollW
-    dim as long nEditH = g_rcDoc.h - nHScrollH
-    if nEditW < 0 then nEditW = 0
-    if nEditH < 0 then nEditH = 0
+    '' NOT named L/T/R/B. `L` is tiko's LOCALIZATION MACRO -- #Define L(e,s) LL(e) in
+    '' app/modLocalization.bi -- and fbc is case-insensitive, so a local called L turns
+    '' every later L(id) in this file into a variable reference. It compiles far enough to
+    '' be confusing.
+    dim as long nDocL = g_rcDoc.x
+    dim as long nDocT = g_rcDoc.y
+    dim as long nDocR = g_rcDoc.x + g_rcDoc.w
+    dim as long nDocB = g_rcDoc.y + g_rcDoc.h
 
-    g_view->SetBounds( PsRc(g_rcDoc.x, g_rcDoc.y, nEditW, nEditH) )
-    g_view->bVisible = true
+    '' At most ONE bar is shown. tiko keeps two PsSplitter instances because orientation is
+    '' fixed at creation, and follows the active document's mode.
+    g_splitV->bVisible = false
+    g_splitH->bVisible = false
+    g_view2->bVisible  = false
+    g_vscroll2->bVisible = false
+    g_hscroll2->bVisible = false
 
-    g_vscroll->SetBounds( PsRc(g_rcDoc.x + nEditW, g_rcDoc.y, nVScrollW, nEditH + nHScrollH) )
-    g_vscroll->bVisible = true
+    select case st.nSplitMode
 
-    '' The H bar occupies the strip its height reserved. tiko only SHOWS it when the document
-    '' is wider than the pane -- a model question this shell has no answer to yet -- so it is
-    '' laid out unconditionally and its visibility follows the state flag.
-    g_hscroll->SetBounds( PsRc(g_rcDoc.x, g_rcDoc.y + nEditH, nEditW, nHScrollH) )
-    g_hscroll->bVisible = st.bHScrollVisible
+    case SH_SPLIT_LEFTRIGHT
+        '' frmMain.inc:1048 -- the bar is clamped between the two panes' scrollbar edges,
+        '' and the clamped value is taken back so the bar and the panes cannot disagree.
+        dim as long nSplitX = ClampTo( st.nSplitX, nDocL + nVScrollW, nDocR - nVScrollW - nGrabV )
+        g_splitV->SetBounds( PsRc(nSplitX, nDocT, nGrabV, nDocB - nDocT) )
+        g_splitV->bVisible = true
+
+        '' frmMain_PositionSplitDocLeft (:608) -- the SPLIT pane, DocView(1), on the left.
+        dim as long wLeft = nSplitX - nDocL - nVScrollW
+        if wLeft < 0 then wLeft = 0
+        g_view2->SetBounds( PsRc(nDocL, nDocT, wLeft, (nDocB - nDocT) - nHScrollH) )
+        g_view2->bVisible = true
+        g_vscroll2->SetBounds( PsRc(nDocL + wLeft, nDocT, nVScrollW, nDocB - nDocT) )
+        g_vscroll2->bVisible = true
+        g_hscroll2->SetBounds( PsRc(nDocL, nDocB - nHScrollH, wLeft, nHScrollH) )
+        g_hscroll2->bVisible = st.bHScrollVisible
+
+        '' frmMain_PositionMainDocRight (:696) -- the MAIN pane, DocView(0), on the right.
+        '' Max() against rcDoc.left, exactly as the original: an unclamped SplitX could put
+        '' the main pane left of the document area entirely.
+        dim as long nLeft2 = nSplitX + nGrabV
+        if nLeft2 < nDocL then nLeft2 = nDocL
+        dim as long wRight = nDocR - nLeft2 - nVScrollW
+        if wRight < 0 then wRight = 0
+        g_view->SetBounds( PsRc(nLeft2, nDocT, wRight, (nDocB - nDocT) - nHScrollH) )
+        g_view->bVisible = true
+        g_vscroll->SetBounds( PsRc(nLeft2 + wRight, nDocT, nVScrollW, nDocB - nDocT) )
+        g_vscroll->bVisible = true
+        g_hscroll->SetBounds( PsRc(nLeft2, nDocB - nHScrollH, wRight, nHScrollH) )
+        g_hscroll->bVisible = st.bHScrollVisible
+
+    case SH_SPLIT_TOPBOTTOM
+        dim as long nSplitY = ClampTo( st.nSplitY, nDocT, nDocB - nGrabH )
+        g_splitH->SetBounds( PsRc(nDocL, nSplitY, nDocR - nDocL, nGrabH) )
+        g_splitH->bVisible = true
+
+        '' frmMain_PositionSplitDocTop (:651) -- DocView(1), above the bar.
+        dim as long wPane = (nDocR - nDocL) - nVScrollW
+        if wPane < 0 then wPane = 0
+        dim as long hTop = nSplitY - nDocT - nHScrollH
+        if hTop < 0 then hTop = 0
+        g_view2->SetBounds( PsRc(nDocL, nDocT, wPane, hTop) )
+        g_view2->bVisible = true
+        '' AND THE TOP PANE'S SCROLLBAR DOES NOT SPAN THE RESERVED STRIP, while the bottom
+        '' one below does. frmMain.inc:685 passes AfxGetWindowHeight(DocView(1)) and :783
+        '' passes AfxGetWindowHeight(DocView(0)) + iHScrollbarHeight. The asymmetry is real
+        '' and reproduced; the oracle records it as 95 against 395.
+        g_vscroll2->SetBounds( PsRc(nDocL + wPane, nDocT, nVScrollW, hTop) )
+        g_vscroll2->bVisible = true
+        g_hscroll2->SetBounds( PsRc(nDocL, nSplitY - nHScrollH, wPane, nHScrollH) )
+        g_hscroll2->bVisible = st.bHScrollVisible
+
+        '' frmMain_PositionMainDocBottom (:743) with a non-zero nTop -- DocView(0), below.
+        dim as long nTop2 = nSplitY + nGrabH
+        if nTop2 < nDocT then nTop2 = nDocT
+        dim as long hBot = nDocB - nTop2 - nHScrollH
+        if hBot < 0 then hBot = 0
+        g_view->SetBounds( PsRc(nDocL, nTop2, wPane, hBot) )
+        g_view->bVisible = true
+        g_vscroll->SetBounds( PsRc(nDocL + wPane, nTop2, nVScrollW, hBot + nHScrollH) )
+        g_vscroll->bVisible = true
+        g_hscroll->SetBounds( PsRc(nDocL, nDocB - nHScrollH, wPane, nHScrollH) )
+        g_hscroll->bVisible = st.bHScrollVisible
+
+    case else
+        '' frmMain_PositionMainDocBottom with nTop = rcDoc.top. See the reserve note below.
+        dim as long nEditW = g_rcDoc.w - nVScrollW
+        dim as long nEditH = g_rcDoc.h - nHScrollH
+        if nEditW < 0 then nEditW = 0
+        if nEditH < 0 then nEditH = 0
+
+        g_view->SetBounds( PsRc(nDocL, nDocT, nEditW, nEditH) )
+        g_view->bVisible = true
+        g_vscroll->SetBounds( PsRc(nDocL + nEditW, nDocT, nVScrollW, nEditH + nHScrollH) )
+        g_vscroll->bVisible = true
+        g_hscroll->SetBounds( PsRc(nDocL, nDocT + nEditH, nEditW, nHScrollH) )
+        g_hscroll->bVisible = st.bHScrollVisible
+    end select
 end sub
 
 '' The pump and the self-test both call this, so the live state is threaded from one place.
@@ -971,9 +1102,14 @@ sub DumpState( byref surf as PsSurface, byval szState as zstring ptr )
     DumpChild( @"SPLITOUTPUT",   g_splitOutput )
     DumpChild( @"OUTPUT",        g_output )
     DumpChild( @"FINDINPROJECT", g_fip )
+    DumpChild( @"SPLITV",        g_splitV )
+    DumpChild( @"SPLITH",        g_splitH )
     DumpChild( @"EDIT0",         g_view )
-    DumpChild( @"VSCROLL0",      g_vscroll )
+    DumpChild( @"EDIT1",         g_view2 )
     DumpChild( @"HSCROLL0",      g_hscroll )
+    DumpChild( @"HSCROLL1",      g_hscroll2 )
+    DumpChild( @"VSCROLL0",      g_vscroll )
+    DumpChild( @"VSCROLL1",      g_vscroll2 )
 end sub
 
 sub RunLayoutDump( byref surf as PsSurface )
@@ -1026,6 +1162,34 @@ sub RunLayoutDump( byref surf as PsSurface )
     g_state.bShowInfo = true : g_state.bShowFind = true : g_state.bShowReplace = true
     DumpState( surf, @"BAR_ALL" )
     g_state.bShowInfo = false : g_state.bShowFind = false : g_state.bShowReplace = false
+
+    '' The two split modes, positioned the way OnCommand_ViewSplit does it: set the mode,
+    '' lay out ONCE so the unsplit view has a real rectangle, then halve THAT. Setting the
+    '' mode without a position dumps a degenerate split -- the same trap the oracle itself
+    '' fell into, recorded in modLayoutDump.inc.
+    g_state.nSplitMode = SH_SPLIT_LEFTRIGHT
+    g_state.nSplitX = 0
+    Shell_LayoutAll( surf, g_state )
+    '' MIDPOINT for X, exactly as OnCommand_ViewSplit does it (frmMainView.inc:88).
+    g_state.nSplitX = g_view->bounds.x + (g_view->bounds.w \ 2)
+    DumpState( surf, @"SPLIT_LEFTRIGHT" )
+
+    g_state.nSplitMode = SH_SPLIT_TOPBOTTOM
+    g_state.nSplitX = 0 : g_state.nSplitY = 0
+    Shell_LayoutAll( surf, g_state )
+    '' AND A BARE HEIGHT/2 FOR Y, which is NOT the midpoint and is tiko's, not a slip
+    '' here: frmMainView.inc:118 is `pDoc->SplitY = (rc.bottom - rc.top) \ 2` while :88 is
+    '' `rc.left + (rc.right - rc.left) / 2`. So a top/bottom split is only centred when the
+    '' document rect starts at y = 0, which it never does -- the menubar and tab bar are
+    '' above it. The bar lands high and the top pane is the smaller one.
+    ''
+    '' Reproduced because the oracle records it and the layout takes nSplitY as an absolute
+    '' Y either way; where the CALLER puts it is the caller's business, and fixing that is
+    '' a change to tiko rather than a port of it.
+    g_state.nSplitY = g_view->bounds.h \ 2
+    DumpState( surf, @"SPLIT_TOPBOTTOM" )
+
+    g_state.nSplitMode = SH_SPLIT_NONE
 
     print
     print "LAYOUT DUMP COMPLETE"
@@ -1173,10 +1337,10 @@ end function
         print "--- tikoshell selftest ---"
 
         Check "the tree is built", (surf.pRoot <> 0)
-        '' Fifteen: the real menubar, statusbar and PsSciView, plus twelve stubs standing
-        '' in for every other child frmMain_PositionWindows places. Two more arrive with
-        '' the split bars in commit 10.
-        Check "  fifteen children", (surf.pRoot->ChildCount() = 15), _
+        '' Twenty, and that is the whole of frmMain's child list bar the panel's own
+        '' contents: the real menubar and statusbar, TWO real PsSciViews, and sixteen stubs.
+        '' The plan called this "twenty children" before any of it was written.
+        Check "  twenty children", (surf.pRoot->ChildCount() = 20), _
               str(surf.pRoot->ChildCount())
 
         '' ---- THE MENU VOCABULARY CAME FROM tiko ---------------------------------------
@@ -1631,6 +1795,80 @@ end function
                   str(g_vscroll->bounds.h)
             Check "  and sits against the editor's right edge", _
                   (g_vscroll->bounds.x = g_view->bounds.x + g_view->bounds.w)
+
+            '' ---- THE SPLIT MODES ------------------------------------------------------
+            '' At most one bar is shown, both panes clear it, and the two scrollbar columns
+            '' line up. Driven at the oracle's inputs, still at 1.75.
+            scope
+                g_state.nSplitMode = SH_SPLIT_LEFTRIGHT
+                g_state.nSplitX = 0
+                LayoutAll( surf )
+                g_state.nSplitX = g_view->bounds.x + (g_view->bounds.w \ 2)
+                LayoutAll( surf )
+
+                Check "left/right shows the vertical bar only", _
+                      (g_splitV->bVisible = true) andalso (g_splitH->bVisible = false)
+                Check "  both panes are visible", _
+                      (g_view->bVisible = true) andalso (g_view2->bVisible = true)
+                '' THE SPLIT PANE CLEARS THE BAR. It used to start exactly at SplitX with
+                '' the bar painted into the scrollbar gap -- which worked only while the bar
+                '' was a painted rect and not a window (frmMain.inc:749-752).
+                Check "  the main pane starts AFTER the bar", _
+                      (g_view->bounds.x = g_splitV->bounds.x + g_splitV->bounds.w), _
+                      str(g_view->bounds.x)
+                Check "  the split pane's scrollbar sits before the bar", _
+                      (g_vscroll2->bounds.x + g_vscroll2->bounds.w = g_splitV->bounds.x)
+                Check "  and the split pane before that", _
+                      (g_view2->bounds.x + g_view2->bounds.w = g_vscroll2->bounds.x)
+                Check "  the bar spans the document rect", _
+                      (g_splitV->bounds.y = g_rcDoc.y) andalso _
+                      (g_splitV->bounds.h = g_rcDoc.h), str(g_splitV->bounds.h)
+                '' Both panes keep the H reserve, so the two are the same height.
+                Check "  both panes are the same height", _
+                      (g_view->bounds.h = g_view2->bounds.h), _
+                      str(g_view->bounds.h) & " vs " & str(g_view2->bounds.h)
+
+                g_state.nSplitMode = SH_SPLIT_TOPBOTTOM
+                g_state.nSplitY = 0
+                LayoutAll( surf )
+                '' A BARE HEIGHT/2, not the midpoint -- see the note in RunLayoutDump.
+                g_state.nSplitY = g_view->bounds.h \ 2
+                LayoutAll( surf )
+
+                Check "top/bottom shows the horizontal bar only", _
+                      (g_splitH->bVisible = true) andalso (g_splitV->bVisible = false)
+                Check "  the bottom pane starts AFTER the bar", _
+                      (g_view->bounds.y = g_splitH->bounds.y + g_splitH->bounds.h), _
+                      str(g_view->bounds.y)
+                Check "  the top pane's H strip is above the bar", _
+                      (g_hscroll2->bounds.y + g_hscroll2->bounds.h = g_splitH->bounds.y)
+
+                '' THE ASYMMETRY, AND IT IS tiko's. The TOP pane's vertical scrollbar spans
+                '' the pane ALONE; the bottom one spans its pane PLUS the reserved H strip
+                '' (frmMain.inc:685 against :783). The oracle records it as 95 against 395.
+                Check "  the TOP scrollbar does not span the H reserve", _
+                      (g_vscroll2->bounds.h = g_view2->bounds.h), _
+                      str(g_vscroll2->bounds.h) & " vs pane " & str(g_view2->bounds.h)
+                Check "  but the BOTTOM one does", _
+                      (g_vscroll->bounds.h = g_view->bounds.h + PsScaleBy(SH_SCROLLBAR_HEIGHT, 1.75)), _
+                      str(g_vscroll->bounds.h) & " vs pane " & str(g_view->bounds.h)
+
+                '' AND THE SPLIT IS NOT CENTRED, which is also tiko's: SplitY is a bare
+                '' height/2 used as an absolute Y, so it only centres when the document rect
+                '' starts at 0 -- and the menubar and tab bar are always above it.
+                Check "  so the top pane is the SMALLER one", _
+                      (g_view2->bounds.h < g_view->bounds.h), _
+                      str(g_view2->bounds.h) & " vs " & str(g_view->bounds.h)
+
+                '' Back to unsplit, and the second pane goes away entirely.
+                g_state.nSplitMode = SH_SPLIT_NONE
+                LayoutAll( surf )
+                Check "unsplit hides both bars", _
+                      (g_splitV->bVisible = false) andalso (g_splitH->bVisible = false)
+                Check "  and the split pane", (g_view2->bVisible = false)
+                Check "  leaving the editor the whole document rect less its bars", _
+                      (g_view->bounds.w = g_rcDoc.w - g_state.nVScrollW)
+            end scope
 
             surf.fScale = 1.0
             surf.Resize( SH_W, SH_H )

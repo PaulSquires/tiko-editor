@@ -88,11 +88,31 @@ both sides in `BASE`, and its bottom is 833 on both in `OUTPUT_HIDDEN`. What rem
 class is only class 1 arriving second-hand — the document rect is itself one pixel off, so
 the editor computed from it is too.
 
-**So there is ONE difference class left, and it is the rounding.** All 47 differing fields
-across the eight states are a one-pixel shift traceable to `SPLITTER_GRAB`. Every Y
-coordinate and every height that does not depend on `nLeft` matches exactly.
+**So there is ONE difference class left, and it is the rounding.** Across all ten states and
+every field, **no edge differs from tiko's by more than 2 pixels, and nothing differs by
+more than that at all.** One pixel is the grab itself; two is the left/right split, where the
+grab enters the arithmetic twice — once as the bar's own width and once through `nLeft`.
+Every Y coordinate and every height not downstream of `nLeft` matches exactly.
 
-**A difference outside that class is a real one.** That is what this file is for.
+**A difference outside that class is a real one.** That is what this file is for. The bound
+is worth re-deriving rather than trusting: parse both files, compare the four edges of each
+child in each state, and take the maximum.
+
+## Two tiko behaviours reproduced deliberately
+
+Both are recorded because a reader who finds them will otherwise assume the port is wrong.
+
+**The top/bottom split is not centred, and cannot be.** `OnCommand_ViewSplit` sets
+`SplitX = rc.left + (rc.right - rc.left) / 2` — a midpoint — but
+`SplitY = (rc.bottom - rc.top) \ 2`, a bare **height**, used as an absolute Y
+(`frmMainView.inc:88` against `:118`). The document rect never starts at y=0 because the
+menubar and tab bar are above it, so the bar always lands high and the top pane is the
+smaller one. The layout takes `nSplitY` as an absolute Y either way; where the caller puts
+it is the caller's business.
+
+**The two vertical scrollbars are asymmetric in a top/bottom split.** The top pane's spans
+the pane alone; the bottom pane's spans its pane **plus** the reserved horizontal-scrollbar
+strip (`frmMain.inc:685` against `:783`). The oracle records it as 95 against 395.
 
 ## States, and what each is for
 
