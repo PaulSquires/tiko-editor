@@ -738,6 +738,11 @@ end function
 '' the view globals, SciMsg, clsDocument -- is declared above; it touches nothing from
 '' shellhost.bi, so it does not have to wait for it.
 #include once "shelltabs.bi"
+'' The side panel's contents -- the first tiko FORM behaviour in this binary. AFTER
+'' shelltabs.bi, which it needs for ShellTabs_IndexOfDoc and the tab array: a bookmark row
+'' carries the tab it belongs to, and reading a background tab's markers means pointing the
+'' single view at that tab's Scintilla document.
+#include once "shellpanel.bi"
 
 
 sub BuildTree( byref surf as PsSurface )
@@ -3309,6 +3314,138 @@ end function
                     Check "    and creates no second document", _
                           (gApp.GetDocumentCount() = 1), str(gApp.GetDocumentCount())
 
+                    '' ---- THE BOOKMARK LOADER, END TO END ---------------------------
+                    '' Driven HERE rather than in its own scope because it needs exactly
+                    '' what this one already built: a real document, in a tab, with a live
+                    '' Scintilla view behind it. A loader asserted against an empty
+                    '' pDocList would prove only that it does not crash on nothing.
+                    scope
+                        dim as clsDocument ptr pDoc = ShellTabs_CurrentDoc()
+                        pDoc->ToggleBookmark( 1 )
+                        Check "  a bookmark is set on line 1", _
+                              (pDoc->GetBookmarks() = "1"), pDoc->GetBookmarks()
+
+                        ShellBookmarks_Load()
+                        '' A HEADER FOR THE FILE AND A ROW FOR THE LINE. Two rows, not one:
+                        '' the grouping is what makes bookmarks across several files
+                        '' readable, and it is the shape the click handler walks.
+                        Check "  the panel lists it under a file header", _
+                              (g_panel->GetCount() = 2), str(g_panel->GetCount())
+                        Check "    the first row is the header", g_panel->IsHeader(0)
+                        Check "    and the second is not", (g_panel->IsHeader(1) = false)
+
+                        '' THE PACKED SLOT, READ BACK OFF A REAL ROW. Everything below is
+                        '' asserted on synthetic values too, but only this says the LOADER
+                        '' packed what it claimed to.
+                        Check "    the row carries its tab", _
+                              (ShellPanel_TabOf(g_panel->GetItemData(1)) = idx1), _
+                              str(ShellPanel_TabOf(g_panel->GetItemData(1)))
+                        Check "    and its line", _
+                              (ShellPanel_LineOf(g_panel->GetItemData(1)) = 1), _
+                              str(ShellPanel_LineOf(g_panel->GetItemData(1)))
+
+                        '' THE VIEW SURVIVED THE WALK. The loader points the single view at
+                        '' each document in turn to read its markers -- see shellpanel.bi --
+                        '' and a missing ADDREF frees the document the user is looking at.
+                        ''
+                        '' THIS ONE DOES NOT BITE WITH A SINGLE DOCUMENT OPEN, and saying so
+                        '' is the honest half. Reverting the ADDREF leaves it green: the tab
+                        '' entry created the document with SCI_CREATEDOCUMENT and the view
+                        '' then took its own reference, so the count has slack and one
+                        '' unbalanced release does not reach zero. The two-document block
+                        '' below is where the reference discipline is actually exercised.
+                        Check "    and the editor still holds its document", _
+                              (SciMsg(g_view->pSci, SCI_GETLENGTH, 0, 0) > 0), _
+                              str(SciMsg(g_view->pSci, SCI_GETLENGTH, 0, 0))
+
+                        '' A DOCUMENT WITH NO BOOKMARKS CONTRIBUTES NO HEADER -- tiko's
+                        '' `if len(sBookmarks)` guard. Without it the panel lists every open
+                        '' file whether or not it has anything in it.
+                        pDoc->ToggleBookmark( 1 )
+                        ShellBookmarks_Load()
+                        Check "  clearing the bookmark empties the panel", _
+                              (g_panel->GetCount() = 0), str(g_panel->GetCount())
+                    end scope
+
+                    '' ---- TWO DOCUMENTS, WHICH IS WHAT THE LOADER EXISTS FOR -------
+                    '' Everything above runs with one file open, and one file cannot show
+                    '' the defect this loader was written to avoid: clsDocument.GetMarkers
+                    '' walks the ACTIVE VIEW, and this binary has ONE view for every tab, so
+                    '' asking a BACKGROUND tab for its bookmarks returns the FOREGROUND
+                    '' tab's -- every group in the panel listing the same lines under a
+                    '' different filename.
+                    ''
+                    '' The two files carry bookmarks on DIFFERENT lines precisely so that
+                    '' answer would be wrong in a way an assertion can see.
+                    scope
+                        dim as DWSTRING wszFile2 = wszDir & "\open_probe2.bas"
+                        if PsFileWriteAll( wszFile2, !"' two\nprint 2\nprint 3\nprint 4\n" ) then
+                            dim as long idxB = ShellTabs_Open( wszFile2 )
+                            Check "  a second file opens into its own tab", _
+                                  (idxB > idx1), str(idx1) & " then " & str(idxB)
+                            Check "    and gApp has both", _
+                                  (gApp.GetDocumentCount() = 2), str(gApp.GetDocumentCount())
+
+                            '' B is in the foreground now -- ShellTabs_Open selects what it
+                            '' opens -- so A is the background document whose markers the
+                            '' naive read would get wrong.
+                            dim as clsDocument ptr pB = g_tabDocs(idxB).pDoc
+                            dim as clsDocument ptr pA = g_tabDocs(idx1).pDoc
+                            pB->ToggleBookmark( 3 )
+
+                            '' A's bookmark is set while B is showing, which needs the view
+                            '' pointed at A first -- the same dance the loader does.
+                            g_view->Msg( SCI_SETDOCPOINTER, 0, cast(integer, g_tabDocs(idx1).pSciDoc) )
+                            pA->ToggleBookmark( 1 )
+                            g_view->Msg( SCI_SETDOCPOINTER, 0, cast(integer, g_tabDocs(idxB).pSciDoc) )
+
+                            ShellBookmarks_Load()
+                            '' Two headers, two rows.
+                            Check "  both files appear in the panel", _
+                                  (g_panel->GetCount() = 4), str(g_panel->GetCount())
+
+                            '' ---- THE LOAD-BEARING ONE. Find each file's row and check the
+                            '' LINE it carries. If the loader read the foreground document
+                            '' for both, both rows say line 3 and the count above is still 4.
+                            dim as long nLineA = -1, nLineB = -1
+                            for r as long = 0 to g_panel->GetCount() - 1
+                                if g_panel->IsHeader(r) then continue for
+                                dim as integer d = g_panel->GetItemData(r)
+                                if ShellPanel_TabOf(d) = idx1 then nLineA = ShellPanel_LineOf(d)
+                                if ShellPanel_TabOf(d) = idxB then nLineB = ShellPanel_LineOf(d)
+                            next
+                            Check "    the background tab's row carries ITS line", _
+                                  (nLineA = 1), str(nLineA)
+                            Check "    and the foreground tab's carries its own", _
+                                  (nLineB = 3), str(nLineB)
+
+                            '' BOTH DOCUMENTS STILL HAVE THEIR TEXT after the walk pointed
+                            '' the view at each in turn. This is the reference discipline's
+                            '' real test: with two documents there is no slack left.
+                            g_view->Msg( SCI_SETDOCPOINTER, 0, cast(integer, g_tabDocs(idx1).pSciDoc) )
+                            dim as long nLenA = SciMsg(g_view->pSci, SCI_GETLENGTH, 0, 0)
+                            g_view->Msg( SCI_SETDOCPOINTER, 0, cast(integer, g_tabDocs(idxB).pSciDoc) )
+                            dim as long nLenB = SciMsg(g_view->pSci, SCI_GETLENGTH, 0, 0)
+                            Check "    and neither document was freed under the view", _
+                                  (nLenA > 0) andalso (nLenB > 0), _
+                                  str(nLenA) & " / " & str(nLenB)
+
+                            '' Tidy: drop B's bookmark, its tab and its document.
+                            pB->ToggleBookmark( 3 )
+                            g_view->Msg( SCI_SETDOCPOINTER, 0, cast(integer, g_tabDocs(idx1).pSciDoc) )
+                            pA->ToggleBookmark( 1 )
+                            if g_tabs <> 0 then g_tabs->DeleteTab( idxB )
+                            g_view->Msg( SCI_RELEASEDOCUMENT, 0, cast(integer, g_tabDocs(idxB).pSciDoc) )
+                            gApp.RemoveDocument( pB )
+                            g_tabDocs(idxB).pDoc    = 0
+                            g_tabDocs(idxB).pSciDoc = 0
+                            g_nTabDocs -= 1
+                            g_nTabCur  = idx1
+                            ShellPanel_Clear()
+                        end if
+                        PsFileDelete( wszFile2 )
+                    end scope
+
                     '' ---- CLEANUP, and it has to be complete: this suite runs before the
                     '' band walk, which asserts geometry against a tree this test has added
                     '' a tab to.
@@ -3336,6 +3473,53 @@ end function
                 end if
 
                 PsFileDelete( wszFile )
+            end scope
+
+            '' ---- THE PACKED ROW SLOT ----------------------------------------------------
+            '' PsPlatform's PsListTree has ONE data slot per row; tiko's Win32 control has
+            '' two, and its panels use them for (document, line). The slot is `integer` --
+            '' 64 bits on win64 -- and this shell is index-based, so a tab index and a line
+            '' number fit in one with room to spare.
+            ''
+            '' A WRONG MASK HERE DOES NOT CRASH. It sends a click to the wrong line of the
+            '' wrong file, which looks like a navigation bug anywhere but here.
+            scope
+                Check "a packed row round-trips its tab", _
+                      (ShellPanel_TabOf(ShellPanel_PackRow(7, 42)) = 7), _
+                      str(ShellPanel_TabOf(ShellPanel_PackRow(7, 42)))
+                Check "  and its line", _
+                      (ShellPanel_LineOf(ShellPanel_PackRow(7, 42)) = 42), _
+                      str(ShellPanel_LineOf(ShellPanel_PackRow(7, 42)))
+
+                '' TAB 0, LINE 0 PACKS TO ZERO, and that is a legitimate row rather than an
+                '' "unset" marker -- the first line of the first tab. Anything that treated
+                '' 0 as absent would drop exactly one bookmark and no other.
+                Check "  tab 0 line 0 is a real value, not a hole", _
+                      (ShellPanel_PackRow(0, 0) = 0) andalso _
+                      (ShellPanel_TabOf(0) = 0) andalso (ShellPanel_LineOf(0) = 0)
+
+                '' THE BIGGEST LINE AGAINST A NONZERO TAB, and the pairing is the point.
+                ''
+                '' THIS ASSERTION USED TO READ `PackRow(0, huge)` and check the tab was
+                '' still 0. IT SURVIVED THREE DELIBERATE BREAKAGES -- a 16-bit mask, a
+                '' missing clamp and a shl 16 -- because with the tab at ZERO it reads back
+                '' zero whatever the shift or mask does. It could not fail. Rewritten with a
+                '' nonzero tab, it fails on the shift-width revert with the rest.
+                dim as integer nBig = ShellPanel_PackRow( SH_MAX_DOCS - 1, 2147483647 )
+                Check "  the biggest line does not disturb the tab beside it", _
+                      (ShellPanel_TabOf(nBig) = SH_MAX_DOCS - 1), _
+                      str(ShellPanel_TabOf(nBig))
+                Check "    and reads back whole", _
+                      (ShellPanel_LineOf(nBig) = 2147483647), str(ShellPanel_LineOf(nBig))
+
+                '' A NEGATIVE LINE IS CLAMPED rather than packed. Scintilla returns -1 for
+                '' "no such line", and sign-extending that would fill the tab half with 1s
+                '' and address a tab that does not exist.
+                Check "  a negative line clamps to zero", _
+                      (ShellPanel_LineOf(ShellPanel_PackRow(3, -1)) = 0), _
+                      str(ShellPanel_LineOf(ShellPanel_PackRow(3, -1)))
+                Check "    leaving the tab intact", _
+                      (ShellPanel_TabOf(ShellPanel_PackRow(3, -1)) = 3)
             end scope
 
             '' ---- GROUP J: THE FILE DIALOG'S NESTED PUMP --------------------------------
