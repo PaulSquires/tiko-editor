@@ -3440,6 +3440,29 @@ end function
                               (SciMsg(g_view->pSci, SCI_GETLENGTH, 0, 0) > 0), _
                               str(SciMsg(g_view->pSci, SCI_GETLENGTH, 0, 0))
 
+                        '' ---- THE LOADER MUST NOT MOVE THE CARET ---------------------
+                        '' REPORTED BY THE AUTHOR: Ctrl+F2 set the bookmark and then threw
+                        '' the caret back to line 1, column 1.
+                        ''
+                        '' The cause is the doc-pointer walk this loader does to read each
+                        '' document's markers. SCI_SETDOCPOINTER RE-ATTACHES A DOCUMENT AND
+                        '' RESETS THE VIEW'S CARET AND SCROLL -- position belongs to the
+                        '' VIEW, not the document, which is the same fact ShellTabs_Show
+                        '' exists to work around when switching tabs. Pointing away and
+                        '' back is not a no-op.
+                        ''
+                        '' Written before the fix and confirmed FAILING, so this is a
+                        '' reproduction rather than a description.
+                        scope
+                            dim as long nWant = SciMsg( g_view->pSci, SCI_POSITIONFROMLINE, 1, 0 )
+                            SciMsg( g_view->pSci, SCI_GOTOPOS, nWant, 0 )
+                            ShellBookmarks_Load()
+                            Check "  the loader leaves the caret where it was", _
+                                  (SciMsg(g_view->pSci, SCI_GETCURRENTPOS, 0, 0) = nWant), _
+                                  str(SciMsg(g_view->pSci, SCI_GETCURRENTPOS, 0, 0)) & _
+                                  " wanted " & str(nWant)
+                        end scope
+
                         '' A DOCUMENT WITH NO BOOKMARKS CONTRIBUTES NO HEADER -- tiko's
                         '' `if len(sBookmarks)` guard. Without it the panel lists every open
                         '' file whether or not it has anything in it.

@@ -72,6 +72,14 @@
 #include once "mdParse.inc"
 #include once "mdHilite.inc"
 
+'' ---- the renderer ----------------------------------------------------------------------
+'' mdFonts and mdLayout sit on PsPlatform's PAINT layer -- PsTextEngine and PsImage -- but
+'' reach no widget, no surface and no colour. MarkdownView is the only file here that knows
+'' what a theme is.
+#include once "mdFonts.inc"
+#include once "mdLayout.inc"
+#include once "MarkdownView.inc"
+
 
 '' ========================================================================================
 '' MODES
@@ -80,6 +88,7 @@
 ''                parser and highlighter suites. Exit non-zero on failure. WINDOWLESS, NOT
 ''                HEADLESS -- SDL's video subsystem is initialised because the text engine
 ''                needs it. No window is shown.
+''   --open <path>     render one .md file instead of the built-in demo
 ''   --dump-md <path>
 ''                parse one .md file and print the block model, one line per block, then
 ''                every line the parser could not classify. No window, no font, no SDL.
@@ -139,48 +148,39 @@ dim shared as DWSTRING g_sTopic, g_sDocset, g_sRoot, g_sTheme
 
 
 '' ---------------------------------------------------------------------------------------
-'' PageStub -- the markdown pane's stand-in: IN THE TREE, IN THE RIGHT PLACE, WITH NOTHING
-'' BEHIND IT. Replaced by MarkdownView in phase 3.
+'' AppRoot -- the root widget, which exists to PAINT.
 ''
-'' It paints its own bounds because reading them off the screen is the fastest way to find a
-'' band that is one scrollbar out, and because an empty real view would look correct anywhere.
+'' A plain PsWidget draws nothing, and PsPaintWalk does not clear behind it, so whatever the
+'' bands do not cover shows the uninitialised buffer -- black. The toolbar band is exactly
+'' that: the nav buttons and the search box size themselves and the strip beside them belongs
+'' to nobody. Invisible against a dark theme and glaring against a light one, which is how it
+'' got found.
 '' ---------------------------------------------------------------------------------------
-type PageStub extends PsWidget
-    sLabel as DWSTRING
-    nRole  as long = PSTHEME_BACKGROUND
-    declare constructor(byval szLabel as zstring ptr, byval nRoleIn as long)
-    declare sub OnPaint(byval p as PsBufferPaint_ ptr)
+type AppRoot extends PsWidget
+    clrBack as PsColor
+    declare constructor()
+    declare sub OnPaint( byval p as PsBufferPaint_ ptr )
+    declare sub OnThemeChanged()
 end type
 
-constructor PageStub(byval szLabel as zstring ptr, byval nRoleIn as long)
-    this.sLabel.Utf8 = *szLabel
-    this.nRole = nRoleIn
-    '' Stubs take no focus. A Tab that stopped on a placeholder would be a Tab order the real
-    '' view will not have, and the traversal is tree order -- see PsDispatch.
+constructor AppRoot()
     this.bFocusable = false
+    this.OnThemeChanged()
 end constructor
 
-sub PageStub.OnPaint(byval p as PsBufferPaint_ ptr)
+sub AppRoot.OnThemeChanged()
+    '' BACKGROUNDALT, the same role the TOC and the status bar take: the bands are chrome and
+    '' only the document pane is the page.
+    this.clrBack = PsThemeRoleColor( PSTHEME_BACKGROUNDALT )
+    this.Invalidate()
+end sub
+
+sub AppRoot.OnPaint( byval p as PsBufferPaint_ ptr )
     if p = 0 then exit sub
-    dim as PsBufferPaint ptr q = cptr(PsBufferPaint ptr, p)
-
-    '' Bounds-relative, like every control: the walker has already set the origin.
-    dim as PsRect rcAll = PsRc(0, 0, this.bounds.w, this.bounds.h)
-
-    q->SetBackColor( PsThemeRoleColor(this.nRole) )
-    q->PaintRect( @rcAll )
-    q->SetPenColor( PsThemeRoleColor(PSTHEME_BORDER) )
-    q->PaintBorderRect( @rcAll, 1 )
-
-    q->SetForeColor( PsThemeRoleColor(PSTHEME_FOREGROUND) )
-    q->PaintText( this.sLabel, @rcAll, PSTF_CENTER or PSTF_VCENTER )
-
-    dim as DWSTRING sGeom
-    sGeom.Utf8 = str(this.bounds.x) & "," & str(this.bounds.y) & "," & _
-                 str(this.bounds.w) & "x" & str(this.bounds.h)
-    dim as PsRect rcGeom = PsRc(0, rcAll.h - this.ScaleY(22), rcAll.w, this.ScaleY(18))
-    q->SetForeColor( PsThemeRoleColor(PSTHEME_FOREGROUNDDIM) )
-    q->PaintText( sGeom, @rcGeom, PSTF_CENTER or PSTF_VCENTER )
+    dim as PsBufferPaint ptr q = cptr( PsBufferPaint ptr, p )
+    dim as PsRect rc = PsRc(0, 0, this.bounds.w, this.bounds.h)
+    q->SetBackColor( this.clrBack )
+    q->PaintRect( @rc )
 end sub
 
 
@@ -192,7 +192,7 @@ dim shared as PsToolbar   ptr g_nav
 dim shared as PsTextBox   ptr g_search
 dim shared as PsListTree  ptr g_toc
 dim shared as PsSplitter  ptr g_split
-dim shared as PageStub    ptr g_page
+dim shared as MarkdownView ptr g_page
 dim shared as PsStatusBar ptr g_status
 
 declare sub LayoutAll( byref surf as PsSurface )
@@ -214,8 +214,19 @@ sub OnNavCommand( byval pBar as any ptr, byval nId as long, byval ud as any ptr 
     '' unreachable rather than empty -- stated because a silent no-op handler reads as a bug.
 end sub
 
+
+'' Phase 4 owns navigation. Until then a link reports where it would have gone, which is the
+'' only honest thing a handler with no history stack and no corpus index can do.
+sub OnDocLink( byval pView as any ptr, byref sHref as string, byval ud as any ptr )
+    if g_status <> 0 then
+        dim as DWSTRING s
+        s.Utf8 = "link: " & sHref
+        g_status->SetText( 0, s )
+    end if
+end sub
+
 sub BuildTree( byref surf as PsSurface )
-    g_root = new PsWidget
+    g_root = new AppRoot
     g_root->bClipsChildren = false
     surf.SetRoot( g_root )                    '' the surface takes ownership
 
@@ -247,7 +258,8 @@ sub BuildTree( byref surf as PsSurface )
     g_split->OnMove( @OnSplitMove )
     g_root->AddChild( g_split )
 
-    g_page = new PageStub( "markdown view -- phase 3", PSTHEME_BACKGROUND )
+    g_page = new MarkdownView
+    g_page->OnLink( @OnDocLink )
     g_root->AddChild( g_page )
 
     g_status = new PsStatusBar
@@ -357,6 +369,11 @@ sub ApplyScale( byref surf as PsSurface, byval fIn as single )
         end if
         g_nFontPx = px
     end if
+
+    '' AND THE PAGE'S TEN, which is a FOURTH thing and not the same as step 1. g_te is what
+    '' the CONTROLS measure with; the document has its own set and reopening one does nothing
+    '' for the other. The symptom is a perfectly scaled shell with an unscaled page in it.
+    MdFontsApplyScale( f )
 
     surf.fScale = f
     if surf.pRoot then surf.pRoot->PropagateScaleChanged( f )
@@ -497,12 +514,13 @@ end sub
 
 '' ======================================================================== main
     dim as boolean bSelfTest = false
-    dim as DWSTRING g_sDumpMd
+    dim as DWSTRING g_sDumpMd, g_sOpen
     for i as integer = 1 to __FB_ARGC__ - 1
         dim as string sArg = command(i)
         select case sArg
             case "--selftest" : bSelfTest = true
             case "--dump-md"  : if i < __FB_ARGC__ - 1 then g_sDumpMd = command(i + 1)
+            case "--open"     : if i < __FB_ARGC__ - 1 then g_sOpen   = command(i + 1)
             case "--topic"    : if i < __FB_ARGC__ - 1 then g_sTopic  = command(i + 1)
             case "--docset"   : if i < __FB_ARGC__ - 1 then g_sDocset = command(i + 1)
             case "--root"     : if i < __FB_ARGC__ - 1 then g_sRoot   = command(i + 1)
@@ -533,6 +551,15 @@ end sub
     end if
     g_nFontPx = FM_FONT_PX
 
+    '' The page's OWN ten, separate from the one the CONTROLS measure with. The controls take
+    '' their engine from surf.pText and there is exactly one of those; the document needs ten
+    '' and picks per run.
+    if MdFontsInit( FontDir(), 1.0 ) = false then
+        print "F1Markdown: missing font faces -- " & MdFontsMissing()
+        print "  looked in " & FontDir()
+        end 1
+    end if
+
     dim as PsSurface surf
     g_pSurf     = @surf
     surf.fScale = 1.0
@@ -555,6 +582,27 @@ end sub
         dim as long n = PsThemeLoadFile( sTheme )
         if n = 0 then print "F1Markdown: no theme loaded from " & sTheme.Utf8
         PsThemeApply( surf.pRoot )
+    end scope
+
+    '' ---- the document ----------------------------------------------------------------
+    '' --open reads a file; otherwise the demo, which is the SAME string the layout tests
+    '' assert against, so the interactive pass and the suite look at one document.
+    scope
+        if len(g_sOpen) > 0 then
+            dim as boolean bOk = false
+            dim as string sBytes = PsFileReadAll( g_sOpen, bOk )
+            if bOk then
+                dim as PsEncodingId enc
+                dim as DWSTRING sText = PsEncDecodeAuto( sBytes, enc )
+                g_page->SetMarkdown( sText.Utf8, PsPathDirWithSep(g_sOpen).Utf8 )
+                g_status->SetText( 0, g_sOpen )
+            else
+                print "F1Markdown: cannot read " & g_sOpen.Utf8
+            end if
+        else
+            dim as string sNone = ""
+            g_page->SetMarkdown( MdDemoMarkdown(), sNone )
+        end if
     end scope
 
     LayoutAll( surf )
@@ -603,8 +651,12 @@ end sub
         '' geometry failure is not buried under a hundred parser lines.
         MdRunParserTests()
         MdRunHiliteTests()
+        MdRunFontTests()
+        MdRunLayoutTests()
 
         print "--- " & str(g_nPass) & " passed, " & str(g_nFail) & " failed ---"
+        MdFontsFree()
+        MdLayoutFreeImages()
         TE_Free( g_te )
         PsPlatformShutdown()
         if g_nFail > 0 then end 1
@@ -734,6 +786,8 @@ end sub
 
     if pix <> 0 then deallocate(pix)
     g_plat.window.Destroy( win )
+    MdFontsFree()
+    MdLayoutFreeImages()
     TE_Free( g_te )
     PsPlatformShutdown()
     end 0

@@ -358,3 +358,202 @@ sub MdRunHiliteTests()
     CheckTiles "plain text, no language", MDL_NONE, "anything at all"
     CheckTiles "utf8 bytes survive", MDL_FB, "print " & Chr(34) & Chr(226) & Chr(134) & Chr(146) & Chr(34)
 end sub
+
+
+'' ---------------------------------------------------------------------------------------
+'' fonts
+'' ---------------------------------------------------------------------------------------
+sub MdRunFontTests()
+    print "  -- fonts: ten engines, and they really are six faces --"
+    dim as boolean bAll = true
+    for i as long = 0 to MDF_COUNT - 1
+        if MdFontPtr(i)->lineHeight <= 0 then bAll = false
+    next
+    Check "all ten engines opened", bAll, MdFontsMissing()
+
+    '' THE VARIABLE-FONT TRAP, ASSERTED. A variable file loads and renders its default
+    '' instance, so a "bold" opened from one measures IDENTICALLY to the regular and nothing
+    '' errors anywhere. Comparing the two widths is the cheapest thing that can tell them
+    '' apart, and it is the entire reason six static faces were shipped.
+    dim as string sSpec = "Handgloves"
+    dim as long nReg  = TE_MeasureText64( *MdFontPtr(MDF_BODY),   sSpec )
+    dim as long nBold = TE_MeasureText64( *MdFontPtr(MDF_BODY_B), sSpec )
+    dim as long nItal = TE_MeasureText64( *MdFontPtr(MDF_BODY_I), sSpec )
+    Check "bold is a different face from regular", (nBold <> nReg), _
+          str(nBold) & " vs " & str(nReg)
+    Check "italic is a different face from regular", (nItal <> nReg), _
+          str(nItal) & " vs " & str(nReg)
+
+    '' And that the mono face really is monospaced. With the wrong file, code still renders
+    '' -- just misaligned, which is the kind of wrong that survives a glance at a screenshot.
+    dim as long nNarrow = TE_MeasureText64( *MdFontPtr(MDF_MONO), "iiii" )
+    dim as long nWide   = TE_MeasureText64( *MdFontPtr(MDF_MONO), "MMMM" )
+    Check "the mono face is monospaced", (nNarrow = nWide), _
+          str(nNarrow) & " vs " & str(nWide)
+    dim as long nPropN = TE_MeasureText64( *MdFontPtr(MDF_BODY), "iiii" )
+    dim as long nPropW = TE_MeasureText64( *MdFontPtr(MDF_BODY), "MMMM" )
+    Check "the body face is proportional", (nPropN <> nPropW), _
+          str(nPropN) & " vs " & str(nPropW)
+
+    Check "h1 is larger than the body", _
+          (MdFontPtr(MDF_H1)->lineHeight > MdFontPtr(MDF_BODY)->lineHeight)
+    Check "style bits pick the right engine", _
+          (MdFontForInline(MDS_BOLD or MDS_ITALIC) = MDF_BODY_BI) andalso _
+          (MdFontForInline(MDS_CODE or MDS_ITALIC) = MDF_MONO) andalso _
+          (MdFontForHeading(6) = MDF_BODY_B)
+end sub
+
+
+'' One of every block kind, because a layout assertion about a paragraph proves nothing
+'' about a table. Also what --demo renders, so the interactive pass and the tests look at
+'' exactly the same document.
+function MdDemoMarkdown() as string
+    dim as string s
+    s  = "# F1Markdown" & NL() & NL()
+    s &= "A **native** markdown viewer with *emphasis*, `inline code` and a " & _
+         "[link](CWindow.md) in one paragraph, long enough that it has to wrap at any " & _
+         "sensible pane width and therefore exercises the run-aware wrapper across a " & _
+         "style change." & NL() & NL()
+    s &= "## Blocks" & NL() & NL()
+    s &= "- a bullet" & NL() & "- another, with a continuation line" & NL()
+    s &= "  that belongs to the same item" & NL() & NL()
+    s &= "1. first" & NL() & "2. second" & NL() & NL()
+    s &= "> a callout, quoted" & NL() & NL()
+    s &= "```freebasic" & NL()
+    s &= "dim as hwnd h = CreateWindowEx( 0, " & Chr(34) & "MyClass" & Chr(34) & ", _" & NL()
+    s &= "    " & Chr(34) & "Title" & Chr(34) & ", WS_OVERLAPPEDWINDOW, 0, 0, 640, 480 )  ' note" & NL()
+    s &= "```" & NL() & NL()
+    s &= "| Return | Meaning |" & NL()
+    s &= "|--------|---------|" & NL()
+    s &= "| HWND   | Handle to the new window |" & NL()
+    s &= "| NULL   | Failed -- call **GetLastError** |" & NL() & NL()
+    s &= "---" & NL() & NL()
+    s &= "### Done" & NL() & NL()
+    s &= "That is every block kind the parser emits." & NL()
+    return s
+end function
+
+
+'' ---------------------------------------------------------------------------------------
+'' layout
+'' ---------------------------------------------------------------------------------------
+sub MdRunLayoutTests()
+    print "  -- layout --"
+    dim as MdDoc doc
+    dim as MdPage page
+    dim as string sMd = MdDemoMarkdown()
+    dim as string sBase = ""
+    MdParse( sMd, doc )
+
+    const LW = 700
+    MdLayoutPage( doc, page, LW, 1.0, sBase )
+
+    Check "the demo parsed", (doc.nBlk > 12), str(doc.nBlk) & " blocks"
+    Check "lines were produced", (page.nLine > 12), str(page.nLine) & " lines"
+    Check "the page has a height", (page.nHeight > 200), str(page.nHeight)
+    Check "the width is recorded", (page.nWidth = LW)
+
+    '' THE WRAP INVARIANT, and the one assertion that catches a wrapper measuring with the
+    '' wrong engine: nothing except a code fence may extend past the width it was given.
+    '' Fences are excluded BY DESIGN -- they do not wrap and the view clips them -- so they
+    '' are counted separately rather than quietly skipped.
+    dim as long nOver = 0, nFenceOver = 0, nWidest = 0
+    for r as long = 0 to page.nRun - 1
+        dim as long nRight = page.run(r).x + page.run(r).w
+        if page.run(r).nKind = MDRK_FENCE then
+            if nRight > LW then nFenceOver += 1
+        else
+            if nRight > nWidest then nWidest = nRight
+            if nRight > LW then nOver += 1
+        end if
+    next
+    Check "no wrapped run passes the layout width", (nOver = 0), _
+          str(nOver) & " over, widest " & str(nWidest) & " of " & str(LW)
+    Check "the demo fence fits too", (nFenceOver = 0), str(nFenceOver) & " over"
+
+    '' A baseline outside its own line box draws on top of the line above.
+    dim as long nBadLine = 0
+    for l as long = 0 to page.nLine - 1
+        if page.line(l).h <= 0 then nBadLine += 1
+        if page.line(l).nBaseline <= 0 then nBadLine += 1
+        if page.line(l).nBaseline > page.line(l).h then nBadLine += 1
+    next
+    Check "every line has a sane box", (nBadLine = 0), str(nBadLine) & " bad"
+
+    '' Narrower means more lines. A wrapper that ignored its width passes everything above
+    '' and fails this.
+    dim as MdPage narrow
+    MdLayoutPage( doc, narrow, 340, 1.0, sBase )
+    Check "a narrower width wraps more", (narrow.nLine > page.nLine), _
+          str(narrow.nLine) & " vs " & str(page.nLine)
+    Check "and is therefore taller", (narrow.nHeight > page.nHeight), _
+          str(narrow.nHeight) & " vs " & str(page.nHeight)
+
+    dim as long nCodeBg = 0, nRule = 0, nQuote = 0, nTable = 0, nHead = 0
+    for d as long = 0 to page.nDeco - 1
+        select case page.deco(d).nKind
+            case MDD_CODEBG      : nCodeBg += 1
+            case MDD_RULE        : nRule += 1
+            case MDD_QUOTEBAR    : nQuote += 1
+            case MDD_TABLELINE   : nTable += 1
+            case MDD_TABLEHEADBG : nHead += 1
+        end select
+    next
+    Check "the fence got a slab", (nCodeBg = 1), str(nCodeBg)
+    Check "h1 and h2 underlines plus the explicit rule", (nRule = 3), str(nRule) & " rules"
+    Check "the blockquote got a bar", (nQuote = 1), str(nQuote)
+    Check "the table got a header band and grid lines", _
+          cbool(nHead = 1) andalso cbool(nTable = 4), _
+          str(nHead) & " head, " & str(nTable) & " lines"
+
+    '' The demo has bold, italic, code and a link in ONE paragraph, so all four must have
+    '' survived parse, segmentation and wrapping to reach a run.
+    dim as boolean bB = false, bI = false, bC = false, bL = false
+    for r as long = 0 to page.nRun - 1
+        if page.run(r).nFont = MDF_BODY_B then bB = true
+        if page.run(r).nFont = MDF_BODY_I then bI = true
+        if page.run(r).nFont = MDF_MONO   then bC = true
+        if page.run(r).nKind = MDRK_LINK  then bL = true
+    next
+    Check "bold reached a run", bB
+    Check "italic reached a run", bI
+    Check "monospace reached a run", bC
+    Check "a link run was produced", bL
+
+    '' Hit-testing, which is the path a click on a link takes.
+    dim as long nLinkRun = -1
+    for r as long = 0 to page.nRun - 1
+        if page.run(r).nKind = MDRK_LINK then nLinkRun = r : exit for
+    next
+    if nLinkRun >= 0 then
+        dim as long nLineOf = -1
+        for l as long = 0 to page.nLine - 1
+            if cbool(nLinkRun >= page.line(l).nFirstRun) andalso _
+               cbool(nLinkRun < page.line(l).nFirstRun + page.line(l).nRunCount) then
+                nLineOf = l : exit for
+            end if
+        next
+        dim as long nHit = -1
+        if nLineOf >= 0 then
+            nHit = MdPageHitRun( page, page.run(nLinkRun).x + 1, page.line(nLineOf).y + 1 )
+            Check "the link hit-tests back to itself", (nHit = nLinkRun), _
+                  "hit " & str(nHit) & ", want " & str(nLinkRun)
+            Check "a point left of the content hits nothing", _
+                  (MdPageHitRun( page, -5, page.line(nLineOf).y + 1 ) = -1)
+        else
+            Check "the link hit-tests back to itself", false, "run is on no line"
+        end if
+    else
+        Check "the link hit-tests back to itself", false, "no link run"
+    end if
+
+    '' Every metric is a design unit, so the same document at 1.75 must be taller -- and the
+    '' FONTS have to be reopened first or the text would not be, which is the four-part DPI
+    '' change asserted from the page's side.
+    MdFontsApplyScale( 1.75 )
+    dim as MdPage big
+    MdLayoutPage( doc, big, PsScaleBy(LW, 1.75), 1.75, sBase )
+    Check "the page scales with the display", (big.nHeight > page.nHeight), _
+          str(big.nHeight) & " vs " & str(page.nHeight)
+    MdFontsApplyScale( 1.0 )
+end sub

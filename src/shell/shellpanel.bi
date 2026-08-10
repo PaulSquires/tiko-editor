@@ -283,9 +283,15 @@ function ShellBookmarks_ClearAllDocs() as boolean
     '' view. Without the switch this clears the foreground document N times and leaves every
     '' other document's bookmarks exactly where they were.
     dim as any ptr pWasDoc = 0
+    '' CARET AND SCROLL SAVED TOO -- see ShellBookmarks_Load. Any walk that points the view
+    '' at another document owes the user their position back, and this is the second of the
+    '' two walks in this file.
+    dim as long nWasPos = 0, nWasFirst = 0
     if g_view <> 0 then
         pWasDoc = cast( any ptr, g_view->Msg(SCI_GETDOCPOINTER, 0, 0) )
         if pWasDoc <> 0 then g_view->Msg( SCI_ADDREFDOCUMENT, 0, cast(integer, pWasDoc) )
+        nWasPos   = SciMsg( g_view->pSci, SCI_GETCURRENTPOS, 0, 0 )
+        nWasFirst = SciMsg( g_view->pSci, SCI_GETFIRSTVISIBLELINE, 0, 0 )
     end if
 
     dim pDoc as clsDocument ptr = gApp.pDocList
@@ -301,6 +307,8 @@ function ShellBookmarks_ClearAllDocs() as boolean
     if (g_view <> 0) andalso (pWasDoc <> 0) then
         g_view->Msg( SCI_SETDOCPOINTER, 0, cast(integer, pWasDoc) )
         g_view->Msg( SCI_RELEASEDOCUMENT, 0, cast(integer, pWasDoc) )
+        SciMsg( g_view->pSci, SCI_GOTOPOS, nWasPos, 0 )
+        SciMsg( g_view->pSci, SCI_SETFIRSTVISIBLELINE, nWasFirst, 0 )
     end if
 
     ShellPanel_Clear()
@@ -328,9 +336,20 @@ sub ShellBookmarks_Load()
     '' was showing. Without the ADDREF the shell's own document is freed while the user is
     '' looking at it.
     dim as any ptr pWasDoc = 0
+    '' ---- AND THE CARET AND SCROLL WITH IT, WHICH IS NOT THE SAME THING -----------------
+    '' SCI_SETDOCPOINTER RE-ATTACHES A DOCUMENT AND RESETS THE VIEW'S CARET AND SCROLL.
+    '' Position belongs to the VIEW, not to the document -- the same fact ShellTabs_Show
+    '' exists to work around when switching tabs -- so pointing the view away and back is
+    '' NOT a no-op, even when it is the same document both times.
+    ''
+    '' REPORTED BY THE AUTHOR: Ctrl+F2 set the bookmark and then threw the caret to line 1,
+    '' column 1, because toggling reloads the panel and the reload walked the documents.
+    dim as long nWasPos = 0, nWasFirst = 0
     if g_view <> 0 then
         pWasDoc = cast( any ptr, g_view->Msg(SCI_GETDOCPOINTER, 0, 0) )
         if pWasDoc <> 0 then g_view->Msg( SCI_ADDREFDOCUMENT, 0, cast(integer, pWasDoc) )
+        nWasPos   = SciMsg( g_view->pSci, SCI_GETCURRENTPOS, 0, 0 )
+        nWasFirst = SciMsg( g_view->pSci, SCI_GETFIRSTVISIBLELINE, 0, 0 )
     end if
 
     '' gApp.pDocList, exactly as tiko walks it -- the list this binary only started
@@ -371,6 +390,11 @@ sub ShellBookmarks_Load()
     if (g_view <> 0) andalso (pWasDoc <> 0) then
         g_view->Msg( SCI_SETDOCPOINTER, 0, cast(integer, pWasDoc) )
         g_view->Msg( SCI_RELEASEDOCUMENT, 0, cast(integer, pWasDoc) )
+        '' PUT THE USER BACK. Caret first, then the scroll: SCI_GOTOPOS scrolls to reveal
+        '' the caret, so setting first-visible before it would be undone -- the same
+        '' ordering ShellTabs_Show documents.
+        SciMsg( g_view->pSci, SCI_GOTOPOS, nWasPos, 0 )
+        SciMsg( g_view->pSci, SCI_SETFIRSTVISIBLELINE, nWasFirst, 0 )
     end if
 
     g_panel->EndUpdate()
