@@ -250,8 +250,9 @@ function clsTopTabCtl.SetFocusTab( byval idx as long ) as long
 
                 dim pDoc as clsDocument ptr = this.GetpDoc(idx)
                 if pDoc then
-                    AfxRedrawWindow( DocView(pDoc, 0) )  ' makes the code window display quicker especially when loading Project.
-                    AfxRedrawWindow( DocView(pDoc, 1) )  ' makes the code window display quicker especially when loading Project.
+                    ' makes the code window display quicker especially when loading Project.
+                    gAppHost.InvalidateView( pDoc->hWindow(0) )
+                    gAppHost.InvalidateView( pDoc->hWindow(1) )
 
                     ' We have moved to a new Tab. If Find is open then highlight any search phrase.   
                     FindReplace_HighlightSearches()
@@ -272,7 +273,7 @@ function clsTopTabCtl.SetFocusTab( byval idx as long ) as long
 
                     ' If moving to a new Tab and the Find panel is closed then ensure that we 
                     ' remove any find occurrence highlights.
-                    if IsWindowVisible(HWND_FRMMAIN_FIND) = 0 then pDoc->RemoveSelectionAttributes()
+                    if gAppHost.IsFindVisible() = false then pDoc->RemoveSelectionAttributes()
                 end if
 
     function = PsTabBar_GetCurSel( this.hWindow )
@@ -330,7 +331,7 @@ end function
 ''
 function clsTopTabCtl.CloseTab( byval nTabIdx as long = -1) as long
     ' Invoked by clicking "X" on tab
-    OnCommand_FileClose( HWND_FRMMAIN, EFC_CLOSECURRENT, nTabIdx )
+    gAppHost.CloseTab( nTabIdx )
     function = 0
 end function
 

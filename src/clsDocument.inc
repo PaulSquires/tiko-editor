@@ -62,7 +62,9 @@ end function
 ''
 ''
 function clsDocument.GetActiveScintillaPtr() as any ptr
-    dim as HWND hEdit = this.hWndActiveScintilla
+    '' any ptr, not HWND: this only ever COMPARES the handle against the two stored views,
+    '' which are themselves any ptr. Naming the Win32 type here bought nothing.
+    dim as any ptr hEdit = this.hWndActiveScintilla
     for i as long = lbound(this.hWindow) to ubound(this.hWindow)
         if this.hWindow(i) = hEdit then return pSci(i)
     next
@@ -141,7 +143,7 @@ function clsDocument.DestroyScintillaWindows() as long
 
     for i as long = lbound(this.hWindow) to ubound(this.hWindow)
         if this.hWindow(i) then 
-            DestroyWindow( this.hWindow(i) )
+            gAppHost.DestroyView( this.hWindow(i) )
             this.hWindow(i) = 0
         end if
     next
@@ -160,27 +162,14 @@ function clsDocument.CreateScintillaWindows() as long
         ' hWindow uses and ~90 hWndActiveScintilla sites elsewhere are untouched.
         ' Behind it there is no Scintilla window at all: a PsSurface holding a
         ' PsSciView, painted with Blend2D. See frmSciHost.bi.
-        this.hWindow(i) = SciHost_Create( HWND_FRMMAIN, IDC_SCINTILLA + i )
+        ' PHASE 7c STEP 3: the HOST makes the view. It was SciHost_Create(HWND_FRMMAIN, ...)
+        ' here, which is the one line that tied document creation to frmMain's window.
+        this.hWindow(i) = gAppHost.CreateView( i )
 
-        SendMessage( this.hWindow(i), SCI_SETMODEVENTMASK, _
-                        SC_MOD_INSERTTEXT or SC_MOD_DELETETEXT, 0 )
-    
         ' Initialize our direct access to the Scintilla code windows. This is much faster than
-        ' using SendMessage to the window. Only need to initialize once no matter how many
+        ' sending messages to the window. Only need to initialize once no matter how many
         ' code windows that are eventually opened.
-        if IsWindow(this.hWindow(i)) then
-            ' NOTE: In my testing, need to only set the Scintilla lexer to the base editing
-            ' window only and NOT both split windows. Also need to do this immediately after
-            ' the window is created and do not send the message again afterwards.
-            ' Also, every window must have a separate new call to CreateLexer. We can not
-            ' just get one lexer and then try to share it amongst multiple new windows. When
-            ' a window is destroyed then the pointer would be as well causing other existing
-            ' windows to GPF.
-            if i = 0 then
-                ' Load my custom Tiko lexer based on VB lexer from Lexilla and feed it into Scintilla
-                dim as any ptr pLexer = gApp.pfnCreateLexerfn( "tiko" )
-                SendMessage( this.hWindow(i), SCI_SETILEXER, 0, cast(LPARAM, pLexer) )
-            end if
+        if gAppHost.IsViewAlive( this.hWindow(i) ) then
             if SciMsg = 0 then
                 ' TAKEN DIRECTLY, not asked for via SCI_GETDIRECTFUNCTION. The
                 ' signatures are identical on win64 -- cdecl, (any ptr, 32-bit
@@ -192,7 +181,28 @@ function clsDocument.CreateScintillaWindows() as long
             ' The opaque editor pointer. Its PROVENANCE changed -- SciPs_Create
             ' rather than SCI_GETDIRECTPOINTER -- and nothing else did: the 398
             ' pSci uses never cared where it came from.
+            '
+            ' HOISTED ABOVE THE TWO CALLS BELOW, which used to be SendMessage to the HWND.
+            ' They are the same two messages in the same order as before; what changed is
+            ' that pSci now exists in time to carry them, so no message is addressed to a
+            ' window any more. SETMODEVENTMASK still precedes SETILEXER.
             pSci(i) = SciHost_DirectPointer( this.hWindow(i) )
+
+            SciMsg( pSci(i), SCI_SETMODEVENTMASK, _
+                    SC_MOD_INSERTTEXT or SC_MOD_DELETETEXT, 0 )
+
+            ' NOTE: In my testing, need to only set the Scintilla lexer to the base editing
+            ' window only and NOT both split windows. Also need to do this immediately after
+            ' the window is created and do not send the message again afterwards.
+            ' Also, every window must have a separate new call to CreateLexer. We can not
+            ' just get one lexer and then try to share it amongst multiple new windows. When
+            ' a window is destroyed then the pointer would be as well causing other existing
+            ' windows to GPF.
+            if i = 0 then
+                ' Load my custom Tiko lexer based on VB lexer from Lexilla and feed it into Scintilla
+                dim as any ptr pLexer = gApp.pfnCreateLexerfn( "tiko" )
+                SciMsg( pSci(i), SCI_SETILEXER, 0, cast(integer, pLexer) )
+            end if
         end if
     next
 
@@ -204,7 +214,7 @@ function clsDocument.CreateScintillaWindows() as long
     
     ' Get the document pointer from our main control and assign it to the other split windows
     dim as any ptr pDoc = cast(any ptr, SciMsg(pSci(0), SCI_GETDOCPOINTER, 0, 0))
-    if pDoc then SciMsg( pSci(1), SCI_SETDOCPOINTER, 0, cast(LPARAM, pDoc)) 
+    if pDoc then SciMsg( pSci(1), SCI_SETDOCPOINTER, 0, cast(integer, pDoc)) 
             
     function = 0
 
@@ -315,7 +325,7 @@ function clsDocument.FindReplace( _
     SciMsg( pSci, SCI_SETSEARCHFLAGS, findFlags, 0)
 
     ' Search the text to replace
-    newPos = SciMsg( pSci, SCI_SEARCHINTARGET, len(strFindText), cast(LPARAM, strptr(strFindText)) )
+    newPos = SciMsg( pSci, SCI_SEARCHINTARGET, len(strFindText), cast(integer, strptr(strFindText)) )
     
     ' return -1 if not found
     if newPos = - 1 then return -1
@@ -331,7 +341,7 @@ function clsDocument.FindReplace( _
     if len(strReplaceText) = 0 then
         SciMsg( pSci, SCI_CUT, 0, 0 )
     else
-        SciMsg( pSci, SCI_REPLACESEL, 0, cast(LPARAM, strptr(strReplaceText)) )
+        SciMsg( pSci, SCI_REPLACESEL, 0, cast(integer, strptr(strReplaceText)) )
     end if
     gApp.SuppressNotify = false
     
@@ -345,13 +355,13 @@ end function
 function clsDocument.InsertFile() as boolean
     dim as any ptr pSci = this.GetActiveScintillaPtr()
     ' Display the Open File Dialog
-    dim pwszName as wstring ptr = AfxIFileOpenDialogW(HWND_FRMMAIN, IDM_INSERTFILE)
-    if pwszName then
+    '' The HOST asks. It owns the dialog and the CoTaskMemFree that used to be here.
+    dim as DWSTRING wszPick
+    if gAppHost.AskOpenPath( wszPick ) then
         ' save the main file encoding because GetFileTostring may change it
         dim as string sText
-        GetFileTostring(*pwszName, sText, @this)
-        SciMsg( pSci, SCI_INSERTTEXT, -1, cast(LPARAM, strptr(sText)) )
-        CoTaskMemFree pwszName
+        GetFileTostring(*wszPick.Wz(), sText, @this)
+        SciMsg( pSci, SCI_INSERTTEXT, -1, cast(integer, strptr(sText)) )
         this.ApplyProperties()
     end if
     
@@ -391,14 +401,13 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
     wszFilename = this.Diskfilename
         
     if bSaveAs then
-        ' Display the Save File Dialog
-        dim pwszName as wstring ptr = AfxIFileSaveDialog(HWND_FRMMAIN, @wszFilename, @wszExtension, IDM_FILESAVEAS)
-        if pwszName then
-            wszFilename = *pwszName
-            CoTaskMemFree(pwszName)
-        else
+        ' Display the Save File Dialog. The HOST owns it, and the CoTaskMemFree that used to
+        ' be here with it.
+        dim as DWSTRING wszPick = wszFilename, wszExt = wszExtension
+        if gAppHost.AskSavePath( wszPick, wszExt ) = false then
             return true  ' file save cancelled
         end if
+        wszFilename = *wszPick.Wz()
     end if
 
     dim as any ptr pSci = this.GetActiveScintillaPtr()
@@ -522,7 +531,7 @@ function clsDocument.GetTextRange( _
     txtrg.chrg.cpMax = cpMax
     buffer = space(cpMax - cpMin + 1)
     txtrg.lpstrText = strptr(buffer)
-    SciMsg(pSci, SCI_GETTEXTRANGE, 0, cast(LPARAM, @txtrg))
+    SciMsg(pSci, SCI_GETTEXTRANGE, 0, cast(integer, @txtrg))
     p = PsInStr(buffer, chr(0))
     if p then buffer = PsLeft(buffer, p - 1).Utf8
     function = buffer
@@ -568,7 +577,7 @@ function clsDocument.ChangeSelectionCase( byval fcase as long) as long
     end if
     
     ' Replace the selected text
-    SciMsg( pSci, SCI_REPLACESEL, 0, cast(LPARAM, strptr(strText)))
+    SciMsg( pSci, SCI_REPLACESEL, 0, cast(integer, strptr(strText)))
 
     function = 0
 end function
@@ -584,7 +593,7 @@ function clsDocument.RemoveSelectionAttributes() as long
     SciMsg( pSci(0), SCI_TARGETWHOLEDOCUMENT, 0, 0)
     startPos = SciMsg( pSci(0), SCI_GETTARGETSTART, 0, 0)
     endPos =  SciMsg( pSci(0), SCI_GETTARGETEND, 0, 0)
-    SciMsg( pSci(0), SCI_INDICATORCLEARRANGE, startPos, cast(LPARAM, endPos))
+    SciMsg( pSci(0), SCI_INDICATORCLEARRANGE, startPos, cast(integer, endPos))
     function = 0
 end function
 
@@ -681,7 +690,7 @@ function clsDocument.GetLine( byval nLine as long ) as string
     nLen = SciMsg( pSci, SCI_LINELENGTH, nLine , 0)
     if nLen < 1 then exit function
     buffer = space(nLen)
-    SciMsg( pSci, SCI_GETLINE, nLine, cast(LPARAM, strptr(buffer)))
+    SciMsg( pSci, SCI_GETLINE, nLine, cast(integer, strptr(buffer)))
     function = RTrim(buffer, any chr(13,10))
 end function
 
@@ -693,7 +702,7 @@ function clsDocument.SetLine( byval nLineNum as long, byval sText as string) as 
     dim nEndPos   as long = SciMsg( pSci, SCI_GETLINEENDPOSITION, nLineNum, 0)
     SciMsg( pSci, SCI_SETTARGETSTART, nStartPos, 0)
     SciMsg( pSci, SCI_SETTARGETEND, nEndPos, 0)
-    SciMsg( pSci, SCI_REPLACETARGET, len(sText), cast(LPARAM, strptr(sText))) 
+    SciMsg( pSci, SCI_REPLACETARGET, len(sText), cast(integer, strptr(sText))) 
     function = 0
 end function
 
@@ -706,7 +715,7 @@ function clsDocument.GetSelText() as string
     nLen = SciMsg( pSci, SCI_GETSELTEXT, 0, 0)
     if nLen < 1 then exit function
     buffer = space(nLen)
-    SciMsg( pSci, SCI_GETSELTEXT, 0, cast(LPARAM, strptr(buffer)))
+    SciMsg( pSci, SCI_GETSELTEXT, 0, cast(integer, strptr(buffer)))
     function = buffer
 end function
 
@@ -719,7 +728,7 @@ function clsDocument.GetText() as string
     nLen = SciMsg( pSci, SCI_GETLENGTH, 0 , 0)
     if nLen < 1 then exit function
     buffer = space(nLen+1)
-    SciMsg( pSci, SCI_GETTEXT, nLen+1, cast(LPARAM, strptr(buffer)) )
+    SciMsg( pSci, SCI_GETTEXT, nLen+1, cast(integer, strptr(buffer)) )
     function = buffer
 end function
 
@@ -728,7 +737,7 @@ end function
 function clsDocument.SetText( byref sText as const string ) as long 
     ' Set the text into the scintilla buffer and make the buffer not dirty
     dim as any ptr pSci = this.GetActiveScintillaPtr()
-    SciMsg( pSci, SCI_SETTEXT, 0, cast(LPARAM, strptr(sText)) )
+    SciMsg( pSci, SCI_SETTEXT, 0, cast(integer, strptr(sText)) )
     SciMsg( pSci, SCI_SETSAVEPOINT, 0, 0)
     SciMsg( pSci, SCI_EMPTYUNDOBUFFER, 0, 0)
     this.UserModified = false
@@ -741,7 +750,7 @@ end function
 ''
 function clsDocument.AppendText( byref sText as const string ) as long 
     dim as any ptr pSci = this.GetActiveScintillaPtr()
-    SciMsg( pSci, SCI_APPENDTEXT, len(sText), cast(LPARAM, strptr(sText)) )
+    SciMsg( pSci, SCI_APPENDTEXT, len(sText), cast(integer, strptr(sText)) )
     SciMsg( pSci, SCI_COLOURISE, 0, -1 )
     function = 0
 end function
@@ -1045,7 +1054,7 @@ function clsDocument.BlockComment( byval flagBlock as boolean ) as long
                 continue For
             else   
                 firstpos = SciMsg( pSci, SCI_POSITIONFROMLINE, i, 0 ) + firstpos
-                SciMsg( pSci, SCI_DELETERANGE, firstpos, cast(LPARAM, len(blockChars)) )
+                SciMsg( pSci, SCI_DELETERANGE, firstpos, cast(integer, len(blockChars)) )
             end if
             nCount += 1
         else
@@ -1053,7 +1062,7 @@ function clsDocument.BlockComment( byval flagBlock as boolean ) as long
             if len(rtrim(strText)) then
                 strNewText = blockChars
                 firstpos = SciMsg( pSci, SCI_POSITIONFROMLINE, i, 0 )
-                SciMsg( pSci, SCI_INSERTTEXT, firstpos, cast(LPARAM, strptr(strNewText)) )
+                SciMsg( pSci, SCI_INSERTTEXT, firstpos, cast(integer, strptr(strNewText)) )
                 nCount += 1
             end if   
         end if
@@ -1070,7 +1079,7 @@ function clsDocument.BlockComment( byval flagBlock as boolean ) as long
 
     SetWindowRedraw( this.hWndActiveScintilla, true )
     gApp.SuppressNotify = false
-    AfxRedrawWindow( this.hWndActiveScintilla )
+    gAppHost.InvalidateView( this.hWndActiveScintilla )
     
     function = 0
 end function
@@ -1448,11 +1457,10 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
     ' DPI ratios come from the DOCUMENT's own window, not the caller's: an excerpt view is
     ' parented elsewhere, and a plain registered class would silently give a ratio of 1 and
     ' put every margin at the wrong width above 100%.
-    dim pWindow as CWindow ptr = AfxCWindowOwnerPtr(this.hWindow(0))
-    if pWindow then
-        rxRatio = pWindow->rxRatio
-        ryRatio = pWindow->ryRatio
-    end if
+    '' The HOST knows the view's DPI ratios. This reached the owning CWindow, which is why
+    '' it could not simply read a global: a view parented elsewhere answers 1.0 and would put
+    '' every margin at the wrong width above 100%.
+    gAppHost.ViewScale( this.hWindow(0), rxRatio, ryRatio )
 
     strFontName = PsText(gConfig.EditorFontname)
     nFontSize   = PsVal(gConfig.EditorFontsize)
@@ -1486,7 +1494,7 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
         SciMsg( pSciView, SCI_BRACEHIGHLIGHTINDICATOR, 1, 9 )  ' use indicator for SCI_BRACEHIGHLIGHTINDICATOR
         SciMsg( pSciView, SCI_BRACEBADLIGHTINDICATOR, 1, 9 )   ' and SCI_BRACEBADLIGHTINDICATOR
 
-        SciMsg( pSciView, SCI_STYLESETFONT, STYLE_DEFAULT, cast(LPARAM, strptr(strFontName)) )
+        SciMsg( pSciView, SCI_STYLESETFONT, STYLE_DEFAULT, cast(integer, strptr(strFontName)) )
         SciMsg( pSciView, SCI_STYLESETSIZE, STYLE_DEFAULT, nFontSize )
         SciMsg( pSciView, SCI_SETEXTRAASCENT, nFontExtraSpace, 0 )
         SciMsg( pSciView, SCI_SETEXTRADESCENT, nFontExtraSpace, 0 )
@@ -1500,8 +1508,8 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
         SciMsg( pSciView, SCI_STYLECLEARALL, 0, 0 )  ' Copies global style to all others
             
         ' Set the style for the AutoComplete popup list
-        SciMsg( pSciView, SCI_STYLESETFONT, STYLE_AUTOCOMPLETE, cast(LPARAM, pWindow->DefaultFontName) )
-        SciMsg( pSciView, SCI_STYLESETSIZE, STYLE_AUTOCOMPLETE, pWindow->DefaultFontSize)
+        SciMsg( pSciView, SCI_STYLESETFONT, STYLE_AUTOCOMPLETE, cast(integer, gAppHost.ViewUiFontName(this.hWindow(0))) )
+        SciMsg( pSciView, SCI_STYLESETSIZE, STYLE_AUTOCOMPLETE, gAppHost.ViewUiFontSize(this.hWindow(0)))
         SciMsg( pSciView, SCI_STYLESETCHARACTERSET, STYLE_AUTOCOMPLETE, GetFontCharSetID(gConfig.EditorFontCharset) )
 
         ' define bookmark marker (white circle)
@@ -1530,7 +1538,7 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
         SciMsg( pSciView, SCI_MARKERSETBACK, MARKER_DEBUGGER_CURLINE, theme.editor.debugline.backcolor )
         ''
         ''  MARGIN 0: Line Numbering (defaults to width 0)
-        nPixels = SciMsg( pSciView, SCI_TEXTWIDTH, 0, cast(LPARAM, @"_99999"))
+        nPixels = SciMsg( pSciView, SCI_TEXTWIDTH, 0, cast(integer, @"_99999"))
         SciMsg( pSciView, SCI_SETMARGINTYPEN, 0, SC_MARGIN_NUMBER )
         SciMsg( pSciView, SCI_STYLESETFORE, STYLE_LINENUMBER, theme.editor.linenumbers.forecolor )
         SciMsg( pSciView, SCI_STYLESETBACK, STYLE_LINENUMBER, theme.editor.linenumbers.backcolor )
@@ -1629,7 +1637,7 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
 
         ''
         ''  IDENTIFY CHARACTERS to BE USED IN WORDS
-        SciMsg( pSciView, SCI_SETWORDCHARS, 0, cast(LPARAM, @"~_\abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") )
+        SciMsg( pSciView, SCI_SETWORDCHARS, 0, cast(integer, @"~_\abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") )
 
 
         ''  UNICODE (UTF-8 encoding)
@@ -1673,17 +1681,17 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
 
             ' Set FreeBASIC Keywords
             if len(gConfig.FBKeywords) then
-                SciMsg( pSciView, SCI_SETKEYWORDS, 0, cast(LPARAM, strptr(gConfig.FBKeywords)) )
+                SciMsg( pSciView, SCI_SETKEYWORDS, 0, cast(integer, strptr(gConfig.FBKeywords)) )
             end if
 
             ' Set Windows Api Keywords
             if len(gConfig.WinApiKeywords) then
-                SciMsg( pSciView, SCI_SETKEYWORDS, 1, cast(LPARAM, strptr(gConfig.WinApiKeywords)) )
+                SciMsg( pSciView, SCI_SETKEYWORDS, 1, cast(integer, strptr(gConfig.WinApiKeywords)) )
             end if
 
             ' Set Extra Keywords
             if len(gConfig.ExtraKeywords) then
-                SciMsg( pSciView, SCI_SETKEYWORDS, 2, cast(LPARAM, strptr(gConfig.ExtraKeywords)) )
+                SciMsg( pSciView, SCI_SETKEYWORDS, 2, cast(integer, strptr(gConfig.ExtraKeywords)) )
             end if
 
             ' Canonical spellings for SC_CASE_PROPER ("Proper Case" in Options).
@@ -1695,7 +1703,7 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
             ' file, actually removes the old spellings rather than leaving them behind.
             dim as string strCaseKeywords = _
                 gConfig.FBKeywords & " " & gConfig.WinApiKeywords & " " & gConfig.ExtraKeywords
-            SciMsg( pSciView, SCI_SETCASEKEYWORDS, 0, cast(LPARAM, strptr(strCaseKeywords)) )
+            SciMsg( pSciView, SCI_SETCASEKEYWORDS, 0, cast(integer, strptr(strCaseKeywords)) )
 
 
             if gConfig.SyntaxHighlighting then
@@ -1786,7 +1794,7 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
         ''  CODE FOLDING
         if gConfig.FoldMargin then
             ' Enable folding of the procedures and functions
-            SciMsg( pSciView, SCI_SETPROPERTY, cast(WPARAM, @"fold"), cast(LPARAM, @"1") )
+            SciMsg( pSciView, SCI_SETPROPERTY, cast(uinteger, @"fold"), cast(integer, @"1") )
 
             ' Initialize fold symbols for folding - Box tree
             SciMsg( pSciView, SCI_MARKERDEFINE, SC_MARKNUM_FOLDEROPEN,    SC_MARK_BOXMINUS )
@@ -1830,7 +1838,7 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
         
         else
             ' Disable folding of the procedures and functions
-            SciMsg( pSciView, SCI_SETPROPERTY, cast(WPARAM, @"fold"), cast(LPARAM, @"0") )
+            SciMsg( pSciView, SCI_SETPROPERTY, cast(uinteger, @"fold"), cast(integer, @"0") )
         end if
     
 end sub
@@ -1853,11 +1861,10 @@ function clsDocument.ApplyProperties() as long
 
     ' Determine the pWindow parent of the Scintilla window in order
     ' to ensure that DPI ratios are correctly used.
-    dim pWindow as CWindow ptr = AfxCWindowOwnerPtr(this.hWindow(0))
-    if pWindow then
-        rxRatio = pWindow->rxRatio
-        ryRatio = pWindow->ryRatio
-    end if   
+    '' The HOST knows the view's DPI ratios. This reached the owning CWindow, which is why
+    '' it could not simply read a global: a view parented elsewhere answers 1.0 and would put
+    '' every margin at the wrong width above 100%.
+    gAppHost.ViewScale( this.hWindow(0), rxRatio, ryRatio )   
     
     ' if this is a read-only file then set the flag so that the document can not be edited.
     if PsFileIsReadOnly( this.DiskFilename ) then
@@ -2051,9 +2058,10 @@ function clsDocument.LinesPerPage( byval idxWindow as long ) as long
     ' SCI_LINESONSCREEN is not a reliable count of lines per screen because
     ' it does not take into account any extra ascent or descent value.
     dim as long nLineHeight = SciMsg( pSci, SCI_TEXTHEIGHT, 0, 0 )
-    dim as RECT rc = AfxGetWindowRect(this.hWindow(idxWindow))
-    MapWindowPoints( HWND_DESKTOP, HWND_FRMMAIN, cast(POINT ptr, @rc), 2 )
-    dim as long nHeight = rc.bottom - rc.top
+    '' The HOST measures. This took the window rect in SCREEN coordinates, mapped it into
+    '' frmMain's client area, and then used only (bottom - top) -- and a translation cannot
+    '' change a height, so the mapping never affected the answer.
+    dim as long nHeight = gAppHost.ViewHeight( this.hWindow(idxWindow) )
     function = (nHeight / nLineHeight)
 end function
 

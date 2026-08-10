@@ -60,6 +60,20 @@ end function
 '' now, and it is the one thing here that is easy to lose in the move: the call sites this
 '' replaces each ended with CoTaskMemFree, and a wrapper that returned the string without
 '' freeing would leak one path per dialog with nothing to show for it.
+private function AppHostW32_ViewUiFontName( byval pView as any ptr ) as string
+    if pView = 0 then return ""
+    dim pWindow as CWindow ptr = AfxCWindowOwnerPtr( cast(HWND, pView) )
+    if pWindow = 0 then return ""
+    return pWindow->DefaultFontName
+end function
+
+private function AppHostW32_ViewUiFontSize( byval pView as any ptr ) as long
+    if pView = 0 then return 0
+    dim pWindow as CWindow ptr = AfxCWindowOwnerPtr( cast(HWND, pView) )
+    if pWindow = 0 then return 0
+    return pWindow->DefaultFontSize
+end function
+
 private function AppHostW32_AskOpenPath( byref sOut as DWSTRING ) as boolean
     dim pwszName as wstring ptr = AfxIFileOpenDialogW( HWND_FRMMAIN, IDM_INSERTFILE )
     if pwszName = 0 then return false
@@ -104,6 +118,8 @@ sub AppHostW32_Install()
     gAppHost.InvalidateView = @AppHostW32_InvalidateView
     gAppHost.ViewScale      = @AppHostW32_ViewScale
     gAppHost.ViewHeight     = @AppHostW32_ViewHeight
+    gAppHost.ViewUiFontName = @AppHostW32_ViewUiFontName
+    gAppHost.ViewUiFontSize = @AppHostW32_ViewUiFontSize
     gAppHost.AskOpenPath    = @AppHostW32_AskOpenPath
     gAppHost.AskSavePath    = @AppHostW32_AskSavePath
     gAppHost.IsFindVisible  = @AppHostW32_IsFindVisible

@@ -18,6 +18,8 @@ function AppHost_FirstMissing() as string
     if gAppHost.InvalidateView = 0 then return "InvalidateView"
     if gAppHost.ViewScale      = 0 then return "ViewScale"
     if gAppHost.ViewHeight     = 0 then return "ViewHeight"
+    if gAppHost.ViewUiFontName = 0 then return "ViewUiFontName"
+    if gAppHost.ViewUiFontSize = 0 then return "ViewUiFontSize"
     if gAppHost.AskOpenPath    = 0 then return "AskOpenPath"
     if gAppHost.AskSavePath    = 0 then return "AskSavePath"
     if gAppHost.IsFindVisible  = 0 then return "IsFindVisible"

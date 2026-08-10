@@ -67,6 +67,17 @@ type AppHostServices
     '' height, so the mapping never affected the answer.
     ViewHeight     as function(byval pView as any ptr) as long
 
+    '' The OWNER window's UI font -- not the editor's. One caller styles the autocomplete
+    '' popup with it, so the popup matches the application's chrome rather than the code face.
+    '' Reached through the view for the same reason ViewScale is: it is the font of whatever
+    '' window this view is parented to, not a process-wide constant.
+    ''
+    '' Two fields returning the parts separately, rather than one filling byref parameters,
+    '' because the call site casts the name straight into a Scintilla message and matching
+    '' that expression exactly is worth more here than a tidier signature.
+    ViewUiFontName as function(byval pView as any ptr) as string
+    ViewUiFontSize as function(byval pView as any ptr) as long
+
     '' ---- asking the user for a path -----------------------------------------------------
     '' TRUE if the user chose one. tiko uses the Afx IFileDialog wrappers; the shell will use
     '' PsPlatform's, which are asynchronous and get a synchronous wrapper of their own.
