@@ -20,13 +20,24 @@ deliberately reverting the fix rather than by reading.
 **NOTHING ABOUT A MODAL DIALOG IS ASSERTED ANYWHERE, in either repo.** `PsModalHost.Run` needs
 a compositor and `build check` is headless by design — no suite calls `PsPlatformInit`. Both
 defects this step found in `Run` were fixed with the buggy line restorable and **all 46
-PsPlatform suites plus all 194 shell assertions still green**, checked both times. The only
-evidence either fix reaches its defect is the author dismissing a real dialog.
+PsPlatform suites plus all 194 shell assertions still green**, checked both times. That is the
+state of the automated evidence and it has not changed.
 
-**Specifically unproven:** that `Run` calls `PsSurfaceDetachRoot` rather than `SetRoot`; that it
-sets initial focus; that a dialog is centred, correctly sized at 175%, or painted at all; that
-the OS half of modality holds (`g_plat.window.SetModal`); that `Run`'s failure path works — it
-needs window creation to fail and nobody has made it.
+**WHAT IS WITNESSED IS WITNESSED BY A PERSON, and there are three such facts.** The author
+confirmed, on a running shell: the exit box dismisses without killing the process and exits only
+on Yes (so `PsSurfaceDetachRoot` does reach the defect); the input box's field has focus on open
+(so `Run`'s initial-focus line runs); and with a box up, Alt+F does nothing and the menubar
+cannot be opened (so modality holds in practice, and the blocked outer pump behaves as the design
+says it must).
+
+**Those three are the ONLY evidence for those three behaviours.** No suite in either repo would
+notice if any of them regressed tomorrow, and that asymmetry — a defect class fixed twice, still
+guarded by nothing — is the single most important sentence on this page.
+
+**Specifically unproven even now:** that a dialog is centred, correctly sized at 175%, or painted
+correctly — nobody has measured one; that the OS half of modality (`g_plat.window.SetModal`) is
+what does the blocking rather than the blocked pump alone; and that `Run`'s failure path works,
+which needs window creation to fail and nobody has made it.
 
 **No key has been pressed in any of it.** Tab order is asserted against `PsSurface.FocusNext`
 directly, never through a keystroke. The path from hardware through the backend into dispatch is

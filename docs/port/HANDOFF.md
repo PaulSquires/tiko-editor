@@ -170,9 +170,14 @@ expected to be large — the `IsDialogMessage` replacement — is **four lines**
 **AND IT COST TWO DEFECTS IN `PsModalHost`, BOTH BECAUSE THE SHELL WAS ITS FIRST CALLER
 ANYWHERE.** `Run` deleted its caller's dialog on every dismissal — `SetRoot(0)` deletes, under
 a comment saying it detaches — which killed the process silently; and no dialog it raised had
-ever had initial keyboard focus. Fixed in `61f56bb` and `be10064`. **Neither fix is asserted
-anywhere**: restoring either bug leaves all 46 PsPlatform suites and all 194 shell assertions
-green, checked both times. `Run` needs a compositor and `build check` is headless by design.
+ever had initial keyboard focus. Fixed in `61f56bb` and `be10064`, and **both fixes are
+confirmed only by the author using the program** — the box dismisses without killing the
+process, the field has focus on open, and Alt+F does nothing while a box is up.
+
+**Neither fix is asserted anywhere**: restoring either bug leaves all 46 PsPlatform suites and
+all 194 shell assertions green, checked both times. `Run` needs a compositor and `build check`
+is headless by design. A defect class found twice in one step and guarded by nothing afterwards
+is the thing to fix first if modal work continues.
 
 **That is ONE FORM AND TWO DIALOGS. 7c is 48 forms and ~45,000 lines**, so read step 1 as a measurement of
 the approach rather than of the progress. An earlier version of this page said 7c was *done*,
