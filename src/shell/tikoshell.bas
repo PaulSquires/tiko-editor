@@ -1994,16 +1994,14 @@ end sub
 sub ApplyScale( byref surf as PsSurface, byval f as single )
     if f <= 0 then f = 1.0
 
-    '' SCINTILLA IS TOLD THE SCALE TOO, and it is a separate act from the font above.
-    '' PsScintilla.bi: "a DPI-AWARE host that does not call it renders its editor small while
-    '' every other control scales." tiko calls it in frmSciHost.inc:303 from GetDpiForWindow;
-    '' this binary knows its scale directly.
+    '' NO PlatPs_SetDpi HERE, and the attempt is worth recording. It was added on the theory
+    '' that Scintilla was hit-testing at 96 dpi while drawing at 175% -- and it DOUBLED the
+    '' text size, because this shell already pre-scales everything Scintilla is told: the
+    '' font size it is created with, and SCI_SETMARGINWIDTHN through PsScaleBy. Telling it
+    '' the DPI as well scales the same thing twice.
     ''
-    '' MISSING THIS PUT THE MOUSE IN THE WRONG PLACE. The editor looked right because the
-    '' FONT was scaled, but Scintilla was still laying out and hit-testing at 96 dpi -- so a
-    '' click landed at the character its own unscaled geometry said was there, which at 175%
-    '' is most of a screen away from the pointer.
-    PlatPs_SetDpi( culng( 96.0 * f + 0.5 ) )
+    '' tiko calls PlatPs_SetDpi because ITS font sizes are in POINTS, which Scintilla then
+    '' scales. Ours are already in pixels for this display. The mouse bug is elsewhere.
 
     dim as long px = PsScaleBy( SH_FONT_PX, f )
     if px <> g_nFontPx then
@@ -2925,7 +2923,17 @@ end function
             '' Driven on a SCRATCH Scintilla document so the editor the rest of this suite
             '' looks at is left exactly as it was.
             scope
+                '' ADDREF BEFORE LOOKING AWAY. SCI_GETDOCPOINTER hands back the current
+                '' document WITHOUT taking a reference, and SCI_SETDOCPOINTER releases the
+                '' outgoing one -- so pointing the view elsewhere takes the shell's original
+                '' document to a refcount of zero and FREES it. Restoring it afterwards then
+                '' walks memory Scintilla has already given back.
+                ''
+                '' That is what segfaulted this suite twice, AFTER printing every assertion
+                '' as ok: the report was perfect and the process died on the way out, which
+                '' is why an empty result line was the only symptom and I read past it.
                 dim as any ptr pWasDoc = cast( any ptr, g_view->Msg(SCI_GETDOCPOINTER, 0, 0) )
+                if pWasDoc <> 0 then g_view->Msg( SCI_ADDREFDOCUMENT, 0, cast(integer, pWasDoc) )
                 dim as any ptr pScratch = cast( any ptr, g_view->Msg(SCI_CREATEDOCUMENT, 0, 0) )
                 Check "a scratch document can be created", (pScratch <> 0)
 
@@ -2954,10 +2962,22 @@ end function
                               (SciMsg(g_view->pSci, SCI_GETLENGTH, 0, 0) = 0), _
                               str(SciMsg(g_view->pSci, SCI_GETLENGTH, 0, 0))
                         delete pBad
-                        g_view->Msg( SCI_RELEASEDOCUMENT, 0, cast(integer, pScratch2) )
                     end if
 
+                    '' POINT THE VIEW AWAY BEFORE RELEASING, and this order is the whole of
+                    '' it. SCI_RELEASEDOCUMENT drops the reference; releasing the document
+                    '' the view is CURRENTLY SHOWING takes its refcount to zero and frees it
+                    '' underneath the view, and the next SCI_SETDOCPOINTER then walks freed
+                    '' memory. The first version of this block released each scratch document
+                    '' while it was still current and segfaulted the suite AFTER printing
+                    '' every assertion as ok -- which is why the crash was missed twice: the
+                    '' report was perfect and the process died on the way out.
                     g_view->Msg( SCI_SETDOCPOINTER, 0, cast(integer, pWasDoc) )
+                    '' The view holds it again, so drop the reference taken above.
+                    if pWasDoc <> 0 then g_view->Msg( SCI_RELEASEDOCUMENT, 0, cast(integer, pWasDoc) )
+                    if pScratch2 <> 0 then
+                        g_view->Msg( SCI_RELEASEDOCUMENT, 0, cast(integer, pScratch2) )
+                    end if
                     g_view->Msg( SCI_RELEASEDOCUMENT, 0, cast(integer, pScratch) )
                 end if
             end scope
