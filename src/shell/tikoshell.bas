@@ -414,19 +414,19 @@ end sub
 '' Forward-declared: the body needs g_state and Shell_LayoutAll, which are declared
 '' further down, and BuildDropDown up here needs the address.
 declare sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any ptr )
+declare sub OnMenusClosed( byval pHost as any ptr, byval ud as any ptr )
 
 function BuildDropDown( byval nParentId as long ) as PsPopupMenu ptr
     dim as PsPopupMenu ptr pM = new PsPopupMenu
 
-    '' EVERY LEVEL, INCLUDING THE SUBMENUS. Each PsPopupMenu fires its OWN pfnCommand --
-    '' PsMenuHost does not take that over, it only wires the sub-open/close callbacks -- so
-    '' setting it on the top-level dropdown alone leaves every submenu item SILENTLY INERT.
-    '' It was set once in BuildTree until 2026-08-09, which meant the MRU list, the Settings
-    '' submenu, Format and the theme rows all clicked to nothing while File and View worked.
-    '' PsMenuHostWire's own comment is the rule: "every level is wired the same way,
-    '' including the root, so a menu does not behave differently depending on how deep it
-    '' happens to be."
-    pM->OnCommand( @OnMenuCommand )
+    '' NO pM->OnCommand HERE, and that is the fix rather than an omission. PsMenuHost takes
+    '' every popup's single command slot so it can CLOSE THE CHAIN before the handler runs,
+    '' and the application registers with the host instead -- g_menus.OnCommand, below.
+    ''
+    '' Setting it per-popup is what this file did first, and it was wrong twice over: the
+    '' submenus never got one at all (so the MRU list, Settings, Format and the theme rows
+    '' clicked to nothing), and the top-level ones overwrote the host's, so the menu stayed
+    '' open and the bar stayed highlighted after every click.
     for i as long = lbound(gTopMenu) to ubound(gTopMenu)
         if gTopMenu(i).nParentID <> nParentId then continue for
         if gTopMenu(i).isSeparator then
@@ -560,6 +560,17 @@ sub BuildTree( byref surf as PsSurface )
         g_menubar->AddItem( sCap, pM )
     next
     g_menubar->OnOpenRequest( @OnBarOpen )
+
+    '' THE HOST OWNS THE COMMAND SLOT, so this is where the application asks for it. It
+    '' closes the chain first and then calls this -- which also means a handler is free to
+    '' raise a modal dialog without leaving a menu floating over it.
+    g_menus.OnCommand( @OnMenuCommand )
+
+    '' AND THE BAR HAS TO BE TOLD THE MENU WENT AWAY, whether it went by a command, by
+    '' Escape or by a click outside. Without this the bar still believes a menu is open --
+    '' the title stays highlighted and the next hover re-opens it. PsMenuBar.bi:135-138 says
+    '' so; nothing in PsPlatform was wiring it.
+    g_menus.OnClosed( @OnMenusClosed )
     root->AddChild( g_menubar )
 
     '' THE TAB BAR IS A STUB TOO, from this commit on. PsTabBar is a real control and was
@@ -1069,6 +1080,10 @@ sub LayoutAll( byref surf as PsSurface )
     Shell_LayoutAll( surf, g_state )
 end sub
 
+sub OnMenusClosed( byval pHost as any ptr, byval ud as any ptr )
+    if g_menubar then g_menubar->NotifyClosed()
+end sub
+
 sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any ptr )
     '' Printed first, always, so a command ARRIVING is visible even when nothing is bound
     '' to it. Most ids reach nothing here and that is the design -- their handlers are in
@@ -1460,8 +1475,32 @@ end function
         Check "  and was handed File's own popup", _
               (g_pLastBarMenu = g_menubar->GetMenu(0))
         Check "  the bar considers the menu open", (g_menubar->IsMenuOpen() = true)
+
+        '' ---- AND CLOSING THE CHAIN CLEARS THE BAR ------------------------------------
+        '' Reported: after clicking a menu row the popup stayed up and the title stayed
+        '' highlighted. Two causes, both of them missing wiring rather than logic:
+        ''
+        ''   PsMenuHostOnCommand existed in PsPlatform, said in its own comment that
+        ''   "running something and leaving the menus up is the one behaviour no menu has",
+        ''   and was NEVER INSTALLED. No menu in any host had ever closed itself.
+        ''
+        ''   And nothing told the BAR. PsMenuBar.bi:135-138 says the host must, or the bar
+        ''   still believes a menu is open -- the title stays lit and the next hover
+        ''   re-opens it. That is g_menus.OnClosed, wired in BuildTree.
+        ''
+        '' THE CALLBACK IS DRIVEN DIRECTLY, AND THE REASON IS A LIMIT WORTH STATING.
+        '' g_menus.CloseAll() does NOT fire it here: PsMenuHost only notifies when
+        '' something was actually open, and OpenRoot declined at the start of this section
+        '' because PsPopupHost.OpenAt needs a real hWin. So the host never opened, never
+        '' closes, and never calls back.
+        ''
+        '' What is asserted is therefore the SHELL's half -- that the callback clears the
+        '' bar. That the HOST calls it is PsPlatform's half, and it is covered by the line
+        '' this fix added to PsMenuHostWire rather than by anything here.
         g_menus.CloseAll()
-        g_menubar->NotifyClosed()
+        OnMenusClosed( 0, 0 )
+        Check "the closed callback clears the bar's highlight", _
+              (g_menubar->IsMenuOpen() = false), "IsMenuOpen"
 
         '' ---- THE DOCKED BANDS, NUMERICALLY -------------------------------------------
         '' "It looks docked" is not a test, and a bar one pixel short leaves a seam nobody
