@@ -15,9 +15,9 @@ Read the numbers below as a measurement of the *approach*, not of the progress.
 | claim | how |
 | --- | --- |
 | the layout matches tiko's | **the oracle**, field by field, ten states — see below |
-| the widget tree is well-formed | `--selftest`, 92 assertions, 0 failing |
+| the widget tree is well-formed | `--selftest`, 110 assertions, 0 failing |
 | the app layer is usable from a second binary | 8 menu titles resolve through `L()`; 85 chords parse |
-| tiko still builds | `_compile_fast.bat` at every one of the 14 commits |
+| tiko still builds | `_compile_fast.bat` at every commit on this branch |
 | PsPlatform is not broken by any of it | `build check` 46 suites; `_check_scihost` after each PsPlatform commit |
 | the boundary holds | `_check_shell.bat`, and `_check_app_standalone` at 11 clean / 0 errors |
 
@@ -44,10 +44,15 @@ geometry. Specifically:
 * **No key has been pressed.** `PsAccel` resolves a synthetic `Ctrl+S` to `IDM_FILESAVE`; the
   path from real hardware through the backend into the table is untested. On a US keyboard it
   could not distinguish physical from layout mapping anyway.
-* **No menu has been opened by hand.** The self-test asserts the host *answers*
-  `OnOpenRequest` and is handed the right dropdown — not that a popup appears.
-  `PsPopupHost.OpenAt` declines when the surface has no `hWin`, and `--selftest` has no
-  window by design.
+* ~~**No menu has been opened by hand.**~~ **They have been now, and it cost three defects** —
+  see below. What the self-test can still only assert is that the host *answers*
+  `OnOpenRequest` and is handed the right dropdown; `PsPopupHost.OpenAt` declines when the
+  surface has no `hWin`, and `--selftest` has no window by design. Everything about what a
+  menu does NEXT — closing, un-highlighting, reopening clean — is unreachable from here and
+  was found by clicking.
+* **The View commands that move the layout are wired; nothing else is.** Panel position, side
+  panel, output and the two split modes map onto `ShellLayoutState` and need no model, so they
+  work. Every other id prints and stops, and will until 7c gives this binary a document.
 * **No splitter has been dragged.** The bars are laid out and have no drag behaviour at all;
   every split position comes from the state record.
 * **The clipboard and the caret are wired and unexercised.** `PsSciUseSystemClipboard` is
@@ -97,9 +102,23 @@ It would not have: `ScaleY` reads the surface's scale live and passes whether or
 was ever told. Caught by deliberately reverting each fix to check the new assertions went
 red — two did, that one did not.
 
-**THREE DEFECTS CAME OUT OF `demos/ideshell`** by copying it, and all three were live there:
-its menubar answers nothing so it drops nothing; it never sets `surf.hWin`; it never scales.
-Fixed in PsPlatform `db73895`. A demo that is the nearest prior art is a demo people copy.
+**FOUR DEFECTS CAME OUT OF `demos/ideshell`** by copying it, and all four were live there: its
+menubar answers nothing so it drops nothing; it never sets `surf.hWin`; it never scales; and it
+never scales the EDITOR's font, which is a separate font from the widgets'. Fixed in PsPlatform
+`db73895` and `974b6b9`. A demo that is the nearest prior art is a demo people copy.
+
+**AND THREE MORE IN THE MENU LAYER, none of which came from the demo — they were in
+`PsMenuHost` and `PsPopupMenu` themselves, live in every host in the tree.** The popup never
+closed after a click (`PsMenuHostOnCommand` written for exactly that and never installed); the
+menubar title stayed lit (`PsMenuBar` documents that the host must call `NotifyClosed`, and no
+host did); and a reopened menu came back wearing its last selection. Fixed in `120f127` and
+`f27bef6`.
+
+All three were reported by the author within a minute of opening a menu, and **none is
+reachable by any headless suite** — each is about what a menu does *next*. The suites did catch
+something, though: the first fix for the first one took `PsPopupMenu`'s single command slot for
+the host and disconnected Scintilla's context menu, and `psslist` went 44/0 to 43/1 in one
+build. The host chains now.
 
 **TWO tiko DEFECTS FOUND AND DELIBERATELY NOT FIXED**, both recorded in the oracle README:
 with the side panel docked right the top-tabs icon strip is drawn over the panel; and the

@@ -1,6 +1,6 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ `e7b267dbb`; PsPlatform **`main`** @ `ec3d972`;
+tiko `feat/cross-platform` @ `4d236e2a8`; PsPlatform **`main`** @ `f27bef6`;
 HelpCenter **`main`** @ `02a4c18`. All build warning-free, all are pushed, and tiko runs.
 
 **THERE ARE TWO BINARIES IN tiko NOW.** `tiko.exe` from `tiko.bas`, unchanged and building at
@@ -63,6 +63,27 @@ Read in this order, and do not skip the first:
 or reading the callers, and none from the gates. When a note here says something is done,
 blocked, or not yours to decide, check it before believing it — that claim was true when written
 and this page's own record is that it stops being true quickly.
+
+**THE MENUS PROVED IT THREE TIMES IN A ROW, and all three were live in EVERY HOST IN THE TREE**
+— PsPlatform's demos included, for as long as `PsMenuBar` has existed. Each was reported by the
+author within a minute of opening a menu, and none of them is reachable by any headless suite,
+because each is about what a menu *does next*:
+
+1. **The popup never closed after a click.** `PsMenuHostOnCommand` existed for exactly this and
+   said so in its own comment — *"running something and leaving the menus up is the one
+   behaviour no menu has"* — and **was never installed**. `gallery2` looked fine only because
+   the handler it exercises is a TOOLBAR command, which never goes through a popup.
+2. **The menubar title stayed lit.** `PsMenuBar.bi:135-138` says the host must call
+   `NotifyClosed`, and `PsMenuHost.OnClosed` is the hook for it. No host wired it.
+3. **A reopened menu came back wearing its last selection.** `nHot`, `nPinned` and `bHoverSel`
+   survive a close; the only thing that reset them was `clear()`, which frees every item, so
+   nothing on the show path could use it.
+
+**And the fix for the first one broke Scintilla's context menu inside one build** — `psslist`
+went 44/0 to 43/1. `PsPopupMenu` has ONE command slot and two parties want it; taking it for
+the host disconnected `PsSciPopup.inc:228`, which had already claimed it. The host CHAINS now.
+That is the useful shape of the story: the suites could not find any of the three, and caught
+the regression the fix introduced, immediately.
 
 **Step 1 said it twice more, and the second time is the sharper one.** The shell shipped a
 commit whose UI was visibly unscaled while 21 assertions passed — every one of them a RELATION
@@ -507,7 +528,21 @@ the code*, and the code moves. Re-check the claim before honouring it.
 
 ## Things that will bite
 
-Beyond `Learnings.md`, seven specific to this tree:
+Beyond `Learnings.md`, eight specific to this tree:
+
+* **NEVER SET `pM->OnCommand` ON A MENU A `PsMenuHost` OPENS.** There is ONE command slot and
+  two parties want it: the application, which wants to run the command, and the host, which has
+  to CLOSE THE CHAIN first. `PsMenuHostWire` claims it on every open, at every level.
+  **Register with the host — `g_menus.OnCommand(...)` — not with the menu.**
+
+  Setting it per-popup fails two ways at once and neither says so: the host's hook is
+  overwritten, so the menu never closes; and submenus created after the wiring never get one at
+  all, so their rows click to nothing. tiko's shell had both — File and View worked while the
+  MRU list, Settings, Format and the theme rows were silently inert.
+
+  The host CHAINS to whatever held the slot before it, so code that claims it directly still
+  runs — `PsSciPopup.inc:228` does, for Scintilla's context menu. That chaining exists because
+  the first version of the fix did not have it and broke `psslist` in one build.
 
 * **A PsPlatform CHANGE CAN BREAK tiko WITH BOTH TREES GREEN.** tiko wraps the toolkit in
   `namespace PsC`, and PsPlatform has nothing that does — so any header reaching PsPlatform's
