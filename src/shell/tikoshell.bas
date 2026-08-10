@@ -103,6 +103,11 @@
 #include once "ui/controls/PsMenuBar.inc"
 #include once "ui/controls/PsStatusBar.inc"
 #include once "ui/controls/PsTabBar.inc"
+'' The side panel. Its absence was NOT a compile error where you would expect one -- with
+'' the type unknown, `dim shared as PsListTree ptr` parsed and every USE of the variable
+'' reported "Expected End-of-Line", seven errors deep into the file and none of them at the
+'' declaration. Worth knowing before hunting the wrong line.
+#include once "ui/controls/PsListTree.inc"
 '' For the input box: a prompt, a field and two buttons. There is no label control in
 '' PsPlatform, so the prompt is painted by the dialog root itself.
 #include once "ui/controls/PsButton.inc"
@@ -387,7 +392,21 @@ dim shared as PsStatusBar ptr g_status
 '' it drove the stub, so the control never gets to choose.
 dim shared as PsTabBar ptr g_tabs
 dim shared as ShellStub ptr g_topTabsMenu
-dim shared as ShellStub ptr g_panel, g_splitPanel
+
+'' ---- g_panel IS A REAL PsListTree NOW, and the stub's own comment argued against this
+'' until this commit: "Deliberately NOT an empty real control: an empty PsListTree looks
+'' perfectly correct in the wrong band, whereas a rect that paints OUTPUT 0,486,1100,160
+'' tells you where it actually is."
+''
+'' That was right while the band was unproven. IT IS PROVEN NOW -- the panel's rectangle is
+'' pinned by docs/port/layout-oracle/ at four states and by six assertions in the band walk,
+'' so the diagnostic the stub existed to provide has been spent. The band cannot move
+'' without the dump failing, whatever is painted inside it.
+''
+'' THE LAYOUT STILL OWNS THE RECT, exactly as it does for g_tabs: Shell_LayoutAll drives it
+'' through SetBounds from g_state.nPanelW, so the control never gets to choose its own size.
+dim shared as PsListTree ptr g_panel
+dim shared as ShellStub ptr g_splitPanel
 dim shared as ShellStub ptr g_barInfo, g_barFind, g_barReplace
 dim shared as ShellStub ptr g_splitOutput, g_output, g_fip
 
@@ -764,7 +783,16 @@ sub BuildTree( byref surf as PsSurface )
     '' so a dump and a self-test failure can be read against each other.
     g_topTabsMenu = new ShellStub( @"TOPTABSMENU", PSTHEME_BACKGROUNDRAISED )
     root->AddChild( g_topTabsMenu )
-    g_panel       = new ShellStub( @"PANEL",       PSTHEME_BACKGROUNDALT )
+    '' THE SIDE PANEL, REAL. Twisty and indent on, because what goes in it is a two-level
+    '' list -- a header row per file, bookmark rows beneath -- which is the shape
+    '' frmBookmarks builds with AddHeader/AddString and the shape ideshell's explorer uses.
+    ''
+    '' NOTHING FILLS IT IN THIS COMMIT, deliberately. An empty real control in the right
+    '' band is the thing the layout oracle can still check byte-for-byte; adding content and
+    '' the widget swap in one commit would leave a dump difference with two possible causes.
+    g_panel = new PsListTree
+    g_panel->SetTreeIndent( true )
+    g_panel->ShowTwisty( true )
     root->AddChild( g_panel )
     g_splitPanel  = new ShellStub( @"",            PSTHEME_BORDER )
     root->AddChild( g_splitPanel )
@@ -2930,6 +2958,42 @@ end function
 
                 g_tabs->clear()
                 Check "  and clear empties it", (g_tabs->GetCount() = 0)
+            end scope
+
+            '' ---- THE SIDE PANEL IS A REAL CONTROL TOO --------------------------------
+            '' Same shape as the tab bar's block above, and here for the same reason: the
+            '' widget has to be shown WORKING in this binary, not merely compiling in it.
+            '' PsListTree is exercised by tests/pstree and by one demo; a control can be
+            '' green in both and still be wired wrong by its third host.
+            scope
+                Check "the side panel is a real control now, not a stub", (g_panel <> 0)
+                Check "  and starts empty in a windowless run", (g_panel->GetCount() = 0), _
+                      str(g_panel->GetCount())
+
+                '' THE TWO-LEVEL SHAPE the bookmarks list needs: a header row per file with
+                '' rows beneath it. Asserted through the tree API rather than by reading the
+                '' flags back, because what matters is that a child KNOWS its parent -- that
+                '' is what the click handler in commit 5 will walk.
+                dim as long nHdr = g_panel->AddHeader( DWSTRING("probe.bas"), 0 )
+                dim as long nRow = g_panel->AddNode( nHdr, DWSTRING("  line 12"), 0 )
+                Check "  a header and a child row are added", _
+                      (g_panel->GetCount() = 2), str(g_panel->GetCount())
+                Check "  the header knows it is one", g_panel->IsHeader( nHdr )
+                Check "  and the child knows its parent", _
+                      (g_panel->GetParent(nRow) = nHdr), str(g_panel->GetParent(nRow))
+
+                '' COLLAPSING HIDES THE CHILD WITHOUT DELETING IT -- the distinction the
+                '' loader depends on, since it restores the top index across a reload and a
+                '' visible index is not a model index.
+                g_panel->CollapseRow( nHdr )
+                Check "  collapsing hides the child", (g_panel->GetVisibleCount() = 1), _
+                      str(g_panel->GetVisibleCount())
+                Check "    without deleting it", (g_panel->GetCount() = 2)
+                g_panel->ExpandRow( nHdr )
+                Check "    and expanding brings it back", (g_panel->GetVisibleCount() = 2)
+
+                g_panel->clear()
+                Check "  and clear empties it", (g_panel->GetCount() = 0)
             end scope
 
             '' THE BLANK-TAB BUG, ASSERTED. Two tabs opened, both titled correctly, both
