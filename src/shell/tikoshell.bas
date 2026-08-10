@@ -107,6 +107,13 @@
 '' PsPlatform, so the prompt is painted by the dialog root itself.
 #include once "ui/controls/PsButton.inc"
 #include once "ui/controls/PsTextBox.inc"
+'' modScintilla.bi BEFORE PsPlatform's scintilla headers, and THE ORDER IS LOAD-BEARING --
+'' tiko.bas carries the same note for the same reason. tiko #Defines all 117 SCI_* constants;
+'' PsPlatform declares them as `const` behind #ifndef guards, and guards only work in this
+'' direction. With PsScintilla.bi first the const already exists and every #Define becomes a
+'' duplicate, which no guard on the library side can prevent. Reversing these two lines
+'' produces a screen of "Duplicated definition, SCI_ADDTEXT".
+#include once "app/modScintilla.bi"
 #include once "scintilla/PsTextEngineC.inc"
 #include once "scintilla/PsSciView.inc"
 #include once "scintilla/PsSciClipboard.inc"
@@ -131,6 +138,13 @@
 #include once "app/modAppState.bi"
 #include once "app/modNavHistory.bi"
 #include once "app/modFormat.bi"
+#include once "app/modSciText.bi"
+#include once "app/modEncoding.bi"
+#include once "app/modDocEncodingIds.bi"
+#include once "app/clsDocument.bi"
+#include once "app/modAppHost.bi"
+#include once "app/modAppHost.inc"
+#include once "app/clsApp.bi"
 #include once "app/clsConfig.bi"
 '' The constructor. app/clsConfig.bi carries `dim shared gConfig`, so including the header
 '' instantiates the object and this TU has to link a constructor for it. It used to live in
@@ -175,6 +189,11 @@
 '' also the third entry on _check_app_standalone's link-debt baseline, which is where the
 '' obligation is recorded rather than only here.
 #include once "app/modMenuDefinitions.inc"
+#include once "app/modEncoding.inc"
+#include once "app/modSciText.inc"
+#include once "app/clsDocument.inc"
+#include once "app/clsApp.inc"
+
 
 '' ---- THE COMMIT-4 STUB, NOW REAL -------------------------------------------------------
 '' createToolsMenuShortcut composes a User Tools shortcut LABEL by asking what a stored key
@@ -260,6 +279,10 @@ dim shared as long g_nAccelSkipped
 '' of the next iteration rather than the pump variable being promoted to a global for one
 '' caller.
 dim shared as boolean g_bQuitRequested
+
+'' A file named on the command line, loaded through clsDocument once the views exist.
+dim shared as DWSTRING g_sOpenPath
+dim shared as clsDocument ptr g_pDoc
 
 '' What the Command Line dialog edits. tiko keeps this in gApp.ProjectCommandLine, but clsApp
 '' is still in src/ rather than app/, so the shell cannot reach it -- see the IDM_COMMANDLINE
@@ -774,6 +797,15 @@ sub BuildTree( byref surf as PsSurface )
     end if
     root->AddChild( g_view )
 
+    '' ---- THE DOCUMENT, IF ONE WAS NAMED ------------------------------------------------
+    '' THE FIRST TIME clsDocument DRIVES ANYTHING THAT IS NOT tiko.exe. It asks the host for
+    '' its views (which hands back the two above rather than creating any), binds its
+    '' Scintilla pointers, and loads the file through gAppHost.LoadFileText -- PsFileReadAll
+    '' here, CreateFileW in tiko.
+    ''
+    '' AFTER the views are in the tree, deliberately: CreateScintillaWindows asks for view 0
+    '' AND view 1, so both globals have to be non-null before it runs.
+
     '' ---- THE SPLIT PANE, SHARING ONE DOCUMENT ------------------------------------------
     '' A SPLIT VIEW IS TWO VIEWS OF ONE DOCUMENT, not two documents. Scintilla's own
     '' mechanism for that is the doc pointer: create the second view, then point it at the
@@ -796,6 +828,22 @@ sub BuildTree( byref surf as PsSurface )
         g_view2->Msg( SCI_SETCARETPERIOD, 530 )
     end if
     root->AddChild( g_view2 )
+
+    '' ---- THE DOCUMENT, IF ONE WAS NAMED ON THE COMMAND LINE ----------------------------
+    '' THE FIRST TIME clsDocument HAS DRIVEN ANYTHING THAT IS NOT tiko.exe. It asks the host
+    '' for its views -- ShellHost_CreateView hands back the two above rather than making a
+    '' third -- binds their Scintilla pointers, and reads the file through
+    '' gAppHost.LoadFileText, which is PsFileReadAll here and CreateFileW in tiko.
+    ''
+    '' AFTER BOTH VIEWS ARE IN THE TREE, deliberately: CreateScintillaWindows asks for view 0
+    '' and view 1 in one loop, so a null second global would bind half a document.
+    if PsLen( g_sOpenPath ) > 0 then
+        g_pDoc = new clsDocument
+        g_pDoc->CreateScintillaWindows()
+        g_pDoc->LoadDiskFile( g_sOpenPath )
+        g_pDoc->ApplyProperties()
+        print "tikoshell: loaded " & g_sOpenPath.Utf8
+    end if
 
     g_vscroll2 = new ShellStub( @"", PSTHEME_BACKGROUNDRAISED )
     root->AddChild( g_vscroll2 )
@@ -1686,6 +1734,13 @@ function ConfirmExit() as boolean
 end function
 
 
+'' tikoshell's half of the app-host seam -- THE SECOND IMPLEMENTATION of a record that had
+'' only ever been filled by AfxNova. HERE, this late, because its bodies call StyleOneView,
+'' ShellAskPath, LayoutAll and the g_view / g_pSurf / g_sFont globals, every one of which
+'' is declared above this line.
+#include once "shellhost.bi"
+
+
 sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any ptr )
     '' Printed first, always, so a command ARRIVING is visible even when nothing is bound
     '' to it. Most ids reach nothing here and that is the design -- their handlers are in
@@ -1976,7 +2031,25 @@ end function
     for i as integer = 1 to __FB_ARGC__ - 1
         if command(i) = "--selftest" then bSelfTest = true
         if command(i) = "--dump-layout" then bDumpLayout = true
+        '' Anything that is not a switch is a file to open. First one wins -- this binary
+        '' has one document until commit 6 gives it tabs.
+        if left(command(i), 2) <> "--" then
+            if PsLen( g_sOpenPath ) = 0 then g_sOpenPath = command(i)
+        end if
     next
+
+    '' THE APP-HOST SEAM, filled before anything can open a document -- and CHECKED, because
+    '' every field is required and a null one would surface as an empty editor rather than an
+    '' error. Both records, separately: one check over two would pass a half-filled host.
+    ShellHost_Install()
+    if AppHost_IsComplete() = false then
+        print "tikoshell: AppHost." & AppHost_FirstMissing() & " is not set (build error)"
+        end 2
+    end if
+    if AppNotify_IsComplete() = false then
+        print "tikoshell: AppNotify." & AppNotify_FirstMissing() & " is not set (build error)"
+        end 2
+    end if
 
     if PsPlatformInit() = false then
         print "tikoshell: the platform would not start"
@@ -2770,6 +2843,33 @@ end function
                       (ShellInputBox_Commit(0, sVar, DWSTRING("edited")) = false)
                 Check "  leaving the value alone", (sVar = DWSTRING("original")), sVar.Utf8
             end scope
+
+            '' ---- GROUP K: THE APP-HOST SEAM, FILLED BY A SECOND HOST --------------------
+            '' Until this binary, AppHostServices had exactly one implementation and the
+            '' record was a seam in name only -- nothing showed it could be filled by
+            '' anything but AfxNova. These assert that it IS filled, field by field, because
+            '' a null one is not a compile error: it is a crash at the moment a document
+            '' first needs it.
+            Check "the services record is complete", AppHost_IsComplete(), _
+                  AppHost_FirstMissing()
+            Check "  and so is the notification record", AppNotify_IsComplete(), _
+                  AppNotify_FirstMissing()
+
+            '' SPOT-CHECKS ON THE ONES THAT ANSWER SOMETHING, because "non-null" and
+            '' "correct" are different claims and only the first is checked above.
+            Check "  CreateView hands back the editor the layout already built", _
+                  (gAppHost.CreateView(0) = cast(any ptr, g_view))
+            Check "    and view 1 is the SPLIT, not a third view", _
+                  (gAppHost.CreateView(1) = cast(any ptr, g_view2))
+            Check "  a live view reports alive", gAppHost.IsViewAlive( g_view )
+            Check "    and a null one does not", (gAppHost.IsViewAlive(0) = false)
+            Check "  the view's Scintilla pointer is the view's own", _
+                  (gAppHost.ViewSciPointer(g_view) = g_view->pSci)
+
+            '' THE SHELL REFUSES A LOSSY SAVE, and that is the safe answer rather than the
+            '' convenient one -- saying yes would discard characters nobody agreed to lose.
+            Check "  a lossy save is refused while there is no prompt to ask with", _
+                  (gAppHost.ConfirmLossySave(0, DWSTRING("x"), 0) = false)
 
             '' ---- GROUP J: THE FILE DIALOG'S NESTED PUMP --------------------------------
             '' A THIRD nested pump, in a process whose previous two produced two silent

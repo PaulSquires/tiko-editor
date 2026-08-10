@@ -137,6 +137,15 @@ type AppHostServices
     '' these were tried in app/ and both came back.
     ResolveIncludePath as function(byval pDoc as clsDocument ptr, byval sFilename as string) as string
 
+    '' The platform's text for the last failed call, or "" if it has none to offer.
+    ''
+    '' THE SMALLEST POSSIBLE SEAM, and it is what let Doc_WriteToDisk move into the app
+    '' layer. That function is entirely PsCore -- PsFileExists, PsFileWriteAll, PsFileReplace
+    '' -- except for two Win32ErrorText(GetLastError()) calls that produce a MESSAGE. Both
+    '' already fall back to a fixed string when the platform gives nothing, so a host with no
+    '' equivalent returns "" and loses only detail, never correctness.
+    LastErrorText  as function() as DWSTRING
+
     '' ---- telling the user something about a save ----------------------------------------
     '' Both are PROMPTS, so both are services: the first returns the user's answer and the
     '' second must be seen before the caller carries on. A host that stubbed either would

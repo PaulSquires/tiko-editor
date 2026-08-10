@@ -57,9 +57,16 @@ $bad = 0
 # vbcompat's globals in, and any of tiko's own shell files.
 $forbidden = 'windows\.bi|AfxNova|vbcompat|win\\|/frm|\\frm|modDeclares|modRoutines|modScintilla'
 
+# An `app/` PATH IS NOT A SHELL REACH, and the distinction has teeth now.
+# modScintilla was a shell header when this list was written and MOVED INTO app\ in
+# 7c step 3 commit 3c -- so `#include once "app/modScintilla.bi"` is the layer doing
+# exactly what it is supposed to, and the name alone can no longer decide. Anything
+# still under src\ by that name is caught as before.
+$appPath = 'include\s+(once\s+)?"app/'
+
 foreach ($f in $files) {
     $hits = Select-String -Path $f.FullName -Pattern '^\s*#\s*include' |
-            Where-Object { $_.Line -match $forbidden }
+            Where-Object { $_.Line -match $forbidden -and $_.Line -notmatch $appPath }
     foreach ($h in $hits) {
         Write-Host ("  FAIL  {0}:{1}  {2}" -f $f.Name, $h.LineNumber, $h.Line.Trim())
         $bad++

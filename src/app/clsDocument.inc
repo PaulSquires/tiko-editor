@@ -196,8 +196,17 @@ function clsDocument.CreateScintillaWindows() as long
             ' windows to GPF.
             if i = 0 then
                 ' Load my custom Tiko lexer based on VB lexer from Lexilla and feed it into Scintilla
-                dim as any ptr pLexer = gApp.pfnCreateLexerfn( "tiko" )
-                SciMsg( pSci(i), SCI_SETILEXER, 0, cast(integer, pLexer) )
+                '' GUARDED, because the factory is a POINTER a host has to supply and not
+                '' every host has one. tiko resolves it from Lexilla at startup
+                '' (tiko.bas: GetProcAddress(pLibLexilla, "CreateLexer")); tikoshell has no
+                '' Lexilla and left it null, and calling through it segfaulted the moment a
+                '' real document was created -- the first thing the shell tried to load.
+                ''
+                '' No lexer means unstyled text, which is a legible editor. A crash is not.
+                if gApp.pfnCreateLexerfn <> 0 then
+                    dim as any ptr pLexer = gApp.pfnCreateLexerfn( "tiko" )
+                    SciMsg( pSci(i), SCI_SETILEXER, 0, cast(integer, pLexer) )
+                end if
             end if
         end if
     next

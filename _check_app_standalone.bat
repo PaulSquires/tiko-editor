@@ -127,21 +127,17 @@ rem                                   function directly, which the vocabulary
 rem                                   ratchet cannot see because it names no Afx
 rem                                   or Win32 token
 rem
-rem   Doc_EncodeForDisk               modEncoding.inc -- DECLARED in app\modEncoding.bi
-rem   Doc_WriteToDisk                 already; only the bodies lag. Doc_WriteToDisk calls
-rem                                   Win32ErrorText/GetLastError and cannot move as it
-rem                                   stands; Doc_EncodeForDisk could, but splitting the
-rem                                   pair for one point is churn.
 rem   clsConfig::ProjectSaveToFile    clsConfig is SPLIT -- header and constructor in app\,
 rem                                   the rest in src\clsConfig.inc since step 1.
 rem
-rem THE LAST THREE ARRIVED WITH 7c STEP 3 COMMIT 3e, and they arrived for a good reason:
-rem moving clsDocument and clsApp INTO the layer pulled callers in whose callees are still
-rem outside it. That is what this counter is for. It went 3 -> 6 as a DIRECT CONSEQUENCE of
-rem the layer growing, not of anything rotting.
+rem clsConfig::ProjectSaveToFile ARRIVED WITH 7c STEP 3 COMMIT 3e, for a good reason: moving
+rem clsDocument and clsApp INTO the layer pulled callers in whose callees are still outside
+rem it. That is what this counter is for -- it went 3 -> 6, then back to 4 in commit 5 once
+rem Doc_EncodeForDisk and Doc_WriteToDisk followed their declarations down. THE BASELINE IS
+rem LOWERED WHENEVER THE COUNT IS, or it stops being a ratchet and becomes a licence.
 rem
 rem WHEN THE COUNT REACHES 0, delete the baseline and make this a plain failure.
-set /a LINKBASELINE=6
+set /a LINKBASELINE=4
 set /a LINKBAD=0
 %FBC% -i ..\..\PsPlatform\src -maxerr 999 -x _standalone_link.exe _standalone_link.bas > _standalone_link.log 2>&1
 if !errorlevel! neq 0 (

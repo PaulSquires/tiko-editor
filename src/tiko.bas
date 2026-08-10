@@ -159,6 +159,7 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 '' AfxNova or Win32 token in it; it sat in src/ only because that is where it was written.
 '' The shell binary needs it, and a file the app layer cannot reach is a file the shell
 '' binary has to duplicate.
+#include once "app/modEncoding.inc"
 #include once "app/modSciText.inc"
 #include once "app/modTextFile.inc"
 #include once "app/modLocalization.bi"

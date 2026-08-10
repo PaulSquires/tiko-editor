@@ -114,6 +114,10 @@ private sub AppHostW32_StyleView( byval pSciView as any ptr, byval pOwnerView as
     ViewStyle_Apply( pSciView, pOwnerView, nEncoding, sDiskFilename, bIsNew )
 end sub
 
+private function AppHostW32_LastErrorText() as DWSTRING
+    return Win32ErrorText( GetLastError() )
+end function
+
 private function AppHostW32_LoadFileText( byval wszPath as DWSTRING, byref txtBuffer as string, _
                                           byval pDoc as clsDocument ptr ) as boolean
     return GetFileToString( wszPath, txtBuffer, pDoc )
@@ -231,6 +235,7 @@ sub AppHostW32_Install()
     gAppHost.AskOpenPath    = @AppHostW32_AskOpenPath
     gAppHost.AskSavePath    = @AppHostW32_AskSavePath
     gAppHost.IsFindVisible  = @AppHostW32_IsFindVisible
+    gAppHost.LastErrorText      = @AppHostW32_LastErrorText
     gAppHost.LoadFileText       = @AppHostW32_LoadFileText
     gAppHost.ResolveIncludePath = @AppHostW32_ResolveIncludePath
     gAppHost.ConfirmLossySave   = @AppHostW32_ConfirmLossySave
