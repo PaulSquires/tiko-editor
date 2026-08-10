@@ -120,6 +120,31 @@ type AppHostServices
     '' store colours as 32-bit values.
     ThemeSelectionBack as function() as ulong
 
+    '' Read a file into txtBuffer, detecting and recording its encoding on the document.
+    ''
+    '' A SERVICE RATHER THAN APP CODE, and not by choice: the decode goes through
+    '' WideToUtf8, a private helper in modEncoding.inc that is WideCharToMultiByte. The WRITE
+    '' path is already portable -- Doc_EncodeForDisk and Doc_WriteToDisk live in app/ -- so it
+    '' is only reading that still needs the platform. The shell will implement this with
+    '' PsEncDecode.
+    LoadFileText   as function(byval wszPath as DWSTRING, byref txtBuffer as string, _
+                               byval pDoc as clsDocument ptr) as boolean
+
+    '' Resolve a partial #include path to something that exists.
+    ''
+    '' A SERVICE FOR THE SAME REASON AS LoadFileText: it resolves against the ACTIVE BUILD
+    '' CONFIGURATION and reaches frmBuildConfig_getActiveBuildIndex, a form function. Both of
+    '' these were tried in app/ and both came back.
+    ResolveIncludePath as function(byval pDoc as clsDocument ptr, byval sFilename as string) as string
+
+    '' ---- telling the user something about a save ----------------------------------------
+    '' Both are PROMPTS, so both are services: the first returns the user's answer and the
+    '' second must be seen before the caller carries on. A host that stubbed either would
+    '' silently discard characters, or lose a file without saying so.
+    ConfirmLossySave   as function(byval pDoc as clsDocument ptr, byval wszPath as DWSTRING, _
+                                   byval nEncoding as long) as boolean
+    ReportWriteFailure as sub(byval wszPath as DWSTRING, byval wszErr as DWSTRING)
+
     '' ---- asking the user for a path -----------------------------------------------------
     '' TRUE if the user chose one. tiko uses the Afx IFileDialog wrappers; the shell will use
     '' PsPlatform's, which are asynchronous and get a synchronous wrapper of their own.
@@ -162,6 +187,37 @@ type AppHostNotify
     '' Close the tab at this index, with everything that implies -- prompting to save, and
     '' removing the document.
     CloseTab       as sub(byval nTabIdx as long)
+
+    '' Find in Project holds references to a document's buffer and excerpt views bound to it,
+    '' so it has to hear about both events. Fire-and-forget: a host without that feature
+    '' leaves them empty and is correct.
+    OnDocumentClosing as sub(byval pDoc as clsDocument ptr)
+    OnDocumentSaved   as sub(byval pDoc as clsDocument ptr)
+
+    '' Re-scan this document's buffer in the background. The scan manager STAYS IN THE SHELL:
+    '' it wakes and stops a worker thread with Win32 event objects, and PsPlatform has no
+    '' threading or synchronisation service at all. Background parsing belongs to whoever owns
+    '' the UI thread -- see docs/port/document-model-blockers.md.
+    RequestBufferScan as sub(byval pDoc as clsDocument ptr)
+
+    '' The document's root name for the TODO store -- ScanMgr's, and shell-side with it.
+    DocRootName       as function(byval pDoc as clsDocument ptr) as DWSTRING
+
+    '' The shell's own chrome needs re-laying-out, or its TODO pane refreshing, after a
+    '' document-list change. Three separate calls rather than one "something changed",
+    '' because that is how the code already reads and a merged one would relayout more than
+    '' the caller meant.
+    '' The MRU lists and the Explorer pane. All three are shell UI reacting to a
+    '' document-list change, and all three were reached directly until the classes moved --
+    '' via includes of frmExplorer.bi and modMRU.bi that turned out to be VESTIGIAL for
+    '' everything else in those files.
+    UpdateMruFile     as sub(byval wszPath as DWSTRING)
+    UpdateMruProject  as sub(byval wszPath as DWSTRING)
+    ReloadExplorer    as sub()
+
+    RelayoutMain      as sub()
+    RelayoutTopTabs   as sub()
+    RefreshTodoList   as sub()
 end type
 
 extern gAppNotify as AppHostNotify

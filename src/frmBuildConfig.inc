@@ -14,7 +14,7 @@
 #include once "frmBuildConfig.bi"
 #include once "app/clsConfig.bi"
 #include once "clsTopTabCtl.bi"
-#include once "clsDocument.bi"
+#include once "app/clsDocument.bi"
 
 
 ' ----------------------------------------------------------------------------------------

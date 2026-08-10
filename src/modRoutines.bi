@@ -40,7 +40,6 @@ END TYPE
 
 
 declare function RichEditCenterSingleLineText( byval hRichEdit as HWND ) as long
-declare function CompleteIncludeFilename( byval pDoc as clsDocument ptr, byval wszFilename as string ) as string
 declare function getTextWidth( byval hwnd as HWND, byval wszText as DWSTRING, byval FontIndex as long ) as long
 declare function SpawnPreviousInstance() as boolean
 ' Bounded read of a WM_COPYDATA payload -- see its header. Pure, so it is assertable
@@ -52,6 +51,9 @@ declare function GetTemporaryFilename( byval wszFolder as DWSTRING, byval wszExt
 declare function GetFontCharSetID(byref wzCharsetName as DWSTRING ) as long
 ' Scintilla_GetTextBytes / Scintilla_StripTrailingWhitespace moved to
 ' app/modSciText.bi -- see there for the repaint the caller now owns.
+' NEITHER of these could move to app/ -- see modRoutines.inc for what each is bound to.
+' clsDocument reaches them as gAppHost.LoadFileText and gAppHost.ResolveIncludePath.
+declare function CompleteIncludeFilename( byval pDoc as clsDocument ptr, byval wszFilename as string ) as string
 declare function GetFileToString( byval wszFilename as DWSTRING, byref txtBuffer as string, byval pDoc as clsDocument ptr ) as boolean
 declare function IsCurrentLineIncludeFilename() as boolean
 declare function OpenSelectedDocument( byval wszFilename as DWSTRING, byval wszFunctionName as DWSTRING = "", byval nLineNumber as long = -1 ) as clsDocument ptr

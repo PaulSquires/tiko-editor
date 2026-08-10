@@ -13,7 +13,7 @@
 
 #include once "frmMain.bi"
 #include once "frmTopTabs.bi"
-#include once "clsDocument.bi"
+#include once "app/clsDocument.bi"
 
 
 ' ========================================================================================

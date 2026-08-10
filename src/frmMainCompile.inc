@@ -12,7 +12,7 @@
 '    GNU General Public License for more details.
 
 #include once "frmMain.bi"
-#include once "clsDocument.bi"
+#include once "app/clsDocument.bi"
 
 ' ========================================================================================
 ' Compile common actions

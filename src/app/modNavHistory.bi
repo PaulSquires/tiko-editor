@@ -35,7 +35,11 @@
 ' NavHistory_Clear from its session-load paths), well ahead of every Ps* control.
 ' ========================================================================================
 
-#include once "../clsDocument.bi"
+'' A SIBLING NOW, not a reach upward. This read "../clsDocument.bi" -- an app/ file
+'' including a shell one by PATH, which is the fifth vocabulary-ratchet gap
+'' 7c-step1.md records: the checker matches tokens, and a path names none. The
+'' up-reference is gone because the target came down, not because anything caught it.
+#include once "clsDocument.bi"
 
 ' Deepest history we keep. Past this the OLDEST entry is dropped -- the far end of a long
 ' history is worth less than a bounded array.

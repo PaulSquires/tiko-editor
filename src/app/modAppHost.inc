@@ -25,6 +25,10 @@ function AppHost_FirstMissing() as string
     if gAppHost.ViewUiFontSize = 0 then return "ViewUiFontSize"
     if gAppHost.StyleView      = 0 then return "StyleView"
     if gAppHost.ThemeSelectionBack = 0 then return "ThemeSelectionBack"
+    if gAppHost.LoadFileText   = 0 then return "LoadFileText"
+    if gAppHost.ResolveIncludePath = 0 then return "ResolveIncludePath"
+    if gAppHost.ConfirmLossySave   = 0 then return "ConfirmLossySave"
+    if gAppHost.ReportWriteFailure = 0 then return "ReportWriteFailure"
     if gAppHost.AskOpenPath    = 0 then return "AskOpenPath"
     if gAppHost.AskSavePath    = 0 then return "AskSavePath"
     if gAppHost.IsFindVisible  = 0 then return "IsFindVisible"
@@ -37,7 +41,17 @@ end function
 
 
 function AppNotify_FirstMissing() as string
-    if gAppNotify.CloseTab = 0 then return "CloseTab"
+    if gAppNotify.CloseTab          = 0 then return "CloseTab"
+    if gAppNotify.OnDocumentClosing = 0 then return "OnDocumentClosing"
+    if gAppNotify.OnDocumentSaved   = 0 then return "OnDocumentSaved"
+    if gAppNotify.RequestBufferScan = 0 then return "RequestBufferScan"
+    if gAppNotify.DocRootName       = 0 then return "DocRootName"
+    if gAppNotify.UpdateMruFile     = 0 then return "UpdateMruFile"
+    if gAppNotify.UpdateMruProject  = 0 then return "UpdateMruProject"
+    if gAppNotify.ReloadExplorer    = 0 then return "ReloadExplorer"
+    if gAppNotify.RelayoutMain      = 0 then return "RelayoutMain"
+    if gAppNotify.RelayoutTopTabs   = 0 then return "RelayoutTopTabs"
+    if gAppNotify.RefreshTodoList   = 0 then return "RefreshTodoList"
     return ""
 end function
 

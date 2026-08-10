@@ -12,7 +12,7 @@
 '    GNU General Public License for more details.
 
 #include once "frmMain.bi"
-#include once "clsDocument.bi"
+#include once "app/clsDocument.bi"
 #include once "frmProjectOptions.bi"
 #include once "frmBuildConfig.bi"
 #include once "frmUserTools.bi"

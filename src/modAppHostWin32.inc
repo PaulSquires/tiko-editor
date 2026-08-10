@@ -114,6 +114,66 @@ private sub AppHostW32_StyleView( byval pSciView as any ptr, byval pOwnerView as
     ViewStyle_Apply( pSciView, pOwnerView, nEncoding, sDiskFilename, bIsNew )
 end sub
 
+private function AppHostW32_LoadFileText( byval wszPath as DWSTRING, byref txtBuffer as string, _
+                                          byval pDoc as clsDocument ptr ) as boolean
+    return GetFileToString( wszPath, txtBuffer, pDoc )
+end function
+
+private function AppHostW32_ResolveIncludePath( byval pDoc as clsDocument ptr, _
+                                                byval sFilename as string ) as string
+    return CompleteIncludeFilename( pDoc, sFilename )
+end function
+
+private function AppHostW32_ConfirmLossySave( byval pDoc as clsDocument ptr, _
+                                             byval wszPath as DWSTRING, _
+                                             byval nEncoding as long ) as boolean
+    return Doc_ConfirmLossySave( pDoc, wszPath, nEncoding )
+end function
+
+private sub AppHostW32_ReportWriteFailure( byval wszPath as DWSTRING, byval wszErr as DWSTRING )
+    Doc_ReportWriteFailure( wszPath, wszErr )
+end sub
+
+private sub AppHostW32_OnDocumentClosing( byval pDoc as clsDocument ptr )
+    FindProject_OnDocumentClosing( pDoc )
+end sub
+
+private sub AppHostW32_OnDocumentSaved( byval pDoc as clsDocument ptr )
+    FindProject_OnDocumentSaved( pDoc )
+end sub
+
+private sub AppHostW32_RequestBufferScan( byval pDoc as clsDocument ptr )
+    gScanMgr.RequestBufferScan( pDoc )
+end sub
+
+private function AppHostW32_DocRootName( byval pDoc as clsDocument ptr ) as DWSTRING
+    return ScanMgr_GetRootName( pDoc )
+end function
+
+private sub AppHostW32_UpdateMruFile( byval wszPath as DWSTRING )
+    UpdateMRUList( wszPath )
+end sub
+
+private sub AppHostW32_UpdateMruProject( byval wszPath as DWSTRING )
+    UpdateMRUProjectList( wszPath )
+end sub
+
+private sub AppHostW32_ReloadExplorer()
+    LoadExplorerFiles()
+end sub
+
+private sub AppHostW32_RelayoutMain()
+    frmMain_PositionWindows
+end sub
+
+private sub AppHostW32_RelayoutTopTabs()
+    frmTopTabsInfo_PositionWindows()
+end sub
+
+private sub AppHostW32_RefreshTodoList()
+    frmOutput_UpdateToDoListview()
+end sub
+
 private function AppHostW32_ThemeSelectionBack() as ulong
     return cast(ulong, theme.editor.selection.backcolor)
 end function
@@ -171,5 +231,19 @@ sub AppHostW32_Install()
     gAppHost.AskOpenPath    = @AppHostW32_AskOpenPath
     gAppHost.AskSavePath    = @AppHostW32_AskSavePath
     gAppHost.IsFindVisible  = @AppHostW32_IsFindVisible
-    gAppNotify.CloseTab     = @AppHostW32_CloseTab
+    gAppHost.LoadFileText       = @AppHostW32_LoadFileText
+    gAppHost.ResolveIncludePath = @AppHostW32_ResolveIncludePath
+    gAppHost.ConfirmLossySave   = @AppHostW32_ConfirmLossySave
+    gAppHost.ReportWriteFailure = @AppHostW32_ReportWriteFailure
+    gAppNotify.CloseTab          = @AppHostW32_CloseTab
+    gAppNotify.OnDocumentClosing = @AppHostW32_OnDocumentClosing
+    gAppNotify.OnDocumentSaved   = @AppHostW32_OnDocumentSaved
+    gAppNotify.RequestBufferScan = @AppHostW32_RequestBufferScan
+    gAppNotify.DocRootName       = @AppHostW32_DocRootName
+    gAppNotify.UpdateMruFile     = @AppHostW32_UpdateMruFile
+    gAppNotify.UpdateMruProject  = @AppHostW32_UpdateMruProject
+    gAppNotify.ReloadExplorer    = @AppHostW32_ReloadExplorer
+    gAppNotify.RelayoutMain      = @AppHostW32_RelayoutMain
+    gAppNotify.RelayoutTopTabs   = @AppHostW32_RelayoutTopTabs
+    gAppNotify.RefreshTodoList   = @AppHostW32_RefreshTodoList
 end sub

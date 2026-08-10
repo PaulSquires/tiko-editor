@@ -114,7 +114,7 @@ type clsApp
         declare function RemoveDocument( byval pDoc as clsDocument ptr ) as long
         declare function RemoveAllDocuments() as long
         declare function GetDocumentCount() as long
-        declare function GetDocumentPtrByWindow( byval hWindow as hwnd) as clsDocument ptr
+        declare function GetDocumentPtrByWindow( byval hWindow as any ptr) as clsDocument ptr
         '' DWSTRING, NOT `byref as wstring`. Pure -- a walk of the document list comparing names.
         declare function GetDocumentPtrByFilename( byval wszName as DWSTRING ) as clsDocument ptr
         declare function GetMainDocumentPtr() as clsDocument ptr
@@ -122,9 +122,20 @@ type clsApp
         declare function GetSourceDocumentPtr( byval pDocIn as clsDocument ptr ) as clsDocument ptr
         declare function GetHeaderDocumentPtr( byval pDocIn as clsDocument ptr ) as clsDocument ptr
         declare function SaveProject( byval bSaveas as boolean = False, byval wszForcedName as DWSTRING = "" ) as boolean
-        declare function ProjectSetFileType( byval pDoc as clsDocument ptr, byval wszFiletype as DWSTRING ) as LRESULT
+        declare function ProjectSetFileType( byval pDoc as clsDocument ptr, byval wszFiletype as DWSTRING ) as integer
         declare function GetProjectCompiler() as long
         declare function IsProjectNamed() as boolean
 
 end type
 
+
+'' THE INSTANCE, and it lives with its class now. It was `dim shared gApp as clsApp` in
+'' tiko.bas, which meant the app layer referenced a global the SHELL declared -- so
+'' clsApp.inc could not compile on its own, and _check_app_standalone said so the moment the
+'' class came down.
+''
+'' IN THE HEADER, not the body, and that is the same pattern app/clsConfig.bi already uses
+'' for gConfig: including the header instantiates the global. It has to be here because
+'' clsConfig.inc and modIniParse.inc read gApp, and both are included long before any .inc
+'' of this class.
+dim shared gApp as clsApp

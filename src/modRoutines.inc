@@ -495,6 +495,9 @@ function GetFileToString( _
 end function
 
 
+
+
+
 ' ========================================================================================
 ' Try to complete the #include filename so that it resolves to a valid path
 ' Used when right clicking on filename in the editor.
@@ -557,6 +560,22 @@ function CompleteIncludeFilename( byval pDoc as clsDocument ptr, byval sFilename
  
     function = *(wszCompleteFilename).Wz()
 end function
+
+
+' NEITHER GetFileToString NOR CompleteIncludeFilename could move (7c step 3,
+' commit 3e), and BOTH WERE TRIED. Each names a clsDocument ptr, so neither could move
+' before that type did -- and once it had, each turned out to be shell-bound anyway:
+'
+'   GetFileToString decodes UTF-16 through WideToUtf8, a PRIVATE helper in
+'   modEncoding.inc that is WideCharToMultiByte. The WRITE path is already portable
+'   (Doc_EncodeForDisk, Doc_WriteToDisk are in app/); only reading still needs Win32.
+'
+'   CompleteIncludeFilename resolves against the ACTIVE BUILD CONFIGURATION and calls
+'   frmBuildConfig_getActiveBuildIndex -- a form function.
+'
+' clsDocument reaches them as gAppHost.LoadFileText and gAppHost.ResolveIncludePath.
+
+
 
 
 ' ========================================================================================

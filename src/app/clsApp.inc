@@ -12,8 +12,6 @@
 '    GNU General Public License for more details.
 
 #include once "clsApp.bi"
-#include once "frmExplorer.bi"
-#include once "modMRU.bi"
 
 
 ''
@@ -109,8 +107,8 @@ function clsApp.RemoveDocument( byval pDoc as clsDocument ptr ) as long
 
     ' Drop the closed document's TODO entries (keyed by the same name its
     ' buffer scans used) and refresh the panel
-    TodoStore_RemoveFile( ScanMgr_GetRootName( pDoc ) )
-    frmOutput_UpdateToDoListview()
+    TodoStore_RemoveFile( gAppNotify.DocRootName( pDoc ) )
+    gAppNotify.RefreshTodoList()
 
     ' Release memory associated with this pDoc
     if pDoc then delete(pDoc)
@@ -127,14 +125,14 @@ function clsApp.RemoveAllDocuments() as long
     dim pDocNext as clsDocument ptr = this.pDocList
 
     do until pDoc = 0
-        TodoStore_RemoveFile( ScanMgr_GetRootName( pDoc ) )
+        TodoStore_RemoveFile( gAppNotify.DocRootName( pDoc ) )
         pDocNext = pDoc->pDocNext
         ' Release memory associated with this pDoc
         delete pDoc
         pDoc = pDocNext
     loop
     this.pDocList = 0
-    frmOutput_UpdateToDoListview()
+    gAppNotify.RefreshTodoList()
 
     function = 0
 end function
@@ -292,10 +290,10 @@ function clsApp.SaveProject( byval bSaveAs as boolean = false, byval wszForcedNa
             if this.IsProjectNamed() = false then wFilename = ""
             ' Display the Save File Dialog
             ' Default extension is ours, not WinFBE's. Matches frmProjectOptions_SaveProjectOptions.
-            dim pwszName as wstring ptr = AfxIFileSaveDialog(HWND_FRMMAIN, @wFilename, @wstr(APPEXTENSION), IDM_PROJECTSAVE)
-            if pwszName then
-                wFilename = *pwszName
-                CoTaskMemFree(pwszName)
+            '' The HOST owns the dialog, and the CoTaskMemFree that used to be here with it.
+            dim as DWSTRING wszPick = wFilename, wszExt = APPEXTENSION
+            if gAppHost.AskSavePath( wszPick, wszExt ) then
+                wFilename = *wszPick.Wz()
             else
                 return false
             end if
@@ -346,7 +344,7 @@ function clsApp.SaveProject( byval bSaveAs as boolean = false, byval wszForcedNa
     if bIsNamed then
         ' Add to Recent Projects. The untitled workspace's path is an internal file under
         ' settings\ and must never appear there.
-        UpdateMRUProjectList(wFilename)
+        gAppNotify.UpdateMruProject(wFilename)
 
         ' A promoted workspace retires its untitled backing file. Leaving it means the next
         ' Project > Close re-establishes the OLD loose-file set, and -- worse -- that stale
@@ -361,9 +359,9 @@ function clsApp.SaveProject( byval bSaveAs as boolean = false, byval wszForcedNa
     ' The Explorer's "Save as Project..." row is present only while the workspace is
     ' untitled, so a promotion has to repaint the list or the row lingers on a project
     ' that now has a name.
-    if bWasUntitled andalso bIsNamed then LoadExplorerFiles()
+    if bWasUntitled andalso bIsNamed then gAppNotify.ReloadExplorer()
 
-    frmMain_PositionWindows
+    gAppNotify.RelayoutMain()
 
     function = true
 end function
@@ -398,7 +396,7 @@ end function
 function clsApp.ProjectSetFileType( _
             byval pDoc as clsDocument ptr, _
             byval wszFileType as DWSTRING _       ' new filetype 
-            ) as LRESULT
+            ) as integer
 
     if pDoc = 0 then exit function
     
@@ -454,7 +452,7 @@ function clsApp.ProjectSetFileType( _
     pDoc->ProjectFileType = wszFileType
 
     ' Refresh the TopTabsInfo to ensure that the file's type is displayed properly
-    frmTopTabsInfo_PositionWindows()
+    gAppNotify.RelayoutTopTabs()
 
     function = 0
 end function
@@ -477,7 +475,7 @@ end function
 
 ''
 ''
-function clsApp.GetDocumentPtrByWindow( byval hWindow as hwnd) as clsDocument ptr
+function clsApp.GetDocumentPtrByWindow( byval hWindow as any ptr) as clsDocument ptr
     ' Find the pDoc pointer based on all the available hWindow 
     ' for any loaded document.
     dim pDoc as clsDocument ptr = this.pDocList
@@ -485,14 +483,15 @@ function clsApp.GetDocumentPtrByWindow( byval hWindow as hwnd) as clsDocument pt
     
     do until pDoc = 0
         ' Determine if the incoming hWindow matches the clsDocument hWindow 
-        if (hWindow = DocView(pDoc, 0)) orelse _
-            (hWindow = DocView(pDoc, 1)) then
+        '' pDoc->hWindow(i) directly, not DocView: both sides are `any ptr` and this only
+        '' COMPARES them. DocView exists to cast a document's view to a shell-side HWND, and
+        '' nothing here wants an HWND.
+        if (hWindow = pDoc->hWindow(0)) orelse _
+            (hWindow = pDoc->hWindow(1)) then
             return pDoc
         end if   
         pDoc = pDoc->pDocNext
     loop   
     function = 0
 end function
-
-
 

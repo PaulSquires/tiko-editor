@@ -113,12 +113,6 @@ end namespace
 ' everything downstream. modDeclares.bi and frmDebug.bi include it too; #pragma once makes
 ' those no-ops and each names it so neither reads as a stray dependency.
 #include once "app/modAppConstants.bi"
-'' The app-host seam: how clsDocument and clsTopTabCtl ask the shell to make an editor view,
-'' redraw one, or put a file dialog up, without naming Win32. Declaration and body together
-'' and this early because the layer's own files reference gAppHost; the WIN32 BODIES that
-'' fill it are a separate file, included far below where frmMain's functions exist.
-#include once "app/modAppHost.bi"
-#include once "app/modAppHost.inc"
 #define APPBITS             wstr(" (64-bit)")
 #define RUNBATCHFILE        wstr("_tiko_runbatch.bat")
 #define QUICKRUNBAS         wstr("_tiko_quickrun.bas")
@@ -141,7 +135,17 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 ' because clsDocument.ToggleBreakPoint calls into it.
 #include once "app/debugParser.bi"
 #include once "frmSciHost.bi"
-#include once "clsDocument.bi"
+#include once "app/clsDocument.bi"
+'' The app-host seam: how the document model asks the shell to make an editor view, style
+'' one, or put a file dialog up, without naming Win32. The WIN32 BODIES that fill it are a
+'' separate file, included far below where frmMain's functions exist.
+''
+'' AFTER clsDocument.bi, DELIBERATELY. Several callbacks take a `clsDocument ptr`, and a
+'' record declared before that type would have to say `any ptr` and make every host cast.
+'' Nothing between the old position and here referenced gAppHost -- checked -- and only
+'' clsDocument.INC needs the record, not the .BI.
+#include once "app/modAppHost.bi"
+#include once "app/modAppHost.inc"
 '' Where a document's editor WINDOWS live. Must follow clsDocument.bi, which
 '' declares the type it takes.
 #include once "modDocViews.bi"
@@ -212,7 +216,7 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 '' link the constructor. The other ~90 methods stay in the shell's clsConfig.inc at line 225.
 #include once "app/clsConfig.inc"
 #include once "app/modProjectFolders.bi"
-#include once "clsApp.bi"
+#include once "app/clsApp.bi"
 #include once "app/clsSymbolDb.bi"
 #include once "clsScanMgr.bi"
 #include once "app/modUnusedSymbols.bi"
@@ -234,7 +238,8 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 #include once "frmOutputFloat.bi"
 
 '  Global classes
-dim shared gApp     as clsApp
+' gApp is declared at the end of app/clsApp.bi now, with the class it instantiates --
+' the app layer cannot compile on its own against a global the shell declares.
 '' gConfig is declared in app/clsConfig.bi, beside its type.
 dim shared gTTabCtl as clsTopTabCtl
 
@@ -279,7 +284,7 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modNavHistory.inc"
 #include once "frmSciHost.inc"
 #include once "modDocViews.inc"
-#include once "clsDocument.inc"
+#include once "app/clsDocument.inc"
 ' Encoding conversion self-test. After modRoutines.inc (Doc_EncodeForDisk/GetFileToString)
 ' and clsDocument.inc (the clsDocument type it instantiates for the disk round-trip).
 #include once "app/modEncodingSelfTest.bi"
@@ -289,7 +294,7 @@ dim shared gTTabCtl as clsTopTabCtl
 ' write leaves the file already on disk intact -- cannot be reached without a real file.
 #include once "app/modSaveSelfTest.bi"
 #include once "modSaveSelfTest.inc"
-#include once "clsApp.inc"
+#include once "app/clsApp.inc"
 #include once "app/clsSymbolDb.inc"
 #include once "clsScanMgr.inc"
 ' After clsSymbolDb.inc (it reads the reference counts through gSymDb's

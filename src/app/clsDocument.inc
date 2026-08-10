@@ -17,9 +17,10 @@
 ''
 
 #include once "clsDocument.bi"
-#include once "frmTopTabs.bi"
-#include once "frmBuildConfig.bi"
-#include once "modMRU.bi"
+'' Doc_EncodeForDisk / Doc_WriteToDisk. Named explicitly rather than relied on: tiko.bas
+'' pulls modEncoding.bi in indirectly, so the standalone gate's prelude never had it and this
+'' file failed on its own while the whole build was green.
+#include once "modEncoding.bi"
 
 
 ''
@@ -139,7 +140,7 @@ function clsDocument.DestroyScintillaWindows() as long
     ' that is the project-close path), and ReloadDocument, which destroys the Scintilla
     ' document while the clsDocument ptr survives and which the file watcher drives with no
     ' user action at all.
-    FindProject_OnDocumentClosing( @this )
+    gAppNotify.OnDocumentClosing( @this )
 
     for i as long = lbound(this.hWindow) to ubound(this.hWindow)
         if this.hWindow(i) then 
@@ -278,7 +279,7 @@ function clsDocument.LoadDiskFile( _
     ' this will be an UTF-8 encoded string
     dim sText as string  
 
-    if GetFileToString(wszFile, sText, @this) = false then
+    if gAppHost.LoadFileText(wszFile, sText, @this) = false then
         this.DateFileTime = PsFileWriteTime( wszFile )
     end if
 
@@ -294,7 +295,7 @@ function clsDocument.LoadDiskFile( _
     ' Kick a background symbol scan for the freshly loaded text (skipped
     ' during bulk project loading - the project-tier scan covers those files)
     if (gApp.IsProjectLoading = false) andalso (bIsTemplate = false) then
-        gScanMgr.RequestBufferScan( @this )
+        gAppNotify.RequestBufferScan( @this )
     end if
 
     function = 0
@@ -355,7 +356,7 @@ function clsDocument.InsertFile() as boolean
     if gAppHost.AskOpenPath( wszPick ) then
         ' save the main file encoding because GetFileTostring may change it
         dim as string sText
-        GetFileTostring(*wszPick.Wz(), sText, @this)
+        gAppHost.LoadFileText(*wszPick.Wz(), sText, @this)
         SciMsg( pSci, SCI_INSERTTEXT, -1, cast(integer, strptr(sText)) )
         this.ApplyProperties()
     end if
@@ -435,7 +436,7 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
     ' Asking BEFORE the write, so Cancel leaves the file on disk untouched and the document
     ' dirty -- same contract as a failed write below.
     if bLossy then
-        if Doc_ConfirmLossySave( @this, wszFilename, this.FileEncoding ) = false then return true
+        if gAppHost.ConfirmLossySave( @this, wszFilename, this.FileEncoding ) = false then return true
     end if
 
     dim as DWSTRING wszErr
@@ -443,7 +444,7 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
         ' The file on disk is untouched. Say so, and leave the document DIRTY: the whole
         ' point is that the close prompt must still fire and the tab must still show
         ' modified, so the user does not walk away from unsaved work.
-        Doc_ReportWriteFailure( wszFilename, wszErr )
+        gAppHost.ReportWriteFailure( wszFilename, wszErr )
         return true
     end if
 
@@ -453,7 +454,7 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
     ' if this was a new document then it needs to be saved to Recent File list.
     if this.IsNewFlag then
         if gApp.IsProjectNamed() = false then
-            UpdateMRUList(wszFilename)
+            gAppNotify.UpdateMruFile(wszFilename)
         end if
     end if
     this.IsNewFlag = false
@@ -466,7 +467,7 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
     ' HERE rather than in OnCommand_FileSave: this is the single point every save route
     ' converges on -- Save, Save As, Save All, the close prompt, and FindProject's own
     ' SaveAllDirty, which never goes through the command handler at all.
-    FindProject_OnDocumentSaved( @this )
+    gAppNotify.OnDocumentSaved( @this )
 
     function = false
 end function
@@ -492,7 +493,7 @@ function clsDocument.SaveTempFile( byval wszFilename as DWSTRING ) as boolean
     ' Quick Run compiles this file, so a silent character replacement here does not merely
     ' damage a saved document -- it compiles source the user never wrote.
     if bLossy then
-        if Doc_ConfirmLossySave( @this, wszFilename, this.FileEncoding ) = false then return true
+        if gAppHost.ConfirmLossySave( @this, wszFilename, this.FileEncoding ) = false then return true
     end if
 
     ' Same inverted convention as SaveFile: FALSE = the bytes are on disk. This one feeds
@@ -500,7 +501,7 @@ function clsDocument.SaveTempFile( byval wszFilename as DWSTRING ) as boolean
     ' happened to be lying around and run THAT.
     dim as DWSTRING wszErr
     if Doc_WriteToDisk( wszFilename, sOut, wszErr ) <> DOCWRITE_OK then
-        Doc_ReportWriteFailure( wszFilename, wszErr )
+        gAppHost.ReportWriteFailure( wszFilename, wszErr )
         return true
     end if
 
@@ -1790,7 +1791,7 @@ function clsDocument.AddIncludeFromParse( byval sLine as string ) as boolean
 
     if len(sFilename) = 0 then return false
     
-    sFilename = CompleteIncludeFilename( @this, sFilename )
+    sFilename = gAppHost.ResolveIncludePath( @this, sFilename )
     if PsFileExists(sFilename) = false then return false
     
     ' At this point, the filename exists so save it to our list of include files

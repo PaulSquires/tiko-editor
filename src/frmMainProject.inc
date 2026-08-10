@@ -12,7 +12,7 @@
 '    GNU General Public License for more details.
 
 #include once "frmMain.bi"
-#include once "clsDocument.bi"
+#include once "app/clsDocument.bi"
 
 ' ========================================================================================
 ' Add one or more files to the project (but don't open them to Tabs)

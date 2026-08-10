@@ -14,8 +14,8 @@
 #include once "frmMainOnCommand.bi"
 
 #include once "frmOutput.bi"
-#include once "clsApp.bi"
-#include once "clsDocument.bi"
+#include once "app/clsApp.bi"
+#include once "app/clsDocument.bi"
 #include once "frmMain.bi"
 #include once "frmFunctions.bi"
 

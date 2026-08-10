@@ -11,8 +11,8 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
-#include once "clsApp.bi"
-#include once "clsDocument.bi"
+#include once "app/clsApp.bi"
+#include once "app/clsDocument.bi"
 #include once "frmMain.bi"
 #include once "frmMainOnNotify.bi"
 
