@@ -18,7 +18,7 @@ Read the numbers below as a measurement of the *approach*, not of the progress.
 | the widget tree is well-formed | `--selftest`, 92 assertions, 0 failing |
 | the app layer is usable from a second binary | 8 menu titles resolve through `L()`; 85 chords parse |
 | tiko still builds | `_compile_fast.bat` at every one of the 14 commits |
-| PsPlatform is not broken by any of it | `build check` 45 suites; `_check_scihost` after each PsPlatform commit |
+| PsPlatform is not broken by any of it | `build check` 46 suites; `_check_scihost` after each PsPlatform commit |
 | the boundary holds | `_check_shell.bat`, and `_check_app_standalone` at 11 clean / 0 errors |
 
 **THE ORACLE IS THE ONE THAT MATTERS.** Every other line above is a relation, and a
@@ -78,7 +78,7 @@ counted debt at baseline 3.
 
 **FOUR THINGS HAD TO MOVE DOWN INTO `app/`**, all of them already PsCore-clean and none of
 them a judgement call once found: `clsConfig`'s constructor, `modTextFile.inc`,
-`LoadLocalizationFile`, and the key-binding model (`gKeys` and the 112 defaults). Each was
+`LoadLocalizationFile`, and the key-binding model (`gKeys` and the 109 defaults). Each was
 found by the shell needing it, not by reading.
 
 **A PATH IS NOT AN IDENTIFIER.** `app/modMenuDefinitions.inc:22` includes
@@ -125,8 +125,27 @@ the largest single item in the step, exactly as the plan warned.
 Step 1 answers "does the approach work". The question it does **not** answer is the one
 `d2-decision.md` flagged as where the estimate's variance lives: **the pump collapse.**
 Fifteen message loops, 13 `IsDialogMessage` sites, eight ordered filter claims, three
-accelerator tables — and `PsModalHost` still proven exactly once, interactively, for one
-message box, with no headless test.
+accelerator tables.
 
-None of that got easier here. A `tests/psmodalhost` suite is the cheapest thing that would
-tell you whether it is going to.
+**`tests/psmodalhost` NOW EXISTS**, which this page recommended as the cheapest way to find
+out — and the result is a half-answer worth having precisely because the halves are clean.
+
+The routing decisions moved into `PsModalRouteEvent`, a pure function of
+`(event kind, bMine)` with no window and no state, and the suite asserts them exhaustively:
+every event kind, both values of `bMine`, so a hole in the table fails rather than delivering
+one kind to nobody. Both classic nested-pump bugs — swallowing the quit, dispatching the
+owner's resize — were introduced deliberately to check the assertions bite.
+
+**It had to be that shape.** `build check` is HEADLESS BY DESIGN: no suite calls
+`PsPlatformInit`, and the CI workflow says why — *"hello calls SDL_Init(0) — no video
+subsystem, so no display needed"*. A suite that opened a window would pass here and fail on
+every Linux runner, which is worse than no suite. That constraint applies to anything else in
+this port that wants testing.
+
+**And it leaves the other half exactly where it was.** Window creation, both `SetModal` calls
+and their ORDER, measuring the root only after attaching it, the buffer, the paint loop, the
+timer service, the teardown sequence — every one needs a compositor. **A green `psmodalhost`
+says the pump DECIDES correctly, not that the dialog works and not that modality holds.**
+
+So the remaining risk is now specific rather than diffuse: it is `Run()`'s ordering
+constraints, and the only thing that will exercise them is tiko's first real modal dialog.

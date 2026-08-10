@@ -1,7 +1,13 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ `6d79912f1`; PsPlatform **`main`** @ `903d6a2`;
+tiko `feat/cross-platform` @ `e7b267dbb`; PsPlatform **`main`** @ `ec3d972`;
 HelpCenter **`main`** @ `02a4c18`. All build warning-free, all are pushed, and tiko runs.
+
+**THERE ARE TWO BINARIES IN tiko NOW.** `tiko.exe` from `tiko.bas`, unchanged and building at
+every commit; and `_shell\tikoshell.exe` from `src\shell\tikoshell.bas`, which is phase 7c's
+shell. Build them with `_compile_fast.bat` and `_compile_shell.bat`; run the second with
+`_run_shell.bat`, which puts SDL3 on `PATH` — without it you get exit 127 and no message.
+`_shell\` is gitignored, unlike `tiko.exe`.
 
 **THREE REPOS NOW, NOT TWO.** `C:\dev\HelpCenter` was version-controlled on 2026-08-09 and
 lives at `PaulSquires/HelpCenter`. The GENERATOR is tracked; the OUTPUT is not — `site/`,
@@ -22,9 +28,15 @@ public site until someone publishes.
 that names the old one — a script, a checkout, a `git show master:…` — is now silently pointing
 at nothing. tiko's own branches are unaffected: `main`, `development`, `feat/cross-platform`.
 
-**Every count on this page was re-verified on 2026-08-07**, and the D2 sections again on
-2026-08-09. If you are reading this later, re-run them before quoting them — the commands are
-beside each number, and this page's record is that its numbers rot faster than its prose.
+**Every count on this page was re-verified on 2026-08-09**, and the gate table and shell
+figures again at the end of that day. If you are reading this later, re-run them before quoting
+them — the commands are beside each number, and this page's record is that its numbers rot
+faster than its prose.
+
+**Three of them rotted inside a single day and were caught by re-running, not by reading**:
+`_check_app_layer` went 30 files → 36, `_check_app_standalone` 7 clean → 11, and the binding
+count quoted as "112" is **109** — 112 was a `grep -c` of the call sites, not the array. That
+last one had already been corrected once and came back.
 
 ## If you are picking this up cold
 
@@ -39,7 +51,10 @@ Read in this order, and do not skip the first:
    Read its two closing sections first — what the prerequisites taught, and the struck item 2,
    which is the clearest thing on this shelf about what a re-measurement is worth: the strongest
    argument for the losing shape, refuted by `wc` and `grep`.
-4. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
+4. [`7c-step1.md`](7c-step1.md) — what the shell binary is, and what it is evidence FOR. Read
+   its "what is NOT verified" section, which is deliberately the longer half. Its results
+   section is four lines and its caveats are twenty, and that ratio is the honest one.
+5. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
    irreducible, investigated. **It was not a blocker and never had been.** Short, and it is the
    clearest example on this whole shelf of a claim that survived because nobody checked it.
    **Its recommendation has since been implemented**: WebView2 is gone from the tree.
@@ -48,6 +63,14 @@ Read in this order, and do not skip the first:
 or reading the callers, and none from the gates. When a note here says something is done,
 blocked, or not yours to decide, check it before believing it — that claim was true when written
 and this page's own record is that it stops being true quickly.
+
+**Step 1 said it twice more, and the second time is the sharper one.** The shell shipped a
+commit whose UI was visibly unscaled while 21 assertions passed — every one of them a RELATION
+between rectangles, and relations hold perfectly at the wrong scale. Then the *fix* for that
+shipped an assertion advertised as "the one that would have caught it" which **would not
+have**: it read the surface's scale live and passed either way. A green assertion that
+constrains nothing looks exactly like a green assertion that constrains a lot. Both were found
+by looking at the screen.
 
 **The sharpest instance, because it cuts the other way:** `PsTheme` landed in PsPlatform with a
 clean build and 43 green suites, and was pushed three times — while carrying a defect that made
@@ -65,8 +88,8 @@ include graph, not just PsPlatform's own suites.
 **Phase 7d is done, 7c's PREREQUISITE is done, the DWSTRING type swap has landed, and this
 page's whole follow-up queue is closed.** tiko's editor is a `PsSciView` rendered with
 Blend2D, hosted in a Win32 window through PsPlatform's bridge. `DWSTRING` means PsCore's
-everywhere; `PsCompat.bi` is deleted. All five gates are green, including
-`_check_app_standalone` at **7 clean / 0 with errors**.
+everywhere; `PsCompat.bi` is deleted. All gates are green — **six now**, and
+`_check_app_standalone` **links** as well as compiles, at 11 clean / 0 errors.
 
 **7c's STEP 1 IS DONE AND 7c IS NOT.** `_shell\tikoshell.exe` runs: `frmMain`'s chrome, the
 editor, and every dock panel stubbed, in one binary that is not merged. Its layout is checked
@@ -80,9 +103,32 @@ which was the most consequential error it has carried; the correction is not an 
 overclaim in the other direction.
 
 **The next real question is the one step 1 does not touch:** the pump collapse — 15 message
-loops, 13 `IsDialogMessage` sites, eight ordered filter claims — and `PsModalHost`, still
-proven exactly once, interactively, for one message box, with no headless test. That is where
-`d2-decision.md` said the estimate's variance lives, and nothing in step 1 moved it.
+loops, 13 `IsDialogMessage` sites, eight ordered filter claims. That is where `d2-decision.md`
+said the estimate's variance lives, and nothing in step 1 moved it.
+
+**`PsModalHost` IS HALF-ANSWERED NOW, and knowing which half is the point.** It used to be
+"proven exactly once, interactively, for one message box, with no headless test". Its routing
+decisions moved into `PsModalRouteEvent` — a pure function of `(event kind, bMine)`, no window,
+no state — and `tests/psmodalhost` asserts them exhaustively: every event kind, both values of
+`bMine`, so a hole in the table fails rather than delivering one kind to nobody.
+
+**What that closed:** the four ways a nested pump goes wrong, three of which look like a hang.
+Chiefly that `PSEV_QUIT` does not consult `bMine` — route a quit by surface first and the box
+ends, the outer loop never learns, and the application runs on with its main window gone. Both
+that bug and "dispatch the owner's resize" were introduced deliberately to check the assertions
+bite; each was caught by the one written for it.
+
+**What it did NOT close, which is most of `Run()`:** window creation, both `SetModal` calls and
+their ORDER, measuring the root only after attaching it, the back buffer, the paint loop, the
+timer service, and the teardown sequence. Every one needs a compositor. **A green
+`psmodalhost` says the pump DECIDES correctly — not that the dialog works, and not that
+modality holds.**
+
+**And the obstacle is worth knowing before you try to extend it.** `build check` is HEADLESS BY
+DESIGN: no suite calls `PsPlatformInit`, and the CI workflow says why — *"hello calls
+SDL_Init(0) — no video subsystem, so no display needed"*. A suite that opens a window passes on
+this machine and fails on every Linux runner. That constraint is why the decisions had to be
+split out at all, and it applies to anything else here that wants testing.
 
 **D2 IS TAKEN — SHAPE A, AND THE NEXT STEP IS THE SHELL SKELETON.** Decided by the author on
 2026-08-09: **SDL3 on both platforms, no Win32 backend.** `frmMain` becomes a `PsSurface`;
@@ -133,12 +179,25 @@ obligations twice.
    output pane. 36 headless assertions, four palettes, verified by hand. **It found three
    defects nothing headless could see** — see `d2-decision.md`.
 
-**WHAT IS STILL TRUE, AND MATTERS MORE THAN THE TICKS ABOVE:** tiko's 43 `SetTimer` sites are
-untouched, tiko's message loop does not call `PsTimerService`, and **nothing in tiko is themed
-by `PsTheme`**. All of that work landed in PsPlatform. tiko's only stake in it so far is the
-editor: its clipboard, its caret blink and its Scintilla styling are wired by hand in
-`frmSciHost.inc`, because **the editor is not a widget and none of the three reaches it
-automatically**.
+**WHAT IS STILL TRUE OF `tiko.exe`, AND MATTERS MORE THAN THE TICKS ABOVE:** tiko's 43
+`SetTimer` sites are untouched, its message loop does not call `PsTimerService`, and **nothing
+in `tiko.exe` is themed by `PsTheme`**. All of that work landed in PsPlatform. tiko's only
+stake in it so far is the editor: its clipboard, its caret blink and its Scintilla styling are
+wired by hand in `frmSciHost.inc`, because **the editor is not a widget and none of the three
+reaches it automatically**.
+
+**THE SHELL BINARY IS WHERE ALL THREE ARE ACTUALLY USED**, which is the point of it: it runs
+`PsTimerService` in its pump, applies a real tiko `.theme` through `PsThemeApply`, and drives
+`PsAccel` from tiko's own 109 bindings (85 of which carry a chord). None of that has reached `tiko.exe` and none of it
+should until 7c lands — but it is no longer true that the toolkit's three prerequisites have
+no consumer.
+
+**AND THE EDITOR SEAM IS STILL THREE HOST OBLIGATIONS WITH NO DEFAULT.** The shell hit every
+one of them again from scratch — clipboard, caret, and Scintilla styling — plus a fourth
+nobody had written down: **the editor's FONT SIZE**. `PsTextEngine` draws the widgets;
+Scintilla keeps its own style table, so reopening the engine at a scaled size leaves the code
+tiny in a correctly scaled window. `minieditor` is the only host in PsPlatform that ever
+called `SetFontPixelSize`. Whatever shape 7c takes inherits all four.
 
 Two facts that made this look otherwise were stale and are now fixed: **Gate 5 is done, not
 "not started"** (26 widgets exist), and `PsWin32Host` — which D2 assumed could not exist — is
@@ -174,12 +233,27 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | `_compile_fast.bat` | gas64 build, zero warnings | green |
 | `_check_scihost.bat` | the editor works — 26 assertions, incl. an **A/B against a stock Scintilla window in the same process** | green |
 | `_check_package.bat` | tiko runs with **only the Windows directories on PATH** | green, ~1s |
-| `_check_app_layer.bat` | `src/app` names no Win32 or AfxNova token (30 files) | green |
-| `_check_app_standalone.bat` | `src/app` **compiles** against PsCore alone | green — 7 clean, 0 errors |
+| `_check_app_layer.bat` | `src/app` names no Win32 or AfxNova token (36 files) | green |
+| `_check_app_standalone.bat` | `src/app` compiles against PsCore alone **and LINKS as one unit** | green — 11 clean, 0 errors, debt 3 |
+| `_check_shell.bat` | `src/shell` includes no Win32 shell header, and carries no `PsC.` | green |
 
 The ratchet is the weak one and knows it: it greps a hand-written vocabulary, and has had
-three gaps in three audits. The standalone compile is the real test — read a green ratchet as
-evidence, never as proof.
+three gaps in three audits — **five now**. The fourth was `KeyBindings_PickListKeyToValue`,
+reached without naming an `Afx` or Win32 token at all. The fifth is the one worth remembering:
+`app/modMenuDefinitions.inc:22` includes `"../modKeyBindings.bi"`, the app layer reaching UP
+into the shell **by relative path**, and no token scan can see it because A PATH IS NOT AN
+IDENTIFIER. That is why `_check_shell.bat` reads `#include` lines instead.
+
+**`_check_app_standalone` LINKS NOW, AND THAT IS NEW.** It ran `fbc -c` — compile only — for
+its whole life, so a missing BODY was invisible to it by construction, and it reported 7 clean
+/ 0 errors while `src/app` **had never linked on its own**. `app/clsConfig.bi` declares
+`dim shared gConfig`, so including the header instantiates it, and the constructor was in the
+shell. Found by the shell binary, which is the first thing that ever linked the layer.
+
+The link half carries a counted DEBT, baseline 3: `ProcessFromCurdriveApp` (already pure
+PsCore), `FilenameOriginalCase` (real Win32, wants a PsCore canonical-path call first), and
+`KeyBindings_PickListKeyToValue`. It fails on a fourth. **Delete the baseline when it reaches
+zero** — the file says so too.
 
 **And read every green tick above as evidence too.** All 27 suites and all five gates were
 green throughout the period when the editor had no right-click menu and no mouse wheel. The

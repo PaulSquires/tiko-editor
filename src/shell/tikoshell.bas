@@ -144,7 +144,7 @@
 #include once "app/modTextFile.inc"
 #include once "app/modLocalization.inc"
 #include once "app/modAppState.inc"
-'' The binding DATA -- gKeys and the 112 defaults. Split out of src/modKeyBindings.inc for
+'' The binding DATA -- gKeys and the 109 defaults. Split out of src/modKeyBindings.inc for
 '' this commit: getMenuAccelText walks gKeys to caption a menu row, so without it every
 '' accelerator column in the menus above rendered blank.
 #include once "app/modKeyBindings.inc"
@@ -227,7 +227,7 @@ dim shared as long g_nPass, g_nFail
 dim shared as long g_nBarOpenCalls
 dim shared as any ptr g_pLastBarMenu
 
-'' The accelerator table, built from tiko's own 112 default bindings. Consulted in the pump
+'' The accelerator table, built from tiko's own 109 default bindings, 85 of which carry a chord. Consulted in the pump
 '' BETWEEN the menu host and surf.Dispatch -- see the loop for why that order is fixed.
 dim shared as PsAccelTable g_accel
 dim shared as long g_nAccelSkipped
@@ -464,11 +464,11 @@ end sub
 '' ---------------------------------------------------------------------------------------
 '' THE ACCELERATOR TABLE, FROM tiko's OWN BINDINGS.
 ''
-'' gKeys carries 112 commands, each with a default chord and an optional user override, and
+'' gKeys carries 109 commands, each with a default chord and an optional user override, and
 '' getMenuAccelText already renders that same pair beside a menu row. Feeding both from one
 '' array is the point: a shortcut that fires and a label that says it fires cannot disagree.
 ''
-'' SKIPPED ENTRIES ARE COUNTED RATHER THAN IGNORED. Most of the 112 have no default chord at
+'' SKIPPED ENTRIES ARE COUNTED RATHER THAN IGNORED. Most of the 109 have no default chord at
 '' all, which is not a failure -- but a chord that fails to PARSE is, and the two would be
 '' indistinguishable if the count were not kept. The self-test asserts it.
 '' ---------------------------------------------------------------------------------------
@@ -1511,7 +1511,7 @@ end function
                                PsScaleBy(SH_INFO_ABSENT_MARGIN, 1.0)), str(g_rcDoc.y)
         end scope
 
-        '' ---- ACCELERATORS, FROM tiko's OWN 112 BINDINGS -------------------------------
+        '' ---- ACCELERATORS, FROM tiko's OWN 109 BINDINGS -------------------------------
         Check "the binding table loaded", (ubound(gKeys) > 100), _
               str(ubound(gKeys) + 1) & " commands"
         Check "  and every chord in it parsed", (g_nAccelSkipped = 0), _
