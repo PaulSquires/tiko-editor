@@ -94,6 +94,12 @@
 #include once "ui/core/PsThemeLoadFile.inc"
 #include once "ui/core/PsLayout.inc"
 #include once "ui/core/PsAccel.inc"
+'' The first modal. PsModalHost.Run had NO CALLER anywhere in either tree before this --
+'' PsModalRoute.bi records it as "exercised exactly once, interactively, by one message box
+'' in one demo", and that demo no longer calls it; gallery2 includes the header and stops
+'' there. So this binary is its first and only caller, and everything Run does that
+'' tests/psmodalhost cannot reach is being executed here for the first time.
+#include once "ui/core/PsModalHost.inc"
 #include once "ui/controls/PsMenuBar.inc"
 #include once "ui/controls/PsStatusBar.inc"
 #include once "ui/controls/PsTabBar.inc"
@@ -244,6 +250,12 @@ dim shared as PsAccelTable g_accel        '' tiko's pWindow->AccelHandle, from g
 dim shared as PsAccelTable g_accelTools   '' tiko's ghAccelUserTools, from gConfig.Tools
 dim shared as PsAccelTable g_accelBuilds  '' tiko's ghAccelBuildConfigurations, from gConfig.Builds
 dim shared as long g_nAccelSkipped
+
+'' Set by the Exit command once the user has confirmed. The pump owns `bRunning` as a local,
+'' and a command handler cannot reach it -- so the answer is parked here and read at the top
+'' of the next iteration rather than the pump variable being promoted to a global for one
+'' caller.
+dim shared as boolean g_bQuitRequested
 
 '' The menubar titles' first letters, kept HERE because PsMenuBar has no GetCaption and
 '' should not grow one for this: the host wrote the captions and is the natural owner of a
@@ -1227,6 +1239,52 @@ sub OnBarCloseRequest( byval pBar as any ptr, byval ud as any ptr )
     g_menus.CloseAll()
 end sub
 
+'' ---------------------------------------------------------------------------------------
+'' THE FIRST MODAL DIALOG IN THE PORT.
+''
+'' tiko's own Exit confirmation, frmMain.inc:1282-1287: with gConfig.AskExit set it asks
+'' L(213) under caption L(214) with a question icon and Yes/No/Cancel, and anything but Yes
+'' cancels the close. Reproduced here because a REAL command whose real behaviour is a
+'' message box exercises Run() in the shape the port will actually use it.
+''
+'' THE BUTTONS ARE BUILT WITH AddButton, NOT AddPreset. PsMessageBox.bi:122-124 is explicit
+'' that preset captions are English literals and "a localised host uses AddButton" -- and
+'' tiko is a localised host. Ids 94, 95 and 1 already exist in all six .lang files, so this
+'' adds no id and cannot render blank.
+''
+'' THE CANCEL ID IS SET EXPLICITLY even though the last button IS Cancel and the control
+'' would default to it. The header calls that a convention rather than a law and warns that a
+'' host whose last button is destructive must set it; relying on the default would make this
+'' code wrong the day somebody reorders the buttons.
+''
+'' WINDOWLESS, THIS RETURNS CANCEL AND DOES NOT QUIT. PsMessageBoxShowModal returns the
+'' resolved cancel id when the surface cannot be created, which --selftest relies on: it has
+'' no window, so the box cannot be shown, and the safe answer is the one that keeps running.
+'' COMPOSING IS SPLIT FROM SHOWING so the composition can be asserted. Everything above --
+'' the localised captions, the button ids, the cancel id -- is decided here and is reachable
+'' windowlessly; only PsMessageBoxShowModal needs a compositor. Without the split, the one
+'' part of this that a suite CAN check would sit behind the part it cannot.
+sub BuildExitBox( byref box as PsMessageBox )
+    box.SetCaption( L(214, "Confirm") )
+    box.SetText( L(213, "Are you sure you want to exit?") )
+    box.SetIcon( MBX_ICON_QUESTION )
+
+    box.AddButton( L(94, "Yes"),    MBX_ID_YES )
+    box.AddButton( L(95, "No"),     MBX_ID_NO )
+    box.AddButton( L(1,  "Cancel"), MBX_ID_CANCEL )
+    box.SetDefaultButton( 0 )
+    box.SetCancelId( MBX_ID_CANCEL )
+end sub
+
+
+function ConfirmExit() as boolean
+    if g_pSurf = 0 then return false
+    dim as PsMessageBox box
+    BuildExitBox( box )
+    return (PsMessageBoxShowModal( g_pSurf, box ) = MBX_ID_YES)
+end function
+
+
 sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any ptr )
     '' Printed first, always, so a command ARRIVING is visible even when nothing is bound
     '' to it. Most ids reach nothing here and that is the design -- their handlers are in
@@ -1244,6 +1302,11 @@ sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any pt
     '' pure function of the record, so flipping a field IS the whole operation.
     dim as boolean bHandled = true
     select case nId
+        '' The one command in this binary that raises a real dialog. bHandled stays true so
+        '' the relayout below runs either way: the modal painted over the shell, and the
+        '' damage it left is the shell's to repair.
+        case IDM_EXIT             : if ConfirmExit() then g_bQuitRequested = true
+
         case IDM_EXPLORERPOSITION : g_state.bExplorerRight = not g_state.bExplorerRight
         case IDM_VIEWSIDEPANEL    : g_state.bPanelVisible  = not g_state.bPanelVisible
         case IDM_VIEWOUTPUT       : g_state.bOutputVisible = not g_state.bOutputVisible
@@ -2002,6 +2065,76 @@ end function
             surf.bKeyConsumed = false
         end scope
 
+        '' ---- THE FIRST MODAL: WHAT IS REACHABLE WITHOUT A COMPOSITOR ------------------
+        '' Almost nothing about a modal dialog is assertable here, and the report says so at
+        '' length. What IS assertable is the box's COMPOSITION, which is why BuildExitBox is
+        '' split out from ConfirmExit: the captions, the ids and the dismissal rules are
+        '' decided windowlessly and only the showing needs a display.
+        scope
+            dim as PsMessageBox box
+            BuildExitBox( box )
+
+            Check "the exit box carries three buttons", (box.GetButtonCount() = 3), _
+                  str(box.GetButtonCount())
+            Check "  Yes first, because it is the default", (box.ButtonId(0) = MBX_ID_YES)
+            Check "  then No", (box.ButtonId(1) = MBX_ID_NO)
+            Check "  then Cancel", (box.ButtonId(2) = MBX_ID_CANCEL)
+            Check "  Escape resolves to Cancel", (box.ResolveCancelId() = MBX_ID_CANCEL), _
+                  str(box.ResolveCancelId())
+
+            '' AND THAT ONE IS VACUOUS AGAINST SetCancelId, checked by removing the call:
+            '' still 146/0, because Cancel IS the last button and the control's unset
+            '' convention resolves to the last button anyway. Said here rather than left for
+            '' a reader to discover.
+            ''
+            '' What the explicit SetCancelId actually defends against is REORDERING, so that
+            '' is what gets asserted -- on a box built the wrong way round, where the
+            '' convention alone would answer "Yes" to a question the user escaped out of.
+            scope
+                dim as PsMessageBox rev
+                rev.AddButton( L(1,  "Cancel"), MBX_ID_CANCEL )
+                rev.AddButton( L(95, "No"),     MBX_ID_NO )
+                rev.AddButton( L(94, "Yes"),    MBX_ID_YES )
+                Check "  unset, the convention would make Escape mean the LAST button", _
+                      (rev.ResolveCancelId() = MBX_ID_YES), str(rev.ResolveCancelId())
+                rev.SetCancelId( MBX_ID_CANCEL )
+                Check "  set, Escape means Cancel wherever Cancel sits", _
+                      (rev.ResolveCancelId() = MBX_ID_CANCEL), str(rev.ResolveCancelId())
+            end scope
+            Check "  and focus starts on the default", (box.ResolveFocusIndex() = 0), _
+                  str(box.ResolveFocusIndex())
+
+            '' THE BLANK-RENDER TRAP. L(id, "default") DISCARDS the default -- an id missing
+            '' from a .lang file renders as an empty string with nothing to say so. A modal
+            '' asking an empty question above three blank buttons is the failure mode, and it
+            '' is invisible to every other assertion in this file.
+            Check "  every localised string in it resolved", _
+                  ((PsLen(L(213,"")) > 0) andalso (PsLen(L(214,"")) > 0) andalso _
+                   (PsLen(L(94,"")) > 0) andalso (PsLen(L(95,"")) > 0) andalso _
+                   (PsLen(L(1,"")) > 0))
+
+            '' NO SURFACE MEANS "DO NOT QUIT", and g_pSurf is nulled to get there.
+            ''
+            '' THIS HUNG THE SELF-TEST ON FIRST WRITE, and the reason is worth more than the
+            '' assertion. `--selftest` is described in this file's header as WINDOWLESS, and
+            '' that is true of the SHELL's surface -- but PsPlatformInit is called (PsSciView
+            '' needs the text engine), so PsModalHost.Run can and does create a window of its
+            '' own and pump it. Called with the live g_pSurf, ConfirmExit put a real modal on
+            '' screen and blocked forever waiting for a button nobody was going to press.
+            ''
+            '' "Windowless" is a property of what this test BUILDS, not a guarantee about
+            '' what it can be made to do. Any future assertion that reaches a Show/Run/DoModal
+            '' has the same trap under it.
+            scope
+                dim as PsSurface ptr pWas = g_pSurf
+                g_pSurf = 0
+                Check "and with no surface the exit is refused, not assumed", _
+                      (ConfirmExit() = false)
+                Check "  so nothing requested a quit", (g_bQuitRequested = false)
+                g_pSurf = pWas
+            end scope
+        end scope
+
         '' ---- THE BAND WALK ------------------------------------------------------------
         '' Driven at the ORACLE's inputs so a failure here and a line in
         '' docs/port/layout-oracle/ are the same numbers.
@@ -2494,6 +2627,13 @@ end function
     dim as PsEvent ev
     dim as boolean bRunning = true
     do while bRunning
+        '' A command handler cannot reach `bRunning`, so the Exit confirmation parks its
+        '' answer and it is read here. Checked at the TOP: the handler ran inside the
+        '' previous iteration, and the rest of that iteration -- relayout, paint, present --
+        '' still had to complete or the shell would exit having left the modal's damage on
+        '' screen for a frame.
+        if g_bQuitRequested then exit do
+
         dim as ulongint nNow = g_plat.events.Ticks()
         PsTimerService( nNow )
 
