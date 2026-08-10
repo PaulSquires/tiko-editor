@@ -120,10 +120,31 @@ function ShellTabs_Open( byval wszPath as DWSTRING ) as long
     g_view->Msg( SCI_SETDOCPOINTER, 0, cast(integer, g_tabDocs(idx).pSciDoc) )
     g_nTabCur = idx
 
+    '' ---- THE ORDER HERE IS THE WHOLE THING, and getting it wrong shows a file that
+    '' opens, tabs correctly, and is EMPTY.
+    ''
+    '' LoadDiskFile only fills clsDocument.TextBuffer -- it never touches Scintilla.
+    '' AssignTextBuffer is what pushes that buffer in, and it CREATES THE VIEWS ITSELF:
+    ''
+    ''     "If a valid scintilla window already exists then this means that a previous
+    ''      function has already assigned the buffer text to the scintilla window so we
+    ''      can not do it a second time"
+    ''     if gAppHost.IsViewAlive(this.hWindow(0)) then exit function
+    ''
+    '' So calling CreateScintillaWindows first -- which looks like the obvious setup step --
+    '' makes that guard fire and the assignment never happens. It is a guard against
+    '' DOUBLE assignment, and an explicit create is indistinguishable from a first one.
+    '' Two tabs opened and both were blank.
     dim as clsDocument ptr pDoc = new clsDocument
-    pDoc->CreateScintillaWindows()
     pDoc->LoadDiskFile( wszPath )
+    pDoc->AssignTextBuffer()
     pDoc->ApplyProperties()
+
+    '' REPORTED, because an empty document looks exactly like a working one from outside:
+    '' the tab appears, the title is right, and the pane is blank. This is what the blank-tab
+    '' bug above would have shown as 0 bytes.
+    print "tikoshell: " & PsPathName( wszPath ).Utf8 & " -- " & _
+          str( SciMsg( g_view->pSci, SCI_GETLENGTH, 0, 0 ) ) & " bytes"
 
     g_tabDocs(idx).pDoc   = pDoc
     g_tabDocs(idx).nPos   = 0

@@ -2888,6 +2888,57 @@ end function
                 Check "  and clear empties it", (g_tabs->GetCount() = 0)
             end scope
 
+            '' THE BLANK-TAB BUG, ASSERTED. Two tabs opened, both titled correctly, both
+            '' EMPTY -- and nothing in this suite noticed, because the failure is entirely
+            '' inside Scintilla. It cost a screenshot to find.
+            ''
+            '' LoadDiskFile only fills clsDocument.TextBuffer. AssignTextBuffer is what
+            '' pushes it in, AND IT CREATES THE VIEWS ITSELF -- so its own guard,
+            ''     if gAppHost.IsViewAlive(this.hWindow(0)) then exit function
+            '' fires against an explicit CreateScintillaWindows and the text never arrives.
+            '' A guard against DOUBLE assignment cannot tell an eager caller from a second
+            '' one.
+            ''
+            '' Driven on a SCRATCH Scintilla document so the editor the rest of this suite
+            '' looks at is left exactly as it was.
+            scope
+                dim as any ptr pWasDoc = cast( any ptr, g_view->Msg(SCI_GETDOCPOINTER, 0, 0) )
+                dim as any ptr pScratch = cast( any ptr, g_view->Msg(SCI_CREATEDOCUMENT, 0, 0) )
+                Check "a scratch document can be created", (pScratch <> 0)
+
+                if pScratch <> 0 then
+                    g_view->Msg( SCI_SETDOCPOINTER, 0, cast(integer, pScratch) )
+
+                    '' THE RIGHT ORDER: buffer, then assign.
+                    dim as clsDocument ptr pGood = new clsDocument
+                    pGood->TextBuffer = "hello"
+                    pGood->AssignTextBuffer()
+                    Check "  AssignTextBuffer puts the buffer into the view", _
+                          (SciMsg(g_view->pSci, SCI_GETLENGTH, 0, 0) = 5), _
+                          str(SciMsg(g_view->pSci, SCI_GETLENGTH, 0, 0))
+                    delete pGood
+
+                    '' THE WRONG ORDER, which is what shipped for one build: create first
+                    '' and the assignment is skipped, silently.
+                    dim as any ptr pScratch2 = cast( any ptr, g_view->Msg(SCI_CREATEDOCUMENT, 0, 0) )
+                    if pScratch2 <> 0 then
+                        g_view->Msg( SCI_SETDOCPOINTER, 0, cast(integer, pScratch2) )
+                        dim as clsDocument ptr pBad = new clsDocument
+                        pBad->TextBuffer = "hello"
+                        pBad->CreateScintillaWindows()
+                        pBad->AssignTextBuffer()
+                        Check "  and creating the views FIRST makes it a silent no-op", _
+                              (SciMsg(g_view->pSci, SCI_GETLENGTH, 0, 0) = 0), _
+                              str(SciMsg(g_view->pSci, SCI_GETLENGTH, 0, 0))
+                        delete pBad
+                        g_view->Msg( SCI_RELEASEDOCUMENT, 0, cast(integer, pScratch2) )
+                    end if
+
+                    g_view->Msg( SCI_SETDOCPOINTER, 0, cast(integer, pWasDoc) )
+                    g_view->Msg( SCI_RELEASEDOCUMENT, 0, cast(integer, pScratch) )
+                end if
+            end scope
+
             '' THE SWITCH'S GUARDS, and the two of them are NOT equally well covered --
             '' checked by reverting each:
             ''
