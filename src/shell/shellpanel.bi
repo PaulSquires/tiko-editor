@@ -170,6 +170,34 @@ end sub
 
 
 '' ---------------------------------------------------------------------------------------
+'' NO ZEBRA STRIPES IN A BOOKMARK LIST.
+''
+'' REPORTED BY THE AUTHOR: "the bookmark rows colored weird". PsListTree paints every ODD
+'' ROW in a second colour --
+''
+''     if (v and 1) = 1 then cBack = this.clrRowAlt      (PsListTree.inc:1384)
+''
+'' -- unconditionally, with no switch to turn it off. It suits a data grid and it is wrong
+'' for this panel: the rows here are a file's bookmarks, not records, and tiko's own
+'' bookmarks panel paints every row the same because it supplies its own row painter.
+''
+'' FLATTENED RATHER THAN REPAINTED. clrRowAlt is a public field, so setting it to clrBack
+'' costs one line where an OnPaintRow callback would cost forty and would then own hot,
+'' selected, header and twisty colours as well.
+''
+'' MUST BE CALLED AFTER EVERY THEME LOAD. PsListTree.OnThemeChanged re-reads both colours
+'' from the theme (PsListTree.inc:1648-1653), so anything that applies a theme puts the
+'' stripes back. That is a sharp edge, and the real fix is a SetAltRows(bOn) on the control
+'' -- a PsPlatform change, recorded here rather than made from a port task.
+'' ---------------------------------------------------------------------------------------
+sub ShellPanel_ApplyTheme()
+    if g_panel = 0 then exit sub
+    g_panel->clrRowAlt = g_panel->clrBack
+    g_panel->Invalidate()
+end sub
+
+
+'' ---------------------------------------------------------------------------------------
 '' Empty the panel. tiko's ClearBookmarks, which is one call there and one call here.
 '' ---------------------------------------------------------------------------------------
 sub ShellPanel_Clear()
@@ -290,8 +318,8 @@ function ShellBookmarks_ClearAllDocs() as boolean
     if g_view <> 0 then
         pWasDoc = cast( any ptr, g_view->Msg(SCI_GETDOCPOINTER, 0, 0) )
         if pWasDoc <> 0 then g_view->Msg( SCI_ADDREFDOCUMENT, 0, cast(integer, pWasDoc) )
-        nWasPos   = SciMsg( g_view->pSci, SCI_GETCURRENTPOS, 0, 0 )
-        nWasFirst = SciMsg( g_view->pSci, SCI_GETFIRSTVISIBLELINE, 0, 0 )
+        nWasPos   = g_view->Msg( SCI_GETCURRENTPOS, 0, 0 )
+        nWasFirst = g_view->Msg( SCI_GETFIRSTVISIBLELINE, 0, 0 )
     end if
 
     dim pDoc as clsDocument ptr = gApp.pDocList
@@ -307,8 +335,8 @@ function ShellBookmarks_ClearAllDocs() as boolean
     if (g_view <> 0) andalso (pWasDoc <> 0) then
         g_view->Msg( SCI_SETDOCPOINTER, 0, cast(integer, pWasDoc) )
         g_view->Msg( SCI_RELEASEDOCUMENT, 0, cast(integer, pWasDoc) )
-        SciMsg( g_view->pSci, SCI_GOTOPOS, nWasPos, 0 )
-        SciMsg( g_view->pSci, SCI_SETFIRSTVISIBLELINE, nWasFirst, 0 )
+        g_view->Msg( SCI_GOTOPOS, nWasPos, 0 )
+        g_view->Msg( SCI_SETFIRSTVISIBLELINE, nWasFirst, 0 )
     end if
 
     ShellPanel_Clear()
@@ -348,8 +376,14 @@ sub ShellBookmarks_Load()
     if g_view <> 0 then
         pWasDoc = cast( any ptr, g_view->Msg(SCI_GETDOCPOINTER, 0, 0) )
         if pWasDoc <> 0 then g_view->Msg( SCI_ADDREFDOCUMENT, 0, cast(integer, pWasDoc) )
-        nWasPos   = SciMsg( g_view->pSci, SCI_GETCURRENTPOS, 0, 0 )
-        nWasFirst = SciMsg( g_view->pSci, SCI_GETFIRSTVISIBLELINE, 0, 0 )
+        '' ---- g_view->Msg, NOT SciMsg, AND THAT IS NOT A STYLE CHOICE.
+        '' SciMsg is a FUNCTION POINTER bound by ShellHost_CreateView -- which does not run
+        '' until the first document is created. This loader is called once at startup with
+        '' no documents open, so SciMsg was NULL and the first version of this fix crashed
+        '' the whole binary before the window appeared. PsSciView.Msg is a method and is
+        '' always safe.
+        nWasPos   = g_view->Msg( SCI_GETCURRENTPOS, 0, 0 )
+        nWasFirst = g_view->Msg( SCI_GETFIRSTVISIBLELINE, 0, 0 )
     end if
 
     '' gApp.pDocList, exactly as tiko walks it -- the list this binary only started
@@ -393,8 +427,8 @@ sub ShellBookmarks_Load()
         '' PUT THE USER BACK. Caret first, then the scroll: SCI_GOTOPOS scrolls to reveal
         '' the caret, so setting first-visible before it would be undone -- the same
         '' ordering ShellTabs_Show documents.
-        SciMsg( g_view->pSci, SCI_GOTOPOS, nWasPos, 0 )
-        SciMsg( g_view->pSci, SCI_SETFIRSTVISIBLELINE, nWasFirst, 0 )
+        g_view->Msg( SCI_GOTOPOS, nWasPos, 0 )
+        g_view->Msg( SCI_SETFIRSTVISIBLELINE, nWasFirst, 0 )
     end if
 
     g_panel->EndUpdate()

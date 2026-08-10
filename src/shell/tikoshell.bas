@@ -2255,6 +2255,10 @@ end function
         end if
         PsThemeApply( surf.pRoot )
         StyleEditorFromTheme( surf )
+        '' AFTER PsThemeApply, NOT BEFORE. Applying a theme runs OnThemeChanged on every
+        '' widget, and PsListTree's re-reads the alternating-row colour -- so the panel's
+        '' stripes have to be flattened again on the far side of it. See ShellPanel_ApplyTheme.
+        ShellPanel_ApplyTheme()
     end scope
 
     LayoutAll( surf )
@@ -3461,6 +3465,12 @@ end function
                                   (SciMsg(g_view->pSci, SCI_GETCURRENTPOS, 0, 0) = nWant), _
                                   str(SciMsg(g_view->pSci, SCI_GETCURRENTPOS, 0, 0)) & _
                                   " wanted " & str(nWant)
+                            '' PUT IT BACK. This scope moved the caret to line 1 and the
+                            '' assertions below say "the caret is at the top in a windowless
+                            '' run" -- which was true until this block existed. Leaving it
+                            '' moved failed two of them, on a bookmark toggled at the wrong
+                            '' line, and neither failure would have named this scope.
+                            g_view->Msg( SCI_GOTOPOS, 0, 0 )
                         end scope
 
                         '' A DOCUMENT WITH NO BOOKMARKS CONTRIBUTES NO HEADER -- tiko's
