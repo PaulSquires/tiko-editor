@@ -86,6 +86,17 @@ sub ShellTabs_Show( byval idx as long )
     SciMsg( g_view->pSci, SCI_SETFIRSTVISIBLELINE, g_tabDocs(idx).nFirst, 0 )
 
     g_nTabCur = idx
+
+    '' ---- FOCUS FOLLOWS THE TAB, and without this the caret vanishes on every switch.
+    ''
+    '' Clicking a tab gives the TAB BAR the focus -- it is a focusable widget and it was
+    '' just clicked. The editor then has no focus, so Scintilla stops drawing a caret, and
+    '' the user has clicked "go to this file" and been handed a window they cannot type in.
+    ''
+    '' SetFocus is also what makes the restored caret position visible: the position was
+    '' always set below, but an unfocused view draws no caret to show it at.
+    if (g_pSurf <> 0) andalso (g_view <> 0) then g_pSurf->SetFocus( g_view )
+
     if g_pSurf <> 0 then g_pSurf->InvalidateAll()
 end sub
 

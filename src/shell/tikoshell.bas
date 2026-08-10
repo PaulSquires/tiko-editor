@@ -853,6 +853,18 @@ sub BuildTree( byref surf as PsSurface )
         end if
     next
 
+    '' ---- THE EDITOR STARTS FOCUSED ------------------------------------------------------
+    '' Nothing did this, so the shell opened with focus NOWHERE and the caret never appeared
+    '' until something else was clicked. PsSciView has been focusable since it was written
+    '' (bFocusable = TRUE); no host had ever said which widget should start with it.
+    ''
+    '' The same omission PsModalHost had, one level up: a surface with no focus is a keyboard
+    '' that does nothing, and it looks like a dead window rather than an error.
+    ''
+    '' The FIRST tab if any opened, so that a document that IS on screen is the one taking
+    '' keys; the editor either way, because it is the only thing here worth typing into.
+    if g_view <> 0 then surf.SetFocus( g_view )
+
     g_vscroll2 = new ShellStub( @"", PSTHEME_BACKGROUNDRAISED )
     root->AddChild( g_vscroll2 )
     g_hscroll2 = new ShellStub( @"", PSTHEME_BACKGROUNDRAISED )
@@ -1981,6 +1993,17 @@ end sub
 '' ---------------------------------------------------------------------------------------
 sub ApplyScale( byref surf as PsSurface, byval f as single )
     if f <= 0 then f = 1.0
+
+    '' SCINTILLA IS TOLD THE SCALE TOO, and it is a separate act from the font above.
+    '' PsScintilla.bi: "a DPI-AWARE host that does not call it renders its editor small while
+    '' every other control scales." tiko calls it in frmSciHost.inc:303 from GetDpiForWindow;
+    '' this binary knows its scale directly.
+    ''
+    '' MISSING THIS PUT THE MOUSE IN THE WRONG PLACE. The editor looked right because the
+    '' FONT was scaled, but Scintilla was still laying out and hit-testing at 96 dpi -- so a
+    '' click landed at the character its own unscaled geometry said was there, which at 175%
+    '' is most of a screen away from the pointer.
+    PlatPs_SetDpi( culng( 96.0 * f + 0.5 ) )
 
     dim as long px = PsScaleBy( SH_FONT_PX, f )
     if px <> g_nFontPx then
