@@ -56,6 +56,17 @@ private function AppHostW32_ViewHeight( byval pView as any ptr ) as long
     return rc.bottom - rc.top
 end function
 
+'' ---- THE TWO BODIES NO SUITE REACHES --------------------------------------------------
+''
+'' No self-test raises a file dialog, so these two are the only members of this record whose
+'' behaviour is verified by a person and by nothing else. Confirmed working by the author on
+'' 2026-08-10: Ctrl+I inserts a chosen file at the caret, and File > Save As saves.
+''
+'' KEEP THAT IN MIND BEFORE EDITING EITHER. The first versions of both had defects the
+'' compiler was happy with -- a dropped CoTaskMemFree, and @aDWSTRING passed where a
+'' wstring ptr was wanted, which is a WARNING and not an error. Neither would have been
+'' caught by any gate in this repo.
+''
 '' BOTH DIALOGS RETURN COM-ALLOCATED MEMORY AND BOTH CALLERS FREE IT. The wrapper owns that
 '' now, and it is the one thing here that is easy to lose in the move: the call sites this
 '' replaces each ended with CoTaskMemFree, and a wrapper that returned the string without
