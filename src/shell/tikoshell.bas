@@ -880,6 +880,7 @@ sub BuildTree( byref surf as PsSurface )
     '' AFTER BOTH VIEWS ARE IN THE TREE, deliberately: CreateScintillaWindows asks for view 0
     '' and view 1 in one loop, so a null second global would bind half a document.
     ShellTabs_Install()
+    ShellPanel_Install()
     for i as long = 0 to g_nOpenPaths - 1
         if ShellTabs_Open( g_sOpenPaths(i) ) >= 0 then
             print "tikoshell: loaded " & g_sOpenPaths(i).Utf8
@@ -3492,6 +3493,52 @@ end function
                             Check "    and neither document was freed under the view", _
                                   (nLenA > 0) andalso (nLenB > 0), _
                                   str(nLenA) & " / " & str(nLenB)
+
+                            '' ---- THE CLICK, DRIVEN BY ROW NUMBER --------------------
+                            '' The gesture cannot be delivered here -- no mouse reaches a
+                            '' windowless surface -- so ShellPanel_GotoRow is split out of
+                            '' the callback and driven directly. What that leaves untested
+                            '' is the WIRING (OnSelChange -> handler), and that is stated in
+                            '' the commit rather than implied by these passing.
+                            ''
+                            '' The panel currently holds B's group and A's group. Jumping to
+                            '' A's row from B being current is the case that matters: it has
+                            '' to CHANGE TABS, not just move a caret.
+                            g_view->Msg( SCI_SETDOCPOINTER, 0, cast(integer, g_tabDocs(idxB).pSciDoc) )
+                            g_nTabCur = idxB
+
+                            dim as long nRowA = -1, nRowHdr = -1
+                            for r as long = 0 to g_panel->GetCount() - 1
+                                if g_panel->IsHeader(r) then
+                                    if nRowHdr = -1 then nRowHdr = r
+                                    continue for
+                                end if
+                                if ShellPanel_TabOf(g_panel->GetItemData(r)) = idx1 then nRowA = r
+                            next
+
+                            Check "  a header row goes nowhere", _
+                                  (ShellPanel_GotoRow(nRowHdr) = false), str(nRowHdr)
+                            Check "  and neither does a row that does not exist", _
+                                  (ShellPanel_GotoRow(9999) = false)
+
+                            '' THE CALL IS MADE INTO A LOCAL FIRST, and that is not style.
+                            '' Written inline as `Check "...", GotoRow(r) andalso (g_nTabCur
+                            '' = idx1), str(g_nTabCur)`, the NOTE printed "1 wanted 0" on a
+                            '' PASSING assertion -- fbc had built the note argument before
+                            '' evaluating the condition that changes what it reports. A
+                            '' diagnostic that describes the state before the thing it is
+                            '' diagnosing is worse than none.
+                            dim as boolean bWent = ShellPanel_GotoRow( nRowA )
+                            Check "  clicking the other file's bookmark switches tab", _
+                                  bWent andalso (g_nTabCur = idx1), _
+                                  str(g_nTabCur) & " wanted " & str(idx1)
+                            '' AND LANDS ON THE LINE. The caret is what the user asked for;
+                            '' the tab switch is only how it got there.
+                            Check "    and lands on its line", _
+                                  (SciMsg(g_view->pSci, SCI_LINEFROMPOSITION, _
+                                          SciMsg(g_view->pSci, SCI_GETCURRENTPOS, 0, 0), 0) = 1), _
+                                  str(SciMsg(g_view->pSci, SCI_LINEFROMPOSITION, _
+                                             SciMsg(g_view->pSci, SCI_GETCURRENTPOS, 0, 0), 0))
 
                             '' Tidy: drop B's bookmark, its tab and its document.
                             pB->ToggleBookmark( 3 )
