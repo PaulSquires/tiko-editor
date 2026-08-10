@@ -8,7 +8,10 @@ HelpCenter **`main`** @ `02a4c18`. All build warning-free and tiko runs.
 `src/shell`; **F1Markdown** (`src/F1Markdown`, `F1Markdown.exe`) is the author's own and is
 interleaved with it in the log. Neither builds the other. One F1Markdown commit swept up 90
 lines of in-progress `shell/shellpanel.bi`, so `git log -- <path>` is more reliable than
-reading commit subjects when tracing who changed what.
+reading commit subjects when tracing who changed what. **F1Markdown has its own handoff at
+[`../f1markdown/HANDOFF.md`](../f1markdown/HANDOFF.md)**, and it has since moved onto its own
+branch, `feat/f1markdown` — which was cut from this one and therefore still carries this
+workstream's commits inside it.
 
 **PsPlatform is pushed. tiko's last commits are NOT** — `origin/feat/cross-platform` was at
 `d79163672` when this was written. **Run `git log origin/feat/cross-platform..HEAD` rather
