@@ -47,12 +47,17 @@ type ShellTabEntry
     pSciDoc  as any ptr
     nPos     as long          '' caret, saved on the way out
     nFirst   as long          '' first visible line, likewise
-    '' The path this tab is showing, HELD HERE rather than only in pDoc->DiskFilename, so
-    '' ShellTabs_FindByPath is a pure function of this array and can be driven windowlessly.
-    '' It is re-read from the document after a Save As, which is the one thing that renames
-    '' a tab in place.
-    sPath    as DWSTRING
 end type
+
+'' ---- THERE IS NO sPath FIELD HERE ANY MORE, and its removal is the point of commit 1.
+''
+'' It held a copy of pDoc->DiskFilename so that "is this file already open?" could be
+'' answered from this array alone. That was TWO SOURCES OF TRUTH for one fact, and the field
+'' had already grown the maintenance the second source always needs: a re-read after Save As,
+'' because Save As renames the document and a stale copy would send the next Ctrl+S to the
+'' old path.
+''
+'' gApp.pDocList is the answer now, which is what tiko has always used.
 
 dim shared g_tabDocs(0 to SH_MAX_DOCS - 1) as ShellTabEntry
 dim shared as long g_nTabDocs
@@ -112,19 +117,31 @@ private sub ShellTabs_OnSelect( byval pBar as any ptr, byval idx as long, byval 
 end sub
 
 
-'' The index already showing this path, or -1. CASE-INSENSITIVE, because Windows paths are
-'' and "C:\x\a.bas" opened twice under two spellings is two documents over one file.
+'' Which tab is showing this document, or -1. A POINTER COMPARE over the array, and pure --
+'' it reads nothing else, so --selftest can drive it with addresses that are never
+'' dereferenced.
 ''
-'' PURE, and deliberately so: it reads nothing but this array, so --selftest can seed the
-'' table and drive it without a window. The alternative -- walking pDoc->DiskFilename -- would
-'' have needed a live document per case.
-function ShellTabs_FindByPath( byval wszPath as DWSTRING ) as long
-    if len( wszPath ) = 0 then return -1
-    dim as DWSTRING sWant = PsUCase( wszPath )
+'' This is the array's ONE job now: tab ORDER. Which documents exist is gApp's.
+function ShellTabs_IndexOfDoc( byval pDoc as clsDocument ptr ) as long
+    if pDoc = 0 then return -1
     for i as long = 0 to g_nTabDocs - 1
-        if PsUCase( g_tabDocs(i).sPath ) = sWant then return i
+        if g_tabDocs(i).pDoc = pDoc then return i
     next
     return -1
+end function
+
+
+'' The tab already showing this path, or -1.
+''
+'' THE LOOKUP IS gApp's, not ours. clsApp.GetDocumentPtrByFilename already answers "is this
+'' file open?" for tiko, and it is already case-insensitive (clsApp.inc:147) -- Windows paths
+'' are, and the same file opened under two spellings would otherwise become two documents
+'' over one path, where saving either silently discards the other's edits.
+''
+'' Delegating means the two binaries cannot disagree about what "already open" means, and it
+'' is what let the sPath field go.
+function ShellTabs_FindByPath( byval wszPath as DWSTRING ) as long
+    return ShellTabs_IndexOfDoc( gApp.GetDocumentPtrByFilename( wszPath ) )
 end function
 
 
@@ -187,8 +204,22 @@ function ShellTabs_Open( byval wszPath as DWSTRING ) as long
     '' makes that guard fire and the assignment never happens. It is a guard against
     '' DOUBLE assignment, and an explicit create is indistinguishable from a first one.
     '' Two tabs opened and both were blank.
-    dim as clsDocument ptr pDoc = new clsDocument
+    ''
+    '' ---- gApp.CreateEmptyDocument, NOT `new clsDocument`, and that one word is commit 1.
+    ''
+    '' A bare `new` produced a document NOTHING IN THE APP LAYER COULD SEE. gApp.pDocList is
+    '' how the model answers "which documents exist" -- GetDocumentPtrByFilename walks it,
+    '' IsValidDocumentPointer walks it, and every panel tiko has walks it -- and in this
+    '' binary it was permanently EMPTY. The tabs worked, so nothing said so.
+    ''
+    '' CreateEmptyDocument(false) links the document into that list and sets ProjectFileType
+    '' to FILETYPE_UNDEFINED. It does NOT touch FileEncoding: that happens only on the
+    '' IsNewFile arm, which this is not (clsApp.inc:47-61). So the only behaviour this adds
+    '' to the shell's own path is the category, and SetProjectFileType below is what tiko
+    '' calls to fill it in from the extension (frmMainFile.inc:117).
+    dim as clsDocument ptr pDoc = gApp.CreateEmptyDocument()
     pDoc->LoadDiskFile( wszPath )
+    pDoc->SetProjectFileType()
     pDoc->AssignTextBuffer()
     pDoc->ApplyProperties()
 
@@ -201,10 +232,6 @@ function ShellTabs_Open( byval wszPath as DWSTRING ) as long
     g_tabDocs(idx).pDoc   = pDoc
     g_tabDocs(idx).nPos   = 0
     g_tabDocs(idx).nFirst = 0
-    '' FROM THE DOCUMENT, not from the argument. LoadDiskFile is what decides the path a
-    '' document believes it has, and a lookup that disagreed with the save path would let a
-    '' file be opened twice under two spellings of the same name.
-    g_tabDocs(idx).sPath  = pDoc->DiskFilename
     g_nTabDocs += 1
 
     if g_tabs <> 0 then
@@ -238,15 +265,16 @@ function ShellTabs_Save( byval bIsSaveAs as boolean ) as boolean
 
     if pDoc->SaveFile( bIsSaveAs ) then return false
 
-    '' RE-READ AFTER THE SAVE, because Save As is a RENAME: SaveFile writes the picked path
+    '' STRAIGHT OFF THE DOCUMENT, because Save As is a RENAME: SaveFile writes the picked path
     '' into DiskFilename, and a tab left captioned with the old name is a tab that lies about
-    '' which file the next Ctrl+S overwrites.
-    g_tabDocs(g_nTabCur).sPath = pDoc->DiskFilename
+    '' which file the next Ctrl+S overwrites. There used to be a copy of the path in the entry
+    '' to update here as well -- gApp holds the only one now, and this is one of the two
+    '' places that no longer has to remember it exists.
     if g_tabs <> 0 then
-        g_tabs->SetText( g_nTabCur, PsPathName( g_tabDocs(g_nTabCur).sPath ) )
+        g_tabs->SetText( g_nTabCur, PsPathName( pDoc->DiskFilename ) )
     end if
 
-    print "tikoshell: saved " & g_tabDocs(g_nTabCur).sPath.Utf8
+    print "tikoshell: saved " & DWSTRING( pDoc->DiskFilename ).Utf8
     return true
 end function
 

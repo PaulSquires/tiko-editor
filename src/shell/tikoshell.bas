@@ -3128,36 +3128,49 @@ end function
                 dim as long nWasCount = g_nTabDocs
                 dim as long nWasCur   = g_nTabCur
                 '' PUT BACK WHAT WAS THERE, rather than blanked. `--selftest` takes file
-                '' arguments like any other run, so tabs 0 and 1 can be real open documents,
-                '' and clearing their paths would leave the binary able to open the same file
-                '' twice for the rest of the session.
-                dim as DWSTRING sWas0 = g_tabDocs(0).sPath
-                dim as DWSTRING sWas1 = g_tabDocs(1).sPath
+                '' arguments like any other run, so tabs 0 and 1 can be real open documents.
+                dim as clsDocument ptr pWas0 = g_tabDocs(0).pDoc
+                dim as clsDocument ptr pWas1 = g_tabDocs(1).pDoc
 
-                '' SEEDED, NOT OPENED. ShellTabs_FindByPath reads nothing but this array,
-                '' which is why sPath is stored in the entry at all -- walking
-                '' pDoc->DiskFilename instead would have needed a live document per case.
-                g_tabDocs(0).sPath = DWSTRING("C:\dev\one.bas")
-                g_tabDocs(1).sPath = DWSTRING("C:\dev\two.bas")
+                '' ---- ADDRESSES THAT ARE NEVER DEREFERENCED, and that is what makes this
+                '' assertable at all. ShellTabs_IndexOfDoc compares POINTERS and reads nothing
+                '' through them, so two fabricated ones drive every branch without allocating
+                '' a clsDocument -- and a version that started dereferencing would fault here
+                '' rather than in front of a user.
+                dim as clsDocument ptr pFake0 = cast( clsDocument ptr, 4096 )
+                dim as clsDocument ptr pFake1 = cast( clsDocument ptr, 8192 )
+                g_tabDocs(0).pDoc = pFake0
+                g_tabDocs(1).pDoc = pFake1
                 g_nTabDocs = 2
 
-                Check "an open file is found by path", _
-                      (ShellTabs_FindByPath(DWSTRING("C:\dev\two.bas")) = 1), _
-                      str(ShellTabs_FindByPath(DWSTRING("C:\dev\two.bas")))
-                '' WINDOWS PATHS ARE CASE-INSENSITIVE, and a case-sensitive compare would
-                '' open the same file twice under two spellings -- two documents over one
-                '' path, where saving either silently discards the other's edits.
-                Check "  whatever case it is spelled in", _
-                      (ShellTabs_FindByPath(DWSTRING("c:\DEV\Two.BAS")) = 1)
-                Check "  a file that is not open is not found", _
-                      (ShellTabs_FindByPath(DWSTRING("C:\dev\three.bas")) = -1)
-                '' An empty path matches an empty slot on a naive compare, and every slot
-                '' past g_nTabDocs is empty.
-                Check "  and an empty path matches nothing", _
+                Check "an open document is found by its tab", _
+                      (ShellTabs_IndexOfDoc(pFake1) = 1), str(ShellTabs_IndexOfDoc(pFake1))
+                Check "  the first one too", (ShellTabs_IndexOfDoc(pFake0) = 0)
+                Check "  a document in no tab is not found", _
+                      (ShellTabs_IndexOfDoc(cast(clsDocument ptr, 12288)) = -1)
+                '' A null is what gApp.GetDocumentPtrByFilename returns for a file that is
+                '' not open, so it arrives here on every miss. AN EMPTY SLOT IS SEEDED TO
+                '' MAKE THIS BITE: without one, the loop finds no match anyway and the guard
+                '' above it is doing nothing that could be observed. With one, a missing
+                '' guard reports THAT TAB for every unknown file -- which reads as "already
+                '' open" and quietly refuses to open anything else.
+                g_tabDocs(1).pDoc = 0
+                Check "  and a null matches nothing, even against an empty tab", _
+                      (ShellTabs_IndexOfDoc(0) = -1), str(ShellTabs_IndexOfDoc(0))
+                g_tabDocs(1).pDoc = pFake1
+
+                '' THE PATH LOOKUP IS gApp's NOW, so what is asserted here is the DELEGATION:
+                '' with an empty pDocList nothing is open, whatever this array holds. The
+                '' case-insensitivity that used to be tested here belongs to
+                '' clsApp.GetDocumentPtrByFilename and is tiko's, not the shell's.
+                Check "  a path finds nothing while gApp's list is empty", _
+                      (gApp.pDocList = 0) andalso _
+                      (ShellTabs_FindByPath(DWSTRING("C:\dev\one.bas")) = -1)
+                Check "  and neither does an empty path", _
                       (ShellTabs_FindByPath(DWSTRING("")) = -1)
 
-                g_tabDocs(0).sPath = sWas0
-                g_tabDocs(1).sPath = sWas1
+                g_tabDocs(0).pDoc = pWas0
+                g_tabDocs(1).pDoc = pWas1
                 g_nTabDocs = nWasCount
                 g_nTabCur  = nWasCur
 
@@ -3169,6 +3182,96 @@ end function
                 Check "  and so is Save As", (ShellTabs_Save(true) = false)
                 Check "  with no document to hand back", (ShellTabs_CurrentDoc() = 0)
                 g_nTabCur = nWasCur
+            end scope
+
+            '' ---- GROUP M: A REAL FILE, THROUGH THE REAL OPEN PATH -----------------------
+            '' EVERYTHING ELSE IN THIS SUITE DRIVES THE PIECES. This drives ShellTabs_Open
+            '' itself, on a file that exists, and it is here because commit 1 changed HOW a
+            '' document is created -- gApp.CreateEmptyDocument instead of `new clsDocument`.
+            ''
+            '' The defect that change fixes is invisible from outside: the tabs worked, the
+            '' text appeared, and gApp.pDocList was permanently EMPTY, so every model-side
+            '' walk in the app layer saw no documents at all. Nothing failed. Nothing could.
+            ''
+            '' Windowless is fine here: `--selftest` builds the whole tree, so g_view and
+            '' g_tabs are real, and modSaveSelfTest already establishes that %TEMP% is a
+            '' legitimate place for a suite to put a file.
+            scope
+                dim as DWSTRING wszDir = environ("TEMP") & "\tiko_shellopen"
+                PsDirCreate( wszDir )
+                dim as DWSTRING wszFile = wszDir & "\open_probe.bas"
+                dim as boolean bWrote = PsFileWriteAll( wszFile, !"' probe\nprint 1\n" )
+
+                if bWrote = false then
+                    Check "the open probe could be written to %TEMP%", false, wszFile.Utf8
+                else
+                    dim as long nWasCount = g_nTabDocs
+                    dim as long nWasCur   = g_nTabCur
+                    '' The view is pointed at a new document by Open, so its current one is
+                    '' held across the test -- SCI_GETDOCPOINTER takes no reference, and
+                    '' restoring one that has been freed underneath us is what crashed this
+                    '' suite for two commits in step 3.
+                    dim as any ptr pWasDoc = 0
+                    if g_view <> 0 then
+                        pWasDoc = cast( any ptr, g_view->Msg(SCI_GETDOCPOINTER, 0, 0) )
+                        if pWasDoc <> 0 then g_view->Msg( SCI_ADDREFDOCUMENT, 0, cast(integer, pWasDoc) )
+                    end if
+
+                    dim as long idx1 = ShellTabs_Open( wszFile )
+                    Check "a real file opens into a tab", (idx1 >= 0), str(idx1)
+                    '' THE POINT OF THE COMMIT. Before it, this count was zero however many
+                    '' files were open.
+                    Check "  and the document is in gApp's list", _
+                          (gApp.GetDocumentCount() = 1), str(gApp.GetDocumentCount())
+                    Check "  which is the same document the tab holds", _
+                          (gApp.pDocList = ShellTabs_CurrentDoc())
+                    Check "  and it loaded its bytes", _
+                          (SciMsg(g_view->pSci, SCI_GETLENGTH, 0, 0) > 0), _
+                          str(SciMsg(g_view->pSci, SCI_GETLENGTH, 0, 0))
+                    '' SetProjectFileType ran: a .bas is a real category, not UNDEFINED.
+                    '' ProjectFileType is a DWSTRING holding "0".."5", not a number -- the
+                    '' FILETYPE_* names are string #defines (clsDocument.bi:34-39), which is
+                    '' why this reads .Utf8 rather than str().
+                    Check "  and it was categorised by extension", _
+                          (ShellTabs_CurrentDoc()->ProjectFileType <> FILETYPE_UNDEFINED), _
+                          ShellTabs_CurrentDoc()->ProjectFileType.Utf8
+
+                    '' THE SAME PATH AGAIN IS THE SAME TAB. Through gApp's lookup now, so
+                    '' this is also what proves the delegation is wired rather than merely
+                    '' compiled.
+                    dim as long idx2 = ShellTabs_Open( wszFile )
+                    Check "  reopening it returns the same tab", (idx2 = idx1), _
+                          str(idx1) & " then " & str(idx2)
+                    Check "    and creates no second document", _
+                          (gApp.GetDocumentCount() = 1), str(gApp.GetDocumentCount())
+
+                    '' ---- CLEANUP, and it has to be complete: this suite runs before the
+                    '' band walk, which asserts geometry against a tree this test has added
+                    '' a tab to.
+                    if (idx1 >= 0) andalso (g_tabs <> 0) then g_tabs->DeleteTab( idx1 )
+                    if idx1 >= 0 then
+                        if g_view <> 0 then
+                            '' Point the view away BEFORE releasing, or the release frees the
+                            '' document the view is showing and the next switch walks it.
+                            g_view->Msg( SCI_SETDOCPOINTER, 0, cast(integer, pWasDoc) )
+                            if g_tabDocs(idx1).pSciDoc <> 0 then
+                                g_view->Msg( SCI_RELEASEDOCUMENT, 0, cast(integer, g_tabDocs(idx1).pSciDoc) )
+                            end if
+                            if pWasDoc <> 0 then g_view->Msg( SCI_RELEASEDOCUMENT, 0, cast(integer, pWasDoc) )
+                        end if
+                        '' gApp owns the clsDocument now, so gApp is what frees it.
+                        gApp.RemoveDocument( g_tabDocs(idx1).pDoc )
+                        g_tabDocs(idx1).pDoc    = 0
+                        g_tabDocs(idx1).pSciDoc = 0
+                    end if
+                    g_nTabDocs = nWasCount
+                    g_nTabCur  = nWasCur
+
+                    Check "  and the suite left gApp's list as it found it", _
+                          (gApp.GetDocumentCount() = 0), str(gApp.GetDocumentCount())
+                end if
+
+                PsFileDelete( wszFile )
             end scope
 
             '' ---- GROUP J: THE FILE DIALOG'S NESTED PUMP --------------------------------
