@@ -1177,11 +1177,11 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
         end if
 
         if IsDialogMessage( HWND_FRMTHEMES, @uMsg ) = 0 then
-            PumpTrace_Note( "frmThemes", "DispatchMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmThemes", false, @uMsg )
             TranslateMessage @uMsg
             DispatchMessage @uMsg
         else
-            PumpTrace_Note( "frmThemes", "IsDialogMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmThemes", true, @uMsg )
         end if
     wend
 

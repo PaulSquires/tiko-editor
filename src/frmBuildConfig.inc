@@ -2286,11 +2286,11 @@ function frmBuildConfig_Show( byval hWndParent as HWND ) as LRESULT
         end if
 
         if IsDialogMessage( HWND_FRMBUILDCONFIG, @uMsg ) = 0 then
-            PumpTrace_Note( "frmBuildConfig", "DispatchMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmBuildConfig", false, @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
         else
-            PumpTrace_Note( "frmBuildConfig", "IsDialogMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmBuildConfig", true, @uMsg )
         end if
     wend
 

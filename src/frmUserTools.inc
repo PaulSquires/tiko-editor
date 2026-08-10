@@ -1883,11 +1883,11 @@ function frmUserTools_Show( byval hWndParent as HWND ) as LRESULT
         end if
 
         if IsDialogMessage( HWND_FRMUSERTOOLS, @uMsg ) = 0 then
-            PumpTrace_Note( "frmUserTools", "DispatchMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmUserTools", false, @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
         else
-            PumpTrace_Note( "frmUserTools", "IsDialogMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmUserTools", true, @uMsg )
         end if
     wend
 

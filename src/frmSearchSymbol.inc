@@ -564,11 +564,11 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
         end if
 
         if IsDialogMessage( HWND_FRMSEARCHSYMBOL, @uMsg ) = 0 then
-            PumpTrace_Note( "frmSearchSymbol", "DispatchMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmSearchSymbol", false, @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
         else
-            PumpTrace_Note( "frmSearchSymbol", "IsDialogMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmSearchSymbol", true, @uMsg )
         end if
     wend
 

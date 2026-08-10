@@ -51,7 +51,7 @@
 #pragma once
 
 const PUMPTRACE_MAXSLOTS   = 96
-const PUMPTRACE_MAXSAMPLES = 12
+const PUMPTRACE_MAXSAMPLES = 24
 
 '' Set by PumpTrace_Init from the environment. Read on every call, so it is checked rather
 '' than assumed -- see the cost note above.
@@ -75,6 +75,12 @@ declare function PumpTrace( byval bClaimed as boolean, _
 declare sub PumpTrace_Note( byval zPump as zstring ptr, _
                             byval zWho as zstring ptr, _
                             byval pMsg as MSG ptr )
+
+'' The IsDialogMessage / DispatchMessage pair, split into keyboard and everything else.
+'' See the implementation for why an undivided count of either is misleading.
+declare sub PumpTrace_NoteTerminal( byval zPump as zstring ptr, _
+                                    byval bIsDlg as boolean, _
+                                    byval pMsg as MSG ptr )
 
 '' Counts a message ENTERING a pump, so the summary can report what share each filter took.
 declare sub PumpTrace_Enter( byval zPump as zstring ptr )

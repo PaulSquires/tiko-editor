@@ -1350,11 +1350,11 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
         end if
 
         if IsDialogMessage( HWND_FRMOPTIONS, @uMsg ) = 0 then
-            PumpTrace_Note( "frmOptions", "DispatchMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmOptions", false, @uMsg )
             TranslateMessage @uMsg
             DispatchMessage @uMsg
         else
-            PumpTrace_Note( "frmOptions", "IsDialogMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmOptions", true, @uMsg )
         end if
     wend
 

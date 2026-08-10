@@ -489,11 +489,11 @@ function frmInputBox_Show( byval hWndParent as HWND, _
         end if
 
         if IsDialogMessage( HWND_FRMINPUTBOX, @uMsg ) = 0 then
-            PumpTrace_Note( "frmInputBox", "DispatchMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmInputBox", false, @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
         else
-            PumpTrace_Note( "frmInputBox", "IsDialogMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmInputBox", true, @uMsg )
         end if
     wend
 

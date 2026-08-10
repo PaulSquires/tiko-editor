@@ -1325,11 +1325,11 @@ function frmAbout_Show( byval hWndParent as HWND ) as LRESULT
         end if
 
         if IsDialogMessage( HWND_FRMABOUT, @uMsg ) = 0 then
-            PumpTrace_Note( "frmAbout", "DispatchMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmAbout", false, @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
         else
-            PumpTrace_Note( "frmAbout", "IsDialogMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmAbout", true, @uMsg )
         end if
     wend
 

@@ -1024,11 +1024,11 @@ function frmProjectOptions_Show( _
         end if
 
         if IsDialogMessage( HWND_FRMPROJECTOPTIONS, @uMsg ) = 0 then
-            PumpTrace_Note( "frmProjectOptions", "DispatchMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmProjectOptions", false, @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
         else
-            PumpTrace_Note( "frmProjectOptions", "IsDialogMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmProjectOptions", true, @uMsg )
         end if
     wend
 

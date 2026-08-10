@@ -882,11 +882,11 @@ function frmFormatOptions_Show( byval hWndParent as HWND ) as LRESULT
         end if
 
         if IsDialogMessage( HWND_FRMFORMATOPTIONS, @uMsg ) = 0 then
-            PumpTrace_Note( "frmFormatOptions", "DispatchMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmFormatOptions", false, @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
         else
-            PumpTrace_Note( "frmFormatOptions", "IsDialogMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmFormatOptions", true, @uMsg )
         end if
     wend
 

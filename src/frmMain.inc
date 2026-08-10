@@ -2308,11 +2308,11 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
             if hDlgRoot <> pWindow->hWindow then PumpTrace_Note( "frmMain", "isdlg:retargeted-to-float", @uMsg )
 
             if IsDialogMessage(hDlgRoot, @uMsg) = 0 then
-                PumpTrace_Note( "frmMain", "DispatchMessage", @uMsg )
+                PumpTrace_NoteTerminal( "frmMain", false, @uMsg )
                 TranslateMessage @uMsg    ' Translates virtual-key messages into character messages.
                 DispatchMessage @uMsg     ' Dispatches a message to a window procedure.
             else
-                PumpTrace_Note( "frmMain", "IsDialogMessage", @uMsg )
+                PumpTrace_NoteTerminal( "frmMain", true, @uMsg )
             end if
 
           end if  ' accelerators build configurations

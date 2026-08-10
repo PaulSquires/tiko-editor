@@ -203,6 +203,47 @@ sub PumpTrace_Note( byval zPump as zstring ptr, _
 end sub
 
 
+'' THE TERMINAL PAIR, SPLIT BY MESSAGE CLASS -- and the split is the whole point.
+''
+'' The first driven trace read "IsDialogMessage claims 4115 of 5517" and that number invites
+'' exactly the wrong conclusion. IsDialogMessage DISPATCHES what it processes: the API docs
+'' are explicit that a message it handled must NOT then be passed to TranslateMessage or
+'' DispatchMessage. So a TRUE return means "I was the dispatcher", not "I swallowed it" --
+'' which is why WM_PAINT, WM_TIMER and WM_MOUSEMOVE all appeared in its claim list while the
+'' editor went on repainting perfectly.
+''
+'' Undivided, the count measures nothing but message volume. The quantity the port actually
+'' needs is the KEYBOARD share, because dialog-key semantics -- Tab traversal, the default
+'' button, Escape -- are the part with no PsPlatform analogue. Everything else it "claims" is
+'' dispatch that surf.Dispatch already does.
+sub PumpTrace_NoteTerminal( byval zPump as zstring ptr, _
+                            byval bIsDlg as boolean, _
+                            byval pMsg as MSG ptr )
+    if gPumpTraceOn = false then exit sub
+    if pMsg = 0 then exit sub
+
+    dim as boolean bKey = false
+    select case pMsg->message
+        case WM_KEYDOWN, WM_KEYUP, WM_CHAR, WM_SYSKEYDOWN, WM_SYSKEYUP, WM_SYSCHAR, WM_DEADCHAR
+            bKey = true
+    end select
+
+    if bIsDlg then
+        if bKey then
+            PumpTrace_Record( zPump, "IsDialogMessage:KEYBOARD", pMsg )
+        else
+            PumpTrace_Record( zPump, "IsDialogMessage:dispatched-other", pMsg )
+        end if
+    else
+        if bKey then
+            PumpTrace_Record( zPump, "DispatchMessage:KEYBOARD", pMsg )
+        else
+            PumpTrace_Record( zPump, "DispatchMessage:other", pMsg )
+        end if
+    end if
+end sub
+
+
 sub PumpTrace_Enter( byval zPump as zstring ptr )
     if gPumpTraceOn = false then exit sub
 

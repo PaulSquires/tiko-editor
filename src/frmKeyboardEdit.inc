@@ -1104,11 +1104,11 @@ function frmKeyboardEdit_Show( byval hWndParent as HWND ) as LRESULT
         end if
 
         if IsDialogMessage( HWND_FRMKEYBOARDEDIT, @uMsg ) = 0 then
-            PumpTrace_Note( "frmKeyboardEdit", "DispatchMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmKeyboardEdit", false, @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
         else
-            PumpTrace_Note( "frmKeyboardEdit", "IsDialogMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmKeyboardEdit", true, @uMsg )
         end if
     wend
 

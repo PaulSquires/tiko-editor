@@ -1177,11 +1177,11 @@ function frmKeyboard_Show( byval hWndParent as HWND ) as LRESULT
         ' falls through to the default OK button when anything else does. Catching it in the
         ' pump would break the second half of that.
         if IsDialogMessage( HWND_FRMKEYBOARD, @uMsg ) = 0 then
-            PumpTrace_Note( "frmKeyboard", "DispatchMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmKeyboard", false, @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
         else
-            PumpTrace_Note( "frmKeyboard", "IsDialogMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmKeyboard", true, @uMsg )
         end if
     wend
 

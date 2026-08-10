@@ -979,11 +979,11 @@ function frmAssignKey_Show( byval hWndParent as HWND ) as LRESULT
         end if
 
         if IsDialogMessage( HWND_FRMASSIGNKEY, @uMsg ) = 0 then
-            PumpTrace_Note( "frmAssignKey", "DispatchMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmAssignKey", false, @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
         else
-            PumpTrace_Note( "frmAssignKey", "IsDialogMessage", @uMsg )
+            PumpTrace_NoteTerminal( "frmAssignKey", true, @uMsg )
         end if
     wend
 
