@@ -103,6 +103,10 @@
 #include once "ui/controls/PsMenuBar.inc"
 #include once "ui/controls/PsStatusBar.inc"
 #include once "ui/controls/PsTabBar.inc"
+'' For the input box: a prompt, a field and two buttons. There is no label control in
+'' PsPlatform, so the prompt is painted by the dialog root itself.
+#include once "ui/controls/PsButton.inc"
+#include once "ui/controls/PsTextBox.inc"
 #include once "scintilla/PsTextEngineC.inc"
 #include once "scintilla/PsSciView.inc"
 #include once "scintilla/PsSciClipboard.inc"
@@ -256,6 +260,11 @@ dim shared as long g_nAccelSkipped
 '' of the next iteration rather than the pump variable being promoted to a global for one
 '' caller.
 dim shared as boolean g_bQuitRequested
+
+'' What the Command Line dialog edits. tiko keeps this in gApp.ProjectCommandLine, but clsApp
+'' is still in src/ rather than app/, so the shell cannot reach it -- see the IDM_COMMANDLINE
+'' handler, which says so at the point it matters.
+dim shared as DWSTRING g_sCommandLine
 
 '' The menubar titles' first letters, kept HERE because PsMenuBar has no GetCaption and
 '' should not grow one for this: the host wrote the captions and is the natural owner of a
@@ -1239,6 +1248,226 @@ sub OnBarCloseRequest( byval pBar as any ptr, byval ud as any ptr )
     g_menus.CloseAll()
 end sub
 
+'' ========================================================================================
+'' THE INPUT BOX -- AND THE DIALOG KEY POLICY, WHICH IS WHAT REPLACES IsDialogMessage.
+''
+'' docs/port/pump-census.md put the whole residue of the pump collapse here. Fifteen
+'' IsDialogMessage calls do one job that PsPlatform has no analogue for, and the census
+'' measured which part of that job is real: in frmMain its keyboard share is 53 messages in
+'' 7167 and is visibly ordinary typing being dispatched, while in frmOptions it is 87 in 1614
+'' and the descriptors are VK_TAB, Shift+VK_TAB, the arrows and VK_RETURN. The irreplaceable
+'' behaviour lives in DIALOGS.
+''
+'' So this is the piece the census said would be needed ONCE rather than fourteen times, and
+'' building it here is the test of that claim.
+''
+'' WHAT PsPlatform ALREADY DOES, and must not be re-implemented: TAB. PsDispatch.inc:247-255
+'' gives Tab to the focused widget FIRST and only moves focus if nothing wanted it, which is
+'' the rule a text editor needs. FocusNext walks the tree in document order skipping anything
+'' not focusable, enabled and visible. None of that is this file's business.
+''
+'' WHAT IS LEFT IS ENTER AND ESCAPE, and they are application policy in any toolkit: which
+'' button is default, and what cancel means. That is the whole of the gap.
+''
+'' AND IT STAYS IN THE SHELL FOR NOW. It is a candidate to move into PsPlatform once a
+'' second dialog wants it -- but PsMenuBar.bi:44-48 already set the precedent for not moving
+'' a seam on one caller's guess, and this has exactly one caller.
+'' ========================================================================================
+const SH_DLG_PAD     = 20     '' design units, like every literal in this file
+const SH_DLG_GAP     = 12
+const SH_DLG_FIELDH  = 28
+const SH_DLG_BTNW    = 88
+const SH_DLG_BTNH    = 28
+const SH_DLG_PROMPTH = 22
+const SH_DLG_MINW    = 360
+
+type ShellInputBox extends PsWidget
+    sPrompt   as DWSTRING
+    pField    as PsTextBox ptr
+    pOK       as PsButton ptr
+    pCancel   as PsButton ptr
+
+    '' 0 while the box is still up. The pump's done-predicate reads this, so it is the
+    '' single piece of state that ends the dialog.
+    nResult   as long
+
+    declare constructor()
+    declare sub OnPaint(byval p as PsBufferPaint_ ptr)
+    declare sub OnLayout()
+    declare function MeasureDesired() as PsSize
+    declare function OnEvent(byval ev as PsEvent ptr) as boolean
+end type
+
+'' The two buttons and the two keys all land here, so "what OK means" is written once.
+sub ShellInputBox_Finish( byval pBox as ShellInputBox ptr, byval nId as long )
+    if pBox = 0 then exit sub
+    pBox->nResult = nId
+end sub
+
+sub ShellInputBox_OnOK( byval pBtn as any ptr, byval ud as any ptr )
+    ShellInputBox_Finish( cptr(ShellInputBox ptr, ud), MBX_ID_OK )
+end sub
+
+sub ShellInputBox_OnCancel( byval pBtn as any ptr, byval ud as any ptr )
+    ShellInputBox_Finish( cptr(ShellInputBox ptr, ud), MBX_ID_CANCEL )
+end sub
+
+constructor ShellInputBox()
+    this.bFocusable = false      '' the container is not a stop; its children are
+
+    this.pField = new PsTextBox
+    this.pOK    = new PsButton
+    this.pCancel = new PsButton
+
+    this.pOK->SetText( L(0, "OK") )
+    this.pCancel->SetText( L(1, "Cancel") )
+
+    '' ADDED IN TAB ORDER, because traversal IS tree order (PsDispatch's FocusNext walks the
+    '' tree, not a tabindex). Field, then OK, then Cancel -- so the order the dialog is read
+    '' in and the order Tab visits are the same thing by construction rather than by a
+    '' separate list that can drift out of step with the layout.
+    this.AddChild( this.pField )
+    this.AddChild( this.pOK )
+    this.AddChild( this.pCancel )
+
+    this.pOK->OnClick( @ShellInputBox_OnOK, @this )
+    this.pCancel->OnClick( @ShellInputBox_OnCancel, @this )
+end constructor
+
+function ShellInputBox.MeasureDesired() as PsSize
+    '' MEASURED, NOT GUESSED, and it is measured HERE rather than by the caller because
+    '' PsModalHost.Run asks only after attaching this to a surface -- which is the documented
+    '' trap in PsModalHost.bi: asked while detached, every string measures zero because there
+    '' is no font and the scale is 1.0.
+    dim as PsSize sz
+    sz.w = this.ScaleX(SH_DLG_MINW)
+    sz.h = this.ScaleY(SH_DLG_PAD) + this.ScaleY(SH_DLG_PROMPTH) + this.ScaleY(SH_DLG_GAP) + _
+           this.ScaleY(SH_DLG_FIELDH) + this.ScaleY(SH_DLG_GAP) + this.ScaleY(SH_DLG_BTNH) + _
+           this.ScaleY(SH_DLG_PAD)
+    return sz
+end function
+
+sub ShellInputBox.OnLayout()
+    dim as long nPad = this.ScaleX(SH_DLG_PAD)
+    dim as long nGap = this.ScaleY(SH_DLG_GAP)
+    dim as long nY   = this.ScaleY(SH_DLG_PAD) + this.ScaleY(SH_DLG_PROMPTH) + nGap
+
+    dim as PsRect rc
+    rc.x = nPad : rc.y = nY
+    rc.w = this.bounds.w - (nPad * 2) : rc.h = this.ScaleY(SH_DLG_FIELDH)
+    if this.pField then this.pField->SetBounds( rc )
+
+    dim as long nBtnW = this.ScaleX(SH_DLG_BTNW)
+    dim as long nBtnH = this.ScaleY(SH_DLG_BTNH)
+    dim as long nBtnY = rc.y + rc.h + nGap
+
+    '' Cancel rightmost, OK to its left -- the Windows order, and the order the buttons were
+    '' ADDED in is the opposite. That is deliberate and is the one place tab order and visual
+    '' order legitimately differ: Tab reaches OK first because OK is the likely answer.
+    dim as PsRect rcC
+    rcC.x = this.bounds.w - nPad - nBtnW : rcC.y = nBtnY
+    rcC.w = nBtnW : rcC.h = nBtnH
+    if this.pCancel then this.pCancel->SetBounds( rcC )
+
+    dim as PsRect rcO = rcC
+    rcO.x = rcC.x - this.ScaleX(SH_DLG_GAP) - nBtnW
+    if this.pOK then this.pOK->SetBounds( rcO )
+end sub
+
+sub ShellInputBox.OnPaint(byval p as PsBufferPaint_ ptr)
+    if p = 0 then exit sub
+
+    dim as PsRect rcAll
+    rcAll.x = 0 : rcAll.y = 0 : rcAll.w = this.bounds.w : rcAll.h = this.bounds.h
+    p->SetBackColor( PsThemeRoleColor(PSTHEME_BACKGROUND) )
+    p->PaintRect( @rcAll )
+    p->SetPenColor( PsThemeRoleColor(PSTHEME_BORDER) )
+    p->PaintBorderRect( @rcAll, 1 )
+
+    '' The prompt. No label control exists, so the container draws it.
+    dim as PsRect rcP
+    rcP.x = this.ScaleX(SH_DLG_PAD)
+    rcP.y = this.ScaleY(SH_DLG_PAD)
+    rcP.w = this.bounds.w - (this.ScaleX(SH_DLG_PAD) * 2)
+    rcP.h = this.ScaleY(SH_DLG_PROMPTH)
+    p->SetForeColor( PsThemeRoleColor(PSTHEME_FOREGROUND) )
+    p->PaintText( this.sPrompt, @rcP, PSTF_LEFT or PSTF_VCENTER )
+end sub
+
+'' ---------------------------------------------------------------------------------------
+'' THE POLICY ITSELF, and it is four lines because Tab is not its job.
+''
+'' This runs as the ROOT's OnEvent, so it sees a key only after the focused widget declined
+'' it -- PsDispatch bubbles from the focus outward. That ordering is what makes Enter safe:
+'' a multi-line field that wants Enter takes it first, exactly as Tab works.
+function ShellInputBox.OnEvent(byval ev as PsEvent ptr) as boolean
+    if ev = 0 then return false
+    if ev->kind <> PSEV_KEY_DOWN then return false
+
+    select case ev->key.key
+        case PSKEY_RETURN, PSKEY_KP_ENTER
+            '' THE DEFAULT BUTTON. Not "the focused button" -- Enter means OK wherever focus
+            '' happens to be, which is the whole point of a default.
+            ShellInputBox_Finish( @this, MBX_ID_OK )
+            return true
+        case PSKEY_ESCAPE
+            ShellInputBox_Finish( @this, MBX_ID_CANCEL )
+            return true
+    end select
+    return false
+end function
+
+
+'' Returns OK or Cancel; the text comes back through sText, which is left untouched on
+'' cancel -- tiko's frmInputBox_Show has the same shape (frmInputBox.bi:113).
+private function ShellInputBox_IsDone(byval ud as any ptr) as boolean
+    dim as ShellInputBox ptr p = cptr(ShellInputBox ptr, ud)
+    if p = 0 then return true
+    return (p->nResult <> 0)
+end function
+
+'' THE WRITE-BACK RULE, SPLIT OUT SO IT CAN BE ASSERTED. tiko is explicit about it
+'' (frmMainCompile.inc:34-36): "Cancel returns the (possibly edited) text too, but the
+'' IDCANCEL says to disregard it." Left inline in ShellInputBoxShow the rule was unreachable
+'' -- reverting it to write back on Cancel as well left all 169 assertions green, checked --
+'' because everything around it needs a window. Out here it is a pure function of the answer.
+function ShellInputBox_Commit( byval nRes as long, _
+                               byref sOut as DWSTRING, _
+                               byval sField as DWSTRING ) as boolean
+    if nRes <> MBX_ID_OK then return false
+    sOut = sField
+    return true
+end function
+
+
+function ShellInputBoxShow( byval sCaption as DWSTRING, _
+                            byval sPrompt as DWSTRING, _
+                            byref sText as DWSTRING ) as long
+    if g_pSurf = 0 then return MBX_ID_CANCEL
+
+    '' HEAP, NOT STACK, and deliberately -- unlike the message box. PsModalHost hands the
+    '' root to a PsSurface, and until PsPlatform 61f56bb that surface DELETED it on teardown:
+    '' the message box was a local and the process died on every dismissal. That is fixed,
+    '' and this is still allocated here because the dialog owns three child widgets whose
+    '' lifetime is the tree's -- so the tree is freed once, explicitly, at the end.
+    dim as ShellInputBox ptr pBox = new ShellInputBox
+    pBox->sPrompt = sPrompt
+    if pBox->pField then pBox->pField->SetText( sText )
+
+    dim as PsModalHost host
+    dim as long nRes = MBX_ID_CANCEL
+    if host.Run( g_pSurf, pBox, sCaption, @ShellInputBox_IsDone, pBox ) then
+        nRes = pBox->nResult
+        if pBox->pField <> 0 then
+            ShellInputBox_Commit( nRes, sText, pBox->pField->GetText() )
+        end if
+    end if
+
+    delete pBox
+    return nRes
+end function
+
+
 '' ---------------------------------------------------------------------------------------
 '' THE FIRST MODAL DIALOG IN THE PORT.
 ''
@@ -1302,10 +1531,29 @@ sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any pt
     '' pure function of the record, so flipping a field IS the whole operation.
     dim as boolean bHandled = true
     select case nId
-        '' The one command in this binary that raises a real dialog. bHandled stays true so
+        '' The two commands in this binary that raise a real dialog. bHandled stays true so
         '' the relayout below runs either way: the modal painted over the shell, and the
         '' damage it left is the shell's to repair.
         case IDM_EXIT             : if ConfirmExit() then g_bQuitRequested = true
+
+        '' tiko's frmMainCompile.inc:32-42, ported whole: seed the box with the current
+        '' command line, and write it back ONLY on OK -- Cancel returns the edited text too,
+        '' and the id is what says to disregard it.
+        ''
+        '' THE VALUE LIVES IN A SHELL GLOBAL, not gApp.ProjectCommandLine, because clsApp is
+        '' still in src/ and has not moved down into app/. That is a real difference from
+        '' tiko and it is here rather than hidden: the DIALOG is what this commit is proving,
+        '' and the field it edits is a stand-in.
+        case IDM_COMMANDLINE
+            scope
+                dim as DWSTRING sText = g_sCommandLine
+                if ShellInputBoxShow( L(142, "Command Line"), _
+                                      L(143, "Enter command line arguments:"), _
+                                      sText ) = MBX_ID_OK then
+                    g_sCommandLine = sText
+                    print "tikoshell: command line is now [" & g_sCommandLine.Utf8 & "]"
+                end if
+            end scope
 
         case IDM_EXPLORERPOSITION : g_state.bExplorerRight = not g_state.bExplorerRight
         case IDM_VIEWSIDEPANEL    : g_state.bPanelVisible  = not g_state.bPanelVisible
@@ -2136,6 +2384,117 @@ end function
                 b4.Dismiss( MBX_ID_YES )
                 Check "  and only Yes is Yes", _
                       (b4.GetResult() = MBX_ID_YES), str(b4.GetResult())
+            end scope
+
+            '' ---- GROUP H: THE DIALOG KEY POLICY -------------------------------------
+            '' The census said the pump's whole residue was this, and that it would be
+            '' needed once rather than fourteen times. Most of a modal is unreachable
+            '' headlessly -- but the TRAVERSAL is not, because PsSurface.FocusNext walks the
+            '' widget tree and needs no window at all. So the part that replaces
+            '' IsDialogMessage is the part that CAN be asserted, which is a better split
+            '' than this step had any right to expect.
+            scope
+                dim as PsSurface dlg
+                dlg.pText = surf.pText
+                dlg.fScale = surf.fScale
+                dlg.Resize( 400, 200 )
+
+                dim as ShellInputBox ptr pIB = new ShellInputBox
+                pIB->sPrompt = DWSTRING("prompt")
+                dlg.SetRoot( pIB )
+                dim as PsRect rcAll = PsRc(0, 0, dlg.w, dlg.h)
+                pIB->SetBounds( rcAll )
+
+                '' TAB ORDER IS TREE ORDER, which is why the constructor adds the children
+                '' in the order it does rather than keeping a separate index that could
+                '' drift away from the layout.
+                dlg.SetFocus( 0 )
+                Check "Tab reaches the field first", _
+                      (dlg.FocusNext() andalso (dlg.pFocus = cptr(PsWidget ptr, pIB->pField)))
+                Check "  then OK", _
+                      (dlg.FocusNext() andalso (dlg.pFocus = cptr(PsWidget ptr, pIB->pOK)))
+                Check "  then Cancel", _
+                      (dlg.FocusNext() andalso (dlg.pFocus = cptr(PsWidget ptr, pIB->pCancel)))
+                Check "  and then it wraps rather than sticking", _
+                      (dlg.FocusNext() andalso (dlg.pFocus = cptr(PsWidget ptr, pIB->pField)))
+
+                '' Shift+Tab is the same walk backwards. Asserted because a traversal that
+                '' only works forwards is a dialog you can enter and not leave.
+                Check "  Shift+Tab goes back to Cancel", _
+                      (dlg.FocusNext(true) andalso (dlg.pFocus = cptr(PsWidget ptr, pIB->pCancel)))
+                Check "  and again to OK", _
+                      (dlg.FocusNext(true) andalso (dlg.pFocus = cptr(PsWidget ptr, pIB->pOK)))
+
+                '' THE CONTAINER IS NOT A TAB STOP. It is focusable-by-default in PsWidget,
+                '' and a root that took focus would put a stop on the dialog background.
+                Check "  and the container itself is never a stop", (pIB->bFocusable = false)
+
+                '' ---- ENTER AND ESCAPE, which is the actual policy --------------------
+                dim as PsEvent ev
+                ev.kind = PSEV_KEY_DOWN
+
+                pIB->nResult = 0
+                ev.key.key = PSKEY_RETURN
+                Check "Enter is claimed by the dialog", pIB->OnEvent(@ev)
+                Check "  and means OK wherever focus sits", (pIB->nResult = MBX_ID_OK), _
+                      str(pIB->nResult)
+
+                pIB->nResult = 0
+                ev.key.key = PSKEY_ESCAPE
+                Check "Escape is claimed", pIB->OnEvent(@ev)
+                Check "  and means Cancel", (pIB->nResult = MBX_ID_CANCEL), str(pIB->nResult)
+
+                '' An ordinary key is NOT the dialog's. If the root claimed everything, the
+                '' field could never be typed into -- and the root only sees a key the
+                '' focused widget declined, so claiming broadly here is invisible until a
+                '' control stops wanting something.
+                pIB->nResult = 0
+                ev.key.key = PSKEY_A
+                Check "  but an ordinary key is left alone", (pIB->OnEvent(@ev) = false)
+                Check "    and decides nothing", (pIB->nResult = 0)
+
+                '' A key UP must not fire the default. Enter pressed in some other window
+                '' and released over this one would otherwise commit the dialog.
+                pIB->nResult = 0
+                ev.kind = PSEV_KEY_UP
+                ev.key.key = PSKEY_RETURN
+                Check "  and a key UP never commits", (pIB->OnEvent(@ev) = false)
+                Check "    still undecided", (pIB->nResult = 0)
+
+                '' The done-predicate is what ends the nested pump, so nResult and "is it
+                '' finished" have to agree -- a box that decided but never reported would
+                '' hang the dialog with its answer already chosen.
+                pIB->nResult = 0
+                Check "the pump keeps running while undecided", _
+                      (ShellInputBox_IsDone(pIB) = false)
+                pIB->nResult = MBX_ID_CANCEL
+                Check "  and stops once decided", ShellInputBox_IsDone(pIB)
+
+                '' THE WRITE-BACK RULE. Cancel must leave the caller's variable ALONE even
+                '' though the field holds edited text -- tiko says so in as many words.
+                scope
+                    dim as DWSTRING sVar = "original"
+                    Check "Cancel does not write the edited text back", _
+                          (ShellInputBox_Commit(MBX_ID_CANCEL, sVar, DWSTRING("edited")) = false)
+                    Check "  and leaves the caller's value untouched", _
+                          (sVar = DWSTRING("original")), sVar.Utf8
+
+                    Check "OK does write it back", _
+                          ShellInputBox_Commit(MBX_ID_OK, sVar, DWSTRING("edited"))
+                    Check "  and the caller sees the edit", _
+                          (sVar = DWSTRING("edited")), sVar.Utf8
+
+                    '' An empty edit is a REAL value, not a no-op: clearing the command line
+                    '' and pressing OK has to clear it.
+                    Check "  and clearing the field commits the clear", _
+                          ShellInputBox_Commit(MBX_ID_OK, sVar, DWSTRING(""))
+                    Check "    so the value is now empty", (PsLen(sVar) = 0), sVar.Utf8
+                end scope
+
+                '' The surface owns this tree -- it built nothing and was handed it, but
+                '' unlike PsModalHost this scope intends the surface to free it, so SetRoot
+                '' is correct here and DetachRoot would leak.
+                dlg.SetRoot( 0 )
             end scope
 
             '' NO SURFACE MEANS "DO NOT QUIT", and g_pSurf is nulled to get there.
