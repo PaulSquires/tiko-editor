@@ -119,7 +119,15 @@ declare sub MdDocClear( byref doc as MdDoc )
 
 '' THE ENTRY POINT. sMarkdown is UTF-8; \r\n and bare \r are normalised. doc is cleared
 '' first, so the same MdDoc can be reused across pages without leaking the previous one.
-declare sub MdParse( byref sMarkdown as string, byref doc as MdDoc )
+''
+'' bHeadingsOnly is FOR THE CORPUS SCAN, and it is not a different parser: the block walk is
+'' byte-for-byte the same, so a "# heading" inside a fenced block is still not a heading --
+'' which is the whole reason the index parses rather than greps. All it skips is INLINE
+'' parsing for blocks nobody is about to render. On the AfxNova docset that is the difference
+'' between 533 ms and a scan you do not notice, because those pages are mostly table cells and
+'' the index has no use for a single one of them.
+declare sub MdParse( byref sMarkdown as string, byref doc as MdDoc, _
+                     byval bHeadingsOnly as boolean = false )
 
 '' Exposed for the tests and for phase 4's heading index, which wants the slug rule without
 '' re-deriving it.

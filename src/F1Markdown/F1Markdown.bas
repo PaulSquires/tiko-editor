@@ -71,6 +71,7 @@
 '' over unchanged, and they are included before anything that would tempt them otherwise.
 #include once "mdParse.inc"
 #include once "mdHilite.inc"
+#include once "mdIndex.inc"
 
 '' ---- the renderer ----------------------------------------------------------------------
 '' mdFonts and mdLayout sit on PsPlatform's PAINT layer -- PsTextEngine and PsImage -- but
@@ -89,12 +90,16 @@
 ''                HEADLESS -- SDL's video subsystem is initialised because the text engine
 ''                needs it. No window is shown.
 ''   --open <path>     render one .md file instead of the built-in demo
+''   --scan <path>    walk one root, print the topic tree, the heading count, the scan
+''                    time and the ranked answer to --topic if one was given, then exit.
+''                    No window, no font, no SDL -- the index is filesystem and strings.
 ''   --dump-md <path>
 ''                parse one .md file and print the block model, one line per block, then
 ''                every line the parser could not classify. No window, no font, no SDL.
 ''
 '' SWITCHES (parsed here, acted on from phase 4 on except --theme and --selftest)
-''   --topic <text>    the symbol F1 was pressed on
+''   --topic <text>    the symbol F1 was pressed on; fills the search box and opens the
+''                     best match, which is the same path Enter in the box takes
 ''   --docset <name>   which configured root to search first
 ''   --root <path>     a one-off content root, overriding f1markdown.ini
 ''   --theme <file>    a .theme file; default settings/themes/default_dark.theme
@@ -145,6 +150,25 @@ dim shared as long g_nTocW = FM_TOC_W
 
 '' Command line, parsed once at startup.
 dim shared as DWSTRING g_sTopic, g_sDocset, g_sRoot, g_sTheme
+
+'' ---- the corpus, and where we are in it ------------------------------------------------
+dim shared as MdIndex g_ix
+dim shared as long g_nCurTopic = -1
+dim shared as boolean g_bSearchMode
+'' The toolbar exists before its callbacks can safely touch it; UpdateNav is reachable from
+'' OpenTopic, which the command line can call during startup.
+dim shared as boolean g_navReady
+
+'' BACK/FORWARD: an array and a cursor, which is the whole of it. Pushing truncates whatever
+'' was ahead of the cursor -- following a link from three pages back throws away the branch
+'' you left, exactly as a browser does.
+const NAV_MAX = 128
+dim shared as long g_navHist(0 to NAV_MAX - 1)
+dim shared as long g_navCount
+dim shared as long g_navAt = -1
+
+const HITS_MAX = 200
+dim shared as MdHit g_hits(0 to HITS_MAX - 1)
 
 
 '' ---------------------------------------------------------------------------------------
@@ -209,21 +233,210 @@ sub OnSplitMove( byval pSpl as any ptr, byval nPos as long, byval ud as any ptr 
     g_pSurf->InvalidateAll()
 end sub
 
+
+'' ---------------------------------------------------------------------------------------
+'' NAVIGATION
+'' ---------------------------------------------------------------------------------------
+sub Say( byref sMsg as string )
+    if g_status = 0 then exit sub
+    dim as DWSTRING s
+    s.Utf8 = sMsg
+    g_status->SetText( 0, s )
+end sub
+
+sub UpdateNav()
+    if g_navReady = false then exit sub
+    g_nav->EnableItem( IDM_BACK, (g_navAt > 0) )
+    g_nav->EnableItem( IDM_FORWARD, cbool(g_navAt >= 0) andalso cbool(g_navAt < g_navCount - 1) )
+end sub
+
+private sub NavPush( byval nTopic as long )
+    if (g_navAt >= 0) andalso (g_navHist(g_navAt) = nTopic) then exit sub
+    g_navAt += 1
+    if g_navAt >= NAV_MAX then
+        '' Oldest out. A help session that visits 128 pages is real; growing the array without
+        '' bound so it can never happen is not worth the memory.
+        for i as long = 1 to NAV_MAX - 1
+            g_navHist(i - 1) = g_navHist(i)
+        next
+        g_navAt = NAV_MAX - 1
+    end if
+    g_navHist(g_navAt) = nTopic
+    g_navCount = g_navAt + 1
+end sub
+
+sub OpenTopic( byval nTopic as long, byval bPush as boolean )
+    if (nTopic < 0) orelse (nTopic >= g_ix.nTopic) then exit sub
+    '' A folder or a docset row is selectable and opens nothing. Silently, on purpose: the
+    '' alternative is a status line that scolds you for clicking a folder.
+    if g_ix.topic(nTopic).kind <> MDX_DOC then exit sub
+
+    dim as boolean bOk = false
+    dim as string sUtf8 = MdReadUtf8( g_ix.topic(nTopic).sPath, bOk )
+    if bOk = false then
+        Say( "cannot read " & g_ix.topic(nTopic).sPath.Utf8 )
+        exit sub
+    end if
+    g_page->SetMarkdown( sUtf8, PsPathDirWithSep(g_ix.topic(nTopic).sPath).Utf8 )
+
+    g_nCurTopic = nTopic
+    if bPush then NavPush( nTopic )
+
+    '' SetCurSel is SILENT, which is the only reason this does not call straight back into
+    '' OnTocSel and reload the page it has just loaded.
+    if (g_bSearchMode = false) andalso (g_ix.topic(nTopic).nRow >= 0) then
+        g_toc->SetCurSel( g_ix.topic(nTopic).nRow )
+        g_toc->EnsureVisible( g_ix.topic(nTopic).nRow )
+    end if
+
+    Say( g_ix.topic(nTopic).sPath.Utf8 )
+    UpdateNav()
+end sub
+
 sub OnNavCommand( byval pBar as any ptr, byval nId as long, byval ud as any ptr )
-    '' Phase 4 owns the history stack. Both buttons stay disabled until then, so this is
-    '' unreachable rather than empty -- stated because a silent no-op handler reads as a bug.
+    select case nId
+        case IDM_BACK
+            if g_navAt > 0 then
+                g_navAt -= 1
+                OpenTopic( g_navHist(g_navAt), false )
+            end if
+        case IDM_FORWARD
+            if (g_navAt >= 0) andalso (g_navAt < g_navCount - 1) then
+                g_navAt += 1
+                OpenTopic( g_navHist(g_navAt), false )
+            end if
+    end select
 end sub
 
 
-'' Phase 4 owns navigation. Until then a link reports where it would have gone, which is the
-'' only honest thing a handler with no history stack and no corpus index can do.
-sub OnDocLink( byval pView as any ptr, byref sHref as string, byval ud as any ptr )
-    if g_status <> 0 then
-        dim as DWSTRING s
-        s.Utf8 = "link: " & sHref
-        g_status->SetText( 0, s )
+'' ---------------------------------------------------------------------------------------
+'' THE TOC
+''
+'' EVERY AddNode BELOW LANDS AT THE END OF THE TREE, so no nRow recorded earlier can be
+'' invalidated by a later insert. That is not luck: AddNode inserts after nParent's whole
+'' subtree, and mdIndex hands its topics over in PRE-ORDER, so the parent's last descendant
+'' is always the row just added. Fill it in any other order and the recorded rows go stale
+'' silently, which shows up as the tree selecting the wrong page.
+'' ---------------------------------------------------------------------------------------
+sub FillTree()
+    if g_toc = 0 then exit sub
+    g_bSearchMode = false
+    g_toc->BeginUpdate()
+    g_toc->clear()
+    for i as long = 0 to g_ix.nTopic - 1
+        dim as long nPar = -1
+        if g_ix.topic(i).nParent >= 0 then nPar = g_ix.topic( g_ix.topic(i).nParent ).nRow
+        dim as DWSTRING sTx
+        sTx.Utf8 = g_ix.topic(i).sName
+        g_ix.topic(i).nRow = g_toc->AddNode( nPar, sTx, i )
+    next
+    g_toc->EndUpdate()
+    if g_nCurTopic >= 0 then
+        if g_ix.topic(g_nCurTopic).nRow >= 0 then
+            g_toc->SetCurSel( g_ix.topic(g_nCurTopic).nRow )
+            g_toc->EnsureVisible( g_ix.topic(g_nCurTopic).nRow )
+        end if
     end if
 end sub
+
+'' The tree becomes a FLAT RANKED LIST while a query is live. Filtering the tree in place
+'' would leave folders standing with no visible children, and ranked order is the point --
+'' a tree cannot show one.
+function FillSearchResults( byref sQuery as string ) as long
+    if g_toc = 0 then return 0
+    dim as long n = MdIndexSearch( g_ix, sQuery, g_hits(), HITS_MAX )
+    g_bSearchMode = true
+    g_toc->BeginUpdate()
+    g_toc->clear()
+    for i as long = 0 to n - 1
+        dim as long t = g_hits(i).nTopic
+        dim as string sTx = g_ix.topic(t).sTitle
+        '' When a HEADING matched rather than the title, show it too -- otherwise five hits
+        '' inside one page read as five identical rows.
+        if g_hits(i).nHead >= 0 then
+            dim as string sH = g_ix.head( g_hits(i).nHead ).sText
+            if lcase(sH) <> lcase(sTx) then sTx = sTx & "  -  " & sH
+        end if
+        dim as DWSTRING sDw
+        sDw.Utf8 = sTx
+        g_toc->AddNode( -1, sDw, t )
+    next
+    g_toc->EndUpdate()
+    return n
+end function
+
+sub OnTocSel( byval pList as any ptr, byval nRow as long, byval ud as any ptr )
+    if g_toc = 0 then exit sub
+    if g_toc->IsValidRow( nRow ) = false then exit sub
+    OpenTopic( clng(g_toc->GetItemData(nRow)), true )
+end sub
+
+sub OnSearchChange( byval pTb as any ptr, byval ud as any ptr )
+    if g_search = 0 then exit sub
+    dim as string q = trim( g_search->GetText().Utf8 )
+    if len(q) = 0 then
+        FillTree()
+        Say( str(g_ix.nDocs) & " topics" )
+        exit sub
+    end if
+    dim as long n = FillSearchResults( q )
+    Say( str(n) & " match" & iif(n = 1, "", "es") & " for " & q )
+end sub
+
+'' Enter opens the best hit -- the SAME path --topic takes, so the keyboard and the command
+'' line can never disagree about which page a symbol means.
+sub OnSearchEnter( byval pTb as any ptr, byval ud as any ptr )
+    if g_search = 0 then exit sub
+    dim as string q = trim( g_search->GetText().Utf8 )
+    if len(q) = 0 then exit sub
+    dim as long n = MdIndexSearch( g_ix, q, g_hits(), HITS_MAX )
+    if n > 0 then OpenTopic( g_hits(0).nTopic, true )
+end sub
+
+
+'' ---------------------------------------------------------------------------------------
+'' FOLLOWING A LINK
+'' ---------------------------------------------------------------------------------------
+sub OnDocLink( byval pView as any ptr, byref sHref as string, byval ud as any ptr )
+    if len(sHref) = 0 then exit sub
+    dim as string sLow = lcase(sHref)
+
+    '' EXTERNAL LINKS ARE COPIED, NOT OPENED, and that is a limitation rather than a stub.
+    '' PsPlatform has no open-url call; ShellExecute here would be raw Win32 above the
+    '' platform layer -- what scripts/check-isolation.sh exists to prevent -- and it would
+    '' need writing a second time for the Linux port. The CLIPBOARD is in the platform
+    '' interface, so the url reaches a browser in one paste.
+    if (left(sLow, 7) = "http://") orelse (left(sLow, 8) = "https://") then
+        dim as DWSTRING u
+        u.Utf8 = sHref
+        g_plat.clip.SetText( u )
+        Say( "copied to the clipboard: " & sHref )
+        exit sub
+    end if
+
+    '' The #anchor is stripped: in-page anchors are out of v1, so a link to one opens its
+    '' page and stays where it is, rather than doing nothing at all.
+    dim as string sPath = sHref
+    dim as long nHash = instr(sPath, "#")
+    if nHash > 0 then sPath = left(sPath, nHash - 1)
+    if len(sPath) = 0 then
+        Say( "in-page anchors are not in v1: " & sHref )
+        exit sub
+    end if
+
+    if g_nCurTopic < 0 then exit sub
+    dim as DWSTRING sRel
+    sRel.Utf8 = sPath
+    dim as DWSTRING sFull = PsPathCanonicalise( _
+        PsPathJoin( PsPathDirWithSep(g_ix.topic(g_nCurTopic).sPath), sRel ) )
+    dim as long t = MdIndexFindPath( g_ix, sFull )
+    if t >= 0 then
+        OpenTopic( t, true )
+    else
+        Say( "not in the index: " & sPath )
+    end if
+end sub
+
 
 sub BuildTree( byref surf as PsSurface )
     g_root = new AppRoot
@@ -236,10 +449,13 @@ sub BuildTree( byref surf as PsSurface )
     g_nav->EnableItem( IDM_BACK, false )
     g_nav->EnableItem( IDM_FORWARD, false )
     g_nav->OnCommand( @OnNavCommand )
+    g_navReady = true
     g_root->AddChild( g_nav )                 '' AddChild TRANSFERS OWNERSHIP
 
     g_search = new PsTextBox
     g_search->SetCueBannerText( PsText("Search topics") )
+    g_search->OnChange( @OnSearchChange )
+    g_search->OnEnterPressed( @OnSearchEnter )
     g_root->AddChild( g_search )
 
     g_toc = new PsListTree
@@ -247,10 +463,7 @@ sub BuildTree( byref surf as PsSurface )
     g_toc->ShowTwisty( true )
     '' One row, and it says what is true. An empty tree and a tree whose corpus failed to
     '' load look identical, and phase 1 has no corpus at all.
-    scope
-        dim as long nRow = g_toc->AddString( PsText("(no docsets -- phase 4)") )
-        g_toc->SetRowSelectable( nRow, false )
-    end scope
+    g_toc->OnSelChange( @OnTocSel )
     g_root->AddChild( g_toc )
 
     g_split = new PsSplitter
@@ -484,17 +697,11 @@ end sub
 '' ---------------------------------------------------------------------------------------
 sub RunDumpMd( byref sPath as DWSTRING )
     dim as boolean bOk = false
-    dim as string sBytes = PsFileReadAll( sPath, bOk )
+    dim as string sUtf8 = MdReadUtf8( sPath, bOk )
     if bOk = false then
         print "F1Markdown: cannot read " & sPath.Utf8
         end 1
     end if
-
-    '' The corpus is UTF-8, but a BOM or a legacy file would otherwise reach the parser as
-    '' mojibake and be reported as prose rather than as an encoding problem.
-    dim as PsEncodingId enc
-    dim as DWSTRING sText = PsEncDecodeAuto( sBytes, enc )
-    dim as string sUtf8 = sText.Utf8
 
     dim as MdDoc doc
     MdParse( sUtf8, doc )
@@ -512,14 +719,67 @@ sub RunDumpMd( byref sPath as DWSTRING )
 end sub
 
 
+'' ---------------------------------------------------------------------------------------
+'' --scan. Walks a root and reports, before the platform starts -- which is the assertion
+'' that the index needs no SDL, no window and no font either.
+'' ---------------------------------------------------------------------------------------
+sub RunScan( byref sRoot as DWSTRING, byref sTopic as DWSTRING )
+    dim as DWSTRING sR = PsPathCanonicalise( sRoot )
+    if PsFileIsDir( sR ) = false then
+        print "F1Markdown: not a folder -- " & sR.Utf8
+        end 1
+    end if
+
+    dim as double t0 = timer
+    MdIndexAddRoot( g_ix, PsPathName(sR).Utf8, sR )
+    dim as double nMs = (timer - t0) * 1000
+
+    print "-- " & sR.Utf8 & " --"
+    print str(g_ix.nDocs) & " documents, " & str(g_ix.nTopic) & " tree nodes, " & _
+          str(g_ix.nHead) & " headings, " & str(g_ix.nSkipped) & " unreadable"
+    print "scanned in " & format(nMs, "0") & " ms"
+
+    for i as long = 0 to g_ix.nTopic - 1
+        dim as string sInd = space( g_ix.topic(i).nDepth * 2 )
+        dim as string sKind = "  "
+        if g_ix.topic(i).kind = MDX_DOCSET then sKind = "* "
+        if g_ix.topic(i).kind = MDX_FOLDER then sKind = "+ "
+        print sInd & sKind & g_ix.topic(i).sName
+    next
+
+    if len(sTopic) > 0 then
+        print ""
+        print "-- ranked for " & sTopic.Utf8 & " --"
+        dim as long n = MdIndexSearch( g_ix, sTopic.Utf8, g_hits(), HITS_MAX )
+        if n = 0 then
+            print "  no match"
+        else
+            for i as long = 0 to n - 1
+                if i >= 10 then
+                    print "  ... and " & str(n - 10) & " more"
+                    exit for
+                end if
+                dim as string sWhere = "title"
+                if g_hits(i).nHead >= 0 then sWhere = "h" & _
+                    str(g_ix.head(g_hits(i).nHead).nLevel) & " " & _
+                    g_ix.head(g_hits(i).nHead).sText
+                print "  " & str(g_hits(i).nScore) & "  " & _
+                      g_ix.topic(g_hits(i).nTopic).sTitle & "   [" & sWhere & "]"
+            next
+        end if
+    end if
+end sub
+
+
 '' ======================================================================== main
     dim as boolean bSelfTest = false
-    dim as DWSTRING g_sDumpMd, g_sOpen
+    dim as DWSTRING g_sDumpMd, g_sOpen, g_sScan
     for i as integer = 1 to __FB_ARGC__ - 1
         dim as string sArg = command(i)
         select case sArg
             case "--selftest" : bSelfTest = true
             case "--dump-md"  : if i < __FB_ARGC__ - 1 then g_sDumpMd = command(i + 1)
+            case "--scan"     : if i < __FB_ARGC__ - 1 then g_sScan   = command(i + 1)
             case "--open"     : if i < __FB_ARGC__ - 1 then g_sOpen   = command(i + 1)
             case "--topic"    : if i < __FB_ARGC__ - 1 then g_sTopic  = command(i + 1)
             case "--docset"   : if i < __FB_ARGC__ - 1 then g_sDocset = command(i + 1)
@@ -532,6 +792,10 @@ end sub
     '' needs no platform at all.
     if len(g_sDumpMd) > 0 then
         RunDumpMd( g_sDumpMd )
+        end 0
+    end if
+    if len(g_sScan) > 0 then
+        RunScan( g_sScan, g_sTopic )
         end 0
     end if
 
@@ -584,24 +848,76 @@ end sub
         PsThemeApply( surf.pRoot )
     end scope
 
-    '' ---- the document ----------------------------------------------------------------
-    '' --open reads a file; otherwise the demo, which is the SAME string the layout tests
-    '' assert against, so the interactive pass and the suite look at one document.
+    '' ---- the corpus --------------------------------------------------------------------
+    '' SYNCHRONOUS, and measured rather than assumed. The plan called for a background
+    '' thread; PsPlatform has no thread abstraction at all, and the scan turned out to cost
+    '' a fraction of the window's own startup -- so a thread would have been a second way to
+    '' get things wrong in exchange for nothing. The cost is printed on every run, so the day
+    '' a corpus makes it visible, it says so rather than just feeling slow.
+    scope
+        dim as double t0 = timer
+        if len(g_sRoot) > 0 then
+            dim as DWSTRING sR = PsPathCanonicalise( g_sRoot )
+            MdIndexAddRoot( g_ix, PsPathName(sR).Utf8, sR )
+        else
+            '' tiko's own docs, beside the exe. Phase 5's f1markdown.ini replaces this with a
+            '' named list of roots; until then one default beats none, because a viewer that
+            '' opens empty looks broken.
+            dim as DWSTRING sDocs
+            sDocs.Utf8 = ThemeDir() & "../docs"
+            sDocs = PsPathCanonicalise( sDocs )
+            if PsFileIsDir( sDocs ) then MdIndexAddRoot( g_ix, "tiko", sDocs )
+        end if
+        FillTree()
+        dim as DWSTRING sCount
+        sCount.Utf8 = str(g_ix.nDocs) & " topics"
+        g_status->SetText( 1, sCount )
+        print "F1Markdown: " & str(g_ix.nDocs) & " topics, " & str(g_ix.nHead) & _
+              " headings in " & format((timer - t0) * 1000, "0") & " ms" & _
+              iif(g_ix.nSkipped > 0, " (" & str(g_ix.nSkipped) & " unreadable)", "")
+    end scope
+
+    '' ---- the first page ------------------------------------------------------------------
     scope
         if len(g_sOpen) > 0 then
+            '' --open renders one file whether or not it is in the index, which is what makes
+            '' it useful for looking at a document the corpus does not contain.
             dim as boolean bOk = false
-            dim as string sBytes = PsFileReadAll( g_sOpen, bOk )
+            dim as string sUtf8 = MdReadUtf8( g_sOpen, bOk )
             if bOk then
-                dim as PsEncodingId enc
-                dim as DWSTRING sText = PsEncDecodeAuto( sBytes, enc )
-                g_page->SetMarkdown( sText.Utf8, PsPathDirWithSep(g_sOpen).Utf8 )
+                g_page->SetMarkdown( sUtf8, PsPathDirWithSep(g_sOpen).Utf8 )
                 g_status->SetText( 0, g_sOpen )
             else
                 print "F1Markdown: cannot read " & g_sOpen.Utf8
             end if
+        elseif len(g_sTopic) > 0 then
+            '' THE F1 PATH. The topic goes into the search box as well as being resolved, so
+            '' what the viewer opened and why is visible rather than magic -- and the box is
+            '' then ready to be edited if it guessed wrong.
+            g_search->SetText( g_sTopic )
+            dim as long n = MdIndexSearch( g_ix, g_sTopic.Utf8, g_hits(), HITS_MAX )
+            if n > 0 then
+                FillSearchResults( g_sTopic.Utf8 )
+                OpenTopic( g_hits(0).nTopic, true )
+                Say( str(n) & " match" & iif(n = 1, "", "es") & " for " & g_sTopic.Utf8 )
+            else
+                Say( "no match for " & g_sTopic.Utf8 )
+            end if
         else
-            dim as string sNone = ""
-            g_page->SetMarkdown( MdDemoMarkdown(), sNone )
+            dim as long nFirst = -1
+            for i as long = 0 to g_ix.nTopic - 1
+                if g_ix.topic(i).kind = MDX_DOC then nFirst = i : exit for
+            next
+            if nFirst >= 0 then
+                OpenTopic( nFirst, true )
+            else
+                '' An empty corpus falls back to the demo rather than a blank pane, and says
+                '' so, because "no documents found" is a configuration problem the user can
+                '' act on and an empty window is not.
+                dim as string sNone = ""
+                g_page->SetMarkdown( MdDemoMarkdown(), sNone )
+                Say( "no documents found -- showing the built-in demo" )
+            end if
         end if
     end scope
 
@@ -651,6 +967,7 @@ end sub
         '' geometry failure is not buried under a hundred parser lines.
         MdRunParserTests()
         MdRunHiliteTests()
+        MdRunIndexTests()
         MdRunFontTests()
         MdRunLayoutTests()
 

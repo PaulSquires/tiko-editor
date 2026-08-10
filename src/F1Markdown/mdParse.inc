@@ -802,10 +802,19 @@ private sub ScanInline( byref s as string, byval nFrom as long, byval nTo as lon
     FLUSH()
 end sub
 
-'' Parse `sText` into the arena and hand back the slice.
+'' Set for the duration of a heading-only parse. A module flag rather than a parameter
+'' threaded through six recursive functions, because every one of them would carry it
+'' unchanged and exactly one place reads it.
+dim shared as boolean g_mdHeadOnly
+
+'' Parse `sText` into the arena and hand back the slice. bForce is what a HEADING passes: it
+'' is the one block kind the corpus scan wants.
 private sub ParseInlineRange( byref sText as string, byref doc as MdDoc, _
-                              byref nFirst as long, byref nCount as long )
+                              byref nFirst as long, byref nCount as long, _
+                              byval bForce as boolean = false )
     nFirst = doc.nInl
+    nCount = 0
+    if g_mdHeadOnly andalso (bForce = false) then exit sub
     dim as string sNone = ""
     ScanInline( sText, 0, len(sText), 0, sNone, doc )
     nCount = doc.nInl - nFirst
@@ -893,7 +902,7 @@ private sub ParseLines( lines() as string, byval nFirst as long, byval nLast as 
                 doc.blk(b).sAnchor = MdSlug(sVisible)
             end if
             dim as long nF, nC
-            ParseInlineRange( sVisible, doc, nF, nC )
+            ParseInlineRange( sVisible, doc, nF, nC, true )
             doc.blk(b).nFirstInl = nF
             doc.blk(b).nInlCount = nC
             i += 1
@@ -1126,8 +1135,10 @@ private sub ParseLines( lines() as string, byval nFirst as long, byval nLast as 
 end sub
 
 
-sub MdParse( byref sMarkdown as string, byref doc as MdDoc )
+sub MdParse( byref sMarkdown as string, byref doc as MdDoc, _
+             byval bHeadingsOnly as boolean )
     MdDocClear( doc )
+    g_mdHeadOnly = bHeadingsOnly
 
     '' \r\n and bare \r normalised, then split. Written out rather than routed through
     '' PsStrSplit because that one speaks DWSTRING and this model is UTF-8 bytes throughout.
@@ -1153,6 +1164,9 @@ sub MdParse( byref sMarkdown as string, byref doc as MdDoc )
     wend
 
     if n > 0 then ParseLines( lines(), 0, n - 1, 0, doc )
+    '' Cleared unconditionally. Left set, the NEXT page would render as a document with no
+    '' words in it and nothing would say why.
+    g_mdHeadOnly = false
 end sub
 
 

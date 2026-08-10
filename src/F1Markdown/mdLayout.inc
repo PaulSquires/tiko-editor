@@ -237,6 +237,33 @@ private function SegsNatural64( segs() as MdSeg, byval nSegs as long ) as long
     return nW
 end function
 
+'' The widest single WORD, in 26.6. This is a column's real floor: squeeze it narrower and
+'' the wrapper has no legal break left and starts splitting mid-word, which turned
+'' "AfxStrClipLeft" into "AfxStrCli / pLeft" in the AfxNova reference tables. Natural width
+'' says what a column WANTS; this says what it cannot go below without lying about the text.
+private function SegsWidestWord64( segs() as MdSeg, byval nSegs as long ) as long
+    dim as long nMax = 0
+    for i as long = 0 to nSegs - 1
+        dim as string s = segs(i).sText
+        dim as long a = 0
+        while a < len(s)
+            while (a < len(s)) andalso (s[a] = 32)
+                a += 1
+            wend
+            dim as long b = a
+            while (b < len(s)) andalso (s[b] <> 32)
+                b += 1
+            wend
+            if b > a then
+                dim as long w = Meas64( segs(i).nFont, mid(s, a + 1, b - a) )
+                if w > nMax then nMax = w
+            end if
+            a = b
+        wend
+    next
+    return nMax
+end function
+
 
 '' ---------------------------------------------------------------------------------------
 '' THE WRAPPER
@@ -666,6 +693,10 @@ sub MdLayoutPage( byref doc as MdDoc, byref page as MdPage, byval nWidth as long
             for c as long = 0 to nCols - 1
                 colW(c) = 0
             next
+            dim as long colMin(0 to nCols - 1)
+            for c as long = 0 to nCols - 1
+                colMin(c) = 0
+            next
             for r as long = nFirstRow to nFirstRow + nRows - 1
                 dim as long nHead = iif(doc.blk(r).bHeaderRow, MDF_BODY_B, -1)
                 for c as long = 0 to doc.blk(r).nCellCount - 1
@@ -674,16 +705,28 @@ sub MdLayoutPage( byref doc as MdDoc, byref page as MdPage, byval nWidth as long
                                     doc.cell(nCell).nInlCount, segs(), nSegs, nHead )
                     dim as long nW = (SegsNatural64(segs(), nSegs) + 63) shr 6
                     if nW > colW(c) then colW(c) = nW
+                    dim as long nM = (SegsWidestWord64(segs(), nSegs) + 63) shr 6
+                    if nM > colMin(c) then colMin(c) = nM
                 next
             next
 
             '' 2. fit them to the available width. A table narrower than the pane is
             '' EXPANDED to fill it -- a two-column reference table floating at 40% of the
-            '' width looks like a rendering failure -- and one that is too wide is shrunk
-            '' proportionally, never below MDL_CELL_MIN.
+            '' width looks like a rendering failure.
+            ''
+            '' A COLUMN IS NEVER SQUEEZED BELOW ITS WIDEST WORD. Proportional sizing alone
+            '' gave the AfxNova reference tables a name column narrower than the names in it,
+            '' and the wrapper -- correctly, having no legal break left -- split them:
+            '' "AfxStrClipLeft" rendered as "AfxStrCli / pLeft". The floor is capped at half
+            '' the table so that one very long token cannot starve every other column.
             dim as long nPadTotal = nCols * 2 * Sc(MDL_CELL_PAD)
             dim as long nAvail = (nRight0 - nLeft) - nPadTotal
             if nAvail < nCols * Sc(MDL_CELL_MIN) then nAvail = nCols * Sc(MDL_CELL_MIN)
+            for c as long = 0 to nCols - 1
+                if colMin(c) < Sc(MDL_CELL_MIN) then colMin(c) = Sc(MDL_CELL_MIN)
+                if colMin(c) > nAvail \ 2 then colMin(c) = nAvail \ 2
+            next
+
             dim as long nNat = 0
             for c as long = 0 to nCols - 1
                 nNat += colW(c)
@@ -692,13 +735,54 @@ sub MdLayoutPage( byref doc as MdDoc, byref page as MdPage, byval nWidth as long
             dim as long nUsed = 0
             for c as long = 0 to nCols - 1
                 colW(c) = clng(colW(c) * (nAvail / nNat))
-                if colW(c) < Sc(MDL_CELL_MIN) then colW(c) = Sc(MDL_CELL_MIN)
+                if colW(c) < colMin(c) then colW(c) = colMin(c)
                 nUsed += colW(c)
             next
-            '' Rounding and the minimum both push the total off; the last column absorbs it,
-            '' so the right edge is exact rather than nearly right.
-            colW(nCols - 1) += nAvail - nUsed
-            if colW(nCols - 1) < Sc(MDL_CELL_MIN) then colW(nCols - 1) = Sc(MDL_CELL_MIN)
+
+            '' Holding the floors can push the total past the width. The overflow is taken
+            '' back only from columns that are ABOVE their own floor, proportionally to the
+            '' slack they have -- so the wide description column gives way and the narrow
+            '' name column does not.
+            if nUsed > nAvail then
+                dim as long nSlack = 0
+                for c as long = 0 to nCols - 1
+                    nSlack += colW(c) - colMin(c)
+                next
+                if nSlack > 0 then
+                    dim as long nCut = nUsed - nAvail
+                    if nCut > nSlack then nCut = nSlack
+                    dim as long nDone = 0
+                    for c as long = 0 to nCols - 1
+                        dim as long nHave = colW(c) - colMin(c)
+                        dim as long nTake = clng(nCut * (nHave / nSlack))
+                        if nTake > nHave then nTake = nHave
+                        colW(c) -= nTake
+                        nDone += nTake
+                    next
+                    '' Rounding leaves a few pixels; take them from the widest column that
+                    '' still has slack rather than spreading a second pass over all of them.
+                    dim as long nLeftOver = nCut - nDone
+                    while nLeftOver > 0
+                        dim as long nBest = -1
+                        for c as long = 0 to nCols - 1
+                            if colW(c) > colMin(c) then
+                                if (nBest < 0) orelse (colW(c) > colW(nBest)) then nBest = c
+                            end if
+                        next
+                        if nBest < 0 then exit while
+                        colW(nBest) -= 1
+                        nLeftOver -= 1
+                    wend
+                end if
+                nUsed = 0
+                for c as long = 0 to nCols - 1
+                    nUsed += colW(c)
+                next
+            end if
+
+            '' Rounding pushes the total off by a pixel or two; the last column absorbs it, so
+            '' the right edge is exact rather than nearly right. Only when it has room to.
+            if (nAvail - nUsed) > 0 then colW(nCols - 1) += nAvail - nUsed
 
             nY += Sc(MDL_TABLE_GAP)
             dim as long nTableTop = nY

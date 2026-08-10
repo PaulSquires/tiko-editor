@@ -361,6 +361,79 @@ end sub
 
 
 '' ---------------------------------------------------------------------------------------
+'' the corpus index
+''
+'' The RANKING is tested against a hand-built index rather than a fixture folder on disk. It
+'' is the part with rules in it, and a folder would make the test depend on a scan that
+'' --scan already exercises against 137 real documents.
+'' ---------------------------------------------------------------------------------------
+private sub IxDoc( byref ix as MdIndex, byref sTitle as string )
+    if ix.nTopic > ubound(ix.topic) then redim preserve ix.topic(0 to (ix.nTopic + 1) * 2)
+    with ix.topic(ix.nTopic)
+        .kind = MDX_DOC : .sTitle = sTitle : .sName = sTitle
+        .nParent = -1 : .nDepth = 1 : .nSort = -1 : .nRow = -1
+    end with
+    ix.nTopic += 1
+    ix.nDocs += 1
+end sub
+
+private sub IxHead( byref ix as MdIndex, byval nTopic as long, byref sText as string )
+    if ix.nHead > ubound(ix.head) then redim preserve ix.head(0 to (ix.nHead + 1) * 2)
+    with ix.head(ix.nHead)
+        .nTopic = nTopic : .nLevel = 2 : .sText = sText : .sAnchor = "" : .nY = -1 : .nBlock = 0
+    end with
+    ix.nHead += 1
+end sub
+
+sub MdRunIndexTests()
+    print "  -- the index: ranked lookup --"
+    dim as MdIndex ix
+    dim as MdHit hits(0 to 31)
+
+    IxDoc( ix, "CWindow" )                      '' 0 -- title is the symbol
+    IxDoc( ix, "About Menus" )                  '' 1 -- only a heading matches
+    IxDoc( ix, "CWindowEx" )                    '' 2 -- title prefix
+    IxDoc( ix, "String Procedures" )            '' 3 -- headings only
+    IxHead( ix, 1, "CWindow" )
+    IxHead( ix, 2, "Notes" )
+    IxHead( ix, 3, "AfxStrParseCount" )
+    IxHead( ix, 3, "AfxStrParse" )
+
+    dim as long n = MdIndexSearch( ix, "CWindow", hits(), 32 )
+    Check "three topics match CWindow", (n = 3), str(n)
+    Check "the page TITLED CWindow comes first", (n > 0) andalso (hits(0).nTopic = 0), _
+          "first is " & str(iif(n > 0, hits(0).nTopic, -1))
+    Check "an exact HEADING beats a title PREFIX", _
+          (n > 2) andalso (hits(1).nTopic = 1) andalso (hits(2).nTopic = 2), _
+          "order " & str(hits(0).nTopic) & "," & str(hits(1).nTopic) & "," & str(hits(2).nTopic)
+    Check "a title match reports no heading", (n > 0) andalso (hits(0).nHead = -1)
+    Check "a heading match reports which one", (n > 1) andalso (hits(1).nHead >= 0)
+
+    '' The F1 case: a symbol that is a heading inside a page whose title is something else.
+    n = MdIndexSearch( ix, "AfxStrParseCount", hits(), 32 )
+    Check "an exact heading finds its page", _
+          (n = 1) andalso (hits(0).nTopic = 3), str(n) & " hits"
+
+    '' ONE ENTRY PER TOPIC. Two headings of one page matching must not crowd out other pages,
+    '' and the entry must keep the BEST of the two rather than the first seen.
+    n = MdIndexSearch( ix, "AfxStrParse", hits(), 32 )
+    Check "one row per topic however many headings match", (n = 1), str(n) & " hits"
+    Check "and it keeps the better score", _
+          (n = 1) andalso (ix.head(hits(0).nHead).sText = "AfxStrParse"), _
+          iif(n = 1, ix.head(hits(0).nHead).sText, "-")
+
+    '' Within a band the shorter title wins, which is what makes searching "CWindow" offer
+    '' CWindow before CWindowEx when neither is exact.
+    n = MdIndexSearch( ix, "cwindowe", hits(), 32 )
+    Check "matching is case-insensitive", (n = 1) andalso (hits(0).nTopic = 2), str(n)
+
+    Check "an empty query matches nothing", (MdIndexSearch(ix, "", hits(), 32) = 0)
+    Check "a query nothing contains matches nothing", _
+          (MdIndexSearch(ix, "zzzz", hits(), 32) = 0)
+end sub
+
+
+'' ---------------------------------------------------------------------------------------
 '' fonts
 '' ---------------------------------------------------------------------------------------
 sub MdRunFontTests()

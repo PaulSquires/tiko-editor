@@ -73,7 +73,12 @@ Read in this order, and do not skip the first:
    suite the moment the code under it became real. Beside it,
    [`document-model-blockers.md`](document-model-blockers.md), which is what re-measurement by
    compiler looks like after three wrong greps.
-7. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
+7. [`7c-step4.md`](7c-step4.md) — **the first real form, and the only number 7c was never
+   sized against.** Read THE NUMBER section and then the four defects under it: the ratio is
+   1.35 and it is a floor, and three of the eight commits were fixing things that only appear
+   when the program runs. Also the shortest list on this shelf of what a single panel demanded
+   from the toolkit underneath it.
+8. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
    irreducible, investigated. **It was not a blocker and never had been.** Short, and it is the
    clearest example on this whole shelf of a claim that survived because nobody checked it.
    **Its recommendation has since been implemented**: WebView2 is gone from the tree.
@@ -209,6 +214,26 @@ instead, and no background parsing.
 caret, clicks landing up-and-left of the pointer, an arrow cursor over text, and doubled text
 after my own wrong fix for the third. **Three of the five were in PsPlatform and had been
 reachable by every host in the tree since those widgets existed.** Same shape as step 2's menus.
+
+**AND STEP 4 PUT A REAL FORM IN IT, WHICH IS WHERE THE ONLY UNMEASURED NUMBER FINALLY GOT A
+VALUE.** The Bookmarks panel is ported end to end: grouped by file, click-to-jump across tabs,
+all four accelerators, a margin icon. **~216 lines of port code replaced ~160 of tiko's — a
+ratio of 1.35 — in EIGHT commits, three of which were fixing defects that only appeared when
+the program ran.** Read the ratio as a FLOOR: bookmarks was the easiest real panel, its model
+was already portable and its control already existed on both sides. See
+[`7c-step4.md`](7c-step4.md).
+
+**FOUR DEFECTS, ALL FOUND BY THE AUTHOR RUNNING THE BINARY, NONE BY ANY GATE** — the binary died
+at startup with a file argument, Ctrl+F2 threw the caret to line 1, the panel rows were striped,
+and a bookmarked line was highlighted end to end instead of showing a margin icon. Fourth step
+running, fourth time this is the finding. **The startup crash was invisible to the suite BY
+CONSTRUCTION**: it opens its files after the tree is built, and the defect was about *when* the
+work happened, not what it did.
+
+**THREE PsPlatform GAPS CAME OUT OF ONE PANEL**, none fixed here: `PsListTree` has one item-data
+slot where tiko's control has two; its row striping is unconditional with no `SetAltRows`; and
+`OnSelChange` cannot tell a mouse selection from a keyboard one, so **arrowing the list moves the
+editor**. Each is worked around at the call site with the workaround named.
 
 **That is ONE FORM AND TWO DIALOGS. 7c is 48 forms and ~45,000 lines**, so read step 1 as a measurement of
 the approach rather than of the progress. An earlier version of this page said 7c was *done*,
@@ -538,28 +563,38 @@ PsCore now declares `operator len`, so unconverted sites are right rather than q
 
 ---
 
-## What 7c step 4 has to decide — the live list
+## What 7c step 5 has to decide — the live list
 
 The four items below this one are all closed and are kept as a record. **These are the open
-ones**, and each is a decision rather than a task:
+ones**, and each is a decision rather than a task. Reordered after step 4, which moved item 2
+to the front by hitting it:
 
-1. **Encoding detection on read.** `ShellHost_LoadFileText` reads bytes and calls them UTF-8;
+1. **Threading in PsPlatform — the largest single blocker left, and not tiko's to solve.**
+   `clsScanMgr` is blocked on it outright: its worker thread is woken and stopped with Win32
+   event objects, and PsPlatform surfaces no threading or synchronisation service at all (the
+   vendored `SDL_mutex.bi` is never exposed through `g_plat`). **The FUNCTIONS panel — the next
+   one anybody would port — needs it**, so this now gates form work rather than sitting behind
+   it.
+2. **The three `PsListTree` gaps step 4 found**, each worked around at a call site today: one
+   item-data slot where tiko's control has two; unconditional row striping with no
+   `SetAltRows`; and `OnSelChange` not distinguishing mouse from keyboard, which makes arrowing
+   the list move the editor. Fix in the control, or work around again in every host that
+   follows.
+3. **Encoding detection on read.** `ShellHost_LoadFileText` reads bytes and calls them UTF-8;
    tiko's read path decodes UTF-16 through `WideCharToMultiByte` and is still shell-side.
-   Now that the shell *saves*, a UTF-16 file opened there will not round-trip. First thing
-   that makes the shell's file handling honest.
-2. **Threading — a PsPlatform decision, not a tiko one.** `clsScanMgr` is blocked on it
-   outright: its worker thread is woken and stopped with Win32 event objects, and PsPlatform
-   surfaces no threading or synchronisation service at all (the vendored `SDL_mutex.bi` is
-   never exposed through `g_plat`). It will not be the last thing blocked on this.
-3. **`clsTopTabCtl`: portable rewrite, or a Win32 facade forever?** The shell shows the
+   The shell *saves* now, so a UTF-16 file opened there will not round-trip.
+4. **`clsTopTabCtl`: portable rewrite, or a Win32 facade forever?** The shell shows the
    *model* half is small — 258 lines including its comments. The class as it stands stores the
    `clsDocument ptr` inside the control and reads it back with `PsTabBar_GetItemData`.
-4. **The four link-debt bodies.** Three are trivially host-supplied; `FilenameOriginalCase`
+5. **The four link-debt bodies.** Three are trivially host-supplied; `FilenameOriginalCase`
    needs a PsCore canonical-path call first.
+6. **Whether the 1.35 per-form ratio holds on a panel that is not the easy one.** It came from
+   the panel whose model was already portable and whose control already existed. Functions has
+   neither.
 
-**And one process point step 3 earned the right to state plainly: drive every milestone by hand
-before calling it done.** Every claim a suite supports survived this step. Every claim about
-what the user sees came from a person opening the binary — five for five.
+**And one process point steps 3 and 4 both earned: drive every milestone by hand before calling
+it done.** Every claim a suite supports has survived. Every claim about what the user sees came
+from a person opening the binary — nine for nine across the two steps.
 
 ## What I would do next, in order — ALL FOUR ARE NOW CLOSED
 
