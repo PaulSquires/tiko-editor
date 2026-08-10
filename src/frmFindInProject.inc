@@ -1923,8 +1923,24 @@ sub frmFindInProject_RunSelfTest()
             FindProject_Search( "e", false, false )
             frmFindInProject_Check( "cap: a huge search stops at the match cap", _
                 gFip.nMatchCount <= FINDPROJ_MAX_MATCHES, str(gFip.nMatchCount) )
-            frmFindInProject_Check( "cap: and reports itself as capped", _
-                gFip.bCapped = true )
+            ' bCapped REPORTS the cap; it does not predict it. This used to assert
+            ' bCapped = true outright, on the assumption that one letter over "this
+            ' project" always overruns 5000 -- but the suite searches the DOCUMENTS
+            ' THAT HAPPEN TO BE OPEN, not the project on disk, and a session holding
+            ' two small scratch files yields ~129 matches. The old assertion failed on
+            ' correct behaviour: the flag was false because the cap genuinely was not
+            ' reached. What is true in every session is the BICONDITIONAL, so that is
+            ' what is asserted, and a run too small to reach the cap says so rather
+            ' than claiming to have tested the truncation path.
+            dim as boolean bAtCap = cbool( gFip.nMatchCount >= FINDPROJ_MAX_MATCHES )
+            frmFindInProject_Check( "cap: capped is set if and only if the cap was reached", _
+                gFip.bCapped = bAtCap, str(gFip.nMatchCount) & " matches, capped=" & _
+                str(gFip.bCapped) )
+            if bAtCap = false then
+                print "  NOTE: only " & str(gFip.nMatchCount) & " matches across " & _
+                      str(gFip.nGroupCount) & " open document(s) -- under the " & _
+                      str(FINDPROJ_MAX_MATCHES) & " cap, so the TRUNCATION path did NOT run."
+            end if
             ' The other half: no block may swallow a whole file, or its per-line snapshot
             ' costs one GetLine for every line of every matching file.
             dim as long nFatBlocks = 0
