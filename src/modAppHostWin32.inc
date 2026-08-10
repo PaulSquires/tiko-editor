@@ -16,6 +16,19 @@
 private function AppHostW32_CreateView( byval nIndex as long ) as any ptr
     '' PHASE 7d: a tikoSciHost, not a Scintilla window -- same style, same parent, same
     '' control id, and behind it a PsSurface holding a PsSciView. See frmSciHost.bi.
+    ''
+    '' SciMsg IS BOUND HERE, and this is where it belongs. clsDocument used to do it on
+    '' first view creation, which meant the document model named @SciPs_Send -- a C entry
+    '' point that belongs to whoever owns the editor implementation. Same one-shot guard,
+    '' same cast; only the owner changed.
+    ''
+    '' TAKEN DIRECTLY, not asked for via SCI_GETDIRECTFUNCTION. The signatures are identical
+    '' on win64 -- cdecl, (any ptr, 32-bit message, pointer-sized wParam and lParam,
+    '' pointer-sized result) -- so this is the same call all 374 SciMsg sites already make,
+    '' and it says plainly which implementation they now reach.
+    if SciMsg = 0 then
+        SciMsg = cast( Scintilla_Directfunction, @SciPs_Send )
+    end if
     return SciHost_Create( HWND_FRMMAIN, IDC_SCINTILLA + nIndex )
 end function
 
@@ -95,6 +108,16 @@ private function AppHostW32_ViewUiFontSize( byval pView as any ptr ) as long
     return pWindow->DefaultFontSize
 end function
 
+private sub AppHostW32_StyleView( byval pSciView as any ptr, byval pOwnerView as any ptr, _
+                                  byval nEncoding as long, byval sDiskFilename as DWSTRING, _
+                                  byval bIsNew as boolean )
+    ViewStyle_Apply( pSciView, pOwnerView, nEncoding, sDiskFilename, bIsNew )
+end sub
+
+private function AppHostW32_ThemeSelectionBack() as ulong
+    return cast(ulong, theme.editor.selection.backcolor)
+end function
+
 private function AppHostW32_AskOpenPath( byref sOut as DWSTRING ) as boolean
     dim pwszName as wstring ptr = AfxIFileOpenDialogW( HWND_FRMMAIN, IDM_INSERTFILE )
     if pwszName = 0 then return false
@@ -143,6 +166,8 @@ sub AppHostW32_Install()
     gAppHost.ViewHeight     = @AppHostW32_ViewHeight
     gAppHost.ViewUiFontName = @AppHostW32_ViewUiFontName
     gAppHost.ViewUiFontSize = @AppHostW32_ViewUiFontSize
+    gAppHost.StyleView      = @AppHostW32_StyleView
+    gAppHost.ThemeSelectionBack = @AppHostW32_ThemeSelectionBack
     gAppHost.AskOpenPath    = @AppHostW32_AskOpenPath
     gAppHost.AskSavePath    = @AppHostW32_AskSavePath
     gAppHost.IsFindVisible  = @AppHostW32_IsFindVisible

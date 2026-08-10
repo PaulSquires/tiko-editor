@@ -97,6 +97,29 @@ type AppHostServices
     ViewUiFontName as function(byval pView as any ptr) as string
     ViewUiFontSize as function(byval pView as any ptr) as long
 
+    '' Paint the theme onto one view. THE BIGGEST THING BEHIND THIS SEAM by a wide margin --
+    '' 401 lines in tiko, and it held 87 of clsDocument's 88 theme references.
+    ''
+    '' pOwnerView is NOT the view being styled: it is the document's MAIN view, asked only for
+    '' DPI ratios and the UI font. A Find in Project excerpt view is styled through here too
+    '' and must scale like the editor it came from rather than like itself.
+    ''
+    '' The three document values are passed because that is ALL the body touched -- measured,
+    '' not guessed. Passing a document pointer instead would make every host name that type.
+    StyleView      as sub(byval pSciView as any ptr, byval pOwnerView as any ptr, _
+                          byval nEncoding as long, byval sDiskFilename as DWSTRING, _
+                          byval bIsNew as boolean)
+
+    '' ---- the theme, as far as the document model needs it ------------------------------
+    '' The background a search-scope highlight is drawn in. ONE COLOUR, and that is the point:
+    '' the document model needs exactly this much of the theme, and the theme itself is
+    '' staying in the shell -- COLORREF appears 552 times across src/, which is a type
+    '' migration on the scale of the DWSTRING swap rather than anything this step can do.
+    ''
+    '' A ulong rather than COLORREF, so the answer names no Win32 type. Both sides already
+    '' store colours as 32-bit values.
+    ThemeSelectionBack as function() as ulong
+
     '' ---- asking the user for a path -----------------------------------------------------
     '' TRUE if the user chose one. tiko uses the Afx IFileDialog wrappers; the shell will use
     '' PsPlatform's, which are asynchronous and get a synchronous wrapper of their own.

@@ -472,6 +472,10 @@ dim shared gTTabCtl as clsTopTabCtl
 '' tiko's half of the app-host seam. HERE, near the end, because its bodies call
 '' SciHost_Create, OnCommand_FileClose and the HWND_FRM* globals -- everything the shell
 '' declares. app/modAppHost.* is the portable half and went in near the top.
+'' The 401-line view styler, lifted out of clsDocument. Shell-side and staying: it is the
+'' theme's, and the theme is not moving -- see its header. BEFORE modAppHostWin32.inc, which
+'' is the only thing that calls it.
+#include once "modViewStyle.inc"
 #include once "modAppHostWin32.inc"
 #include once "modLayoutDump.inc"
 
