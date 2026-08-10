@@ -1249,6 +1249,177 @@ sub OnBarCloseRequest( byval pBar as any ptr, byval ud as any ptr )
 end sub
 
 '' ========================================================================================
+'' ========================================================================================
+'' THE FILE DIALOG, MADE SYNCHRONOUS -- IN THE SHELL, AND DELIBERATELY NOT IN PsPlatform.
+''
+'' PsPlatform's dialogs take a CALLBACK, and Platform.bi states the reason as a position
+'' rather than an accident:
+''
+''     "ASYNCHRONOUS BY NATURE [...] A blocking wrapper would have to pump events internally
+''      and re-enter the application's own dispatch, which is exactly the re-entrancy hazard
+''      that moving off SendMessage was meant to remove."
+''
+'' That objection is to a LIBRARY imposing re-entrancy on every host. It is not an objection
+'' to an application deciding, for its own pump, that it will block here -- which is what
+'' this is. PsPlatform is not modified by this commit at all.
+''
+'' AND THE SEAM ALREADY DEMANDS IT. AppHostServices.AskOpenPath and AskSavePath return a
+'' boolean and fill a path, because clsDocument.SaveFile and InsertFile use the answer on the
+'' next line. Making those asynchronous would rewrite the document model this step has just
+'' finished making portable.
+''
+'' ---- WHAT THIS IS, PRECISELY ----------------------------------------------------------
+''
+'' A THIRD NESTED PUMP in a process that already has two, and the previous two produced two
+'' silent defects between them. So it is built the way PsModalRoute was: the DECISIONS come
+'' out into a pure function a headless suite can drive exhaustively, and only the acting is
+'' left in the loop.
+''
+'' It differs from PsModalHost in one way that matters: THERE IS NO WINDOW OF OURS TO
+'' DISPATCH TO. The dialog belongs to the operating system. So every event is either the
+'' quit, the owner's resize, or something to drop -- there is no "give it to the dialog" arm.
+'' ========================================================================================
+enum ShellFileDlgAction
+    '' Not ours, or not interesting. The native dialog owns the user's attention.
+    SHFD_DROP = 0
+
+    '' End the wait AND re-post the quit. Identical in spirit to PSMODAL_END_REPOST_QUIT,
+    '' and wrong in the same way if forgotten: the wait would end, the application would
+    '' carry on, and the quit would be gone.
+    SHFD_ABORT_REPOST_QUIT
+
+    '' The shell was resized behind the dialog. Handle it -- a window that comes back the
+    '' wrong size after a file dialog is a visible bug, and compositors do deliver these.
+    SHFD_RESIZE_SELF
+end enum
+
+'' bMine is "this event belongs to the shell's own window", computed by the caller the same
+'' way the main pump does: (ev->surface = win) orelse (ev->surface = 0).
+function ShellFileDlgRoute( byval ev as PsEvent ptr, byval bMine as boolean ) as ShellFileDlgAction
+    '' A null is not a crash. The loop only calls this after Wait returned TRUE, which is
+    '' exactly why it is asserted -- a table that faults on a null cannot be fuzzed.
+    if ev = 0 then return SHFD_DROP
+
+    select case ev->kind
+        case PSEV_QUIT
+            '' bMine NOT consulted, for PsModalRoute's reason: a quit is the application
+            '' going away, and whose window it was addressed to does not change that.
+            return SHFD_ABORT_REPOST_QUIT
+
+        case PSEV_CLOSE
+            '' THE SHELL'S OWN CLOSE ENDS EVERYTHING. Unlike a modal dialog there is no
+            '' window of ours to close instead -- the file dialog is the OS's, and closing
+            '' that produces a callback rather than an event.
+            if bMine then return SHFD_ABORT_REPOST_QUIT
+            return SHFD_DROP
+
+        case PSEV_RESIZE
+            if bMine then return SHFD_RESIZE_SELF
+            return SHFD_DROP
+    end select
+
+    return SHFD_DROP
+end function
+
+
+'' ---- the callback's landing area -------------------------------------------------------
+'' File-scope because the callback is a plain sub pointer invoked by SDL, on SDL's stack,
+'' carrying only a userdata pointer -- and Platform.bi is explicit that a non-trivial UDT
+'' must not cross that boundary. Two fbc codegen bugs have already been hit doing so.
+dim shared as boolean  g_bDlgPending
+dim shared as boolean  g_bDlgOk
+dim shared as DWSTRING g_sDlgPath
+
+private sub ShellDlgDone( byval result as PsDialogResult, _
+                          byval paths as zstring ptr ptr, _
+                          byval nPaths as long, _
+                          byval userdata as any ptr )
+    g_bDlgOk = false
+    g_sDlgPath = ""
+    '' THREE OUTCOMES, NOT TWO. Platform.bi keeps PSDLG_ERROR distinct from PSDLG_CANCELLED
+    '' so a broken portal cannot masquerade as a user decision. Both mean "no path" to the
+    '' caller, but only one of them is the user's doing, and only one is worth printing.
+    if result = PSDLG_OK then
+        if (paths <> 0) andalso (nPaths > 0) then
+            if paths[0] <> 0 then
+                '' COPIED, NOT KEPT. SDL frees the array on return.
+                g_sDlgPath.Utf8 = *paths[0]
+                g_bDlgOk = true
+            end if
+        end if
+    elseif result = PSDLG_ERROR then
+        print "tikoshell: the file dialog could not be shown (no portal or backend)"
+    end if
+    g_bDlgPending = false
+end sub
+
+
+'' Blocks until the user answers. TRUE if a path came back.
+'' bIsSave, NOT bSave: fbc has a Bsave statement and identifiers are case-insensitive, so a
+'' parameter called bSave is a "Duplicated definition" and every use of it is then reported
+'' as "No matching overloaded function, BSAVE". Exactly the family _check_app_layer.bas
+'' records for bIn against Bin().
+function ShellAskPath( byval bIsSave as boolean, byref sOut as DWSTRING ) as boolean
+    if g_pSurf = 0 then return false
+    if g_plat.dialogs.Available() = false then
+        '' "An application should disable the affordance rather than open nothing" --
+        '' Platform.bi. This shell has no affordance to disable, so it says so instead.
+        print "tikoshell: no file dialog is available on this system"
+        return false
+    end if
+
+    g_bDlgPending = true
+    g_bDlgOk      = false
+    g_sDlgPath    = ""
+
+    if bIsSave then
+        g_plat.dialogs.SaveFile( g_pSurf->hWin, @ShellDlgDone, 0 )
+    else
+        g_plat.dialogs.OpenFile( g_pSurf->hWin, @ShellDlgDone, 0, false )
+    end if
+
+    '' ---- the nested pump. Its only job is to keep the process answering until the
+    '' callback fires.
+    dim as PsEvent ev
+    dim as boolean bAborted = false
+    do while g_bDlgPending
+        dim as ulongint nNow = g_plat.events.Ticks()
+        PsTimerService( nNow )
+
+        if g_plat.events.Wait( @ev, PsTimerWaitMs(nNow, 30) ) then
+            dim as boolean bMine = (ev.surface = g_pSurf->hWin)
+            if ev.surface = 0 then bMine = true
+
+            select case ShellFileDlgRoute( @ev, bMine )
+                case SHFD_ABORT_REPOST_QUIT
+                    '' RE-POSTED, NOT CONSUMED.
+                    g_plat.events.Post( PSEV_QUIT, 0, 0 )
+                    bAborted = true
+                    exit do
+
+                case SHFD_RESIZE_SELF
+                    g_pSurf->Dispatch( @ev )
+                    LayoutAll( *g_pSurf )
+                    g_pSurf->InvalidateAll()
+
+                case else
+                    '' SHFD_DROP. The OS dialog has the user; dispatching into a window
+                    '' they cannot reach is what PsModalRoute warns about.
+            end select
+        end if
+
+        '' NO PAINT HERE, and that is not an omission. The shell's back buffer lives in the
+        '' main pump's locals, which this function cannot reach. A resize above marks damage
+        '' and the main loop repaints on its very next iteration once this returns.
+    loop
+
+    if bAborted then return false
+    if g_bDlgOk = false then return false
+    sOut = g_sDlgPath
+    return true
+end function
+
+
 '' THE INPUT BOX -- AND THE DIALOG KEY POLICY, WHICH IS WHAT REPLACES IsDialogMessage.
 ''
 '' docs/port/pump-census.md put the whole residue of the pump collapse here. Fifteen
@@ -2598,6 +2769,64 @@ end function
                 Check "and a quit commits no text either", _
                       (ShellInputBox_Commit(0, sVar, DWSTRING("edited")) = false)
                 Check "  leaving the value alone", (sVar = DWSTRING("original")), sVar.Utf8
+            end scope
+
+            '' ---- GROUP J: THE FILE DIALOG'S NESTED PUMP --------------------------------
+            '' A THIRD nested pump, in a process whose previous two produced two silent
+            '' defects. Its decisions are a pure function for exactly that reason, and this
+            '' drives the table exhaustively -- every kind, both values of bMine -- so a hole
+            '' fails here rather than in front of a user with a dialog open.
+            scope
+                dim as PsEvent ev
+
+                ev.kind = PSEV_QUIT
+                Check "a quit during a file dialog aborts AND re-posts", _
+                      (ShellFileDlgRoute(@ev, true) = SHFD_ABORT_REPOST_QUIT)
+                Check "  whoever it was addressed to", _
+                      (ShellFileDlgRoute(@ev, false) = SHFD_ABORT_REPOST_QUIT)
+
+                '' THE ONE PLACE THIS DIFFERS FROM PsModalRoute, and it is the whole reason
+                '' the table is separate: a modal dialog's own close is a CANCEL, because the
+                '' dialog is ours. A file dialog is the OPERATING SYSTEM'S -- closing it
+                '' produces a callback, not an event -- so the only close that can arrive
+                '' here is the SHELL'S, and that ends everything.
+                ev.kind = PSEV_CLOSE
+                Check "the shell's own close ends the wait", _
+                      (ShellFileDlgRoute(@ev, true) = SHFD_ABORT_REPOST_QUIT)
+                Check "  and a close for anything else is dropped", _
+                      (ShellFileDlgRoute(@ev, false) = SHFD_DROP)
+
+                ev.kind = PSEV_RESIZE
+                Check "the shell's resize is handled behind the dialog", _
+                      (ShellFileDlgRoute(@ev, true) = SHFD_RESIZE_SELF)
+                Check "  but nobody else's is", _
+                      (ShellFileDlgRoute(@ev, false) = SHFD_DROP)
+
+                '' EVERYTHING ELSE IS DROPPED, both ways. The OS dialog has the user, and
+                '' dispatching into a window they cannot reach is what PsModalRoute warns
+                '' about. Asserted over the kinds this shell actually produces rather than
+                '' by inspection.
+                dim as long kinds(0 to 7) = { PSEV_KEY_DOWN, PSEV_KEY_UP, PSEV_TEXT_INPUT, _
+                                              PSEV_MOUSE_DOWN, PSEV_MOUSE_UP, PSEV_MOUSE_MOVE, _
+                                              PSEV_MOUSE_WHEEL, PSEV_TIMER }
+                dim as boolean bAllDropped = true
+                for i as long = 0 to 7
+                    ev.kind = kinds(i)
+                    if ShellFileDlgRoute(@ev, true)  <> SHFD_DROP then bAllDropped = false
+                    if ShellFileDlgRoute(@ev, false) <> SHFD_DROP then bAllDropped = false
+                next
+                Check "every other event kind is dropped, both ways", bAllDropped
+
+                '' A null is unreachable from the loop, which is why it is asserted: a
+                '' decision table that faults on one cannot be fuzzed.
+                Check "  and a null event is dropped rather than faulted on", _
+                      (ShellFileDlgRoute(0, true) = SHFD_DROP)
+
+                '' DROP MUST BE THE ZERO VALUE. If the enum were reordered so that
+                '' ABORT_REPOST_QUIT became what a zeroed variable holds, an uninitialised
+                '' action would kill the application.
+                Check "  and the safe action is the one a zeroed variable holds", _
+                      (SHFD_DROP = 0)
             end scope
 
             '' NOT REACHABLE FROM HERE, and listed so the group is not read as complete:
