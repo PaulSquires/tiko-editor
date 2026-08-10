@@ -15,7 +15,7 @@ Read the numbers below as a measurement of the *approach*, not of the progress.
 | claim | how |
 | --- | --- |
 | the layout matches tiko's | **the oracle**, field by field, ten states — see below |
-| the widget tree is well-formed | `--selftest`, 110 assertions, 0 failing |
+| the widget tree is well-formed | `--selftest`, 113 assertions, 0 failing |
 | the app layer is usable from a second binary | 8 menu titles resolve through `L()`; 85 chords parse |
 | tiko still builds | `_compile_fast.bat` at every commit on this branch |
 | PsPlatform is not broken by any of it | `build check` 46 suites; `_check_scihost` after each PsPlatform commit |
@@ -107,18 +107,25 @@ menubar answers nothing so it drops nothing; it never sets `surf.hWin`; it never
 never scales the EDITOR's font, which is a separate font from the widgets'. Fixed in PsPlatform
 `db73895` and `974b6b9`. A demo that is the nearest prior art is a demo people copy.
 
-**AND THREE MORE IN THE MENU LAYER, none of which came from the demo — they were in
-`PsMenuHost` and `PsPopupMenu` themselves, live in every host in the tree.** The popup never
-closed after a click (`PsMenuHostOnCommand` written for exactly that and never installed); the
-menubar title stayed lit (`PsMenuBar` documents that the host must call `NotifyClosed`, and no
-host did); and a reopened menu came back wearing its last selection. Fixed in `120f127` and
-`f27bef6`.
+**AND FOUR MORE IN THE MENU LAYER, none of which came from the demo — they were in
+`PsMenuBar`, `PsMenuHost` and `PsPopupMenu` themselves, live in every host in the tree.** The
+popup never closed after a click; the menubar title stayed lit; a reopened menu came back
+wearing its last selection; and clicking the OPEN title did not dismiss it. Fixed in `120f127`,
+`f27bef6` and `a03f67f`.
 
-All three were reported by the author within a minute of opening a menu, and **none is
-reachable by any headless suite** — each is about what a menu does *next*. The suites did catch
-something, though: the first fix for the first one took `PsPopupMenu`'s single command slot for
-the host and disconnected Scintilla's context menu, and `psslist` went 44/0 to 43/1 in one
-build. The host chains now.
+**They are one defect wearing four hats, and that is the useful reading.** `PsMenuBar` and
+`PsMenuHost` are deliberately ignorant of each other, so the APPLICATION carries every leg
+between them — four callbacks, two in each direction — and **every one had been written,
+documented and left unconnected.** A demo that opens a menu and never closes it looks finished.
+
+All four were reported by the author within a minute of opening a menu, and **none is reachable
+by any headless suite** — each is about what a menu does *next*. The suites did catch something,
+though: the first fix took `PsPopupMenu`'s single command slot for the host and disconnected
+Scintilla's context menu, and `psslist` went 44/0 to 43/1 in one build. The host chains now.
+
+And wiring the last two creates a LOOP — the bar asks the host to close, the host tells the bar
+it closed — which terminates only because `NotifyClosed` clears the bar's fields directly. That
+one IS asserted, because the failure mode is a stack overflow on a mouse click.
 
 **TWO tiko DEFECTS FOUND AND DELIBERATELY NOT FIXED**, both recorded in the oracle README:
 with the side panel docked right the top-tabs icon strip is drawn over the panel; and the

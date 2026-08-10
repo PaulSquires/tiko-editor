@@ -1,6 +1,6 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ `4d236e2a8`; PsPlatform **`main`** @ `f27bef6`;
+tiko `feat/cross-platform` @ `6296ff08a`; PsPlatform **`main`** @ `a03f67f`;
 HelpCenter **`main`** @ `02a4c18`. All build warning-free, all are pushed, and tiko runs.
 
 **THERE ARE TWO BINARIES IN tiko NOW.** `tiko.exe` from `tiko.bas`, unchanged and building at
@@ -64,7 +64,7 @@ or reading the callers, and none from the gates. When a note here says something
 blocked, or not yours to decide, check it before believing it — that claim was true when written
 and this page's own record is that it stops being true quickly.
 
-**THE MENUS PROVED IT THREE TIMES IN A ROW, and all three were live in EVERY HOST IN THE TREE**
+**THE MENUS PROVED IT FOUR TIMES IN A ROW, and all four were live in EVERY HOST IN THE TREE**
 — PsPlatform's demos included, for as long as `PsMenuBar` has existed. Each was reported by the
 author within a minute of opening a menu, and none of them is reachable by any headless suite,
 because each is about what a menu *does next*:
@@ -78,12 +78,29 @@ because each is about what a menu *does next*:
 3. **A reopened menu came back wearing its last selection.** `nHot`, `nPinned` and `bHoverSel`
    survive a close; the only thing that reset them was `clear()`, which frees every item, so
    nothing on the show path could use it.
+4. **Clicking the OPEN title did not dismiss it.** `PsMenuBar.inc:324-328` is explicit that
+   "the obvious gesture — clicking the thing you just clicked" must close rather than reopen,
+   and fires `OnCloseRequest` to say so. Nothing was listening, so the bar cleared its own
+   state and the dropdown stayed on screen.
+
+**THE PATTERN IS THE POINT, AND IT IS WORTH MORE THAN THE FOUR BUGS.** `PsMenuBar` and
+`PsMenuHost` know nothing about each other BY DESIGN — the bar asks, the host opens, and the
+APPLICATION is the only thing that owns both. There are four callbacks across that gap, two in
+each direction, and **every one of them had been written, documented, and left unconnected.** A
+demo that opens a menu and never closes it looks finished, so nothing in the tree ever
+connected them. When you wire a menubar, wire all four: `OnOpenRequest`, `OnCloseRequest`,
+`PsMenuHost.OnCommand`, `PsMenuHost.OnClosed`.
 
 **And the fix for the first one broke Scintilla's context menu inside one build** — `psslist`
 went 44/0 to 43/1. `PsPopupMenu` has ONE command slot and two parties want it; taking it for
 the host disconnected `PsSciPopup.inc:228`, which had already claimed it. The host CHAINS now.
-That is the useful shape of the story: the suites could not find any of the three, and caught
+That is the useful shape of the story: the suites could not find any of the four, and caught
 the regression the fix introduced, immediately.
+
+**Wiring two of them creates a LOOP that has to be checked.** The bar asks the host to close;
+the host tells the bar it closed. That terminates only because `NotifyClosed` clears the bar's
+fields directly instead of going back through `CloseMenu` (`PsMenuBar.inc:195-200`). The shell
+asserts it, because the failure mode is a stack overflow on a mouse click.
 
 **Step 1 said it twice more, and the second time is the sharper one.** The shell shipped a
 commit whose UI was visibly unscaled while 21 assertions passed — every one of them a RELATION
@@ -528,7 +545,7 @@ the code*, and the code moves. Re-check the claim before honouring it.
 
 ## Things that will bite
 
-Beyond `Learnings.md`, eight specific to this tree:
+Beyond `Learnings.md`, nine specific to this tree:
 
 * **NEVER SET `pM->OnCommand` ON A MENU A `PsMenuHost` OPENS.** There is ONE command slot and
   two parties want it: the application, which wants to run the command, and the host, which has
@@ -543,6 +560,21 @@ Beyond `Learnings.md`, eight specific to this tree:
   The host CHAINS to whatever held the slot before it, so code that claims it directly still
   runs — `PsSciPopup.inc:228` does, for Scintilla's context menu. That chaining exists because
   the first version of the fix did not have it and broke `psslist` in one build.
+
+* **A MENUBAR NEEDS ALL FOUR CALLBACKS, and every one of them was unwired in every host.**
+  `PsMenuBar` and `PsMenuHost` are deliberately ignorant of each other; the application is the
+  only thing that owns both, so it has to carry all four legs:
+
+  | callback | direction | what breaks without it |
+  | --- | --- | --- |
+  | `PsMenuBar.OnOpenRequest` | bar → host | the menubar drops nothing at all |
+  | `PsMenuBar.OnCloseRequest` | bar → host | clicking the OPEN title leaves it open |
+  | `PsMenuHost.OnCommand` | host → app | the command never reaches the application |
+  | `PsMenuHost.OnClosed` | host → bar | the title stays lit and the next hover re-opens it |
+
+  **The last two point at each other**, so check the loop terminates: it does, because
+  `NotifyClosed` clears the bar's fields directly rather than re-entering `CloseMenu`. The
+  failure mode is a stack overflow on a mouse click, so assert it rather than trusting it.
 
 * **A PsPlatform CHANGE CAN BREAK tiko WITH BOTH TREES GREEN.** tiko wraps the toolkit in
   `namespace PsC`, and PsPlatform has nothing that does — so any header reaching PsPlatform's
