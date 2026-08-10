@@ -1281,7 +1281,10 @@ function ConfirmExit() as boolean
     if g_pSurf = 0 then return false
     dim as PsMessageBox box
     BuildExitBox( box )
-    return (PsMessageBoxShowModal( g_pSurf, box ) = MBX_ID_YES)
+    dim as long nAns = PsMessageBoxShowModal( g_pSurf, box )
+    print "tikoshell: exit box answered " & str(nAns) & _
+          "  (Yes=" & str(MBX_ID_YES) & " No=" & str(MBX_ID_NO) & " Cancel=" & str(MBX_ID_CANCEL) & ")"
+    return (nAns = MBX_ID_YES)
 end function
 
 
@@ -2113,6 +2116,31 @@ end function
                    (PsLen(L(94,"")) > 0) andalso (PsLen(L(95,"")) > 0) andalso _
                    (PsLen(L(1,"")) > 0))
 
+            '' THE RESULT PATH, WHICH THE MODAL DEFECT MADE WORTH ASSERTING. The box ends
+            '' the whole application whichever button dismisses it, and one candidate cause
+            '' was "GetResult always answers Yes". These rule that out without a window:
+            '' whatever id is dismissed with is the id that comes back.
+            scope
+                dim as PsMessageBox b2
+                BuildExitBox( b2 )
+                b2.Dismiss( MBX_ID_NO )
+                Check "  dismissing with No reports No", _
+                      (b2.GetResult() = MBX_ID_NO), str(b2.GetResult())
+                Check "    and the box knows it is dismissed", b2.IsDismissed()
+
+                dim as PsMessageBox b3
+                BuildExitBox( b3 )
+                b3.Dismiss( MBX_ID_CANCEL )
+                Check "  dismissing with Cancel reports Cancel", _
+                      (b3.GetResult() = MBX_ID_CANCEL), str(b3.GetResult())
+
+                dim as PsMessageBox b4
+                BuildExitBox( b4 )
+                b4.Dismiss( MBX_ID_YES )
+                Check "  and only Yes is Yes", _
+                      (b4.GetResult() = MBX_ID_YES), str(b4.GetResult())
+            end scope
+
             '' NO SURFACE MEANS "DO NOT QUIT", and g_pSurf is nulled to get there.
             ''
             '' THIS HUNG THE SELF-TEST ON FIRST WRITE, and the reason is worth more than the
@@ -2644,9 +2672,19 @@ end function
 
             select case ev.kind
                 case PSEV_QUIT
+                    '' DIAGNOSTIC, TEMPORARY. The modal ends the whole application whatever
+                    '' button dismisses it, and there are two candidate paths -- a PSEV_QUIT
+                    '' re-posted by PsModalHost, or a PSEV_CLOSE for the destroyed dialog
+                    '' arriving here with a surface this pump reads as its own. They need
+                    '' different fixes, so the pump says which one happened rather than a
+                    '' guess being committed.
+                    print "tikoshell: PSEV_QUIT  ev.surface=" & str(cast(ulongint, ev.surface)) & _
+                          "  win=" & str(cast(ulongint, win))
                     bRunning = false
 
                 case PSEV_CLOSE
+                    print "tikoshell: PSEV_CLOSE ev.surface=" & str(cast(ulongint, ev.surface)) & _
+                          "  win=" & str(cast(ulongint, win)) & "  bMine=" & str(bMine)
                     if bMine then bRunning = false
 
                 case PSEV_RESIZE
