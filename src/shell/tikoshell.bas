@@ -380,6 +380,11 @@ end sub
 dim shared as PsMenuBar  ptr g_menubar
 dim shared as PsStatusBar ptr g_status
 
+'' FALSE UNTIL EVERY CHILD EXISTS. Read by ShellHost_RelayoutMain, which must drop a
+'' relayout that arrives while BuildTree is still constructing -- see the end of BuildTree
+'' for the access violation that paid for this.
+dim shared as boolean g_bTreeReady
+
 '' EVERY OTHER CHILD IS A STUB, and each is named as the ORACLE names it -- so a dump and a
 '' self-test failure can be read against each other without a translation table.
 ''
@@ -881,11 +886,6 @@ sub BuildTree( byref surf as PsSurface )
     '' and view 1 in one loop, so a null second global would bind half a document.
     ShellTabs_Install()
     ShellPanel_Install()
-    for i as long = 0 to g_nOpenPaths - 1
-        if ShellTabs_Open( g_sOpenPaths(i) ) >= 0 then
-            print "tikoshell: loaded " & g_sOpenPaths(i).Utf8
-        end if
-    next
 
     '' ---- THE EDITOR STARTS FOCUSED ------------------------------------------------------
     '' Nothing did this, so the shell opened with focus NOWHERE and the caret never appeared
@@ -916,6 +916,43 @@ sub BuildTree( byref surf as PsSurface )
     '' none of that is here. The panels exist so the band has a real height to lay out to.
     g_status->AddPanel( "" )
     root->AddChild( g_status )
+
+    '' ---- THE TREE IS COMPLETE. Nothing may lay it out before this line ------------------
+    '' A HALF-BUILT TREE IS WHAT A RELAYOUT FAULTS ON, and it cost a windowed binary that
+    '' died at startup with an access violation and no output at all.
+    ''
+    '' Opening a document fires notifications: SetProjectFileType -> ProjectSetFileType ->
+    '' gAppNotify.RelayoutTopTabs -> LayoutAll, which walks EVERY child. The open loop used
+    '' to sit above, before g_vscroll2, g_hscroll2, g_splitV, g_splitH and g_status existed,
+    '' so LayoutAll dereferenced four null pointers.
+    ''
+    '' Two changes, and both are wanted. The loop moved down here, which is where "open the
+    '' command line's files" always belonged -- it is the last thing the tree needs. And
+    '' ShellHost_RelayoutMain drops any relayout arriving before this flag is set, because
+    '' the app layer notifies from wherever it likes and no host can be expected to survive
+    '' laying out children it has not made yet.
+    g_bTreeReady = true
+
+    '' ---- THE DOCUMENTS NAMED ON THE COMMAND LINE ---------------------------------------
+    '' THE FIRST TIME clsDocument HAS DRIVEN ANYTHING THAT IS NOT tiko.exe. It asks the host
+    '' for its views -- ShellHost_CreateView hands back the two above rather than making a
+    '' third -- binds their Scintilla pointers, and reads the file through
+    '' gAppHost.LoadFileText, which is PsFileReadAll here and CreateFileW in tiko.
+    for i as long = 0 to g_nOpenPaths - 1
+        if ShellTabs_Open( g_sOpenPaths(i) ) >= 0 then
+            print "tikoshell: loaded " & g_sOpenPaths(i).Utf8
+        end if
+    next
+
+    '' The bookmarks panel starts filled: a document reopened from the command line can
+    '' already carry bookmarks in its .tiko session data, and an empty panel beside a
+    '' bookmarked document would be a panel that lies.
+    ShellBookmarks_Load()
+
+    '' THE EDITOR TAKES THE FOCUS LAST, after the opens: ShellTabs_Show hands focus to the
+    '' view as each tab appears, but ShellBookmarks_Load runs after it and the panel is
+    '' focusable now (commit 2). Whoever ends up focused, the editor is what should be.
+    if g_view <> 0 then surf.SetFocus( g_view )
 end sub
 
 
@@ -3122,6 +3159,38 @@ end function
                   AppHost_FirstMissing()
             Check "  and so is the notification record", AppNotify_IsComplete(), _
                   AppNotify_FirstMissing()
+
+            '' ---- A RELAYOUT ARRIVING BEFORE THE TREE EXISTS MUST BE DROPPED -----------
+            '' THIS SUITE COULD NOT SEE THE DEFECT THIS GUARDS, and that is the reason it is
+            '' worth having. Opening a document from inside BuildTree fires
+            '' gAppNotify.RelayoutTopTabs, which laid out a tree whose last five children
+            '' had not been constructed -- an access violation at startup, no output, and
+            '' 300 assertions still passing, because the suite opens its files AFTER
+            '' BuildTree has finished and never reproduces the ordering.
+            ''
+            '' What is checkable is the guard itself: with the flag down, a relayout changes
+            '' nothing. The bounds are moved first so that a LayoutAll would put them back.
+            scope
+                dim as boolean bWasReady = g_bTreeReady
+                dim as PsRect  rcWas     = g_status->bounds
+
+                g_status->SetBounds( PsRc(1, 2, 3, 4) )
+                g_bTreeReady = false
+                gAppNotify.RelayoutMain()
+                Check "a relayout before the tree is ready is dropped", _
+                      (g_status->bounds.x = 1) andalso (g_status->bounds.w = 3), _
+                      str(g_status->bounds.x) & "," & str(g_status->bounds.w)
+
+                '' AND IS OBEYED ONCE IT IS. Without this the assertion above is satisfied
+                '' by a RelayoutMain that never works at all.
+                g_bTreeReady = true
+                gAppNotify.RelayoutMain()
+                Check "  and obeyed once it is", (g_status->bounds.w <> 3), _
+                      str(g_status->bounds.w)
+
+                g_status->SetBounds( rcWas )
+                g_bTreeReady = bWasReady
+            end scope
 
             '' SPOT-CHECKS ON THE ONES THAT ANSWER SOMETHING, because "non-null" and
             '' "correct" are different claims and only the first is checked above.

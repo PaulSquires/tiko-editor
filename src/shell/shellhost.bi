@@ -296,6 +296,20 @@ end sub
 
 private sub ShellHost_RelayoutMain()
     if g_pSurf = 0 then exit sub
+    '' ---- NOT WHILE THE TREE IS STILL BEING BUILT, and this guard was paid for.
+    ''
+    '' Opening a document from inside BuildTree CRASHED THE WINDOWED BINARY with an access
+    '' violation and no output. The chain: clsDocument.SetProjectFileType ->
+    '' clsApp.ProjectSetFileType -> gAppNotify.RelayoutTopTabs -> here -> LayoutAll, which
+    '' walks every child -- while four of them (g_vscroll2, g_hscroll2, g_splitV, g_splitH)
+    '' were still null, because they are constructed AFTER the point the files were opened.
+    ''
+    '' The open loop moved to the end of BuildTree, which fixes THIS path. The guard stays
+    '' because the hazard is general: the app layer fires notifications from wherever it
+    '' likes, and a host that lays out a half-built tree faults on whichever child has not
+    '' been made yet. A notification arriving too early must be DROPPED, not obeyed --
+    '' BuildTree's caller lays out immediately afterwards regardless.
+    if g_bTreeReady = false then exit sub
     LayoutAll( *g_pSurf )
     g_pSurf->InvalidateAll()
 end sub
