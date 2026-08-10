@@ -280,9 +280,9 @@ dim shared as long g_nAccelSkipped
 '' caller.
 dim shared as boolean g_bQuitRequested
 
-'' A file named on the command line, loaded through clsDocument once the views exist.
-dim shared as DWSTRING g_sOpenPath
-dim shared as clsDocument ptr g_pDoc
+'' Files named on the command line, each opened as a tab once the views exist.
+dim shared as DWSTRING g_sOpenPaths(0 to 31)
+dim shared as long g_nOpenPaths
 
 '' What the Command Line dialog edits. tiko keeps this in gApp.ProjectCommandLine, but clsApp
 '' is still in src/ rather than app/, so the shell cannot reach it -- see the IDM_COMMANDLINE
@@ -378,11 +378,15 @@ dim shared as PsStatusBar ptr g_status
 '' EVERY OTHER CHILD IS A STUB, and each is named as the ORACLE names it -- so a dump and a
 '' self-test failure can be read against each other without a translation table.
 ''
-'' g_tabs was a real PsTabBar in commit 4 and is a stub from this one. The layout now needs
-'' a band whose height IT controls rather than one the control decides, and a stub paints
-'' its own bounds, which is what makes a misplaced band visible without reading an
-'' assertion. The real control returns when the tab MODEL does, well past step 1.
-dim shared as ShellStub ptr g_tabs, g_topTabsMenu
+'' g_tabs IS A REAL PsTabBar AGAIN, as its stub comment promised: "the real control returns
+'' when the tab MODEL does". The model is shelltabs.bi and this is that commit.
+''
+'' THE LAYOUT STILL OWNS THE BAND'S HEIGHT. That was the reason for the stub -- a control
+'' that decides its own height would not match the oracle, which pins TOPTABS at the height
+'' tiko MEASURED. Shell_LayoutAll drives it through SetBounds from g_state.nTabsH exactly as
+'' it drove the stub, so the control never gets to choose.
+dim shared as PsTabBar ptr g_tabs
+dim shared as ShellStub ptr g_topTabsMenu
 dim shared as ShellStub ptr g_panel, g_splitPanel
 dim shared as ShellStub ptr g_barInfo, g_barFind, g_barReplace
 dim shared as ShellStub ptr g_splitOutput, g_output, g_fip
@@ -708,6 +712,15 @@ end function
 '' The tree. Chrome is real; the body is still one stub. Commit 8 replaces the body with
 '' the band walk and the rest of the panels.
 '' ---------------------------------------------------------------------------------------
+'' The shell's own tab model -- NEW code, not a port. clsTopTabCtl is a facade over tiko's
+'' HWND tab control and stays there; see the file's header.
+''
+'' BEFORE BuildTree, which opens the command line's files as tabs. Everything it needs --
+'' the view globals, SciMsg, clsDocument -- is declared above; it touches nothing from
+'' shellhost.bi, so it does not have to wait for it.
+#include once "shelltabs.bi"
+
+
 sub BuildTree( byref surf as PsSurface )
     dim as PsWidget ptr root = new PsWidget
     surf.SetRoot( root )                      '' the surface takes ownership
@@ -743,12 +756,8 @@ sub BuildTree( byref surf as PsSurface )
     g_menubar->OnCloseRequest( @OnBarCloseRequest )
     root->AddChild( g_menubar )
 
-    '' THE TAB BAR IS A STUB TOO, from this commit on. PsTabBar is a real control and was
-    '' real in commit 4, but the layout now needs a band whose height it CONTROLS rather
-    '' than one the control decides -- and a stub prints its own bounds, which is what makes
-    '' a misplaced band visible without reading an assertion. The real PsTabBar comes back
-    '' when the tab MODEL does, which is well past step 1.
-    g_tabs = new ShellStub( @"TOPTABS", PSTHEME_BACKGROUNDRAISED )
+    '' THE REAL TAB BAR. Its height is still the LAYOUT'S -- see the note on g_tabs.
+    g_tabs = new PsTabBar
     root->AddChild( g_tabs )
 
     '' Every remaining child frmMain_PositionWindows places, named as the ORACLE names them
@@ -837,13 +846,12 @@ sub BuildTree( byref surf as PsSurface )
     ''
     '' AFTER BOTH VIEWS ARE IN THE TREE, deliberately: CreateScintillaWindows asks for view 0
     '' and view 1 in one loop, so a null second global would bind half a document.
-    if PsLen( g_sOpenPath ) > 0 then
-        g_pDoc = new clsDocument
-        g_pDoc->CreateScintillaWindows()
-        g_pDoc->LoadDiskFile( g_sOpenPath )
-        g_pDoc->ApplyProperties()
-        print "tikoshell: loaded " & g_sOpenPath.Utf8
-    end if
+    ShellTabs_Install()
+    for i as long = 0 to g_nOpenPaths - 1
+        if ShellTabs_Open( g_sOpenPaths(i) ) >= 0 then
+            print "tikoshell: loaded " & g_sOpenPaths(i).Utf8
+        end if
+    next
 
     g_vscroll2 = new ShellStub( @"", PSTHEME_BACKGROUNDRAISED )
     root->AddChild( g_vscroll2 )
@@ -2033,8 +2041,13 @@ end function
         if command(i) = "--dump-layout" then bDumpLayout = true
         '' Anything that is not a switch is a file to open. First one wins -- this binary
         '' has one document until commit 6 gives it tabs.
+        '' Anything that is not a switch is a file to open, and EVERY one of them is --
+        '' this binary has tabs from this commit on.
         if left(command(i), 2) <> "--" then
-            if PsLen( g_sOpenPath ) = 0 then g_sOpenPath = command(i)
+            if g_nOpenPaths <= ubound(g_sOpenPaths) then
+                g_sOpenPaths(g_nOpenPaths) = command(i)
+                g_nOpenPaths += 1
+            end if
         end if
     next
 
@@ -2842,6 +2855,62 @@ end function
                 Check "and a quit commits no text either", _
                       (ShellInputBox_Commit(0, sVar, DWSTRING("edited")) = false)
                 Check "  leaving the value alone", (sVar = DWSTRING("original")), sVar.Utf8
+            end scope
+
+            '' ---- GROUP L: THE TAB MODEL ------------------------------------------------
+            '' NEW code rather than a port, so nothing upstream vouches for it. What IS
+            '' reachable windowlessly is the bookkeeping -- which document a tab maps to, and
+            '' that a switch saves and restores the view position. The Scintilla side of a
+            '' switch is not: SCI_SETDOCPOINTER needs a live view.
+            scope
+                '' The bar is real from this commit, so it can be driven directly.
+                Check "the tab bar is a real control now, not a stub", (g_tabs <> 0)
+                Check "  and starts empty in a windowless run", (g_tabs->GetCount() = 0), _
+                      str(g_tabs->GetCount())
+
+                '' ITEM DATA IS THE TAB-TO-DOCUMENT MAP, and it is the one thing a tab bar
+                '' must not lose. tiko stores the clsDocument ptr itself; this shell stores
+                '' an INDEX into its own table, because the pointer would then live in two
+                '' places and one of them would go stale on close.
+                g_tabs->AddTab( DWSTRING("alpha.bas"), 0 )
+                g_tabs->AddTab( DWSTRING("beta.bas"),  1 )
+                Check "  two tabs added", (g_tabs->GetCount() = 2), str(g_tabs->GetCount())
+                Check "  and the second reads back its name", _
+                      (g_tabs->GetText(1) = DWSTRING("beta.bas")), g_tabs->GetText(1).Utf8
+
+                '' SetCurSel is documented SILENT -- it must NOT fire OnSelect, or selecting
+                '' a tab programmatically would re-enter the switch that selected it.
+                g_tabs->SetCurSel( 1 )
+                Check "  selection follows SetCurSel", (g_tabs->GetCurSel() = 1), _
+                      str(g_tabs->GetCurSel())
+
+                g_tabs->clear()
+                Check "  and clear empties it", (g_tabs->GetCount() = 0)
+            end scope
+
+            '' THE SWITCH'S GUARDS, and the two of them are NOT equally well covered --
+            '' checked by reverting each:
+            ''
+            ''   * THE BOUNDS GUARD BITES, fatally. Removing it does not fail an assertion,
+            ''     it CRASHES the run: ShellTabs_Show(999) indexes g_tabDocs past its end.
+            ''     So "does nothing" below really means "does not take the process with it",
+            ''     which is worth having even though the report reads the same either way.
+            ''
+            ''   * THE RE-SHOW GUARD IS UNASSERTED, and removing it changes nothing here.
+            ''     With no documents open, the other guards absorb the call before it can
+            ''     matter. What that guard actually prevents is a redundant
+            ''     SCI_SETDOCPOINTER and a SaveView of the tab being re-shown, and neither is
+            ''     observable without a live view. Said here rather than left to be found.
+            scope
+                dim as long nWas = g_nTabCur
+                g_nTabCur = 5
+                ShellTabs_Show( -1 )
+                Check "showing a negative tab does nothing", (g_nTabCur = 5)
+                ShellTabs_Show( 999 )
+                Check "  and neither does one past the end", (g_nTabCur = 5)
+                ShellTabs_Show( 5 )
+                Check "  and re-showing the current tab is a no-op", (g_nTabCur = 5)
+                g_nTabCur = nWas
             end scope
 
             '' ---- GROUP K: THE APP-HOST SEAM, FILLED BY A SECOND HOST --------------------
