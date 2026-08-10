@@ -411,8 +411,22 @@ sub SplitMenuText( byval nId as long, byref sCap as DWSTRING, byref sAccel as DW
     end if
 end sub
 
+'' Forward-declared: the body needs g_state and Shell_LayoutAll, which are declared
+'' further down, and BuildDropDown up here needs the address.
+declare sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any ptr )
+
 function BuildDropDown( byval nParentId as long ) as PsPopupMenu ptr
     dim as PsPopupMenu ptr pM = new PsPopupMenu
+
+    '' EVERY LEVEL, INCLUDING THE SUBMENUS. Each PsPopupMenu fires its OWN pfnCommand --
+    '' PsMenuHost does not take that over, it only wires the sub-open/close callbacks -- so
+    '' setting it on the top-level dropdown alone leaves every submenu item SILENTLY INERT.
+    '' It was set once in BuildTree until 2026-08-09, which meant the MRU list, the Settings
+    '' submenu, Format and the theme rows all clicked to nothing while File and View worked.
+    '' PsMenuHostWire's own comment is the rule: "every level is wired the same way,
+    '' including the root, so a menu does not behave differently depending on how deep it
+    '' happens to be."
+    pM->OnCommand( @OnMenuCommand )
     for i as long = lbound(gTopMenu) to ubound(gTopMenu)
         if gTopMenu(i).nParentID <> nParentId then continue for
         if gTopMenu(i).isSeparator then
@@ -454,11 +468,6 @@ sub OnBarOpen( byval pBar as any ptr, byval idx as long, byval pMenu as any ptr,
     g_menus.OpenRoot( g_pSurf, rc, pM )
 end sub
 
-sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any ptr )
-    '' The ids are tiko's and every handler behind them is still in the shell binary that
-    '' this one will replace. Printed so a command arriving is visible rather than inert.
-    print "tikoshell: command " & str(nId) & "  (" & getMenuText(nId).Utf8 & ")"
-end sub
 
 
 '' ---------------------------------------------------------------------------------------
@@ -546,7 +555,6 @@ sub BuildTree( byref surf as PsSurface )
             g_barInitial(id - IDC_MENUBAR_FILE) = ucase(left(sCap.Utf8, 1))
         end if
         dim as PsPopupMenu ptr pM = BuildDropDown( id )
-        pM->OnCommand( @OnMenuCommand )
         '' AddItem TAKES OWNERSHIP of the dropdown, and hands it back through OnOpenRequest
         '' when the title is clicked -- so the host keeps no table of its own.
         g_menubar->AddItem( sCap, pM )
@@ -1059,6 +1067,58 @@ end sub
 '' The pump and the self-test both call this, so the live state is threaded from one place.
 sub LayoutAll( byref surf as PsSurface )
     Shell_LayoutAll( surf, g_state )
+end sub
+
+sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any ptr )
+    '' Printed first, always, so a command ARRIVING is visible even when nothing is bound
+    '' to it. Most ids reach nothing here and that is the design -- their handlers are in
+    '' tiko.exe and need the document model this binary does not have.
+    print "tikoshell: command " & str(nId) & "  (" & getMenuText(nId).Utf8 & ")"
+
+    '' ---- THE VIEW TOGGLES THAT MAP ONTO ShellLayoutState -------------------------------
+    '' These are the exception, and they earn it: every one is a field of the state record
+    '' and needs no model at all. Without them the twelve layout states are reachable ONLY
+    '' from --selftest, which is how the mirrored panel shipped for two commits with the
+    '' icon strip drawn over it -- asserted by the oracle, never once looked at.
+    ''
+    '' tiko's own handlers are in frmMainView.inc and do far more than this: they move
+    '' HWNDs, adjust SplitX when the panel width changes, and repaint. Here the layout is a
+    '' pure function of the record, so flipping a field IS the whole operation.
+    dim as boolean bHandled = true
+    select case nId
+        case IDM_EXPLORERPOSITION : g_state.bExplorerRight = not g_state.bExplorerRight
+        case IDM_VIEWSIDEPANEL    : g_state.bPanelVisible  = not g_state.bPanelVisible
+        case IDM_VIEWOUTPUT       : g_state.bOutputVisible = not g_state.bOutputVisible
+
+        '' The split modes TOGGLE OFF when re-selected, exactly as OnCommand_ViewSplit does,
+        '' and each sets its position from the unsplit pane's extent -- see RunLayoutDump for
+        '' why the midpoint and the bare height/2 differ, which is tiko's inconsistency.
+        case IDM_SPLITLEFTRIGHT
+            if g_state.nSplitMode = SH_SPLIT_LEFTRIGHT then
+                g_state.nSplitMode = SH_SPLIT_NONE
+            else
+                g_state.nSplitMode = SH_SPLIT_LEFTRIGHT
+                g_state.nSplitX = 0
+                if g_pSurf then Shell_LayoutAll( *g_pSurf, g_state )
+                g_state.nSplitX = g_view->bounds.x + (g_view->bounds.w \ 2)
+            end if
+        case IDM_SPLITTOPBOTTOM
+            if g_state.nSplitMode = SH_SPLIT_TOPBOTTOM then
+                g_state.nSplitMode = SH_SPLIT_NONE
+            else
+                g_state.nSplitMode = SH_SPLIT_TOPBOTTOM
+                g_state.nSplitY = 0
+                if g_pSurf then Shell_LayoutAll( *g_pSurf, g_state )
+                g_state.nSplitY = g_view->bounds.h \ 2
+            end if
+
+        case else : bHandled = false
+    end select
+
+    if bHandled andalso (g_pSurf <> 0) then
+        LayoutAll( *g_pSurf )
+        g_pSurf->InvalidateAll()
+    end if
 end sub
 
 
@@ -1942,6 +2002,51 @@ end function
             surf.Resize( SH_W, SH_H )
             if surf.pRoot then surf.pRoot->PropagateScaleChanged( 1.0 )
             LayoutAll( surf )
+        end scope
+
+        '' ---- THE VIEW COMMANDS ACTUALLY MOVE THE LAYOUT --------------------------------
+        '' The author clicked View > Move Explorer Window Right and nothing happened, which
+        '' was correct and useless: the command reached OnMenuCommand, printed, and stopped,
+        '' because every handler behind these ids lives in tiko.exe. The ones that map onto
+        '' ShellLayoutState need no model at all, so they are wired -- and asserted here
+        '' through the SAME entry point a click uses, not through the state record.
+        scope
+            dim as boolean bWas = g_state.bExplorerRight
+            OnMenuCommand( 0, IDM_EXPLORERPOSITION, 0 )
+            Check "the panel-position command mirrors the panel", _
+                  (g_state.bExplorerRight <> bWas)
+            Check "  and the layout followed it", _
+                  (g_panel->bounds.x + g_panel->bounds.w = surf.w), _
+                  str(g_panel->bounds.x) & ".." & str(g_panel->bounds.x + g_panel->bounds.w)
+            OnMenuCommand( 0, IDM_EXPLORERPOSITION, 0 )
+            Check "  and toggles back", (g_state.bExplorerRight = bWas)
+
+            OnMenuCommand( 0, IDM_VIEWSIDEPANEL, 0 )
+            Check "the side-panel command hides the panel", (g_panel->bVisible = false)
+            OnMenuCommand( 0, IDM_VIEWSIDEPANEL, 0 )
+            Check "  and shows it again", (g_panel->bVisible = true)
+
+            OnMenuCommand( 0, IDM_VIEWOUTPUT, 0 )
+            Check "the output command hides the output", (g_output->bVisible = false)
+            OnMenuCommand( 0, IDM_VIEWOUTPUT, 0 )
+            Check "  and shows it again", (g_output->bVisible = true)
+
+            '' The split commands TOGGLE OFF when re-selected, as tiko's do, and set their
+            '' own position from the unsplit pane.
+            OnMenuCommand( 0, IDM_SPLITLEFTRIGHT, 0 )
+            Check "the split command splits", (g_splitV->bVisible = true)
+            Check "  with both panes real", _
+                  (g_view->bounds.w > 0) andalso (g_view2->bounds.w > 0), _
+                  str(g_view->bounds.w) & " / " & str(g_view2->bounds.w)
+            OnMenuCommand( 0, IDM_SPLITLEFTRIGHT, 0 )
+            Check "  and re-selecting it closes the split", (g_splitV->bVisible = false)
+
+            '' AN ID WITH NO HANDLER MUST NOT TOUCH THE LAYOUT. Most ids are in that state
+            '' and will be for the whole of 7c; a fall-through that re-laid out anyway would
+            '' hide a missing handler behind a working-looking repaint.
+            dim as long yWas = g_rcDoc.y
+            OnMenuCommand( 0, IDM_FILESAVE, 0 )
+            Check "an unhandled command changes nothing", (g_rcDoc.y = yWas)
         end scope
 
         '' NO WINDOW WAS CREATED, and the surface says so. hWin is the marker PsModalHost
