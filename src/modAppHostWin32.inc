@@ -29,6 +29,11 @@ private function AppHostW32_IsViewAlive( byval pView as any ptr ) as boolean
     return (IsWindow( cast(HWND, pView) ) <> 0)
 end function
 
+private function AppHostW32_ViewSciPointer( byval pView as any ptr ) as any ptr
+    if pView = 0 then return 0
+    return SciHost_DirectPointer( cast(HWND, pView) )
+end function
+
 private sub AppHostW32_InvalidateView( byval pView as any ptr )
     if pView = 0 then exit sub
     AfxRedrawWindow( cast(HWND, pView) )
@@ -131,6 +136,7 @@ sub AppHostW32_Install()
     gAppHost.CreateView     = @AppHostW32_CreateView
     gAppHost.DestroyView    = @AppHostW32_DestroyView
     gAppHost.IsViewAlive    = @AppHostW32_IsViewAlive
+    gAppHost.ViewSciPointer = @AppHostW32_ViewSciPointer
     gAppHost.InvalidateView = @AppHostW32_InvalidateView
     gAppHost.SetViewRedraw  = @AppHostW32_SetViewRedraw
     gAppHost.ViewScale      = @AppHostW32_ViewScale

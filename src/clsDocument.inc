@@ -186,7 +186,7 @@ function clsDocument.CreateScintillaWindows() as long
             ' They are the same two messages in the same order as before; what changed is
             ' that pSci now exists in time to carry them, so no message is addressed to a
             ' window any more. SETMODEVENTMASK still precedes SETILEXER.
-            pSci(i) = SciHost_DirectPointer( this.hWindow(i) )
+            pSci(i) = gAppHost.ViewSciPointer( this.hWindow(i) )
 
             SciMsg( pSci(i), SCI_SETMODEVENTMASK, _
                     SC_MOD_INSERTTEXT or SC_MOD_DELETETEXT, 0 )

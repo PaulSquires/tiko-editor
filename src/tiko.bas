@@ -62,7 +62,7 @@ using AfxNova
 '' #ifndef guards. Guards only work in this direction -- with PsScintilla.bi
 '' first the const already exists and tiko's #Define becomes the duplicate,
 '' which no guard on the library side can prevent.
-#include once "modScintilla.bi"
+#include once "app/modScintilla.bi"
 
 '' THE C BINDINGS GO OUTSIDE THE NAMESPACE, and this is not a style choice.
 '' fbc mangles an `extern "C"` block declared inside a namespace as

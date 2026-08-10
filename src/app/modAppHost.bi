@@ -48,6 +48,15 @@ type AppHostServices
     '' call site already tests before using.
     IsViewAlive    as function(byval pView as any ptr) as boolean
 
+    '' The view's opaque Scintilla pointer -- what all 374 SciMsg call sites pass as
+    '' their first argument. tiko's SciHost_DirectPointer; the shell's PsSciView.
+    ''
+    '' A SECOND HANDLE FOR THE SAME VIEW, deliberately. CreateView returns what the
+    '' host wants to be given back (an HWND in tiko), and this returns what Scintilla
+    '' wants to be called with. They are the same object and different pointers, and
+    '' clsDocument has always stored both -- hWindow(i) and pSci(i).
+    ViewSciPointer as function(byval pView as any ptr) as any ptr
+
     '' Repaint now, rather than at the next idle. Used where a load would otherwise leave the
     '' pane stale for a visible moment.
     InvalidateView as sub(byval pView as any ptr)

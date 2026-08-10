@@ -88,11 +88,18 @@ type GetNameSpaceFn as function() as const zstring ptr
 ' library with LoadLibrary (the attach process automatically register the classes) and free
 ' it with FreeLibrary (the detach process unregisters the classes).
 ' ========================================================================================
+'' RESTATED IN PORTABLE TYPES, and the shape is unchanged. It read
+''     (any ptr, UINT, WPARAM, LPARAM) as LRESULT
+'' which on win64 is exactly what PsPlatform's SciPs_Send already declares as
+''     (any ptr, ulong, uinteger, integer) as integer
+'' -- and PsScintilla.bi says keeping that shape is "the whole reason Phase 6 is
+'' affordable [...] this signature should not be improved". Naming the Win32 spellings
+'' was the only thing tying this file to Windows; the ABI is untouched.
 type Scintilla_DirectFunction as _
         function CDECL(   byval as any ptr, _
-                        byval as UINT, _
-                        byval as WPARAM, _
-                        byval as LPARAM  ) as LRESULT
+                        byval as ulong, _
+                        byval as uinteger, _
+                        byval as integer  ) as integer
 
 dim shared SciMsg as Scintilla_DirectFunction
 'Dim pSci as Any Ptr 
@@ -1140,9 +1147,20 @@ end type
 '' from Platform.h.  Not needed by most client code.
 
 ' // Size = 48 bytes
+''
+'' THE TWO SURFACE HANDLES ARE `any ptr`, NOT HDC, and nothing is lost by it.
+'' Scintilla's own header calls them Sci_SurfaceID -- an opaque platform handle --
+'' and the comments beside them have always said so. On Windows that is an HDC; the
+'' field is pointer-sized either way, so the 48-byte layout above is unchanged.
+''
+'' AND THIS TYPE IS DECLARED AND NEVER USED ANYWHERE IN tiko. Verified across every
+'' .bi and .inc: nothing references Sci_RangeToFormat. It is here because this file
+'' mirrors Scintilla's public API rather than only the parts tiko calls, which is
+'' worth keeping -- but it means these two fields were the last Win32 in the file
+'' and no code depended on their type.
 type Sci_RangeToFormat field = 4
-    hdc       as HDC                  ' Sci_SurfaceID hdc
-    hdcTarget as HDC                  ' Sci_SurfaceID hdcTarget
+    hdc       as any ptr              ' Sci_SurfaceID hdc
+    hdcTarget as any ptr              ' Sci_SurfaceID hdcTarget
     rc        as Sci_Rectangle        ' struct Sci_Rectangle rc
     rcPage    as Sci_Rectangle        ' struct Sci_Rectangle rcPage
     chrg      as Sci_CharacterRange   ' struct Sci_CharacterRange chrg

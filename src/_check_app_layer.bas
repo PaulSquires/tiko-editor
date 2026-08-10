@@ -94,10 +94,29 @@ function IsWordChar(byval c as integer) as boolean
     return (c = asc("_"))
 end function
 
+'' TRUE when the word at pStart is immediately followed by the keyword `as`, i.e.
+'' it is the NAME being declared rather than the TYPE it is declared as.
+function IsDeclaredName(byref sLine as string, byval pStart as long, byval nLen as long) as boolean
+    dim as long p = pStart + nLen
+    do while (p <= len(sLine)) andalso ((sLine[p - 1] = asc(" ")) orelse (sLine[p - 1] = 9))
+        p += 1
+    loop
+    if p + 1 > len(sLine) then return false
+    if ucase(mid(sLine, p, 2)) <> "AS" then return false
+    '' `as` must itself be a whole word, or `assert` would look like one.
+    if p + 2 <= len(sLine) then
+        if IsWordChar(sLine[p + 1]) then return false
+    end if
+    return true
+end function
+
+
 '' Whole-word search, case-insensitive. Position or 0.
-function FindWord(byref sLine as string, byref sWord as string) as long
+function FindWord(byref sLine as string, byref sWord as string, _
+                  byval pFrom as long = 1) as long
     dim as string a = ucase(sLine), b = ucase(sWord)
-    dim as long p = 1
+    dim as long p = pFrom
+    if p < 1 then p = 1
     do
         p = instr(p, a, b)
         if p = 0 then return 0
@@ -144,7 +163,31 @@ sub CheckFile(byref sPath as string, byref sName as string)
         if len(trim(sCode)) = 0 then continue do
 
         for i as long = lbound(g_banned) to ubound(g_banned)
-            if FindWord(sCode, g_banned(i)) > 0 then
+            '' EVERY occurrence on the line, not just the first. `hdc as HDC`
+            '' declares a field NAMED hdc of TYPE HDC -- and the name comes first.
+            '' Stopping at the first match let that line pass as a declaration
+            '' while the real Win32 type sat three characters later.
+            dim as long pHit = 0, pScan = 1
+            do
+                dim as long pTry = FindWord(sCode, g_banned(i), pScan)
+                if pTry = 0 then exit do
+                if IsDeclaredName(sCode, pTry, len(g_banned(i))) = false then
+                    pHit = pTry
+                    exit do
+                end if
+                pScan = pTry + 1
+            loop
+            if pHit > 0 then
+                '' A NAME, NOT A TYPE, when the very next token is `as`. FreeBASIC
+                '' declares as `<name> as <type>`, so a banned word FOLLOWED by `as`
+                '' is being declared, and a banned word PRECEDED by `as` is being
+                '' used. Only the second is a dependency on Win32.
+                ''
+                '' This is not hypothetical: modScintilla.bi mirrors Scintilla's C
+                '' API and has struct fields NAMED wParam and lParam, which tripped
+                '' the rules for the TYPES WPARAM and LPARAM. Renaming them to please
+                '' a checker would have been the wrong repair -- the names match the
+                '' upstream header on purpose.
                 print "  FAIL  " & sName & "(" & nLine & "): " & g_banned(i)
                 print "        " & trim(sLine)
                 g_nBad += 1

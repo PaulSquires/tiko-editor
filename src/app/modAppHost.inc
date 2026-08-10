@@ -16,6 +16,7 @@ function AppHost_FirstMissing() as string
     if gAppHost.CreateView     = 0 then return "CreateView"
     if gAppHost.DestroyView    = 0 then return "DestroyView"
     if gAppHost.IsViewAlive    = 0 then return "IsViewAlive"
+    if gAppHost.ViewSciPointer = 0 then return "ViewSciPointer"
     if gAppHost.InvalidateView = 0 then return "InvalidateView"
     if gAppHost.SetViewRedraw  = 0 then return "SetViewRedraw"
     if gAppHost.ViewScale      = 0 then return "ViewScale"
