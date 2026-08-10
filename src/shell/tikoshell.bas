@@ -1339,11 +1339,14 @@ function ShellInputBox.MeasureDesired() as PsSize
     '' PsModalHost.Run asks only after attaching this to a surface -- which is the documented
     '' trap in PsModalHost.bi: asked while detached, every string measures zero because there
     '' is no font and the scale is 1.0.
+    print "tikoshell: inputbox: MeasureDesired, surface=" & str(cast(ulongint, this.pSurface)) & _
+          " scaleX(100)=" & str(this.ScaleX(100))
     dim as PsSize sz
     sz.w = this.ScaleX(SH_DLG_MINW)
     sz.h = this.ScaleY(SH_DLG_PAD) + this.ScaleY(SH_DLG_PROMPTH) + this.ScaleY(SH_DLG_GAP) + _
            this.ScaleY(SH_DLG_FIELDH) + this.ScaleY(SH_DLG_GAP) + this.ScaleY(SH_DLG_BTNH) + _
            this.ScaleY(SH_DLG_PAD)
+    print "tikoshell: inputbox: wants " & str(sz.w) & "x" & str(sz.h)
     return sz
 end function
 
@@ -1450,13 +1453,18 @@ function ShellInputBoxShow( byval sCaption as DWSTRING, _
     '' the message box was a local and the process died on every dismissal. That is fixed,
     '' and this is still allocated here because the dialog owns three child widgets whose
     '' lifetime is the tree's -- so the tree is freed once, explicitly, at the end.
+    print "tikoshell: inputbox: entering, surf=" & str(cast(ulongint, g_pSurf))
     dim as ShellInputBox ptr pBox = new ShellInputBox
     pBox->sPrompt = sPrompt
     if pBox->pField then pBox->pField->SetText( sText )
+    print "tikoshell: inputbox: built, field=" & str(cast(ulongint, pBox->pField)) & _
+          " ok=" & str(cast(ulongint, pBox->pOK)) & " cancel=" & str(cast(ulongint, pBox->pCancel))
 
     dim as PsModalHost host
     dim as long nRes = MBX_ID_CANCEL
-    if host.Run( g_pSurf, pBox, sCaption, @ShellInputBox_IsDone, pBox ) then
+    dim as boolean bRan = host.Run( g_pSurf, pBox, sCaption, @ShellInputBox_IsDone, pBox )
+    print "tikoshell: inputbox: Run returned " & str(bRan) & "  nResult=" & str(pBox->nResult)
+    if bRan then
         nRes = pBox->nResult
         if pBox->pField <> 0 then
             ShellInputBox_Commit( nRes, sText, pBox->pField->GetText() )
