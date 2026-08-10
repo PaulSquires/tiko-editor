@@ -415,6 +415,7 @@ end sub
 '' further down, and BuildDropDown up here needs the address.
 declare sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any ptr )
 declare sub OnMenusClosed( byval pHost as any ptr, byval ud as any ptr )
+declare sub OnBarCloseRequest( byval pBar as any ptr, byval ud as any ptr )
 
 function BuildDropDown( byval nParentId as long ) as PsPopupMenu ptr
     dim as PsPopupMenu ptr pM = new PsPopupMenu
@@ -571,6 +572,7 @@ sub BuildTree( byref surf as PsSurface )
     '' the title stays highlighted and the next hover re-opens it. PsMenuBar.bi:135-138 says
     '' so; nothing in PsPlatform was wiring it.
     g_menus.OnClosed( @OnMenusClosed )
+    g_menubar->OnCloseRequest( @OnBarCloseRequest )
     root->AddChild( g_menubar )
 
     '' THE TAB BAR IS A STUB TOO, from this commit on. PsTabBar is a real control and was
@@ -1084,6 +1086,23 @@ sub OnMenusClosed( byval pHost as any ptr, byval ud as any ptr )
     if g_menubar then g_menubar->NotifyClosed()
 end sub
 
+'' THE OTHER DIRECTION, and a different callback for a reason. OnClosed is the HOST telling
+'' the BAR its popup went away; this is the BAR asking the HOST to take it away. It fires
+'' from PsMenuBar.CloseMenu, which runs when the user clicks the title that is ALREADY OPEN
+'' -- PsMenuBar.inc:324-328 is explicit that "clicking the thing you just clicked" must
+'' dismiss rather than reopen -- when the pointer leaves the bar sideways, and when a title
+'' is disabled while its menu is up.
+''
+'' Unwired, the bar clears its own state and the dropdown simply stays on screen. Nothing in
+'' PsPlatform was wiring it either; ideshell has the same fix.
+''
+'' NO LOOP: CloseAll fires OnClosed, which calls NotifyClosed, which clears the bar's fields
+'' DIRECTLY without calling back (PsMenuBar.inc:195-200). CloseMenu also early-outs when the
+'' bar already thinks it is closed.
+sub OnBarCloseRequest( byval pBar as any ptr, byval ud as any ptr )
+    g_menus.CloseAll()
+end sub
+
 sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any ptr )
     '' Printed first, always, so a command ARRIVING is visible even when nothing is bound
     '' to it. Most ids reach nothing here and that is the design -- their handlers are in
@@ -1501,6 +1520,22 @@ end function
         OnMenusClosed( 0, 0 )
         Check "the closed callback clears the bar's highlight", _
               (g_menubar->IsMenuOpen() = false), "IsMenuOpen"
+
+        '' ---- AND THE ROUND TRIP TERMINATES ---------------------------------------------
+        '' Two callbacks point at each other: the bar asks the host to close
+        '' (OnCloseRequest -> CloseAll) and the host tells the bar it closed
+        '' (OnClosed -> NotifyClosed). That is a loop unless one end stops calling back,
+        '' and one does -- NotifyClosed clears the bar's fields DIRECTLY
+        '' (PsMenuBar.inc:195-200) rather than going through CloseMenu.
+        ''
+        '' Asserted because the failure mode is a stack overflow on a mouse click, which is
+        '' not something to discover interactively.
+        g_menubar->OpenMenu( 0 )
+        Check "the bar reports a menu open again", (g_menubar->IsMenuOpen() = true)
+        g_menubar->CloseMenu()
+        Check "  the bar's own close request completes", _
+              (g_menubar->IsMenuOpen() = false)
+        Check "  and does not leave the host open", (g_menus.IsOpen() = false)
 
         '' ---- THE DOCKED BANDS, NUMERICALLY -------------------------------------------
         '' "It looks docked" is not a test, and a bar one pixel short leaves a seam nobody
