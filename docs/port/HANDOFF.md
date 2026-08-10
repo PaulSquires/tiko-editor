@@ -1,7 +1,13 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ `e285254a1`; PsPlatform **`main`** @ `be10064`;
-HelpCenter **`main`** @ `02a4c18`. All build warning-free, all are pushed, and tiko runs.
+tiko `feat/cross-platform` @ **the commit that added [`7c-step3.md`](7c-step3.md)** — 7c
+step 3 complete, code at `26e4bf8eb`; PsPlatform **`main`** @ **`b4d7371`**; HelpCenter
+**`main`** @ `02a4c18`. All build warning-free and tiko runs.
+
+**PsPlatform is pushed. tiko's last commits are NOT** — `origin/feat/cross-platform` was at
+`d79163672` when this was written. **Run `git log origin/feat/cross-platform..HEAD` rather
+than believing that sentence**; this page's own record is that its numbers rot faster than its
+prose.
 
 **THERE ARE TWO BINARIES IN tiko NOW.** `tiko.exe` from `tiko.bas`, unchanged and building at
 every commit; and `_shell\tikoshell.exe` from `src\shell\tikoshell.bas`, which is phase 7c's
@@ -60,7 +66,14 @@ Read in this order, and do not skip the first:
    [`pump-census.md`](pump-census.md), which is the evidence, and note that its
    not-verified section is again the longer half — this time because NOTHING about a modal
    dialog is asserted anywhere in either repo.
-6. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
+6. [`7c-step3.md`](7c-step3.md) — **the document model, measured and moved.** Read its first
+   two sections in order: five defects found by running the binary against zero found by any
+   gate, and then the two gates of my own that turned out to measure nothing — a paired
+   27-suite sweep that compared a tree with itself, and an assertion that would have hung the
+   suite the moment the code under it became real. Beside it,
+   [`document-model-blockers.md`](document-model-blockers.md), which is what re-measurement by
+   compiler looks like after three wrong greps.
+7. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
    irreducible, investigated. **It was not a blocker and never had been.** Short, and it is the
    clearest example on this whole shelf of a claim that survived because nobody checked it.
    **Its recommendation has since been implemented**: WebView2 is gone from the tree.
@@ -178,6 +191,24 @@ process, the field has focus on open, and Alt+F does nothing while a box is up.
 all 194 shell assertions green, checked both times. `Run` needs a compositor and `build check`
 is headless by design. A defect class found twice in one step and guarded by nothing afterwards
 is the thing to fix first if modal work continues.
+
+**AND STEP 3 IS DONE: THE DOCUMENT MODEL IS OUT OF THE SHELL.** `clsDocument` and `clsApp` are
+in `src/app` — **46 files, 9,901 lines that compile against PsCore alone** — and `tikoshell`
+opens files, tabs between them and **saves them through the same `clsDocument.SaveFile` that
+tiko calls**, with no AfxNova and no `HWND` in its half. The app-host seam that makes that
+possible is two records: `AppHostServices` (20 fields, the host answers) and `AppHostNotify`
+(11, fire-and-forget) — and the split is load-bearing, because every `Notify` field can be
+safely stubbed and no `Services` field can. See [`7c-step3.md`](7c-step3.md).
+
+**THREE THINGS DID NOT MOVE AND ARE NAMED**: `clsTopTabCtl` (a facade over a Win32 control
+whose item data *is* the document list), `clsScanMgr` (**PsPlatform has no threading or
+synchronisation service at all**), and `modDocViews`. The shell has its own 258-line tab model
+instead, and no background parsing.
+
+**FIVE DEFECTS, ALL FOUND BY THE AUTHOR RUNNING THE BINARY, NONE BY ANY GATE** — blank tabs, no
+caret, clicks landing up-and-left of the pointer, an arrow cursor over text, and doubled text
+after my own wrong fix for the third. **Three of the five were in PsPlatform and had been
+reachable by every host in the tree since those widgets existed.** Same shape as step 2's menus.
 
 **That is ONE FORM AND TWO DIALOGS. 7c is 48 forms and ~45,000 lines**, so read step 1 as a measurement of
 the approach rather than of the progress. An earlier version of this page said 7c was *done*,
@@ -315,8 +346,8 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | `_compile_fast.bat` | gas64 build, zero warnings | green |
 | `_check_scihost.bat` | the editor works — 26 assertions, incl. an **A/B against a stock Scintilla window in the same process** | green |
 | `_check_package.bat` | tiko runs with **only the Windows directories on PATH** | green, ~1s |
-| `_check_app_layer.bat` | `src/app` names no Win32 or AfxNova token (36 files) | green |
-| `_check_app_standalone.bat` | `src/app` compiles against PsCore alone **and LINKS as one unit** | green — 11 clean, 0 errors, debt 3 |
+| `_check_app_layer.bat` | `src/app` names no Win32 or AfxNova token (**46 files**, 2026-08-10) | green |
+| `_check_app_standalone.bat` | `src/app` compiles against PsCore alone **and LINKS as one unit** | green — **16 clean**, 0 errors, **debt 4** |
 | `_check_shell.bat` | `src/shell` includes no Win32 shell header, and carries no `PsC.` | green |
 
 The ratchet is the weak one and knows it: it greps a hand-written vocabulary, and has had
@@ -332,10 +363,16 @@ its whole life, so a missing BODY was invisible to it by construction, and it re
 `dim shared gConfig`, so including the header instantiates it, and the constructor was in the
 shell. Found by the shell binary, which is the first thing that ever linked the layer.
 
-The link half carries a counted DEBT, baseline 3: `ProcessFromCurdriveApp` (already pure
-PsCore), `FilenameOriginalCase` (real Win32, wants a PsCore canonical-path call first), and
-`KeyBindings_PickListKeyToValue`. It fails on a fourth. **Delete the baseline when it reaches
-zero** — the file says so too.
+The link half carries a counted DEBT, **baseline 4 as of 7c step 3**: `FilenameOriginalCase`
+(real Win32, wants a PsCore canonical-path call first), `KeyBindings_PickListKeyToValue`
+(declared in a *shell* header — the app layer calling up, which no token ratchet can see),
+`TodoStore_RemoveFile`, and `clsConfig::ProjectSaveToFile` (the class is split). It fails on a
+fifth. **Delete the baseline when it reaches zero** — the file says so too.
+
+**IT WENT 3 → 6 → 4, AND THE MIDDLE NUMBER IS THE INSTRUCTIVE ONE.** Moving `clsDocument` and
+`clsApp` into the layer pulled in callers whose callees were still outside it. That is what the
+counter is for; it is lowered whenever the count is, or it stops being a ratchet and becomes a
+licence.
 
 **And read every green tick above as evidence too.** All 27 suites and all five gates were
 green throughout the period when the editor had no right-click menu and no mouse wheel. The
@@ -425,7 +462,7 @@ All four were invisible to every suite.
    `SCI_GETXOFFSET` back immediately after the set, at the call site — `newPos=316 xBefore=16
    xAfter=16` names it in one line, and nothing that watches only the write can see it.
 
-### 7c's first increment — the app layer. Done. **7c itself has not started.**
+### 7c's app layer — the DOCUMENT MODEL is in it now. **7c's forms have not started.**
 
 This heading used to read "7c — the app layer. Done." **That is wrong twice over**: 7c is the
 shell — 48 forms, ~45,000 lines — and the app layer is the increment
@@ -433,10 +470,21 @@ shell — 48 forms, ~45,000 lines — and the app layer is the increment
 translation unit with no AfxNova in it. Reading the old heading, you would conclude a third of
 the codebase had already been converted.
 
-What is actually done: `clsDocument.bi` is free of Win32; the menu vocabulary, localization
-and two `gApp` flags moved into `app/` (30 files); `clsConfig`'s UI defaults split out.
-`clsSymbolDb.inc` was the last file, and its 11 errors were the type swap — they went with it.
-`_check_app_standalone` compiling those files against PsCore alone is the proof.
+The first increment: `clsDocument.bi` free of Win32; the menu vocabulary, localization and two
+`gApp` flags into `app/` (30 files); `clsConfig`'s UI defaults split out.
+
+**7c STEP 3 THEN MOVED THE MODEL ITSELF** — `clsDocument` (2,078 lines with its header),
+`clsApp`, `modScintilla`, `modSciText`, the encoding write path — taking `app/` to **46 files
+and 9,901 lines**, with **52 `gAppHost.` and 23 `gAppNotify.` call sites** where Win32 calls
+used to be. `_check_app_standalone` compiling *and linking* those files against PsCore alone is
+the proof, at debt 4.
+
+**THE SIZING OF THAT MOVE WAS WRONG THREE TIMES — 15 blockers, then 40, then 40 different ones,
+two of the three mine.** Work stopped and it was re-measured by *compiling*: three commits of
+measurement before a line of the move was written
+([`document-model-blockers.md`](document-model-blockers.md)). Both findings that changed the
+plan's shape came out of that, and neither was visible to any grep. **A text search over a
+language whose type names carry no prefix will be wrong in a direction that looks plausible.**
 
 ### The DWSTRING swap. Landed.
 
@@ -489,6 +537,29 @@ PsCore now declares `operator len`, so unconverted sites are right rather than q
 **A clean build of a swapped tree is the start of the verification, not the end of it.**
 
 ---
+
+## What 7c step 4 has to decide — the live list
+
+The four items below this one are all closed and are kept as a record. **These are the open
+ones**, and each is a decision rather than a task:
+
+1. **Encoding detection on read.** `ShellHost_LoadFileText` reads bytes and calls them UTF-8;
+   tiko's read path decodes UTF-16 through `WideCharToMultiByte` and is still shell-side.
+   Now that the shell *saves*, a UTF-16 file opened there will not round-trip. First thing
+   that makes the shell's file handling honest.
+2. **Threading — a PsPlatform decision, not a tiko one.** `clsScanMgr` is blocked on it
+   outright: its worker thread is woken and stopped with Win32 event objects, and PsPlatform
+   surfaces no threading or synchronisation service at all (the vendored `SDL_mutex.bi` is
+   never exposed through `g_plat`). It will not be the last thing blocked on this.
+3. **`clsTopTabCtl`: portable rewrite, or a Win32 facade forever?** The shell shows the
+   *model* half is small — 258 lines including its comments. The class as it stands stores the
+   `clsDocument ptr` inside the control and reads it back with `PsTabBar_GetItemData`.
+4. **The four link-debt bodies.** Three are trivially host-supplied; `FilenameOriginalCase`
+   needs a PsCore canonical-path call first.
+
+**And one process point step 3 earned the right to state plainly: drive every milestone by hand
+before calling it done.** Every claim a suite supports survived this step. Every claim about
+what the user sees came from a person opening the binary — five for five.
 
 ## What I would do next, in order — ALL FOUR ARE NOW CLOSED
 
