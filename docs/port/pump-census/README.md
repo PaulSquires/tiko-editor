@@ -66,6 +66,35 @@ comments say they exist to beat `IsDialogMessage` and the accelerator chain to t
 Their comments are corroborated by the trace, which is worth recording because most of the
 others' are not yet corroborated by anything.
 
+## `run-2-split.txt` — 2026-08-10, driven at the cold paths
+
+The same editor plus Options, About and User Tools, with the gestures run 1 missed: menubar
+keyboard navigation, Alt mnemonics, Tab and Shift+Tab traversal, Ctrl+Space, the Find bar.
+**7167 messages through `frmMain`**, 1614 through `frmOptions`, 323 through `frmUserTools`, 127
+through `frmAbout`.
+
+Carries the keyboard/other split, and it settles the question run 1 could only raise:
+
+| pump | messages | `IsDialogMessage` keyboard | share |
+| --- | --- | --- | --- |
+| `frmMain` | 7167 | 53 | **0.7%**, and visibly ordinary typing |
+| `frmOptions` | 1614 | 87 | 5.4%, and visibly Tab/arrow/Enter traversal |
+| `frmAbout` | 127 | 7 | 5.5%, traversal |
+
+`DispatchMessage:KEYBOARD` is **zero in every pump** — every keyboard message reaching the end of
+a chain went through `IsDialogMessage`. See [`../pump-census.md`](../pump-census.md) for what
+follows from that.
+
+Five claim points fired here that were silent in run 1: `PsMenuBar` (17),
+`handleCtrlSpaceAutoComplete` (1), `handleKeysFindReplace` (2), and `accel:main` picked up the
+Alt mnemonics. **Eight claim points have now fired in neither session** and are carried as
+unexercised, not dead.
+
+**The completeness check passes.** Claims plus terminal outcomes account for 7166 of `frmMain`'s
+7167 messages, 1612 of `frmOptions`' 1614, 126 of `frmAbout`'s 127 and 323 of 323 — the one or
+two missing per pump being the message the loop exited on. A chain that leaked would show it
+here.
+
 ## What a capture cannot tell you
 
 **Absence is not evidence of deadness** — see above. It is the single easiest misreading of this

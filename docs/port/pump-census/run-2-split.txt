@@ -1,0 +1,163 @@
+TIKO PUMP TRACE
+
+Every filter claim in every message loop, counted. Written at process exit.
+A claimant absent from this file NEVER FIRED in this session -- which is a
+fact about the session, not about the code. See docs/port/pump-census.md.
+
+---- messages entering each pump ----
+  frmMain  7167
+  frmOptions  1614
+  frmAbout  127
+  frmUserTools  323
+
+---- claims ----
+
+[frmMain]
+  IsDialogMessage:dispatched-other  claims 4964
+      msg &h31F
+      msg &hC0DD
+      msg &h401
+      msg &h402
+      msg &h403
+      msg &h404
+      msg &h40D
+      WM_PAINT
+      WM_TIMER
+      msg &hA0
+      WM_MOUSEMOVE
+      msg &h2A2
+      msg &h2A3
+      WM_LBUTTONDOWN
+      WM_LBUTTONUP
+      WM_RBUTTONDOWN
+      WM_RBUTTONUP
+      WM_COMMAND
+      msg &h118
+      msg &h2A1
+      WM_NCLBUTTONDOWN
+  DispatchMessage:other  claims 2123
+      msg &h60
+      WM_TIMER
+      WM_PAINT
+      WM_MOUSEMOVE
+      msg &h118
+      msg &h2A1
+      WM_LBUTTONDOWN
+      WM_LBUTTONUP
+      msg &h2A3
+      WM_RBUTTONUP
+  IsDialogMessage:KEYBOARD  claims 53
+      WM_KEYDOWN VK_SPACE
+      WM_CHAR printable
+      WM_KEYUP VK_SPACE
+      WM_KEYDOWN 'D'
+      WM_KEYUP 'D'
+      WM_KEYDOWN 'W'
+      WM_KEYUP 'W'
+      WM_KEYDOWN 'S'
+      WM_KEYUP 'S'
+      WM_KEYDOWN Ctrl+VK_CONTROL
+      WM_KEYUP Ctrl+VK_SPACE
+      WM_KEYUP VK_CONTROL
+      WM_KEYDOWN 'T'
+      WM_KEYUP 'T'
+      WM_KEYDOWN 'R'
+      WM_KEYUP 'R'
+      WM_KEYDOWN 'I'
+      WM_KEYUP 'I'
+      WM_KEYDOWN VK_RETURN
+      WM_KEYUP VK_RETURN
+      WM_SYSKEYDOWN Alt+VK_MENU
+      WM_SYSKEYUP Alt+'F'
+      WM_SYSKEYUP Alt+'P'
+      WM_KEYUP VK_ESCAPE
+      (sample list full -- there may be more kinds than these)
+  handleCtrlSpaceAutoComplete  claims 1
+      WM_KEYDOWN Ctrl+VK_SPACE
+  accel:main  claims 5
+      WM_SYSKEYDOWN Alt+'F'
+      WM_SYSKEYDOWN Alt+'P'
+      WM_KEYDOWN Ctrl+'H'
+      WM_KEYDOWN vk188
+  PsMenuBar  claims 17
+      WM_KEYUP VK_MENU
+      WM_KEYDOWN VK_DOWN
+      WM_KEYUP VK_DOWN
+      WM_KEYDOWN VK_RETURN
+      WM_KEYDOWN VK_ESCAPE
+  handleEscKeyModeless  claims 1
+      WM_KEYDOWN VK_ESCAPE
+  handleKeysFindReplace  claims 2
+      WM_KEYDOWN VK_TAB
+
+[frmOptions]
+  IsDialogMessage:dispatched-other  claims 669
+      msg &h31F
+      WM_MOUSEMOVE
+      WM_PAINT
+      msg &h118
+      WM_TIMER
+      msg &hA0
+      msg &h2A3
+      msg &h2A2
+      WM_LBUTTONDOWN
+      WM_LBUTTONUP
+  DispatchMessage:other  claims 856
+      msg &h60
+      msg &h2A3
+      WM_PAINT
+      WM_TIMER
+      msg &h401
+  IsDialogMessage:KEYBOARD  claims 87
+      WM_KEYUP Ctrl+vk188
+      WM_KEYUP VK_CONTROL
+      WM_KEYUP VK_DOWN
+      WM_KEYDOWN VK_TAB
+      WM_KEYUP VK_TAB
+      WM_KEYDOWN VK_DOWN
+      WM_KEYDOWN VK_UP
+      WM_KEYUP VK_UP
+      WM_CHAR ctrl-9
+      WM_KEYDOWN Shift+VK_SHIFT
+      WM_KEYDOWN Shift+VK_TAB
+      WM_KEYUP VK_SHIFT
+      WM_KEYDOWN VK_RETURN
+      WM_KEYUP VK_RETURN
+      WM_KEYDOWN VK_RIGHT
+      WM_KEYUP VK_RIGHT
+      WM_CHAR ctrl-13
+
+[frmAbout]
+  IsDialogMessage:dispatched-other  claims 16
+      msg &h31F
+      WM_MOUSEMOVE
+      WM_PAINT
+      WM_TIMER
+  DispatchMessage:other  claims 103
+      msg &h60
+      msg &h2A3
+      WM_PAINT
+      WM_TIMER
+      msg &h401
+  IsDialogMessage:KEYBOARD  claims 7
+      WM_KEYDOWN VK_TAB
+      WM_KEYUP VK_TAB
+      WM_KEYDOWN VK_RETURN
+
+[frmUserTools]
+  IsDialogMessage:dispatched-other  claims 222
+      msg &h31F
+      WM_MOUSEMOVE
+      WM_PAINT
+      WM_TIMER
+      msg &h118
+      msg &h2A1
+      msg &h2A3
+      WM_LBUTTONDOWN
+      WM_LBUTTONUP
+  DispatchMessage:other  claims 101
+      msg &h60
+      msg &h2A3
+      WM_PAINT
+      WM_TIMER
+      msg &h401
