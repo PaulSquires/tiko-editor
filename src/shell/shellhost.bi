@@ -37,11 +37,35 @@ function clsConfig.ProjectSaveToFile() as boolean
     return false
 end function
 
-sub TodoStore_RemoveFile( byval wszFile as DWSTRING )
-    '' Deliberately silent: the document model calls this on every close, and a binary with
-    '' no TODO store has nothing to remove. Unlike the one above, doing nothing here IS the
-    '' right answer -- there is no caller waiting on a result.
-end sub
+
+'' ---- FilenameOriginalCase: THE IDENTITY, AND THAT IS A REAL DIFFERENCE ------------------
+'' tiko's asks the FILE SYSTEM for a path's true casing -- CreateFileW plus
+'' GetFinalPathNameByHandleW -- which is why it is on _check_app_standalone's link-debt list
+'' and cannot move into app/ until PsCore grows a canonical-path call. This binary has no
+'' Win32, so it hands the path back unchanged.
+''
+'' WHAT THAT COSTS, because "identity function" reads harmless and is not: the symbol
+'' database and the TODO store are KEYED BY FILENAME. Two spellings of one path --
+'' C:\dev\Foo.bas from a tab, c:\dev\foo.bas from an #include -- become two entries in this
+'' binary and one in tiko. The scan path normalises with PsUCase at most of its comparison
+'' sites (SymDb_FileNameEq), which is why this has not surfaced; the store's own keys are
+'' where it would.
+''
+'' NOT A STUB THAT SHOULD BE LOUD. Returning the path is the correct answer for a
+'' case-insensitive filesystem in every respect but the display of a name the user typed
+'' differently, so printing a warning on every call would be noise.
+function FilenameOriginalCase( byval wszFilename as DWSTRING ) as DWSTRING
+    return wszFilename
+end function
+
+'' ---- TodoStore_RemoveFile's STUB IS GONE, AND THAT IS A DEBT REPAID ---------------------
+'' It used to live here, empty, "because this binary has no TODO store". THE REAL ONE IS IN
+'' app/clsSymbolDb.inc:941 -- it always was. The shell supplied a stub only because it
+'' included that file's HEADER and not its body, so the linker had nothing else to bind to.
+''
+'' Step 5 includes the body (the scanner needs InstallSet and BuildIndexes out of the same
+'' file), which makes this a DUPLICATE DEFINITION rather than a fallback -- fbc says so, in
+'' those words. One of _check_app_standalone's four debt entries closes with it.
 
 
 '' ---------------------------------------------------------------------------------------
@@ -275,9 +299,17 @@ private sub ShellHost_OnDocumentSaved( byval pDoc as clsDocument ptr )
 end sub
 
 private sub ShellHost_RequestBufferScan( byval pDoc as clsDocument ptr )
-    '' No background scanner here. docs/port/document-model-blockers.md records why
-    '' clsScanMgr stays in tiko: its worker thread is woken with Win32 event objects and
-    '' PsPlatform has no threading service at all.
+    '' ---- NO LONGER A STUB, AND NOT BECAUSE THREADING ARRIVED --------------------------
+    '' This said "no background scanner here -- clsScanMgr stays in tiko because its worker
+    '' is woken with Win32 event objects and PsPlatform has no threading service". All of
+    '' that is still true and none of it turned out to matter: the panel needs gSymDb
+    '' POPULATED, not populated asynchronously, and everything between the DLL call and the
+    '' symbol database was already in app/. See shellscan.bi.
+    ''
+    '' SO THIS RUNS THE PARSE ON THE CALLING THREAD -- which is the UI thread, which is the
+    '' thing clsScanMgr exists to avoid. That is the experiment step 5 is running, not an
+    '' oversight: the cost is measured (g_nLastScanMs) rather than assumed.
+    ShellScan_Buffer( pDoc )
 end sub
 
 private function ShellHost_DocRootName( byval pDoc as clsDocument ptr ) as DWSTRING

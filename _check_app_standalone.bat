@@ -116,8 +116,12 @@ rem named below; the check fails when a FOURTH appears, not while those three
 rem remain. A gate that is red on the day it lands gets switched off, and a debt
 rem that is counted is a debt someone can finish.
 rem
-rem   ProcessFromCurdriveApp          modPaths.inc:103 -- already pure PsCore,
-rem                                   moves down as soon as someone does it
+rem   ProcessFromCurdriveApp          CLOSED in 7c step 5. It is in app\modPaths.inc
+rem                                   now. This entry said it "moves down as soon
+rem                                   as someone does it", and the shell's scanner
+rem                                   is who did -- app\clsSymbolDb.inc calls it at
+rem                                   three sites, so a second binary including
+rem                                   that body could not link without it.
 rem   FilenameOriginalCase            modPaths.inc:55  -- real Win32
 rem                                   (CreateFileW / GetFinalPathNameByHandleW).
 rem                                   Needs a PsCore canonical-path call first
@@ -136,8 +140,15 @@ rem it. That is what this counter is for -- it went 3 -> 6, then back to 4 in co
 rem Doc_EncodeForDisk and Doc_WriteToDisk followed their declarations down. THE BASELINE IS
 rem LOWERED WHENEVER THE COUNT IS, or it stops being a ratchet and becomes a licence.
 rem
+rem 7c STEP 5 TOOK IT 4 -> 3, and TWO entries closed to get there while one opened:
+rem ProcessFromCurdriveApp moved down, TodoStore_RemoveFile turned out to have had a real
+rem body in app\clsSymbolDb.inc all along (the shell was supplying a stub only because it
+rem included that file's header and not its body), and FilenameOriginalCase became a live
+rem debt rather than a latent one -- the shell has to implement it now that it links the
+rem symbol database.
+rem
 rem WHEN THE COUNT REACHES 0, delete the baseline and make this a plain failure.
-set /a LINKBASELINE=4
+set /a LINKBASELINE=3
 set /a LINKBAD=0
 %FBC% -i ..\..\PsPlatform\src -maxerr 999 -x _standalone_link.exe _standalone_link.bas > _standalone_link.log 2>&1
 if !errorlevel! neq 0 (

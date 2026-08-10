@@ -17,7 +17,16 @@ rem Arguments are forwarded, so --selftest and friends work through it.
 rem ---------------------------------------------------------------------------
 setlocal
 set PSP=%~dp0..\PsPlatform
-set PATH=%PSP%\build\out\win64;%PSP%\deps\out\win64\bin;%PATH%
+rem ---- %~dp0 IS ON THE END OF THIS FOR fbcParser.dll (7c step 5) -------------
+rem The shell links fbcParser now, and fbcParser.dll lives in the PROJECT ROOT
+rem beside tiko.exe -- not in _shell\ and not with the PsPlatform deps. Windows
+rem searches the exe's own directory and then PATH, so without the third entry
+rem the process dies AT LOAD with no window and no message: exactly the failure
+rem this file already warns about for SDL3, one DLL further along.
+rem
+rem NOT COPIED next to the exe, for the reason at the top of _compile_shell.bat:
+rem two executables sharing a directory would share libpsscintilla.dll too.
+set PATH=%PSP%\build\out\win64;%PSP%\deps\out\win64\bin;%~dp0;%PATH%
 rem .\ is required: PATH was just prepended with two directories, and cmd
 rem searches PATH before the current directory.
 "%~dp0_shell\tikoshell.exe" %*

@@ -268,6 +268,10 @@ dim shared gTTabCtl as clsTopTabCtl
 ' each file's header. Order is load-bearing for the first two: modEncoding holds the four
 ' PRIVATE conversion helpers (undeclared in any .bi), and modRoutines' own GetFileToString
 ' and modCompileErrors both call into them, so they must be DEFINED first.
+'' app/modPaths.inc carries ProcessFromCurdriveApp, which moved down out of modPaths.inc in
+'' 7c step 5 -- pure PsCore, and app/clsSymbolDb.inc calls it at three sites. BOTH files are
+'' included: the app one holds that single body, the shell one still holds the other four.
+#include once "app/modPaths.inc"
 #include once "modPaths.inc"
 ' The encoding conversion logic, then the dialogs it asks through. The .bi comes
 ' first because modEncoding.inc CALLS one of them: the logic decides whether to

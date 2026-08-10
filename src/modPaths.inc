@@ -97,23 +97,12 @@ function ProcessToCurdriveApp( byval wszFilename as DWSTRING ) as DWSTRING
 end function
 
 
-' ========================================================================================
-' Process current drive to prefix {CURDRIVE} 
-' ========================================================================================
-function ProcessFromCurdriveApp( byval wszFilename as DWSTRING ) as DWSTRING
-    ' for each folder location determine if it resides on the same drive as
-    ' the editor. if it does then substitute the replaceable parameter
-    ' {CURDRIVE} for the drive letter. This allows you to easily run the editor
-    ' on different media (eg. thumb drive) that may be assigned a different
-    ' drive letter.
-    dim as DWSTRING wszText = PsExePath
+' ProcessFromCurdriveApp MOVED to app/modPaths.inc (7c step 5). Its declaration has been
+' in app/modPaths.bi since step 1 and the body is pure PsCore -- PsExePath, PsUCase,
+' PsLeft, PsMid -- so it was on _check_app_standalone's list of things that move as soon
+' as something needs them. app/clsSymbolDb.inc calls it at three sites; the shell binary
+' including that body is what finally needed it.
 
-    if PsUCase(PsLeft(wszFilename, 10)) = wstr("{CURDRIVE}") then 
-        wszFilename = PsLeft(wszText, 1) & PsMid(wszFilename, 11)
-    end if
-
-    return wszFilename
-end function
 
 
 ' ========================================================================================

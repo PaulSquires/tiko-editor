@@ -198,6 +198,16 @@
 #include once "app/modSciText.inc"
 #include once "app/clsDocument.inc"
 #include once "app/clsApp.inc"
+'' THE SYMBOL DATABASE'S BODY, new in 7c step 5. Its HEADER has been included since step 4
+'' -- clsSymbolDb.bi carries PARSERESULTSET, which nothing was building until the shell
+'' gained a scanner. Adding the .inc is what makes InstallSet and BuildIndexes link, and it
+'' is app-layer code: one of the sixteen files _check_app_standalone already compiles
+'' against PsCore alone.
+#include once "app/clsSymbolDb.inc"
+'' ProcessFromCurdriveApp, which clsSymbolDb.inc calls at three sites to find the compiler's
+'' inc directory. Its body moved down from src/modPaths.inc in this commit -- pure PsCore,
+'' and on the standalone gate's own list of things that move when something needs them.
+#include once "app/modPaths.inc"
 
 
 '' ---- THE COMMIT-4 STUB, NOW REAL -------------------------------------------------------
@@ -779,6 +789,10 @@ end function
 '' shelltabs.bi, which it needs for ShellTabs_IndexOfDoc and the tab array: a bookmark row
 '' carries the tab it belongs to, and reading a background tab's markers means pointing the
 '' single view at that tab's Scintilla document.
+'' The symbol scan. BEFORE shellpanel.bi is not required today -- nothing in the panel calls
+'' it yet -- but it is where the Functions loader will read from, and shellhost.bi (included
+'' much later) is what routes gAppNotify.RequestBufferScan into it.
+#include once "shellscan.bi"
 #include once "shellpanel.bi"
 
 
@@ -3387,7 +3401,14 @@ end function
                 dim as DWSTRING wszDir = environ("TEMP") & "\tiko_shellopen"
                 PsDirCreate( wszDir )
                 dim as DWSTRING wszFile = wszDir & "\open_probe.bas"
-                dim as boolean bWrote = PsFileWriteAll( wszFile, !"' probe\nprint 1\n" )
+                '' ---- REAL SOURCE, NOT TWO LINES OF FILLER, since 7c step 5 ------------
+                '' The probe used to be "' probe" and one print. It carries two PROCEDURES
+                '' now because the scanner assertions below need something to find, and one
+                '' file serves both: the earlier assertions only care that it has bytes and
+                '' a line 1, which it still does.
+                dim as boolean bWrote = PsFileWriteAll( wszFile, _
+                        !"' probe\nsub ProbeAlpha()\n  print 1\nend sub\n\n" & _
+                        !"function ProbeBeta( byval n as long ) as long\n  return n\nend function\n" )
 
                 if bWrote = false then
                     Check "the open probe could be written to %TEMP%", false, wszFile.Utf8
@@ -3422,6 +3443,64 @@ end function
                     Check "  and it was categorised by extension", _
                           (ShellTabs_CurrentDoc()->ProjectFileType <> FILETYPE_UNDEFINED), _
                           ShellTabs_CurrentDoc()->ProjectFileType.Utf8
+
+                    '' ---- THE SCANNER, END TO END --------------------------------------
+                    '' Opening a document calls gAppNotify.RequestBufferScan, which is no
+                    '' longer a stub -- so by this line the file has already been parsed and
+                    '' installed into gSymDb, WITHOUT anything here asking for it. That is
+                    '' the assertion: the seam fires on its own.
+                    ''
+                    '' gSymDb IS GLOBAL STATE THIS SUITE NOW WRITES, like gApp.pDocList
+                    '' before it. The cleanup below evicts what it installed.
+                    scope
+                        Check "  opening a file scanned it", (g_nScanCount > 0), _
+                              str(g_nScanCount)
+                        Check "    and the parse succeeded", (g_nLastScanMs >= 0)
+
+                        '' THE PROCS ARE IN THE DATABASE, which is the whole reason the
+                        '' Functions panel can exist -- it reads gSymDb, never the scanner.
+                        dim rs() as SYMBOLREF
+                        dim as long nProcs = gSymDb.EnumProcsInFile( wszFile, rs() )
+                        Check "    and both procedures are in gSymDb", (nProcs = 2), _
+                              str(nProcs)
+
+                        '' A NAME AND A LINE, because a count alone would pass on two
+                        '' entries that say nothing useful. The line is what commit 4's
+                        '' click will jump to.
+                        if nProcs = 2 then
+                            dim as DWSTRING sN1 = gSymDb.QualifiedName( rs(0) )
+                            dim as DWSTRING sN2 = gSymDb.QualifiedName( rs(1) )
+                            dim as boolean bNamed = _
+                                (PsInStr(PsUCase(sN1 & "|" & sN2), "PROBEALPHA") > 0) andalso _
+                                (PsInStr(PsUCase(sN1 & "|" & sN2), "PROBEBETA") > 0)
+                            Check "    named, both of them", bNamed, _
+                                  sN1.Utf8 & " | " & sN2.Utf8
+                            Check "    with a body line each", _
+                                  (gSymDb.SymBodyLine(rs(0)) > 0) andalso _
+                                  (gSymDb.SymBodyLine(rs(1)) > 0), _
+                                  str(gSymDb.SymBodyLine(rs(0))) & "," & _
+                                  str(gSymDb.SymBodyLine(rs(1)))
+                        end if
+
+                        '' ONLY SOURCE FILES ARE PARSED. tiko's filter, ported: .bas, .bi,
+                        '' .inc, and anything with no path at all (an unsaved buffer, which
+                        '' is exactly when the panel should follow the typing).
+                        ''
+                        '' Driven by renaming the document rather than opening a second
+                        '' file: the filter reads DiskFilename and nothing else, so this
+                        '' reaches it without another tab to clean up afterwards.
+                        '' pD, not pDoc: the bookmark block's pDoc belongs to a scope that
+                        '' has already closed, and fbc reports an unknown name at statement
+                        '' position as "Expected End-of-Line" -- five errors none of which
+                        '' mentions the name being undefined.
+                        dim as clsDocument ptr pD = ShellTabs_CurrentDoc()
+                        dim as DWSTRING sNameWas = pD->DiskFilename
+                        pD->DiskFilename = "C:\dev\notsource.txt"
+                        Check "    a .txt is not scanned", (ShellScan_Buffer(pD) = false)
+                        pD->DiskFilename = "C:\dev\notsource.bi"
+                        Check "      but a .bi is", ShellScan_Buffer(pD)
+                        pD->DiskFilename = *sNameWas.Wz()
+                    end scope
 
                     '' THE SAME PATH AGAIN IS THE SAME TAB. Through gApp's lookup now, so
                     '' this is also what proves the delegation is wired rather than merely
@@ -3704,6 +3783,19 @@ end function
                             end if
                             if pWasDoc <> 0 then g_view->Msg( SCI_RELEASEDOCUMENT, 0, cast(integer, pWasDoc) )
                         end if
+                        '' ---- AND EVICT WHAT THE SCANNER PUT IN gSymDb.
+                        '' A second global this suite writes, after gApp.pDocList. There is
+                        '' no Clear on clsSymbolDb -- InstallSet(tier, 0) is the eviction,
+                        '' and it hands back what it displaced for the caller to free, which
+                        '' is the same contract ShellScan_Buffer honours.
+                        scope
+                            dim as PARSERESULTSET ptr pGone = gSymDb.InstallSet( ScanTierBuffer, 0 )
+                            if pGone then
+                                if pGone->pResult then fbcparser_free( pGone->pResult )
+                                delete pGone
+                            end if
+                        end scope
+
                         '' gApp owns the clsDocument now, so gApp is what frees it.
                         gApp.RemoveDocument( g_tabDocs(idx1).pDoc )
                         g_tabDocs(idx1).pDoc    = 0

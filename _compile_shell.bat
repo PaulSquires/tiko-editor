@@ -41,8 +41,25 @@ rem The DLLs are NOT copied next to it, for the reason _check_scihost.bat gives:
 rem a partial copy fails at load with 0xC0000139 naming nothing useful. PATH
 rem points at the real directories instead -- see _run_shell.bat.
 rem ---------------------------------------------------------------------------
+rem ---- -l fbcParser ARRIVED WITH 7c STEP 5 -----------------------------------
+rem The shell has included app\fbcParser.bi since step 4 -- but only for its
+rem FBCP_KIND_* constants, which clsSymbolDb.bi needs. Nothing CALLED the DLL,
+rem so nothing had to link it. ShellScan_Buffer calls fbcparser_scan_text, and
+rem the import library is src\libfbcParser.dll.a -- already on the search path
+rem via the -p . below, so this is one flag and no new -p.
+rem
+rem THE DLL ITSELF IS IN THE PROJECT ROOT, NOT NEXT TO THIS EXE. See _run_shell.bat:
+rem the shell lives in _shell\, so fbcParser.dll is found only because that file
+rem puts the project root on PATH. Without it the process dies at load with no
+rem message -- the same trap that file already documents for SDL3.
+rem
+rem AND A rem MAY NOT GO BETWEEN TWO ^-CONTINUED LINES. Putting this block in the
+rem middle of the command below broke it into fragments; batch continues the line
+rem with whatever follows, comment or not.
+rem ---------------------------------------------------------------------------
 if not exist ..\_shell mkdir ..\_shell
 ..\toolchains\FreeBASIC-1.10.1-winlibs-gcc-9.3.0\fbc64.exe -gen gas64 -p . ^
     -i ..\..\PsPlatform\src -i ..\..\PsPlatform\src\bind ^
-    -p ..\..\PsPlatform\deps\out\win64\lib -p ..\..\PsPlatform\build\out\win64 -l psscintilla ^
+    -p ..\..\PsPlatform\deps\out\win64\lib -p ..\..\PsPlatform\build\out\win64 ^
+    -l psscintilla -l fbcParser ^
     -x ..\_shell\tikoshell.exe shell\tikoshell.bas
