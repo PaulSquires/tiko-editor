@@ -434,6 +434,115 @@ end sub
 
 
 '' ---------------------------------------------------------------------------------------
+'' the index cache
+''
+'' Against a REAL fixture folder built in the temp directory, because every property worth
+'' asserting here is about the filesystem: that the stamp notices an edit, that a corrupt
+'' file is refused, that a partial load leaves nothing behind. A hand-built index could not
+'' test any of them.
+'' ---------------------------------------------------------------------------------------
+sub MdRunCacheTests()
+    print "  -- the index cache --"
+
+    dim as DWSTRING sDir = PsPathJoin( PsKnownFolder(PSFOLDER_TEMP), PsText("f1md_test") )
+    PsDirCreateTree( sDir )
+    dim as DWSTRING sA = PsPathJoin( sDir, PsText("10-alpha.md") )
+    dim as DWSTRING sB = PsPathJoin( sDir, PsText("20-beta.md") )
+    PsFileWriteAll( sA, "# Alpha" & NL() & NL() & "## One" & NL() )
+    PsFileWriteAll( sB, "# Beta" & NL() & NL() & "## Two" & NL() & "## Three" & NL() )
+    MdCacheForget( sDir )
+
+    '' A fresh root: no cache yet, so the load must decline rather than invent an empty one.
+    scope
+        dim as MdIndex ix
+        Check "a missing cache does not load", (MdCacheLoad(ix, "fix", sDir) = false)
+        Check "and leaves the index empty", (ix.nTopic = 0) andalso (ix.nHead = 0), _
+              str(ix.nTopic) & "/" & str(ix.nHead)
+    end scope
+
+    dim as long nDocs0, nHead0, nTopic0
+    scope
+        dim as MdIndex ix
+        MdIndexAddRoot( ix, "fix", sDir )
+        nDocs0 = ix.nDocs : nHead0 = ix.nHead : nTopic0 = ix.nTopic
+        Check "the fixture scanned", (nDocs0 = 2) andalso (nHead0 = 5), _
+              str(nDocs0) & " docs, " & str(nHead0) & " headings"
+        Check "MdCacheSave wrote it", MdCacheSave( ix, sDir, 0, 0 )
+    end scope
+
+    '' THE ROUND TRIP. Counts, titles, tree shape and heading text must all survive, because
+    '' a cache that loses the parent links produces a flat TOC and nothing says why.
+    scope
+        dim as MdIndex ix
+        Check "the cache loads", MdCacheLoad( ix, "fix", sDir )
+        Check "the counts round-trip", _
+              cbool(ix.nDocs = nDocs0) andalso cbool(ix.nHead = nHead0) andalso _
+              cbool(ix.nTopic = nTopic0), _
+              str(ix.nDocs) & "/" & str(ix.nHead) & "/" & str(ix.nTopic)
+        Check "the docset label is the CALLER's", (ix.topic(0).sName = "fix"), ix.topic(0).sName
+        Check "the numeric prefix still orders and hides", _
+              cbool(ix.nTopic >= 3) andalso cbool(ix.topic(1).sTitle = "Alpha") andalso _
+              cbool(ix.topic(2).sTitle = "Beta"), _
+              ix.topic(1).sTitle & ", " & ix.topic(2).sTitle
+        Check "parents survived", (ix.topic(1).nParent = 0) andalso (ix.topic(2).nParent = 0), _
+              str(ix.topic(1).nParent) & "," & str(ix.topic(2).nParent)
+        '' And the index it produces must answer the same questions the scan's would.
+        dim as MdHit hits(0 to 15)
+        dim as long n = MdIndexSearch( ix, "Three", hits(), 16 )
+        Check "a cached heading is searchable", (n = 1) andalso (hits(0).nTopic = 2), str(n)
+    end scope
+
+    '' A SECOND ROOT BEHIND THE FIRST. Parent indices are stored relative to the root's own
+    '' first topic; get that wrong and the second docset's tree hangs off the first one.
+    scope
+        dim as MdIndex ix
+        MdIndexAddRoot( ix, "other", sDir )
+        dim as long nBase = ix.nTopic
+        Check "a cache loads behind an existing root", MdCacheLoad( ix, "fix", sDir )
+        Check "and its parents are rebased", _
+              (ix.nTopic > nBase) andalso (ix.topic(nBase + 1).nParent = nBase), _
+              str(ix.topic(nBase + 1).nParent) & " want " & str(nBase)
+    end scope
+
+    '' STALENESS. The stamp is count + bytes + newest write time, so a file that gets LONGER
+    '' must miss even if the clock has not moved.
+    scope
+        PsFileWriteAll( sB, "# Beta" & NL() & NL() & "## Two" & NL() & "## Three" & NL() & _
+                            "## Four" & NL() )
+        dim as MdIndex ix
+        Check "an edited corpus misses", (MdCacheLoad(ix, "fix", sDir) = false)
+        Check "and the miss leaves nothing behind", (ix.nTopic = 0), str(ix.nTopic)
+    end scope
+
+    '' A DELETED FILE must miss too -- the count and the byte total both move.
+    scope
+        dim as MdIndex ix
+        MdIndexAddRoot( ix, "fix", sDir )
+        MdCacheSave( ix, sDir, 0, 0 )
+    end scope
+    scope
+        PsFileDelete( sA )
+        dim as MdIndex ix
+        Check "a deleted document misses", (MdCacheLoad(ix, "fix", sDir) = false)
+    end scope
+
+    '' CORRUPTION. Anything that is not this format at this version is refused, rather than
+    '' being half-read into an index that then renders as missing documentation.
+    scope
+        PsFileWriteAll( MdCachePath(sDir), "garbage, and not even the right length" )
+        dim as MdIndex ix
+        Check "a corrupt cache is refused", (MdCacheLoad(ix, "fix", sDir) = false)
+        Check "and leaves nothing behind", (ix.nTopic = 0), str(ix.nTopic)
+    end scope
+
+    '' Tidy up: the temp fixture is ours and leaving it would make the next run's stamp lie.
+    MdCacheForget( sDir )
+    PsFileDelete( sB )
+    PsDirDelete( sDir )
+end sub
+
+
+'' ---------------------------------------------------------------------------------------
 '' fonts
 '' ---------------------------------------------------------------------------------------
 sub MdRunFontTests()

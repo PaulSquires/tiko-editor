@@ -152,12 +152,13 @@ end function
 
 private sub AddDeco( byref page as MdPage, byval nKind as long, byval x as long, _
                      byval y as long, byval w as long, byval h as long, _
-                     byval nImage as long = -1 )
+                     byval nImage as long = -1, byval nBlock as long = -1 )
     if page.nDeco > ubound(page.deco) then
         redim preserve page.deco(0 to (page.nDeco + 1) * 2)
     end if
     with page.deco(page.nDeco)
-        .nKind = nKind : .x = x : .y = y : .w = w : .h = h : .nImage = nImage
+        .nKind = nKind : .x = x : .y = y : .w = w : .h = h
+        .nImage = nImage : .nBlock = nBlock
     end with
     page.nDeco += 1
 end sub
@@ -642,7 +643,7 @@ sub MdLayoutPage( byref doc as MdDoc, byref page as MdPage, byval nWidth as long
             wend
 
             nY += Sc(MDL_CODE_PAD)
-            AddDeco( page, MDD_CODEBG, nLeft, nSlabTop, nMaxW, nY - nSlabTop )
+            AddDeco( page, MDD_CODEBG, nLeft, nSlabTop, nMaxW, nY - nSlabTop, -1, i )
             nY += Sc(MDL_CODE_GAP)
             i += 1
 

@@ -76,3 +76,9 @@ src/_prelude.txt
 
 # gas64 leaves an .asm beside each source it compiles. A build artefact, never source.
 *.asm
+
+# F1Markdown's per-install docset list. GENERATED on first run with a commented
+# starter, then edited to name whatever documentation that machine has -- so it is
+# install state exactly like settings.ini, not source. The generator in mdConfig.inc
+# is where the format is documented.
+/f1markdown.ini

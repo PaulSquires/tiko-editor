@@ -8,6 +8,10 @@
 private const MDV_SB_W     = 11     '' design units
 private const MDV_WHEEL    = 54     '' design units per notch -- about three body lines
 private const MDV_KEYSTEP  = 40
+'' The Copy button on a code fence, DESIGN units.
+private const MDV_COPY_W   = 52
+private const MDV_COPY_H   = 20
+private const MDV_COPY_PAD = 6
 
 private sub MdvOnScroll( byval pSB as any ptr, byval nPos as long, byval ud as any ptr )
     dim as MarkdownView ptr pV = cptr( MarkdownView ptr, ud )
@@ -26,6 +30,9 @@ constructor MarkdownView()
     this.nScroll  = 0
     this.nLaidW   = -1
     this.nHotRun  = -1
+    this.nHotCode = -1
+    this.bOnCopy  = false
+    this.nCopiedAt = -1
     this.pfnLink  = 0
     this.pLinkData = 0
     this.bFocusable    = true
@@ -88,6 +95,34 @@ sub MarkdownView.OnScaleChanged( byval fScale as single )
     this.nLaidW = -1
     this.InvalidateLayout()
 end sub
+
+'' The Copy button for a slab, in CONTENT coordinates. Top-right, inside the slab, so it
+'' never covers the first line of code -- which is the line most worth reading.
+function MarkdownView.CopyRect( byval nDeco as long ) as PsRect
+    dim as PsRect rc
+    if (this.pPage = 0) orelse (nDeco < 0) orelse (nDeco >= this.pPage->nDeco) then return rc
+    with this.pPage->deco(nDeco)
+        rc.w = this.ScaleX(MDV_COPY_W)
+        rc.h = this.ScaleY(MDV_COPY_H)
+        rc.x = .x + .w - rc.w - this.ScaleX(MDV_COPY_PAD)
+        rc.y = .y + this.ScaleY(MDV_COPY_PAD)
+    end with
+    return rc
+end function
+
+'' The code slab under a content point, or -1.
+function MarkdownView.CodeAt( byval px as long, byval py as long ) as long
+    if this.pPage = 0 then return -1
+    for d as long = 0 to this.pPage->nDeco - 1
+        with this.pPage->deco(d)
+            if .nKind = MDD_CODEBG then
+                if (px >= .x) andalso (px < .x + .w) andalso _
+                   (py >= .y) andalso (py < .y + .h) then return d
+            end if
+        end with
+    next
+    return -1
+end function
 
 function MarkdownView.ContentWidth() as long
     dim as long w = this.bounds.w
@@ -285,6 +320,29 @@ sub MarkdownView.OnPaint( byval p as PsBufferPaint_ ptr )
         end with
     next
 
+    '' ---- the Copy button, LAST -----------------------------------------------------------
+    '' After the text, because it sits over the slab's top-right corner and a long first line
+    '' would otherwise be drawn on top of it. Only ever for the slab under the pointer: a
+    '' button on every fence at once is clutter on a page that is mostly fences.
+    if (this.nHotCode >= 0) andalso (this.nHotCode < this.pPage->nDeco) then
+        dim as PsRect rcC = this.CopyRect( this.nHotCode )
+        if (rcC.y + rcC.h >= nTop) andalso (rcC.y <= nBot) then
+            rcC.y -= this.nScroll
+            q->SetBackColor( iif(this.bOnCopy, this.clrRule, this.clrCodeBg) )
+            q->PaintRoundRect( @rcC, this.ScaleY(8) )
+            q->SetPenColor( this.clrRule )
+            q->PaintRoundOutline( @rcC, this.ScaleY(8), 1 )
+            dim as DWSTRING sCap
+            if this.nCopiedAt = this.nHotCode then
+                sCap = PsText("Copied")
+            else
+                sCap = PsText("Copy")
+            end if
+            q->SetForeColor( iif(this.bOnCopy, this.clrFore, this.clrDim) )
+            q->PaintText( sCap, @rcC, PSTF_CENTER or PSTF_VCENTER )
+        end if
+    end if
+
     g_rb.PopClip()
 end sub
 
@@ -309,12 +367,42 @@ function MarkdownView.OnEvent( byval ev as PsEvent ptr ) as boolean
         return true
 
     case PSEV_MOUSE_MOVE
+        '' ev->mouse IS ALREADY LOCAL. PsDispatch gives every delivery its own copy of the
+        '' event with the coordinates translated into the receiving widget's space
+        '' (PsDispatch.inc:26-30), so calling FromSurface here translates a SECOND time and
+        '' every hit test lands one widget-origin away from the pointer. That is what it did
+        '' until it was driven by hand: link hover, link clicks and the copy button were all
+        '' silently dead, and no headless assertion could have seen it because none of them
+        '' goes through dispatch.
         dim as PsPoint pt
-        if this.FromSurface( ev->mouse.x, ev->mouse.y, @pt ) = false then return false
+        pt.x = ev->mouse.x
+        pt.y = ev->mouse.y
+        '' The code slab and its button, tracked on the same move that tracks links.
+        scope
+            dim as long nCode = this.CodeAt( pt.x, pt.y + this.nScroll )
+            dim as boolean bOn = false
+            if nCode >= 0 then
+                dim as PsRect rcC = this.CopyRect( nCode )
+                dim as long nCy = pt.y + this.nScroll
+                bOn = (pt.x >= rcC.x) andalso (pt.x < rcC.x + rcC.w) andalso _
+                      (nCy >= rcC.y) andalso (nCy < rcC.y + rcC.h)
+            end if
+            if (nCode <> this.nHotCode) orelse (bOn <> this.bOnCopy) then
+                '' Leaving a slab clears "Copied" -- the acknowledgement belongs to the moment
+                '' of the click, and a button that still says Copied ten minutes later is
+                '' claiming something about the clipboard it cannot know.
+                if nCode <> this.nHotCode then this.nCopiedAt = -1
+                this.nHotCode = nCode
+                this.bOnCopy  = bOn
+                this.Invalidate()
+            end if
+        end scope
+
         dim as long r = MdPageHitRun( *this.pPage, pt.x, pt.y + this.nScroll )
         if r >= 0 then
             if this.pPage->run(r).nKind <> MDRK_LINK then r = -1
         end if
+        if this.bOnCopy then this.cursor = PSCUR_HAND
         if r <> this.nHotRun then
             this.nHotRun = r
             '' PSCUR_HAND, and the surface syncs it after dispatch -- the widget only states
@@ -325,8 +413,11 @@ function MarkdownView.OnEvent( byval ev as PsEvent ptr ) as boolean
         return false
 
     case PSEV_MOUSE_LEAVE
-        if this.nHotRun <> -1 then
-            this.nHotRun = -1
+        if (this.nHotRun <> -1) orelse (this.nHotCode <> -1) then
+            this.nHotRun  = -1
+            this.nHotCode = -1
+            this.bOnCopy  = false
+            this.nCopiedAt = -1
             this.cursor = PSCUR_DEFAULT
             this.Invalidate()
         end if
@@ -334,9 +425,32 @@ function MarkdownView.OnEvent( byval ev as PsEvent ptr ) as boolean
 
     case PSEV_MOUSE_DOWN
         if ev->mouse.button <> PSBTN_LEFT then return false
+        '' ev->mouse IS ALREADY LOCAL. PsDispatch gives every delivery its own copy of the
+        '' event with the coordinates translated into the receiving widget's space
+        '' (PsDispatch.inc:26-30), so calling FromSurface here translates a SECOND time and
+        '' every hit test lands one widget-origin away from the pointer. That is what it did
+        '' until it was driven by hand: link hover, link clicks and the copy button were all
+        '' silently dead, and no headless assertion could have seen it because none of them
+        '' goes through dispatch.
         dim as PsPoint pt
-        if this.FromSurface( ev->mouse.x, ev->mouse.y, @pt ) = false then return false
+        pt.x = ev->mouse.x
+        pt.y = ev->mouse.y
         if this.pSurface <> 0 then cptr(PsSurface ptr, this.pSurface)->SetFocus( @this )
+
+        '' The Copy button, BEFORE link hit-testing: it sits over the slab and a code line
+        '' underneath it must not win the click.
+        if this.bOnCopy andalso (this.nHotCode >= 0) then
+            dim as long b = this.pPage->deco(this.nHotCode).nBlock
+            if (this.pDoc <> 0) andalso (b >= 0) andalso (b < this.pDoc->nBlk) then
+                dim as DWSTRING sCode
+                sCode.Utf8 = this.pDoc->blk(b).sText
+                g_plat.clip.SetText( sCode )
+                this.nCopiedAt = this.nHotCode
+                this.Invalidate()
+            end if
+            return true
+        end if
+
         dim as long r = MdPageHitRun( *this.pPage, pt.x, pt.y + this.nScroll )
         if r < 0 then return true
         if this.pPage->run(r).nKind <> MDRK_LINK then return true

@@ -72,6 +72,9 @@ type MdDeco
     nKind  as long
     x as long : y as long : w as long : h as long
     nImage as long     '' MDD_IMAGE: index into the layout's image cache, or -1
+    '' MDD_CODEBG: the MdDoc block this slab was built from, so the view can copy its text
+    '' without re-deriving which fence it is looking at. -1 everywhere else.
+    nBlock as long
 end type
 
 type MdPage

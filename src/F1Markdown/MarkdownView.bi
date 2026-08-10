@@ -45,6 +45,11 @@ type MarkdownView extends PsWidget
     nScroll as long           '' content y at the top of the viewport
     nLaidW  as long           '' the width pPage was laid out for; -1 forces a relayout
     nHotRun as long           '' the link run under the pointer, or -1
+    '' The code slab under the pointer, and whether the pointer is on its Copy button. Both
+    '' are decoration indices rather than block indices, because that is what OnPaint walks.
+    nHotCode  as long
+    bOnCopy   as boolean
+    nCopiedAt as long         '' the slab that most recently said "Copied"; -1 for none
 
     clrBack      as PsColor
     clrFore      as PsColor
@@ -69,6 +74,8 @@ type MarkdownView extends PsWidget
     declare sub SetMarkdown( byref sUtf8 as string, byref sBase as string )
     declare sub OnLink( byval pfn as MdLinkProc, byval userdata as any ptr = 0 )
 
+    declare function CopyRect( byval nDeco as long ) as PsRect
+    declare function CodeAt( byval px as long, byval py as long ) as long
     declare sub ScrollTo( byval nY as long )
     declare sub ScrollBy( byval nDelta as long )
     declare function GetScroll() as long

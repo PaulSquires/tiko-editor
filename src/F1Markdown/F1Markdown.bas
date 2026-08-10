@@ -72,6 +72,9 @@
 #include once "mdParse.inc"
 #include once "mdHilite.inc"
 #include once "mdIndex.inc"
+#include once "mdCache.inc"
+#include once "mdConfig.inc"
+#include once "mdMailbox.inc"
 
 '' ---- the renderer ----------------------------------------------------------------------
 '' mdFonts and mdLayout sit on PsPlatform's PAINT layer -- PsTextEngine and PsImage -- but
@@ -93,6 +96,9 @@
 ''   --scan <path>    walk one root, print the topic tree, the heading count, the scan
 ''                    time and the ranked answer to --topic if one was given, then exit.
 ''                    No window, no font, no SDL -- the index is filesystem and strings.
+''   --rescan         ignore the index cache for this run and rebuild it. The escape
+''                    hatch for an edit that changed neither a file's size nor its write
+''                    time, which is the one thing the stamp cannot see.
 ''   --dump-md <path>
 ''                parse one .md file and print the block model, one line per block, then
 ''                every line the parser could not classify. No window, no font, no SDL.
@@ -128,6 +134,7 @@ const FM_FONT_PX = 15
 '' Toolbar command ids.
 const IDM_BACK    = 101
 const IDM_FORWARD = 102
+const IDM_THEME   = 103
 
 dim shared as PsTextEngine  g_te
 dim shared as PsBufferPaint g_pnt
@@ -153,6 +160,18 @@ dim shared as DWSTRING g_sTopic, g_sDocset, g_sRoot, g_sTheme
 
 '' ---- the corpus, and where we are in it ------------------------------------------------
 dim shared as MdIndex g_ix
+dim shared as boolean g_bRescan
+'' What the last AddRoot actually did, for the startup line. A cache that is silently
+'' not being used looks exactly like a cache that is working.
+dim shared as boolean g_bFromCache
+
+'' Settings, and the theme list they choose from.
+dim shared as MdSettings g_set
+dim shared as DWSTRING g_themes(any)
+dim shared as long g_nThemes
+dim shared as long g_nThemeAt = -1
+dim shared as ulongint g_nNextBeat
+dim shared as ulongint g_nNextPoll
 dim shared as long g_nCurTopic = -1
 dim shared as boolean g_bSearchMode
 '' The toolbar exists before its callbacks can safely touch it; UpdateNav is reachable from
@@ -220,6 +239,11 @@ dim shared as MarkdownView ptr g_page
 dim shared as PsStatusBar ptr g_status
 
 declare sub LayoutAll( byref surf as PsSurface )
+'' Defined beside the self-test helpers at the bottom; declared here because the theme
+'' and font code above needs them and fbc insists on knowing first.
+declare function FontDir() as string
+declare function ThemeDir() as string
+declare function ExeDir() as string
 
 '' The splitter moves nothing itself -- it reports a position and the host re-docks. nPos is
 '' in the PARENT's coordinates and in PIXELS; the body band starts at x = 0, so the pixel
@@ -235,6 +259,29 @@ end sub
 
 
 '' ---------------------------------------------------------------------------------------
+'' ADDING A ROOT, THROUGH THE CACHE
+''
+'' Load, and on any doubt at all -- missing, wrong version, stamp moved, truncated -- scan
+'' and rewrite. There is deliberately no way to express "use the cache even though it does
+'' not match the tree": stale documentation is the worst thing this program could serve.
+'' ---------------------------------------------------------------------------------------
+sub AddRootCached( byref sLabel as string, byref sRoot as DWSTRING )
+    dim as long nT = g_ix.nTopic
+    dim as long nH = g_ix.nHead
+    if g_bRescan = false then
+        if MdCacheLoad( g_ix, sLabel, sRoot ) then
+            g_bFromCache = true
+            exit sub
+        end if
+    end if
+    g_bFromCache = false
+    MdIndexAddRoot( g_ix, sLabel, sRoot )
+    '' A failed write is not an error -- the next run simply scans again.
+    MdCacheSave( g_ix, sRoot, nT, nH )
+end sub
+
+
+'' ---------------------------------------------------------------------------------------
 '' NAVIGATION
 '' ---------------------------------------------------------------------------------------
 sub Say( byref sMsg as string )
@@ -243,6 +290,47 @@ sub Say( byref sMsg as string )
     s.Utf8 = sMsg
     g_status->SetText( 0, s )
 end sub
+
+'' ---------------------------------------------------------------------------------------
+'' THEMES
+''
+'' Every .theme in settings/themes, in the order the folder lists them, cycled by one toolbar
+'' button. No picker dialog: this is a help viewer, the choice is made once, and a modal for
+'' it would be more machinery than the feature is worth.
+'' ---------------------------------------------------------------------------------------
+sub LoadThemeList()
+    g_nThemes = 0
+    dim as DWSTRING sDir
+    sDir.Utf8 = ThemeDir()
+    dim as DWSTRING names(any)
+    dim as long n = PsDirList( sDir, names(), false )
+    for i as long = 0 to n - 1
+        if lcase( PsPathExt(names(i)).Utf8 ) = ".theme" then
+            if g_nThemes > ubound(g_themes) then redim preserve g_themes(0 to (g_nThemes + 1) * 2)
+            g_themes(g_nThemes) = PsPathJoin( sDir, names(i) )
+            g_nThemes += 1
+        end if
+    next
+end sub
+
+sub ApplyTheme( byref sPath as DWSTRING, byval bRemember as boolean )
+    if PsThemeLoadFile( sPath ) = 0 then exit sub
+    if g_pSurf = 0 then exit sub
+    PsThemeApply( g_pSurf->pRoot )
+    '' THE WHOLE SURFACE, not each control. PsThemeApply repaints what it walked, but the
+    '' gaps between widgets keep the old background until something clears them.
+    g_pSurf->InvalidateAll()
+    if bRemember then g_set.sTheme = sPath
+end sub
+
+sub OnCycleTheme()
+    if g_nThemes = 0 then exit sub
+    g_nThemeAt += 1
+    if g_nThemeAt >= g_nThemes then g_nThemeAt = 0
+    ApplyTheme( g_themes(g_nThemeAt), true )
+    Say( "theme: " & PsPathStem(g_themes(g_nThemeAt)).Utf8 )
+end sub
+
 
 sub UpdateNav()
     if g_navReady = false then exit sub
@@ -305,6 +393,8 @@ sub OnNavCommand( byval pBar as any ptr, byval nId as long, byval ud as any ptr 
                 g_navAt += 1
                 OpenTopic( g_navHist(g_navAt), false )
             end if
+        case IDM_THEME
+            OnCycleTheme()
     end select
 end sub
 
@@ -369,6 +459,22 @@ sub OnTocSel( byval pList as any ptr, byval nRow as long, byval ud as any ptr )
     if g_toc = 0 then exit sub
     if g_toc->IsValidRow( nRow ) = false then exit sub
     OpenTopic( clng(g_toc->GetItemData(nRow)), true )
+end sub
+
+'' The one path a topic request takes, wherever it came from: the command line at startup,
+'' or the mailbox while running. Written once so the two can never disagree.
+sub GoToTopic( byref sTopic as DWSTRING )
+    if len(sTopic) = 0 then exit sub
+    g_search->SetText( sTopic )                     '' SILENT
+    dim as long n = MdIndexSearch( g_ix, sTopic.Utf8, g_hits(), HITS_MAX )
+    if n > 0 then
+        FillSearchResults( sTopic.Utf8 )
+        OpenTopic( g_hits(0).nTopic, true )
+        Say( str(n) & " match" & iif(n = 1, "", "es") & " for " & sTopic.Utf8 )
+    else
+        FillTree()
+        Say( "no match for " & sTopic.Utf8 )
+    end if
 end sub
 
 sub OnSearchChange( byval pTb as any ptr, byval ud as any ptr )
@@ -446,6 +552,8 @@ sub BuildTree( byref surf as PsSurface )
     g_nav = new PsToolbar
     g_nav->AddItem( PsText("Back"), IDM_BACK, TBR_KIND_BUTTON )
     g_nav->AddItem( PsText("Forward"), IDM_FORWARD, TBR_KIND_BUTTON )
+    g_nav->AddSeparator()
+    g_nav->AddItem( PsText("Theme"), IDM_THEME, TBR_KIND_BUTTON )
     g_nav->EnableItem( IDM_BACK, false )
     g_nav->EnableItem( IDM_FORWARD, false )
     g_nav->OnCommand( @OnNavCommand )
@@ -615,6 +723,14 @@ function FontDir() as string
     return sExe & "/assets/f1markdown/fonts/"
 end function
 
+function ExeDir() as string
+    dim as string sExe = exepath()
+    for i as integer = 0 to len(sExe) - 1
+        if sExe[i] = asc("\") then sExe[i] = asc("/")
+    next
+    return sExe & "/"
+end function
+
 function ThemeDir() as string
     dim as string sExe = exepath()
     for i as integer = 0 to len(sExe) - 1
@@ -730,14 +846,32 @@ sub RunScan( byref sRoot as DWSTRING, byref sTopic as DWSTRING )
         end 1
     end if
 
+    '' THE CACHE IS TRIED FIRST, AGAINST WHATEVER IS ON DISK, and that ordering is the whole
+    '' value of this mode. Scanning and rewriting before attempting the load -- which is what
+    '' this did first -- makes the load succeed unconditionally and reports a hit even for a
+    '' corpus that has just been edited. The test then proves nothing, which is exactly what
+    '' happened: touching a file's write time still printed "reloaded".
+    dim as MdIndex ixCached
+    dim as double t1 = timer
+    dim as boolean bCached = MdCacheLoad( ixCached, PsPathName(sR).Utf8, sR )
+    dim as double nMsCached = (timer - t1) * 1000
+
     dim as double t0 = timer
     MdIndexAddRoot( g_ix, PsPathName(sR).Utf8, sR )
     dim as double nMs = (timer - t0) * 1000
+    MdCacheSave( g_ix, sR, 0, 0 )
 
     print "-- " & sR.Utf8 & " --"
     print str(g_ix.nDocs) & " documents, " & str(g_ix.nTopic) & " tree nodes, " & _
           str(g_ix.nHead) & " headings, " & str(g_ix.nSkipped) & " unreadable"
-    print "scanned in " & format(nMs, "0") & " ms"
+    if bCached then
+        print "CACHE HIT   " & str(ixCached.nDocs) & " documents and " & _
+              str(ixCached.nHead) & " headings in " & format(nMsCached, "0") & " ms"
+    else
+        print "CACHE MISS  (absent, stale or corrupt) -- rebuilt"
+    end if
+    print "full scan   " & format(nMs, "0") & " ms"
+    print "cache file: " & MdCachePath(sR).Utf8
 
     for i as long = 0 to g_ix.nTopic - 1
         dim as string sInd = space( g_ix.topic(i).nDepth * 2 )
@@ -780,6 +914,7 @@ end sub
             case "--selftest" : bSelfTest = true
             case "--dump-md"  : if i < __FB_ARGC__ - 1 then g_sDumpMd = command(i + 1)
             case "--scan"     : if i < __FB_ARGC__ - 1 then g_sScan   = command(i + 1)
+            case "--rescan"   : g_bRescan = true
             case "--open"     : if i < __FB_ARGC__ - 1 then g_sOpen   = command(i + 1)
             case "--topic"    : if i < __FB_ARGC__ - 1 then g_sTopic  = command(i + 1)
             case "--docset"   : if i < __FB_ARGC__ - 1 then g_sDocset = command(i + 1)
@@ -797,6 +932,22 @@ end sub
     if len(g_sScan) > 0 then
         RunScan( g_sScan, g_sTopic )
         end 0
+    end if
+
+    '' ---- ONE VIEWER ------------------------------------------------------------------
+    '' Before ANYTHING is initialised: a process that is only going to hand its topic over
+    '' has no business starting SDL, opening ten fonts or scanning a corpus.
+    if (bSelfTest = false) andalso (len(g_sScan) = 0) andalso (len(g_sDumpMd) = 0) then
+        if MdMailboxOwnerLive() then
+            if len(g_sTopic) > 0 then
+                if MdMailboxPost( g_sTopic ) then end 0
+            else
+                '' No topic and somebody is already showing the documentation. Exiting
+                '' silently is right: a second empty window helps nobody.
+                end 0
+            end if
+        end if
+        MdMailboxTakeLock()
     end if
 
     if PsPlatformInit() = false then
@@ -824,6 +975,12 @@ end sub
         end 1
     end if
 
+    '' ---- settings, before the tree ---------------------------------------------------
+    '' The splitter's position is a global the layout reads, so it has to be right before
+    '' the first LayoutAll rather than corrected afterwards with a visible jump.
+    MdSettingsLoad( g_set )
+    if g_set.nTocW >= FM_TOC_MIN then g_nTocW = g_set.nTocW
+
     dim as PsSurface surf
     g_pSurf     = @surf
     surf.fScale = 1.0
@@ -841,10 +998,22 @@ end sub
     '' deliberately and almost verbatim, same keys, same roles, same key -> role -> default
     '' resolution. So the fourteen files in settings/themes drive this binary as they are.
     scope
+        LoadThemeList()
+        '' PRECEDENCE: --theme, then the remembered one, then the built-in default. The
+        '' command line wins so that a bad remembered theme is one flag away from being
+        '' fixed rather than requiring the settings file to be found and edited.
         dim as DWSTRING sTheme = g_sTheme
+        if len(sTheme) = 0 then sTheme = g_set.sTheme
+        if (len(sTheme) > 0) andalso (PsFileExists(sTheme) = false) then sTheme = PsText("")
         if len(sTheme) = 0 then sTheme.Utf8 = ThemeDir() & "default_dark.theme"
-        dim as long n = PsThemeLoadFile( sTheme )
-        if n = 0 then print "F1Markdown: no theme loaded from " & sTheme.Utf8
+        for i as long = 0 to g_nThemes - 1
+            if lcase(g_themes(i).Utf8) = lcase(sTheme.Utf8) then g_nThemeAt = i : exit for
+        next
+        if PsThemeLoadFile( sTheme ) = 0 then
+            print "F1Markdown: no theme loaded from " & sTheme.Utf8
+        else
+            g_set.sTheme = sTheme
+        end if
         PsThemeApply( surf.pRoot )
     end scope
 
@@ -857,16 +1026,23 @@ end sub
     scope
         dim as double t0 = timer
         if len(g_sRoot) > 0 then
+            '' --root is a ONE-OFF and deliberately replaces the configured list rather than
+            '' adding to it: it exists for looking at a folder that is not part of the
+            '' installation, and mixing it in would make the tree depend on both.
             dim as DWSTRING sR = PsPathCanonicalise( g_sRoot )
-            MdIndexAddRoot( g_ix, PsPathName(sR).Utf8, sR )
+            AddRootCached( PsPathName(sR).Utf8, sR )
         else
-            '' tiko's own docs, beside the exe. Phase 5's f1markdown.ini replaces this with a
-            '' named list of roots; until then one default beats none, because a viewer that
-            '' opens empty looks broken.
-            dim as DWSTRING sDocs
-            sDocs.Utf8 = ThemeDir() & "../docs"
-            sDocs = PsPathCanonicalise( sDocs )
-            if PsFileIsDir( sDocs ) then MdIndexAddRoot( g_ix, "tiko", sDocs )
+            dim as MdDocset ds(any)
+            dim as DWSTRING sExeDir
+            sExeDir.Utf8 = ExeDir()
+            dim as long nDs = MdConfigLoadDocsets( ds(), sExeDir )
+            for i as long = 0 to nDs - 1
+                '' --docset names ONE of them; without it every configured root is loaded.
+                if len(g_sDocset) > 0 then
+                    if lcase(ds(i).sName) <> lcase(g_sDocset.Utf8) then continue for
+                end if
+                AddRootCached( ds(i).sName, ds(i).sPath )
+            next
         end if
         FillTree()
         dim as DWSTRING sCount
@@ -874,6 +1050,7 @@ end sub
         g_status->SetText( 1, sCount )
         print "F1Markdown: " & str(g_ix.nDocs) & " topics, " & str(g_ix.nHead) & _
               " headings in " & format((timer - t0) * 1000, "0") & " ms" & _
+              iif(g_bFromCache, " (cached)", " (scanned)") & _
               iif(g_ix.nSkipped > 0, " (" & str(g_ix.nSkipped) & " unreadable)", "")
     end scope
 
@@ -905,9 +1082,15 @@ end sub
             end if
         else
             dim as long nFirst = -1
-            for i as long = 0 to g_ix.nTopic - 1
-                if g_ix.topic(i).kind = MDX_DOC then nFirst = i : exit for
-            next
+            '' The page that was open last time, if it is still in the corpus. Falling back
+            '' to the first document rather than an error is right: a page can be renamed
+            '' between runs and that is not worth a message.
+            if len(g_set.sLastPage) > 0 then nFirst = MdIndexFindPath( g_ix, g_set.sLastPage )
+            if nFirst < 0 then
+                for i as long = 0 to g_ix.nTopic - 1
+                    if g_ix.topic(i).kind = MDX_DOC then nFirst = i : exit for
+                next
+            end if
             if nFirst >= 0 then
                 OpenTopic( nFirst, true )
             else
@@ -968,6 +1151,7 @@ end sub
         MdRunParserTests()
         MdRunHiliteTests()
         MdRunIndexTests()
+        MdRunCacheTests()
         MdRunFontTests()
         MdRunLayoutTests()
 
@@ -1008,8 +1192,15 @@ end sub
     ''    display -- and the clamp compares PIXELS with PIXELS. ideshell clamps its design
     ''    size against usable pixels, which are the same number only at 100%.
     scope
-        dim as long nWantW = PsScaleBy( FM_W, f )
-        dim as long nWantH = PsScaleBy( FM_H, f )
+        '' DESIGN units out of the settings file, scaled here -- which is the whole reason
+        '' they are stored that way. A remembered size below the minimum is ignored rather
+        '' than clamped, because a 40x30 window is a corrupt file, not a preference.
+        dim as long nDesW = FM_W, nDesH = FM_H
+        if (g_set.nWinW >= 480) andalso (g_set.nWinH >= 360) then
+            nDesW = g_set.nWinW : nDesH = g_set.nWinH
+        end if
+        dim as long nWantW = PsScaleBy( nDesW, f )
+        dim as long nWantH = PsScaleBy( nDesH, f )
         dim as PsMonitorInfo mi
         if g_plat.monitors.Describe(0, @mi) then
             dim as long wMax = clng(mi.usable.w * 0.9)
@@ -1051,6 +1242,25 @@ end sub
     do while bRunning
         dim as ulongint nNow = g_plat.events.Ticks()
         PsTimerService( nNow )
+
+        '' ---- the mailbox -----------------------------------------------------------
+        '' Two intervals, both off the pump's own clock. The wait below is already capped at
+        '' 30 ms, so a poll every 250 ms costs one stat per eight idle wakeups.
+        if nNow >= g_nNextBeat then
+            MdMailboxBeat()
+            g_nNextBeat = nNow + MDM_BEAT_MS
+        end if
+        if nNow >= g_nNextPoll then
+            g_nNextPoll = nNow + MDM_POLL_MS
+            dim as DWSTRING sReq
+            if MdMailboxTake( sReq ) then
+                '' Show(true) is the ONLY lever this toolkit has for bringing a window
+                '' forward -- there is no Raise and no Focus, because Wayland does not let a
+                '' client take focus. On Windows this usually suffices.
+                g_plat.window.Show( win, true )
+                GoToTopic( sReq )
+            end if
+        end if
 
         if g_plat.events.Wait( @ev, PsTimerWaitMs(nNow, 30) ) then
             '' Surface 0 means "not addressed to a window" -- quit, and anything global.
@@ -1100,6 +1310,25 @@ end sub
             surf.ClearDamage()
         end if
     loop
+
+    '' ---- remember ---------------------------------------------------------------------
+    '' Sizes converted BACK to design units on the way out, using the scale the window is
+    '' actually on. Saving pixels here and multiplying on the way in would grow the window by
+    '' the scale factor on every restart.
+    scope
+        dim as single fNow = surf.fScale
+        if fNow <= 0 then fNow = 1.0
+        dim as PsSize szNow
+        g_plat.window.GetSize( win, @szNow )
+        g_set.nWinW = clng(szNow.w / fNow)
+        g_set.nWinH = clng(szNow.h / fNow)
+        g_set.nTocW = g_nTocW
+        if (g_nCurTopic >= 0) andalso (g_nCurTopic < g_ix.nTopic) then
+            g_set.sLastPage = g_ix.topic(g_nCurTopic).sPath
+        end if
+        MdSettingsSave( g_set )
+    end scope
+    MdMailboxReleaseLock()
 
     if pix <> 0 then deallocate(pix)
     g_plat.window.Destroy( win )
