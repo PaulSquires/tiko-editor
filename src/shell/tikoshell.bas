@@ -1537,6 +1537,52 @@ end function
               (g_menubar->IsMenuOpen() = false)
         Check "  and does not leave the host open", (g_menus.IsOpen() = false)
 
+        '' ---- HOVER-SWITCHING SURVIVES ITS OWN REOPEN ----------------------------------
+        '' Reported: with a menu down, moving along the bar highlighted the next title but
+        '' left the first title's dropdown up. Three components interacting, and no single
+        '' one of them wrong:
+        ''
+        ''   PsMenuBar.OpenMenu sets bMenuOpen and nActive and THEN fires OnOpenRequest.
+        ''   The host's OpenRoot begins by closing whatever is up.
+        ''   That close reached OnClosed -> NotifyClosed, which cleared both fields.
+        ''
+        '' So the bar forgot the menu it was in the middle of opening, and PsMenuBar
+        '' switches only while bMenuOpen is true -- the NEXT hover did nothing. Caused by
+        '' wiring OnClosed two commits ago: the callback was right, and reporting an
+        '' internal close as a real one was not. PsMenuHost suppresses it while reopening.
+        ''
+        '' AND THIS ASSERTION DOES NOT COVER THAT FIX. Stated rather than implied, because
+        '' it passes with the suppression removed -- checked. OpenRoot never succeeds
+        '' windowlessly, so nDepth stays 0, so CloseAll's `bWas` is false and pfnClosed
+        '' never fires at all. The path the defect lives on is unreachable from here.
+        ''
+        '' What it DOES cover is the bar's own state machine across repeated OpenMenu calls,
+        '' which is cheap and worth having. The fix itself is verified by the author moving
+        '' a mouse, and by nothing else -- which is the third time in this file that the
+        '' obvious assertion turned out to constrain nothing, and the third time the revert
+        '' habit is what said so.
+        scope
+            g_menubar->OpenMenu( 0 )
+            Check "with a menu open the bar says so", (g_menubar->IsMenuOpen() = true)
+
+            '' The hover-switch: a second OpenMenu while the first is still up.
+            g_menubar->OpenMenu( 1 )
+            Check "  switching to the next title keeps the bar open", _
+                  (g_menubar->IsMenuOpen() = true), "IsMenuOpen after switch"
+            Check "    and it is now the SECOND title that is active", _
+                  (g_menubar->GetActive() = 1), str(g_menubar->GetActive())
+
+            '' And a third, because the failure only showed from the second switch on.
+            g_menubar->OpenMenu( 2 )
+            Check "  and again, so tracking does not decay", _
+                  (g_menubar->IsMenuOpen() = true) andalso (g_menubar->GetActive() = 2), _
+                  str(g_menubar->GetActive())
+
+            g_menus.CloseAll()
+            OnMenusClosed( 0, 0 )
+            Check "  a REAL close still clears the bar", (g_menubar->IsMenuOpen() = false)
+        end scope
+
         '' ---- THE DOCKED BANDS, NUMERICALLY -------------------------------------------
         '' "It looks docked" is not a test, and a bar one pixel short leaves a seam nobody
         '' sees until something scrolls behind it.
