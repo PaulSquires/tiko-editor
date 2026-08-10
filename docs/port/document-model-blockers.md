@@ -97,5 +97,67 @@ against a field that exists, A is four edits plus a file move.
 **C needs one decision** — split `modRoutines`, or route four functions through the host record.
 
 **D is the whole question.** `clsApp` decides whether the document model can leave the shell at
-all, and it has not been measured. Everything else on this page is arithmetic; this is the part
-that could still say no.
+all. It has now been measured — see below.
+
+
+---
+
+# `clsApp`, measured
+
+Same method. **628 lines, 5 ratchet violations, 8 unresolved names.** Smaller and more tractable
+than `clsDocument` was.
+
+**IT DOES NOT SAY NO.**
+
+| blocker | sites | verdict |
+| --- | --- | --- |
+| `hwnd` and `LRESULT` in signatures | 4 | mechanical — the same rename commit 2 applied to `clsDocument` |
+| `AfxIFileSaveDialog` + `CoTaskMemFree`, for the PROJECT save | 1 | `gAppHost.AskSavePath` **already exists** and covers it |
+| `DocView(pDoc, 0/1)` in `GetDocumentPtrByWindow` | 2 | compare `pDoc->hWindow(i)` directly, exactly as commit 2 did in `clsTopTabCtl` |
+| `ScanMgr_GetRootName` | 2 | `clsScanMgr.bi` is **clean** |
+| `frmMain_PositionWindows`, `frmTopTabsInfo_PositionWindows`, `frmOutput_UpdateToDoListview` | 4 | **the only new work**: three host notifications |
+
+The last row is the whole of it. `clsApp` reaches into three forms to say "re-lay-out" and
+"refresh the TODO list". Those are notifications, not queries, and they are the natural shape for
+`AppHostServices` fields — the record already carries `CloseTab`, which is the same kind of thing
+and is flagged in its own comment as the one to watch.
+
+## The real find is one level down: `clsScanMgr`
+
+`clsDocument` calls `gScanMgr.RequestBufferScan`, so the scan manager comes with it. Its header is
+clean; **`clsScanMgr.inc` is 544 lines with 5 violations, and they are not cosmetic**:
+
+* **four `CloseHandle`** on `m_hWakeEvent` and `m_hExitEvent` — Win32 **event objects**, used to
+  wake and stop a worker thread.
+* **one `PostMessage(HWND_FRMMAIN, MSG_USER_PARSE_COMPLETE, …)`** — worker to UI. This one maps
+  straight across: `g_plat.events.Post` exists and its own comment describes it as
+  *"application-defined, posted from worker threads"*.
+
+**PsPlatform HAS NO THREADING OR SYNCHRONISATION SERVICE.** Verified: `Platform.bi` mentions
+threads only in a comment about `SDL_AddTimer`, and the only mutex code in the tree is the
+vendored `bind/SDL3/SDL3/SDL_mutex.bi`, which is never surfaced through `g_plat`. So a background
+scanner that moved into `app/` would need one built.
+
+**IT SHOULD NOT MOVE, AND THAT IS THE RECOMMENDATION.** Background parsing is a shell service by
+the same argument `modDocViews.bi` uses for editor windows: it belongs to whoever owns the
+process's UI thread. `RequestBufferScan` becomes one more notification on the record, the scan
+manager stays in `src/`, and PsPlatform is not made to grow a threading layer to satisfy one
+caller — which is the mistake `PsMenuBar.bi` warns about in a different context ("Promoting a
+guess into the library is how you get an API you then unpick").
+
+## So what does the move actually cost
+
+Adding up this page, with everything measured rather than estimated:
+
+| | |
+| --- | --- |
+| `clsDocument` categories A, B, E | cheap: B does not exist, E is 7 edits against a field that exists, A is 4 edits plus a file move |
+| `clsDocument` category C | one decision — split `modRoutines`, or route 4 functions through the record |
+| `clsDocument` category D → `clsApp` | tractable: 7 mechanical sites, 3 new notification fields |
+| `clsScanMgr` | **stays in the shell**; one more notification field |
+| PsPlatform | **no new capability required** |
+
+**Nothing here says no.** The document model can leave the shell, and what it costs is roughly
+four more record fields, two file moves, and one decision about `modRoutines`. That is a smaller
+answer than step 3's plan assumed in either direction, and it is the first number on this page
+that came from compiling everything involved rather than from reading it.
