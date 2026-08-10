@@ -2148,10 +2148,14 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     dim uMsg as MSG
 
     ' Message loop
+    '' The PumpTrace() wrappers below are pass-throughs: each returns its first argument
+    '' unchanged, so the order and the semantics of this loop are exactly what they were.
+    '' Tracing is armed back in WinMain, before any window can open.
     do while GetMessage(@uMsg, null, 0, 0)
         if uMsg.message = WM_QUIT then exit do
+        PumpTrace_Enter( "frmMain" )
 
-        if handleMouseShowScrollBar(uMsg) then continue do
+        if PumpTrace( handleMouseShowScrollBar(uMsg), "frmMain", "handleMouseShowScrollBar", @uMsg ) then continue do
 
         ' The Help Center is a MODELESS, NON-OWNED top-level window, and everything below
         ' this line -- the three TranslateAccelerator calls and IsDialogMessage -- is
@@ -2173,25 +2177,25 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         ' a dropdown is open (menu semantics) but never WM_SYSKEY*, so the Alt+letter
         ' accelerators below keep working. Replaces handleMouseTopMenu and
         ' handleKeysTopMenu.
-        if PsMenuBar_FilterMessage( HWND_FRMMAIN_MENUBAR, @uMsg ) then continue do
+        if PumpTrace( PsMenuBar_FilterMessage( HWND_FRMMAIN_MENUBAR, @uMsg ), "frmMain", "PsMenuBar", @uMsg ) then continue do
 
         ' The same service for the standalone context menus. It is a SEPARATE call
         ' because the bar's filter stands down unless the BAR has a dropdown open --
         ' without this line a context menu would have no keyboard navigation and would
         ' never dismiss on an outside click.
-        if ContextMenu_FilterMessage( @uMsg ) then continue do
+        if PumpTrace( ContextMenu_FilterMessage( @uMsg ), "frmMain", "ContextMenu", @uMsg ) then continue do
 
         ' And for the PsTextBox controls' own built-in Cut/Copy/Paste menu, which is a
         ' PsPopupMenu too since the TrackPopupMenu migration. One call covers every
         ' textbox in the app.
-        if PsTextBox_FilterMessage( @uMsg ) then continue do
+        if PumpTrace( PsTextBox_FilterMessage( @uMsg ), "frmMain", "PsTextBox", @uMsg ) then continue do
 
         ' MANDATORY once any PsListTree enables label editing, which the debugger's Watch
         ' list does: without it IsDialogMessage eats Enter and Escape before the in-place
         ' editor sees them, so a watch expression can be typed but never committed or
         ' cancelled. Control-wide rather than window-wide -- one call covers every
         ' PsListTree in the application.
-        if PsListTree_FilterMessage( @uMsg ) then continue do
+        if PumpTrace( PsListTree_FilterMessage( @uMsg ), "frmMain", "PsListTree", @uMsg ) then continue do
 
         ' F2 on its way to the Explorer's folder rename. F2 is a BOUND ACCELERATOR in tiko
         ' -- IDM_BOOKMARKNEXT -- so TranslateAccelerator further down consumes it before the
@@ -2199,7 +2203,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         ' This must therefore sit AHEAD of the accelerator chain. It claims the key only
         ' while the focus is inside the Explorer and only on a folder row, so Goto Next
         ' Bookmark keeps working everywhere else.
-        if frmExplorer_FilterMessage( @uMsg ) then continue do
+        if PumpTrace( frmExplorer_FilterMessage( @uMsg ), "frmMain", "frmExplorer", @uMsg ) then continue do
 
         ' The code-completion popup. Unlike every filter above it, this one consumes ONLY
         ' the navigation and commit keys -- ordinary typing MUST reach Scintilla, which is
@@ -2207,34 +2211,56 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         ' handleEscKeyModeless, which would otherwise close the Find panel on the Escape
         ' meant for the popup; and ahead of the TranslateAccelerator chain, so Tab commits
         ' instead of firing IDM_INDENTBLOCK.
-        if frmAutoComplete_FilterMessage( @uMsg ) then continue do
+        if PumpTrace( frmAutoComplete_FilterMessage( @uMsg ), "frmMain", "frmAutoComplete", @uMsg ) then continue do
 
         ' The code tip, for Escape only. NOT a PsTooltip pump obligation -- that control
         ' has no FilterMessage. It sits here for the second of the two reasons above:
         ' ahead of handleEscKeyModeless, which would otherwise close the Find panel on an
         ' Escape meant to dismiss the tip.
-        if Codetip_FilterMessage( @uMsg ) then continue do
+        if PumpTrace( Codetip_FilterMessage( @uMsg ), "frmMain", "Codetip", @uMsg ) then continue do
 
         ' Ctrl+Space raises the word autocomplete list. Ahead of the accelerator tables so
         ' the combination cannot be taken by a menu binding, and ahead of dispatch so
         ' Scintilla never sees it.
-        if handleCtrlSpaceAutoComplete(uMsg) then continue do
+        if PumpTrace( handleCtrlSpaceAutoComplete(uMsg), "frmMain", "handleCtrlSpaceAutoComplete", @uMsg ) then continue do
 
-        if handleAltKeyMenuBar(uMsg) then continue do
+        if PumpTrace( handleAltKeyMenuBar(uMsg), "frmMain", "handleAltKeyMenuBar", @uMsg ) then continue do
 
         ' Close with ESC key: Find/Replace, FindInFiles, FunctionList window
-        if handleEscKeyModeless(uMsg) then continue do
+        if PumpTrace( handleEscKeyModeless(uMsg), "frmMain", "handleEscKeyModeless", @uMsg ) then continue do
 
         ' Handle ENTER, TAB keys for active Find/Replace
-        if handleKeysFindReplace(uMsg) then continue do
+        if PumpTrace( handleKeysFindReplace(uMsg), "frmMain", "handleKeysFindReplace", @uMsg ) then continue do
 
 '        ' Handle ENTER for Scintilla control (beautify current line)
 '        if handleScintillaENTER(uMsg) then continue do
 
         ' Processes accelerator keys for menu commands
-        if (pWindow->AccelHandle = 0) orelse (TranslateAccelerator(pWindow->hWindow, pWindow->AccelHandle, @uMsg) = 0) then
-         if (ghAccelUserTools = 0) orelse (TranslateAccelerator(pWindow->hWindow, ghAccelUserTools, @uMsg) = 0) then 
-          if (ghAccelBuildConfigurations = 0) orelse (TranslateAccelerator(pWindow->hWindow, ghAccelBuildConfigurations, @uMsg) = 0) then 
+        '' TRACED BY INVERSION. Each of the three lines below is "the table declined", so the
+        '' claim is the ELSE arm -- and an else arm cannot be added without changing this
+        '' nesting, which is load-bearing. The note therefore goes on the not-taken path: the
+        '' table's own condition is evaluated once into a local, the local drives the if, and
+        '' the note fires when it says the table CLAIMED. Behaviour is identical because
+        '' TranslateAccelerator is called exactly once per table per message either way.
+        dim as boolean bAccelMain = false, bAccelTools = false, bAccelBuild = false
+        if pWindow->AccelHandle <> 0 then
+            bAccelMain = (TranslateAccelerator(pWindow->hWindow, pWindow->AccelHandle, @uMsg) <> 0)
+        end if
+        if bAccelMain then PumpTrace_Note( "frmMain", "accel:main", @uMsg )
+
+        if bAccelMain = false then
+         if ghAccelUserTools <> 0 then
+             bAccelTools = (TranslateAccelerator(pWindow->hWindow, ghAccelUserTools, @uMsg) <> 0)
+         end if
+         if bAccelTools then PumpTrace_Note( "frmMain", "accel:usertools", @uMsg )
+
+         if bAccelTools = false then
+          if ghAccelBuildConfigurations <> 0 then
+              bAccelBuild = (TranslateAccelerator(pWindow->hWindow, ghAccelBuildConfigurations, @uMsg) <> 0)
+          end if
+          if bAccelBuild then PumpTrace_Note( "frmMain", "accel:buildconfig", @uMsg )
+
+          if bAccelBuild = false then
 
             ' Prevent any < asc(32) characters from making their way to Scintilla where they 
             ' get shown as an embedded control graphic. Allow backspace.
@@ -2276,9 +2302,17 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
                 end if
             end if
 
+            '' The two terminal outcomes, told apart. This is the pair the census cares most
+            '' about: IsDialogMessage is the one Win32 mechanism with no PsPlatform analogue,
+            '' so how much traffic it actually claims is the size of the hole.
+            if hDlgRoot <> pWindow->hWindow then PumpTrace_Note( "frmMain", "isdlg:retargeted-to-float", @uMsg )
+
             if IsDialogMessage(hDlgRoot, @uMsg) = 0 then
+                PumpTrace_Note( "frmMain", "DispatchMessage", @uMsg )
                 TranslateMessage @uMsg    ' Translates virtual-key messages into character messages.
                 DispatchMessage @uMsg     ' Dispatches a message to a window procedure.
+            else
+                PumpTrace_Note( "frmMain", "IsDialogMessage", @uMsg )
             end if
 
           end if  ' accelerators build configurations

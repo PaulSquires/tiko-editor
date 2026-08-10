@@ -1133,10 +1133,11 @@ function frmKeyboard_Show( byval hWndParent as HWND ) as LRESULT
     ' box needs one.
     dim uMsg as MSG
     while GetMessage( @uMsg, null, 0, 0 )
+        PumpTrace_Enter( "frmKeyboard" )
 
         ' MANDATORY. The filter box's right-click menu is a PsPopupMenu; without this it has
         ' no keyboard navigation and never closes on an outside click.
-        if PsTextBox_FilterMessage( @uMsg ) then continue while
+        if PumpTrace( PsTextBox_FilterMessage( @uMsg ), "frmKeyboard", "PsTextBox", @uMsg ) then continue while
 
         ' ESCAPE cancels -- handled explicitly, and AFTER the popup filter above so an open
         ' context menu closes on Escape first rather than the whole dialog going with it.
@@ -1176,8 +1177,11 @@ function frmKeyboard_Show( byval hWndParent as HWND ) as LRESULT
         ' falls through to the default OK button when anything else does. Catching it in the
         ' pump would break the second half of that.
         if IsDialogMessage( HWND_FRMKEYBOARD, @uMsg ) = 0 then
+            PumpTrace_Note( "frmKeyboard", "DispatchMessage", @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
+        else
+            PumpTrace_Note( "frmKeyboard", "IsDialogMessage", @uMsg )
         end if
     wend
 

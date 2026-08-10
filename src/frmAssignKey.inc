@@ -965,6 +965,7 @@ function frmAssignKey_Show( byval hWndParent as HWND ) as LRESULT
     ' NO *_FilterMessage CALL, and that is a property worth keeping -- see the .bi header.
     dim uMsg as MSG
     while GetMessage( @uMsg, null, 0, 0 )
+        PumpTrace_Enter( "frmAssignKey" )
 
         ' ESCAPE. Two meanings, decided by where the focus is -- and the capture field's has
         ' to win, or a field that swallows every other key would have no keyboard exit at all.
@@ -978,8 +979,11 @@ function frmAssignKey_Show( byval hWndParent as HWND ) as LRESULT
         end if
 
         if IsDialogMessage( HWND_FRMASSIGNKEY, @uMsg ) = 0 then
+            PumpTrace_Note( "frmAssignKey", "DispatchMessage", @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
+        else
+            PumpTrace_Note( "frmAssignKey", "IsDialogMessage", @uMsg )
         end if
     wend
 

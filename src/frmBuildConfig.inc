@@ -2252,14 +2252,15 @@ function frmBuildConfig_Show( byval hWndParent as HWND ) as LRESULT
     ' owes two of them.
     dim uMsg as MSG
     while GetMessage( @uMsg, null, 0, 0 )
+        PumpTrace_Enter( "frmBuildConfig" )
 
         ' MANDATORY. Two PsTextBoxes, each owning a PsPopupMenu context menu; without this it
         ' has no keyboard navigation and never closes on an outside click.
-        if PsTextBox_FilterMessage( @uMsg ) then continue while
+        if PumpTrace( PsTextBox_FilterMessage( @uMsg ), "frmBuildConfig", "PsTextBox", @uMsg ) then continue while
 
         ' MANDATORY, and it takes the CONTROL handle rather than working off a global -- so a
         ' second combo added to this dialog needs its own line here.
-        if PsComboBox_FilterMessage( ghBCTarget, @uMsg ) then continue while
+        if PumpTrace( PsComboBox_FilterMessage( ghBCTarget, @uMsg ), "frmBuildConfig", "PsComboBox", @uMsg ) then continue while
 
         ' SPACE TOGGLES THE FOCUSED SWITCH ROW.
         '   AFTER the two filters above, so an open context menu or dropdown gets its own
@@ -2285,8 +2286,11 @@ function frmBuildConfig_Show( byval hWndParent as HWND ) as LRESULT
         end if
 
         if IsDialogMessage( HWND_FRMBUILDCONFIG, @uMsg ) = 0 then
+            PumpTrace_Note( "frmBuildConfig", "DispatchMessage", @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
+        else
+            PumpTrace_Note( "frmBuildConfig", "IsDialogMessage", @uMsg )
         end if
     wend
 

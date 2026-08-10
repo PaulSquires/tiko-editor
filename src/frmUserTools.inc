@@ -1864,14 +1864,15 @@ function frmUserTools_Show( byval hWndParent as HWND ) as LRESULT
     ' owes two of them.
     dim uMsg as MSG
     while GetMessage( @uMsg, null, 0, 0 )
+        PumpTrace_Enter( "frmUserTools" )
 
         ' MANDATORY. The four text fields each own a PsPopupMenu context menu; without this it
         ' has no keyboard navigation and never closes on an outside click.
-        if PsTextBox_FilterMessage( @uMsg ) then continue while
+        if PumpTrace( PsTextBox_FilterMessage( @uMsg ), "frmUserTools", "PsTextBox", @uMsg ) then continue while
 
         ' MANDATORY, and it takes the CONTROL handle rather than working off a global -- so a
         ' second combo added to this dialog needs its own line here.
-        if PsComboBox_FilterMessage( ghUTAction, @uMsg ) then continue while
+        if PumpTrace( PsComboBox_FilterMessage( ghUTAction, @uMsg ), "frmUserTools", "PsComboBox", @uMsg ) then continue while
 
         ' ESCAPE cancels -- handled explicitly, and AFTER the two popup filters above so an
         ' open context menu or dropdown closes on Escape first rather than the whole dialog
@@ -1882,8 +1883,11 @@ function frmUserTools_Show( byval hWndParent as HWND ) as LRESULT
         end if
 
         if IsDialogMessage( HWND_FRMUSERTOOLS, @uMsg ) = 0 then
+            PumpTrace_Note( "frmUserTools", "DispatchMessage", @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
+        else
+            PumpTrace_Note( "frmUserTools", "IsDialogMessage", @uMsg )
         end if
     wend
 

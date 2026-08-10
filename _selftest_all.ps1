@@ -71,6 +71,12 @@
 # ---------------------------------------------------------------------------
 param(
     [string]$Out = "",
+    # Run a SUBSET, by substring, e.g. -Only OPTIONS,THEME,ABOUT. Each sweep launches the
+    # whole editor once per suite, so a change that touches four dialogs costs 54 windows to
+    # compare paired across all 27. This runs the suites that touch the changed code and
+    # NAMES THE OMISSION in the capture, so a narrowed sweep can never be mistaken for a
+    # full one when the two files are diffed later.
+    [string[]]$Only = @(),
     [string[]]$Diff = @(),
     [switch]$NoRestoreState,
     [int]$QuietS = 8,
@@ -148,7 +154,23 @@ $suites = @(
  "TIKO_UNUSED_SELFTEST","TIKO_USERTOOLS_SELFTEST","TIKO_WORKSPACE_SELFTEST"
 )
 
+$allSuites = $suites
+$omitted = @()
+# Split on commas as well as taking multiple arguments: invoked through `powershell -File`,
+# PowerShell does NOT parse `-Only A,B,C` into an array -- it arrives as one string, and the
+# filter below then matches nothing and throws. Cost an otherwise-clean sweep once.
+$Only = @($Only | ForEach-Object { $_ -split ',' } | Where-Object { $_ -ne "" })
+if ($Only.Count -gt 0) {
+    $suites  = @($allSuites | Where-Object { $name = $_; ($Only | Where-Object { $name -like "*$_*" }).Count -gt 0 })
+    $omitted = @($allSuites | Where-Object { $suites -notcontains $_ })
+    if ($suites.Count -eq 0) { throw "-Only matched no suite: $($Only -join ',')" }
+}
+
 $lines = New-Object System.Collections.Generic.List[string]
+if ($Only.Count -gt 0) {
+    $lines.Add("SUBSET: $($suites.Count) of $($allSuites.Count) suites (-Only $($Only -join ','))") | Out-Null
+    $lines.Add("OMITTED: $($omitted -join ' ')") | Out-Null
+}
 $logDir = Join-Path $env:TEMP "tiko_selftest_logs"
 if (-not (Test-Path $logDir)) { New-Item -ItemType Directory $logDir | Out-Null }
 

@@ -475,10 +475,11 @@ function frmInputBox_Show( byval hWndParent as HWND, _
     ' needs one.
     dim uMsg as MSG
     while GetMessage( @uMsg, null, 0, 0 )
+        PumpTrace_Enter( "frmInputBox" )
 
         ' MANDATORY. The field's right-click Cut/Copy/Paste menu is a PsPopupMenu; without
         ' this it has no keyboard navigation and never closes on an outside click.
-        if PsTextBox_FilterMessage( @uMsg ) then continue while
+        if PumpTrace( PsTextBox_FilterMessage( @uMsg ), "frmInputBox", "PsTextBox", @uMsg ) then continue while
 
         ' ESCAPE cancels -- handled explicitly, and AFTER the popup filter above so an open
         ' context menu closes on Escape first rather than the whole dialog going with it.
@@ -488,8 +489,11 @@ function frmInputBox_Show( byval hWndParent as HWND, _
         end if
 
         if IsDialogMessage( HWND_FRMINPUTBOX, @uMsg ) = 0 then
+            PumpTrace_Note( "frmInputBox", "DispatchMessage", @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
+        else
+            PumpTrace_Note( "frmInputBox", "IsDialogMessage", @uMsg )
         end if
     wend
 

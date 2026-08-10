@@ -533,6 +533,7 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
     ' Message loop (modal)
     dim uMsg as MSG
     while GetMessage( @uMsg, null, 0, 0 )
+        PumpTrace_Enter( "frmSearchSymbol" )
         if (uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_ESCAPE) then
             SendMessage( HWND_FRMSEARCHSYMBOL, WM_CLOSE, 0, 0 )
         
@@ -563,8 +564,11 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
         end if
 
         if IsDialogMessage( HWND_FRMSEARCHSYMBOL, @uMsg ) = 0 then
+            PumpTrace_Note( "frmSearchSymbol", "DispatchMessage", @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
+        else
+            PumpTrace_Note( "frmSearchSymbol", "IsDialogMessage", @uMsg )
         end if
     wend
 

@@ -1009,10 +1009,11 @@ function frmProjectOptions_Show( _
     ' owes one. PsToggle and PsButton add none.
     dim uMsg as MSG
     while GetMessage( @uMsg, null, 0, 0 )
+        PumpTrace_Enter( "frmProjectOptions" )
 
         ' MANDATORY. The four text fields each own a PsPopupMenu context menu; without this it
         ' has no keyboard navigation and never closes on an outside click.
-        if PsTextBox_FilterMessage( @uMsg ) then continue while
+        if PumpTrace( PsTextBox_FilterMessage( @uMsg ), "frmProjectOptions", "PsTextBox", @uMsg ) then continue while
 
         ' ESCAPE cancels -- explicitly, and AFTER the filter above so an open context menu
         ' closes on Escape first rather than the whole dialog going with it.
@@ -1023,8 +1024,11 @@ function frmProjectOptions_Show( _
         end if
 
         if IsDialogMessage( HWND_FRMPROJECTOPTIONS, @uMsg ) = 0 then
+            PumpTrace_Note( "frmProjectOptions", "DispatchMessage", @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
+        else
+            PumpTrace_Note( "frmProjectOptions", "IsDialogMessage", @uMsg )
         end if
     wend
 

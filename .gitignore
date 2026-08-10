@@ -67,3 +67,9 @@ src/_prelude.txt
 # share a shim that only one of them is rebuilt against. Build it with _compile_shell.bat,
 # run it with _run_shell.bat.
 /_shell/
+
+# The pump oracle's output (modPumpTrace.inc, TIKO_PUMP_TRACE=1). It is a record of one
+# SESSION -- what the author happened to do for a few minutes -- so it is generated, not
+# source. The captures that a census actually cites are copied into docs/port/pump-census/
+# deliberately and by hand; anything left lying in the root is the last run, not evidence.
+/pump-trace.txt

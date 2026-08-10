@@ -170,6 +170,12 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 ' MSG_USER_PROCESS_COMMANDLINE handler; the body has to come in after frmMain.inc, since it
 ' drives frmMain_PositionWindows.
 #include once "modLayoutDump.bi"
+' The 7c PUMP oracle. Both halves up here and adjacent, unlike the layout oracle above: it is
+' called from every message loop in the application, and the earliest of those is inside
+' PsTextBox.bi -- so the bodies have to be in scope well before the frm* block. It depends on
+' nothing but windows.bi, which is why it can sit this early.
+#include once "modPumpTrace.bi"
+#include once "modPumpTrace.inc"
 ' Declarations only, and deliberately naming no Ps* type: clsConfig.inc calls
 ' NavHistory_Clear from both of its session-load paths, well ahead of the frm* block. The
 ' implementation goes in after modRoutines.inc, whose OpenSelectedDocument it drives.
@@ -468,6 +474,13 @@ function WinMain( _
 
 
     LogInit( "_debug.txt" )
+
+    ' The 7c pump oracle, armed before anything can open a window. HERE rather than in
+    ' frmMain's message loop, which is where it was first put: the startup path can raise a
+    ' message box -- a missing settings file, a failed theme load -- and those run their own
+    ' pump before frmMain has one. Armed later, the trace would silently omit exactly the
+    ' loops that ran earliest.
+    PumpTrace_Init()
 
     ' ---- DLL SEARCH HARDENING, before anything can load a library --------------------
     ' By default LoadLibrary with a bare name searches the CURRENT DIRECTORY and then PATH.

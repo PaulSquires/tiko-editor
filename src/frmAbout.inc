@@ -1311,10 +1311,11 @@ function frmAbout_Show( byval hWndParent as HWND ) as LRESULT
     ' field's right-click menu is a PsPopupMenu that needs one.
     dim uMsg as MSG
     while GetMessage( @uMsg, null, 0, 0 )
+        PumpTrace_Enter( "frmAbout" )
 
         ' MANDATORY. Without it that menu has no keyboard navigation and never closes on an
         ' outside click.
-        if PsTextBox_FilterMessage( @uMsg ) then continue while
+        if PumpTrace( PsTextBox_FilterMessage( @uMsg ), "frmAbout", "PsTextBox", @uMsg ) then continue while
 
         ' ESCAPE closes -- handled explicitly, and AFTER the popup filter above so an open
         ' context menu closes on Escape first rather than the whole dialog going with it.
@@ -1324,8 +1325,11 @@ function frmAbout_Show( byval hWndParent as HWND ) as LRESULT
         end if
 
         if IsDialogMessage( HWND_FRMABOUT, @uMsg ) = 0 then
+            PumpTrace_Note( "frmAbout", "DispatchMessage", @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
+        else
+            PumpTrace_Note( "frmAbout", "IsDialogMessage", @uMsg )
         end if
     wend
 

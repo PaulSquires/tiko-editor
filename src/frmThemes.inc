@@ -1156,8 +1156,9 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
     ' EDIT view. PsColorPicker contributes NOTHING -- no FilterMessage exists for it.
     dim uMsg as MSG
     while GetMessage( @uMsg, null, 0, 0 )
+        PumpTrace_Enter( "frmThemes" )
 
-        if PsTextBox_FilterMessage( @uMsg ) then continue while
+        if PumpTrace( PsTextBox_FilterMessage( @uMsg ), "frmThemes", "PsTextBox", @uMsg ) then continue while
 
         ' The colour popup's dismissal (Escape / outside-click). Ahead of the dialog's own
         ' Escape so that, while the popup is open, Escape closes it rather than backing out.
@@ -1176,8 +1177,11 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
         end if
 
         if IsDialogMessage( HWND_FRMTHEMES, @uMsg ) = 0 then
+            PumpTrace_Note( "frmThemes", "DispatchMessage", @uMsg )
             TranslateMessage @uMsg
             DispatchMessage @uMsg
+        else
+            PumpTrace_Note( "frmThemes", "IsDialogMessage", @uMsg )
         end if
     wend
 

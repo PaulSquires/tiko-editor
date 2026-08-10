@@ -846,16 +846,17 @@ function frmFormatOptions_Show( byval hWndParent as HWND ) as LRESULT
     ' dialog owes two.
     dim uMsg as MSG
     while GetMessage( @uMsg, null, 0, 0 )
+        PumpTrace_Enter( "frmFormatOptions" )
 
         ' MANDATORY. The preview textbox owns a PsPopupMenu context menu; without this it
         ' has no keyboard navigation and never closes on an outside click.
-        if PsTextBox_FilterMessage( @uMsg ) then continue while
+        if PumpTrace( PsTextBox_FilterMessage( @uMsg ), "frmFormatOptions", "PsTextBox", @uMsg ) then continue while
 
         ' MANDATORY, per combo. Each dropdown is a second top-level window.
         dim as long bEaten = false
         for i as long = 0 to gFmtComboCount - 1
             if gFmtCombos(i) = 0 then continue for
-            if PsComboBox_FilterMessage( gFmtCombos(i), @uMsg ) then
+            if PumpTrace( PsComboBox_FilterMessage( gFmtCombos(i), @uMsg ), "frmFormatOptions", "PsComboBox", @uMsg ) then
                 bEaten = true
                 exit for
             end if
@@ -866,7 +867,7 @@ function frmFormatOptions_Show( byval hWndParent as HWND ) as LRESULT
         for i as long = 0 to gFmtRowCount - 1
             if gFmtRows(i).nKind <> FMTROW_NUMERIC then continue for
             if gFmtRows(i).hCtrl = 0 then continue for
-            if PsNumericUpDown_FilterMessage( @uMsg ) then
+            if PumpTrace( PsNumericUpDown_FilterMessage( @uMsg ), "frmFormatOptions", "PsNumericUpDown", @uMsg ) then
                 bEaten = true
                 exit for
             end if
@@ -881,8 +882,11 @@ function frmFormatOptions_Show( byval hWndParent as HWND ) as LRESULT
         end if
 
         if IsDialogMessage( HWND_FRMFORMATOPTIONS, @uMsg ) = 0 then
+            PumpTrace_Note( "frmFormatOptions", "DispatchMessage", @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
+        else
+            PumpTrace_Note( "frmFormatOptions", "IsDialogMessage", @uMsg )
         end if
     wend
 

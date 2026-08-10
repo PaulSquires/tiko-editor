@@ -1299,6 +1299,7 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
 
     dim uMsg as MSG
     while GetMessage( @uMsg, null, 0, 0 )
+        PumpTrace_Enter( "frmOptions" )
 
         ' Each live PsComboBox is offered the message: the filter takes a control handle
         ' rather than working off a global, and is safe on a closed list or a stale
@@ -1306,13 +1307,13 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
         ' button, so skipping it breaks the dropdown.
         dim as boolean bEaten = false
         for i as long = lbound(gOptCombos) to ubound(gOptCombos)
-            if PsComboBox_FilterMessage( gOptCombos(i), @uMsg ) then bEaten = true: exit for
+            if PumpTrace( PsComboBox_FilterMessage( gOptCombos(i), @uMsg ), "frmOptions", "PsComboBox", @uMsg ) then bEaten = true: exit for
         next
         if bEaten then continue while
 
         ' The PsTextBox right-click menu; also covers any embedded PsNumericUpDown, whose
         ' own filter just forwards here.
-        if PsTextBox_FilterMessage( @uMsg ) then continue while
+        if PumpTrace( PsTextBox_FilterMessage( @uMsg ), "frmOptions", "PsTextBox", @uMsg ) then continue while
 
         ' The Localization page's phrase list edits its translation column in place, and that is
         ' what makes this call mandatory. Its position is load-bearing in BOTH directions: ahead
@@ -1320,7 +1321,7 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
         ' cancelling the edit; and ahead of IsDialogMessage, or Enter fires the OK button instead
         ' of committing. It is safe when nothing is editing, and safe to leave in place if that
         ' page ever stops editing.
-        if PsListTree_FilterMessage( @uMsg ) then continue while
+        if PumpTrace( PsListTree_FilterMessage( @uMsg ), "frmOptions", "PsListTree", @uMsg ) then continue while
 
         ' DOWN ARROW IN THE SEARCH BOX MOVES TO THE NAV LIST, the way Tab does. Type a few
         ' letters, press Down, and you are on the results -- without lifting a hand to the mouse
@@ -1349,8 +1350,11 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
         end if
 
         if IsDialogMessage( HWND_FRMOPTIONS, @uMsg ) = 0 then
+            PumpTrace_Note( "frmOptions", "DispatchMessage", @uMsg )
             TranslateMessage @uMsg
             DispatchMessage @uMsg
+        else
+            PumpTrace_Note( "frmOptions", "IsDialogMessage", @uMsg )
         end if
     wend
 

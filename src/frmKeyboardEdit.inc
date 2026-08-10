@@ -1085,6 +1085,7 @@ function frmKeyboardEdit_Show( byval hWndParent as HWND ) as LRESULT
     ' ---- message loop -----------------------------------------------------------------
     dim uMsg as MSG
     while GetMessage( @uMsg, null, 0, 0 )
+        PumpTrace_Enter( "frmKeyboardEdit" )
 
         ' NO *_FilterMessage CALL HERE, and that is a property worth keeping: the key picker
         ' is a PsListTree with in-place editing off, and nothing else in this dialog owns a
@@ -1103,8 +1104,11 @@ function frmKeyboardEdit_Show( byval hWndParent as HWND ) as LRESULT
         end if
 
         if IsDialogMessage( HWND_FRMKEYBOARDEDIT, @uMsg ) = 0 then
+            PumpTrace_Note( "frmKeyboardEdit", "DispatchMessage", @uMsg )
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
+        else
+            PumpTrace_Note( "frmKeyboardEdit", "IsDialogMessage", @uMsg )
         end if
     wend
 
