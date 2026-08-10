@@ -96,7 +96,10 @@ the three the docs already record. `_check_shell.bat` checks the other direction
 while 21 assertions passed, because every one of them was a relation between rectangles and
 all of those hold perfectly at the wrong scale. The author found it by looking at the window.
 
-**AND A GREEN ASSERTION CAN CONSTRAIN NOTHING.** The first fix for that shipped
+**AND A GREEN ASSERTION CAN CONSTRAIN NOTHING — THREE TIMES NOW.** The menu-switch fix has an
+assertion that passes with the fix reverted, for the same reason the suites cannot see the bug:
+`OpenRoot` never succeeds windowlessly. It is kept, under a comment saying what it does not
+cover. The first fix for the scaling shipped
 `g_menubar->ScaleY(100) = PsScaleBy(100, 1.5)` as "the assertion that would have caught it".
 It would not have: `ScaleY` reads the surface's scale live and passes whether or not the tree
 was ever told. Caught by deliberately reverting each fix to check the new assertions went
@@ -107,18 +110,24 @@ menubar answers nothing so it drops nothing; it never sets `surf.hWin`; it never
 never scales the EDITOR's font, which is a separate font from the widgets'. Fixed in PsPlatform
 `db73895` and `974b6b9`. A demo that is the nearest prior art is a demo people copy.
 
-**AND FOUR MORE IN THE MENU LAYER, none of which came from the demo — they were in
+**AND FIVE MORE IN THE MENU LAYER, none of which came from the demo — they were in
 `PsMenuBar`, `PsMenuHost` and `PsPopupMenu` themselves, live in every host in the tree.** The
 popup never closed after a click; the menubar title stayed lit; a reopened menu came back
-wearing its last selection; and clicking the OPEN title did not dismiss it. Fixed in `120f127`,
-`f27bef6` and `a03f67f`.
+wearing its last selection; clicking the OPEN title did not dismiss it; and hovering along the
+titles with a menu open opened nothing. Fixed in `120f127`, `f27bef6`, `a03f67f` and `32b846c`.
 
-**They are one defect wearing four hats, and that is the useful reading.** `PsMenuBar` and
+**The fifth I caused by fixing the second**, which is the honest and more useful version of the
+story: `OpenRoot`'s internal `CloseAll` reported itself to a host that was in the middle of
+opening. Nothing was wrong with the callback. What was wrong was that it could not tell a state
+change the user asked for from one made in passing — a distinction that only exists once
+something is listening, so the first host to wire all four is the first to find out.
+
+**They are one defect wearing five hats, and that is the useful reading.** `PsMenuBar` and
 `PsMenuHost` are deliberately ignorant of each other, so the APPLICATION carries every leg
 between them — four callbacks, two in each direction — and **every one had been written,
 documented and left unconnected.** A demo that opens a menu and never closes it looks finished.
 
-All four were reported by the author within a minute of opening a menu, and **none is reachable
+All five were reported by the author within a minute of opening a menu, and **none is reachable
 by any headless suite** — each is about what a menu does *next*. The suites did catch something,
 though: the first fix took `PsPopupMenu`'s single command slot for the host and disconnected
 Scintilla's context menu, and `psslist` went 44/0 to 43/1 in one build. The host chains now.

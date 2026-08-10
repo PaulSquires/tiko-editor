@@ -1,6 +1,6 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ `6296ff08a`; PsPlatform **`main`** @ `a03f67f`;
+tiko `feat/cross-platform` @ `dc194e79e`; PsPlatform **`main`** @ `32b846c`;
 HelpCenter **`main`** @ `02a4c18`. All build warning-free, all are pushed, and tiko runs.
 
 **THERE ARE TWO BINARIES IN tiko NOW.** `tiko.exe` from `tiko.bas`, unchanged and building at
@@ -82,14 +82,32 @@ because each is about what a menu *does next*:
    "the obvious gesture — clicking the thing you just clicked" must close rather than reopen,
    and fires `OnCloseRequest` to say so. Nothing was listening, so the bar cleared its own
    state and the dropdown stayed on screen.
+5. **Hovering along the titles with a menu open opened nothing** — and **this one I caused, by
+   fixing #2.** `OpenRoot` begins with `CloseAll` to drop what was open, and that fired
+   `pfnClosed`. So `OpenMenu` set `nActive`/`bMenuOpen`, fired `pfnOpen`, and the handler's
+   `OpenRoot` reached back through `OnClosed` -> `NotifyClosed` and wiped both. The bar then
+   early-outs of its own move handler at `if bMenuOpen = false`. Fixed with a `bReopening`
+   flag: an internal close during a reopen does not notify; a close the USER asks for does.
 
-**THE PATTERN IS THE POINT, AND IT IS WORTH MORE THAN THE FOUR BUGS.** `PsMenuBar` and
+**THE PATTERN IS THE POINT, AND IT IS WORTH MORE THAN THE FIVE BUGS.** `PsMenuBar` and
 `PsMenuHost` know nothing about each other BY DESIGN — the bar asks, the host opens, and the
 APPLICATION is the only thing that owns both. There are four callbacks across that gap, two in
 each direction, and **every one of them had been written, documented, and left unconnected.** A
 demo that opens a menu and never closes it looks finished, so nothing in the tree ever
 connected them. When you wire a menubar, wire all four: `OnOpenRequest`, `OnCloseRequest`,
 `PsMenuHost.OnCommand`, `PsMenuHost.OnClosed`.
+
+**And #5 is the tail of that same pattern: the first host to wire all four is the first to find
+out what they do to each other.** Nothing was wrong with any callback. What was wrong was that
+one of them could not distinguish a state change the user asked for from one made in passing —
+a distinction that only exists once something is listening.
+
+**THE ASSERTION FOR #5 IS VACUOUS AND THE FILE SAYS SO.** It passes with the fix reverted,
+because `OpenRoot` never succeeds windowlessly, so `nDepth` stays 0 and `pfnClosed` never fires
+on that path at all. It is kept for what it does cover — the bar's state across repeated opens —
+under a comment stating what it does not. **Third time in this port the obvious assertion turned
+out to constrain nothing, and the third time deliberately reverting the fix is what said so.
+That habit is the transferable part of this whole section.**
 
 **And the fix for the first one broke Scintilla's context menu inside one build** — `psslist`
 went 44/0 to 43/1. `PsPopupMenu` has ONE command slot and two parties want it; taking it for
