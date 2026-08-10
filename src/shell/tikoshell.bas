@@ -2513,6 +2513,99 @@ end function
                 dlg.SetRoot( 0 )
             end scope
 
+            '' ---- GROUP I: TWO PUMPS IN ONE PROCESS -----------------------------------
+            '' Step 1 never had this interaction. While a modal is up, PsModalHost.Run owns
+            '' delivery and the shell's outer pump is BLOCKED inside OnMenuCommand -- so the
+            '' filter chain in that loop cannot run at all. That is structural, not a rule
+            '' this file enforces, and it is the reason the menubar goes inert: not because
+            '' anything disables it, but because nothing is reading its events.
+            ''
+            '' What can go wrong is the routing INSIDE the nested pump, and that is a pure
+            '' function. tests/psmodalhost asserts it over PsPlatform's vocabulary; this
+            '' asserts it over the kinds THIS shell actually produces, because a hole in the
+            '' table shows up as a whole class of event going to the wrong place.
+            scope
+                dim as PsEvent ev
+
+                '' The keyboard, which is what "the menubar is inert" means in practice.
+                '' Addressed to the dialog it is dispatched; addressed to the shell behind
+                '' it, DROPPED -- not relayed. A key that reached the shell while a modal
+                '' was up would run an accelerator behind the user's back.
+                ev.kind = PSEV_KEY_DOWN
+                Check "with a modal up, a key for the DIALOG is dispatched", _
+                      (PsModalRouteEvent(@ev, true) = PSMODAL_DISPATCH)
+                Check "  and a key for the SHELL is dropped, not relayed", _
+                      (PsModalRouteEvent(@ev, false) = PSMODAL_DROP)
+
+                ev.kind = PSEV_TEXT_INPUT
+                Check "  typing goes to the dialog", _
+                      (PsModalRouteEvent(@ev, true) = PSMODAL_DISPATCH)
+                Check "  and never behind it", _
+                      (PsModalRouteEvent(@ev, false) = PSMODAL_DROP)
+
+                '' The mouse. Alt+F and a click on the menubar are the author's two checks,
+                '' and this is the half of them that is reachable here.
+                ev.kind = PSEV_MOUSE_DOWN
+                Check "  a click on the shell behind the modal is dropped", _
+                      (PsModalRouteEvent(@ev, false) = PSMODAL_DROP)
+                ev.kind = PSEV_MOUSE_MOVE
+                Check "  and so is a move over it", _
+                      (PsModalRouteEvent(@ev, false) = PSMODAL_DROP)
+
+                '' A resize of the OWNER is dropped rather than dispatched. Relaying one
+                '' into a surface the user cannot reach is what rendered the popup demo at
+                '' triple size, per PsModalRoute.bi.
+                ev.kind = PSEV_RESIZE
+                Check "  the owner's resize is dropped", _
+                      (PsModalRouteEvent(@ev, false) = PSMODAL_DROP)
+                Check "  but the dialog's own is acted on", _
+                      (PsModalRouteEvent(@ev, true) = PSMODAL_RESIZE_SELF)
+
+                '' THE QUIT, WHICH IS THE ONE THAT LOOKS LIKE A HANG WHEN IT IS WRONG.
+                '' Swallowed, the box ends and the application runs on with its main window
+                '' gone. bMine is deliberately not consulted.
+                ev.kind = PSEV_QUIT
+                Check "  a quit ends the box AND is re-posted", _
+                      (PsModalRouteEvent(@ev, true) = PSMODAL_END_REPOST_QUIT)
+                Check "    whoever it was addressed to", _
+                      (PsModalRouteEvent(@ev, false) = PSMODAL_END_REPOST_QUIT)
+
+                '' The two closes diverge, and must: the dialog's own X is a cancel, the
+                '' SHELL's close ends everything.
+                ev.kind = PSEV_CLOSE
+                Check "  the dialog's own close is a cancel", _
+                      (PsModalRouteEvent(@ev, true) = PSMODAL_CLOSE_SELF)
+                Check "  but closing the SHELL behind it ends everything", _
+                      (PsModalRouteEvent(@ev, false) = PSMODAL_END_REPOST_QUIT)
+            end scope
+
+            '' AND WHAT A QUIT DURING A MODAL MUST NOT DO: commit the dialog's answer.
+            '' Run returns TRUE in that case -- it created its surface and pumped -- so the
+            '' caller cannot tell "the user answered" from "the application is going away"
+            '' by the return value alone. It has to read the RESULT, and an undismissed box
+            '' reports none.
+            scope
+                dim as PsMessageBox bq
+                BuildExitBox( bq )
+                Check "a box killed by a quit has no result", (bq.GetResult() = 0), _
+                      str(bq.GetResult())
+                Check "  so the exit is not confirmed", (bq.GetResult() <> MBX_ID_YES)
+                Check "  and it never looked dismissed", (bq.IsDismissed() = false)
+
+                '' Same rule on the input box, where the cost of getting it wrong is worse:
+                '' committing text the user never approved because the app was closing.
+                dim as DWSTRING sVar = "original"
+                Check "and a quit commits no text either", _
+                      (ShellInputBox_Commit(0, sVar, DWSTRING("edited")) = false)
+                Check "  leaving the value alone", (sVar = DWSTRING("original")), sVar.Utf8
+            end scope
+
+            '' NOT REACHABLE FROM HERE, and listed so the group is not read as complete:
+            '' that an OPEN MENU is closed before its command runs -- PsMenuHost takes the
+            '' popup's command slot precisely so it can close the chain first, and none of
+            '' it is reachable because OpenRoot declines without a window. Nor that the OS
+            '' half of modality holds, which is g_plat.window.SetModal and a compositor.
+
             '' NO SURFACE MEANS "DO NOT QUIT", and g_pSurf is nulled to get there.
             ''
             '' THIS HUNG THE SELF-TEST ON FIRST WRITE, and the reason is worth more than the
