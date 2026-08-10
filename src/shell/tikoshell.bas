@@ -1281,10 +1281,7 @@ function ConfirmExit() as boolean
     if g_pSurf = 0 then return false
     dim as PsMessageBox box
     BuildExitBox( box )
-    dim as long nAns = PsMessageBoxShowModal( g_pSurf, box )
-    print "tikoshell: exit box answered " & str(nAns) & _
-          "  (Yes=" & str(MBX_ID_YES) & " No=" & str(MBX_ID_NO) & " Cancel=" & str(MBX_ID_CANCEL) & ")"
-    return (nAns = MBX_ID_YES)
+    return (PsMessageBoxShowModal( g_pSurf, box ) = MBX_ID_YES)
 end function
 
 
@@ -2672,19 +2669,9 @@ end function
 
             select case ev.kind
                 case PSEV_QUIT
-                    '' DIAGNOSTIC, TEMPORARY. The modal ends the whole application whatever
-                    '' button dismisses it, and there are two candidate paths -- a PSEV_QUIT
-                    '' re-posted by PsModalHost, or a PSEV_CLOSE for the destroyed dialog
-                    '' arriving here with a surface this pump reads as its own. They need
-                    '' different fixes, so the pump says which one happened rather than a
-                    '' guess being committed.
-                    print "tikoshell: PSEV_QUIT  ev.surface=" & str(cast(ulongint, ev.surface)) & _
-                          "  win=" & str(cast(ulongint, win))
                     bRunning = false
 
                 case PSEV_CLOSE
-                    print "tikoshell: PSEV_CLOSE ev.surface=" & str(cast(ulongint, ev.surface)) & _
-                          "  win=" & str(cast(ulongint, win)) & "  bMine=" & str(bMine)
                     if bMine then bRunning = false
 
                 case PSEV_RESIZE
