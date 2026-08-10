@@ -80,6 +80,96 @@ end function
 
 
 '' ---------------------------------------------------------------------------------------
+'' GO TO A ROW'S BOOKMARK. The port of frmBookmarks_MessageCallback's WM_LBUTTONUP arm
+'' (frmBookmarks.inc:113-125) plus the positioning recipe out of OpenSelectedDocument
+'' (modRoutines.inc:685-697).
+''
+'' Split from the callbacks below so it can be driven by the self-test with a row number,
+'' which is the only part of a click that is reachable without a mouse.
+''
+'' RETURNS FALSE when the row is a header or carries nothing -- tiko's `if IsHeader = false`
+'' guard, and the reason a click on a filename row does not move the caret.
+'' ---------------------------------------------------------------------------------------
+function ShellPanel_GotoRow( byval nRow as long ) as boolean
+    if g_panel = 0 then return false
+    if (nRow < 0) orelse (nRow >= g_panel->GetCount()) then return false
+    '' A HEADER IS A FILENAME, NOT A PLACE. Clicking one collapses it; jumping somewhere
+    '' would fight that.
+    if g_panel->IsHeader( nRow ) then return false
+
+    dim as integer nData  = g_panel->GetItemData( nRow )
+    dim as long    idxTab = ShellPanel_TabOf( nData )
+    dim as long    nLine  = ShellPanel_LineOf( nData )
+
+    '' SWITCH FIRST. ShellTabs_Show is a no-op when the tab is already current, which is the
+    '' common case -- and when it is not, it is what points the single view at the right
+    '' document before anything below reads or moves a caret in it.
+    ShellTabs_Show( idxTab )
+
+    dim as clsDocument ptr pDoc = ShellTabs_CurrentDoc()
+    if pDoc = 0 then return false
+    dim as any ptr pSci = pDoc->GetActiveScintillaPtr()
+    if pSci = 0 then return false
+
+    '' ---- tiko's POSITIONING RECIPE, PORTED WHOLE. Each of the four steps earns its place:
+    ''   1. A FOLDED LINE IS INVISIBLE, and GOTOLINE to a hidden line leaves the caret
+    ''      somewhere the user cannot see. Unfold the block first.
+    ''   2. Three lines of context above, which is tiko's own comment: "just to make it
+    ''      visually more appealing".
+    ''   3. GOTOLINE moves the caret.
+    ''   4. CenterCurrentLine, because 2 put the line near the top and the eye wants it
+    ''      nearer the middle when the jump came from somewhere else.
+    if SciMsg( pSci, SCI_GETLINEVISIBLE, nLine, 0 ) = 0 then
+        pDoc->FoldToggle( nLine )
+    end if
+    SciMsg( pSci, SCI_SETFIRSTVISIBLELINE, iif(nLine - 3 > 0, nLine - 3, 0), 0 )
+    SciMsg( pSci, SCI_GOTOLINE, nLine, 0 )
+    pDoc->CenterCurrentLine()
+
+    '' THE FOCUS GOES TO THE EDITOR, which is the whole point of the gesture: the user asked
+    '' to be taken somewhere, and being taken there with the focus left in the list means the
+    '' next keystroke scrolls the list instead of typing. tiko does the same thing through
+    '' frmMain_SetFocusToCurrentCodeWindow.
+    if (g_pSurf <> 0) andalso (g_view <> 0) then g_pSurf->SetFocus( g_view )
+    if g_pSurf <> 0 then g_pSurf->InvalidateAll()
+    return true
+end function
+
+
+'' PsListTree's callbacks. BOTH are wired to the same handler, and the difference between
+'' them is where this binary diverges from tiko.
+''
+'' ---- WHAT tiko DOES: jump on a single LEFT-BUTTON-UP, and nothing on arrow keys.
+'' ---- WHAT PsListTree OFFERS: OnSelChange (any selection change -- click OR arrow) and
+''      OnActivate (double-click or Enter). NEITHER is tiko's rule.
+''
+'' Wiring OnSelChange gives the single-click jump, which is the gesture that matters, AND
+'' MAKES THE ARROW KEYS JUMP TOO -- a real divergence, named here rather than discovered.
+'' It is defensible (arrowing a bookmark list to preview each one is a reasonable editor
+'' behaviour) but it is NOT what tiko does, and it costs the panel its own keyboard
+'' navigation: every arrow press moves the focus to the editor.
+''
+'' The fix belongs in PsPlatform -- a source argument on the callback, so a host can tell a
+'' mouse selection from a keyboard one -- and that is a control change, not a port task.
+''
+'' SetCurSel IS SILENT (PsListTree.bi:343), which is what makes this safe at all: the loader
+'' restores the selection after every reload, and a notifying setter would jump the editor
+'' every time a bookmark was toggled.
+private sub ShellPanel_OnRowSelected( byval pList as any ptr, byval nRow as long, _
+                                      byval ud as any ptr )
+    ShellPanel_GotoRow( nRow )
+end sub
+
+
+'' Wire the panel's callbacks. Called once, beside ShellTabs_Install.
+sub ShellPanel_Install()
+    if g_panel = 0 then exit sub
+    g_panel->OnSelChange( @ShellPanel_OnRowSelected, 0 )
+    g_panel->OnActivate(  @ShellPanel_OnRowSelected, 0 )
+end sub
+
+
+'' ---------------------------------------------------------------------------------------
 '' Empty the panel. tiko's ClearBookmarks, which is one call there and one call here.
 '' ---------------------------------------------------------------------------------------
 sub ShellPanel_Clear()

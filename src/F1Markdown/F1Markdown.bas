@@ -66,13 +66,23 @@
 #include once "ui/controls/PsToolbar.inc"
 #include once "ui/controls/PsStatusBar.inc"
 
+'' ---- the document model ----------------------------------------------------------------
+'' No UI, no painting, no platform calls -- these two are the layer the Linux port carries
+'' over unchanged, and they are included before anything that would tempt them otherwise.
+#include once "mdParse.inc"
+#include once "mdHilite.inc"
+
 
 '' ========================================================================================
 '' MODES
 ''   (none)       open the window
-''   --selftest   build the tree, lay out, assert geometry at 1.0 AND 1.75, exit non-zero on
-''                failure. WINDOWLESS, NOT HEADLESS -- SDL's video subsystem is initialised
-''                because the text engine needs it. No window is shown.
+''   --selftest   build the tree, lay out, assert geometry at 1.0 AND 1.75, then run the
+''                parser and highlighter suites. Exit non-zero on failure. WINDOWLESS, NOT
+''                HEADLESS -- SDL's video subsystem is initialised because the text engine
+''                needs it. No window is shown.
+''   --dump-md <path>
+''                parse one .md file and print the block model, one line per block, then
+''                every line the parser could not classify. No window, no font, no SDL.
 ''
 '' SWITCHES (parsed here, acted on from phase 4 on except --theme and --selftest)
 ''   --topic <text>    the symbol F1 was pressed on
@@ -445,19 +455,67 @@ sub CheckBands( byref surf as PsSurface, byval f as single )
           str(g_toc->bounds.w) & " want " & str(PsScaleBy(g_nTocW, f))
 end sub
 
+'' AFTER Check, because that is what the suites report through. See mdTests.inc for why they
+'' do not use PsTest.
+#include once "mdTests.inc"
+
+
+'' ---------------------------------------------------------------------------------------
+'' --dump-md. Reads one file and prints the block model. Deliberately runs before the
+'' platform is started: parsing is pure data and must not need SDL, a window or a font, and
+'' a mode that proves that is worth more than a comment claiming it.
+'' ---------------------------------------------------------------------------------------
+sub RunDumpMd( byref sPath as DWSTRING )
+    dim as boolean bOk = false
+    dim as string sBytes = PsFileReadAll( sPath, bOk )
+    if bOk = false then
+        print "F1Markdown: cannot read " & sPath.Utf8
+        end 1
+    end if
+
+    '' The corpus is UTF-8, but a BOM or a legacy file would otherwise reach the parser as
+    '' mojibake and be reported as prose rather than as an encoding problem.
+    dim as PsEncodingId enc
+    dim as DWSTRING sText = PsEncDecodeAuto( sBytes, enc )
+    dim as string sUtf8 = sText.Utf8
+
+    dim as MdDoc doc
+    MdParse( sUtf8, doc )
+
+    print "-- " & sPath.Utf8 & " --"
+    print str(doc.nBlk) & " blocks, " & str(doc.nInl) & " runs, " & _
+          str(doc.nCell) & " cells, " & str(doc.nNote) & " unclassified"
+    for i as long = 0 to doc.nBlk - 1
+        print MdDumpBlock( doc, i )
+    next
+    for i as long = 0 to doc.nNote - 1
+        print "!! line " & str(doc.note(i).nLine) & ": " & doc.note(i).sWhat & _
+              " -- " & doc.note(i).sLine
+    next
+end sub
+
 
 '' ======================================================================== main
     dim as boolean bSelfTest = false
+    dim as DWSTRING g_sDumpMd
     for i as integer = 1 to __FB_ARGC__ - 1
         dim as string sArg = command(i)
         select case sArg
             case "--selftest" : bSelfTest = true
+            case "--dump-md"  : if i < __FB_ARGC__ - 1 then g_sDumpMd = command(i + 1)
             case "--topic"    : if i < __FB_ARGC__ - 1 then g_sTopic  = command(i + 1)
             case "--docset"   : if i < __FB_ARGC__ - 1 then g_sDocset = command(i + 1)
             case "--root"     : if i < __FB_ARGC__ - 1 then g_sRoot   = command(i + 1)
             case "--theme"    : if i < __FB_ARGC__ - 1 then g_sTheme  = command(i + 1)
         end select
     next
+
+    '' BEFORE PsPlatformInit, and that is the assertion: the document model is pure data and
+    '' needs no platform at all.
+    if len(g_sDumpMd) > 0 then
+        RunDumpMd( g_sDumpMd )
+        end 0
+    end if
 
     if PsPlatformInit() = false then
         print "F1Markdown: the platform would not start"
@@ -540,6 +598,11 @@ end sub
         ApplyScale( surf, 1.0 )
         LayoutAll( surf )
         CheckBands( surf, 1.0 )
+
+        '' The document model, which owns no widget and cares about no scale. Run last so a
+        '' geometry failure is not buried under a hundred parser lines.
+        MdRunParserTests()
+        MdRunHiliteTests()
 
         print "--- " & str(g_nPass) & " passed, " & str(g_nFail) & " failed ---"
         TE_Free( g_te )
