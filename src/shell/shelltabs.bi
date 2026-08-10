@@ -220,7 +220,14 @@ function ShellTabs_Open( byval wszPath as DWSTRING ) as long
     dim as clsDocument ptr pDoc = gApp.CreateEmptyDocument()
     pDoc->LoadDiskFile( wszPath )
     pDoc->SetProjectFileType()
+    '' ---- THE DEBOUNCE IS SUPPRESSED ACROSS THE FILL ---------------------------------
+    '' AssignTextBuffer pushes the whole file into Scintilla, which raises SCN_MODIFIED with
+    '' SC_MOD_INSERTTEXT -- a real edit by every test the debounce applies. Without this the
+    '' load would arm a 500ms timer and re-parse the file it has just parsed. tiko suppresses
+    '' the same way, on gApp.IsFileLoading (frmMainOnNotify.inc:437).
+    g_bScanSuppressed = true
     pDoc->AssignTextBuffer()
+    g_bScanSuppressed = false
     pDoc->ApplyProperties()
 
     '' REPORTED, because an empty document looks exactly like a working one from outside:

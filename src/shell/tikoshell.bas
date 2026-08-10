@@ -122,6 +122,10 @@
 #include once "scintilla/PsTextEngineC.inc"
 #include once "scintilla/PsSciView.inc"
 #include once "scintilla/PsSciClipboard.inc"
+'' The editor's notifications, new in 7c step 5. SCNotification becomes PSEV_NOTIFY through
+'' a trampoline; the shell listens for text edits and restarts the parse debounce. Until
+'' this commit nothing in this binary heard from Scintilla at all.
+#include once "scintilla/PsSciNotify.inc"
 
 '' ---- tiko's application layer ----------------------------------------------------------
 '' Every app\*.bi that tiko.bas includes, IN tiko.bas's OWN ORDER. That order is
@@ -394,6 +398,12 @@ dim shared as PsStatusBar ptr g_status
 '' relayout that arrives while BuildTree is still constructing -- see the end of BuildTree
 '' for the access violation that paid for this.
 dim shared as boolean g_bTreeReady
+
+'' TRUE while a document is being FILLED. shelltabs.bi sets it around AssignTextBuffer and
+'' shellscan.bi reads it as the debounce's loading guard -- and it lives here because those
+'' two files are included in that order, so neither can own a declaration the other needs
+'' first. tiko's equivalent is gApp.IsFileLoading, which is driven by tiko's own open path.
+dim shared as boolean g_bScanSuppressed
 
 '' EVERY OTHER CHILD IS A STUB, and each is named as the ORACLE names it -- so a dump and a
 '' self-test failure can be read against each other without a translation table.
@@ -932,6 +942,10 @@ sub BuildTree( byref surf as PsSurface )
     '' and view 1 in one loop, so a null second global would bind half a document.
     ShellTabs_Install()
     ShellPanel_Install()
+    '' The editor's notifications. Until this call nothing in this binary heard from
+    '' Scintilla at all -- no SCN_MODIFIED, no SCN_CHARADDED, nothing. It is what restarts
+    '' the parse debounce as the user types.
+    ShellScan_Install()
 
     '' ---- THE EDITOR STARTS FOCUSED ------------------------------------------------------
     '' Nothing did this, so the shell opened with focus NOWHERE and the caret never appeared
@@ -3856,6 +3870,95 @@ end function
                       str(ShellPanel_LineOf(ShellPanel_PackRow(3, -1)))
                 Check "    leaving the tab intact", _
                       (ShellPanel_TabOf(ShellPanel_PackRow(3, -1)) = 3)
+            end scope
+
+            '' ---- THE PARSE DEBOUNCE -----------------------------------------------------
+            '' The POLICY is a pure function -- (notification, modification type, loading)
+            '' -> (ignore | restart | scan) -- which is the only reason any of this is
+            '' reachable without a keyboard. tiko's version of the same rule is spread over
+            '' three files and can only be exercised by typing into a window.
+            scope
+                '' A REAL EDIT RESTARTS IT. Both halves: the character path and the
+                '' modification path, which is what tiko arms from.
+                Check "a typed character restarts the debounce", _
+                      (ShellScan_DebouncePolicy(SCN_CHARADDED, 0, false) = SHDB_RESTART)
+                Check "  and so does an insertion", _
+                      (ShellScan_DebouncePolicy(SCN_MODIFIED, SC_MOD_INSERTTEXT, false) = SHDB_RESTART)
+                Check "  and a deletion", _
+                      (ShellScan_DebouncePolicy(SCN_MODIFIED, SC_MOD_DELETETEXT, false) = SHDB_RESTART)
+
+                '' ---- THE LOAD-BEARING ONE. SCN_MODIFIED IS NOT "the text changed":
+                '' Scintilla raises it for STYLING too, and this binary styles continuously.
+                '' A policy that keyed on the bare code would rearm the timer on every
+                '' colouring pass -- so the parse would either never fire, or fire for an
+                '' edit that never happened.
+                Check "  but STYLING does not, and that is the whole rule", _
+                      (ShellScan_DebouncePolicy(SCN_MODIFIED, SC_MOD_CHANGESTYLE, false) = SHDB_IGNORE), _
+                      str(ShellScan_DebouncePolicy(SCN_MODIFIED, SC_MOD_CHANGESTYLE, false))
+                Check "    nor a marker change", _
+                      (ShellScan_DebouncePolicy(SCN_MODIFIED, SC_MOD_CHANGEMARKER, false) = SHDB_IGNORE)
+
+                '' The timer firing is the only thing that scans.
+                Check "  the timer firing is what scans", _
+                      (ShellScan_DebouncePolicy(0, 0, false) = SHDB_SCAN)
+
+                '' NOTHING WHILE A FILE IS BEING FILLED. AssignTextBuffer inserts the whole
+                '' document, which is a real edit by every test above -- so without this a
+                '' load would arm a timer to re-parse the file it had just parsed.
+                Check "  and NOTHING at all while a file is loading", _
+                      (ShellScan_DebouncePolicy(SCN_CHARADDED, 0, true) = SHDB_IGNORE) andalso _
+                      (ShellScan_DebouncePolicy(SCN_MODIFIED, SC_MOD_INSERTTEXT, true) = SHDB_IGNORE) andalso _
+                      (ShellScan_DebouncePolicy(0, 0, true) = SHDB_IGNORE)
+
+                '' An unknown notification is ignored rather than acted on -- the same
+                '' default-safe shape as the file dialog's routing table.
+                Check "  an unrelated notification does nothing", _
+                      (ShellScan_DebouncePolicy(SCN_PAINTED, 0, false) = SHDB_IGNORE)
+                Check "    and IGNORE is what a zeroed action holds", (SHDB_IGNORE = 0)
+            end scope
+
+            '' ---- THE TIMER ITSELF, ON THE SYNTHETIC CLOCK -------------------------------
+            '' PsTimer's own suite drives a fake clock rather than sleeping, and so does
+            '' this: 500ms of wall time in a self-test is 500ms nobody gets back, and a test
+            '' that sleeps is a test that is flaky on a loaded machine.
+            scope
+                '' ---- START FROM A KNOWN STATE, and this is not defensive padding.
+                '' The notification sink is LIVE by the time this runs -- ShellScan_Install
+                '' ran in BuildTree -- so the edits earlier assertions make have already
+                '' armed the debounce, and this scope's first version measured against a
+                '' baseline it assumed was zero. It failed with "(2)" and "(1)", which says
+                '' nothing about the timer and everything about the assumption.
+                PsTimerKillProc( @g_sciSink, SH_TIMER_PARSE )
+
+                dim as ulongint nT0 = PsTimerNow()
+                dim as long nCountWas = PsTimerCount()
+
+                ShellScan_ArmTimer()
+                Check "arming the debounce registers exactly one timer", _
+                      (PsTimerCount() = nCountWas + 1), str(PsTimerCount())
+
+                '' RE-ARMING REPLACES, IT DOES NOT STACK. Every keystroke arms it, so a
+                '' version that stacked would leak one timer per character typed --
+                '' PsTimer.bi calls that out as the reason re-arm replaces.
+                ShellScan_ArmTimer()
+                ShellScan_ArmTimer()
+                Check "  and re-arming replaces rather than stacks", _
+                      (PsTimerCount() = nCountWas + 1), str(PsTimerCount())
+
+                '' NOT DUE BEFORE THE PAUSE ELAPSES.
+                PsTimerSetClock( nT0 )
+                PsTimerService( nT0 + SH_PARSER_DEBOUNCE_MS - 1 )
+                Check "  not due one millisecond early", _
+                      (PsTimerCount() = nCountWas + 1), str(PsTimerCount())
+
+                '' AND GONE AFTER IT FIRES, because ShellScan_DebounceFire kills it -- the
+                '' proc form of PsTimer is not purged by anything else, and a timer that
+                '' survived would parse again 500ms later, forever.
+                PsTimerService( nT0 + SH_PARSER_DEBOUNCE_MS + 1 )
+                Check "  fires once and is gone", (PsTimerCount() = nCountWas), _
+                      str(PsTimerCount())
+
+                PsTimerKillProc( @g_sciSink, SH_TIMER_PARSE )
             end scope
 
             '' ---- THE BOOKMARK COMMANDS WITH NOTHING OPEN --------------------------------
