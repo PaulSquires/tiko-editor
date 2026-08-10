@@ -1,6 +1,35 @@
 ' ########################################################################################
 ' modSaveSelfTest.inc  -  see modSaveSelfTest.bi for the contract.
 ' ########################################################################################
+'
+' ---- WHY THIS STAYS IN src/, AND SO DOES modEncodingSelfTest.inc ----------------------
+'
+' 7c step 3's plan said both suites contained "zero Win32 and zero Afx tokens" and would both
+' move down to gate the shell's save path. THAT WAS MEASURED WITH TOO NARROW A GREP AND IS
+' FALSE OF BOTH FILES.
+'
+' This one names CreateFileW, ReadFile, GetFileSize, CloseHandle, LoadLibraryW, FreeLibrary
+' and SetDefaultDllDirectories -- sixteen Win32 references. modEncodingSelfTest.inc names
+' WideCharToMultiByte and CFileStream, and the second is the trap 7c-starting-position.md
+' already records: AfxNova classes called CFileStream / CTextStream / CWebView2 carry no Afx
+' prefix, so an Afx-prefix rule cannot see them. The move was attempted, and
+' _check_app_standalone rejected it in one run with ten errors.
+'
+' They are not incidental and they are not removable without weakening the suite:
+'
+'   * SaveSelfTest_ReadAll reads the written file back with raw CreateFileW, DELIBERATELY --
+'     "through code that is NOT the writer under test". Reading it back through PsFile would
+'     put the reader and the writer on the same layer, which is the one thing a round-trip
+'     test must not do.
+'   * Sections 12 and 13 are not about saving at all. One asserts a compile leaves the
+'     process where it found it; the other that the current directory is not on the DLL
+'     search path. Both are properties of the SHELL PROCESS and belong here.
+'
+' WHAT GATES THE SHELL'S SAVE PATH INSTEAD: the writer itself moves into app/, so tiko and
+' the shell run the SAME writer, and this suite -- running in tiko, compared paired --
+' exercises it. What that does NOT cover is shell-side wiring: the wrong encoding handed in,
+' a path resolved differently. That gap is real and is recorded in docs/port/7c-step3.md
+' rather than papered over by moving a file that does not want to move.
 
 ' For code_Initialize/code_Cleanup: section 12 drives the real pair. Safe this early --
 ' modCompile.bi is types and declarations only and names no Ps* type.

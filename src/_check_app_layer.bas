@@ -165,6 +165,43 @@ end sub
 '' a directory named with one, and the same trap is written up in PsPlatform's
 '' build.bas. Getting it wrong here made the checker scan ZERO files and then
 '' report success, which is the worst answer available.
+'' ---- CANDIDATE MODE: check files that are NOT in the layer yet -------------
+''
+'' `_check_app_layer.exe <file> [file...]` checks the named files instead of
+'' scanning src/app, so "would this file survive the move?" can be asked BEFORE
+'' moving it.
+''
+'' THIS EXISTS BECAUSE THE CHECKER WAS BYPASSED, NOT BECAUSE IT WAS WRONG. 7c
+'' step 3 planned to move modSaveSelfTest.inc and modEncodingSelfTest.inc into
+'' src/app on the strength of an ad-hoc grep that reported them free of Win32.
+'' They are not: between them they name CreateFileW, ReadFile, CloseHandle,
+'' LoadLibraryW, WideCharToMultiByte and CFileStream -- and EVERY ONE of those is
+'' already in g_banned above. The vocabulary was never the gap. The gap was that
+'' this checker could only be pointed at files ALREADY in the layer, so the cheap
+'' way to ask the question was a grep, and the grep was worse.
+if command(1) <> "" then
+    dim as long nArg = 1, nChecked
+    do while command(nArg) <> ""
+        dim as string sPath = command(nArg)
+        if dir(sPath, fbNormal) = "" then
+            print "  FAIL  no such file: " & sPath
+            end 2
+        end if
+        CheckFile(sPath, sPath)
+        nChecked += 1
+        nArg += 1
+    loop
+    print ""
+    if g_nBad > 0 then
+        print "  " & g_nBad & " violation(s) across " & nChecked & " candidate file(s)."
+        print ""
+        print "  These files cannot move into src/app as they stand."
+        end 1
+    end if
+    print "  ok      " & nChecked & " candidate file(s) are free of Win32 and AfxNova"
+    end 0
+end if
+
 dim as string sRoot = exepath() & "\src\app"
 if dir(sRoot, fbDirectory) = "" then sRoot = exepath() & "\app"
 dim as string sDir = sRoot & "\"
