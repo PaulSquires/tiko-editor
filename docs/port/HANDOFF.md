@@ -1,7 +1,7 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ **the commit that added [`7c-step4.md`](7c-step4.md)** — 7c
-**step 4 complete**, shell code at `8a9faf89e`; PsPlatform **`main`** @ **`b4d7371`**;
+tiko `feat/cross-platform` @ **the commit that added [`7c-step5.md`](7c-step5.md)** — 7c
+**step 5 complete**, shell code at `e85af2878`; PsPlatform **`main`** @ **`b4d7371`**;
 HelpCenter **`main`** @ `02a4c18`. All build warning-free and tiko runs.
 
 **THIS BRANCH NOW CARRIES TWO UNRELATED WORKSTREAMS.** The 7c port is `src/app` and
@@ -9,9 +9,12 @@ HelpCenter **`main`** @ `02a4c18`. All build warning-free and tiko runs.
 interleaved with it in the log. Neither builds the other. One F1Markdown commit swept up 90
 lines of in-progress `shell/shellpanel.bi`, so `git log -- <path>` is more reliable than
 reading commit subjects when tracing who changed what. **F1Markdown has its own handoff at
-[`../f1markdown/HANDOFF.md`](../f1markdown/HANDOFF.md)**, and it has since moved onto its own
-branch, `feat/f1markdown` — which was cut from this one and therefore still carries this
-workstream's commits inside it.
+[`../f1markdown/HANDOFF.md`](../f1markdown/HANDOFF.md)**.
+
+**`feat/f1markdown` NO LONGER EXISTS.** It was cut from this branch, ran three commits ahead,
+was fast-forwarded back into `feat/cross-platform` on 2026-08-10 and then deleted, locally and
+on the remote. Both workstreams share this branch again — so the warning above about commit
+subjects applies going forward, not only to the history.
 
 **PsPlatform is pushed. tiko's last commits are NOT** — `origin/feat/cross-platform` was at
 `d79163672` when this was written. **Run `git log origin/feat/cross-platform..HEAD` rather
@@ -87,13 +90,26 @@ Read in this order, and do not skip the first:
    1.35 and it is a floor, and three of the eight commits were fixing things that only appear
    when the program runs. Also the shortest list on this shelf of what a single panel demanded
    from the toolkit underneath it.
-8. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
+8. [`7c-step5.md`](7c-step5.md) — **the blocker that was not one.** This page called
+   threading 7c's largest blocker and put it first for step 5; measuring removed it from the
+   top before a line was written, and the panel it was said to gate shipped without it. Read
+   THE MEASUREMENT and then "The real limit, and it is not the thread" -- the constraint that
+   actually binds is the symbol database holding one file at a time.
+9. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
    irreducible, investigated. **It was not a blocker and never had been.** Short, and it is the
    clearest example on this whole shelf of a claim that survived because nobody checked it.
    **Its recommendation has since been implemented**: WebView2 is gone from the tree.
 
 **The one habit worth copying from this run:** every defect found came from running the program
-or reading the callers, and none from the gates. When a note here says something is done,
+or reading the callers, and almost none from the gates.
+
+**"ALMOST" ARRIVED IN STEP 5, AND IT IS THE FIRST EXCEPTION IN FIVE STEPS.** A suite assertion
+caught the scanner reading whatever the shared view was showing — it printed `tab1=3` for a file
+with no procedures in it. What made that possible is worth copying rather than the exception
+itself: the assertion compared **two independent answers to the same question** (what the symbol
+database holds, and what the panel displays) instead of checking one of them against a constant.
+
+When a note here says something is done,
 blocked, or not yours to decide, check it before believing it — that claim was true when written
 and this page's own record is that it stops being true quickly.
 
@@ -244,6 +260,26 @@ slot where tiko's control has two; its row striping is unconditional with no `Se
 `OnSelChange` cannot tell a mouse selection from a keyboard one, so **arrowing the list moves the
 editor**. Each is worked around at the call site with the workaround named.
 
+**AND STEP 5 KILLED THIS PAGE'S OWN "LARGEST BLOCKER" BEFORE WRITING A LINE.** The list below
+put THREADING first for step 5, because the Functions panel needs `clsScanMgr` and PsPlatform
+exposes no threading at all. Measuring said otherwise: the panel reads **`gSymDb`**, not the
+scanner; `clsSymbolDb` and `PARSERESULTSET` were already in `app/`; the parse is ONE DLL CALL;
+and `gAppNotify.RequestBufferScan` was already a seam field this shell stubbed. **A buffer-tier
+parse on the UI thread measures 4–20ms on files up to 260 KB** — imperceptible behind a
+debounce. `clsScanMgr`'s 382 code lines became **112**, because most of it was thread
+machinery. See [`7c-step5.md`](7c-step5.md).
+
+**THE REAL LIMIT IS THE SYMBOL DATABASE, NOT THE THREAD.** `gSymDb`'s buffer tier holds exactly
+ONE result set and `InstallSet` replaces, so the shell's Functions pane is *"the active file's
+procedures"*, never the project's — tiko's project tier is what covers a whole workspace. That
+is what step 6 has to decide, and it is asserted rather than described so a future project tier
+fails and says so.
+
+**AND THE SUITE FOUND A DEFECT FOR ONCE**: the scanner read whatever the shared view was
+showing, so scanning a background tab parsed the foreground document and filed its symbols
+under the wrong filename. **The same defect the bookmarks loader already documents at length** —
+written two commits earlier, by me, and not carried across.
+
 **That is ONE FORM AND TWO DIALOGS. 7c is 48 forms and ~45,000 lines**, so read step 1 as a measurement of
 the approach rather than of the progress. An earlier version of this page said 7c was *done*,
 which was the most consequential error it has carried; the correction is not an excuse to
@@ -380,8 +416,8 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | `_compile_fast.bat` | gas64 build, zero warnings | green |
 | `_check_scihost.bat` | the editor works — 26 assertions, incl. an **A/B against a stock Scintilla window in the same process** | green |
 | `_check_package.bat` | tiko runs with **only the Windows directories on PATH** | green, ~1s |
-| `_check_app_layer.bat` | `src/app` names no Win32 or AfxNova token (**46 files**, 2026-08-10) | green |
-| `_check_app_standalone.bat` | `src/app` compiles against PsCore alone **and LINKS as one unit** | green — **16 clean**, 0 errors, **debt 4** |
+| `_check_app_layer.bat` | `src/app` names no Win32 or AfxNova token (**47 files**, 2026-08-10) | green |
+| `_check_app_standalone.bat` | `src/app` compiles against PsCore alone **and LINKS as one unit** | green — **17 clean**, 0 errors, **debt 3** |
 | `_check_shell.bat` | `src/shell` includes no Win32 shell header, and carries no `PsC.` | green |
 
 The ratchet is the weak one and knows it: it greps a hand-written vocabulary, and has had
@@ -572,18 +608,22 @@ PsCore now declares `operator len`, so unconverted sites are right rather than q
 
 ---
 
-## What 7c step 5 has to decide — the live list
+## What 7c step 6 has to decide — the live list
 
 The four items below this one are all closed and are kept as a record. **These are the open
-ones**, and each is a decision rather than a task. Reordered after step 4, which moved item 2
-to the front by hitting it:
+ones**, and each is a decision rather than a task.
 
-1. **Threading in PsPlatform — the largest single blocker left, and not tiko's to solve.**
-   `clsScanMgr` is blocked on it outright: its worker thread is woken and stopped with Win32
-   event objects, and PsPlatform surfaces no threading or synchronisation service at all (the
-   vendored `SDL_mutex.bi` is never exposed through `g_plat`). **The FUNCTIONS panel — the next
-   one anybody would port — needs it**, so this now gates form work rather than sitting behind
-   it.
+**ITEM 1 USED TO BE THREADING, TWICE OVER, AND STEP 5 REMOVED IT FROM THE TOP BY MEASURING.**
+Read that as the pattern rather than as one correction: this page named the largest blocker,
+the blocker turned out not to gate the work it was said to gate, and one afternoon of
+measurement is what said so. **The entry is kept below, demoted, with its real scope.**
+
+1. **A PROJECT TIER, or accept "the active file" as the Functions pane's scope.** `gSymDb`'s
+   BUFFER tier holds exactly one result set and `InstallSet` replaces, so the shell's Functions
+   panel can only ever list the last file scanned — it rescans on every tab switch to keep that
+   the file in front of the user. tiko lists a whole workspace because its PROJECT tier scanned
+   it. **This is the panel's real limit and the first thing a user would notice**, and it is
+   asserted in the suite so a future project tier fails and says so.
 2. **The three `PsListTree` gaps step 4 found**, each worked around at a call site today: one
    item-data slot where tiko's control has two; unconditional row striping with no
    `SetAltRows`; and `OnSelChange` not distinguishing mouse from keyboard, which makes arrowing
@@ -592,14 +632,25 @@ to the front by hitting it:
 3. **Encoding detection on read.** `ShellHost_LoadFileText` reads bytes and calls them UTF-8;
    tiko's read path decodes UTF-16 through `WideCharToMultiByte` and is still shell-side.
    The shell *saves* now, so a UTF-16 file opened there will not round-trip.
-4. **`clsTopTabCtl`: portable rewrite, or a Win32 facade forever?** The shell shows the
+4. **Threading in PsPlatform — still open, no longer first, and now with a number against it.**
+   `clsScanMgr`'s worker is woken and stopped with Win32 event objects and PsPlatform surfaces
+   no threading service at all (the vendored `SDL_mutex.bi` is never exposed through `g_plat`).
+   **Nothing in step 5 needed it**: a buffer-tier parse is 4–20ms on the UI thread. The case
+   that survives is the PROJECT tier and anything else that parses more than one file at once
+   — which is item 1, so decide that first.
+5. **`clsTopTabCtl`: portable rewrite, or a Win32 facade forever?** The shell shows the
    *model* half is small — 258 lines including its comments. The class as it stands stores the
    `clsDocument ptr` inside the control and reads it back with `PsTabBar_GetItemData`.
-5. **The four link-debt bodies.** Three are trivially host-supplied; `FilenameOriginalCase`
-   needs a PsCore canonical-path call first.
-6. **Whether the 1.35 per-form ratio holds on a panel that is not the easy one.** It came from
-   the panel whose model was already portable and whose control already existed. Functions has
-   neither.
+6. **The THREE link-debt bodies** (was four; `ProcessFromCurdriveApp` moved into `app/` in step
+   5 and `TodoStore_RemoveFile` turned out to have a real body there all along).
+   `FilenameOriginalCase` needs a PsCore canonical-path call first, and the shell's version is
+   the IDENTITY — which the symbol database and TODO store, both keyed by filename, would
+   notice if two spellings of one path ever reached them.
+7. **What the per-form ratio actually depends on.** Step 4 measured 1.35 on a whole form; step
+   5's panel came in UNDER 1 — and did less, while its scanner replaced 382 lines with 112
+   because most of `clsScanMgr` was thread machinery. **The cost tracks what the platform
+   already provides far more than it tracks the form's size**, so a single ratio is the wrong
+   instrument for estimating the remaining 47 forms.
 
 **And one process point steps 3 and 4 both earned: drive every milestone by hand before calling
 it done.** Every claim a suite supports has survived. Every claim about what the user sees came
