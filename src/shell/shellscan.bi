@@ -76,11 +76,47 @@ end function
 function ShellScan_Buffer( byval pDoc as clsDocument ptr ) as boolean
     if ShellScan_IsScannable( pDoc ) = false then return false
 
-    '' THE TEXT AS SCINTILLA HAS IT, falling back to the document's own buffer. Both are
-    '' bytes -- ANSI or UTF-8 -- and the DLL takes either. A document that has been loaded
-    '' but never shown has no view, which is the case the second line is for.
+    '' ---- THE TEXT OF *THIS* DOCUMENT, WHICH IS NOT WHAT GetText ALONE ANSWERS ----------
+    ''
+    '' clsDocument.GetText reads the ACTIVE VIEW, and this binary has ONE view for every
+    '' tab. Asking a BACKGROUND document for its text therefore returns the FOREGROUND
+    '' document's -- and the scan then installs those symbols under the background file's
+    '' name. Two tabs, and the Functions panel lists one file's procedures under the
+    '' other's heading.
+    ''
+    '' FOUND BY THE SUITE, which is worth recording because almost nothing else in this port
+    '' was: a tier assertion reported "tab1=3" for a file containing four print statements
+    '' and no procedures at all.
+    ''
+    '' It is the SAME DEFECT the bookmarks loader has in shellpanel.bi, whose header
+    '' explains it at length -- written two commits earlier, by me, and not carried across
+    '' to the scanner. The fix is the same dance: point the view at the document, read,
+    '' point it back, and restore the caret, because SCI_SETDOCPOINTER resets it.
     dim as string sText
-    if gAppHost.IsViewAlive( pDoc->hWindow(0) ) then sText = pDoc->GetText()
+    dim as long idxTab = ShellTabs_IndexOfDoc( pDoc )
+
+    if (idxTab >= 0) andalso (g_view <> 0) andalso (g_tabDocs(idxTab).pSciDoc <> 0) then
+        dim as any ptr pWasDoc = cast( any ptr, g_view->Msg(SCI_GETDOCPOINTER, 0, 0) )
+        dim as long nWasPos    = g_view->Msg( SCI_GETCURRENTPOS, 0, 0 )
+        dim as long nWasFirst  = g_view->Msg( SCI_GETFIRSTVISIBLELINE, 0, 0 )
+        if pWasDoc <> 0 then g_view->Msg( SCI_ADDREFDOCUMENT, 0, cast(integer, pWasDoc) )
+
+        g_view->Msg( SCI_SETDOCPOINTER, 0, cast(integer, g_tabDocs(idxTab).pSciDoc) )
+        sText = pDoc->GetText()
+
+        if pWasDoc <> 0 then
+            g_view->Msg( SCI_SETDOCPOINTER, 0, cast(integer, pWasDoc) )
+            g_view->Msg( SCI_RELEASEDOCUMENT, 0, cast(integer, pWasDoc) )
+            g_view->Msg( SCI_GOTOPOS, nWasPos, 0 )
+            g_view->Msg( SCI_SETFIRSTVISIBLELINE, nWasFirst, 0 )
+        end if
+    elseif gAppHost.IsViewAlive( pDoc->hWindow(0) ) then
+        '' No tab of its own -- nothing in this binary reaches here today, but a document
+        '' the host created outside the tab model would.
+        sText = pDoc->GetText()
+    end if
+
+    '' A document that has been loaded but never shown holds its text here instead.
     if len( sText ) = 0 then sText = pDoc->TextBuffer
     if len( sText ) = 0 then return false
 

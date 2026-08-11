@@ -3584,8 +3584,33 @@ end function
                             Check "    IDM_BOOKMARKSLIST switches it back", _
                                   (g_panelMode = SHPANEL_BOOKMARKS)
 
+                            '' ---- CLICKING A FUNCTION GOES THERE ---------------------
+                            '' ShellPanel_GotoRow is MODE-AGNOSTIC and this is the
+                            '' assertion for that: it reads the packed slot, and the
+                            '' functions loader packs the same (tab, line) the bookmarks
+                            '' loader does. No second handler, no second callback -- the
+                            '' whole of commit 4's click support is that the two loaders
+                            '' agree on one encoding.
+                            ShellPanel_SetMode( SHPANEL_FUNCTIONS )
+                            scope
+                                '' Row 2 is ProbeBeta, whose body is on database line 6 and
+                                '' therefore Scintilla line 5.
+                                dim as boolean bWent = ShellPanel_GotoRow( 2 )
+                                dim as long nAt = SciMsg( g_view->pSci, SCI_LINEFROMPOSITION, _
+                                            SciMsg(g_view->pSci, SCI_GETCURRENTPOS, 0, 0), 0 )
+                                Check "    clicking a function jumps to its body", _
+                                      bWent andalso (nAt = 5), str(nAt) & " wanted 5"
+
+                                '' A HEADER IS STILL A FILENAME. Same guard, same reason,
+                                '' and it has to hold in both modes because one handler
+                                '' serves both.
+                                Check "      and its file header still goes nowhere", _
+                                      (ShellPanel_GotoRow(0) = false)
+                            end scope
+
                             '' Leave the document as this block found it -- no bookmarks --
                             '' so the assertions after it see what they expect.
+                            ShellPanel_SetMode( SHPANEL_BOOKMARKS )
                             pDocF->ToggleBookmark( 1 )
                             ShellPanel_Reload()
                         end scope
@@ -3860,6 +3885,76 @@ end function
                                           SciMsg(g_view->pSci, SCI_GETCURRENTPOS, 0, 0), 0) = 1), _
                                   str(SciMsg(g_view->pSci, SCI_LINEFROMPOSITION, _
                                              SciMsg(g_view->pSci, SCI_GETCURRENTPOS, 0, 0), 0))
+
+                            '' ---- THE BUFFER TIER HOLDS ONE FILE, AND THIS RECORDS IT --
+                            '' gSymDb has two tiers and this binary fills only the BUFFER
+                            '' one, whose InstallSet REPLACES. So the symbols in the
+                            '' database are always the LAST FILE SCANNED, and the Functions
+                            '' panel -- which loops over every open tab -- can only ever
+                            '' find rows for one of them.
+                            ''
+                            '' tiko does not have this limit: its PROJECT tier covers every
+                            '' file in the project, and this binary has no project system.
+                            '' Asserted rather than described, so that if a project tier
+                            '' ever arrives these fail and say so.
+                            ''
+                            '' B IS SCANNED EXPLICITLY HERE rather than relying on the
+                            '' order of what came before. The first version of this block
+                            '' assumed B's open had left it as the scanned file and failed
+                            '' with "(3) for the first file" -- correctly, because the click
+                            '' assertion above switches to A, and a tab switch now REQUESTS
+                            '' A SCAN. The claim was right and the setup was stale.
+                            scope
+                                dim rsA() as SYMBOLREF
+                                gAppNotify.RequestBufferScan( g_tabDocs(idxB).pDoc )
+                                dim as long nA = gSymDb.EnumProcsInFile( wszFile, rsA() )
+                                Check "  only the last-scanned file has symbols", _
+                                      (nA = 0), str(nA) & " for the first file"
+
+                                '' AND THE PANEL SHOWS THAT, rather than an empty list or a
+                                '' stale one: B has no procedures at all, so the functions
+                                '' pane is empty with two files open.
+                                '' SetMode THEN Reload, and the second call is not
+                                '' redundant. SetMode EARLY-OUTS when the mode already
+                                '' matches -- deliberately, so that re-selecting a pane
+                                '' does not throw away the user's scroll position -- so a
+                                '' block that assumed it always reloads is a block that
+                                '' asserts against whatever the last one left on screen.
+                                '' This one did: three stale rows, while both lookups
+                                '' agreed the database was empty.
+                                ShellPanel_SetMode( SHPANEL_FUNCTIONS )
+                                ShellPanel_Reload()
+                                dim as string sSeen
+                                for t as long = 0 to g_nTabDocs - 1
+                                    dim rsT() as SYMBOLREF
+                                    sSeen &= " tab" & t & "=" & _
+                                        str(gSymDb.EnumProcsInFile( _
+                                            g_tabDocs(t).pDoc->DiskFilename, rsT() ))
+                                next
+                                Check "    so the functions pane is empty here", _
+                                      (g_panel->GetCount() = 0), _
+                                      str(g_panel->GetCount()) & " rows, mode=" & _
+                                      str(g_panelMode) & ", tabs=" & str(g_nTabDocs) & sSeen
+
+                                '' SWITCHING BACK TO A RESCANS IT -- ShellTabs_Show requests
+                                '' a buffer scan, which is tiko's own site for it
+                                '' (clsTopTabCtl.inc:271) and is what keeps the panel
+                                '' describing the document in front of the user.
+                                '' g_nTabCur IS MOVED OFF A FIRST. ShellTabs_Show returns
+                                '' immediately when the tab is already current -- the
+                                '' re-show guard -- so asking it to switch to the tab that
+                                '' IS current scans nothing, and the first version of this
+                                '' assertion read that as "the rescan does not work".
+                                ShellTabs_Show( idxB )
+                                ShellTabs_Show( idx1 )
+                                Check "    switching back to the first tab rescans it", _
+                                      (gSymDb.EnumProcsInFile(wszFile, rsA()) = 3), _
+                                      str(gSymDb.EnumProcsInFile(wszFile, rsA()))
+                                ShellPanel_Reload()
+                                Check "      and its functions are listed again", _
+                                      (g_panel->GetCount() = 3), str(g_panel->GetCount())
+                                ShellPanel_SetMode( SHPANEL_BOOKMARKS )
+                            end scope
 
                             '' Tidy: drop B's bookmark, its tab and its document.
                             pB->ToggleBookmark( 3 )

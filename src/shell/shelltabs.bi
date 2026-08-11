@@ -107,6 +107,19 @@ sub ShellTabs_Show( byval idx as long )
     '' always set below, but an unfocused view draws no caret to show it at.
     if (g_pSurf <> 0) andalso (g_view <> 0) then g_pSurf->SetFocus( g_view )
 
+    '' ---- AND THE NEW TAB IS SCANNED, which tiko does at the same point
+    '' (clsTopTabCtl.inc:271) and which this binary needs MORE than tiko does.
+    ''
+    '' gSymDb's BUFFER TIER HOLDS EXACTLY ONE RESULT SET. InstallSet replaces, so the
+    '' symbols in the database are always the last file scanned -- and tiko covers every
+    '' other file from its PROJECT tier, which this binary has no notion of. Without a scan
+    '' here the Functions panel would keep showing whichever document happened to be
+    '' scanned last while the user looked at a different one.
+    ''
+    '' It costs a parse per tab switch: 4-20ms on the files measured in
+    '' docs/port/7c-step5.md, on the click that changed the tab.
+    if g_tabDocs(idx).pDoc <> 0 then gAppNotify.RequestBufferScan( g_tabDocs(idx).pDoc )
+
     if g_pSurf <> 0 then g_pSurf->InvalidateAll()
 end sub
 
