@@ -108,6 +108,10 @@
 '' reported "Expected End-of-Line", seven errors deep into the file and none of them at the
 '' declaration. Worth knowing before hunting the wrong line.
 #include once "ui/controls/PsListTree.inc"
+'' The worker thread, new in 7c step 7. The scan takes 1.2 seconds on a large include graph
+'' and used to take it on this thread; PsThread is what moves it, and g_plat.events.Post --
+'' thread-safe, and written for exactly this -- is what brings the result back.
+#include once "ui/core/PsThread.inc"
 '' For the input box: a prompt, a field and two buttons. There is no label control in
 '' PsPlatform, so the prompt is painted by the dialog root itself.
 #include once "ui/controls/PsButton.inc"
@@ -945,6 +949,12 @@ sub BuildTree( byref surf as PsSurface )
     ''
     '' AFTER BOTH VIEWS ARE IN THE TREE, deliberately: CreateScintillaWindows asks for view 0
     '' and view 1 in one loop, so a null second global would bind half a document.
+    '' ---- THE SCAN WORKER STARTS BEFORE ANY FILE OPENS (7c step 7) ---------------------
+    '' Opening a document requests a buffer scan, and a request with no worker to take it
+    '' would sit in the slot until something else happened to signal -- which, at startup,
+    '' is nothing.
+    ShellScan_StartWorker()
+
     ShellTabs_Install()
     ShellPanel_Install()
     '' The editor's notifications. Until this call nothing in this binary heard from
@@ -2356,6 +2366,7 @@ end function
     '' ---------------------------------------------------------------------- dump
     if bDumpLayout then
         RunLayoutDump( surf )
+        ShellScan_StopWorker()
         TE_Free( g_te )
         PsPlatformShutdown()
         end 0
@@ -3483,6 +3494,16 @@ end function
                     end if
 
                     dim as long idx1 = ShellTabs_Open( wszFile )
+
+                    '' ---- THE SCAN IS ASYNCHRONOUS SINCE 7c STEP 7 --------------------
+                    '' Every assertion below used to read gSymDb on the line after asking
+                    '' for a scan, which worked because the scan WAS the asking. Now the
+                    '' request goes to a worker and this waits for it.
+                    ''
+                    '' A BOUNDED WAIT ON A CONDITION, not a fixed sleep: a slow machine
+                    '' waits longer and still passes, and a broken worker fails the
+                    '' assertions in bounded time instead of hanging the suite.
+                    ShellScan_DrainFor( 5000 )
                     Check "a real file opens into a tab", (idx1 >= 0), str(idx1)
                     '' THE POINT OF THE COMMIT. Before it, this count was zero however many
                     '' files were open.
@@ -3664,6 +3685,10 @@ end function
                         Check "    a .txt is not scanned", (ShellScan_Buffer(pD) = false)
                         pD->DiskFilename = "C:\dev\notsource.bi"
                         Check "      but a .bi is", ShellScan_Buffer(pD)
+                        '' That last one ASKED for a scan of a file called .bi that does
+                        '' not exist under that name. Drained here so it cannot land in the
+                        '' middle of a later assertion and replace the buffer tier.
+                        ShellScan_DrainFor( 5000 )
                         pD->DiskFilename = *sNameWas.Wz()
                     end scope
 
@@ -3830,6 +3855,7 @@ end function
                         if PsFileWriteAll( wszFile2, _
                                 !"' two\nsub SecondProc()\n  print 2\nend sub\n" ) then
                             dim as long idxB = ShellTabs_Open( wszFile2 )
+                            ShellScan_DrainFor( 5000 )
                             Check "  a second file opens into its own tab", _
                                   (idxB > idx1), str(idx1) & " then " & str(idxB)
                             Check "    and gApp has both", _
@@ -3941,10 +3967,12 @@ end function
                                 '' STILL TRUE, AND STILL THE POINT: the BUFFER tier holds
                                 '' one file. Scanning B evicts A from it.
                                 gAppNotify.RequestBufferScan( g_tabDocs(idxB).pDoc )
+                                ShellScan_DrainFor( 5000 )
 
                                 '' A's symbols survive anyway -- from the PROJECT tier,
                                 '' which reached A as the root and B through A's #include.
                                 ShellScan_Project()
+                                ShellScan_DrainFor( 15000 )
                                 Check "  a project scan reaches both files", _
                                       (g_nProjCount > 0) andalso (g_nLastProjMs >= 0), _
                                       str(g_nLastProjMs) & "ms"
@@ -3992,6 +4020,7 @@ end function
                                 '' assertion read that as "the rescan does not work".
                                 ShellTabs_Show( idxB )
                                 ShellTabs_Show( idx1 )
+                                ShellScan_DrainFor( 5000 )
                                 Check "    switching back to the first tab rescans it", _
                                       (gSymDb.EnumProcsInFile(wszFile, rsA()) = 3), _
                                       str(gSymDb.EnumProcsInFile(wszFile, rsA()))
@@ -4767,6 +4796,7 @@ end function
 
         print ""
         print "  " & g_nPass & " passed, " & g_nFail & " failed"
+        ShellScan_StopWorker()
         TE_Free( g_te )
         PsPlatformShutdown()
         if g_nFail > 0 then end 1
@@ -4895,6 +4925,20 @@ end function
                         g_menus.RouteEvent( @ev )
                     end if
 
+                '' ---- A WORKER FINISHED (7c step 7) ----------------------------------
+                '' The scan runs on another thread now and posts this when it has a result.
+                '' PSEV_USER is documented as "application-defined, posted from worker
+                '' threads" (PsEvent.bi:90) and this is its first use in either binary.
+                ''
+                '' EVERYTHING THE RESULT TOUCHES HAPPENS HERE, on the UI thread: gSymDb, the
+                '' panel, the documents. The worker only handed over a pointer.
+                ''
+                '' NOT GUARDED BY bMine: a posted event has no window, so its surface is 0
+                '' and the test above already treats that as "mine". Said out loud because
+                '' the next person to add a case here will wonder.
+                case PSEV_USER
+                    if ev.user.code = SH_USER_SCAN_DONE then ShellScan_Collect()
+
                 case else
                     if bMine = false then
                         g_menus.RouteEvent( @ev )
@@ -4948,6 +4992,10 @@ end function
 
     if pix <> 0 then deallocate(pix)
     g_plat.window.Destroy( win )
+    '' THE WORKER IS JOINED BEFORE THE RUNTIME GOES AWAY. A thread still running at exit
+    '' reads globals that are being torn down, on a schedule nobody controls -- which is how
+    '' a clean quit becomes an intermittent crash. All three exit paths do this.
+    ShellScan_StopWorker()
     TE_Free( g_te )
     PsPlatformShutdown()
     end 0

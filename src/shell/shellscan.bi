@@ -50,6 +50,94 @@ dim shared as long g_nLastProjMs
 dim shared as long g_nProjCount
 
 
+'' ========================================================================================
+'' THE WORKER (7c step 7) -- and what came back with it.
+''
+'' Step 5 shipped this file SYNCHRONOUS and its header listed four things that dropped out
+'' BECAUSE there was one thread. Step 6 measured 1.2 SECONDS on a 134-file include graph, so
+'' the parse moved off the UI thread and three of those four are back. Each is re-earned
+'' below rather than re-copied from clsScanMgr:
+''
+''   1. THE RETIRE QUEUE. fbcparser_free has a same-thread contract: a set displaced on the
+''      UI thread by InstallSet must be freed on the WORKER. So the UI hands it back.
+''   2. THE STALE-ROOT TEST. A scan started before a tab switch can now land after it, and
+''      installing it would resurrect the previous document's symbols.
+''   3. LIFETIME. A worker still running at exit is how a clean quit becomes an intermittent
+''      crash.
+''
+'' ---- WHAT THE UI THREAD DOES AND WHAT THE WORKER DOES ----------------------------------
+''
+'' UI:      copies the text (SCINTILLA IS NOT THREAD-SAFE), fills a request slot, signals.
+'' WORKER:  parses, builds indexes, publishes into a done slot, posts PSEV_USER.
+'' UI:      on PSEV_USER, installs into gSymDb and reloads the panel.
+''
+'' NOTHING BUT THE PARSE HAPPENS ON THE WORKER. gSymDb, the panel, the documents and every
+'' widget stay single-threaded, which is what makes this a change of ONE function's timing
+'' rather than a change to the toolkit's threading model.
+''
+'' ---- LATEST WINS, ONE SLOT PER TIER ----------------------------------------------------
+''
+'' tiko's rule (clsScanMgr.inc:288-300): a newer request replaces a pending one in its own
+'' tier. Typing produces a request every time the debounce fires, and queueing them would
+'' mean parsing states the user has already moved past.
+'' ========================================================================================
+
+const SH_MAX_RETIRE = 16
+
+type ShellScanRequest
+    bValid  as boolean
+    sText   as string        '' buffer tier only -- copied on the UI thread
+    wszRoot as DWSTRING
+    wszDir  as DWSTRING      '' project tier's one include path
+end type
+
+dim shared as PsThread    g_scanThread
+dim shared as PsMutex     g_scanMtx
+dim shared as PsCondition g_scanCond
+dim shared as boolean     g_bScanQuit          '' guarded by g_scanMtx
+dim shared as boolean     g_bScanStarted
+
+dim shared as ShellScanRequest g_reqBuf, g_reqProj    '' pending, guarded
+dim shared as PARSERESULTSET ptr g_doneBuf, g_doneProj  '' finished, guarded
+
+'' Sets the UI displaced and the worker still owes a free. Guarded.
+dim shared as PARSERESULTSET ptr g_retire(0 to SH_MAX_RETIRE - 1)
+dim shared as long g_nRetire
+
+'' The code posted through g_plat.events.Post. Any nonzero value would do; it is named so
+'' the pump's arm reads as something other than a magic number.
+const SH_USER_SCAN_DONE = 1
+
+
+'' ---------------------------------------------------------------------------------------
+'' HAND A SET BACK TO THE WORKER TO FREE.
+''
+'' fbcparser_free has a SAME-THREAD CONTRACT -- the thread that allocated a result is the
+'' one that may release it -- so a set displaced on the UI thread cannot simply be deleted
+'' there. tiko carries the identical queue (clsScanMgr.inc:376-393) for the identical
+'' reason, and step 5 deleted it with a note saying it existed only because of the thread.
+''
+'' IF THE QUEUE IS FULL THE SET IS LEAKED, deliberately and loudly. The alternative is
+'' freeing it on the wrong thread, which is a corruption that surfaces somewhere else
+'' entirely; sixteen outstanding is already far beyond what two tiers can produce.
+'' ---------------------------------------------------------------------------------------
+sub ShellScan_Retire( byval pRSet as PARSERESULTSET ptr )
+    if pRSet = 0 then exit sub
+
+    PsMutexLock( g_scanMtx )
+    if g_nRetire < SH_MAX_RETIRE then
+        g_retire(g_nRetire) = pRSet
+        g_nRetire += 1
+        PsCondSignal( g_scanCond )
+        PsMutexUnlock( g_scanMtx )
+    else
+        PsMutexUnlock( g_scanMtx )
+        print "tikoshell: retire queue full -- leaking a result set rather than " & _
+              "freeing it on the wrong thread"
+    end if
+end sub
+
+
 '' ---------------------------------------------------------------------------------------
 '' Only source files are worth parsing. tiko's ScanMgr_IsScannable (clsScanMgr.inc:210),
 '' unchanged: a document with no path is an unsaved buffer and IS scannable -- it is being
@@ -128,52 +216,237 @@ function ShellScan_Buffer( byval pDoc as clsDocument ptr ) as boolean
 
     dim as DWSTRING wszRoot = ShellScan_RootName( pDoc )
 
-    '' NO INCLUDE PATHS. tiko builds them from the active build configuration; this binary
-    '' has none, so an #include resolves against the file's own directory or not at all --
-    '' the same answer ShellHost_ResolveIncludePath already gives.
+    '' ---- FROM HERE THE UI THREAD IS DONE. Everything above ran here because it had to:
+    '' Scintilla is not thread-safe, so the text is copied on the thread that owns the view,
+    '' which is exactly what tiko does (clsScanMgr.inc:331-347) and for the same reason.
+    ''
+    '' LATEST WINS. A pending request is overwritten rather than queued -- typing produces
+    '' one per debounce, and a queue would parse states the user has already moved past.
+    PsMutexLock( g_scanMtx )
+    g_reqBuf.bValid  = true
+    g_reqBuf.sText   = sText
+    g_reqBuf.wszRoot = wszRoot
+    PsCondSignal( g_scanCond )
+    PsMutexUnlock( g_scanMtx )
+
+    '' TRUE MEANS "ASKED FOR", NOT "DONE", and every caller of this function had to be
+    '' re-read when that changed. It is the same word with a different meaning, which is the
+    '' shape of change that quietly breaks callers -- see the drain the self-test needs.
+    return true
+end function
+
+
+'' ---------------------------------------------------------------------------------------
+'' THE PARSE ITSELF, which is all the worker does. No gSymDb, no panel, no document -- it
+'' takes bytes and a name and hands back a result set.
+''
+'' STATIC-FREE AND UI-FREE ON PURPOSE: everything it touches is either a parameter or the
+'' two counters at the top of this file, and those are written here and read by the suite
+'' after a join or a drain.
+'' ---------------------------------------------------------------------------------------
+private function ShellScan_RunParse( byval nTier as long, _
+                                     byref sText as string, _
+                                     byval wszRoot as DWSTRING, _
+                                     byval wszDir as DWSTRING ) as PARSERESULTSET ptr
     dim as FBCP_OPTIONS opts
     opts.version = FBCP_VERSION
     opts.includeCount = 0
 
-    dim as double t0 = timer
-    dim as FBCP_RESULT ptr pRes = 0
-    dim as long rcScan = fbcparser_scan_text( strptr(sText), wszRoot.Wz(), @opts, @pRes )
-
-    dim as PARSERESULTSET ptr pRSet = new PARSERESULTSET
-    pRSet->pResult    = pRes
-    pRSet->tier       = ScanTierBuffer
-    pRSet->scanRc     = rcScan
-    pRSet->scanMs     = clng( (timer - t0) * 1000 )
-    pRSet->wszRootFile = *wszRoot.Wz()
-
-    '' THE INDEXES ARE BUILT HERE, where tiko builds them on the worker "off the UI thread".
-    '' There is no off-the-UI-thread in this binary, and that is the cost being measured.
-    pRSet->BuildIndexes()
-
-    g_nLastScanMs = pRSet->scanMs
-    g_nScanCount += 1
-
-    '' InstallSet hands back whatever it displaced. tiko gives that to the worker to free
-    '' under fbcparser_free's same-thread contract; with one thread it is freed right here,
-    '' which is the same contract trivially satisfied.
-    dim as PARSERESULTSET ptr pOld = gSymDb.InstallSet( ScanTierBuffer, pRSet )
-    if pOld then
-        if pOld->pResult then fbcparser_free( pOld->pResult )
-        delete pOld
+    '' The project tier's one include path -- the root file's own directory. See
+    '' ShellScan_Project for why the other two entries tiko adds are absent.
+    dim as wstring * MAX_PATH wszPath0
+    dim as wstring ptr pPaths(0 to 0)
+    if (nTier = ScanTierProject) andalso (PsLen(wszDir) > 0) then
+        wszPath0 = *wszDir.Wz()
+        pPaths(0) = @wszPath0
+        opts.includeCount = 1
+        opts.includePaths = @pPaths(0)
     end if
 
-    print "tikoshell: scanned " & PsPathName( wszRoot ).Utf8 & _
-          " -- rc=" & rcScan & " ms=" & pRSet->scanMs & _
-          iif( pRes <> 0, " symbols=" & str(pRes->symbolCount), " (no result)" )
+    dim as double t0 = timer
+    dim as FBCP_RESULT ptr pRes = 0
+    dim as long rcScan
+    if nTier = ScanTierBuffer then
+        rcScan = fbcparser_scan_text( strptr(sText), wszRoot.Wz(), @opts, @pRes )
+    else
+        rcScan = fbcparser_scan( wszRoot.Wz(), @opts, @pRes )
+    end if
+
+    dim as PARSERESULTSET ptr pRSet = new PARSERESULTSET
+    pRSet->pResult     = pRes
+    pRSet->tier        = nTier
+    pRSet->scanRc      = rcScan
+    pRSet->scanMs      = clng( (timer - t0) * 1000 )
+    pRSet->wszRootFile = *wszRoot.Wz()
+
+    '' BUILT ON THE WORKER, which is where tiko builds them and says why: "off the UI
+    '' thread". Step 5 had to do it on the UI thread and noted the cost; this is that note
+    '' being paid off.
+    pRSet->BuildIndexes()
+    return pRSet
+end function
+
+
+'' ---------------------------------------------------------------------------------------
+'' THE WORKER LOOP. Mirrors clsScanMgr.WorkerLoop (clsScanMgr.inc:395) with the Win32 event
+'' objects replaced by one condition, and the two tiers kept in the same latest-wins slots.
+'' ---------------------------------------------------------------------------------------
+private sub ShellScan_Worker( byval user as any ptr )
+    do
+        dim as long nTier = -1
+        dim as string sText
+        dim as DWSTRING wszRoot, wszDir
+
+        PsMutexLock( g_scanMtx )
+
+        '' ---- WAIT IN A LOOP, NOT AN `if`. A condition wait may return without a signal,
+        '' and re-testing the predicate is also what makes a lost wakeup survivable.
+        do while (g_bScanQuit = false) andalso _
+                 (g_reqBuf.bValid = false) andalso (g_reqProj.bValid = false) andalso _
+                 (g_nRetire = 0)
+            PsCondWait( g_scanCond, g_scanMtx )
+        loop
+
+        '' ---- THE RETIRE QUEUE, DRAINED HERE AND NOWHERE ELSE.
+        '' fbcparser_free has a same-thread contract: the sets below were displaced by
+        '' InstallSet on the UI thread, and this is the thread that allocated them.
+        for i as long = 0 to g_nRetire - 1
+            if g_retire(i) <> 0 then
+                if g_retire(i)->pResult then fbcparser_free( g_retire(i)->pResult )
+                delete g_retire(i)
+                g_retire(i) = 0
+            end if
+        next
+        g_nRetire = 0
+
+        if g_bScanQuit then
+            PsMutexUnlock( g_scanMtx )
+            exit do
+        end if
+
+        '' BUFFER BEFORE PROJECT, which is tiko's order too: the buffer tier is what the
+        '' user is looking at, and a project scan can take a second.
+        if g_reqBuf.bValid then
+            nTier   = ScanTierBuffer
+            sText   = g_reqBuf.sText
+            wszRoot = g_reqBuf.wszRoot
+            g_reqBuf.bValid = false
+            g_reqBuf.sText  = ""        '' released here, not held until the next request
+        elseif g_reqProj.bValid then
+            nTier   = ScanTierProject
+            wszRoot = g_reqProj.wszRoot
+            wszDir  = g_reqProj.wszDir
+            g_reqProj.bValid = false
+        end if
+
+        PsMutexUnlock( g_scanMtx )
+        if nTier < 0 then continue do
+
+        '' ---- OUTSIDE THE LOCK. This is the 1.2 seconds, and the whole point is that
+        '' nothing else waits on it.
+        dim as PARSERESULTSET ptr pRSet = ShellScan_RunParse( nTier, sText, wszRoot, wszDir )
+
+        '' ---- PUBLISH. A result the UI has not collected yet is replaced, and the old one
+        '' is freed RIGHT HERE -- same thread, same contract, and it is ours because the UI
+        '' never saw it.
+        PsMutexLock( g_scanMtx )
+        if nTier = ScanTierBuffer then
+            if g_doneBuf <> 0 then
+                if g_doneBuf->pResult then fbcparser_free( g_doneBuf->pResult )
+                delete g_doneBuf
+            end if
+            g_doneBuf = pRSet
+        else
+            if g_doneProj <> 0 then
+                if g_doneProj->pResult then fbcparser_free( g_doneProj->pResult )
+                delete g_doneProj
+            end if
+            g_doneProj = pRSet
+        end if
+        PsMutexUnlock( g_scanMtx )
+
+        '' THE SANCTIONED CHANNEL BACK. g_plat.events.Post is thread-safe and wakes a
+        '' blocked pump -- PsSdl3.inc:774 calls it "the direct analogue of the existing
+        '' CreateThread + PostMessage idiom", which is precisely what this replaces.
+        g_plat.events.Post( SH_USER_SCAN_DONE, 0, 0 )
+    loop
+end sub
+
+
+'' ---------------------------------------------------------------------------------------
+'' THE UI SIDE OF A FINISHED SCAN. Called from the pump's PSEV_USER arm, and by the
+'' self-test's drain. Returns TRUE if anything was installed.
+''
+'' EVERYTHING HERE IS ON THE UI THREAD: gSymDb, the panel, the documents. The worker's only
+'' contribution is a pointer handed over under the lock.
+'' ---------------------------------------------------------------------------------------
+function ShellScan_Collect() as boolean
+    dim as PARSERESULTSET ptr pBuf = 0, pProj = 0
+
+    PsMutexLock( g_scanMtx )
+    pBuf = g_doneBuf  : g_doneBuf  = 0
+    pProj = g_doneProj : g_doneProj = 0
+    PsMutexUnlock( g_scanMtx )
+
+    if (pBuf = 0) andalso (pProj = 0) then return false
+
+    dim as boolean bInstalled = false
+    for pass as long = 0 to 1
+        dim as PARSERESULTSET ptr pRSet = iif( pass = 0, pBuf, pProj )
+        if pRSet = 0 then continue for
+
+        '' ---- THE STALE-ROOT TEST, BACK BECAUSE THE RESULT CAN NOW ARRIVE LATE.
+        '' A buffer scan started before a tab switch lands after it, and installing it would
+        '' put the PREVIOUS document's symbols in the database while the user looks at
+        '' another file. tiko discards the same way (frmMain.inc:1713-1737).
+        dim as boolean bStale = false
+        if pRSet->tier = ScanTierBuffer then
+            dim as clsDocument ptr pActive = ShellTabs_CurrentDoc()
+            if pActive = 0 then
+                bStale = true
+            else
+                bStale = (PsUCase(DWSTRING(pRSet->wszRootFile)) <> _
+                          PsUCase(ShellScan_RootName(pActive)))
+            end if
+        end if
+
+        if bStale then
+            print "tikoshell: discarding a stale " & _
+                  iif(pRSet->tier = ScanTierBuffer, "buffer", "project") & " scan of " & _
+                  PsPathName( pRSet->wszRootFile ).Utf8
+            ShellScan_Retire( pRSet )
+            continue for
+        end if
+
+        if pRSet->tier = ScanTierBuffer then
+            g_nLastScanMs = pRSet->scanMs
+            g_nScanCount += 1
+        else
+            g_nLastProjMs = pRSet->scanMs
+            g_nProjCount += 1
+        end if
+
+        print "tikoshell: " & iif(pRSet->tier = ScanTierBuffer, "scanned ", "project scan ") & _
+              PsPathName( pRSet->wszRootFile ).Utf8 & _
+              " -- rc=" & pRSet->scanRc & " ms=" & pRSet->scanMs & _
+              iif( pRSet->pResult <> 0, _
+                   " files=" & str(pRSet->pResult->fileCount) & _
+                   " symbols=" & str(pRSet->pResult->symbolCount), " (no result)" )
+
+        '' InstallSet hands back what it displaced, and THE WORKER OWES ITS FREE -- see
+        '' ShellScan_Retire.
+        dim as PARSERESULTSET ptr pOld = gSymDb.InstallSet( pRSet->tier, pRSet )
+        if pOld then ShellScan_Retire( pOld )
+        bInstalled = true
+    next
 
     '' ---- AND THE PANEL FOLLOWS, which is what makes the Functions list LIVE.
     '' tiko does the same immediately after InstallSet -- "a fresh scan can add/remove files
     '' and procs: refresh the Functions panel when it is showing" (frmMain.inc:1750). Only
     '' when it IS showing: rebuilding a bookmarks list because a parse finished would be
     '' work for a list the parse cannot have changed.
-    if g_panelMode = SHPANEL_FUNCTIONS then ShellPanel_Reload()
-
-    return true
+    if bInstalled andalso (g_panelMode = SHPANEL_FUNCTIONS) then ShellPanel_Reload()
+    return bInstalled
 end function
 
 
@@ -226,47 +499,130 @@ function ShellScan_Project() as boolean
     if PsInStr( wszRoot, "\" ) = 0 then return false
 
     '' ONE INCLUDE PATH: the root's own directory. See the header for why the other two
-    '' entries tiko adds are absent.
-    dim as DWSTRING wszDir = PsPathDirWithSep( wszRoot )
-    dim as wstring * MAX_PATH wszPath0 = *wszDir.Wz()
-    dim as wstring ptr pPaths(0 to 0) = { @wszPath0 }
+    '' entries tiko adds are absent. It is resolved HERE rather than on the worker because
+    '' it reads gApp, and gApp belongs to the UI thread.
+    PsMutexLock( g_scanMtx )
+    g_reqProj.bValid  = true
+    g_reqProj.wszRoot = wszRoot
+    g_reqProj.wszDir  = PsPathDirWithSep( wszRoot )
+    PsCondSignal( g_scanCond )
+    PsMutexUnlock( g_scanMtx )
 
-    dim as FBCP_OPTIONS opts
-    opts.version      = FBCP_VERSION
-    opts.includeCount = 1
-    opts.includePaths = @pPaths(0)
-
-    dim as double t0 = timer
-    dim as FBCP_RESULT ptr pRes = 0
-    dim as long rcScan = fbcparser_scan( wszRoot.Wz(), @opts, @pRes )
-
-    dim as PARSERESULTSET ptr pRSet = new PARSERESULTSET
-    pRSet->pResult     = pRes
-    pRSet->tier        = ScanTierProject
-    pRSet->scanRc      = rcScan
-    pRSet->scanMs      = clng( (timer - t0) * 1000 )
-    pRSet->wszRootFile = *wszRoot.Wz()
-    pRSet->BuildIndexes()
-
-    g_nLastProjMs = pRSet->scanMs
-    g_nProjCount += 1
-
-    dim as PARSERESULTSET ptr pOld = gSymDb.InstallSet( ScanTierProject, pRSet )
-    if pOld then
-        if pOld->pResult then fbcparser_free( pOld->pResult )
-        delete pOld
-    end if
-
-    '' THE FILE COUNT IS THE INTERESTING HALF of this line, not the symbol count: it is how
-    '' many files the include graph actually reached, and therefore how much of "the
-    '' project" this binary can see without a compiler configuration.
-    print "tikoshell: project scan " & PsPathName( wszRoot ).Utf8 & _
-          " -- rc=" & rcScan & " ms=" & pRSet->scanMs & _
-          iif( pRes <> 0, " files=" & str(pRes->fileCount) & _
-                          " symbols=" & str(pRes->symbolCount), " (no result)" )
-
-    if g_panelMode = SHPANEL_FUNCTIONS then ShellPanel_Reload()
+    '' Again: TRUE means "asked for". The result arrives through PSEV_USER.
     return true
+end function
+
+
+'' ========================================================================================
+'' THE WORKER'S LIFETIME.
+''
+'' A THREAD STILL RUNNING AT PROCESS EXIT IS HOW A CLEAN QUIT BECOMES AN INTERMITTENT
+'' CRASH -- it reads globals the runtime is tearing down, and it does so on a schedule
+'' nobody controls. tiko sets an exit event and waits 15 seconds for the worker to
+'' acknowledge (clsScanMgr.inc:531-537); this sets a flag, broadcasts, and JOINS, which is
+'' the same contract without the timeout because the worker's only blocking wait is the
+'' condition it is being woken from.
+'' ========================================================================================
+sub ShellScan_StartWorker()
+    if g_bScanStarted then exit sub
+    if PsMutexCreate( g_scanMtx ) = false then
+        print "tikoshell: no mutex -- the scanner will not start"
+        exit sub
+    end if
+    if PsCondCreate( g_scanCond ) = false then
+        print "tikoshell: no condition -- the scanner will not start"
+        exit sub
+    end if
+    g_bScanQuit = false
+    if PsThreadStart( g_scanThread, @ShellScan_Worker, 0 ) = false then
+        print "tikoshell: the scan worker would not start"
+        exit sub
+    end if
+    g_bScanStarted = true
+end sub
+
+
+sub ShellScan_StopWorker()
+    if g_bScanStarted = false then exit sub
+
+    '' THE FLAG UNDER THE LOCK, THEN THE WAKE. The other order is the lost-wakeup bug: the
+    '' worker is woken, re-tests a flag that is not set yet, and goes back to sleep -- and
+    '' the join below then waits forever on a thread that will never look again.
+    PsMutexLock( g_scanMtx )
+    g_bScanQuit = true
+    PsCondBroadcast( g_scanCond )
+    PsMutexUnlock( g_scanMtx )
+
+    PsThreadJoin( g_scanThread )
+    g_bScanStarted = false
+
+    '' AFTER THE JOIN, so nothing is racing for these. Anything still in a slot never
+    '' reached the UI, so freeing it here is this thread's to do -- the worker is gone.
+    PsMutexLock( g_scanMtx )
+    for i as long = 0 to g_nRetire - 1
+        if g_retire(i) <> 0 then
+            if g_retire(i)->pResult then fbcparser_free( g_retire(i)->pResult )
+            delete g_retire(i)
+            g_retire(i) = 0
+        end if
+    next
+    g_nRetire = 0
+    if g_doneBuf <> 0 then
+        if g_doneBuf->pResult then fbcparser_free( g_doneBuf->pResult )
+        delete g_doneBuf : g_doneBuf = 0
+    end if
+    if g_doneProj <> 0 then
+        if g_doneProj->pResult then fbcparser_free( g_doneProj->pResult )
+        delete g_doneProj : g_doneProj = 0
+    end if
+    PsMutexUnlock( g_scanMtx )
+
+    PsCondDestroy( g_scanCond )
+    PsMutexDestroy( g_scanMtx )
+end sub
+
+
+'' ---------------------------------------------------------------------------------------
+'' A BOUNDED WAIT FOR THE WORKER TO CATCH UP. FOR THE SELF-TEST, which has no pump to
+'' deliver PSEV_USER to.
+''
+'' THIS IS NOT "SLEEP AND HOPE". It waits for a CONDITION -- a result present, or nothing
+'' outstanding -- with a deadline, so a slow machine waits longer and still passes, and a
+'' broken worker fails in bounded time rather than hanging the suite. The sleep inside the
+'' loop is 1ms and exists only so the wait does not spin a core.
+''
+'' Returns TRUE if something was installed.
+'' ---------------------------------------------------------------------------------------
+function ShellScan_DrainFor( byval nMaxMs as long ) as boolean
+    dim as double tEnd = timer + (nMaxMs / 1000.0)
+    dim as boolean bAny = false
+
+    do
+        if ShellScan_Collect() then
+            bAny = true
+            '' Keep going: a buffer and a project result can be outstanding together, and
+            '' the second may not have been published when the first was collected.
+        end if
+
+        dim as boolean bPending
+        PsMutexLock( g_scanMtx )
+        bPending = g_reqBuf.bValid orelse g_reqProj.bValid orelse _
+                   (g_doneBuf <> 0) orelse (g_doneProj <> 0)
+        PsMutexUnlock( g_scanMtx )
+        if bPending = false then
+            '' NOTHING QUEUED AND NOTHING WAITING -- but the worker may be MID-PARSE, which
+            '' neither flag shows. One more short wait and one more collect is what covers
+            '' that gap; a longer answer would need the worker to publish "busy", and a busy
+            '' flag read without the result is a race of its own.
+            if bAny then return true
+        end if
+
+        sleep 1, 1
+    loop while timer < tEnd
+
+    '' One last look, because the loop may have expired between a publish and a collect.
+    if ShellScan_Collect() then bAny = true
+    return bAny
 end function
 
 
