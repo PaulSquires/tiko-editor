@@ -1,8 +1,13 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ **the commit that added [`7c-step6.md`](7c-step6.md)** — 7c
-**step 6 complete**, shell code at `f8ea228f8`; PsPlatform **`main`** @ **`b4d7371`**;
-HelpCenter **`main`** @ `02a4c18`. All build warning-free and tiko runs.
+tiko `feat/cross-platform` @ **the commit that added [`7c-step7.md`](7c-step7.md)** — 7c
+**step 7 complete**, shell code at `ce1e3c40f`; PsPlatform **`main`** @ **the commit that added
+`PsThread`**; HelpCenter **`main`** @ `02a4c18`. All build warning-free and tiko runs.
+
+**THE PORT HAS A THREAD NOW, AND PsPlatform HAS `PsThread`.** The symbol scan runs on a worker;
+the UI thread's share of it went from **1,244ms to 32–37µs** on a 134-file include graph. That
+is the first PsPlatform module added by 7c rather than reused by it, and **tiko links PsPlatform
+too**, so `_check_scihost` is the gate that catches it. See [`7c-step7.md`](7c-step7.md).
 
 **THIS BRANCH NOW CARRIES TWO UNRELATED WORKSTREAMS.** The 7c port is `src/app` and
 `src/shell`; **F1Markdown** (`src/F1Markdown`, `F1Markdown.exe`) is the author's own and is
@@ -101,7 +106,13 @@ Read in this order, and do not skip the first:
    two-line explanation of why both numbers were real. **The pair is the most useful thing on
    this shelf about what a benchmark is worth: step 5's sample did not represent the workload,
    and nothing about the method would have told you that.**
-10. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
+10. [`7c-step7.md`](7c-step7.md) — **the item that took three steps to justify, and the
+    measurement that first measured nothing.** 1,244ms of UI stall became 32–37µs. Read THE
+    MEASUREMENT, including why the first attempt printed `0µs`: it was written against
+    `PsTimerNow()`, which is a **settable virtual clock**, not a wall clock — and *"the clock
+    never moved"* is indistinguishable from *"the work was free"*, which was the answer the step
+    wanted to hear.
+11. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
    irreducible, investigated. **It was not a blocker and never had been.** Short, and it is the
    clearest example on this whole shelf of a claim that survived because nobody checked it.
    **Its recommendation has since been implemented**: WebView2 is gone from the tree.
@@ -223,7 +234,8 @@ ever had initial keyboard focus. Fixed in `61f56bb` and `be10064`, and **both fi
 confirmed only by the author using the program** — the box dismisses without killing the
 process, the field has focus on open, and Alt+F does nothing while a box is up.
 
-**Neither fix is asserted anywhere**: restoring either bug leaves all 46 PsPlatform suites and
+**Neither fix is asserted anywhere**: restoring either bug leaves all PsPlatform suites (46 when
+this was checked, **47 since `psthread` landed in step 7**) and
 all 194 shell assertions green, checked both times. `Run` needs a compositor and `build check`
 is headless by design. A defect class found twice in one step and guarded by nothing afterwards
 is the thing to fix first if modal work continues.
@@ -448,6 +460,8 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | `_check_app_layer.bat` | `src/app` names no Win32 or AfxNova token (**47 files**, 2026-08-10) | green |
 | `_check_app_standalone.bat` | `src/app` compiles against PsCore alone **and LINKS as one unit** | green — **17 clean**, 0 errors, **debt 3** |
 | `_check_shell.bat` | `src/shell` includes no Win32 shell header, and carries no `PsC.` | green |
+| `_run_shell.bat --selftest` | the shell's own suite — **343 assertions** (2026-08-11) | green |
+| PsPlatform `build.cmd check` | **47 suites** (2026-08-11, `psthread` is the newest) | green, 0 failures |
 
 The ratchet is the weak one and knows it: it greps a hand-written vocabulary, and has had
 three gaps in three audits — **five now**. The fourth was `KeyBindings_PickListKeyToValue`,
@@ -642,20 +656,21 @@ PsCore now declares `operator len`, so unconverted sites are right rather than q
 The four items below this one are all closed and are kept as a record. **These are the open
 ones**, and each is a decision rather than a task.
 
-**THREADING HAS NOW BEEN ITEM 1, THEN ITEM 4, AND IS ITEM 1 AGAIN — EACH MOVE MADE BY A
-MEASUREMENT.** Step 5 demoted it (a parse is 4–20ms, so nothing needed a thread); step 6
-promoted it back (the same call on a 134-file include graph is 1.2 SECONDS). **Read that as the
-pattern rather than as two corrections: the page's ordering is only ever as good as the last
-thing that was measured, and both numbers were real — the first was measured on a sample that
-did not represent the workload.**
+**THREADING WAS ITEM 1, THEN ITEM 4, THEN ITEM 1 AGAIN — EACH MOVE MADE BY A MEASUREMENT — AND
+STEP 7 SPENT IT.** Step 5 demoted it (a parse is 4–20ms, so nothing needed a thread); step 6
+promoted it back (the same call on a 134-file include graph is 1.2 SECONDS); step 7 moved the
+parse onto a worker and the UI thread's share fell to **32–37µs**. **Read that as the pattern
+rather than as two corrections: the page's ordering is only ever as good as the last thing that
+was measured, and every number was real — the first was measured on a sample that did not
+represent the workload.**
 
-1. **THREADING, AND NOW THERE IS A NUMBER.** 1.2 seconds of UI stall on a 134-file include
-   graph — on every typing pause, every tab switch, and twice at startup. `clsScanMgr`'s worker
-   is woken with Win32 event objects and PsPlatform surfaces no threading service at all,
-   **though SDL3's `SDL_CreateThread`, `SDL_CreateMutex` and `SDL_CreateCondition` are already
-   vendored** (`src/bind/SDL3/`). The alternative is to bound the work rather than move it — a
-   parse that follows no includes is fast and lists one file, which is what step 5 shipped.
-   **That choice is a product decision, not a porting one.**
+1. ~~**THREADING.**~~ **DONE IN STEP 7.** `PsThread` in PsPlatform (FreeBASIC's primitives, not
+   SDL's — `SDL_CreateThread` is a macro that splices `_beginthreadex` thunks in and will not
+   compile, and FB's runtime needs its per-thread state set up), the scan on a worker, and the
+   three obligations step 5 deleted brought back: the retire queue, the stale-root test, and the
+   join at exit. **The way back to the UI needed nothing new** — `PSEV_USER` and the thread-safe
+   `g_plat.events.Post` were written for exactly this and had never had a caller. See
+   [`7c-step7.md`](7c-step7.md).
 2. ~~**A PROJECT TIER.**~~ **DONE IN STEP 6** — 39 lines of code, because `clsSymbolDb` handles
    two tiers already and the panel needed no change. It is what produced item 1's number.
 3. **The three `PsListTree` gaps step 4 found**, each worked around at a call site today: one
@@ -678,7 +693,17 @@ did not represent the workload.**
    5's panel came in UNDER 1 — and did less, while its scanner replaced 382 lines with 112
    because most of `clsScanMgr` was thread machinery. **The cost tracks what the platform
    already provides far more than it tracks the form's size**, so a single ratio is the wrong
-   instrument for estimating the remaining 47 forms.
+   instrument for estimating the remaining 47 forms. **AND THE 112 DID NOT HOLD** — step 7 put
+   the thread back and the queue, the retire list and the stale-root test came with it. A ratio
+   measured against a deliberately reduced port measures the reduction, not the port.
+8. **Whether the Functions pane should list more than the open tabs.** A 134-file project
+   contributes ONE heading today, because one file is open. The database holds the other 133.
+   That is why the pane looks empty on `tiko.bas` — see [`7c-step7.md`](7c-step7.md)'s closing
+   section, which also records two fbcParser behaviours found there and left alone:
+   **line-continued signatures are not recorded at all**, and `EnumProcsInFile` returns 13 for a
+   file with 48 procedures because type members do not come back.
+9. **Whether two tiers deserve two workers.** They share one thread and serialise, so
+   `tiko.bas` is 1.3s + 1.3s before both are current.
 
 **And one process point steps 3 and 4 both earned: drive every milestone by hand before calling
 it done.** Every claim a suite supports has survived. Every claim about what the user sees came
