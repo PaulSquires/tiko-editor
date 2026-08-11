@@ -80,12 +80,44 @@ merely described, so that a future project tier fails those assertions and says 
 
 ---
 
+## The list collapses while a function is half-typed — and that is tiko's behaviour
+
+Reported by the author on the running binary: typing `function paul() as long` at the top of a
+file leaves **only `paul`** in the Functions pane until `end function` is typed.
+
+**Measured rather than reasoned about.** The same file, scanned twice:
+
+| file | symbols |
+| --- | --- |
+| two complete `sub`s | **2** |
+| the same two, with an unterminated `function` above them | **1** |
+
+fbcParser treats everything after an unterminated `function` as that function's **body**, so the
+procedures below it stop existing. The panel is faithfully showing what the parser returned.
+
+**tiko DOES THE SAME.** `clsSymbolDb.inc:297` suppresses the PROJECT tier for whichever file the
+BUFFER scan is rooted at — so while a file is being edited, the buffer's answer is the only
+answer there too, project scan or not. This is not a shell divergence; it is what "parse the
+buffer as you type" costs, and it corrects itself on the next complete parse.
+
+**LEFT ALONE, DELIBERATELY** (author's decision, 2026-08-10). The two mitigations both cost more
+than the flicker: keeping the previous list when a scan finds fewer symbols also hides a genuine
+deletion, and refusing to install a result that carries diagnostics freezes the list for any file
+the parser complains about at all. Either would also be a behaviour this port then owes tiko, or
+a divergence to explain forever.
+
+---
+
 ## What is NOT verified
 
-**NOTHING IN THIS STEP HAS BEEN SEEN ON SCREEN.** The panel has never been looked at in
-functions mode, no function row has been clicked, and **no key has been pressed in this binary
-in any commit of this port** — so the path from a keystroke through `PsSciNotify` into the
-debounce and out to a refreshed list is asserted piece by piece and has never run end to end.
+**~~NOTHING IN THIS STEP HAS BEEN SEEN ON SCREEN.~~ CONFIRMED BY THE AUTHOR, 2026-08-10:** the
+Functions pane lists a file's procedures, and **typing updates it** — which is the first time a
+key has been pressed in this binary in any commit of this port, and therefore the first run of
+the whole path from a keystroke through `PsSciNotify` into the debounce and out to a refreshed
+list. Every piece of that was asserted separately; none of it had ever run end to end.
+
+**Still unseen:** clicking a function row (asserted by row number only), and the panel at any
+scale but the author's.
 
 **The parse timings are from the console, not from a stopwatch on the UI.** 18ms is measured
 inside `ShellScan_Buffer`; whether a tab switch *feels* instant is not something the number
