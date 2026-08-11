@@ -1009,6 +1009,14 @@ sub BuildTree( byref surf as PsSurface )
         end if
     next
 
+    '' ---- THE PROJECT SCAN, ONCE THE FILES ARE OPEN (7c step 6) -------------------------
+    '' tiko's site is frmMain.inc:63, right after the workspace loads, and for the same
+    '' reason: the scan is rooted at the MAIN document, so it cannot run until there is one.
+    ''
+    '' It costs a disk-rooted parse of the include graph at startup -- the number
+    '' docs/port/7c-step6.md exists to report.
+    ShellScan_Project()
+
     '' The bookmarks panel starts filled: a document reopened from the command line can
     '' already carry bookmarks in its .tiko session data, and an empty panel beside a
     '' bookmarked document would be a panel that lies.
@@ -1958,8 +1966,18 @@ sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any pt
         '' gAppHost.AskSavePath -- so the shell never opens it here, and an UNTITLED document
         '' saved with plain Save still gets the picker, because SaveFile forces bSaveAs on a
         '' new document before anything else.
-        case IDM_FILESAVE   : ShellTabs_Save( false )
-        case IDM_FILESAVEAS : ShellTabs_Save( true )
+        '' ---- A SAVE RESCANS THE PROJECT, which is tiko's own site (frmMainFile.inc:241).
+        '' The project tier reads from DISK, so until a file is saved its symbols there are
+        '' the last saved ones -- a save is the moment that stops being true. Without this a
+        '' background tab would keep listing procedures the file no longer has.
+        ''
+        '' ONLY WHEN THE BYTES REACHED DISK: ShellTabs_Save answers FALSE for a cancelled
+        '' picker or a failed write, and rescanning after either would re-read a file that
+        '' did not change.
+        case IDM_FILESAVE
+            if ShellTabs_Save( false ) then ShellScan_Project()
+        case IDM_FILESAVEAS
+            if ShellTabs_Save( true ) then ShellScan_Project()
 
         '' ---- THE BOOKMARK COMMANDS, ported from OnCommand_SearchBookmarks --------------
         '' The first tiko FORM commands this binary answers. Each one is a clsDocument call
@@ -3437,8 +3455,15 @@ end function
                 '' "if nBodyLine <= 0 then continue for" has something to skip -- without
                 '' it that guard could be deleted and every assertion stayed green, which
                 '' is what the first revert-to-red pass showed.
+                '' ---- AND IT INCLUDES THE SECOND PROBE, since 7c step 6 --------------
+                '' The PROJECT tier follows #includes from disk, so this line is what puts
+                '' a second file in the graph and lets the pane show more than one. The
+                '' BUFFER tier passes no include paths at all, so its scan of this file
+                '' does not resolve it -- which is why the three-symbol assertions above
+                '' are unaffected.
                 dim as boolean bWrote = PsFileWriteAll( wszFile, _
-                        !"' probe\nsub ProbeAlpha()\n  print 1\nend sub\n\n" & _
+                        !"' probe\n#include once \"open_probe2.bas\"\n\n" & _
+                        !"sub ProbeAlpha()\n  print 1\nend sub\n\n" & _
                         !"function ProbeBeta( byval n as long ) as long\n  return n\nend function\n\n" & _
                         !"declare sub ProbeGamma()\n" )
 
@@ -3558,11 +3583,16 @@ end function
                                   g_panel->GetText(1).Utf8 & " | " & g_panel->GetText(2).Utf8
 
                             '' THE ROWS CARRY THE SAME PACKED SLOT the bookmarks use, which
-                            '' is what lets commit 4 reuse ShellPanel_GotoRow untouched.
-                            '' The line is 0-BASED here and 1-based in the database: the
-                            '' body of ProbeAlpha is on database line 2, Scintilla line 1.
+                            '' is what lets ShellPanel_GotoRow be reused untouched. The line
+                            '' is 0-BASED here and 1-based in the database.
+                            ''
+                            '' 3, BECAUSE THE PROBE FILE'S LAYOUT IS LOAD-BEARING: a comment,
+                            '' the #include added in step 6, a blank, then ProbeAlpha. Two
+                            '' assertions carry line numbers derived from it -- this one and
+                            '' the click below -- and both moved when the #include was added.
+                            '' Anything editing that file has to move them again.
                             Check "      and a 0-based line in the packed slot", _
-                                  (ShellPanel_LineOf(g_panel->GetItemData(1)) = 1), _
+                                  (ShellPanel_LineOf(g_panel->GetItemData(1)) = 3), _
                                   str(ShellPanel_LineOf(g_panel->GetItemData(1)))
                             Check "        alongside the tab it belongs to", _
                                   (ShellPanel_TabOf(g_panel->GetItemData(1)) = idx1), _
@@ -3593,13 +3623,15 @@ end function
                             '' agree on one encoding.
                             ShellPanel_SetMode( SHPANEL_FUNCTIONS )
                             scope
-                                '' Row 2 is ProbeBeta, whose body is on database line 6 and
-                                '' therefore Scintilla line 5.
+                                '' Row 2 is ProbeBeta. Scintilla line 7 -- see the note on
+                                '' the packed-slot assertion above: the probe file's layout
+                                '' is load-bearing and step 6's #include moved everything
+                                '' below it down by two.
                                 dim as boolean bWent = ShellPanel_GotoRow( 2 )
                                 dim as long nAt = SciMsg( g_view->pSci, SCI_LINEFROMPOSITION, _
                                             SciMsg(g_view->pSci, SCI_GETCURRENTPOS, 0, 0), 0 )
                                 Check "    clicking a function jumps to its body", _
-                                      bWent andalso (nAt = 5), str(nAt) & " wanted 5"
+                                      bWent andalso (nAt = 7), str(nAt) & " wanted 7"
 
                                 '' A HEADER IS STILL A FILENAME. Same guard, same reason,
                                 '' and it has to hold in both modes because one handler
@@ -3788,8 +3820,15 @@ end function
                     '' The two files carry bookmarks on DIFFERENT lines precisely so that
                     '' answer would be wrong in a way an assertion can see.
                     scope
+                        '' ---- THE SECOND PROBE HAS A PROCEDURE NOW (7c step 6) ---------
+                        '' It was four print statements, chosen so it contributed NOTHING
+                        '' and the buffer tier's one-file limit could be asserted. The
+                        '' project tier is what removes that limit, so the file needs
+                        '' something to contribute -- and it keeps four lines, because the
+                        '' bookmark assertions below put a mark on line 3.
                         dim as DWSTRING wszFile2 = wszDir & "\open_probe2.bas"
-                        if PsFileWriteAll( wszFile2, !"' two\nprint 2\nprint 3\nprint 4\n" ) then
+                        if PsFileWriteAll( wszFile2, _
+                                !"' two\nsub SecondProc()\n  print 2\nend sub\n" ) then
                             dim as long idxB = ShellTabs_Open( wszFile2 )
                             Check "  a second file opens into its own tab", _
                                   (idxB > idx1), str(idx1) & " then " & str(idxB)
@@ -3886,42 +3925,38 @@ end function
                                   str(SciMsg(g_view->pSci, SCI_LINEFROMPOSITION, _
                                              SciMsg(g_view->pSci, SCI_GETCURRENTPOS, 0, 0), 0))
 
-                            '' ---- THE BUFFER TIER HOLDS ONE FILE, AND THIS RECORDS IT --
-                            '' gSymDb has two tiers and this binary fills only the BUFFER
-                            '' one, whose InstallSet REPLACES. So the symbols in the
-                            '' database are always the LAST FILE SCANNED, and the Functions
-                            '' panel -- which loops over every open tab -- can only ever
-                            '' find rows for one of them.
+                            '' ---- THE TWO TIERS, AND WHAT THE PROJECT ONE FIXED --------
                             ''
-                            '' tiko does not have this limit: its PROJECT tier covers every
-                            '' file in the project, and this binary has no project system.
-                            '' Asserted rather than described, so that if a project tier
-                            '' ever arrives these fail and say so.
-                            ''
-                            '' B IS SCANNED EXPLICITLY HERE rather than relying on the
-                            '' order of what came before. The first version of this block
-                            '' assumed B's open had left it as the scanned file and failed
-                            '' with "(3) for the first file" -- correctly, because the click
-                            '' assertion above switches to A, and a tab switch now REQUESTS
-                            '' A SCAN. The claim was right and the setup was stale.
+                            '' UNTIL 7c STEP 6 THIS BLOCK ASSERTED THE OPPOSITE. It read
+                            '' "only the last-scanned file has symbols" and "so the
+                            '' functions pane is empty here", because the buffer tier holds
+                            '' ONE set and this binary filled nothing else -- the pane could
+                            '' only ever list the file in front of the user. Those
+                            '' assertions carried a note saying that if a project tier ever
+                            '' arrived they should fail and say so. It arrived; they did;
+                            '' this is what replaced them.
                             scope
                                 dim rsA() as SYMBOLREF
-                                gAppNotify.RequestBufferScan( g_tabDocs(idxB).pDoc )
-                                dim as long nA = gSymDb.EnumProcsInFile( wszFile, rsA() )
-                                Check "  only the last-scanned file has symbols", _
-                                      (nA = 0), str(nA) & " for the first file"
 
-                                '' AND THE PANEL SHOWS THAT, rather than an empty list or a
-                                '' stale one: B has no procedures at all, so the functions
-                                '' pane is empty with two files open.
-                                '' SetMode THEN Reload, and the second call is not
-                                '' redundant. SetMode EARLY-OUTS when the mode already
-                                '' matches -- deliberately, so that re-selecting a pane
-                                '' does not throw away the user's scroll position -- so a
-                                '' block that assumed it always reloads is a block that
-                                '' asserts against whatever the last one left on screen.
-                                '' This one did: three stale rows, while both lookups
-                                '' agreed the database was empty.
+                                '' STILL TRUE, AND STILL THE POINT: the BUFFER tier holds
+                                '' one file. Scanning B evicts A from it.
+                                gAppNotify.RequestBufferScan( g_tabDocs(idxB).pDoc )
+
+                                '' A's symbols survive anyway -- from the PROJECT tier,
+                                '' which reached A as the root and B through A's #include.
+                                ShellScan_Project()
+                                Check "  a project scan reaches both files", _
+                                      (g_nProjCount > 0) andalso (g_nLastProjMs >= 0), _
+                                      str(g_nLastProjMs) & "ms"
+
+                                dim as long nA = gSymDb.EnumProcsInFile( wszFile, rsA() )
+                                Check "    so the non-active file has symbols again", _
+                                      (nA = 3), str(nA) & " for the first file"
+
+                                '' THE PANEL IS THE POINT. Two headers and three
+                                '' procedures: ProbeAlpha and ProbeBeta from the root file,
+                                '' SecondProc from the one it includes. Before this commit
+                                '' the same call produced rows for one file at most.
                                 ShellPanel_SetMode( SHPANEL_FUNCTIONS )
                                 ShellPanel_Reload()
                                 dim as string sSeen
@@ -3931,10 +3966,20 @@ end function
                                         str(gSymDb.EnumProcsInFile( _
                                             g_tabDocs(t).pDoc->DiskFilename, rsT() ))
                                 next
-                                Check "    so the functions pane is empty here", _
-                                      (g_panel->GetCount() = 0), _
-                                      str(g_panel->GetCount()) & " rows, mode=" & _
-                                      str(g_panelMode) & ", tabs=" & str(g_nTabDocs) & sSeen
+                                Check "    and the pane lists BOTH files", _
+                                      (g_panel->GetCount() = 5), _
+                                      str(g_panel->GetCount()) & " rows," & sSeen
+
+                                '' NO DUPLICATES, which is the failure mode a wrong merge
+                                '' produces -- RecomputeContrib suppresses the project
+                                '' tier's copy of whichever file the buffer owns, and if it
+                                '' did not, that file's procedures would appear TWICE
+                                '' rather than not at all.
+                                dim as long nB = gSymDb.EnumProcsInFile( _
+                                        g_tabDocs(idxB).pDoc->DiskFilename, rsA() )
+                                Check "      each file's procedures exactly once", _
+                                      (nA = 3) andalso (nB = 1), _
+                                      str(nA) & " and " & str(nB)
 
                                 '' SWITCHING BACK TO A RESCANS IT -- ShellTabs_Show requests
                                 '' a buffer scan, which is tiko's own site for it
@@ -3951,8 +3996,8 @@ end function
                                       (gSymDb.EnumProcsInFile(wszFile, rsA()) = 3), _
                                       str(gSymDb.EnumProcsInFile(wszFile, rsA()))
                                 ShellPanel_Reload()
-                                Check "      and its functions are listed again", _
-                                      (g_panel->GetCount() = 3), str(g_panel->GetCount())
+                                Check "      and the pane still lists both", _
+                                      (g_panel->GetCount() = 5), str(g_panel->GetCount())
                                 ShellPanel_SetMode( SHPANEL_BOOKMARKS )
                             end scope
 

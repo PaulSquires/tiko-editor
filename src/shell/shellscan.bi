@@ -43,6 +43,12 @@
 dim shared as long g_nLastScanMs
 dim shared as long g_nScanCount
 
+'' THE PROJECT TIER'S OWN COUNTERS, kept separate on purpose (7c step 6). The two scans cost
+'' different amounts -- one file's text against a whole include graph read from disk -- and
+'' averaging them would hide exactly the number step 6 exists to produce.
+dim shared as long g_nLastProjMs
+dim shared as long g_nProjCount
+
 
 '' ---------------------------------------------------------------------------------------
 '' Only source files are worth parsing. tiko's ScanMgr_IsScannable (clsScanMgr.inc:210),
@@ -167,6 +173,99 @@ function ShellScan_Buffer( byval pDoc as clsDocument ptr ) as boolean
     '' work for a list the parse cannot have changed.
     if g_panelMode = SHPANEL_FUNCTIONS then ShellPanel_Reload()
 
+    return true
+end function
+
+
+'' ========================================================================================
+'' THE PROJECT TIER -- the port of clsScanMgr.RequestProjectScan, and what makes the
+'' Functions panel able to show more than one file.
+''
+'' ---- WHY IT EXISTS, WHICH IS NOT "MORE SYMBOLS FOR THEIR OWN SAKE" --------------------
+''
+'' gSymDb's BUFFER tier holds exactly ONE result set and InstallSet replaces, so until this
+'' commit the panel could only ever list the file the user was looking at -- it rescans on
+'' every tab switch to keep that true. The PROJECT tier is a second slot, filled from DISK
+'' by following #includes, and clsSymbolDb already merges the two: RecomputeContrib
+'' (clsSymbolDb.inc:290-317) SUPPRESSES the project tier for whichever file the buffer is
+'' rooted at, so the active file keeps its live-as-you-type symbols and every other file
+'' comes from here.
+''
+'' THE PANEL NEEDED NO CHANGE AT ALL. EnumProcsInFile has always searched both tiers.
+''
+'' ---- THE ROOT AND THE INCLUDE PATHS ARE tiko's RULE, DEGRADED HONESTLY ----------------
+''
+'' tiko roots at gApp.GetMainDocumentPtr() (clsScanMgr.inc:311) and builds include paths
+'' from three things (clsScanMgr.inc:265-279): the root file's own directory,
+'' gConfig.CompilerIncludes, and the configured compiler's `inc` directory.
+''
+'' THE LAST TWO ARE EMPTY HERE, AND THAT IS CORRECT RATHER THAN MISSING. This binary never
+'' loads settings.ini, so it has no configured compiler and no user include paths -- which
+'' is exactly the state tiko is in for a loose file outside a project. The graph is
+'' therefore the root file plus whatever resolves beside it, and the report says so rather
+'' than implying a whole-tree scan.
+''
+'' A ROOT IS NOT ALWAYS AVAILABLE: GetMainDocumentPtr answers null with nothing open, or
+'' with nothing that is a .bas. tiko exits the request; so does this, and the pane then
+'' behaves exactly as it did before the tier existed.
+''
+'' ---- FROM DISK, WHICH HAS A CONSEQUENCE WORTH NAMING ---------------------------------
+''
+'' fbcparser_scan reads FILES; fbcparser_scan_text reads a buffer. So a background tab with
+'' UNSAVED edits contributes its LAST SAVED symbols here. tiko has the same property and
+'' reconciles it the same way -- by rescanning the project after a save.
+'' ========================================================================================
+function ShellScan_Project() as boolean
+    dim as clsDocument ptr pRoot = gApp.GetMainDocumentPtr()
+    if pRoot = 0 then return false
+
+    dim as DWSTRING wszRoot = pRoot->DiskFilename
+    '' NEVER SAVED MEANS NOTHING ON DISK TO SCAN -- tiko's own guard, and the reason it
+    '' tests for a backslash rather than for emptiness: an untitled document's name is
+    '' "Untitled1", which is a perfectly good string and a perfectly bad path.
+    if PsInStr( wszRoot, "\" ) = 0 then return false
+
+    '' ONE INCLUDE PATH: the root's own directory. See the header for why the other two
+    '' entries tiko adds are absent.
+    dim as DWSTRING wszDir = PsPathDirWithSep( wszRoot )
+    dim as wstring * MAX_PATH wszPath0 = *wszDir.Wz()
+    dim as wstring ptr pPaths(0 to 0) = { @wszPath0 }
+
+    dim as FBCP_OPTIONS opts
+    opts.version      = FBCP_VERSION
+    opts.includeCount = 1
+    opts.includePaths = @pPaths(0)
+
+    dim as double t0 = timer
+    dim as FBCP_RESULT ptr pRes = 0
+    dim as long rcScan = fbcparser_scan( wszRoot.Wz(), @opts, @pRes )
+
+    dim as PARSERESULTSET ptr pRSet = new PARSERESULTSET
+    pRSet->pResult     = pRes
+    pRSet->tier        = ScanTierProject
+    pRSet->scanRc      = rcScan
+    pRSet->scanMs      = clng( (timer - t0) * 1000 )
+    pRSet->wszRootFile = *wszRoot.Wz()
+    pRSet->BuildIndexes()
+
+    g_nLastProjMs = pRSet->scanMs
+    g_nProjCount += 1
+
+    dim as PARSERESULTSET ptr pOld = gSymDb.InstallSet( ScanTierProject, pRSet )
+    if pOld then
+        if pOld->pResult then fbcparser_free( pOld->pResult )
+        delete pOld
+    end if
+
+    '' THE FILE COUNT IS THE INTERESTING HALF of this line, not the symbol count: it is how
+    '' many files the include graph actually reached, and therefore how much of "the
+    '' project" this binary can see without a compiler configuration.
+    print "tikoshell: project scan " & PsPathName( wszRoot ).Utf8 & _
+          " -- rc=" & rcScan & " ms=" & pRSet->scanMs & _
+          iif( pRes <> 0, " files=" & str(pRes->fileCount) & _
+                          " symbols=" & str(pRes->symbolCount), " (no result)" )
+
+    if g_panelMode = SHPANEL_FUNCTIONS then ShellPanel_Reload()
     return true
 end function
 

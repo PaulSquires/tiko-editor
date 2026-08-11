@@ -295,6 +295,11 @@ function ShellTabs_Save( byval bIsSaveAs as boolean ) as boolean
     end if
 
     print "tikoshell: saved " & DWSTRING( pDoc->DiskFilename ).Utf8
+
+    '' THE PROJECT RESCAN IS NOT HERE, and the first version of this commit put it here.
+    '' tiko's site is the COMMAND (frmMainFile.inc:241), not the save mechanism -- and this
+    '' file is included before shellscan.bi, so a call here does not even compile. Both
+    '' point the same way: see IDM_FILESAVE in tikoshell.bas.
     return true
 end function
 
