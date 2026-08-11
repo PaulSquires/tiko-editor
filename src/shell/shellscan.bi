@@ -124,6 +124,13 @@ function ShellScan_Buffer( byval pDoc as clsDocument ptr ) as boolean
           " -- rc=" & rcScan & " ms=" & pRSet->scanMs & _
           iif( pRes <> 0, " symbols=" & str(pRes->symbolCount), " (no result)" )
 
+    '' ---- AND THE PANEL FOLLOWS, which is what makes the Functions list LIVE.
+    '' tiko does the same immediately after InstallSet -- "a fresh scan can add/remove files
+    '' and procs: refresh the Functions panel when it is showing" (frmMain.inc:1750). Only
+    '' when it IS showing: rebuilding a bookmarks list because a parse finished would be
+    '' work for a list the parse cannot have changed.
+    if g_panelMode = SHPANEL_FUNCTIONS then ShellPanel_Reload()
+
     return true
 end function
 

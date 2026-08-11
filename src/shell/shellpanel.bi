@@ -197,6 +197,52 @@ sub ShellPanel_ApplyTheme()
 end sub
 
 
+'' ========================================================================================
+'' THE PANEL HAS A MODE NOW.
+''
+'' tiko's side panel is THREE PANES behind a PsIconPanel strip -- Explorer, Functions,
+'' Bookmarks -- switched by IDM_VIEWEXPLORER / IDM_FUNCTIONLIST / IDM_BOOKMARKSLIST. This
+'' binary has ONE PsListTree and two of those three panes, so the strip is not ported and
+'' the two commands switch a mode instead.
+''
+'' NO NEW MENU IDS AND NO NEW .lang ENTRIES: both commands already exist in
+'' app/modMenuIds.bi and both already have captions in all six language files.
+'' ========================================================================================
+enum ShellPanelMode
+    SHPANEL_BOOKMARKS = 0
+    SHPANEL_FUNCTIONS
+end enum
+
+dim shared as ShellPanelMode g_panelMode = SHPANEL_BOOKMARKS
+
+'' BOTH loaders are forward-declared, not just the functions one. ShellPanel_Reload
+'' dispatches to a pair defined below it, and a declaration for one of two is how you get
+'' "Variable not declared, ShellBookmarks_Load" pointing at a sub that is plainly there
+'' three hundred lines further down.
+declare sub ShellBookmarks_Load()
+declare sub ShellFunctions_Load()
+
+
+'' Rebuild whatever the panel is currently showing. THE ONE ENTRY POINT anything outside
+'' this file should use -- a caller that picked a loader directly would show the wrong list
+'' the moment the mode changed under it.
+sub ShellPanel_Reload()
+    select case g_panelMode
+        case SHPANEL_FUNCTIONS : ShellFunctions_Load()
+        case else              : ShellBookmarks_Load()
+    end select
+end sub
+
+
+'' Switch panes. Silent when the mode has not changed -- reloading a list the user is
+'' already looking at would lose their scroll position for nothing.
+sub ShellPanel_SetMode( byval m as ShellPanelMode )
+    if m = g_panelMode then exit sub
+    g_panelMode = m
+    ShellPanel_Reload()
+end sub
+
+
 '' ---------------------------------------------------------------------------------------
 '' Empty the panel. tiko's ClearBookmarks, which is one call there and one call here.
 '' ---------------------------------------------------------------------------------------
@@ -207,13 +253,8 @@ sub ShellPanel_Clear()
 end sub
 
 
-'' ---------------------------------------------------------------------------------------
-'' Rebuild the bookmark list from every open document. The port of LoadBookmarksFiles.
-''
-'' FORWARD-DECLARED because the commands below call it and it is defined after them in
-'' reading order -- toggling a bookmark reloads the panel.
-'' ---------------------------------------------------------------------------------------
-declare sub ShellBookmarks_Load()
+'' (ShellBookmarks_Load's forward declaration moved up beside ShellFunctions_Load's when the
+'' panel gained a mode -- ShellPanel_Reload needs both, and it sits above this point.)
 
 
 '' ---------------------------------------------------------------------------------------
@@ -235,9 +276,14 @@ sub ShellBookmarks_Toggle()
     dim as clsDocument ptr pDoc = ShellTabs_CurrentDoc()
     if pDoc = 0 then exit sub
     pDoc->ToggleBookmark( pDoc->GetCurrentLineNumber() )
-    '' RELOAD, because the panel is a snapshot. tiko calls LoadBookmarksFiles here for the
+    '' RELOAD THROUGH THE MODE, not straight into the bookmarks loader. Toggling a
+    '' bookmark while the FUNCTIONS pane is showing must not replace it with a bookmark
+    '' list -- the mode would then disagree with what is on screen, and the next pane
+    '' switch would look like it did nothing.
+    ''
+    '' The panel is a snapshot either way. tiko calls LoadBookmarksFiles here for the
     '' same reason -- there is no notification from the document when a marker changes.
-    ShellBookmarks_Load()
+    ShellPanel_Reload()
 end sub
 
 
@@ -273,7 +319,10 @@ sub ShellBookmarks_ClearCurrent()
     dim as clsDocument ptr pDoc = ShellTabs_CurrentDoc()
     if pDoc = 0 then exit sub
     SciMsg( pDoc->GetActiveScintillaPtr(), SCI_MARKERDELETEALL, MARKER_BOOKMARK, 0 )
-    ShellPanel_Clear()
+    '' RELOAD, NOT CLEAR. With the markers gone the bookmarks list rebuilds empty, which is
+    '' the same result -- and in FUNCTIONS mode a bare clear would wipe a list that has
+    '' nothing to do with bookmarks.
+    ShellPanel_Reload()
 end sub
 
 
@@ -339,7 +388,8 @@ function ShellBookmarks_ClearAllDocs() as boolean
         g_view->Msg( SCI_SETFIRSTVISIBLELINE, nWasFirst, 0 )
     end if
 
-    ShellPanel_Clear()
+    '' Same reason as ClearCurrent: reload through the mode rather than clearing outright.
+    ShellPanel_Reload()
     return true
 end function
 
@@ -435,6 +485,115 @@ sub ShellBookmarks_Load()
 
     '' Restore where the user was looking. CLAMPED, because the reload may have produced
     '' fewer rows than there were -- tiko does the same MIN for the same reason.
+    g_panel->SetTopIndex( nTopIndex )
+    nCurSel = iif( nCurSel > g_panel->GetCount() - 1, g_panel->GetCount() - 1, nCurSel )
+    g_panel->SetCurSel( nCurSel )
+
+    if g_pSurf <> 0 then g_pSurf->InvalidateAll()
+end sub
+
+
+'' ========================================================================================
+'' THE FUNCTIONS LIST -- the port of frmFunctions.inc's LoadFilesAndFunctions.
+''
+'' ---- WHERE THE DATA COMES FROM, WHICH IS THE WHOLE POINT -------------------------------
+''
+'' gSymDb. NOT the scanner, and not the parser. The panel asks the symbol database what
+'' procedures a file has and where their bodies start; who filled that database, and on
+'' which thread, is none of its business. That is why this panel could be ported without
+'' threading, and it is the single most useful thing 7c step 5 established.
+''
+'' EnumProcsInFile, SymBodyLine and QualifiedName are all clsSymbolDb's, all in app/, and
+'' all called here exactly as frmFunctions calls them.
+''
+'' ---- THREE DIFFERENCES FROM tiko, ALL OF THEM THIS BINARY'S SHAPE ----------------------
+''
+'' 1. THE FILE LIST IS THE OPEN TABS. tiko walks gSymDb.EnumUserFiles and keeps whatever
+''    the EXPLORER is displaying (frmFunctions_BuildFileList). There is no Explorer here,
+''    and the shell's equivalent of "the files the user has in front of them" is the tab
+''    bar -- which is also what makes a row's tab index meaningful.
+'' 2. THE ROW IS A NAME, NOT A NAME AND A PROTOTYPE. tiko packs "name%prototype" and its
+''    control splits that into two cells; PsListTree stores one string per row and has no
+''    separator convention, so the prototype has nowhere to go. It is what a tooltip would
+''    carry, and tooltips are already on the not-ported list.
+'' 3. TREE, NOT FLAT. tiko has both (ViewAsTree / ViewAsList) behind two commands this
+''    binary does not have. The tree shape is its default, it is the shape the bookmarks
+''    panel already uses, and it is what makes ShellPanel_GotoRow work unchanged.
+'' ========================================================================================
+
+'' One procedure, while the list for a file is being sorted.
+type ShellFuncRow
+    sName as DWSTRING
+    nLine as long
+end type
+
+
+'' Insertion sort by name. tiko uses a quicksort over a far larger array (every proc in
+'' every displayed file, flattened); this sorts ONE FILE's procedures, which is tens of
+'' entries, and a quicksort's setup would cost more than the sort saves.
+private sub ShellFunctions_SortByName( rows() as ShellFuncRow, byval nCount as long )
+    for i as long = 1 to nCount - 1
+        dim as ShellFuncRow tmp = rows(i)
+        dim as long j = i - 1
+        do while (j >= 0) andalso (PsUCase(rows(j).sName) > PsUCase(tmp.sName))
+            rows(j + 1) = rows(j)
+            j -= 1
+        loop
+        rows(j + 1) = tmp
+    next
+end sub
+
+
+sub ShellFunctions_Load()
+    if g_panel = 0 then exit sub
+
+    dim as long nCurSel   = g_panel->GetCurSel()
+    dim as long nTopIndex = g_panel->GetTopIndex()
+
+    g_panel->clear()
+    g_panel->BeginUpdate()
+
+    '' A HEADER PER OPEN FILE, procedures beneath it. The tab order is the panel order,
+    '' which is the order the user arranged themselves.
+    for idxTab as long = 0 to g_nTabDocs - 1
+        dim as clsDocument ptr pDoc = g_tabDocs(idxTab).pDoc
+        if pDoc = 0 then continue for
+
+        dim as DWSTRING wszFile = pDoc->DiskFilename
+        if PsLen( wszFile ) = 0 then continue for
+
+        dim rs() as SYMBOLREF
+        dim as long nProcs = gSymDb.EnumProcsInFile( wszFile, rs() )
+        if nProcs < 1 then continue for
+
+        '' COLLECTED BEFORE BEING ADDED, because the rows are sorted by name and a list
+        '' control cannot be sorted in place without moving its item data with it.
+        redim as ShellFuncRow rows( 0 to nProcs - 1 )
+        dim as long nKeep = 0
+        for p as long = 0 to nProcs - 1
+            '' A DECLARE-ONLY SYMBOL HAS NO BODY, and SymBodyLine answers 0 for it. tiko
+            '' skips those (frmFunctions.inc:463) and so does this: a row that jumped to
+            '' line 0 of the file would be a row that lies about where the code is.
+            dim as long nBodyLine = gSymDb.SymBodyLine( rs(p) )
+            if nBodyLine <= 0 then continue for
+            rows(nKeep).sName = gSymDb.QualifiedName( rs(p) )
+            '' SCINTILLA LINES ARE 0-BASED and the database's are 1-based -- tiko's own
+            '' conversion, at the same place, with the same comment.
+            rows(nKeep).nLine = nBodyLine - 1
+            nKeep += 1
+        next
+        if nKeep < 1 then continue for
+
+        ShellFunctions_SortByName( rows(), nKeep )
+
+        g_panel->AddHeader( PsPathName( wszFile ), ShellPanel_PackRow(idxTab, 0) )
+        for r as long = 0 to nKeep - 1
+            g_panel->AddString( rows(r).sName, ShellPanel_PackRow(idxTab, rows(r).nLine) )
+        next
+    next
+
+    g_panel->EndUpdate()
+
     g_panel->SetTopIndex( nTopIndex )
     nCurSel = iif( nCurSel > g_panel->GetCount() - 1, g_panel->GetCount() - 1, nCurSel )
     g_panel->SetCurSel( nCurSel )

@@ -799,11 +799,16 @@ end function
 '' shelltabs.bi, which it needs for ShellTabs_IndexOfDoc and the tab array: a bookmark row
 '' carries the tab it belongs to, and reading a background tab's markers means pointing the
 '' single view at that tab's Scintilla document.
-'' The symbol scan. BEFORE shellpanel.bi is not required today -- nothing in the panel calls
-'' it yet -- but it is where the Functions loader will read from, and shellhost.bi (included
-'' much later) is what routes gAppNotify.RequestBufferScan into it.
-#include once "shellscan.bi"
+'' ---- THE PANEL BEFORE THE SCANNER, and the order reversed in 7c step 5 commit 3.
+''
+'' It used to be scanner-then-panel, on the reasoning that the panel would read what the
+'' scanner produced. It does -- but through gSymDb, which is neither file's. The actual
+'' dependency runs the OTHER WAY: a finished scan refreshes the Functions list, so
+'' shellscan.bi calls ShellPanel_Reload and reads g_panelMode.
+''
+'' shellpanel.bi needs nothing from shellscan.bi at all.
 #include once "shellpanel.bi"
+#include once "shellscan.bi"
 
 
 sub BuildTree( byref surf as PsSurface )
@@ -1962,6 +1967,13 @@ sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any pt
         '' (NavHistory, whose body is not linkable here) and the one deliberate divergence
         '' (Clear All uses MARKER_BOOKMARK where tiko passes -1 and takes the breakpoints
         '' with it).
+        '' ---- THE PANE SWITCH ------------------------------------------------------------
+        '' tiko's icon strip is not ported (there is one PsListTree here, not three panes),
+        '' so these two commands switch a MODE. Both ids and both captions already exist --
+        '' nothing is added to modMenuIds.bi or to any .lang file.
+        case IDM_BOOKMARKSLIST : ShellPanel_SetMode( SHPANEL_BOOKMARKS )
+        case IDM_FUNCTIONLIST  : ShellPanel_SetMode( SHPANEL_FUNCTIONS )
+
         case IDM_BOOKMARKTOGGLE   : ShellBookmarks_Toggle()
         case IDM_BOOKMARKNEXT     : ShellBookmarks_Next()
         case IDM_BOOKMARKPREV     : ShellBookmarks_Prev()
@@ -3420,9 +3432,15 @@ end function
                 '' now because the scanner assertions below need something to find, and one
                 '' file serves both: the earlier assertions only care that it has bytes and
                 '' a line 1, which it still does.
+                '' ---- AND A DECLARE-ONLY SYMBOL, since 7c step 5 commit 3 --------------
+                '' ProbeGamma has no BODY. It is here so the Functions panel's
+                '' "if nBodyLine <= 0 then continue for" has something to skip -- without
+                '' it that guard could be deleted and every assertion stayed green, which
+                '' is what the first revert-to-red pass showed.
                 dim as boolean bWrote = PsFileWriteAll( wszFile, _
                         !"' probe\nsub ProbeAlpha()\n  print 1\nend sub\n\n" & _
-                        !"function ProbeBeta( byval n as long ) as long\n  return n\nend function\n" )
+                        !"function ProbeBeta( byval n as long ) as long\n  return n\nend function\n\n" & _
+                        !"declare sub ProbeGamma()\n" )
 
                 if bWrote = false then
                     Check "the open probe could be written to %TEMP%", false, wszFile.Utf8
@@ -3473,28 +3491,104 @@ end function
 
                         '' THE PROCS ARE IN THE DATABASE, which is the whole reason the
                         '' Functions panel can exist -- it reads gSymDb, never the scanner.
+                        '' THREE, NOT TWO: EnumProcsInFile returns DECLARATIONS as well as
+                        '' definitions, and the probe file carries a declare-only
+                        '' ProbeGamma. Filtering them is the PANEL's job (SymBodyLine = 0),
+                        '' not the database's -- a distinction worth an assertion of its
+                        '' own, since it is what a Functions list would otherwise get wrong.
                         dim rs() as SYMBOLREF
                         dim as long nProcs = gSymDb.EnumProcsInFile( wszFile, rs() )
-                        Check "    and both procedures are in gSymDb", (nProcs = 2), _
-                              str(nProcs)
+                        Check "    and all three procedure symbols are in gSymDb", _
+                              (nProcs = 3), str(nProcs)
+                        scope
+                            dim as long nWithBody = 0
+                            for p as long = 0 to nProcs - 1
+                                if gSymDb.SymBodyLine( rs(p) ) > 0 then nWithBody += 1
+                            next
+                            Check "      two of which have bodies", (nWithBody = 2), _
+                                  str(nWithBody)
+                        end scope
 
                         '' A NAME AND A LINE, because a count alone would pass on two
                         '' entries that say nothing useful. The line is what commit 4's
                         '' click will jump to.
-                        if nProcs = 2 then
-                            dim as DWSTRING sN1 = gSymDb.QualifiedName( rs(0) )
-                            dim as DWSTRING sN2 = gSymDb.QualifiedName( rs(1) )
-                            dim as boolean bNamed = _
-                                (PsInStr(PsUCase(sN1 & "|" & sN2), "PROBEALPHA") > 0) andalso _
-                                (PsInStr(PsUCase(sN1 & "|" & sN2), "PROBEBETA") > 0)
-                            Check "    named, both of them", bNamed, _
-                                  sN1.Utf8 & " | " & sN2.Utf8
-                            Check "    with a body line each", _
-                                  (gSymDb.SymBodyLine(rs(0)) > 0) andalso _
-                                  (gSymDb.SymBodyLine(rs(1)) > 0), _
-                                  str(gSymDb.SymBodyLine(rs(0))) & "," & _
-                                  str(gSymDb.SymBodyLine(rs(1)))
+                        '' NAMED, ALL THREE. Built as one string and searched, because
+                        '' EnumProcsInFile's order is the database's and not this test's to
+                        '' assume -- an assertion that indexed rs(0) and rs(1) by position
+                        '' would be asserting the enumeration order as a side effect.
+                        if nProcs = 3 then
+                            dim as DWSTRING sAll
+                            for p as long = 0 to nProcs - 1
+                                sAll = sAll & "|" & gSymDb.QualifiedName( rs(p) )
+                            next
+                            Check "    named, all of them", _
+                                  (PsInStr(PsUCase(sAll), "PROBEALPHA") > 0) andalso _
+                                  (PsInStr(PsUCase(sAll), "PROBEBETA") > 0) andalso _
+                                  (PsInStr(PsUCase(sAll), "PROBEGAMMA") > 0), sAll.Utf8
                         end if
+
+                        '' ---- THE FUNCTIONS PANEL ------------------------------------
+                        '' The second pane, and the reason the scanner exists. It reads
+                        '' gSymDb -- never the scanner, never the parser -- which is what
+                        '' let it be ported without threading.
+                        scope
+                            '' A BOOKMARK FIRST, so that "switch back" has something to
+                            '' show. Without it that assertion compared an empty list to an
+                            '' empty list -- the assertions above this point end with the
+                            '' document's bookmarks cleared, and the first version of this
+                            '' block failed on a count of 0 that was entirely correct.
+                            dim as clsDocument ptr pDocF = ShellTabs_CurrentDoc()
+                            pDocF->ToggleBookmark( 1 )
+
+                            ShellPanel_SetMode( SHPANEL_FUNCTIONS )
+                            Check "  the panel switches to functions", _
+                                  (g_panelMode = SHPANEL_FUNCTIONS)
+                            '' One header for the file, one row per procedure with a body.
+                            Check "    and lists both procedures under their file", _
+                                  (g_panel->GetCount() = 3), str(g_panel->GetCount())
+                            Check "      the first row being the file", g_panel->IsHeader(0)
+
+                            '' SORTED BY NAME, which is tiko's order. ProbeBeta is declared
+                            '' second in the file and sorts second here too, so the check
+                            '' below would pass on file order alone -- it is the pair of
+                            '' names being right that it actually asserts.
+                            Check "      Alpha before Beta", _
+                                  (PsInStr(PsUCase(g_panel->GetText(1)), "PROBEALPHA") > 0) andalso _
+                                  (PsInStr(PsUCase(g_panel->GetText(2)), "PROBEBETA") > 0), _
+                                  g_panel->GetText(1).Utf8 & " | " & g_panel->GetText(2).Utf8
+
+                            '' THE ROWS CARRY THE SAME PACKED SLOT the bookmarks use, which
+                            '' is what lets commit 4 reuse ShellPanel_GotoRow untouched.
+                            '' The line is 0-BASED here and 1-based in the database: the
+                            '' body of ProbeAlpha is on database line 2, Scintilla line 1.
+                            Check "      and a 0-based line in the packed slot", _
+                                  (ShellPanel_LineOf(g_panel->GetItemData(1)) = 1), _
+                                  str(ShellPanel_LineOf(g_panel->GetItemData(1)))
+                            Check "        alongside the tab it belongs to", _
+                                  (ShellPanel_TabOf(g_panel->GetItemData(1)) = idx1), _
+                                  str(ShellPanel_TabOf(g_panel->GetItemData(1)))
+
+                            '' SWITCHING BACK RESTORES THE OTHER LIST rather than leaving
+                            '' the functions on screen under a bookmarks mode.
+                            ShellPanel_SetMode( SHPANEL_BOOKMARKS )
+                            Check "    switching back shows bookmarks again", _
+                                  (g_panelMode = SHPANEL_BOOKMARKS) andalso _
+                                  (g_panel->GetCount() = 2), str(g_panel->GetCount())
+
+                            '' AND THE COMMANDS DO IT, which is the only thing that proves
+                            '' the two menu ids are wired to anything.
+                            OnMenuCommand( 0, IDM_FUNCTIONLIST, 0 )
+                            Check "    IDM_FUNCTIONLIST switches the pane", _
+                                  (g_panelMode = SHPANEL_FUNCTIONS)
+                            OnMenuCommand( 0, IDM_BOOKMARKSLIST, 0 )
+                            Check "    IDM_BOOKMARKSLIST switches it back", _
+                                  (g_panelMode = SHPANEL_BOOKMARKS)
+
+                            '' Leave the document as this block found it -- no bookmarks --
+                            '' so the assertions after it see what they expect.
+                            pDocF->ToggleBookmark( 1 )
+                            ShellPanel_Reload()
+                        end scope
 
                         '' ONLY SOURCE FILES ARE PARSED. tiko's filter, ported: .bas, .bi,
                         '' .inc, and anything with no path at all (an unsaved buffer, which
