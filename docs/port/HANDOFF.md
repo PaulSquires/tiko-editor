@@ -1,7 +1,7 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ **the commit that added [`7c-step5.md`](7c-step5.md)** — 7c
-**step 5 complete**, shell code at `e85af2878`; PsPlatform **`main`** @ **`b4d7371`**;
+tiko `feat/cross-platform` @ **the commit that added [`7c-step6.md`](7c-step6.md)** — 7c
+**step 6 complete**, shell code at `f8ea228f8`; PsPlatform **`main`** @ **`b4d7371`**;
 HelpCenter **`main`** @ `02a4c18`. All build warning-free and tiko runs.
 
 **THIS BRANCH NOW CARRIES TWO UNRELATED WORKSTREAMS.** The 7c port is `src/app` and
@@ -95,7 +95,13 @@ Read in this order, and do not skip the first:
    top before a line was written, and the panel it was said to gate shipped without it. Read
    THE MEASUREMENT and then "The real limit, and it is not the thread" -- the constraint that
    actually binds is the symbol database holding one file at a time.
-9. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
+9. [`7c-step6.md`](7c-step6.md) — **the measurement that corrected the previous
+   measurement.** Step 5 said 4–20ms and demoted threading; step 6 measured the same call on a
+   134-file include graph at 1.2 SECONDS and promoted it back. Read THE MEASUREMENT, then the
+   two-line explanation of why both numbers were real. **The pair is the most useful thing on
+   this shelf about what a benchmark is worth: step 5's sample did not represent the workload,
+   and nothing about the method would have told you that.**
+10. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
    irreducible, investigated. **It was not a blocker and never had been.** Short, and it is the
    clearest example on this whole shelf of a claim that survived because nobody checked it.
    **Its recommendation has since been implemented**: WebView2 is gone from the tree.
@@ -269,6 +275,11 @@ parse on the UI thread measures 4–20ms on files up to 260 KB** — imperceptib
 debounce. `clsScanMgr`'s 382 code lines became **112**, because most of it was thread
 machinery. See [`7c-step5.md`](7c-step5.md).
 
+**THAT 4–20ms IS TRUE ONLY OF FILES WHOSE `#include`s DO NOT RESOLVE, and step 6 corrected it:
+the same call on `tiko.bas` takes 1.2 SECONDS.** Left standing rather than rewritten, because
+the useful part is how it was wrong — a real measurement, on a sample that turned out not to
+represent the workload.
+
 **THE REAL LIMIT IS THE SYMBOL DATABASE, NOT THE THREAD.** `gSymDb`'s buffer tier holds exactly
 ONE result set and `InstallSet` replaces, so the shell's Functions pane is *"the active file's
 procedures"*, never the project's — tiko's project tier is what covers a whole workspace. That
@@ -279,6 +290,24 @@ fails and says so.
 showing, so scanning a background tab parsed the foreground document and filed its symbols
 under the wrong filename. **The same defect the bookmarks loader already documents at length** —
 written two commits earlier, by me, and not carried across.
+
+**AND STEP 6 OVERTURNED STEP 5'S ANSWER WITH ANOTHER MEASUREMENT.** The project tier is 39 lines
+of code — `clsSymbolDb` has handled two tiers all along, so the panel needed no change — and
+measuring it produced this:
+
+| root | files | symbols | buffer scan | project scan |
+| --- | --- | --- | --- | --- |
+| `tikoshell.bas` | 5 | 710 | 19ms | 19ms |
+| `tiko.bas` | **134** | 4,496 | **1,244ms** | **1,212ms** |
+
+**STEP 5'S "4–20ms, SO THREADING IS UNJUSTIFIED" WAS TRUE ONLY OF FILES WHOSE `#include`s DID
+NOT RESOLVE.** `fbcparser_scan_text` follows includes too — the *buffer* scan of `tiko.bas`
+returns the same 4,496 symbols from the same 134 files as the project scan. The cost is a
+property of the **include graph**, not of the tier, and both tiers pay it.
+
+Editing `tiko.bas` in this shell would stall **1.2 seconds** on every typing pause, every tab
+switch, and twice at startup. **That is the first hard evidence for a thread in six steps**, and
+it is now item 1. See [`7c-step6.md`](7c-step6.md).
 
 **That is ONE FORM AND TWO DIALOGS. 7c is 48 forms and ~45,000 lines**, so read step 1 as a measurement of
 the approach rather than of the progress. An earlier version of this page said 7c was *done*,
@@ -608,36 +637,35 @@ PsCore now declares `operator len`, so unconverted sites are right rather than q
 
 ---
 
-## What 7c step 6 has to decide — the live list
+## What 7c step 7 has to decide — the live list
 
 The four items below this one are all closed and are kept as a record. **These are the open
 ones**, and each is a decision rather than a task.
 
-**ITEM 1 USED TO BE THREADING, TWICE OVER, AND STEP 5 REMOVED IT FROM THE TOP BY MEASURING.**
-Read that as the pattern rather than as one correction: this page named the largest blocker,
-the blocker turned out not to gate the work it was said to gate, and one afternoon of
-measurement is what said so. **The entry is kept below, demoted, with its real scope.**
+**THREADING HAS NOW BEEN ITEM 1, THEN ITEM 4, AND IS ITEM 1 AGAIN — EACH MOVE MADE BY A
+MEASUREMENT.** Step 5 demoted it (a parse is 4–20ms, so nothing needed a thread); step 6
+promoted it back (the same call on a 134-file include graph is 1.2 SECONDS). **Read that as the
+pattern rather than as two corrections: the page's ordering is only ever as good as the last
+thing that was measured, and both numbers were real — the first was measured on a sample that
+did not represent the workload.**
 
-1. **A PROJECT TIER, or accept "the active file" as the Functions pane's scope.** `gSymDb`'s
-   BUFFER tier holds exactly one result set and `InstallSet` replaces, so the shell's Functions
-   panel can only ever list the last file scanned — it rescans on every tab switch to keep that
-   the file in front of the user. tiko lists a whole workspace because its PROJECT tier scanned
-   it. **This is the panel's real limit and the first thing a user would notice**, and it is
-   asserted in the suite so a future project tier fails and says so.
-2. **The three `PsListTree` gaps step 4 found**, each worked around at a call site today: one
+1. **THREADING, AND NOW THERE IS A NUMBER.** 1.2 seconds of UI stall on a 134-file include
+   graph — on every typing pause, every tab switch, and twice at startup. `clsScanMgr`'s worker
+   is woken with Win32 event objects and PsPlatform surfaces no threading service at all,
+   **though SDL3's `SDL_CreateThread`, `SDL_CreateMutex` and `SDL_CreateCondition` are already
+   vendored** (`src/bind/SDL3/`). The alternative is to bound the work rather than move it — a
+   parse that follows no includes is fast and lists one file, which is what step 5 shipped.
+   **That choice is a product decision, not a porting one.**
+2. ~~**A PROJECT TIER.**~~ **DONE IN STEP 6** — 39 lines of code, because `clsSymbolDb` handles
+   two tiers already and the panel needed no change. It is what produced item 1's number.
+3. **The three `PsListTree` gaps step 4 found**, each worked around at a call site today: one
    item-data slot where tiko's control has two; unconditional row striping with no
    `SetAltRows`; and `OnSelChange` not distinguishing mouse from keyboard, which makes arrowing
    the list move the editor. Fix in the control, or work around again in every host that
    follows.
-3. **Encoding detection on read.** `ShellHost_LoadFileText` reads bytes and calls them UTF-8;
+4. **Encoding detection on read.** `ShellHost_LoadFileText` reads bytes and calls them UTF-8;
    tiko's read path decodes UTF-16 through `WideCharToMultiByte` and is still shell-side.
    The shell *saves* now, so a UTF-16 file opened there will not round-trip.
-4. **Threading in PsPlatform — still open, no longer first, and now with a number against it.**
-   `clsScanMgr`'s worker is woken and stopped with Win32 event objects and PsPlatform surfaces
-   no threading service at all (the vendored `SDL_mutex.bi` is never exposed through `g_plat`).
-   **Nothing in step 5 needed it**: a buffer-tier parse is 4–20ms on the UI thread. The case
-   that survives is the PROJECT tier and anything else that parses more than one file at once
-   — which is item 1, so decide that first.
 5. **`clsTopTabCtl`: portable rewrite, or a Win32 facade forever?** The shell shows the
    *model* half is small — 258 lines including its comments. The class as it stands stores the
    `clsDocument ptr` inside the control and reads it back with `PsTabBar_GetItemData`.
