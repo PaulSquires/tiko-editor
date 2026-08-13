@@ -225,6 +225,10 @@ sub Encoding_RunSelfTest()
     DISKTRIP( FILE_ENCODING_UTF8,      "UTF-8",      FILE_ENCODING_UTF8,      srcRich )
     DISKTRIP( FILE_ENCODING_UTF8_BOM,  "UTF-8 BOM",  FILE_ENCODING_UTF8_BOM,  srcRich )
     DISKTRIP( FILE_ENCODING_UTF16_BOM, "UTF-16 BOM", FILE_ENCODING_UTF16_BOM, srcRich )
+    '' BIG ENDIAN GETS ITS OWN ROW, added with its id in 7c step 10. Before that, a file
+    '' written big-endian came back labelled UTF16_BOM and this row could not have been
+    '' written -- the expectation would have had to be the WRONG id.
+    DISKTRIP( FILE_ENCODING_UTF16BE_BOM, "UTF-16BE BOM", FILE_ENCODING_UTF16BE_BOM, srcRich )
     ' ANSI recovers the SOURCE now, not the ANSI bytes -- 7c step 9. The reader decodes
     ' CP-1252 like every other disk format, so all four round-trips end at the same UTF-8
     ' buffer and the ANSI case stopped being the odd one out.

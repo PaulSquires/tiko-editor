@@ -4295,6 +4295,56 @@ end function
                     PsFileDelete( wszU16 )
                 end if
 
+                '' ---- UTF-16 BIG ENDIAN, WHICH USED TO BE REWRITTEN AS LITTLE ------------
+                '' Read correctly and SILENTLY RE-SAVED LITTLE ENDIAN until 7c step 10,
+                '' because tiko had no id for it -- PsCore detected and decoded BE, and
+                '' Doc_PsToEnc then folded it onto the LE id.
+                dim as DWSTRING wszU16BE = wszDirE & "\probe_utf16be.txt"
+                dim as string sU16BE = chr(&hFE) & chr(&hFF)        '' BOM, big endian
+                sU16BE &= chr(&h00) & chr(&h41)                     '' A
+                sU16BE &= chr(&h00) & chr(&hE9)                     '' e-acute
+                sU16BE &= chr(&h00) & chr(&h42)                     '' B
+                if PsFileWriteAll( wszU16BE, sU16BE ) then
+                    dim as clsDocument ptr pE = gApp.CreateEmptyDocument()
+                    if pE <> 0 then
+                        dim as string sGot
+                        gAppHost.LoadFileText( wszU16BE, sGot, pE )
+                        Check "a UTF-16BE file gets its OWN encoding id", _
+                              (pE->FileEncoding = FILE_ENCODING_UTF16BE_BOM), _
+                              str(pE->FileEncoding)
+                        Check "  and decodes to the same text as LE would", _
+                              (len(sGot) = 4), str(len(sGot)) & " bytes"
+
+                        '' THE ASSERTION THE WHOLE COMMIT EXISTS FOR. Round-tripping to the
+                        '' ORIGINAL BYTES is what an id buys; folding onto the LE id also
+                        '' passed both assertions above and then wrote a different file.
+                        dim as boolean bLossyB = false
+                        dim as string sBackB = Doc_EncodeForDisk( sGot, true, _
+                                                    pE->FileEncoding, bLossyB )
+                        Check "  and re-saves BIG endian, not little", (sBackB = sU16BE), _
+                              "BOM " & hex(asc(left(sBackB,1)),2) & " " & _
+                                       hex(asc(mid(sBackB,2,1)),2)
+
+                        '' And the two ids are genuinely different files.
+                        dim as string sAsLE = Doc_EncodeForDisk( sGot, true, _
+                                                    FILE_ENCODING_UTF16_BOM, bLossyB )
+                        Check "    which is NOT what the LE id produces", (sBackB <> sAsLE)
+
+                        '' AND IT HAS A NAME OF ITS OWN. Doc_EncodingName's `case else` is
+                        '' "ANSI", so a missing arm does not fail loudly -- it puts the
+                        '' word ANSI beside a UTF-16 file in the status bar and ticks the
+                        '' wrong row in the encoding menu.
+                        Check "  and the new id has a name of its own", _
+                              (Doc_EncodingName(FILE_ENCODING_UTF16BE_BOM) <> _
+                               Doc_EncodingName(FILE_ENCODING_ANSI)) andalso _
+                              (Doc_EncodingName(FILE_ENCODING_UTF16BE_BOM) <> _
+                               Doc_EncodingName(FILE_ENCODING_UTF16_BOM)), _
+                              Doc_EncodingName(FILE_ENCODING_UTF16BE_BOM).Utf8
+                        gApp.RemoveDocument( pE )
+                    end if
+                    PsFileDelete( wszU16BE )
+                end if
+
                 '' ---- UTF-8 WITH A BOM: the label must survive, or the BOM is lost --------
                 dim as DWSTRING wszU8B = wszDirE & "\probe_utf8bom.txt"
                 if PsFileWriteAll( wszU8B, chr(&hEF) & chr(&hBB) & chr(&hBF) & "hello" ) then

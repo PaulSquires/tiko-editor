@@ -214,6 +214,7 @@ function OnCommand_EditEncoding( _
         case IDM_UTF8     : nEnc = FILE_ENCODING_UTF8
         case IDM_UTF8BOM  : nEnc = FILE_ENCODING_UTF8_BOM
         case IDM_UTF16BOM : nEnc = FILE_ENCODING_UTF16_BOM
+        case IDM_UTF16BEBOM : nEnc = FILE_ENCODING_UTF16BE_BOM
     end select
 
     if nEnc <> -1 andalso nEnc <> pDoc->FileEncoding then

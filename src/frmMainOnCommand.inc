@@ -276,7 +276,7 @@ function frmMain_OnCommand( _
         case IDM_INDENTBLOCK:        OnCommand_EditIndentBlock( pDoc, hEdit )
         case IDM_UNINDENTBLOCK:      OnCommand_EditUnIndentBlock( pDoc, hEdit )
 
-        case IDM_ANSI, IDM_UTF8, IDM_UTF8BOM, IDM_UTF16BOM
+        case IDM_ANSI, IDM_UTF8, IDM_UTF8BOM, IDM_UTF16BOM, IDM_UTF16BEBOM
             OnCommand_EditEncoding( id, pDoc )
 
         case IDM_DELETELINE,    IDM_INSERTFILE,     IDM_COMMENTBLOCK, _

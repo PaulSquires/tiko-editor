@@ -787,7 +787,7 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
             ' select-case and fall through to no branch at all. A hand-edited or
             ' garbage key falls back to the compiled-in default instead.
             case "NewFileEncoding"
-                if (nData >= FILE_ENCODING_ANSI) andalso (nData <= FILE_ENCODING_UTF16_BOM) then
+                if (nData >= FILE_ENCODING_ANSI) andalso (nData <= FILE_ENCODING_UTF16BE_BOM) then
                     this.NewFileEncoding = nData
                 else
                     this.NewFileEncoding = FILE_ENCODING_UTF8

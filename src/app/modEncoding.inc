@@ -47,6 +47,7 @@ private function Doc_EncToPs( byval nEnc as long ) as PsEncodingId
         case FILE_ENCODING_UTF8      : return PSENC_UTF8
         case FILE_ENCODING_UTF8_BOM  : return PSENC_UTF8_BOM
         case FILE_ENCODING_UTF16_BOM : return PSENC_UTF16LE_BOM
+        case FILE_ENCODING_UTF16BE_BOM : return PSENC_UTF16BE_BOM
     end select
     ' Same fallback the old code had: an unknown target writes UTF-8.
     return PSENC_UTF8
@@ -54,19 +55,20 @@ end function
 
 
 ' ========================================================================================
-' AND BACK. The inverse of Doc_EncToPs, and NOT a bijection -- which is the whole content
-' of this function and the reason it is not one line.
+' AND BACK. The inverse of Doc_EncToPs, and a bijection since 7c step 10.
 '
-' PSENC_UTF16BE_BOM HAS NO tiko ID. A big-endian file is DETECTED and DECODED correctly by
-' PsCore, and then labelled UTF16_BOM here, which means the next save writes it LITTLE
-' endian. That is a silent format change, and it is exactly what tiko has always done --
-' its old reader set FILE_ENCODING_UTF16_BOM for both byte orders and kept the endianness
-' only in a local (modRoutines.inc's bUtf16BE) that died with the function call.
+' ---- IT WAS NOT ONE, AND THE PARAGRAPH THAT EXPLAINED WHY WAS WRONG --------------------
 '
-' It is not fixable by adding an id either: PsEncEncode REFUSES to write big-endian at all
-' ("decoded, never written", PsEncoding.bi:49), so an honest FILE_ENCODING_UTF16BE_BOM
-' would be a label no save could honour. The right fix is in PsEncoding, and until then
-' this is the same lie tiko already told, told in one place instead of nowhere.
+' This function used to fold PSENC_UTF16BE_BOM onto FILE_ENCODING_UTF16_BOM, so a
+' big-endian file was read correctly and SILENTLY REWRITTEN LITTLE ENDIAN on the next save.
+' Twenty lines here argued that the fold was forced, on the grounds that "PsEncEncode
+' REFUSES to write big-endian at all", quoting PsEncoding.bi's enum comment.
+'
+' PsEncEncode has a complete big-endian arm and always did. The comment was false and the
+' code was never opened. Both are fixed now, and the deleted argument is described rather
+' than deleted silently because the mistake is more instructive than the mapping: THE
+' BLOCKER WAS A CLAIM ABOUT TWO THINGS -- what tiko needs and what the library does -- and
+' only the first was ever re-checked.
 '
 ' PSENC_UNKNOWN means the detector declined -- today unreachable, because PsEncDetect's
 ' last rung is ANSI, which never fails. UTF-8 is the safe answer if that ever changes: it
@@ -79,7 +81,7 @@ private function Doc_PsToEnc( byval enc as PsEncodingId ) as long
         case PSENC_UTF8         : return FILE_ENCODING_UTF8
         case PSENC_UTF8_BOM     : return FILE_ENCODING_UTF8_BOM
         case PSENC_UTF16LE_BOM  : return FILE_ENCODING_UTF16_BOM
-        case PSENC_UTF16BE_BOM  : return FILE_ENCODING_UTF16_BOM   ' see above: saved as LE
+        case PSENC_UTF16BE_BOM  : return FILE_ENCODING_UTF16BE_BOM
     end select
     return FILE_ENCODING_UTF8
 end function
@@ -335,7 +337,8 @@ function Doc_EncodingName( byval nEnc as long ) as DWSTRING
     select case nEnc
         case FILE_ENCODING_UTF8      : return "UTF-8"
         case FILE_ENCODING_UTF8_BOM  : return "UTF-8 (BOM)"
-        case FILE_ENCODING_UTF16_BOM : return "UTF-16 (BOM)"
+        case FILE_ENCODING_UTF16_BOM : return "UTF-16 LE (BOM)"
+        case FILE_ENCODING_UTF16BE_BOM : return "UTF-16 BE (BOM)"
         case else                    : return "ANSI"
     end select
 end function

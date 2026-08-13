@@ -278,6 +278,7 @@ sub ShowFileEncodingContextMenu()
         case FILE_ENCODING_UTF8:      nEncoding = IDM_UTF8
         case FILE_ENCODING_UTF8_BOM:  nEncoding = IDM_UTF8BOM
         case FILE_ENCODING_UTF16_BOM: nEncoding = IDM_UTF16BOM
+        case FILE_ENCODING_UTF16BE_BOM: nEncoding = IDM_UTF16BEBOM
     end select
 
     ' Captions come from Doc_EncodingName -- see the note there. The command ids are NOT
@@ -292,6 +293,8 @@ sub ShowFileEncodingContextMenu()
                          Doc_EncodingName(FILE_ENCODING_UTF8_BOM),  "", false, (nEncoding = IDM_UTF8BOM) )
     PsPopupMenu_AddItem( ghPopupFileEncoding, IDM_UTF16BOM, _
                          Doc_EncodingName(FILE_ENCODING_UTF16_BOM), "", false, (nEncoding = IDM_UTF16BOM) )
+    PsPopupMenu_AddItem( ghPopupFileEncoding, IDM_UTF16BEBOM, _
+                         Doc_EncodingName(FILE_ENCODING_UTF16BE_BOM), "", false, (nEncoding = IDM_UTF16BEBOM) )
 
     dim as POINT pt: GetCursorPos( @pt )
     ContextMenu_ShowAt( ghPopupFileEncoding, pt.x, pt.y, true )

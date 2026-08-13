@@ -93,15 +93,34 @@ enum
     IDM_LINEENDINGS, IDM_EOLTOCRLF, IDM_EOLTOLF
     IDM_SELECTLINE, IDM_TABSTOSPACES
     IDM_SPACES, IDM_SELECTALL
-    ' CODE FORMATTER. Appended at the END of the Edit block rather than slotted in beside
-    ' the other transforms: these ids are persisted in keybindings.ini, so inserting one in
-    ' the middle renumbers every id after it and silently reassigns the user's shortcuts.
+    ' ---- THESE THREE ARE APPENDED, AND THE REASON GIVEN FOR IT WAS WRONG ---------------
+    '
+    ' The comments here used to say: "these ids are persisted in keybindings.ini, so
+    ' inserting one in the middle renumbers every id after it and silently reassigns the
+    ' user's shortcuts." That is false, and it was false when it was written.
+    '
+    ' KEYBINDINGS.INI STORES THE NAME, NOT THE NUMBER. frmKeyboard_SaveKeyBindings writes
+    ' gKeys(i).wszMsgString -- "IDM_FILESAVE" -- and the loader matches on the same string
+    ' (frmKeyboard.inc:191-201). app/modKeyBindings.bi:48 says so in as many words:
+    ' "renumbering an IDM_ constant must not invalidate a user's file."
+    '
+    ' So renumbering is SAFE, and two placement decisions were made defensively against a
+    ' hazard that did not exist. They are left where they are -- moving them now would be
+    ' churn for its own sake -- but the reason is corrected, because a false constraint
+    ' that has already steered two decisions will steer a third.
+    '
+    ' WHAT DOES CONSTRAIN PLACEMENT: frmMain_EditTopMenuStates walks
+    ' IDM_EDIT_START..IDM_EDIT_END to disable the Edit menu wholesale (modMenus.inc:111).
+    ' An Edit command declared OUTSIDE that range is never disabled with the rest, which is
+    ' a real bug and the actual reason IDM_UTF16BEBOM sits inside it.
     IDM_FORMATSUBMENU
     IDM_FORMATDOCUMENT, IDM_FORMATSELECTION, IDM_FORMATALLDOCS, IDM_FORMATPROJECT
-    ' The Format Options dialog. It lives on File > Settings beside IDM_OPTIONSDIALOG, but
-    ' its id is declared HERE for the same persisted-id reason as above -- appending is
-    ' safe, inserting it next to IDM_OPTIONSDIALOG would shift every id after that one.
+    ' The Format Options dialog. It lives on File > Settings beside IDM_OPTIONSDIALOG; its
+    ' id is declared here rather than there, which is harmless either way.
     IDM_FORMATOPTIONS
+    ' UTF-16 BIG ENDIAN (7c step 10). Inside the Edit range because the disable loop above
+    ' needs it there.
+    IDM_UTF16BEBOM
     IDM_EDIT_END
     
     '' SEARCH
