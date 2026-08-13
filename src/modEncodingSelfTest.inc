@@ -153,18 +153,26 @@ sub Encoding_RunSelfTest()
     DISKTRIP( FILE_ENCODING_UTF8,      "UTF-8",      FILE_ENCODING_UTF8,      srcRich )
     DISKTRIP( FILE_ENCODING_UTF8_BOM,  "UTF-8 BOM",  FILE_ENCODING_UTF8_BOM,  srcRich )
     DISKTRIP( FILE_ENCODING_UTF16_BOM, "UTF-16 BOM", FILE_ENCODING_UTF16_BOM, srcRich )
-    ' ANSI file: the reader leaves the bytes ANSI (no conversion), so the recovered buffer is
-    ' the ANSI encoding of the source -- compared ANSI-to-ANSI, which is robust to whether the
-    ' system codepage can represent every character.
+    ' ANSI recovers the SOURCE now, not the ANSI bytes -- 7c step 9. The reader decodes
+    ' CP-1252 like every other disk format, so all four round-trips end at the same UTF-8
+    ' buffer and the ANSI case stopped being the odd one out.
     '
-    ' THIS ASSERTION CHANGES IN THE NEXT COMMIT. Once ANSI is a disk format only, the reader
-    ' decodes it to UTF-8 like everything else and the recovered buffer becomes srcRich. It is
-    ' left alone here so that this commit is a swap of readers and nothing else.
-    DISKTRIP( FILE_ENCODING_ANSI,      "ANSI",       FILE_ENCODING_ANSI,      outA )
+    ' It compared ANSI-to-ANSI before, deliberately, because the reader passed the bytes
+    ' through untouched and the system codepage decided what they meant. That comparison was
+    ' robust precisely BECAUSE it never asserted the text was right -- which is what the
+    ' change here buys.
+    DISKTRIP( FILE_ENCODING_ANSI,      "ANSI",       FILE_ENCODING_ANSI,      srcRich )
 
     ' Localization ids owned by the lossy prompt must exist (blank = silent failure).
-    ENCASSERT( len(LL(316)) > 0, "L(316) lossy-prompt body is blank -- missing from english.lang" )
-    ENCASSERT( len(LL(317)) > 0, "L(317) lossy-prompt title is blank -- missing from english.lang" )
+    ' RETARGETED IN 7c STEP 9. These guarded L(316)/L(317), which belonged to the
+    ' convert-to-ANSI prompt -- a prompt that no longer exists, because switching encodings
+    ' no longer converts anything. They now guard the ids of the prompt that DOES still ask,
+    ' at save time. An id missing from english.lang renders BLANK with nothing to say so,
+    ' which is the whole reason these assertions exist and is why they follow the prompt
+    ' rather than the number.
+    ENCASSERT( len(LL(516)) > 0, "L(516) lossy-save body is blank -- missing from english.lang" )
+    ENCASSERT( len(LL(517)) > 0, "L(517) lossy-save body (2) is blank -- missing from english.lang" )
+    ENCASSERT( len(LL(518)) > 0, "L(518) lossy-save title is blank -- missing from english.lang" )
 
     ' ================= Default encoding for new files =================
     ' Three separate claims, kept apart on purpose -- the name table, the index/value

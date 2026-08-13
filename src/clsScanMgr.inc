@@ -338,7 +338,11 @@ sub clsScanMgr.RequestBufferScan( byval pDoc as clsDocument ptr )
     dim as SCANREQUEST ptr pReq = this.BuildRequest( ScanTierBuffer, wszRoot )
     ' ANSI documents keep codepage 0 in Scintilla; everything else is UTF-8
     ' in-buffer - the TODO scanner needs to know which conversion to apply.
-    pReq->bTextUtf8 = ( pDoc->FileEncoding <> FILE_ENCODING_ANSI )
+    '' TRUE ALWAYS, since 7c step 9: the editor holds UTF-8 for every document whatever the
+    '' file's encoding is. Left as an explicit assignment rather than deleted, because the
+    '' request struct's field still means "these bytes are UTF-8" and a future caller feeding
+    '' it something else needs somewhere to say so.
+    pReq->bTextUtf8 = true
     pReq->cchText = len( sText )
     pReq->pszText = allocate( pReq->cchText + 1 )
     if pReq->pszText = 0 then

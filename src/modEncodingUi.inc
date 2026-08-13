@@ -93,20 +93,20 @@ sub Doc_ReportWriteFailure( byval wszPath as DWSTRING, byval wszErr as DWSTRING 
 end sub
 
 ' ========================================================================================
-' Confirm converting to ANSI when characters will be lost. TRUE to go ahead.
+' Doc_ConfirmAnsiConversion IS GONE (7c step 9), and so is the question it asked.
 '
-' Was inline in ConvertTextBuffer. Pulled out for the same reason as the two above -- and
-' because a function that both decides WHETHER to ask and owns HOW the asking looks cannot
-' be tested without a screen. This one can now be stubbed; that one can now be reasoned
-' about.
+' It warned before switching a document to ANSI, because the switch CONVERTED the buffer
+' immediately -- characters outside CP-1252 were replaced there and then, and SetText
+' emptied the undo buffer so there was no way back. Its default button was Cancel for that
+' reason.
 '
-' Default button is CANCEL: SetText empties the undo buffer, so there is no going back.
+' Switching encodings is a RELABEL now (see ConvertTextBuffer): nothing is converted and
+' nothing is lost until the file is written. So the question moved to where it became true
+' -- Doc_ConfirmLossySave, above, which asks at the save and leaves the document intact on
+' a cancel.
+'
+' ONE PROMPT WHERE THERE WERE TWO, and the surviving one asks at the moment the characters
+' are actually at risk. L(316) and L(317) are now unused; they are left in the .lang files
+' rather than blanked, because a used id is cheaper to leave than a renumber is to get
+' wrong.
 ' ========================================================================================
-function Doc_ConfirmAnsiConversion() as boolean
-    dim as long nAnswer = TikoMsgBox( HWND_FRMMAIN, _
-            L(316,"This document contains characters that cannot be represented in ANSI. " & _
-                  "Converting will replace them and cannot be undone. Convert anyway?"), _
-            L(317,"Convert to ANSI"), _
-            TMB_ICON_WARNING, TMB_OKCANCEL, 1 )   ' default = Cancel: this is destructive
-    return (nAnswer = IDOK)
-end function

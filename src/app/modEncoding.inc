@@ -258,6 +258,17 @@ end function
 '
 ' AND THE BOM IS ALREADY GONE. PsEncDecode consumes it (PsEncoding.bi:66), so no caller
 ' needs the strip-the-first-N-bytes arithmetic the old reader carried four times.
+'
+' ---- ANSI IS DECODED TOO, SINCE 7c STEP 9 ----------------------------------------------
+'
+' The old reader passed ANSI bytes through UNTOUCHED and let Scintilla interpret them with
+' codepage 0 -- the SYSTEM codepage. The writer has always encoded CP-1252. So on any
+' machine whose ANSI codepage is not CP-1252, tiko read a file one way and wrote it back
+' another, and had done since long before this port.
+'
+' Now the same CP-1252 mapping runs in both directions and the editor holds UTF-8 for every
+' document, whatever the file was. ANSI joins UTF-16 as a DISK FORMAT ONLY -- see the
+' retired INVARIANT E1 in src/modEncoding.inc for what that cost.
 ' ========================================================================================
 function Doc_ReadFromDisk( _
             byval wszPath as DWSTRING, _

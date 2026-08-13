@@ -26,4 +26,6 @@ declare function Doc_ConfirmLossySave( _
 
 declare sub Doc_ReportWriteFailure( byval wszPath as DWSTRING, byval wszErr as DWSTRING )
 
-declare function Doc_ConfirmAnsiConversion() as boolean
+' Doc_ConfirmAnsiConversion was declared here until 7c step 9. Switching encodings no
+' longer converts anything, so there is nothing to confirm at the click -- see the
+' note where its body was, in modEncodingUi.inc.

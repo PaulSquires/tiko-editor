@@ -244,12 +244,11 @@ sub ViewStyle_Apply( byval pSciView as any ptr, _
 
 
         ''  UNICODE (UTF-8 encoding)
-        if nEncoding = FILE_ENCODING_ANSI then
-            SciMsg( pSciView, SCI_SETCODEPAGE, 0, 0 )
-        else
-            ' UTF8 or UTF16 would have been converted to UTF8 in order to display in the editor.
-            SciMsg( pSciView, SCI_SETCODEPAGE, SC_CP_UTF8, 0 )
-        end if
+        '' ALWAYS, SINCE 7c STEP 9. ANSI used to select codepage 0 here; every disk format
+        '' is converted to UTF-8 on the way in now, so the editor has exactly one layout.
+        '' nEncoding is still a parameter because callers pass it and the styler may want it
+        '' again -- it no longer decides the codepage.
+        SciMsg( pSciView, SCI_SETCODEPAGE, SC_CP_UTF8, 0 )
 
     
         '' RIGHT EDGE COLUMN
