@@ -229,23 +229,27 @@ sub Encoding_RunSelfTest()
     '' written big-endian came back labelled UTF16_BOM and this row could not have been
     '' written -- the expectation would have had to be the WRONG id.
     DISKTRIP( FILE_ENCODING_UTF16BE_BOM, "UTF-16BE BOM", FILE_ENCODING_UTF16BE_BOM, srcRich )
-    ' ANSI recovers the SOURCE now, not the ANSI bytes -- 7c step 9. The reader decodes
-    ' CP-1252 like every other disk format, so all four round-trips end at the same UTF-8
-    ' buffer and the ANSI case stopped being the odd one out.
+    ' ANSI file: the reader leaves the bytes ANSI (no conversion), so the recovered buffer is
+    ' the ANSI encoding of the source -- compared ANSI-to-ANSI, which is robust to whether the
+    ' system codepage can represent every character.
     '
-    ' It compared ANSI-to-ANSI before, deliberately, because the reader passed the bytes
-    ' through untouched and the system codepage decided what they meant. That comparison was
-    ' robust precisely BECAUSE it never asserted the text was right -- which is what the
-    ' change here buys.
-    DISKTRIP( FILE_ENCODING_ANSI,      "ANSI",       FILE_ENCODING_ANSI,      srcRich )
+    ' IT STAYED THIS WAY. 7c step 9 briefly made ANSI a disk format, so the reader decoded
+    ' CP-1252 and this expectation became srcRich; that change was REVERTED at the author's
+    ' request -- see the revert commit. ANSI is an in-editor layout again, so the recovered
+    ' buffer is ANSI bytes once more.
+    DISKTRIP( FILE_ENCODING_ANSI,      "ANSI",       FILE_ENCODING_ANSI,      outA )
 
-    ' Localization ids owned by the lossy prompt must exist (blank = silent failure).
-    ' RETARGETED IN 7c STEP 9. These guarded L(316)/L(317), which belonged to the
-    ' convert-to-ANSI prompt -- a prompt that no longer exists, because switching encodings
-    ' no longer converts anything. They now guard the ids of the prompt that DOES still ask,
-    ' at save time. An id missing from english.lang renders BLANK with nothing to say so,
-    ' which is the whole reason these assertions exist and is why they follow the prompt
-    ' rather than the number.
+    ' BOTH PROMPTS' IDS. 316/317 belong to the convert-to-ANSI warning, which fires when a
+    ' switch is about to destroy characters; 516-518 to the lossy-SAVE prompt, which fires
+    ' when a write is. Both exist, so both are guarded -- an id missing from english.lang
+    ' renders BLANK with nothing to say so, which is the whole reason these are here.
+    '
+    ' THE 516-518 GUARDS WERE MISSING FOR ONE COMMIT. 7c step 9 deleted the ANSI prompt and
+    ' RETARGETED these three onto the save prompt; the revert restored 316/317 and took the
+    ' retarget with them, leaving the save prompt unguarded. Caught by an assertion COUNT
+    ' dropping by one, not by anything failing.
+    ENCASSERT( len(LL(316)) > 0, "L(316) convert-to-ANSI body is blank -- missing from english.lang" )
+    ENCASSERT( len(LL(317)) > 0, "L(317) convert-to-ANSI title is blank -- missing from english.lang" )
     ENCASSERT( len(LL(516)) > 0, "L(516) lossy-save body is blank -- missing from english.lang" )
     ENCASSERT( len(LL(517)) > 0, "L(517) lossy-save body (2) is blank -- missing from english.lang" )
     ENCASSERT( len(LL(518)) > 0, "L(518) lossy-save title is blank -- missing from english.lang" )

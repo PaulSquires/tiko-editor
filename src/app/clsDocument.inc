@@ -251,15 +251,9 @@ function clsDocument.AssignTextBuffer() as long
         ' bytes are never interpreted under the wrong layout (INVARIANT E1). ApplyProperties
         ' below sets the same value again idempotently; doing it here removes the reliance on
         ' SetText happening to be byte-transparent. Codepage is per-view, so set both splits.
-        '
-        ' ALWAYS UTF-8 SINCE 7c STEP 9. This read
-        '     iif( FileEncoding = FILE_ENCODING_ANSI, 0, SC_CP_UTF8 )
-        ' because an ANSI file was handed to Scintilla as raw bytes under the system
-        ' codepage. The reader decodes ANSI now, so every document that reaches here is
-        ' UTF-8 whatever its file was, and the encoding is a property of the DISK FORMAT
-        ' alone. E1's replacement is stated in src/modEncoding.inc.
-        SciMsg( pSci(0), SCI_SETCODEPAGE, SC_CP_UTF8, 0 )
-        SciMsg( pSci(1), SCI_SETCODEPAGE, SC_CP_UTF8, 0 )
+        dim as long nInitCP = iif( this.FileEncoding = FILE_ENCODING_ANSI, 0, SC_CP_UTF8 )
+        SciMsg( pSci(0), SCI_SETCODEPAGE, nInitCP, 0 )
+        SciMsg( pSci(1), SCI_SETCODEPAGE, nInitCP, 0 )
         this.SetText(this.TextBuffer)
         this.TextBuffer = ""
         ' Set the previously saved positions

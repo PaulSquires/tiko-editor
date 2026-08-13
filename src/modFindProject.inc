@@ -439,9 +439,8 @@ private sub FindProject_SearchOneDocument( byval pDoc as clsDocument ptr, _
         ' Never realized: the bytes are still sitting in TextBuffer.
         if len( pDoc->TextBuffer ) = 0 then exit sub
         SciExec( hScratch, SCI_SETDOCPOINTER, 0, 0 )
-        '' UTF-8 ALWAYS, since 7c step 9 -- the scratch buffer receives the document's
-        '' in-editor bytes, and those are UTF-8 for every encoding now.
-        SciExec( hScratch, SCI_SETCODEPAGE, SC_CP_UTF8, 0 )
+        dim as long nCP = iif( pDoc->FileEncoding = FILE_ENCODING_ANSI, 0, SC_CP_UTF8 )
+        SciExec( hScratch, SCI_SETCODEPAGE, nCP, 0 )
         SciExec( hScratch, SCI_SETTEXT, 0, strptr( pDoc->TextBuffer ) )
     end if
 

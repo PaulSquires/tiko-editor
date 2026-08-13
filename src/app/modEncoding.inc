@@ -260,17 +260,6 @@ end function
 '
 ' AND THE BOM IS ALREADY GONE. PsEncDecode consumes it (PsEncoding.bi:66), so no caller
 ' needs the strip-the-first-N-bytes arithmetic the old reader carried four times.
-'
-' ---- ANSI IS DECODED TOO, SINCE 7c STEP 9 ----------------------------------------------
-'
-' The old reader passed ANSI bytes through UNTOUCHED and let Scintilla interpret them with
-' codepage 0 -- the SYSTEM codepage. The writer has always encoded CP-1252. So on any
-' machine whose ANSI codepage is not CP-1252, tiko read a file one way and wrote it back
-' another, and had done since long before this port.
-'
-' Now the same CP-1252 mapping runs in both directions and the editor holds UTF-8 for every
-' document, whatever the file was. ANSI joins UTF-16 as a DISK FORMAT ONLY -- see the
-' retired INVARIANT E1 in src/modEncoding.inc for what that cost.
 ' ========================================================================================
 function Doc_ReadFromDisk( _
             byval wszPath as DWSTRING, _
@@ -300,11 +289,33 @@ function Doc_ReadFromDisk( _
 
     ' AN EMPTY FILE IS UTF-8, not ANSI -- PsEncDetect's own choice, and the one that matters
     ' because a new empty file saved without being typed into must not acquire a codepage.
-    dim as PsEncodingId encUsed = PSENC_UNKNOWN
-    dim as DWSTRING dwsText = PsEncDecodeAuto( sRaw, encUsed )
+    dim as PsEncodingId encUsed = PsEncDetect( sRaw )
+    nEnc = Doc_PsToEnc( encUsed )
 
+    ' ---- ANSI IS NOT DECODED, AND THAT IS DELIBERATE ------------------------------------
+    '
+    ' Every other encoding is converted to UTF-8 here; ANSI bytes are handed over UNTOUCHED,
+    ' which is exactly what tiko's GetFileToString did ("case FILE_ENCODING_ANSI: no
+    ' conversion needed").
+    '
+    ' IT IS NOT AN OVERSIGHT AND IT IS NOT FREE. ANSI is an IN-EDITOR LAYOUT in tiko, not
+    ' merely a disk format: an ANSI document runs Scintilla at codepage 0 and the bytes in
+    ' the buffer are the bytes from the file. That is INVARIANT E1, in src/modEncoding.inc,
+    ' and the reader is half of it -- decode ANSI here and the buffer becomes UTF-8 while
+    ' the codepage stays 0, which is mojibake for every byte above 0x7F.
+    '
+    ' 7c step 9 briefly made ANSI a disk format like the others, decoded it here, and moved
+    ' all five codepage sites to UTF-8. That was REVERTED at the author's request -- the
+    ' conversion-time warning box it removed was wanted. This line is the half of the revert
+    ' that the revert itself could not carry, because the decoding arrived one commit
+    ' earlier than the change that was undone.
+    if encUsed = PSENC_ANSI then
+        sUtf8 = sRaw
+        return DOCREAD_OK
+    end if
+
+    dim as DWSTRING dwsText = PsEncDecode( sRaw, encUsed )
     sUtf8 = dwsText.Utf8
-    nEnc  = Doc_PsToEnc( encUsed )
     return DOCREAD_OK
 end function
 

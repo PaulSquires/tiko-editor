@@ -46,6 +46,21 @@ ladder, endian-swap loop and `WideCharToMultiByte` are gone. Both binaries call 
 function, so there is one answer to *"what encoding is this file"* instead of two feeding one
 filename-keyed document model.
 
+> ## REVERTED, 2026-08-11 — READ THIS BEFORE THE SECTION BELOW
+>
+> **Everything in this section about ANSI and invariant E1 was undone at the author's request.**
+> The conversion-time warning box it removed was wanted: switching a document to ANSI destroys
+> characters, and being told at the click is better than being told at the save.
+>
+> So ANSI is an IN-EDITOR LAYOUT again, E1 is back with its five sites, `ConvertTextBuffer`
+> converts again, and `Doc_ConfirmAnsiConversion` is restored. **The reader passes ANSI bytes
+> through untouched**, which the revert could not carry on its own — the decoding arrived in
+> commit 1, one commit earlier than the change that was undone, and leaving it in place gave a
+> UTF-8 buffer under codepage 0, which is mojibake above 0x7F.
+>
+> **The rest of this step stands**: one shared reader, the encoding suite in `app/`, the seam's
+> polarity fix. Only the ANSI/E1 half went.
+
 **ANSI became a disk format.** Decided with the author, and it is the largest behaviour change of
 the port so far.
 

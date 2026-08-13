@@ -10,10 +10,17 @@ encoding id; `AppHostServices.LoadFileText` is deleted (the seam is 19 fields); 
 no longer includes a shell header by relative path, which takes the **link debt to 1**. See
 [`7c-step10.md`](7c-step10.md).
 
-**THE SHELL DECODES NOW, AND ANSI IS A DISK FORMAT.** Step 9 gave both binaries ONE reader
-(`Doc_ReadFromDisk`, in `app/`), retired **invariant E1** for a stronger one — the editor is
-UTF-8 always, whatever the file was — and moved the 44-assertion encoding suite into `app/` so
-the shell runs it headlessly. See [`7c-step9.md`](7c-step9.md).
+**THE SHELL DECODES NOW.** Step 9 gave both binaries ONE reader (`Doc_ReadFromDisk`, in `app/`)
+and moved the encoding suite into `app/` so the shell runs it headlessly. See
+[`7c-step9.md`](7c-step9.md).
+
+**BUT ITS ANSI CHANGE WAS REVERTED (2026-08-11), AT THE AUTHOR'S REQUEST.** Step 9 made ANSI a
+disk format and retired invariant E1; that removed the warning box shown before a switch to ANSI
+destroys characters, and the box was wanted. **E1 is back**, `ConvertTextBuffer` converts again,
+and the reader passes ANSI bytes through untouched — which the revert could not carry by itself,
+because the ANSI decoding arrived one commit EARLIER than the change that was undone. A partial
+revert left a UTF-8 buffer under codepage 0, which is mojibake above 0x7F, and the encoding suite
+caught it.
 
 **THE PORT HAS A THREAD, AND PsPlatform HAS `PsThread`.** The symbol scan runs on a worker; the
 UI thread's share of it went from **1,244ms to 32–37µs** on a 134-file include graph. **tiko
@@ -517,7 +524,7 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | `_check_app_standalone.bat` | `src/app` compiles against PsCore alone **and LINKS as one unit** | green — **18 clean**, 0 errors, **debt 1** (2026-08-11) |
 | `_check_shell.bat` | `src/shell` includes no Win32 shell header, and carries no `PsC.` | green |
 | `_run_shell.bat --selftest` | the shell's own suite — **389 assertions** (2026-08-11) | green |
-| ...and the encoding suite it now runs | **46 assertions**, moved into `app/` in step 9 | green |
+| ...and the encoding suite it now runs | **48 assertions**, moved into `app/` in step 9 | green |
 | PsPlatform `build.cmd check` | **47 suites** (2026-08-11, `psthread` is the newest) | green, 0 failures |
 | PsPlatform `pstree` | **271 assertions** (was 242 before step 8's three gaps) | green |
 | PsPlatform `psfile` | **94 assertions** (was 91; the three that cover `PsFileRealCase`'s useful direction) | green |

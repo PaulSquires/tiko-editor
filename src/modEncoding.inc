@@ -104,45 +104,22 @@ end function
 
 
 ' ========================================================================================
-' Relabel the document with the encoding it should be SAVED as.
+' Convert the current in-editor text buffer to the byte layout the specified encoding
+' needs (ANSI codepage 0, or UTF-8 codepage 65001), and relabel the document.
 '
-' ---- IT USED TO CONVERT. NOW IT ONLY RELABELS (7c step 9) ------------------------------
+' Returns TRUE whenever the document's encoding actually changed -- INCLUDING a pure relabel
+' (e.g. UTF-8 -> UTF-8 BOM), because a relabel still changes what is written to disk (a BOM
+' added/removed, UTF-8 vs UTF-16), so the caller must mark the document dirty and let it be
+' saved. Returns FALSE only when nothing changed: the document is already that encoding, or a
+' lossy ANSI conversion was cancelled by the user.
 '
-' The old version of this function is worth describing, because what it did explains what
-' this one does not have to. Scintilla held TWO layouts -- ANSI bytes under codepage 0, or
-' UTF-8 under 65001 -- so switching a document to or from ANSI meant decoding the whole
-' buffer, re-encoding it, SCI_CLEARALL, SCI_SETCODEPAGE, SetText, and restoring the caret
-' by LINE AND COLUMN because every byte offset had moved.
+' Scintilla holds exactly two layouts, ANSI or UTF-8; UTF-16 is a DISK format only and its
+' in-memory representation is UTF-8. So UTF8 / UTF8_BOM / UTF16_BOM all share one in-editor
+' layout, and switching between them is a relabel, not a conversion.
 '
-' The reader decodes ANSI now (app/modEncoding.inc), so the editor holds UTF-8 for every
-' document whatever its file was. ANSI is a DISK FORMAT ONLY, exactly as UTF-16 already
-' was -- and this function's whole job is choosing which disk format the next save writes.
-'
-' ---- INVARIANT E1 IS RETIRED, AND ITS REPLACEMENT IS STRONGER --------------------------
-'
-' E1 said: "on return, SCI_GETCODEPAGE = iif(FileEncoding = ANSI, 0, SC_CP_UTF8), and this
-' function is the ONLY code permitted to move either side of that on a populated document."
-' It was enforced in five places that each had to remember the rule.
-'
-'   INVARIANT E2: SCI_GETCODEPAGE IS SC_CP_UTF8 ON EVERY POPULATED DOCUMENT, ALWAYS.
-'   FileEncoding says what to WRITE and never what is in memory. Nothing needs permission
-'   to maintain E2 because nothing needs to do anything.
-'
-' ---- AND THE CONVERSION PROMPT IS GONE WITH IT -----------------------------------------
-'
-' Switching to ANSI used to ask Doc_ConfirmAnsiConversion first, because the conversion
-' destroyed characters immediately and SetText emptied the undo buffer, so there was no way
-' back. NOTHING IS DESTROYED NOW -- the buffer is untouched and the loss, if any, happens
-' when the file is written. The lossy-SAVE prompt (Doc_ConfirmLossySave) already guards
-' that, at the moment it is true, and it is the only place the question is now asked.
-'
-' THIS IS A USER-VISIBLE CHANGE: choosing Edit > Encoding > ANSI on a document full of CJK
-' no longer warns at the click. It warns at the save, which is when the characters are
-' actually at risk, and the document survives a cancel there completely.
-'
-' Returns TRUE whenever the document's encoding actually changed, so the caller marks the
-' document dirty -- a relabel still changes what reaches disk (a BOM added or removed,
-' UTF-8 vs UTF-16 vs CP-1252). Returns FALSE only when it was already that encoding.
+' INVARIANT E1: on return, SCI_GETCODEPAGE = iif(FileEncoding = ANSI, 0, SC_CP_UTF8), and
+' this function is the ONLY code permitted to move either side of that on a populated
+' document (ApplyProperties establishes it on load; nothing else may touch the codepage).
 ' ========================================================================================
 function ConvertTextBuffer( _
             byval pDoc as clsDocument ptr, _
@@ -153,15 +130,70 @@ function ConvertTextBuffer( _
     dim as hwnd hEdit = pDoc->hWndActiveScintilla
     if hEdit = 0 then return false
 
+    dim as boolean bHaveUtf8 = ( SciExec( hEdit, SCI_GETCODEPAGE, 0, 0 ) = SC_CP_UTF8 )
+    dim as boolean bWantUtf8 = ( nNewEncoding <> FILE_ENCODING_ANSI )
+
+    ' Pure relabel: the in-memory layout already matches the target (e.g. UTF-8 -> UTF-8 BOM,
+    ' or UTF-8 BOM -> UTF-16 BOM). No byte conversion, only the disk format changes -- but
+    ' that IS a change (the BOM must reach disk), so report it as one when the label moved.
     ' A deliberate encoding change invalidates any earlier "yes, lose those characters"
     ' answer: the question was about a different target encoding.
     pDoc->bLossySaveAccepted = false
 
-    ' THE WHOLE FUNCTION. Every target is a relabel now -- the bytes in the editor are UTF-8
-    ' and stay UTF-8 (E2), and nothing is converted or lost until the file is written.
-    dim as boolean bChanged = ( pDoc->FileEncoding <> nNewEncoding )
+    if bHaveUtf8 = bWantUtf8 then
+        dim as boolean bChanged = ( pDoc->FileEncoding <> nNewEncoding )
+        pDoc->FileEncoding = nNewEncoding
+        return bChanged
+    end if
+
+    ' Save caret and first-visible line as LINE + COLUMN. Byte offsets shift when the
+    ' encoding changes (ANSI grows to UTF-8), so a saved byte position would land in the
+    ' wrong place, possibly mid-character.
+    dim as long nPos       = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0 )
+    dim as long nCaretLine = SciExec( hEdit, SCI_LINEFROMPOSITION, nPos, 0 )
+    dim as long nCaretCol  = SciExec( hEdit, SCI_GETCOLUMN, nPos, 0 )
+    dim as long nFirstLine = SciExec( hEdit, SCI_GETFIRSTVISIBLELINE, 0, 0 )
+
+    ' Decode the current buffer to UTF-16, then re-encode to the wanted layout.
+    dim as string sBuffer = Scintilla_GetTextBytes( SciHost_DirectPointer(hEdit) )
+    dim as DWSTRING dwsText = PsEncDecode( sBuffer, _
+            iif(bHaveUtf8, PSENC_UTF8, PSENC_ANSI) )
+
+    dim as string sNew
+    dim as long nNewCodePage
+    dim as boolean bLossy
+    if bWantUtf8 then
+        sNew = PsEncEncode( dwsText, PSENC_UTF8, bLossy )
+        nNewCodePage = SC_CP_UTF8
+    else
+        sNew = PsEncEncode( dwsText, PSENC_ANSI, bLossy )
+        if bLossy then
+            ' Converting to ANSI will destroy characters outside the system ANSI codepage,
+            ' and SetText empties the undo buffer, so there is no going back. Confirm first.
+            ' The dialog lives in modEncodingUi.inc. This function decides WHETHER to
+            ' ask; it does not decide what the asking looks like.
+            if Doc_ConfirmAnsiConversion() = false then return false
+        end if
+        nNewCodePage = 0
+    end if
+
+    ' Apply in the safe order: clear, THEN set the codepage on the empty buffer, THEN insert
+    ' the already-converted bytes. Setting the codepage first over the old bytes would make
+    ' Scintilla re-validate UTF-8 and fix up positions over the wrong layout.
+    SciExec( hEdit, SCI_CLEARALL, 0, 0 )
+    SciExec( hEdit, SCI_SETCODEPAGE, nNewCodePage, 0 )
+    pDoc->SetText( sNew )
+
+    ' Assign the label LAST, only after the bytes are in place, so a cancel above leaves the
+    ' document wholly untouched (INVARIANT E1 preserved on every exit path).
     pDoc->FileEncoding = nNewEncoding
-    return bChanged
+
+    ' Restore caret and scroll by line + column.
+    dim as long nRestore = SciExec( hEdit, SCI_FINDCOLUMN, nCaretLine, nCaretCol )
+    SciExec( hEdit, SCI_SETSEL, nRestore, nRestore )
+    SciExec( hEdit, SCI_SETFIRSTVISIBLELINE, nFirstLine, 0 )
+
+    return true
 end function
 
 

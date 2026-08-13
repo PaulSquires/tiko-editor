@@ -4409,69 +4409,9 @@ end function
                         dim as string sGot = pE->TextBuffer
                         Check "a byte that cannot be UTF-8 falls through to ANSI", _
                               (pE->FileEncoding = FILE_ENCODING_ANSI), str(pE->FileEncoding)
-
-                        '' AND ITS TEXT IS DECODED, SINCE 7c STEP 9. This is the assertion
-                        '' that separates "ANSI is a disk format" from the old behaviour:
-                        '' the bytes used to reach Scintilla untouched, under codepage 0 --
-                        '' the SYSTEM codepage -- while the writer always emitted CP-1252.
-                        '' 0xE9 is e-acute in CP-1252 and two bytes in UTF-8, so a decoded
-                        '' buffer is 5 bytes and a raw one is 4.
-                        Check "  and ANSI is DECODED, not passed through", (len(sGot) = 5), _
-                              str(len(sGot)) & " bytes"
-                        Check "    as CP-1252, not the system codepage", _
-                              (len(sGot) = 5) andalso (asc(mid(sGot,4,1)) = &hC3) _
-                                             andalso (asc(mid(sGot,5,1)) = &hA9), _
-                              str(iif(len(sGot) >= 5, asc(mid(sGot,4,1)), 0))
-
-                        '' AND IT ROUND-TRIPS. Read as CP-1252, written as CP-1252 -- which
-                        '' is what the two halves finally agreeing means.
-                        dim as boolean bLossyA = false
-                        dim as string sBackA = Doc_EncodeForDisk( sGot, true, _
-                                                    FILE_ENCODING_ANSI, bLossyA )
-                        Check "    and round-trips to the original bytes", _
-                              (sBackA = "caf" & chr(&hE9)), str(len(sBackA))
-                        Check "      without being called lossy", (bLossyA = false)
                         gApp.RemoveDocument( pE )
                     end if
                     PsFileDelete( wszAnsi )
-                end if
-
-                '' ---- INVARIANT E2, WHICH IS WHAT THE WHOLE COMMIT TURNS ON --------------
-                '' "SCI_GETCODEPAGE is SC_CP_UTF8 on every populated document, ALWAYS."
-                ''
-                '' It replaced E1 -- "codepage 0 when the encoding is ANSI, SC_CP_UTF8
-                '' otherwise" -- which five separate sites each had to remember. Asserting it
-                '' needs a REAL TAB, not just a document, because it is AssignTextBuffer that
-                '' establishes the codepage; a document built with CreateEmptyDocument and
-                '' handed text directly never reaches that path, which is why the assertions
-                '' above cannot see this.
-                dim as DWSTRING wszAnsiTab = wszDirE & "\probe_ansi_tab.bas"
-                if PsFileWriteAll( wszAnsiTab, "' caf" & chr(&hE9) & chr(13) & chr(10) ) then
-                    dim as long nTabsBefore = g_nTabDocs
-                    dim as long idxA = ShellTabs_Open( wszAnsiTab )
-                    if idxA >= 0 then
-                        dim as clsDocument ptr pA2 = g_tabDocs(idxA).pDoc
-                        Check "an ANSI file opens as an ANSI DOCUMENT", _
-                              (pA2 <> 0) andalso (pA2->FileEncoding = FILE_ENCODING_ANSI), _
-                              str(iif(pA2 <> 0, pA2->FileEncoding, -1))
-                        '' AND THE EDITOR IS STILL UTF-8. Under E1 this read 0.
-                        dim as long nCP = SciMsg( g_view->pSci, SCI_GETCODEPAGE, 0, 0 )
-                        Check "  but the EDITOR is UTF-8 anyway (invariant E2)", _
-                              (nCP = SC_CP_UTF8), str(nCP)
-
-                        '' Tear the tab down the way the other probe blocks do.
-                        if g_tabs <> 0 then g_tabs->DeleteTab( idxA )
-                        if g_tabDocs(idxA).pSciDoc <> 0 then
-                            g_view->Msg( SCI_RELEASEDOCUMENT, 0, _
-                                         cast(integer, g_tabDocs(idxA).pSciDoc) )
-                        end if
-                        gApp.RemoveDocument( pA2 )
-                        g_tabDocs(idxA).pDoc    = 0
-                        g_tabDocs(idxA).pSciDoc = 0
-                        g_nTabDocs = nTabsBefore
-                        g_nTabCur  = -1
-                    end if
-                    PsFileDelete( wszAnsiTab )
                 end if
 
                 '' ---- AN EMPTY FILE IS UTF-8, NOT ANSI -----------------------------------
