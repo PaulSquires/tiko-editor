@@ -4148,6 +4148,47 @@ end function
                 end if
             end scope
 
+            '' ---- FilenameOriginalCase IS REAL NOW ---------------------------------------
+            '' It returned its argument for five steps. psfile already asserts the CASE
+            '' repair itself, against PsFileRealCase; what is shell-specific and asserted
+            '' here is the two things wrapped around it, both of which break silently.
+            scope
+                dim as DWSTRING wszDirF = environ("TEMP") & "\tiko_shellcase"
+                PsDirCreate( wszDirF )
+                dim as DWSTRING wszProbeF = wszDirF & "\CaseProbe.bas"
+                if PsFileWriteAll( wszProbeF, "' probe" & chr(13) & chr(10) ) then
+                    '' THE CASE, end to end through the shell's own wrapper -- shouted the
+                    '' way the parser's string pool shouts.
+                    dim as DWSTRING wszShout = wszDirF & "\CASEPROBE.BAS"
+                    dim as DWSTRING wszFixed = FilenameOriginalCase( wszShout )
+                    Check "FilenameOriginalCase repairs a shouted name", _
+                          (PsPathName(wszFixed) = "CaseProbe.bas"), PsPathName(wszFixed).Utf8
+
+                    '' BACKSLASHES, NOT FORWARD ONES. PsCore's canonical form is '/' and
+                    '' PsFileRealCase returns it that way; every consumer of this result
+                    '' compares against paths that came from a command line or a dialog.
+                    '' Forward slashes here do not fail loudly -- the document lookup simply
+                    '' misses, and the pane opens a SECOND copy of an open file.
+                    Check "  and hands back native separators", _
+                          (PsInStr(wszFixed, "/") = 0), wszFixed.Utf8
+
+                    '' THE FALLBACK. PsFileRealCase answers EMPTY for a path that is not
+                    '' there, and the names this is asked about are routinely gone -- deleted
+                    '' since the scan, or synthetic. Returning that empty string would blank
+                    '' a filename in the panel and turn a symbol-database key into "".
+                    dim as DWSTRING wszGone = wszDirF & "\no_such_file_at_all.bas"
+                    Check "  a path that is not there comes back UNCHANGED", _
+                          (FilenameOriginalCase( wszGone ) = wszGone), _
+                          FilenameOriginalCase( wszGone ).Utf8
+
+                    dim as DWSTRING wszEmpty
+                    Check "  and an empty path stays empty rather than becoming a cwd", _
+                          (PsLen( FilenameOriginalCase( wszEmpty ) ) = 0)
+
+                    PsFileDelete( wszProbeF )
+                end if
+            end scope
+
             '' ---- THE TWO WORKAROUNDS THAT WENT WITH THE PACKING -------------------------
             '' Both were shell-side compensations for a control that could not express what
             '' the panel needed. Both are now one call at install, and these assert the

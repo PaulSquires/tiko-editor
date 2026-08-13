@@ -38,26 +38,12 @@ function clsConfig.ProjectSaveToFile() as boolean
 end function
 
 
-'' ---- FilenameOriginalCase: THE IDENTITY, AND THAT IS A REAL DIFFERENCE ------------------
-'' tiko's asks the FILE SYSTEM for a path's true casing -- CreateFileW plus
-'' GetFinalPathNameByHandleW -- which is why it is on _check_app_standalone's link-debt list
-'' and cannot move into app/ until PsCore grows a canonical-path call. This binary has no
-'' Win32, so it hands the path back unchanged.
+'' ---- FilenameOriginalCase's SHELL BODY IS GONE, AND THAT IS THE POINT ------------------
+'' This binary supplied its own -- the IDENTITY function, handing every path straight back --
+'' because tiko's was real Win32 and could not be linked here. In 7c step 8 the real one
+'' became portable and moved into app/modPaths.inc, so BOTH binaries answer this the same
+'' way and there is nothing left for the shell to supply. See that body's header.
 ''
-'' WHAT THAT COSTS, because "identity function" reads harmless and is not: the symbol
-'' database and the TODO store are KEYED BY FILENAME. Two spellings of one path --
-'' C:\dev\Foo.bas from a tab, c:\dev\foo.bas from an #include -- become two entries in this
-'' binary and one in tiko. The scan path normalises with PsUCase at most of its comparison
-'' sites (SymDb_FileNameEq), which is why this has not surfaced; the store's own keys are
-'' where it would.
-''
-'' NOT A STUB THAT SHOULD BE LOUD. Returning the path is the correct answer for a
-'' case-insensitive filesystem in every respect but the display of a name the user typed
-'' differently, so printing a warning on every call would be noise.
-function FilenameOriginalCase( byval wszFilename as DWSTRING ) as DWSTRING
-    return wszFilename
-end function
-
 '' ---- TodoStore_RemoveFile's STUB IS GONE, AND THAT IS A DEBT REPAID ---------------------
 '' It used to live here, empty, "because this binary has no TODO store". THE REAL ONE IS IN
 '' app/clsSymbolDb.inc:941 -- it always was. The shell supplied a stub only because it

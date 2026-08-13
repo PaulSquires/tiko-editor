@@ -111,8 +111,8 @@ type _prelude.txt >>_standalone_link.bas
 for %%F in (app\*.inc) do >>_standalone_link.bas echo #include once "%%F"
 >>_standalone_link.bas echo end 0
 
-rem A RATCHET, NOT A PASS/FAIL. Three bodies are still outside the layer and are
-rem named below; the check fails when a FOURTH appears, not while those three
+rem A RATCHET, NOT A PASS/FAIL. Two bodies are still outside the layer and are
+rem named below; the check fails when a THIRD appears, not while those two
 rem remain. A gate that is red on the day it lands gets switched off, and a debt
 rem that is counted is a debt someone can finish.
 rem
@@ -122,9 +122,15 @@ rem                                   as someone does it", and the shell's scann
 rem                                   is who did -- app\clsSymbolDb.inc calls it at
 rem                                   three sites, so a second binary including
 rem                                   that body could not link without it.
-rem   FilenameOriginalCase            modPaths.inc:55  -- real Win32
-rem                                   (CreateFileW / GetFinalPathNameByHandleW).
-rem                                   Needs a PsCore canonical-path call first
+rem   FilenameOriginalCase            CLOSED in 7c step 8. This entry said it needed
+rem                                   "a PsCore canonical-path call first" -- and PsCore
+rem                                   had one the whole time, PsFileRealCase, which walks
+rem                                   each component against the real directory entries.
+rem                                   Nobody looked. The body is in app\modPaths.inc now
+rem                                   and BOTH binaries answer it the same way; tiko's
+rem                                   CreateFileW / GetFinalPathNameByHandleW version is
+rem                                   gone, and with it the symlink resolution it did as
+rem                                   a side effect
 rem   KeyBindings_PickListKeyToValue  modKeyBindings.inc:622 -- declared in a
 rem                                   SHELL header. An app\*.inc calls a shell
 rem                                   function directly, which the vocabulary
@@ -147,8 +153,13 @@ rem included that file's header and not its body), and FilenameOriginalCase beca
 rem debt rather than a latent one -- the shell has to implement it now that it links the
 rem symbol database.
 rem
+rem 7c STEP 8 TOOK IT 3 -> 2. FilenameOriginalCase moved down, and the entry above records
+rem why it took five steps: the blocker it named had already been removed, by someone who
+rem was not looking for it. A debt list is only as good as the last time its entries were
+rem re-read rather than re-counted.
+rem
 rem WHEN THE COUNT REACHES 0, delete the baseline and make this a plain failure.
-set /a LINKBASELINE=3
+set /a LINKBASELINE=2
 set /a LINKBAD=0
 %FBC% -i ..\..\PsPlatform\src -maxerr 999 -x _standalone_link.exe _standalone_link.bas > _standalone_link.log 2>&1
 if !errorlevel! neq 0 (

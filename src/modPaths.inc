@@ -45,33 +45,11 @@ function AfxFilenameOriginalCase( byval filename as DWSTRING ) as DWSTRING
 end function
 
 
-' ========================================================================================
-' Get the original case filename as stored by Windows. The fbcParser scans intern
-' filenames UPPERCASED, so any scan-sourced name that reaches the UI (panel
-' captions, tab captions, TODO rows, search results) is normalized through here.
-' Returns the input unchanged when the file cannot be opened (deleted files,
-' the scanner's synthetic UNTITLED names) or the path cannot be resolved.
-' ========================================================================================
-function FilenameOriginalCase( byval wszFilename as DWSTRING ) as DWSTRING
-    dim as long bufSize = 1024
-    dim as DWSTRING buffer = wspace(bufSize \ 2)
-
-    dim as HANDLE hFile = CreateFileW( wszFilename.Wz(), GENERIC_READ, FILE_SHARE_READ,                                         null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null )
-    if hFile = INVALID_HANDLE_VALUE then return wszFilename
-
-    dim as DWORD result = GetFinalPathNameByHandleW( hFile, buffer.Wz(), bufSize, FILE_NAME_NORMALIZED )
-    CloseHandle( hFile )
-
-    if (result > 0) andalso (result < bufSize) then
-        buffer = PsLeft( buffer, result )      ' drop the unwritten buffer tail
-        ' Good data returned but still need to remove the mapping characters
-        if PsLeft( buffer, 4 ) = "\\?\" then buffer = PsMid( buffer, 5 )
-        return buffer
-    end if
-
-    ' error: could not retrieve the path - display the incoming name as-is
-    return wszFilename
-end function
+' FilenameOriginalCase MOVED TO app/modPaths.inc IN 7c STEP 8. It was the last Win32 thing
+' in this file's half of the module -- CreateFileW plus GetFinalPathNameByHandleW -- and it
+' sat on _check_app_standalone's link-debt list waiting for "a PsCore canonical-path call",
+' which turned out to exist already. See the new body's header for what changed for tiko:
+' the case is still resolved, the symlink and junction resolution is not.
 
 
 ' ========================================================================================
