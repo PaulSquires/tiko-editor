@@ -99,3 +99,7 @@ declare function SciHost_DirectPointer(byval hWnd as HWND) as any ptr
 
 '' Set once, before any editor window is created.
 declare sub SciHost_SetFontPath(byref sPath as string)
+'' A font FAMILY name -> the font FILE FreeType must open. See the body.
+declare function SciHost_ResolveFontFile(byref wszFamily as const wstring) as string
+'' Env-gated (TIKO_FONTFILE_SELFTEST=1).
+declare sub SciHost_RunFontFileSelfTest()

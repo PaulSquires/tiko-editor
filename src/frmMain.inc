@@ -1864,6 +1864,11 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     CopyData_RunSelfTest()
     ' Env-gated (TIKO_INIPARSE_SELFTEST=1). Pure.
     Ini_RunSelfTest()
+    ' Env-gated (TIKO_FONTFILE_SELFTEST=1). Reads the REAL registry -- it is the one
+    ' thing the suite cannot fake -- and asserts the logic around it, above all the
+    ' fallback: an unresolvable family that answered "" would take the editor down
+    ' rather than degrade to Consolas.
+    SciHost_RunFontFileSelfTest()
     ' Env-gated (TIKO_DEBUG_SELFTEST=1). Pure: layout arithmetic, the datatip expression
     ' walk and the localized strings. It launches nothing -- see the suite's own header
     ' for what that means it cannot reach.
