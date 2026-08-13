@@ -16,17 +16,19 @@
 '' The CONTROL half is a mechanical rewrite of one shape:
 ''
 ''     PsListTree_AddHeader( hCtrl, wszText, cast(integer, pDoc), 0 )   ' tiko, Win32
-''     g_panel->AddHeader( wszText, ShellPanel_PackRow(idx, 0) )        ' here, widget
+''     g_panel->AddHeader( wszText, idx, 0 )                            ' here, widget
 ''
 '' ---- THE TWO REAL DIFFERENCES, AND BOTH ARE THIS BINARY'S DOING ------------------------
 ''
-'' 1. THE ROW CARRIES A TAB INDEX, NOT A DOCUMENT POINTER. tiko's list control has two data
-''    slots per row (itemData + itemDataExtra) and uses them for (pDoc, line). PsPlatform's
-''    has ONE. Checked before assuming: itemData has 20+ readers across five tiko forms and
-''    itemDataExtra has three, so the second slot is the rare one -- and the slot is
-''    `integer`, 64-bit on win64, while this shell is INDEX-based (g_tabDocs) rather than
-''    pointer-based. So a tab index and a line number are two 32-bit values in one slot,
-''    with no truncation and no pointer parked inside a list control.
+'' 1. THE ROW CARRIES A TAB INDEX, NOT A DOCUMENT POINTER -- in TWO SLOTS, since 7c step 8.
+''    tiko's control has itemData + itemDataExtra and uses them for (pDoc, line). PsPlatform's
+''    had one, so this file bit-packed the pair into a single 64-bit integer and carried a
+''    shift, a mask and a clamp to do it. PsListTree has the second slot now and the packing
+''    is gone: the tab index is slot 1 and the line is slot 2, which is tiko's own shape.
+''
+''    It stays INDEX-based rather than pointer-based -- a tab index, not a clsDocument ptr --
+''    because this shell is index-based throughout and a pointer parked inside a list control
+''    outlives nothing safely.
 ''
 '' 2. READING ANOTHER TAB'S BOOKMARKS MEANS POINTING THE VIEW AT IT. This is the cost of
 ''    "one view pair, many documents" (see shelltabs.bi) and it is the one place that design
@@ -49,33 +51,30 @@
 
 
 '' ---------------------------------------------------------------------------------------
-'' THE ROW'S DATA SLOT: (tab index, line number) in one 64-bit integer.
+'' THE ROW'S TWO DATA SLOTS: slot 1 is the tab index, slot 2 is the line number.
 ''
-'' Split out and named rather than inlined at the four call sites, because a shift-and-mask
-'' written four times is four chances to get the mask wrong -- and a wrong mask here does
-'' not crash, it sends a click to the wrong line of the wrong file.
+'' THE CLAMP SURVIVED THE UNPACKING. Scintilla answers -1 for "no such line", and -1 in a
+'' slot of its own no longer corrupts the tab index the way it corrupted the packed one --
+'' but it still reaches SelectLine, which is the defect the clamp was written for. So it
+'' stays, as a function rather than as a side effect of an encoding.
 ''
-'' HEADERS PACK THEIR LINE AS 0 and are told apart by PsListTree.IsHeader, which the control
+'' HEADERS STORE THEIR LINE AS 0 and are told apart by PsListTree.IsHeader, which the control
 '' already tracks. Encoding "this is a header" into the data as well would be a second
 '' source of truth for something the control knows.
 '' ---------------------------------------------------------------------------------------
-const SHP_LINE_MASK = &hFFFFFFFFll
-
-function ShellPanel_PackRow( byval nTab as long, byval nLine as long ) as integer
-    '' CLAMPED, not packed as-is. Scintilla answers -1 for "no such line", and the mask
-    '' below keeps the sign extension out of the tab half -- but the LINE would then read
-    '' back as -1 and reach SelectLine. Asserted: reverting this line fails "a negative line
-    '' clamps to zero" and nothing else, which is exactly the claim.
-    if nLine < 0 then nLine = 0
-    return (cast(integer, nTab) shl 32) or (cast(integer, nLine) and SHP_LINE_MASK)
+function ShellPanel_ClampLine( byval nLine as long ) as long
+    if nLine < 0 then return 0
+    return nLine
 end function
 
-function ShellPanel_TabOf( byval nData as integer ) as long
-    return cast(long, nData shr 32)
+function ShellPanel_TabOf( byval nRow as long ) as long
+    if g_panel = 0 then return -1
+    return cast(long, g_panel->GetItemData( nRow ))
 end function
 
-function ShellPanel_LineOf( byval nData as integer ) as long
-    return cast(long, nData and SHP_LINE_MASK)
+function ShellPanel_LineOf( byval nRow as long ) as long
+    if g_panel = 0 then return 0
+    return cast(long, g_panel->GetItemData2( nRow ))
 end function
 
 
@@ -97,9 +96,8 @@ function ShellPanel_GotoRow( byval nRow as long ) as boolean
     '' would fight that.
     if g_panel->IsHeader( nRow ) then return false
 
-    dim as integer nData  = g_panel->GetItemData( nRow )
-    dim as long    idxTab = ShellPanel_TabOf( nData )
-    dim as long    nLine  = ShellPanel_LineOf( nData )
+    dim as long idxTab = ShellPanel_TabOf( nRow )
+    dim as long nLine  = ShellPanel_LineOf( nRow )
 
     '' SWITCH FIRST. ShellTabs_Show is a no-op when the tab is already current, which is the
     '' common case -- and when it is not, it is what points the single view at the right
@@ -136,27 +134,39 @@ function ShellPanel_GotoRow( byval nRow as long ) as boolean
 end function
 
 
-'' PsListTree's callbacks. BOTH are wired to the same handler, and the difference between
-'' them is where this binary diverges from tiko.
+'' PsListTree's callbacks, AND THE ARROW KEYS DO NOT JUMP ANY MORE.
 ''
 '' ---- WHAT tiko DOES: jump on a single LEFT-BUTTON-UP, and nothing on arrow keys.
-'' ---- WHAT PsListTree OFFERS: OnSelChange (any selection change -- click OR arrow) and
-''      OnActivate (double-click or Enter). NEITHER is tiko's rule.
+'' ---- WHAT PsListTree OFFERS: OnSelChange (any selection change) and OnActivate
+''      (double-click or Enter).
 ''
-'' Wiring OnSelChange gives the single-click jump, which is the gesture that matters, AND
-'' MAKES THE ARROW KEYS JUMP TOO -- a real divergence, named here rather than discovered.
-'' It is defensible (arrowing a bookmark list to preview each one is a reasonable editor
-'' behaviour) but it is NOT what tiko does, and it costs the panel its own keyboard
-'' navigation: every arrow press moves the focus to the editor.
+'' Until 7c step 8 OnSelChange could not tell the two apart, so wiring it bought the
+'' single-click jump AND made every arrow press move the focus to the editor -- which cost
+'' the panel its own keyboard navigation and was recorded here as a divergence rather than
+'' discovered later.
 ''
-'' The fix belongs in PsPlatform -- a source argument on the callback, so a host can tell a
-'' mouse selection from a keyboard one -- and that is a control change, not a port task.
+'' GetSelSource closes it. The handler acts on a MOUSE selection and returns on a KEYBOARD
+'' one, which is tiko's rule exactly. Enter still jumps, through OnActivate, so the list is
+'' navigable by keyboard and still usable from it.
 ''
-'' SetCurSel IS SILENT (PsListTree.bi:343), which is what makes this safe at all: the loader
-'' restores the selection after every reload, and a notifying setter would jump the editor
-'' every time a bookmark was toggled.
+'' THIS MATTERS MORE THAN IT DID. The Functions pane lists files that are not open, and
+'' choosing one OPENS IT FROM DISK -- so an arrow key that acted would load a file per
+'' keypress on the way down a 134-row list.
+''
+'' SetCurSel IS SILENT (PsListTree.bi:343), which is what makes the reload path safe: the
+'' loader restores the selection after every reload, and a notifying setter would jump the
+'' editor every time a bookmark was toggled.
 private sub ShellPanel_OnRowSelected( byval pList as any ptr, byval nRow as long, _
                                       byval ud as any ptr )
+    dim as PsListTree ptr pLt = cast(PsListTree ptr, pList)
+    if pLt = 0 then exit sub
+    if pLt->GetSelSource() <> PSLT_SRC_MOUSE then exit sub
+    ShellPanel_GotoRow( nRow )
+end sub
+
+'' Enter and double-click, where the source is not in question.
+private sub ShellPanel_OnRowActivated( byval pList as any ptr, byval nRow as long, _
+                                       byval ud as any ptr )
     ShellPanel_GotoRow( nRow )
 end sub
 
@@ -164,36 +174,14 @@ end sub
 '' Wire the panel's callbacks. Called once, beside ShellTabs_Install.
 sub ShellPanel_Install()
     if g_panel = 0 then exit sub
-    g_panel->OnSelChange( @ShellPanel_OnRowSelected, 0 )
-    g_panel->OnActivate(  @ShellPanel_OnRowSelected, 0 )
-end sub
-
-
-'' ---------------------------------------------------------------------------------------
-'' NO ZEBRA STRIPES IN A BOOKMARK LIST.
-''
-'' REPORTED BY THE AUTHOR: "the bookmark rows colored weird". PsListTree paints every ODD
-'' ROW in a second colour --
-''
-''     if (v and 1) = 1 then cBack = this.clrRowAlt      (PsListTree.inc:1384)
-''
-'' -- unconditionally, with no switch to turn it off. It suits a data grid and it is wrong
-'' for this panel: the rows here are a file's bookmarks, not records, and tiko's own
-'' bookmarks panel paints every row the same because it supplies its own row painter.
-''
-'' FLATTENED RATHER THAN REPAINTED. clrRowAlt is a public field, so setting it to clrBack
-'' costs one line where an OnPaintRow callback would cost forty and would then own hot,
-'' selected, header and twisty colours as well.
-''
-'' MUST BE CALLED AFTER EVERY THEME LOAD. PsListTree.OnThemeChanged re-reads both colours
-'' from the theme (PsListTree.inc:1648-1653), so anything that applies a theme puts the
-'' stripes back. That is a sharp edge, and the real fix is a SetAltRows(bOn) on the control
-'' -- a PsPlatform change, recorded here rather than made from a port task.
-'' ---------------------------------------------------------------------------------------
-sub ShellPanel_ApplyTheme()
-    if g_panel = 0 then exit sub
-    g_panel->clrRowAlt = g_panel->clrBack
-    g_panel->Invalidate()
+    g_panel->OnSelChange( @ShellPanel_OnRowSelected,  0 )
+    g_panel->OnActivate(  @ShellPanel_OnRowActivated, 0 )
+    '' NO ZEBRA STRIPES. Reported by the author -- "the bookmark rows colored weird". The
+    '' rows here are a file's bookmarks, not records, and tiko's own panel paints every row
+    '' the same. Set ONCE, at install: SetAltRows is a flag the control keeps, unlike the
+    '' clrRowAlt = clrBack flatten this replaces, which OnThemeChanged undid on every theme
+    '' load and had to be reapplied after each one.
+    g_panel->SetAltRows( false )
 end sub
 
 
@@ -453,7 +441,7 @@ sub ShellBookmarks_Load()
 
         if len(sBookmarks) then
             dim as DWSTRING wszText = PsPathName( pDoc->DiskFilename )
-            g_panel->AddHeader( wszText, ShellPanel_PackRow(idxTab, 0) )
+            g_panel->AddHeader( wszText, idxTab, 0 )
 
             dim as long nCount = PsStrParseCount( sBookmarks, "," )
             for i as long = 1 to nCount
@@ -462,7 +450,7 @@ sub ShellBookmarks_Load()
                 '' this narrow, and every row would start at a different column.
                 dim as string sDescription = ltrim( pDoc->GetLine(nLineNum) )
                 wszText.Utf8 = sDescription
-                g_panel->AddString( wszText, ShellPanel_PackRow(idxTab, nLineNum) )
+                g_panel->AddString( wszText, idxTab, ShellPanel_ClampLine(nLineNum) )
             next
         end if
 
@@ -586,9 +574,9 @@ sub ShellFunctions_Load()
 
         ShellFunctions_SortByName( rows(), nKeep )
 
-        g_panel->AddHeader( PsPathName( wszFile ), ShellPanel_PackRow(idxTab, 0) )
+        g_panel->AddHeader( PsPathName( wszFile ), idxTab, 0 )
         for r as long = 0 to nKeep - 1
-            g_panel->AddString( rows(r).sName, ShellPanel_PackRow(idxTab, rows(r).nLine) )
+            g_panel->AddString( rows(r).sName, idxTab, ShellPanel_ClampLine(rows(r).nLine) )
         next
     next
 

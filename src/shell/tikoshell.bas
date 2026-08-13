@@ -2355,10 +2355,10 @@ end function
         end if
         PsThemeApply( surf.pRoot )
         StyleEditorFromTheme( surf )
-        '' AFTER PsThemeApply, NOT BEFORE. Applying a theme runs OnThemeChanged on every
-        '' widget, and PsListTree's re-reads the alternating-row colour -- so the panel's
-        '' stripes have to be flattened again on the far side of it. See ShellPanel_ApplyTheme.
-        ShellPanel_ApplyTheme()
+        '' NOTHING TO REDO AFTER PsThemeApply ANY MORE. This used to re-flatten the panel's
+        '' alternating-row colour, because applying a theme runs OnThemeChanged on every
+        '' widget and PsListTree's re-read clrRowAlt from it. SetAltRows is a flag the control
+        '' keeps, set once at install, and a theme load cannot undo it.
     end scope
 
     LayoutAll( surf )
@@ -3612,12 +3612,12 @@ end function
                             '' assertions carry line numbers derived from it -- this one and
                             '' the click below -- and both moved when the #include was added.
                             '' Anything editing that file has to move them again.
-                            Check "      and a 0-based line in the packed slot", _
-                                  (ShellPanel_LineOf(g_panel->GetItemData(1)) = 3), _
-                                  str(ShellPanel_LineOf(g_panel->GetItemData(1)))
+                            Check "      and a 0-based line in its own slot", _
+                                  (ShellPanel_LineOf(1) = 3), _
+                                  str(ShellPanel_LineOf(1))
                             Check "        alongside the tab it belongs to", _
-                                  (ShellPanel_TabOf(g_panel->GetItemData(1)) = idx1), _
-                                  str(ShellPanel_TabOf(g_panel->GetItemData(1)))
+                                  (ShellPanel_TabOf(1) = idx1), _
+                                  str(ShellPanel_TabOf(1))
 
                             '' SWITCHING BACK RESTORES THE OTHER LIST rather than leaving
                             '' the functions on screen under a bookmarks mode.
@@ -3637,11 +3637,11 @@ end function
 
                             '' ---- CLICKING A FUNCTION GOES THERE ---------------------
                             '' ShellPanel_GotoRow is MODE-AGNOSTIC and this is the
-                            '' assertion for that: it reads the packed slot, and the
-                            '' functions loader packs the same (tab, line) the bookmarks
+                            '' assertion for that: it reads the two data slots, and the
+                            '' functions loader fills the same (tab, line) the bookmarks
                             '' loader does. No second handler, no second callback -- the
                             '' whole of commit 4's click support is that the two loaders
-                            '' agree on one encoding.
+                            '' agree on what a row carries.
                             ShellPanel_SetMode( SHPANEL_FUNCTIONS )
                             scope
                                 '' Row 2 is ProbeBeta. Scintilla line 7 -- see the note on
@@ -3725,11 +3725,11 @@ end function
                         '' asserted on synthetic values too, but only this says the LOADER
                         '' packed what it claimed to.
                         Check "    the row carries its tab", _
-                              (ShellPanel_TabOf(g_panel->GetItemData(1)) = idx1), _
-                              str(ShellPanel_TabOf(g_panel->GetItemData(1)))
+                              (ShellPanel_TabOf(1) = idx1), _
+                              str(ShellPanel_TabOf(1))
                         Check "    and its line", _
-                              (ShellPanel_LineOf(g_panel->GetItemData(1)) = 1), _
-                              str(ShellPanel_LineOf(g_panel->GetItemData(1)))
+                              (ShellPanel_LineOf(1) = 1), _
+                              str(ShellPanel_LineOf(1))
 
                         '' THE VIEW SURVIVED THE WALK. The loader points the single view at
                         '' each document in turn to read its markers -- see shellpanel.bi --
@@ -3885,9 +3885,8 @@ end function
                             dim as long nLineA = -1, nLineB = -1
                             for r as long = 0 to g_panel->GetCount() - 1
                                 if g_panel->IsHeader(r) then continue for
-                                dim as integer d = g_panel->GetItemData(r)
-                                if ShellPanel_TabOf(d) = idx1 then nLineA = ShellPanel_LineOf(d)
-                                if ShellPanel_TabOf(d) = idxB then nLineB = ShellPanel_LineOf(d)
+                                if ShellPanel_TabOf(r) = idx1 then nLineA = ShellPanel_LineOf(r)
+                                if ShellPanel_TabOf(r) = idxB then nLineB = ShellPanel_LineOf(r)
                             next
                             Check "    the background tab's row carries ITS line", _
                                   (nLineA = 1), str(nLineA)
@@ -3924,7 +3923,7 @@ end function
                                     if nRowHdr = -1 then nRowHdr = r
                                     continue for
                                 end if
-                                if ShellPanel_TabOf(g_panel->GetItemData(r)) = idx1 then nRowA = r
+                                if ShellPanel_TabOf(r) = idx1 then nRowA = r
                             next
 
                             Check "  a header row goes nowhere", _
@@ -4088,51 +4087,98 @@ end function
                 PsFileDelete( wszFile )
             end scope
 
-            '' ---- THE PACKED ROW SLOT ----------------------------------------------------
-            '' PsPlatform's PsListTree has ONE data slot per row; tiko's Win32 control has
-            '' two, and its panels use them for (document, line). The slot is `integer` --
-            '' 64 bits on win64 -- and this shell is index-based, so a tab index and a line
-            '' number fit in one with room to spare.
+            '' ---- THE ROW'S TWO DATA SLOTS -----------------------------------------------
+            '' THESE ASSERTIONS USED TO TEST A BIT-PACKING. PsPlatform's PsListTree had one
+            '' data slot per row where tiko's Win32 control has two, so this shell shifted a
+            '' tab index and a line number into a single 64-bit integer and carried a mask, a
+            '' shift and a clamp to do it. Step 8 gave the control its second slot, so the
+            '' encoding is gone and these were REWRITTEN rather than deleted -- what they
+            '' guard is the row's identity, which still exists and still matters.
             ''
-            '' A WRONG MASK HERE DOES NOT CRASH. It sends a click to the wrong line of the
+            '' A WRONG SLOT HERE DOES NOT CRASH. It sends a click to the wrong line of the
             '' wrong file, which looks like a navigation bug anywhere but here.
             scope
-                Check "a packed row round-trips its tab", _
-                      (ShellPanel_TabOf(ShellPanel_PackRow(7, 42)) = 7), _
-                      str(ShellPanel_TabOf(ShellPanel_PackRow(7, 42)))
-                Check "  and its line", _
-                      (ShellPanel_LineOf(ShellPanel_PackRow(7, 42)) = 42), _
-                      str(ShellPanel_LineOf(ShellPanel_PackRow(7, 42)))
+                if g_panel <> 0 then
+                    g_panel->Clear()
+                    dim as DWSTRING sR
+                    sR.Utf8 = "row"
+                    g_panel->AddString( sR, 7, 42 )
+                    Check "a row round-trips its tab", (ShellPanel_TabOf(0) = 7), _
+                          str(ShellPanel_TabOf(0))
+                    Check "  and its line", (ShellPanel_LineOf(0) = 42), _
+                          str(ShellPanel_LineOf(0))
 
-                '' TAB 0, LINE 0 PACKS TO ZERO, and that is a legitimate row rather than an
-                '' "unset" marker -- the first line of the first tab. Anything that treated
-                '' 0 as absent would drop exactly one bookmark and no other.
-                Check "  tab 0 line 0 is a real value, not a hole", _
-                      (ShellPanel_PackRow(0, 0) = 0) andalso _
-                      (ShellPanel_TabOf(0) = 0) andalso (ShellPanel_LineOf(0) = 0)
+                    '' TAB 0, LINE 0 IS A LEGITIMATE ROW rather than an "unset" marker -- the
+                    '' first line of the first tab. Anything treating 0 as absent would drop
+                    '' exactly one bookmark and no other. It mattered more when both lived in
+                    '' one integer that was then zero; it is still the value a fresh slot
+                    '' holds, so it is still the one an "is it set" test would swallow.
+                    g_panel->AddString( sR, 0, 0 )
+                    Check "  tab 0 line 0 is a real value, not a hole", _
+                          (ShellPanel_TabOf(1) = 0) andalso (ShellPanel_LineOf(1) = 0)
 
-                '' THE BIGGEST LINE AGAINST A NONZERO TAB, and the pairing is the point.
-                ''
-                '' THIS ASSERTION USED TO READ `PackRow(0, huge)` and check the tab was
-                '' still 0. IT SURVIVED THREE DELIBERATE BREAKAGES -- a 16-bit mask, a
-                '' missing clamp and a shl 16 -- because with the tab at ZERO it reads back
-                '' zero whatever the shift or mask does. It could not fail. Rewritten with a
-                '' nonzero tab, it fails on the shift-width revert with the rest.
-                dim as integer nBig = ShellPanel_PackRow( SH_MAX_DOCS - 1, 2147483647 )
-                Check "  the biggest line does not disturb the tab beside it", _
-                      (ShellPanel_TabOf(nBig) = SH_MAX_DOCS - 1), _
-                      str(ShellPanel_TabOf(nBig))
-                Check "    and reads back whole", _
-                      (ShellPanel_LineOf(nBig) = 2147483647), str(ShellPanel_LineOf(nBig))
+                    '' THE BIGGEST LINE AGAINST A NONZERO TAB, and the PAIRING is the point:
+                    '' this is what fails if the two slots ever alias, or if either is
+                    '' truncated on its way through the control.
+                    ''
+                    '' Its ancestor read `PackRow(0, huge)` and checked the tab was still 0.
+                    '' IT SURVIVED THREE DELIBERATE BREAKAGES -- a 16-bit mask, a missing
+                    '' clamp and a shl 16 -- because with the tab at ZERO it reads back zero
+                    '' whatever the encoding does. The nonzero tab is why it can fail.
+                    g_panel->AddString( sR, SH_MAX_DOCS - 1, 2147483647 )
+                    Check "  the biggest line does not disturb the tab beside it", _
+                          (ShellPanel_TabOf(2) = SH_MAX_DOCS - 1), str(ShellPanel_TabOf(2))
+                    Check "    and reads back whole", _
+                          (ShellPanel_LineOf(2) = 2147483647), str(ShellPanel_LineOf(2))
 
-                '' A NEGATIVE LINE IS CLAMPED rather than packed. Scintilla returns -1 for
-                '' "no such line", and sign-extending that would fill the tab half with 1s
-                '' and address a tab that does not exist.
-                Check "  a negative line clamps to zero", _
-                      (ShellPanel_LineOf(ShellPanel_PackRow(3, -1)) = 0), _
-                      str(ShellPanel_LineOf(ShellPanel_PackRow(3, -1)))
-                Check "    leaving the tab intact", _
-                      (ShellPanel_TabOf(ShellPanel_PackRow(3, -1)) = 3)
+                    '' A NEGATIVE LINE IS STILL CLAMPED. It no longer sign-extends into the
+                    '' tab -- there is nothing beside it to corrupt -- but Scintilla returns
+                    '' -1 for "no such line" and -1 still reaches SelectLine, which is the
+                    '' defect the clamp was written for and the reason it outlived the
+                    '' encoding that hosted it.
+                    Check "  a negative line clamps to zero", _
+                          (ShellPanel_ClampLine(-1) = 0), str(ShellPanel_ClampLine(-1))
+                    Check "    and a real line passes through", _
+                          (ShellPanel_ClampLine(42) = 42), str(ShellPanel_ClampLine(42))
+                    g_panel->AddString( sR, 3, ShellPanel_ClampLine(-1) )
+                    Check "    a clamped row keeps its tab intact", _
+                          (ShellPanel_TabOf(3) = 3) andalso (ShellPanel_LineOf(3) = 0)
+
+                    g_panel->Clear()
+                end if
+            end scope
+
+            '' ---- THE TWO WORKAROUNDS THAT WENT WITH THE PACKING -------------------------
+            '' Both were shell-side compensations for a control that could not express what
+            '' the panel needed. Both are now one call at install, and these assert the
+            '' property each workaround kept failing to hold.
+            scope
+                if g_panel <> 0 then
+                    '' STRIPING SURVIVES A THEME LOAD NOW. The old fix set clrRowAlt = clrBack
+                    '' and OnThemeChanged put it straight back, so it had to be reapplied
+                    '' after every theme apply -- and the startup path above HAS applied one
+                    '' by the time this runs, which is what makes this assertion worth having
+                    '' rather than a restatement of the setter.
+                    Check "striping is off, and a theme load did not undo it", _
+                          (g_panel->bAltRows = false)
+
+                    '' AND A PROGRAMMATIC SELECTION IS NOT A CLICK. Every reload restores the
+                    '' selection through SetCurSel; the row handler acts only on
+                    '' PSLT_SRC_MOUSE, so what this asserts is that a reload cannot leave the
+                    '' panel in a state where the next notification is mistaken for one.
+                    ''
+                    '' WHAT IT DOES NOT ASSERT is the gate itself -- no mouse or key event
+                    '' reaches a windowless surface, so "arrowing does not jump" is verified
+                    '' by hand and stated as such rather than implied by this passing.
+                    dim as DWSTRING sR
+                    sR.Utf8 = "row"
+                    g_panel->AddString( sR, 0, 0 )
+                    g_panel->AddString( sR, 0, 1 )
+                    g_panel->SetCurSel(1)
+                    Check "a restored selection does not read as a mouse click", _
+                          (g_panel->GetSelSource() <> PSLT_SRC_MOUSE)
+                    g_panel->Clear()
+                end if
             end scope
 
             '' ---- THE PARSE DEBOUNCE -----------------------------------------------------
