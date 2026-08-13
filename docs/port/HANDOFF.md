@@ -80,6 +80,18 @@ shell. Build them with `_compile_fast.bat` and `_compile_shell.bat`; run the sec
 `_run_shell.bat`, which puts SDL3 on `PATH` — without it you get exit 127 and no message.
 `_shell\` is gitignored, unlike `tiko.exe`.
 
+**PsPlatform'S TEXT ENGINE HAS NO FONT FALLBACK, AND THE WIN32 BUILD DID.** Open a UTF-8
+Korean file in tiko today and every glyph is a box; the same file in the old
+`Scintilla64.dll` build rendered, because GDI/Uniscribe font-links and PsTextEngine's single
+`FT_Face` does not. **This is a toolkit-wide regression, not an editor one** — every
+PsPlatform control paints through that engine. Items 9 and 10 of the live list carry the
+evidence.
+
+**AND IT WAS MISDIAGNOSED TWICE BEFORE THE CODE WAS OPENED**, which is the same failure this
+page already has a table about: first as an encoding bug (it was not — the bytes were always
+intact and Notepad proved it), then as a font-charset setting (inert: `PlatPs.cxx` never
+reads `lfCharSet`). The question that found it was "why did this work in the ORIGINAL tiko?"
+
 **THREE REPOS NOW, NOT TWO.** `C:\dev\HelpCenter` was version-controlled on 2026-08-09 and
 lives at `PaulSquires/HelpCenter`. The GENERATOR is tracked; the OUTPUT is not — `site/`,
 `cache/` and `data/` are 300 MB of derived files that a deterministic rebuild reproduces
@@ -790,7 +802,42 @@ represent the workload.**
    573 procedure symbols, **41 with a body line**. Line-continued signatures are not recorded
    with one, and type members are filed against the header that declares them. Whether any of
    those belong in a Functions pane is a parser question, not a port one.
-9. **Whether two tiers deserve two workers.** They share one thread and serialise, so
+9. **NO FONT FALLBACK IN PsPlatform'S TEXT ENGINE, AND IT IS A REGRESSION FROM THE WIN32
+   BUILD.** Found 2026-08-11 by the author opening a UTF-8 Korean file: every glyph is a
+   box.
+
+   `PsTextEngine` holds ONE `FT_Face` and one `hb_font_t` (`paint/PsTextEngine.bi:99-100`),
+   loaded by the single `FT_New_Face` in the whole paint layer (`PsTextEngine.inc:24`).
+   There is no fallback chain, no `.notdef` handling, no second face. A codepoint the
+   selected font lacks returns glyph 0 and paints as a box, and nothing can be configured
+   around it.
+
+   **THE OLD BUILD DID NOT HAVE THIS PROBLEM.** tiko drew through `Scintilla64.dll` — Win32
+   GDI/Uniscribe — which font-links: Consolas has no Hangul, Windows substituted silently,
+   and Korean rendered. `libpsscintilla` replaces Scintilla's Win32 platform layer with
+   `scintilla/PlatPs.cxx` → PsTextEngine → FreeType/HarfBuzz/Blend2D, and that substitution
+   is gone.
+
+   **IT IS NOT AN EDITOR PROBLEM, IT IS A TOOLKIT PROBLEM.** Every PsPlatform control paints
+   through this engine, so a non-Latin filename in a tab, a path in the Functions pane or a
+   menu caption tofus identically. It is also a CROSS-PLATFORM correctness issue, which is
+   the point of the whole port.
+
+   The fix is a face CHAIN — per-run coverage check (`FT_Get_Char_Index` returns 0 → try the
+   next face) plus a platform way to choose the fallback list (DirectWrite on Windows,
+   fontconfig on Linux). Real work, touching the layer everything paints through, and the
+   engine's own comment about fractional monospace advances says the metrics are
+   load-bearing. **Workaround today: pick a font that covers the script** — on this machine
+   Malgun Gothic is the ONLY Hangul-capable font of 355 installed, and it is proportional.
+
+10. **THE OPTIONS "CHARACTER SET" COMBO IS DEAD UI.** `modViewStyle.inc` still sends
+    `SCI_STYLESETCHARACTERSET` from `gConfig.EditorFontCharSet`, and `PlatPs.cxx` never
+    consults `lfCharSet` — the setting was live under `Scintilla64.dll` and does nothing now.
+    Either wire it into the fallback work above or remove it; a control that cannot affect
+    anything is worse than no control, because it gets tried first when something looks
+    wrong. (It was tried first here.)
+
+11. **Whether two tiers deserve two workers.** They share one thread and serialise, so
    `tiko.bas` is 1.3s + 1.3s before both are current.
 
 **And one process point steps 3 and 4 both earned: drive every milestone by hand before calling
