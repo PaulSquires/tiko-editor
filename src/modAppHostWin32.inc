@@ -118,13 +118,18 @@ private function AppHostW32_LastErrorText() as DWSTRING
     return Win32ErrorText( GetLastError() )
 end function
 
+'' ---- THE SAME READER THE SHELL USES (7c step 9) ---------------------------------------
+'' This forwarded GetFileToString, seventy lines of CreateFileW and WideCharToMultiByte in
+'' modRoutines.inc, whose own note said reading could not be made portable. It could. Both
+'' implementations of this seam field are now one call to app/'s Doc_ReadFromDisk, which
+'' means the field itself is close to pointless -- recorded at its declaration.
 private function AppHostW32_LoadFileText( byval wszPath as DWSTRING, byref txtBuffer as string, _
                                           byval pDoc as clsDocument ptr ) as boolean
-    '' INVERTED, because GetFileToString reports FAILURE as true -- an old convention that
-    '' this wrapper hid rather than translated, which is how the seam ended up with two
-    '' implementations disagreeing about what true meant. The seam's rule is now stated where
-    '' it is declared, and the inversion is visible here rather than implied.
-    return (GetFileToString( wszPath, txtBuffer, pDoc ) = false)
+    dim as long nEnc = FILE_ENCODING_UTF8
+    dim as DWSTRING wszErr
+    if Doc_ReadFromDisk( wszPath, txtBuffer, nEnc, wszErr ) <> DOCREAD_OK then return false
+    if pDoc <> 0 then pDoc->FileEncoding = nEnc
+    return true
 end function
 
 private function AppHostW32_ResolveIncludePath( byval pDoc as clsDocument ptr, _

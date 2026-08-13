@@ -415,84 +415,19 @@ end function
 ' owns the repaint. That is written up at the top of the new file.
 
 
-' ========================================================================================
-' Open a disk file and read it into a string (ANSI or UTF8)
-' ========================================================================================
-function GetFileToString( _
-            byval wszFilename as DWSTRING, _
-            byref txtBuffer as string, _
-            byval pDoc as clsDocument ptr _
-            ) as boolean
-    
-    if pDoc = 0 then return true
-    if PsFileExists(wszFilename) = false then return true
-    
-    ' Load the entire file into a string
-    dim dwCount as DWORD, dwFileSize as DWORD, dwHighSize as DWORD, dwBytesRead as DWORD
-    dim hFile as HANDLE = CreateFileW(wszFileName.Wz(), GENERIC_READ, FILE_SHARE_READ, null, _
-                            OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, null)
-    if hFile = INVALID_HANDLE_VALUE then return true
-    dwFileSize = GetFileSize(hFile, @dwHighSize)
-    txtBuffer = string(dwFileSize, 0)
-    dim bSuccess as long = ReadFile(hFile, strptr(txtBuffer), dwFileSize, @dwBytesRead, null)
-    CloseHandle(hFile)
-    if bSuccess = false then return true
-
-    pDoc->FileEncoding = FILE_ENCODING_ANSI
-
-    ' Check for BOM signatures. left() clamps on a string shorter than the count, so a 1- or
-    ' 2-byte file cannot match a longer BOM -- no truncated-BOM guard is needed.
-    dim as boolean bUtf16BE = false
-    if left(txtBuffer, 3) = chr(&HEF, &HBB, &HBF) then
-        ' UTF-8 with BOM
-        pDoc->FileEncoding = FILE_ENCODING_UTF8_BOM
-        txtBuffer = mid(txtBuffer, 4)   ' bypass the BOM
-    elseif left(txtBuffer, 2) = chr(&HFF, &HFE) then
-        ' UTF-16 little-endian BOM
-        pDoc->FileEncoding = FILE_ENCODING_UTF16_BOM
-        txtBuffer = mid(txtBuffer, 3)   ' bypass the BOM
-    elseif left(txtBuffer, 2) = chr(&HFE, &HFF) then
-        ' UTF-16 big-endian BOM. Same on-disk encoding class; byte-swap to LE below so the
-        ' one UTF-16 decode path handles both. (Was previously read as ANSI -> interleaved NULs.)
-        pDoc->FileEncoding = FILE_ENCODING_UTF16_BOM
-        bUtf16BE = true
-        txtBuffer = mid(txtBuffer, 3)   ' bypass the BOM
-    else
-        if isUTF8encoded(txtBuffer) then
-            pDoc->FileEncoding = FILE_ENCODING_UTF8
-        end if
-    end if
-
-   select case pDoc->FileEncoding
-      case FILE_ENCODING_ANSI
-         ' No conversion needed. clsDocument ApplyProperties will *not*
-         ' set the editor to UTF8 code.
-
-      case FILE_ENCODING_UTF8, FILE_ENCODING_UTF8_BOM
-         ' No conversion needed. clsDocument ApplyProperties will set
-         ' the editor to UTF8 code.
-
-      case FILE_ENCODING_UTF16_BOM
-         ' Guard an odd byte count (a corrupt or truncated UTF-16 file): drop the stray
-         ' trailing byte rather than reading one past the end of the last code unit.
-         if (len(txtBuffer) and 1) then txtBuffer = left(txtBuffer, len(txtBuffer) - 1)
-
-         ' Big-endian: swap each 2-byte code unit in place to little-endian.
-         if bUtf16BE then
-            dim as ubyte ptr pb = cast(ubyte ptr, strptr(txtBuffer))
-            for i as long = 0 to len(txtBuffer) - 2 step 2
-               dim as ubyte t = pb[i] : pb[i] = pb[i+1] : pb[i+1] = t
-            next
-         end if
-
-         ' The buffer now holds a UTF-16LE payload; decode it to UTF-8 for the editor with an
-         ' explicit code-unit count (len \ 2), so an embedded NUL does not terminate it early.
-         txtBuffer = WideToUtf8( txtBuffer, len(txtBuffer) \ 2 )
-
-    end select
-
-    function = false
-end function
+' GetFileToString IS GONE (7c step 9). Seventy lines of CreateFileW, a BOM ladder, an
+' endian swap loop and WideCharToMultiByte, replaced by Doc_ReadFromDisk in
+' app/modEncoding.inc -- which PsCore's PsEncDecodeAuto had been able to do since
+' before this port started.
+'
+' The note further down this file said reading "still needs Win32". It did not, and
+' saying so for three steps is what kept the portable shell reading every file as
+' UTF-8. tiko and the shell now share one reader; see AppHostW32_LoadFileText.
+'
+' ONE BEHAVIOUR IS UNCHANGED AND WORTH NAMING: a big-endian UTF-16 file is still
+' decoded correctly and still re-saved LITTLE endian, because tiko's encoding enum
+' has no BE member. The old code kept the endianness in a local (bUtf16BE) that died
+' with the call, so this was already true; it is now true in one place.
 
 
 
@@ -562,18 +497,25 @@ function CompleteIncludeFilename( byval pDoc as clsDocument ptr, byval sFilename
 end function
 
 
-' NEITHER GetFileToString NOR CompleteIncludeFilename could move (7c step 3,
-' commit 3e), and BOTH WERE TRIED. Each names a clsDocument ptr, so neither could move
-' before that type did -- and once it had, each turned out to be shell-bound anyway:
+' THIS NOTE USED TO NAME TWO FUNCTIONS. It named GetFileToString first, and said:
 '
-'   GetFileToString decodes UTF-16 through WideToUtf8, a PRIVATE helper in
+'   "GetFileToString decodes UTF-16 through WideToUtf8, a PRIVATE helper in
 '   modEncoding.inc that is WideCharToMultiByte. The WRITE path is already portable
-'   (Doc_EncodeForDisk, Doc_WriteToDisk are in app/); only reading still needs Win32.
+'   (Doc_EncodeForDisk, Doc_WriteToDisk are in app/); only reading still needs Win32."
+'
+' EVERY SENTENCE OF THAT WAS TRUE AND THE CONCLUSION WAS WRONG. Reading did not need
+' Win32; it needed PsEncDecodeAuto, which already existed. The note was accurate about
+' the code in front of it and never checked against the library it was ruling out --
+' which is the same failure the link-debt list made about FilenameOriginalCase, one
+' step earlier, and is why both are now written up rather than quietly deleted.
+'
+' GetFileToString is gone. What remains:
 '
 '   CompleteIncludeFilename resolves against the ACTIVE BUILD CONFIGURATION and calls
-'   frmBuildConfig_getActiveBuildIndex -- a form function.
+'   frmBuildConfig_getActiveBuildIndex -- a form function. That one is still true, and
+'   is worth re-checking rather than re-counting the next time someone reads this.
 '
-' clsDocument reaches them as gAppHost.LoadFileText and gAppHost.ResolveIncludePath.
+' clsDocument reaches it as gAppHost.ResolveIncludePath.
 
 
 

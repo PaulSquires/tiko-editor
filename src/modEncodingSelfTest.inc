@@ -121,7 +121,7 @@ sub Encoding_RunSelfTest()
     Doc_EncodeForDisk( srcBase, true, FILE_ENCODING_ANSI, bLossy )
     ENCASSERT( bLossy = false, "Latin-1 -> ANSI should not be flagged lossy" )
 
-    ' ================= Disk round-trip : encode -> write -> GetFileToString =================
+    ' ============ Disk round-trip : encode -> write -> Doc_ReadFromDisk ============
     dim as wstring * MAX_PATH wFolder = environ("TEMP")
     if len(wFolder) = 0 then wFolder = "."
 
@@ -135,7 +135,10 @@ sub Encoding_RunSelfTest()
             else
                 dim d as clsDocument
                 dim as string sRecovered
-                GetFileToString( sPath, sRecovered, @d )
+                dim as long nRdEnc = FILE_ENCODING_UTF8
+                dim as DWSTRING wszRdErr
+                Doc_ReadFromDisk( sPath, sRecovered, nRdEnc, wszRdErr )
+                d.FileEncoding = nRdEnc
                 ENCASSERT( d.FileEncoding = expectEnc, _
                     encName & ": detected encoding " & str(d.FileEncoding) & " <> " & str(expectEnc) )
                 ENCASSERT( sRecovered = expectRecovered, _
@@ -150,9 +153,13 @@ sub Encoding_RunSelfTest()
     DISKTRIP( FILE_ENCODING_UTF8,      "UTF-8",      FILE_ENCODING_UTF8,      srcRich )
     DISKTRIP( FILE_ENCODING_UTF8_BOM,  "UTF-8 BOM",  FILE_ENCODING_UTF8_BOM,  srcRich )
     DISKTRIP( FILE_ENCODING_UTF16_BOM, "UTF-16 BOM", FILE_ENCODING_UTF16_BOM, srcRich )
-    ' ANSI file: GetFileToString leaves the bytes ANSI (no conversion), so the recovered
-    ' buffer is the ANSI encoding of the source -- compared ANSI-to-ANSI, which is robust to
-    ' whether the system codepage can represent every character.
+    ' ANSI file: the reader leaves the bytes ANSI (no conversion), so the recovered buffer is
+    ' the ANSI encoding of the source -- compared ANSI-to-ANSI, which is robust to whether the
+    ' system codepage can represent every character.
+    '
+    ' THIS ASSERTION CHANGES IN THE NEXT COMMIT. Once ANSI is a disk format only, the reader
+    ' decodes it to UTF-8 like everything else and the recovered buffer becomes srcRich. It is
+    ' left alone here so that this commit is a swap of readers and nothing else.
     DISKTRIP( FILE_ENCODING_ANSI,      "ANSI",       FILE_ENCODING_ANSI,      outA )
 
     ' Localization ids owned by the lossy prompt must exist (blank = silent failure).

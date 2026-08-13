@@ -54,7 +54,8 @@ declare function GetFontCharSetID(byref wzCharsetName as DWSTRING ) as long
 ' NEITHER of these could move to app/ -- see modRoutines.inc for what each is bound to.
 ' clsDocument reaches them as gAppHost.LoadFileText and gAppHost.ResolveIncludePath.
 declare function CompleteIncludeFilename( byval pDoc as clsDocument ptr, byval wszFilename as string ) as string
-declare function GetFileToString( byval wszFilename as DWSTRING, byref txtBuffer as string, byval pDoc as clsDocument ptr ) as boolean
+' GetFileToString's declaration went with its body in 7c step 9 -- app/modEncoding.inc's
+' Doc_ReadFromDisk is the reader now, for both binaries.
 declare function IsCurrentLineIncludeFilename() as boolean
 declare function OpenSelectedDocument( byval wszFilename as DWSTRING, byval wszFunctionName as DWSTRING = "", byval nLineNumber as long = -1 ) as clsDocument ptr
 declare function AfxIFileOpenDialogW( byval hwndOwner as HWND, byval idButton as long) as wstring Ptr
