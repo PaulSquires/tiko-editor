@@ -293,7 +293,7 @@ dim shared gTTabCtl as clsTopTabCtl
 ' Encoding conversion self-test. After modRoutines.inc (Doc_EncodeForDisk/GetFileToString)
 ' and clsDocument.inc (the clsDocument type it instantiates for the disk round-trip).
 #include once "app/modEncodingSelfTest.bi"
-#include once "modEncodingSelfTest.inc"
+#include once "app/modEncodingSelfTest.inc"
 ' Atomic-save self-test. After modRoutines.inc, which owns Doc_WriteToDisk. It writes to
 ' %TEMP% rather than staying pure, deliberately: the contract it asserts -- that a FAILED
 ' write leaves the file already on disk intact -- cannot be reached without a real file.

@@ -1,26 +1,101 @@
 ' ########################################################################################
 ' modEncodingSelfTest.inc  -  see modEncodingSelfTest.bi for the contract.
+'
+' ---- MOVED INTO app/ IN 7c STEP 9, AND ITS THREE BLOCKERS ALL DIED THAT STEP ------------
+'
+' This file sat in src/ because of exactly three things, each named in its old header:
+'
+'   1. WideCharToMultiByte, in the independent oracle below.
+'   2. CFileStream (AfxNova), in the byte writer below.
+'   3. GetFileToString, the reader the disk round-trip closed the loop against.
+'
+' (3) became portable when Doc_ReadFromDisk replaced it. (2) is PsFileWriteAll. (1) is
+' discussed where it now lives -- and the replacement is BETTER than a port, not merely
+' equivalent.
+'
+' WHAT THIS BUYS: the portable shell can run these 27 assertions HEADLESSLY, from
+' --selftest, where tiko can only run them behind an env var inside a started GUI. A suite
+' that needs a window to run is a suite that does not run.
 ' ########################################################################################
 
-' Independent oracle: raw Win32 UTF-16 -> UTF-8 (distinct code from modRoutines' private
-' helpers, so a shared bug cannot hide behind both). Length-explicit.
+#include once "modEncodingSelfTest.bi"
+'' ITS OWN DEPENDENCIES, because an app/*.inc has to compile ALONE -- that is what
+'' _check_app_standalone asserts, one file at a time against PsCore plus the layer's
+'' headers. Moving this file here is what revealed that the gate's prelude is built
+'' from the app/*.bi files tiko.bas names DIRECTLY, and tiko.bas names modEncoding.INC
+'' only -- so Doc_EncodeForDisk had never been in scope for that check and nothing had
+'' needed it to be. The fix belongs here rather than in the gate: a translation unit
+'' that states what it needs cannot be broken by someone else's include order.
+#include once "modEncoding.bi"
+#include once "modDocEncodingIds.bi"
+#include once "modLocalization.bi"
+
+' ---- THE INDEPENDENT ORACLE, HAND-WRITTEN ON PURPOSE -----------------------------------
+'
+' This was WideCharToMultiByte, and the reason was sound: it is code the thing under test
+' does not share, so a bug cannot hide behind both sides of a comparison.
+'
+' THE OBVIOUS PORT WOULD HAVE DESTROYED THAT. Reaching for DWSTRING.Utf8 or PsEncEncode
+' here would make the oracle the same implementation as the subject, and every assertion
+' below would then prove only that PsEncoding agrees with itself.
+'
+' So it is written out by hand from the UTF-8 rules instead: 1 byte below U+0080, 2 below
+' U+0800, 4 for a surrogate pair, 3 otherwise. Twenty lines, no library, and independent of
+' BOTH the old Win32 helper and the new PsCore one -- which is a stronger oracle than the
+' one it replaces, and portable as well.
 private function EncSelfTest_WideToUtf8( byval w as DWSTRING ) as string
     dim as long n = PsLen(w)
     if n = 0 then return ""
-    dim as long u8 = WideCharToMultiByte( CP_UTF8, 0, w.Wz(), n, NULL, 0, NULL, NULL )
-    if u8 <= 0 then return ""
-    dim as string s = string( u8, 0 )
-    WideCharToMultiByte( CP_UTF8, 0, w.Wz(), n, strptr(s), u8, NULL, NULL )
-    return s
+
+    dim as string r
+    dim as long i = 0
+    while i < n
+        dim as ulong cp = w.At(i)
+        i += 1
+        ' A surrogate PAIR is one code point. A lone surrogate is passed through as-is,
+        ' which is what makes the "encoded surrogate" case in psencoding meaningful.
+        if (cp >= &hD800) andalso (cp <= &hDBFF) andalso (i < n) then
+            dim as ulong lo = w.At(i)
+            if (lo >= &hDC00) andalso (lo <= &hDFFF) then
+                cp = &h10000 + ((cp - &hD800) shl 10) + (lo - &hDC00)
+                i += 1
+            end if
+        end if
+
+        if cp < &h80 then
+            r &= chr( cp )
+        elseif cp < &h800 then
+            r &= chr( &hC0 or (cp shr 6) ) & chr( &h80 or (cp and &h3F) )
+        elseif cp < &h10000 then
+            r &= chr( &hE0 or (cp shr 12) ) & _
+                 chr( &h80 or ((cp shr 6) and &h3F) ) & _
+                 chr( &h80 or (cp and &h3F) )
+        else
+            r &= chr( &hF0 or (cp shr 18) ) & _
+                 chr( &h80 or ((cp shr 12) and &h3F) ) & _
+                 chr( &h80 or ((cp shr 6) and &h3F) ) & _
+                 chr( &h80 or (cp and &h3F) )
+        end if
+    wend
+    return r
 end function
 
-' Write raw bytes to a file with the same stream the save path uses.
+' Write raw bytes to a file. Was CFileStream, "the same stream the save path uses" -- and
+' the save path uses PsFileWriteAll now, so this still is.
 private function EncSelfTest_WriteBytes( byval wszPath as DWSTRING, byref sBytes as string ) as boolean
-    dim pStream as CFileStream
-    if pStream.Open( *wszPath.Wz(), STGM_CREATE or STGM_WRITE ) <> S_OK then return false
-    if len(sBytes) then pStream.Write strptr(sBytes), len(sBytes)
-    pStream.Close
-    return true
+    return PsFileWriteAll( wszPath, sBytes )
+end function
+
+' A scratch filename. Was GetTemporaryFilename, which is GetTempFileName. PSFOLDER_TEMP is
+' %TEMP% on Windows and $TMPDIR or /tmp elsewhere; the counter keeps repeated calls in one
+' run distinct, which is all the old function's uniqueness was being used for here.
+dim shared as long g_nEncTempSeq
+
+private function EncSelfTest_TempPath( byref sExt as string ) as DWSTRING
+    g_nEncTempSeq += 1
+    dim as DWSTRING wszName
+    wszName.Utf8 = "tiko_enc_" & str(g_nEncTempSeq) & "." & sExt
+    return PsPathJoin( PsKnownFolder( PSFOLDER_TEMP ), wszName )
 end function
 
 ' Hex of the first n bytes, for readable failure output.
@@ -122,14 +197,11 @@ sub Encoding_RunSelfTest()
     ENCASSERT( bLossy = false, "Latin-1 -> ANSI should not be flagged lossy" )
 
     ' ============ Disk round-trip : encode -> write -> Doc_ReadFromDisk ============
-    dim as wstring * MAX_PATH wFolder = environ("TEMP")
-    if len(wFolder) = 0 then wFolder = "."
-
     #macro DISKTRIP( enc, encName, expectEnc, expectRecovered )
         scope
             dim as boolean bL
             dim as string sDisk = Doc_EncodeForDisk( srcRich, true, enc, bL )
-            dim as string sPath = GetTemporaryFilename( wFolder, "txt" )
+            dim as DWSTRING sPath = EncSelfTest_TempPath( "txt" )
             if EncSelfTest_WriteBytes( sPath, sDisk ) = false then
                 nFail += 1 : ? "  FAIL: could not write temp file for " & encName
             else

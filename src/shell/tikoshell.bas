@@ -169,6 +169,7 @@
 #include once "app/modUnusedSymbols.bi"
 #include once "app/modIniParse.bi"
 #include once "app/modEncodingSelfTest.bi"
+#include once "app/modEncodingSelfTest.inc"
 #include once "app/modSaveSelfTest.bi"
 
 '' ---- app-layer BODIES the shell drives directly ----------------------------------------
@@ -5164,6 +5165,19 @@ end function
         '' reads to find a dialog's parent, so a surface that acquired one by accident here
         '' would be a real defect rather than an untidy test.
         Check "the surface is windowless", (surf.hWin = 0)
+
+        '' ---- AND tiko's OWN ENCODING SUITE, WHICH THIS BINARY CAN NOW RUN ----------
+        '' 27 assertions that lived in src/ until 7c step 9 because they named
+        '' WideCharToMultiByte, CFileStream and GetFileToString. They are in app/ now, so
+        '' the portable shell runs them HEADLESSLY -- where tiko can only run them behind
+        '' TIKO_ENCODING_SELFTEST inside a started GUI, which is why they had not been run
+        '' once during this step until this line existed.
+        ''
+        '' IT KEEPS ITS OWN PASS/FAIL COUNTERS AND PRINTS ITS OWN LINE. Not merged into
+        '' g_nPass: two suites with one counter is how a failure in the quiet one gets
+        '' read as a rounding error in the loud one.
+        setenviron "TIKO_ENCODING_SELFTEST=1"
+        Encoding_RunSelfTest()
 
         print ""
         print "  " & g_nPass & " passed, " & g_nFail & " failed"
