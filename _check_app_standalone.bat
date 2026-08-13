@@ -111,9 +111,8 @@ type _prelude.txt >>_standalone_link.bas
 for %%F in (app\*.inc) do >>_standalone_link.bas echo #include once "%%F"
 >>_standalone_link.bas echo end 0
 
-rem A RATCHET, NOT A PASS/FAIL. Two bodies are still outside the layer and are
-rem named below; the check fails when a THIRD appears, not while those two
-rem remain. A gate that is red on the day it lands gets switched off, and a debt
+rem A RATCHET, NOT A PASS/FAIL. ONE body is still outside the layer and is named
+rem below; the check fails when a SECOND appears, not while that one remains. A gate that is red on the day it lands gets switched off, and a debt
 rem that is counted is a debt someone can finish.
 rem
 rem   ProcessFromCurdriveApp          CLOSED in 7c step 5. It is in app\modPaths.inc
@@ -131,11 +130,18 @@ rem                                   and BOTH binaries answer it the same way; 
 rem                                   CreateFileW / GetFinalPathNameByHandleW version is
 rem                                   gone, and with it the symlink resolution it did as
 rem                                   a side effect
-rem   KeyBindings_PickListKeyToValue  modKeyBindings.inc:622 -- declared in a
-rem                                   SHELL header. An app\*.inc calls a shell
-rem                                   function directly, which the vocabulary
-rem                                   ratchet cannot see because it names no Afx
-rem                                   or Win32 token
+rem   KeyBindings_PickListKeyToValue  CLOSED in 7c step 10, and it was never the
+rem                                   right function to call. app\modMenuDefinitions.inc
+rem                                   wanted to know whether a stored key name is one
+rem                                   the pick list offers, and asked for a VIRTUAL KEY
+rem                                   in order to throw it away -- while that function's
+rem                                   own header said "MEMBERSHIP IN gKeyNames() is the
+rem                                   validity test here, never 'the return is
+rem                                   non-zero'". The membership half is now
+rem                                   KeyBindings_IsPickListName, in app\, with the
+rem                                   vocabulary it needs; the VK half stayed in the
+rem                                   shell. The `#include "../modKeyBindings.bi"` that
+rem                                   this entry was really about is gone with it.
 rem
 rem   clsConfig::ProjectSaveToFile    clsConfig is SPLIT -- header and constructor in app\,
 rem                                   the rest in src\clsConfig.inc since step 1.
@@ -153,13 +159,19 @@ rem included that file's header and not its body), and FilenameOriginalCase beca
 rem debt rather than a latent one -- the shell has to implement it now that it links the
 rem symbol database.
 rem
+rem 7c STEP 10 TOOK IT 2 -> 1, and the entry above is the third in three steps whose
+rem stated blocker did not survive being re-read. What remains is
+rem clsConfig::ProjectSaveToFile, and THAT one is blocked on something real: it calls
+rem gTTabCtl -- clsTopTabCtl, Win32 to its bones -- at four sites. It cannot close until
+rem the tab control does, which is the largest open item in the port.
+rem
 rem 7c STEP 8 TOOK IT 3 -> 2. FilenameOriginalCase moved down, and the entry above records
 rem why it took five steps: the blocker it named had already been removed, by someone who
 rem was not looking for it. A debt list is only as good as the last time its entries were
 rem re-read rather than re-counted.
 rem
 rem WHEN THE COUNT REACHES 0, delete the baseline and make this a plain failure.
-set /a LINKBASELINE=2
+set /a LINKBASELINE=1
 set /a LINKBAD=0
 %FBC% -i ..\..\PsPlatform\src -maxerr 999 -x _standalone_link.exe _standalone_link.bas > _standalone_link.log 2>&1
 if !errorlevel! neq 0 (

@@ -4530,6 +4530,40 @@ end function
                 end if
             end scope
 
+            '' ---- THE KEY VOCABULARY, WHICH app/ COULD NOT ASK ABOUT UNTIL STEP 10 -------
+            '' KeyBindings_IsPickListName is the membership half of PickListKeyToValue,
+            '' split off so app/modMenuDefinitions.inc could stop including a SHELL header
+            '' by relative path. THAT THIS RUNS AT ALL IS HALF THE ASSERTION: this binary
+            '' has no keyboard layout, no VkKeyScanEx and no VK_* constants, and the
+            '' function it replaced needed all three.
+            scope
+                Check "a vocabulary name is recognised", _
+                      KeyBindings_IsPickListName( "Tab" )
+                Check "  and matching is case-insensitive", _
+                      KeyBindings_IsPickListName( "tab" ), _
+                      "config files carry either spelling"
+
+                '' THE TWO THE ORIGINAL HEADER NAMES. "None" was written into keyless tools
+                '' by an older dialog; "PageUp" is a stale spelling of "PgUp" from an older
+                '' tiko. Both must be refused, or a menu shows Ctrl+NONE and a binding
+                '' silently never fires.
+                Check "  a name the pick list never offered is refused", _
+                      (KeyBindings_IsPickListName( "None" ) = false)
+                Check "    including a stale spelling", _
+                      (KeyBindings_IsPickListName( "PageUp" ) = false)
+                Check "    and the empty string", _
+                      (KeyBindings_IsPickListName( "" ) = false)
+
+                '' IDEMPOTENT, which matters more now than it did: EnsureKeyNames is built
+                '' lazily and its definition now sits in a different file from some of its
+                '' callers.
+                KeyBindings_EnsureKeyNames()
+                dim as long nWas = ubound(gKeyNames)
+                KeyBindings_EnsureKeyNames()
+                Check "  EnsureKeyNames is idempotent across the layer split", _
+                      (ubound(gKeyNames) = nWas) andalso (nWas > 0), str(ubound(gKeyNames))
+            end scope
+
             '' ---- FilenameOriginalCase IS REAL NOW ---------------------------------------
             '' It returned its argument for five steps. psfile already asserts the CASE
             '' repair itself, against PsFileRealCase; what is shell-specific and asserted

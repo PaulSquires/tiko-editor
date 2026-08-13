@@ -74,3 +74,39 @@ declare function frmKeyBoard_AddKeyBinding_User( byval wszMsgString as DWSTRING,
                                                  byval bDisabled as boolean ) as long
 declare function frmKeyboard_CreateDefaultKeyBindings() as long
 declare function frmKeyboard_SaveKeyBindings( byval wszFilename as DWSTRING ) as long
+
+' ========================================================================================
+' THE ACCELERATOR KEY VOCABULARY -- the names a user may bind to.
+'
+' MOVED DOWN IN 7c STEP 10, and the reason is one include line. app/modMenuDefinitions.inc
+' carried
+'
+'     #include once "../modKeyBindings.bi"
+'
+' -- an app/ file reaching UP into the shell BY RELATIVE PATH, which no token scan can see
+' and which is why _check_shell reads #include lines instead of grepping for Afx and Win32
+' names. It wanted one thing: to ask whether a stored key name is one the pick list offers.
+'
+' IT ASKED THE WRONG FUNCTION. It called KeyBindings_PickListKeyToValue and tested for 0 --
+' and that function's own header says, in as many words: "MEMBERSHIP IN gKeyNames() is the
+' validity test here, never 'the return is non-zero'". The non-zero return is a VK_*, and a
+' VK_* is precisely what app/ may not name.
+'
+' So the membership test moved instead, and the vocabulary with it. It is a list of
+' STRINGS; nothing about it was ever platform-specific. What stayed in the shell is
+' everything that turns a name into a virtual key -- AccelKeyToValue, OEMtoVirtKey,
+' PickListKeyToValue and VKToName -- because that is the half that needs a keyboard layout.
+' ========================================================================================
+type KEYNAME_TYPE
+    wszName as DWSTRING
+end type
+
+dim shared gKeyNames(any) as KEYNAME_TYPE
+
+' Idempotent and safe to call from anywhere, which matters more now than it did: its
+' definition and some of its callers are in different files and different layers.
+declare sub KeyBindings_EnsureKeyNames()
+
+' Is this one of the names the pick list offers? The membership test, without resolving to
+' a virtual key -- which is what lets it live here at all.
+declare function KeyBindings_IsPickListName( byval wszName as DWSTRING ) as boolean

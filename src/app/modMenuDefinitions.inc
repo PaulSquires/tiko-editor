@@ -11,15 +11,18 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
-'' modKeyBindings.bi DIRECTLY. This file needs gKeys and nothing else, and
-'' frmKeyboard.bi says so itself: "The MODEL (gKeys, ...) moved to
-'' modKeyBindings.* ... Included here so the existing includers of
-'' frmKeyboard.bi (modMenuDefinitions.inc, frmKeyboardEdit.inc) still see gKeys
-'' without changing." That convenience cost this file the whole keyboard DIALOG.
+'' ---- THE ../ INCLUDE IS GONE (7c step 10) ---------------------------------------------
+'' This file used to open with `#include once "../modKeyBindings.bi"` -- an app/ file
+'' reaching UP into the shell by RELATIVE PATH. No token scan could see it, which is why
+'' _check_shell reads #include lines rather than grepping for names, and it was the last
+'' structural reason the app layer was not self-contained.
 ''
-'' ../modMRU.bi was included too and NOTHING here used it -- measured: it defines
-'' five symbols and this file names none of them.
-#include once "../modKeyBindings.bi"
+'' It wanted gKeys, and one function: a test for whether a stored key name is one the pick
+'' list offers. gKeys was already here. The test is now KeyBindings_IsPickListName, in
+'' app/modKeyBindings.bi beside it -- the membership half of PickListKeyToValue, without
+'' the virtual-key resolution that kept it in the shell.
+#include once "modKeyBindings.bi"
+
 
 
 
@@ -35,7 +38,9 @@
 function createToolsMenuShortcut( byval nCtrlID as long ) as DWSTRING
     dim wszShortcut as DWSTRING
 
-    if KeyBindings_PickListKeyToValue( gConfig.Tools(nCtrlID).wszKey ) = 0 then return ""
+    '' MEMBERSHIP, not the virtual key -- see KeyBindings_IsPickListName. This read
+    '' `PickListKeyToValue(...) = 0`, which asked for a VK in order to throw it away.
+    if KeyBindings_IsPickListName( gConfig.Tools(nCtrlID).wszKey ) = false then return ""
 
     if gConfig.Tools(nCtrlID).IsCtrl then wszShortcut = "Ctrl+"
     if gConfig.Tools(nCtrlID).IsShift then wszShortcut = wszShortcut + "Shift+"

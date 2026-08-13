@@ -303,3 +303,123 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
 
     function = 0
 end function
+
+' ========================================================================================
+' Build the accelerator key vocabulary -- ONCE, lazily.
+'
+' The order below is the order every pick-list shows AND the search order
+' KeyBindings_VKToName uses, so it is also what makes one spelling canonical when several
+' map to the same virtual key.
+'
+' EVERY NAME HERE MUST BE ONE frmKeyboard_AccelKeyToValue UNDERSTANDS. That is not a style
+' rule: a name it does not recognise yields virtual key 0, AddAccelerator is skipped, and
+' the binding saves and displays perfectly while never firing. "PageUp"/"PageDn" sat in
+' the old hardcoded combobox list in exactly that state; they are "PgUp"/"PgDn" here.
+' TIKO_KEYBOARD_SELFTEST asserts the round trip for the whole table.
+' ========================================================================================
+sub KeyBindings_EnsureKeyNames()
+
+    if ubound(gKeyNames) >= 0 then exit sub
+
+    ' Sized generously, then trimmed to what was actually added.
+    redim gKeyNames(255) as KEYNAME_TYPE
+    dim as long n = -1
+
+    #macro ADDKEYNAME( _name_ )
+        n += 1
+        gKeyNames(n).wszName = _name_
+    #endmacro
+
+    ADDKEYNAME( "Backspace" )
+    ADDKEYNAME( "Tab" )
+    ADDKEYNAME( "Enter" )
+    ADDKEYNAME( "Escape" )
+    ADDKEYNAME( "Spacebar" )
+    ADDKEYNAME( "PgUp" )
+    ADDKEYNAME( "PgDn" )
+    ADDKEYNAME( "End" )
+    ADDKEYNAME( "Home" )
+    ADDKEYNAME( "Left" )
+    ADDKEYNAME( "Right" )
+    ADDKEYNAME( "Up" )
+    ADDKEYNAME( "Down" )
+    ADDKEYNAME( "DEL" )
+    ADDKEYNAME( "INS" )
+
+    for i as long = 48 to 57    ' 0 to 9
+        ADDKEYNAME( wchr(i) )
+    next
+    for i as long = 65 to 90    ' A to Z
+        ADDKEYNAME( wchr(i) )
+    next
+
+    ADDKEYNAME( "Numpad0" )
+    ADDKEYNAME( "Numpad1" )
+    ADDKEYNAME( "Numpad2" )
+    ADDKEYNAME( "Numpad3" )
+    ADDKEYNAME( "Numpad4" )
+    ADDKEYNAME( "Numpad5" )
+    ADDKEYNAME( "Numpad6" )
+    ADDKEYNAME( "Numpad7" )
+    ADDKEYNAME( "Numpad8" )
+    ADDKEYNAME( "Numpad9" )
+    ADDKEYNAME( "Numpad*" )
+    ADDKEYNAME( "Numpad+" )
+    ADDKEYNAME( "Numpad-" )
+    ADDKEYNAME( "Numpad." )
+    ADDKEYNAME( "Numpad/" )
+
+    ADDKEYNAME( "F1" )
+    ADDKEYNAME( "F2" )
+    ADDKEYNAME( "F3" )
+    ADDKEYNAME( "F4" )
+    ADDKEYNAME( "F5" )
+    ADDKEYNAME( "F6" )
+    ADDKEYNAME( "F7" )
+    ADDKEYNAME( "F8" )
+    ADDKEYNAME( "F9" )
+    ADDKEYNAME( "F10" )
+    ADDKEYNAME( "F11" )
+    ADDKEYNAME( "F12" )
+
+    ADDKEYNAME( "Tilde" )
+    ADDKEYNAME( "Plus" )
+    ADDKEYNAME( "Comma" )
+    ADDKEYNAME( "Minus" )
+    ADDKEYNAME( "Period" )
+    ADDKEYNAME( "SingleQuote" )
+    ADDKEYNAME( "SemiColon" )
+    ADDKEYNAME( "/" )
+    ADDKEYNAME( "\" )
+    ADDKEYNAME( "[" )
+    ADDKEYNAME( "]" )
+
+    redim preserve gKeyNames(n) as KEYNAME_TYPE
+
+end sub
+
+
+' ========================================================================================
+' Is wszName one of the names the pick list offers?
+'
+' KeyBindings_PickListKeyToValue without its last line. That function looks the name up in
+' gKeyNames() and then returns frmKeyboard_AccelKeyToValue of it -- and its header says the
+' MEMBERSHIP is the validity test, not the non-zero return. Its one app/-side caller wanted
+' the membership; taking the VK with it is what forced an app/ file to include a shell
+' header by relative path for three steps.
+'
+' CASE-INSENSITIVE, like the function it was split from: stored text is whatever a combo box
+' held, and older config files carry either spelling.
+' ========================================================================================
+function KeyBindings_IsPickListName( byval wszName as DWSTRING ) as boolean
+
+    KeyBindings_EnsureKeyNames()
+
+    dim as DWSTRING wszUpper = PsUCase(wszName)
+
+    for i as long = lbound(gKeyNames) to ubound(gKeyNames)
+        if PsUCase(gKeyNames(i).wszName) = wszUpper then return true
+    next
+
+    return false
+end function

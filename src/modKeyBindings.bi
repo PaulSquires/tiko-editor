@@ -52,11 +52,10 @@ dim shared gKeysEdit as KEYBINDINGS_TYPE
 '
 ' Built lazily by KeyBindings_EnsureKeyNames -- no startup ordering to get wrong.
 ' ========================================================================================
-type KEYNAME_TYPE
-    wszName as DWSTRING
-end type
-
-dim shared gKeyNames(any) as KEYNAME_TYPE
+' KEYNAME_TYPE and gKeyNames() MOVED to app/modKeyBindings.bi in 7c step 10, with
+' KeyBindings_EnsureKeyNames that fills them. The vocabulary is a list of STRINGS and
+' names no Win32; what stays here is everything that turns one of those strings into a
+' VK_*, which is the part that does.
 
 
 ' SaveKeyBindings, AddKeyBinding, AddKeyBinding_User and CreateDefaultKeyBindings are
@@ -67,8 +66,9 @@ declare function frmKeyboard_VirtKeyToValue( byval wszString as DWSTRING ) as lo
 declare function frmKeyboard_OEMtoVirtKey( byval ch as ubyte ) as long
 declare function frmKeyboard_AccelKeyToValue( byval wszString as DWSTRING ) as long
 
-' The vocabulary. EnsureKeyNames is idempotent and safe to call from anywhere.
-declare sub      KeyBindings_EnsureKeyNames()
+' The vocabulary itself is declared in app/modKeyBindings.bi since 7c step 10 -- along
+' with EnsureKeyNames, which used to be declared here. Everything below turns one of
+' those names into a VIRTUAL KEY, and that is the half this file keeps.
 ' Virtual key -> its canonical name, or "" when this key has no name in the vocabulary.
 ' An unnamed key CANNOT be persisted or turned back into an accelerator, so "" is the
 ' signal to refuse it rather than to store something that will never fire.
