@@ -210,11 +210,23 @@ sub SciHost_RunFontFileSelfTest()
               "an empty family did not fall back to Consolas" )
     FFASSERT( SciHost_ResolveFontFile("No Such Font Family At All") = sFallback, _
               "an unknown family did not fall back to Consolas" )
-    '' A STYLE IS NOT A FAMILY. "Consolas Bold" is a real registry value name and
-    '' must NOT match the family "Consolas" -- matching it would pick the bold
-    '' face as the regular one. It has no family of its own, so it falls back.
-    FFASSERT( SciHost_ResolveFontFile("Consolas Bold") = sFallback, _
-              "a STYLE name matched as if it were a family" )
+    '' EXACT MATCH DISCRIMINATES, and this is what that buys.
+    ''
+    '' THIS ASSERTION WAS WRONG WHEN IT WAS WRITTEN. It read
+    ''     ResolveFontFile("Consolas Bold") = sFallback
+    '' on the reasoning that a style is not a family and should not resolve. But
+    '' "Consolas Bold (TrueType)" is a real VALUE NAME in that registry key, and
+    '' this function maps NAME -> FILE: resolving it is correct, and the suite was
+    '' asserting a rule the code had no reason to follow. It failed on the first
+    '' run, which is the assertion doing its job in the wrong direction.
+    ''
+    '' The property that actually matters is that the two names give DIFFERENT
+    '' files. A prefix or "starts with" match would answer consolab.ttf for both
+    '' and silently make the bold face the regular one for the whole editor.
+    dim as string sBold = SciHost_ResolveFontFile( "Consolas Bold" )
+    FFASSERT( len(dir(sBold)) > 0, "Consolas Bold resolved to nothing on disk: " & sBold )
+    FFASSERT( lcase(sBold) <> lcase(sCon), _
+              "Consolas and Consolas Bold resolved to the SAME file: " & sBold )
 
     '' A RELATIVE VALUE IS JOINED TO THE FONTS DIRECTORY. The registry stores bare
     '' filenames, so a resolved path that is not absolute means the join is gone.
