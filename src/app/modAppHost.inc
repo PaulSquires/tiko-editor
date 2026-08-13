@@ -26,7 +26,6 @@ function AppHost_FirstMissing() as string
     if gAppHost.StyleView      = 0 then return "StyleView"
     if gAppHost.ThemeSelectionBack = 0 then return "ThemeSelectionBack"
     if gAppHost.LastErrorText  = 0 then return "LastErrorText"
-    if gAppHost.LoadFileText   = 0 then return "LoadFileText"
     if gAppHost.ResolveIncludePath = 0 then return "ResolveIncludePath"
     if gAppHost.ConfirmLossySave   = 0 then return "ConfirmLossySave"
     if gAppHost.ReportWriteFailure = 0 then return "ReportWriteFailure"

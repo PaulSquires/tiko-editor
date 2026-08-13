@@ -120,22 +120,19 @@ type AppHostServices
     '' store colours as 32-bit values.
     ThemeSelectionBack as function() as ulong
 
-    '' Read a file into txtBuffer, detecting and recording its encoding on the document.
+    '' LoadFileText WAS HERE, and it went in 7c step 10.
     ''
-    '' TRUE MEANS SUCCESS. Spelled out because it did not, and nobody noticed for six steps:
-    '' tiko's implementation forwarded GetFileToString, which returned FALSE on success --
-    '' an inversion that was invisible while there was one implementation and became a live
-    '' defect the moment there were two. The shell's returned TRUE, LoadDiskFile tested for
-    '' FALSE, and so a successful load in the shell never stamped DateFileTime. Fixed in 7c
-    '' step 9, in the same commit that gave both binaries one reader.
+    '' It existed because the decode was WideCharToMultiByte. Step 9 replaced that with
+    '' Doc_ReadFromDisk, in app/ -- at which point BOTH implementations were the same four
+    '' statements around a call the app layer could make itself, and clsDocument now does.
     ''
-    '' STILL A SERVICE, and now for a smaller reason than before. It used to be here because
-    '' the decode was WideCharToMultiByte; since step 9 the decode is Doc_ReadFromDisk, in
-    '' app/, and BOTH implementations are one line around it. What is left at the seam is
-    '' the platform's error text and nothing else -- so this is a candidate for deletion
-    '' rather than a fixture.
-    LoadFileText   as function(byval wszPath as DWSTRING, byref txtBuffer as string, _
-                               byval pDoc as clsDocument ptr) as boolean
+    '' A SEAM FIELD EXISTS TO LET THE TWO BINARIES DIFFER. When they stop differing it is
+    '' an indirection with a lifetime, an install line and two bodies to keep in step -- and
+    '' this one had already grown a defect from exactly that: the two implementations
+    '' disagreed about whether TRUE meant success.
+    ''
+    '' What is left of the platform in the read path is gAppHost.LastErrorText, which
+    '' Doc_ReadFromDisk calls directly from app/.
 
     '' Resolve a partial #include path to something that exists.
     ''

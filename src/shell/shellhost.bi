@@ -148,29 +148,6 @@ private function ShellHost_LastErrorText() as DWSTRING
     return ""
 end function
 
-'' ---- IT DECODES NOW, AND THE DOCUMENT LEARNS WHAT IT READ (7c step 9) ------------------
-'' This used to read bytes and call them UTF-8 without touching pDoc->FileEncoding, which
-'' was not merely a save-side problem: a UTF-16LE file arrived at Scintilla as UTF-16 bytes
-'' labelled UTF-8 and was MOJIBAKE ON SCREEN, NULs and all, before anyone tried to save it.
-''
-'' clsApp.inc's own comment said the UTF-8 default was safe "because LoadDiskFile
-'' immediately sniffs the file's real BOM". True of tiko. False here, for six steps.
-''
-'' The whole body is now one call to app/'s Doc_ReadFromDisk, which is what tiko calls too.
-private function ShellHost_LoadFileText( byval wszPath as DWSTRING, byref txtBuffer as string, _
-                                         byval pDoc as clsDocument ptr ) as boolean
-    dim as long nEnc = FILE_ENCODING_UTF8
-    dim as DWSTRING wszErr
-    if Doc_ReadFromDisk( wszPath, txtBuffer, nEnc, wszErr ) <> DOCREAD_OK then
-        print "tikoshell: could not read " & wszPath.Utf8 & " -- " & wszErr.Utf8
-        return false
-    end if
-    '' THE POINT OF THE COMMIT. Without this the document keeps whatever it was born with
-    '' (gConfig.NewFileEncoding, i.e. UTF-8) and a save silently rewrites the container.
-    if pDoc <> 0 then pDoc->FileEncoding = nEnc
-    return true
-end function
-
 private function ShellHost_ResolveIncludePath( byval pDoc as clsDocument ptr, _
                                                byval sFilename as string ) as string
     '' tiko resolves against the active build configuration's compiler paths. This binary has
@@ -366,7 +343,6 @@ sub ShellHost_Install()
     gAppHost.StyleView          = @ShellHost_StyleView
     gAppHost.ThemeSelectionBack = @ShellHost_ThemeSelectionBack
     gAppHost.LastErrorText      = @ShellHost_LastErrorText
-    gAppHost.LoadFileText       = @ShellHost_LoadFileText
     gAppHost.ResolveIncludePath = @ShellHost_ResolveIncludePath
     gAppHost.ConfirmLossySave   = @ShellHost_ConfirmLossySave
     gAppHost.ReportWriteFailure = @ShellHost_ReportWriteFailure

@@ -294,10 +294,19 @@ function clsDocument.LoadDiskFile( _
     ' this will be an UTF-8 encoded string
     dim sText as string  
 
-    ' TRUE IS SUCCESS. This read `= false` until 7c step 9, matching an implementation that
-    ' returned false on success -- so the shell, whose implementation returned true, never
-    ' reached the stamp at all. See AppHostServices.LoadFileText.
-    if gAppHost.LoadFileText(wszFile, sText, @this) then
+    ' ---- STRAIGHT TO app/, SINCE 7c STEP 10 --------------------------------------------
+    ' This went through gAppHost.LoadFileText, a seam field whose two implementations had
+    ' become the same four statements around Doc_ReadFromDisk -- which is in app/ already.
+    ' A seam field exists to let the two binaries DIFFER; when they stop differing it is
+    ' just an indirection with a lifetime.
+    '
+    ' The polarity note it carried is worth keeping: this used to read `= false`, matching
+    ' tiko's implementation, which returned false on success -- so the shell, returning
+    ' true, never reached the stamp at all.
+    dim as long nReadEnc = FILE_ENCODING_UTF8
+    dim as DWSTRING wszReadErr
+    if Doc_ReadFromDisk( wszFile, sText, nReadEnc, wszReadErr ) = DOCREAD_OK then
+        this.FileEncoding = nReadEnc
         this.DateFileTime = PsFileWriteTime( wszFile )
     end if
 
@@ -372,9 +381,19 @@ function clsDocument.InsertFile() as boolean
     '' The HOST asks. It owns the dialog and the CoTaskMemFree that used to be here.
     dim as DWSTRING wszPick
     if gAppHost.AskOpenPath( wszPick ) then
-        ' save the main file encoding because GetFileTostring may change it
+        ' ---- AND IT NO LONGER RELABELS THE DOCUMENT (7c step 10) -----------------------
+        ' The comment here said "save the main file encoding because GetFileTostring may
+        ' change it" -- and nothing saved it. `@this` was passed straight through, so
+        ' inserting a UTF-16 file into a UTF-8 document RELABELLED THE DOCUMENT UTF-16 and
+        ' the next save rewrote the whole file in a container the user never chose.
+        '
+        ' Doc_ReadFromDisk reports the encoding as an OUT PARAMETER rather than writing it
+        ' onto a document, so the fix is to ignore it. An insert wants the text; the
+        ' document's own encoding is not the inserted file's business.
         dim as string sText
-        gAppHost.LoadFileText(*wszPick.Wz(), sText, @this)
+        dim as long nInsEnc = FILE_ENCODING_UTF8
+        dim as DWSTRING wszInsErr
+        Doc_ReadFromDisk( *wszPick.Wz(), sText, nInsEnc, wszInsErr )
         SciMsg( pSci, SCI_INSERTTEXT, -1, cast(integer, strptr(sText)) )
         this.ApplyProperties()
     end if

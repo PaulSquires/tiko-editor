@@ -4267,8 +4267,13 @@ end function
                 if PsFileWriteAll( wszU16, sU16 ) then
                     dim as clsDocument ptr pE = gApp.CreateEmptyDocument()
                     if pE <> 0 then
-                        dim as string sGot
-                        dim as boolean bRead = gAppHost.LoadFileText( wszU16, sGot, pE )
+                        '' THROUGH clsDocument.LoadDiskFile, the real caller. These used
+                        '' to call gAppHost.LoadFileText -- a seam field deleted in step
+                        '' 10, because both implementations had become the same call to
+                        '' Doc_ReadFromDisk. Driving the real path is better coverage than
+                        '' driving the indirection was.
+                        dim as boolean bRead = (pE->LoadDiskFile( wszU16 ) = 0)
+                        dim as string sGot = pE->TextBuffer
                         Check "a UTF-16LE file reads", bRead
                         '' THE ENCODING IS RECORDED. Without this the document keeps UTF-8
                         '' and the next save rewrites the container silently.
@@ -4295,6 +4300,37 @@ end function
                     PsFileDelete( wszU16 )
                 end if
 
+                '' ---- INSERTING A FILE MUST NOT RELABEL THE DOCUMENT ---------------------
+                '' clsDocument.InsertFile passed @this straight into the reader, so the
+                '' INSERTED file's encoding was written onto the HOST document -- insert a
+                '' UTF-16 file into a UTF-8 one and the next save rewrote the whole thing in
+                '' a container the user never chose. The comment there even said "save the
+                '' main file encoding because GetFileTostring may change it", and nothing
+                '' saved it.
+                ''
+                '' InsertFile itself needs a dialog, so what is asserted is the rule it now
+                '' follows: reading a file reports its encoding as an OUT PARAMETER and
+                '' touches no document.
+                scope
+                    dim as clsDocument ptr pH = gApp.CreateEmptyDocument()
+                    if pH <> 0 then
+                        pH->FileEncoding = FILE_ENCODING_UTF8
+                        dim as DWSTRING wszIns = wszDirE & "\probe_insert.txt"
+                        if PsFileWriteAll( wszIns, chr(&hFF) & chr(&hFE) & chr(&h41) & chr(&h00) ) then
+                            dim as string sIns
+                            dim as long nInsEnc = FILE_ENCODING_UTF8
+                            dim as DWSTRING wszInsErr
+                            Doc_ReadFromDisk( wszIns, sIns, nInsEnc, wszInsErr )
+                            Check "reading reports the file's encoding OUT", _
+                                  (nInsEnc = FILE_ENCODING_UTF16_BOM), str(nInsEnc)
+                            Check "  and does NOT touch the document it was read for", _
+                                  (pH->FileEncoding = FILE_ENCODING_UTF8), str(pH->FileEncoding)
+                            PsFileDelete( wszIns )
+                        end if
+                        gApp.RemoveDocument( pH )
+                    end if
+                end scope
+
                 '' ---- UTF-16 BIG ENDIAN, WHICH USED TO BE REWRITTEN AS LITTLE ------------
                 '' Read correctly and SILENTLY RE-SAVED LITTLE ENDIAN until 7c step 10,
                 '' because tiko had no id for it -- PsCore detected and decoded BE, and
@@ -4307,8 +4343,8 @@ end function
                 if PsFileWriteAll( wszU16BE, sU16BE ) then
                     dim as clsDocument ptr pE = gApp.CreateEmptyDocument()
                     if pE <> 0 then
-                        dim as string sGot
-                        gAppHost.LoadFileText( wszU16BE, sGot, pE )
+                        pE->LoadDiskFile( wszU16BE )
+                        dim as string sGot = pE->TextBuffer
                         Check "a UTF-16BE file gets its OWN encoding id", _
                               (pE->FileEncoding = FILE_ENCODING_UTF16BE_BOM), _
                               str(pE->FileEncoding)
@@ -4350,8 +4386,8 @@ end function
                 if PsFileWriteAll( wszU8B, chr(&hEF) & chr(&hBB) & chr(&hBF) & "hello" ) then
                     dim as clsDocument ptr pE = gApp.CreateEmptyDocument()
                     if pE <> 0 then
-                        dim as string sGot
-                        gAppHost.LoadFileText( wszU8B, sGot, pE )
+                        pE->LoadDiskFile( wszU8B )
+                        dim as string sGot = pE->TextBuffer
                         Check "a UTF-8 BOM file is labelled as one", _
                               (pE->FileEncoding = FILE_ENCODING_UTF8_BOM), str(pE->FileEncoding)
                         Check "  and the BOM is not in the text", (sGot = "hello"), _
@@ -4369,8 +4405,8 @@ end function
                 if PsFileWriteAll( wszAnsi, "caf" & chr(&hE9) ) then
                     dim as clsDocument ptr pE = gApp.CreateEmptyDocument()
                     if pE <> 0 then
-                        dim as string sGot
-                        gAppHost.LoadFileText( wszAnsi, sGot, pE )
+                        pE->LoadDiskFile( wszAnsi )
+                        dim as string sGot = pE->TextBuffer
                         Check "a byte that cannot be UTF-8 falls through to ANSI", _
                               (pE->FileEncoding = FILE_ENCODING_ANSI), str(pE->FileEncoding)
 
@@ -4445,8 +4481,8 @@ end function
                 if PsFileWriteAll( wszEmpty, "" ) then
                     dim as clsDocument ptr pE = gApp.CreateEmptyDocument()
                     if pE <> 0 then
-                        dim as string sGot
-                        gAppHost.LoadFileText( wszEmpty, sGot, pE )
+                        pE->LoadDiskFile( wszEmpty )
+                        dim as string sGot = pE->TextBuffer
                         Check "an empty file is UTF-8, not ANSI", _
                               (pE->FileEncoding = FILE_ENCODING_UTF8), str(pE->FileEncoding)
                         gApp.RemoveDocument( pE )
@@ -4454,15 +4490,26 @@ end function
                     PsFileDelete( wszEmpty )
                 end if
 
-                '' ---- AND THE SEAM'S POLARITY, which was wrong for six steps -------------
-                '' TRUE IS SUCCESS. It used to be that tiko's implementation returned false
-                '' on success and the shell's returned true, so LoadDiskFile -- testing for
-                '' false -- stamped DateFileTime in one binary and never in the other.
+                '' ---- A MISSING FILE REPORTS FAILURE -------------------------------------
+                '' This asserted the SEAM's polarity, which was wrong for six steps: tiko's
+                '' implementation returned false on success and the shell's returned true,
+                '' so LoadDiskFile -- testing for false -- stamped DateFileTime in one
+                '' binary and never in the other. THE SEAM IS GONE in step 10, so what is
+                '' left to assert is the reader's own status, which is where the meaning
+                '' now lives.
                 dim as DWSTRING wszGoneE = wszDirE & "\no_such_file.txt"
                 scope
                     dim as string sGot
-                    Check "a file that is not there reads FALSE", _
-                          (gAppHost.LoadFileText( wszGoneE, sGot, 0 ) = false)
+                    dim as long nGoneEnc = -1
+                    dim as DWSTRING wszGoneErr
+                    Check "a file that is not there reports DOCREAD_FAILED", _
+                          (Doc_ReadFromDisk( wszGoneE, sGot, nGoneEnc, wszGoneErr ) = DOCREAD_FAILED)
+                    Check "  and says why", (PsLen( wszGoneErr ) > 0), wszGoneErr.Utf8
+                    '' AND IT LEAVES A SAFE ENCODING BEHIND rather than whatever the caller
+                    '' happened to have in the variable -- a caller that ignores the status
+                    '' must not then label a document -1.
+                    Check "  and leaves a usable encoding, not the caller's junk", _
+                          (nGoneEnc = FILE_ENCODING_UTF8), str(nGoneEnc)
                 end scope
 
                 '' AND THE CONSEQUENCE THE INVERSION HAD, asserted rather than described:
