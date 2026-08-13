@@ -102,4 +102,7 @@ declare sub SciHost_SetFontPath(byref sPath as string)
 '' A font FAMILY name -> the font FILE FreeType must open. See the body.
 declare function SciHost_ResolveFontFile(byref wszFamily as const wstring) as string
 '' Env-gated (TIKO_FONTFILE_SELFTEST=1).
+'' Resolve gConfig.EditorFontname and push it to BOTH places that need it.
+declare sub SciHost_ApplyConfiguredFont()
+'' Env-gated (TIKO_FONTFILE_SELFTEST=1).
 declare sub SciHost_RunFontFileSelfTest()

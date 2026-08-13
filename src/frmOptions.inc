@@ -639,6 +639,12 @@ private sub frmOptions_ApplyAndClose( byval hwnd as HWND )
     ' SyncThemes and the per-document ApplyProperties walk) -- all of that now lives in
     ' Theme_ApplySubsystems, which the live preview drives too, so there is one path instead
     ' of two that could disagree.
+    ' BEFORE Theme_ApplyAll, NOT AFTER. That call is what walks every document sending
+    ' SCI_STYLESET*, and a restyle is what makes Scintilla re-realise its fonts from the
+    ' platform layer's current path -- so the path has to be right BY then. Set it
+    ' afterwards and the font changes one options-apply late.
+    SciHost_ApplyConfiguredFont()
+
     Theme_ApplyAll()
 
     ' Still required, and NOT made redundant by the above: these are LAYOUT, not colour.

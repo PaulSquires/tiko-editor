@@ -1441,6 +1441,10 @@ function clsConfig.ReloadConfigFileTest() as boolean
     ft = PsFileWriteTime(this.ConfigFilename)
     if ft <> this.DateFileTime then
         this.LoadConfigFile(true)  ' this function also updates the _DateFileTime value
+        ' THE FONT FILE, before the walk below -- same rule as the options dialog. Miss
+        ' this one and the editor font follows the dialog but not an edit to settings.ini,
+        ' which is the harder of the two to notice.
+        SciHost_ApplyConfiguredFont()
         ' Apply the newly saved options to all open Scintilla windows
         dim pDoc as clsDocument ptr = gApp.pDocList
         do until pDoc = 0

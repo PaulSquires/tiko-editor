@@ -445,3 +445,27 @@ sub ViewStyle_Apply( byval pSciView as any ptr, _
         end if
     
 end sub
+
+'' ---------------------------------------------------------------------------
+'' RESOLVE THE CONFIGURED FAMILY AND PUSH IT ALL THE WAY DOWN.
+''
+'' TWO THINGS HAVE TO HAPPEN AND EITHER ALONE IS USELESS:
+''
+''   g_sSciHostFont  is what PsSciView.Create passes for views created LATER.
+''   PlatPs_SetFontPath is what the platform layer reads when it realises a
+''                      face, which is the only thing EXISTING views consult.
+''
+'' Set only the first and every open document keeps its old face until it is
+'' closed and reopened. Set only the second and the next new view reverts.
+''
+'' IT DOES NOT REPAINT ANYTHING. The caller sends the restyle -- at startup
+'' there is nothing to restyle yet, and on an options change the walk that was
+'' already going to happen does it. See the call sites.
+'' ---------------------------------------------------------------------------
+sub SciHost_ApplyConfiguredFont()
+    '' .Wz() rather than the DWSTRING itself: the resolver takes a plain wstring so
+    '' that _check_scihost, which has no AfxNova string layer, can compile it.
+    dim as string sPath = SciHost_ResolveFontFile( *(gConfig.EditorFontname).Wz() )
+    SciHost_SetFontPath( sPath )
+    PlatPs_SetFontPath( strptr(sPath) )
+end sub

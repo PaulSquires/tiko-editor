@@ -22,6 +22,13 @@ sub SciHost_SetFontPath(byref sPath as string)
 end sub
 
 
+'' SciHost_ApplyConfiguredFont LIVES IN modViewStyle.inc, not here. It reads
+'' gConfig, and _check_scihost.bas compiles THIS file with a deliberately minimal
+'' include set that has no config object -- so a gConfig reference here breaks the
+'' one probe that proves tiko can host a PsSciView at all.
+
+
+
 '' ---------------------------------------------------------------------------
 '' A FONT FAMILY NAME IS NOT A FONT FILE, AND THIS LAYER NEEDS THE FILE.
 ''

@@ -560,6 +560,15 @@ function WinMain( _
     gConfig.LoadConfigFile()
     gConfig.LoadKeywords()
 
+    ' THE EDITOR FONT, resolved from a family name to a FILE and pushed into the
+    ' Scintilla platform layer. HERE, immediately after the config that names it and
+    ' long before any window exists -- SciHost_GlobalInit runs on the first editor
+    ' window's WM_CREATE and takes whatever path is set by then.
+    '
+    ' Before 7c step 11 nothing called this and the editor opened consola.ttf,
+    ' hard-coded, whatever the Options dialog said.
+    SciHost_ApplyConfiguredFont()
+
     
     ' Attempt to load the english localization file. This is necessary because
     ' any non-english localization file will have missing entries filled by the
