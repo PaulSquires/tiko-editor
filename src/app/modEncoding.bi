@@ -14,6 +14,12 @@ declare function Doc_EncodeForDisk( byref sBuffer as string, byval bSourceIsUtf8
 ' which is exactly why a failed save used to be indistinguishable from a good one.
 const DOCWRITE_OK     = 0
 const DOCWRITE_FAILED = 1
+
+' Doc_ReadFromDisk's pair, spelled the same way and for the same reason. See its
+' declaration below for why a READ has a status rather than a boolean.
+const DOCREAD_OK      = 0
+const DOCREAD_FAILED  = 1
+
 ' Test hook for Doc_ConfirmLossySave: 0 = ask the user (always, outside a self-test),
 ' >0 = answer OK, <0 = answer Cancel. See that function's header for why it exists.
 dim shared gLossySaveTestAnswer as long
@@ -21,6 +27,20 @@ declare function Doc_WriteToDisk( byval wszPath as DWSTRING, byref sBytes as str
 ' Doc_ConfirmLossySave and Doc_ReportWriteFailure are declared in
 ' modEncodingUi.bi now -- they put a window in front of the user, and this file
 ' is in app\, which may not know what a window is.
+
+' ---- READING, which is the writer's missing half (7c step 9) ---------------------------
+' Decodes whatever the file actually is into UTF-8 and reports which encoding that was, so
+' a later save can put it back the way it came.
+'
+' sUtf8 is UTF-8 BYTES, not a DWSTRING, because every consumer -- Scintilla, the parser,
+' clsDocument.TextBuffer -- wants bytes and converting to a wide string only to convert
+' straight back is a copy for nobody.
+'
+' DOCREAD_OK / DOCREAD_FAILED mirror Doc_WriteToDisk's pair. NOTE THE POLARITY: this
+' returns a STATUS, not a boolean, and it does so precisely because the seam's
+' LoadFileText has the opposite convention -- see AppHostServices.
+declare function Doc_ReadFromDisk( byval wszPath as DWSTRING, byref sUtf8 as string, _
+                                   byref nEnc as long, byref wszErr as DWSTRING ) as long
 
 declare function Doc_EncodingName( byval nEnc as long ) as DWSTRING
 declare function ConvertTextBuffer( byval pDoc as clsDocument ptr, byval nNewEncoding as long ) as boolean

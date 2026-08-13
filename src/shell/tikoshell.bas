@@ -4245,6 +4245,133 @@ end function
                 end if
             end scope
 
+            '' ---- ENCODING, WHICH THIS SUITE HAD NOT ONE ASSERTION ABOUT -----------------
+            '' The shell has SAVED since step 3 and could not DECODE until step 9, and
+            '' nothing here noticed -- 357 assertions and none of them opened a file that
+            '' was not UTF-8. These go through the real seam (gAppHost.LoadFileText ->
+            '' Doc_ReadFromDisk), not the decoder directly, because psencoding already
+            '' covers the decoder with 53 assertions and what was broken was the WIRING.
+            scope
+                dim as DWSTRING wszDirE = environ("TEMP") & "\tiko_shellenc"
+                PsDirCreate( wszDirE )
+
+                '' ---- UTF-16LE WITH A BOM, which is the case that was mojibake -----------
+                '' Built byte by byte rather than by encoding a DWSTRING, so the test does
+                '' not depend on the encoder to check the decoder.
+                dim as DWSTRING wszU16 = wszDirE & "\probe_utf16.txt"
+                dim as string sU16 = chr(&hFF) & chr(&hFE)          '' BOM
+                sU16 &= chr(&h41) & chr(&h00)                       '' A
+                sU16 &= chr(&hE9) & chr(&h00)                       '' e-acute
+                sU16 &= chr(&h42) & chr(&h00)                       '' B
+                if PsFileWriteAll( wszU16, sU16 ) then
+                    dim as clsDocument ptr pE = gApp.CreateEmptyDocument()
+                    if pE <> 0 then
+                        dim as string sGot
+                        dim as boolean bRead = gAppHost.LoadFileText( wszU16, sGot, pE )
+                        Check "a UTF-16LE file reads", bRead
+                        '' THE ENCODING IS RECORDED. Without this the document keeps UTF-8
+                        '' and the next save rewrites the container silently.
+                        Check "  and the document knows it is UTF-16", _
+                              (pE->FileEncoding = FILE_ENCODING_UTF16_BOM), _
+                              str(pE->FileEncoding)
+                        '' AND THE TEXT IS RIGHT: 4 UTF-8 bytes, because e-acute is two.
+                        '' The old reader handed back 8 bytes with NULs in them, which is
+                        '' what "mojibake on screen" means in an assertion.
+                        Check "  the text decodes to UTF-8", (len(sGot) = 4), _
+                              str(len(sGot)) & " bytes"
+                        Check "    with the BOM consumed", _
+                              (len(sGot) > 0) andalso (asc(left(sGot,1)) = &h41), _
+                              str(iif(len(sGot) > 0, asc(left(sGot,1)), 0))
+
+                        '' ROUND TRIP: saving must put the UTF-16 container back.
+                        dim as boolean bLossy = false
+                        dim as string sBack = Doc_EncodeForDisk( sGot, true, _
+                                                    pE->FileEncoding, bLossy )
+                        Check "  and it round-trips to the same bytes", (sBack = sU16), _
+                              str(len(sBack)) & " vs " & str(len(sU16))
+                        gApp.RemoveDocument( pE )
+                    end if
+                    PsFileDelete( wszU16 )
+                end if
+
+                '' ---- UTF-8 WITH A BOM: the label must survive, or the BOM is lost --------
+                dim as DWSTRING wszU8B = wszDirE & "\probe_utf8bom.txt"
+                if PsFileWriteAll( wszU8B, chr(&hEF) & chr(&hBB) & chr(&hBF) & "hello" ) then
+                    dim as clsDocument ptr pE = gApp.CreateEmptyDocument()
+                    if pE <> 0 then
+                        dim as string sGot
+                        gAppHost.LoadFileText( wszU8B, sGot, pE )
+                        Check "a UTF-8 BOM file is labelled as one", _
+                              (pE->FileEncoding = FILE_ENCODING_UTF8_BOM), str(pE->FileEncoding)
+                        Check "  and the BOM is not in the text", (sGot = "hello"), _
+                              str(len(sGot)) & " bytes"
+                        gApp.RemoveDocument( pE )
+                    end if
+                    PsFileDelete( wszU8B )
+                end if
+
+                '' ---- ANSI: a byte no UTF-8 sequence can start ---------------------------
+                '' 0xE9 alone is invalid UTF-8, so strict validation must reject it and the
+                '' ladder must fall through to ANSI. A lenient validator would call this
+                '' UTF-8 and the file would round-trip as garbage.
+                dim as DWSTRING wszAnsi = wszDirE & "\probe_ansi.txt"
+                if PsFileWriteAll( wszAnsi, "caf" & chr(&hE9) ) then
+                    dim as clsDocument ptr pE = gApp.CreateEmptyDocument()
+                    if pE <> 0 then
+                        dim as string sGot
+                        gAppHost.LoadFileText( wszAnsi, sGot, pE )
+                        Check "a byte that cannot be UTF-8 falls through to ANSI", _
+                              (pE->FileEncoding = FILE_ENCODING_ANSI), str(pE->FileEncoding)
+                        gApp.RemoveDocument( pE )
+                    end if
+                    PsFileDelete( wszAnsi )
+                end if
+
+                '' ---- AN EMPTY FILE IS UTF-8, NOT ANSI -----------------------------------
+                '' PsEncDetect's deliberate choice, and it matters: a new empty file that
+                '' acquired a codepage would save its first typed character as CP-1252.
+                dim as DWSTRING wszEmpty = wszDirE & "\probe_empty.txt"
+                if PsFileWriteAll( wszEmpty, "" ) then
+                    dim as clsDocument ptr pE = gApp.CreateEmptyDocument()
+                    if pE <> 0 then
+                        dim as string sGot
+                        gAppHost.LoadFileText( wszEmpty, sGot, pE )
+                        Check "an empty file is UTF-8, not ANSI", _
+                              (pE->FileEncoding = FILE_ENCODING_UTF8), str(pE->FileEncoding)
+                        gApp.RemoveDocument( pE )
+                    end if
+                    PsFileDelete( wszEmpty )
+                end if
+
+                '' ---- AND THE SEAM'S POLARITY, which was wrong for six steps -------------
+                '' TRUE IS SUCCESS. It used to be that tiko's implementation returned false
+                '' on success and the shell's returned true, so LoadDiskFile -- testing for
+                '' false -- stamped DateFileTime in one binary and never in the other.
+                dim as DWSTRING wszGoneE = wszDirE & "\no_such_file.txt"
+                scope
+                    dim as string sGot
+                    Check "a file that is not there reads FALSE", _
+                          (gAppHost.LoadFileText( wszGoneE, sGot, 0 ) = false)
+                end scope
+
+                '' AND THE CONSEQUENCE THE INVERSION HAD, asserted rather than described:
+                '' LoadDiskFile stamps DateFileTime only on a SUCCESSFUL read, and with the
+                '' polarity backwards the shell reached that line on failures and never on
+                '' successes. The stamp is what the file-watch and the reload prompt compare
+                '' against, so a zero here is a document that can never look stale.
+                dim as DWSTRING wszStamp = wszDirE & "\probe_stamp.bas"
+                if PsFileWriteAll( wszStamp, "' stamp" ) then
+                    dim as clsDocument ptr pS = gApp.CreateEmptyDocument()
+                    if pS <> 0 then
+                        pS->LoadDiskFile( wszStamp )
+                        Check "a successful load stamps DateFileTime", _
+                              (pS->DateFileTime <> 0), str(pS->DateFileTime)
+                        gApp.RemoveDocument( pS )
+                    end if
+                    PsFileDelete( wszStamp )
+                end if
+            end scope
+
             '' ---- FilenameOriginalCase IS REAL NOW ---------------------------------------
             '' It returned its argument for five steps. psfile already asserts the CASE
             '' repair itself, against PsFileRealCase; what is shell-specific and asserted

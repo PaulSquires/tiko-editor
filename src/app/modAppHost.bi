@@ -122,11 +122,18 @@ type AppHostServices
 
     '' Read a file into txtBuffer, detecting and recording its encoding on the document.
     ''
-    '' A SERVICE RATHER THAN APP CODE, and not by choice: the decode goes through
-    '' WideToUtf8, a private helper in modEncoding.inc that is WideCharToMultiByte. The WRITE
-    '' path is already portable -- Doc_EncodeForDisk and Doc_WriteToDisk live in app/ -- so it
-    '' is only reading that still needs the platform. The shell will implement this with
-    '' PsEncDecode.
+    '' TRUE MEANS SUCCESS. Spelled out because it did not, and nobody noticed for six steps:
+    '' tiko's implementation forwarded GetFileToString, which returned FALSE on success --
+    '' an inversion that was invisible while there was one implementation and became a live
+    '' defect the moment there were two. The shell's returned TRUE, LoadDiskFile tested for
+    '' FALSE, and so a successful load in the shell never stamped DateFileTime. Fixed in 7c
+    '' step 9, in the same commit that gave both binaries one reader.
+    ''
+    '' STILL A SERVICE, and now for a smaller reason than before. It used to be here because
+    '' the decode was WideCharToMultiByte; since step 9 the decode is Doc_ReadFromDisk, in
+    '' app/, and BOTH implementations are one line around it. What is left at the seam is
+    '' the platform's error text and nothing else -- so this is a candidate for deletion
+    '' rather than a fixture.
     LoadFileText   as function(byval wszPath as DWSTRING, byref txtBuffer as string, _
                                byval pDoc as clsDocument ptr) as boolean
 

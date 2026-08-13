@@ -148,15 +148,26 @@ private function ShellHost_LastErrorText() as DWSTRING
     return ""
 end function
 
+'' ---- IT DECODES NOW, AND THE DOCUMENT LEARNS WHAT IT READ (7c step 9) ------------------
+'' This used to read bytes and call them UTF-8 without touching pDoc->FileEncoding, which
+'' was not merely a save-side problem: a UTF-16LE file arrived at Scintilla as UTF-16 bytes
+'' labelled UTF-8 and was MOJIBAKE ON SCREEN, NULs and all, before anyone tried to save it.
+''
+'' clsApp.inc's own comment said the UTF-8 default was safe "because LoadDiskFile
+'' immediately sniffs the file's real BOM". True of tiko. False here, for six steps.
+''
+'' The whole body is now one call to app/'s Doc_ReadFromDisk, which is what tiko calls too.
 private function ShellHost_LoadFileText( byval wszPath as DWSTRING, byref txtBuffer as string, _
                                          byval pDoc as clsDocument ptr ) as boolean
-    '' PsFileReadAll plus PsCore's decoder, where tiko uses CreateFileW and
-    '' WideCharToMultiByte. The ENCODING IS NOT DETECTED HERE YET -- see the not-verified
-    '' notes in the commit: this reads bytes and hands them over as UTF-8.
-    dim as boolean bOk = false
-    dim as string sRaw = PsFileReadAll( wszPath, bOk )
-    if bOk = false then return false
-    txtBuffer = sRaw
+    dim as long nEnc = FILE_ENCODING_UTF8
+    dim as DWSTRING wszErr
+    if Doc_ReadFromDisk( wszPath, txtBuffer, nEnc, wszErr ) <> DOCREAD_OK then
+        print "tikoshell: could not read " & wszPath.Utf8 & " -- " & wszErr.Utf8
+        return false
+    end if
+    '' THE POINT OF THE COMMIT. Without this the document keeps whatever it was born with
+    '' (gConfig.NewFileEncoding, i.e. UTF-8) and a save silently rewrites the container.
+    if pDoc <> 0 then pDoc->FileEncoding = nEnc
     return true
 end function
 

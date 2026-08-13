@@ -53,6 +53,38 @@ private function Doc_EncToPs( byval nEnc as long ) as PsEncodingId
 end function
 
 
+' ========================================================================================
+' AND BACK. The inverse of Doc_EncToPs, and NOT a bijection -- which is the whole content
+' of this function and the reason it is not one line.
+'
+' PSENC_UTF16BE_BOM HAS NO tiko ID. A big-endian file is DETECTED and DECODED correctly by
+' PsCore, and then labelled UTF16_BOM here, which means the next save writes it LITTLE
+' endian. That is a silent format change, and it is exactly what tiko has always done --
+' its old reader set FILE_ENCODING_UTF16_BOM for both byte orders and kept the endianness
+' only in a local (modRoutines.inc's bUtf16BE) that died with the function call.
+'
+' It is not fixable by adding an id either: PsEncEncode REFUSES to write big-endian at all
+' ("decoded, never written", PsEncoding.bi:49), so an honest FILE_ENCODING_UTF16BE_BOM
+' would be a label no save could honour. The right fix is in PsEncoding, and until then
+' this is the same lie tiko already told, told in one place instead of nowhere.
+'
+' PSENC_UNKNOWN means the detector declined -- today unreachable, because PsEncDetect's
+' last rung is ANSI, which never fails. UTF-8 is the safe answer if that ever changes: it
+' is what gConfig.NewFileEncoding defaults to and the only encoding that round-trips a
+' buffer the detector could not classify.
+' ========================================================================================
+private function Doc_PsToEnc( byval enc as PsEncodingId ) as long
+    select case enc
+        case PSENC_ANSI         : return FILE_ENCODING_ANSI
+        case PSENC_UTF8         : return FILE_ENCODING_UTF8
+        case PSENC_UTF8_BOM     : return FILE_ENCODING_UTF8_BOM
+        case PSENC_UTF16LE_BOM  : return FILE_ENCODING_UTF16_BOM
+        case PSENC_UTF16BE_BOM  : return FILE_ENCODING_UTF16_BOM   ' see above: saved as LE
+    end select
+    return FILE_ENCODING_UTF8
+end function
+
+
 
 
 ' ========================================================================================
@@ -193,6 +225,74 @@ function Doc_WriteToDisk( _
     end if
 
     return DOCWRITE_OK
+end function
+
+
+' ========================================================================================
+' READ A FILE AND SAY WHAT IT WAS. Doc_WriteToDisk's missing half, added in 7c step 9.
+'
+' ---- WHY THIS COULD NOT EXIST UNTIL NOW, AND WHY THAT WAS WRONG ------------------------
+'
+' tiko read files through GetFileToString (src/modRoutines.inc), which sniffed the BOM by
+' hand and converted with WideCharToMultiByte. Its own comment gave that as the reason it
+' could not come down here: "only reading still needs Win32."
+'
+' It did not. PsEncDecodeAuto has implemented the identical ladder -- UTF-8 BOM first, then
+' FF FE, then FE FF, then a STRICT UTF-8 validation, else ANSI -- for as long as PsEncoding
+' has existed, with 53 assertions over it in tests/psencoding. The third time in three
+' steps that a blocker on this project turned out to have been removed before anyone
+' noticed, and the second where the note naming it was quoted accurately at every audit and
+' was wrong at all of them.
+'
+' ---- WHAT IT MEANS THAT THERE IS ONE OF THESE NOW --------------------------------------
+'
+' tiko and the portable shell were answering "what encoding is this file" with two separate
+' implementations, and both then keyed the same document model on the answer. The shell's
+' answer was "UTF-8, always", which is why a UTF-16 file opened there was mojibake on
+' screen rather than merely mis-saved.
+'
+' ---- BYTES OUT, NOT A WIDE STRING ------------------------------------------------------
+'
+' sUtf8 receives UTF-8 BYTES because every consumer wants bytes: Scintilla, the parser, and
+' clsDocument.TextBuffer. DWSTRING is the intermediate, not the product.
+'
+' AND THE BOM IS ALREADY GONE. PsEncDecode consumes it (PsEncoding.bi:66), so no caller
+' needs the strip-the-first-N-bytes arithmetic the old reader carried four times.
+' ========================================================================================
+function Doc_ReadFromDisk( _
+            byval wszPath as DWSTRING, _
+            byref sUtf8 as string, _
+            byref nEnc as long, _
+            byref wszErr as DWSTRING _
+            ) as long
+
+    wszErr = ""
+    sUtf8  = ""
+    ' NOT TOUCHED ON FAILURE beyond this default: a caller that ignores the status and reads
+    ' nEnc anyway gets the document's safest encoding rather than an uninitialised label.
+    nEnc   = FILE_ENCODING_UTF8
+
+    if PsLen( wszPath ) = 0 then
+        wszErr = "No filename."
+        return DOCREAD_FAILED
+    end if
+
+    dim as boolean bOk = false
+    dim as string sRaw = PsFileReadAll( wszPath, bOk )
+    if bOk = false then
+        wszErr = gAppHost.LastErrorText()
+        if PsLen( wszErr ) = 0 then wszErr = "Could not read the file."
+        return DOCREAD_FAILED
+    end if
+
+    ' AN EMPTY FILE IS UTF-8, not ANSI -- PsEncDetect's own choice, and the one that matters
+    ' because a new empty file saved without being typed into must not acquire a codepage.
+    dim as PsEncodingId encUsed = PSENC_UNKNOWN
+    dim as DWSTRING dwsText = PsEncDecodeAuto( sRaw, encUsed )
+
+    sUtf8 = dwsText.Utf8
+    nEnc  = Doc_PsToEnc( encUsed )
+    return DOCREAD_OK
 end function
 
 

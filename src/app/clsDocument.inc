@@ -288,7 +288,10 @@ function clsDocument.LoadDiskFile( _
     ' this will be an UTF-8 encoded string
     dim sText as string  
 
-    if gAppHost.LoadFileText(wszFile, sText, @this) = false then
+    ' TRUE IS SUCCESS. This read `= false` until 7c step 9, matching an implementation that
+    ' returned false on success -- so the shell, whose implementation returned true, never
+    ' reached the stamp at all. See AppHostServices.LoadFileText.
+    if gAppHost.LoadFileText(wszFile, sText, @this) then
         this.DateFileTime = PsFileWriteTime( wszFile )
     end if
 

@@ -120,7 +120,11 @@ end function
 
 private function AppHostW32_LoadFileText( byval wszPath as DWSTRING, byref txtBuffer as string, _
                                           byval pDoc as clsDocument ptr ) as boolean
-    return GetFileToString( wszPath, txtBuffer, pDoc )
+    '' INVERTED, because GetFileToString reports FAILURE as true -- an old convention that
+    '' this wrapper hid rather than translated, which is how the seam ended up with two
+    '' implementations disagreeing about what true meant. The seam's rule is now stated where
+    '' it is declared, and the inversion is visible here rather than implied.
+    return (GetFileToString( wszPath, txtBuffer, pDoc ) = false)
 end function
 
 private function AppHostW32_ResolveIncludePath( byval pDoc as clsDocument ptr, _
