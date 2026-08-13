@@ -1,9 +1,14 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ **the commit that added [`7c-step9.md`](7c-step9.md)** — 7c
-**step 9 complete**, shell code at `533313ef4`; PsPlatform **`main`** @ **the commit that added
-`psfile`'s case assertions** (untouched by step 9); HelpCenter **`main`** @ `02a4c18`. All build
-warning-free and tiko runs.
+tiko `feat/cross-platform` @ **the commit that added [`7c-step10.md`](7c-step10.md)** — 7c
+**step 10 complete**, shell code at `b21df72c3`; PsPlatform **`main`** @ **the commit that
+corrected the UTF-16BE comment**; HelpCenter **`main`** @ `02a4c18`. All build warning-free and
+tiko runs.
+
+**STEP 10 CLOSED THREE ITEMS THIS PAGE CALLED BLOCKED, AND NONE OF THEM WAS.** UTF-16BE has an
+encoding id; `AppHostServices.LoadFileText` is deleted (the seam is 19 fields); and the app layer
+no longer includes a shell header by relative path, which takes the **link debt to 1**. See
+[`7c-step10.md`](7c-step10.md).
 
 **THE SHELL DECODES NOW, AND ANSI IS A DISK FORMAT.** Step 9 gave both binaries ONE reader
 (`Doc_ReadFromDisk`, in `app/`), retired **invariant E1** for a stronger one — the editor is
@@ -30,11 +35,20 @@ consecutive steps:
 | 8 | "needs a PsCore canonical-path call first" | `PsFileRealCase` |
 | 8 | PsListTree has one data slot | `itemData2`, in the struct, zeroed, unreachable |
 | 9 | "only reading still needs Win32" | `PsEncDecodeAuto`, with 53 assertions over it |
+| 10 | UTF-16BE is "decoded, never written" | a complete BE arm in `PsEncEncode`, round-tripped by the suite |
+| 10 | menu ids are "persisted in keybindings.ini" as numbers | the file stores the NAME; `app/modKeyBindings.bi:48` says so |
+| 10 | `app/` needs a `VK_*` to validate a key name | that function's header: **membership** is the test, not the return |
 
 **Every one of those notes was accurate about the code in front of it and was never checked
-against the library it was ruling out.** Three were re-read at an audit and re-COUNTED rather
+against the library it was ruling out.** Several were re-read at an audit and re-COUNTED rather
 than re-tested. If you take one habit from this page, take that one: a blocker is a claim about
 two things, and the second one moves.
+
+**AND THE STEP-9 ROW WAS WRITTEN BY SOMEONE WHO THEN MADE THE STEP-10 MISTAKE IN THE SAME STEP.**
+The "decoded, never written" comment was believed, and the conclusion drawn from it went into a
+source comment, a commit message, `7c-step9.md` and this page before anyone opened `PsEncEncode`.
+Two of step 10's false comments were **load-bearing for decisions already taken**. Reading the
+code the comment describes is cheap; nobody was doing it.
 
 **THIS BRANCH NOW CARRIES TWO UNRELATED WORKSTREAMS.** The 7c port is `src/app` and
 `src/shell`; **F1Markdown** (`src/F1Markdown`, `F1Markdown.exe`) is the author's own and is
@@ -139,17 +153,22 @@ Read in this order, and do not skip the first:
     `PsTimerNow()`, which is a **settable virtual clock**, not a wall clock — and *"the clock
     never moved"* is indistinguishable from *"the work was free"*, which was the answer the step
     wanted to hear.
-11. [`7c-step9.md`](7c-step9.md) — **the encoding step, and the third blocker in three steps
+11. [`7c-step10.md`](7c-step10.md) — **three items closed, three false comments, and one of
+    them mine.** Read the three-row table at the top. Then the revert-to-red section: every rule
+    went red for the first time in six steps, and the one that nearly did not is instructive —
+    `Doc_EncodingName`'s `case else` is `"ANSI"`, so a missing arm does not fail, it puts the
+    word ANSI beside a UTF-16 file.
+12. [`7c-step9.md`](7c-step9.md) — **the encoding step, and the third blocker in three steps
     that had already been removed.** Read the table at the top, then "A defect found next to the
     one being fixed": the seam's `LoadFileText` had NO AGREED POLARITY — one implementation
     returned false on success, the other true — which was invisible with one implementation and
     live from the moment there were two.
-12. [`7c-step8.md`](7c-step8.md) — **the step where two blockers turned out to have been
+13. [`7c-step8.md`](7c-step8.md) — **the step where two blockers turned out to have been
     removed before anyone noticed.** The pane went 0 → 51 rows, but read the two intermediate
     tables first: the one that shows the pane's ceiling is fbcParser (573 procedure symbols, 41
     with a body line) and the revert-to-red table, where one revert found not a missing test but
     a **false claim in a comment** — which is the other thing reverting is for.
-13. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
+14. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
    irreducible, investigated. **It was not a blocker and never had been.** Short, and it is the
    clearest example on this whole shelf of a claim that survived because nobody checked it.
    **Its recommendation has since been implemented**: WebView2 is gone from the tree.
@@ -495,13 +514,14 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | `_check_scihost.bat` | the editor works — 26 assertions, incl. an **A/B against a stock Scintilla window in the same process** | green |
 | `_check_package.bat` | tiko runs with **only the Windows directories on PATH** | green, ~1s |
 | `_check_app_layer.bat` | `src/app` names no Win32 or AfxNova token (**48 files**, 2026-08-11) | green |
-| `_check_app_standalone.bat` | `src/app` compiles against PsCore alone **and LINKS as one unit** | green — **18 clean**, 0 errors, **debt 2** (2026-08-11) |
+| `_check_app_standalone.bat` | `src/app` compiles against PsCore alone **and LINKS as one unit** | green — **18 clean**, 0 errors, **debt 1** (2026-08-11) |
 | `_check_shell.bat` | `src/shell` includes no Win32 shell header, and carries no `PsC.` | green |
-| `_run_shell.bat --selftest` | the shell's own suite — **374 assertions** (2026-08-11) | green |
-| ...and the encoding suite it now runs | **44 assertions**, moved into `app/` in step 9 | green |
+| `_run_shell.bat --selftest` | the shell's own suite — **389 assertions** (2026-08-11) | green |
+| ...and the encoding suite it now runs | **46 assertions**, moved into `app/` in step 9 | green |
 | PsPlatform `build.cmd check` | **47 suites** (2026-08-11, `psthread` is the newest) | green, 0 failures |
 | PsPlatform `pstree` | **271 assertions** (was 242 before step 8's three gaps) | green |
 | PsPlatform `psfile` | **94 assertions** (was 91; the three that cover `PsFileRealCase`'s useful direction) | green |
+| PsPlatform `psencoding` | **54 assertions** (was 53; the one that pins BE ENCODING, not just its round trip) | green |
 
 The ratchet is the weak one and knows it: it greps a hand-written vocabulary, and has had
 three gaps in three audits — **five now**. The fourth was `KeyBindings_PickListKeyToValue`,
@@ -721,10 +741,12 @@ represent the workload.**
    stamped at the ENTRY POINTS — one mouse path in the file, everything else a key.
 4. ~~**Encoding detection on read.**~~ **DONE IN STEP 9.** Both binaries share
    `Doc_ReadFromDisk`; `GetFileToString`'s seventy lines of Win32 are gone; ANSI became a disk
-   format and the editor is UTF-8 always. **What replaced it as an open item is UTF-16BE**:
-   `PsEncEncode` refuses to write big-endian, so tiko reads such a file correctly and rewrites
-   it LITTLE endian, silently. Pre-existing, now inherited by a second binary, and the real fix
-   is in PsEncoding.
+   format and the editor is UTF-8 always. **UTF-16BE closed in step 10** —
+   `FILE_ENCODING_UTF16BE_BOM`, about fifteen lines. The sentence that stood here said
+   *"`PsEncEncode` refuses to write big-endian... the real fix is in PsEncoding"*, and it was
+   false: PsEncEncode has always had a big-endian arm. **That claim was written into this page,
+   a step report, a source comment and a commit message off the strength of an enum comment
+   nobody tested.**
 
    THE OLD TEXT, for the record: `ShellHost_LoadFileText` read
    bytes and called them UTF-8;
@@ -733,7 +755,15 @@ represent the workload.**
 5. **`clsTopTabCtl`: portable rewrite, or a Win32 facade forever?** The shell shows the
    *model* half is small — 258 lines including its comments. The class as it stands stores the
    `clsDocument ptr` inside the control and reads it back with `PsTabBar_GetItemData`.
-6. **The TWO link-debt bodies** (was four, then three; unchanged in step 9). `FilenameOriginalCase` closed in step 8
+6. **The ONE link-debt body** (was four, then three, then two).
+   **`KeyBindings_PickListKeyToValue` closed in step 10** — and it was never the right function
+   for the caller to be using: its own header said membership, not the non-zero return, was the
+   validity test, and the non-zero return is the `VK_*` that `app/` may not name. The
+   `#include "../modKeyBindings.bi"` went with it, so **no `app/` file reaches up any more.**
+
+   **What remains is `clsConfig::ProjectSaveToFile`, and it is blocked on something real**: it
+   calls `gTTabCtl` at four sites. It cannot close until item 5 does. THE OLD TEXT, for the
+   record: `FilenameOriginalCase` closed in step 8
    — and the entry that had said it "needs a PsCore canonical-path call first" was wrong when
    written and wrong at three audits after it: `PsFileRealCase` already existed. **tiko gave up
    symlink and junction resolution with it**, deliberately, because

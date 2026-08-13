@@ -149,10 +149,17 @@ function and the shell's 374 assertions exercise it, but tiko's GUI was not driv
 the case the ANSI change exists for. On a Western install CP-1252 and the system codepage are the
 same mapping and nothing moves.
 
-**UTF-16BE round-trips to LE, silently.** tiko's enum has no BE member and `PsEncEncode` refuses
-to write one, so an honest id would be a label no save could honour. Pre-existing — tiko's old
+**UTF-16BE round-trips to LE, silently.** tiko's enum has no BE member. Pre-existing — tiko's old
 reader kept the endianness in a local that died with the call — and now inherited by a second
-binary. **The real fix is in PsEncoding.**
+binary.
+
+> **CORRECTED IN STEP 10, AND THE CORRECTION IS THE POINT.** This paragraph continued: *"and
+> `PsEncEncode` refuses to write one, so an honest id would be a label no save could honour. The
+> real fix is in PsEncoding."* **Every word of that was wrong.** `PsEncEncode` has always had a
+> complete big-endian arm; `PsEncoding.bi`'s enum comment said otherwise and I believed the
+> comment over the code — in the step whose own finding was that a blocker is a claim about two
+> things and the second one moves. `FILE_ENCODING_UTF16BE_BOM` exists as of step 10 and cost
+> about fifteen lines. See [`7c-step10.md`](7c-step10.md).
 
 ---
 
@@ -190,8 +197,9 @@ than a forced assertion.
 
 ## What step 10 has to decide
 
-1. **UTF-16BE, properly.** `PsEncEncode` cannot write it; until it can, no honest encoding id
-   exists for a file tiko reads correctly and rewrites in the other byte order.
+1. ~~**UTF-16BE, properly.**~~ **DONE IN STEP 10, and this item was never blocked.** It read
+   *"`PsEncEncode` cannot write it; until it can, no honest encoding id exists"* — and PsEncEncode
+   could write it the whole time.
 2. **`AppHostServices.LoadFileText` is close to pointless now.** Both implementations are one
    call to `Doc_ReadFromDisk` plus a `FileEncoding` assignment. What is left at the seam is the
    platform's error text.
