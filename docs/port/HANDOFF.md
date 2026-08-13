@@ -1,13 +1,26 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ **the commit that added [`7c-step7.md`](7c-step7.md)** — 7c
-**step 7 complete**, shell code at `ce1e3c40f`; PsPlatform **`main`** @ **the commit that added
-`PsThread`**; HelpCenter **`main`** @ `02a4c18`. All build warning-free and tiko runs.
+tiko `feat/cross-platform` @ **the commit that added [`7c-step8.md`](7c-step8.md)** — 7c
+**step 8 complete**, shell code at `8702af82a`; PsPlatform **`main`** @ **the commit that added
+`psfile`'s case assertions**; HelpCenter **`main`** @ `02a4c18`. All build warning-free and tiko
+runs.
 
-**THE PORT HAS A THREAD NOW, AND PsPlatform HAS `PsThread`.** The symbol scan runs on a worker;
-the UI thread's share of it went from **1,244ms to 32–37µs** on a 134-file include graph. That
-is the first PsPlatform module added by 7c rather than reused by it, and **tiko links PsPlatform
-too**, so `_check_scihost` is the gate that catches it. See [`7c-step7.md`](7c-step7.md).
+**THE PORT HAS A THREAD, AND PsPlatform HAS `PsThread`.** The symbol scan runs on a worker; the
+UI thread's share of it went from **1,244ms to 32–37µs** on a 134-file include graph. **tiko
+links PsPlatform too**, so `_check_scihost` is the gate that catches a change here reaching
+there. See [`7c-step7.md`](7c-step7.md).
+
+**AND THE FUNCTIONS PANE SHOWS A PROJECT NOW — 0 rows to 51 on `src\tiko.bas`.** Step 8 closed
+the three `PsListTree` gaps (all additive), moved `FilenameOriginalCase` into `app/` (link debt
+**3 → 2**), and pointed the pane at the symbol database instead of the tab bar. **The startup
+pane is Functions**, because Bookmarks is empty by construction until someone sets one. See
+[`7c-step8.md`](7c-step8.md).
+
+**TWO ITEMS ON THIS PAGE WERE BLOCKED ON THINGS THAT HAD ALREADY BEEN REMOVED.** `PsFileRealCase`
+had existed the whole time the link-debt entry said `FilenameOriginalCase` was "waiting for a
+PsCore canonical-path call"; `itemData2` had been in `PsLtRow` the whole time the shell was
+bit-packing two values into one slot. **Both entries were re-counted at every audit and never
+re-read.** If you take one habit from this page, take that one.
 
 **THIS BRANCH NOW CARRIES TWO UNRELATED WORKSTREAMS.** The 7c port is `src/app` and
 `src/shell`; **F1Markdown** (`src/F1Markdown`, `F1Markdown.exe`) is the author's own and is
@@ -112,7 +125,12 @@ Read in this order, and do not skip the first:
     `PsTimerNow()`, which is a **settable virtual clock**, not a wall clock — and *"the clock
     never moved"* is indistinguishable from *"the work was free"*, which was the answer the step
     wanted to hear.
-11. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
+11. [`7c-step8.md`](7c-step8.md) — **the step where two blockers turned out to have been
+    removed before anyone noticed.** The pane went 0 → 51 rows, but read the two intermediate
+    tables first: the one that shows the pane's ceiling is fbcParser (573 procedure symbols, 41
+    with a body line) and the revert-to-red table, where one revert found not a missing test but
+    a **false claim in a comment** — which is the other thing reverting is for.
+12. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
    irreducible, investigated. **It was not a blocker and never had been.** Short, and it is the
    clearest example on this whole shelf of a claim that survived because nobody checked it.
    **Its recommendation has since been implemented**: WebView2 is gone from the tree.
@@ -458,10 +476,12 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | `_check_scihost.bat` | the editor works — 26 assertions, incl. an **A/B against a stock Scintilla window in the same process** | green |
 | `_check_package.bat` | tiko runs with **only the Windows directories on PATH** | green, ~1s |
 | `_check_app_layer.bat` | `src/app` names no Win32 or AfxNova token (**47 files**, 2026-08-10) | green |
-| `_check_app_standalone.bat` | `src/app` compiles against PsCore alone **and LINKS as one unit** | green — **17 clean**, 0 errors, **debt 3** |
+| `_check_app_standalone.bat` | `src/app` compiles against PsCore alone **and LINKS as one unit** | green — **17 clean**, 0 errors, **debt 2** (2026-08-11) |
 | `_check_shell.bat` | `src/shell` includes no Win32 shell header, and carries no `PsC.` | green |
-| `_run_shell.bat --selftest` | the shell's own suite — **343 assertions** (2026-08-11) | green |
+| `_run_shell.bat --selftest` | the shell's own suite — **357 assertions** (2026-08-11) | green |
 | PsPlatform `build.cmd check` | **47 suites** (2026-08-11, `psthread` is the newest) | green, 0 failures |
+| PsPlatform `pstree` | **271 assertions** (was 242 before step 8's three gaps) | green |
+| PsPlatform `psfile` | **94 assertions** (was 91; the three that cover `PsFileRealCase`'s useful direction) | green |
 
 The ratchet is the weak one and knows it: it greps a hand-written vocabulary, and has had
 three gaps in three audits — **five now**. The fourth was `KeyBindings_PickListKeyToValue`,
@@ -673,22 +693,26 @@ represent the workload.**
    [`7c-step7.md`](7c-step7.md).
 2. ~~**A PROJECT TIER.**~~ **DONE IN STEP 6** — 39 lines of code, because `clsSymbolDb` handles
    two tiers already and the panel needed no change. It is what produced item 1's number.
-3. **The three `PsListTree` gaps step 4 found**, each worked around at a call site today: one
-   item-data slot where tiko's control has two; unconditional row striping with no
-   `SetAltRows`; and `OnSelChange` not distinguishing mouse from keyboard, which makes arrowing
-   the list move the editor. Fix in the control, or work around again in every host that
-   follows.
-4. **Encoding detection on read.** `ShellHost_LoadFileText` reads bytes and calls them UTF-8;
+3. ~~**The three `PsListTree` gaps step 4 found.**~~ **DONE IN STEP 8**, all three additive, so
+   the four existing callers were untouched. `itemData2` **was already in the row struct** and
+   simply unreachable — the shell's bit-packing existed because nobody had exposed a field that
+   was already there. `SetAltRows` is a flag rather than a colour, which is what stops a theme
+   load undoing it. `GetSelSource` is read inside the handler rather than passed to it, and is
+   stamped at the ENTRY POINTS — one mouse path in the file, everything else a key.
+4. **Encoding detection on read — NOW THE OLDEST OPEN ITEM.** `ShellHost_LoadFileText` reads
+   bytes and calls them UTF-8;
    tiko's read path decodes UTF-16 through `WideCharToMultiByte` and is still shell-side.
    The shell *saves* now, so a UTF-16 file opened there will not round-trip.
 5. **`clsTopTabCtl`: portable rewrite, or a Win32 facade forever?** The shell shows the
    *model* half is small — 258 lines including its comments. The class as it stands stores the
    `clsDocument ptr` inside the control and reads it back with `PsTabBar_GetItemData`.
-6. **The THREE link-debt bodies** (was four; `ProcessFromCurdriveApp` moved into `app/` in step
-   5 and `TodoStore_RemoveFile` turned out to have a real body there all along).
-   `FilenameOriginalCase` needs a PsCore canonical-path call first, and the shell's version is
-   the IDENTITY — which the symbol database and TODO store, both keyed by filename, would
-   notice if two spellings of one path ever reached them.
+6. **The TWO link-debt bodies** (was four, then three). `FilenameOriginalCase` closed in step 8
+   — and the entry that had said it "needs a PsCore canonical-path call first" was wrong when
+   written and wrong at three audits after it: `PsFileRealCase` already existed. **tiko gave up
+   symlink and junction resolution with it**, deliberately, because
+   `GetFinalPathNameByHandleW` was doing that as a side effect of fixing the case. What remains
+   includes `KeyBindings_PickListKeyToValue` — an `app/*.inc` reaching UP into the shell **by
+   relative path**, which no token scan can see.
 7. **What the per-form ratio actually depends on.** Step 4 measured 1.35 on a whole form; step
    5's panel came in UNDER 1 — and did less, while its scanner replaced 382 lines with 112
    because most of `clsScanMgr` was thread machinery. **The cost tracks what the platform
@@ -696,12 +720,12 @@ represent the workload.**
    instrument for estimating the remaining 47 forms. **AND THE 112 DID NOT HOLD** — step 7 put
    the thread back and the queue, the retire list and the stale-root test came with it. A ratio
    measured against a deliberately reduced port measures the reduction, not the port.
-8. **Whether the Functions pane should list more than the open tabs.** A 134-file project
-   contributes ONE heading today, because one file is open. The database holds the other 133.
-   That is why the pane looks empty on `tiko.bas` — see [`7c-step7.md`](7c-step7.md)'s closing
-   section, which also records two fbcParser behaviours found there and left alone:
-   **line-continued signatures are not recorded at all**, and `EnumProcsInFile` returns 13 for a
-   file with 48 procedures because type members do not come back.
+8. ~~**Whether the Functions pane should list more than the open tabs.**~~ **DONE IN STEP 8** —
+   0 rows to 51 on `src\tiko.bas`, and rows carry a FILE index now, so choosing one opens it
+   from disk. **THE CEILING IS fbcParser AND IT IS THE SAME CEILING tiko HAS**: 134 files,
+   573 procedure symbols, **41 with a body line**. Line-continued signatures are not recorded
+   with one, and type members are filed against the header that declares them. Whether any of
+   those belong in a Functions pane is a parser question, not a port one.
 9. **Whether two tiers deserve two workers.** They share one thread and serialise, so
    `tiko.bas` is 1.3s + 1.3s before both are current.
 
