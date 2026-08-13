@@ -3851,9 +3851,20 @@ end function
                         '' project tier is what removes that limit, so the file needs
                         '' something to contribute -- and it keeps four lines, because the
                         '' bookmark assertions below put a mark on line 3.
+                        '' ---- AND A THIRD PROBE THAT IS NEVER OPENED (7c step 8) -------
+                        '' The pane lists every file the database knows, not the open tabs,
+                        '' so the case that matters is a file with NO TAB. This one is
+                        '' reached only through probe2's #include and is never handed to
+                        '' ShellTabs_Open -- which is what makes the assertions below able
+                        '' to fail if the pane quietly went back to listing tabs.
+                        dim as DWSTRING wszFile3 = wszDir & "\open_probe3.bas"
+                        PsFileWriteAll( wszFile3, _
+                                !"' three\nsub ThirdProc()\n  print 3\nend sub\n" )
+
                         dim as DWSTRING wszFile2 = wszDir & "\open_probe2.bas"
                         if PsFileWriteAll( wszFile2, _
-                                !"' two\nsub SecondProc()\n  print 2\nend sub\n" ) then
+                                !"' two\n#include once \"open_probe3.bas\"\n" & _
+                                !"sub SecondProc()\n  print 2\nend sub\n" ) then
                             dim as long idxB = ShellTabs_Open( wszFile2 )
                             ShellScan_DrainFor( 5000 )
                             Check "  a second file opens into its own tab", _
@@ -3993,9 +4004,62 @@ end function
                                         str(gSymDb.EnumProcsInFile( _
                                             g_tabDocs(t).pDoc->DiskFilename, rsT() ))
                                 next
-                                Check "    and the pane lists BOTH files", _
-                                      (g_panel->GetCount() = 5), _
+                                '' SEVEN ROWS SINCE STEP 8, not five: three headers and four
+                                '' procedures. The third file is the one that is NOT OPEN,
+                                '' and it is in the pane because the pane reads the symbol
+                                '' database rather than the tab bar.
+                                Check "    and the pane lists ALL THREE files", _
+                                      (g_panel->GetCount() = 7), _
                                       str(g_panel->GetCount()) & " rows," & sSeen
+
+                                '' ---- THE UNOPENED FILE, WHICH IS THE COMMIT ---------------
+                                '' Find its row, and assert first that it really has no tab --
+                                '' otherwise the open-on-click assertion below would pass by
+                                '' doing nothing at all.
+                                dim as long nRow3 = -1
+                                for r as long = 0 to g_panel->GetCount() - 1
+                                    if g_panel->IsHeader(r) then continue for
+                                    if PsInStr( PsUCase(ShellPanel_PathOf(r)), _
+                                                "OPEN_PROBE3" ) > 0 then nRow3 = r
+                                next
+                                Check "      the unopened file has a row of its own", _
+                                      (nRow3 >= 0), str(nRow3)
+                                Check "        and no tab, which is why it is the case that " & _
+                                      "matters", (ShellPanel_TabOf(nRow3) = -1), _
+                                      str(ShellPanel_TabOf(nRow3))
+
+                                '' AND ITS NAME IS NOT SHOUTING. EnumUserFiles answers out of
+                                '' the parser's string pool, which holds names UPPERCASED --
+                                '' so without FilenameOriginalCase this heading reads
+                                '' OPEN_PROBE3.BAS. Nothing else in this suite would notice.
+                                dim as DWSTRING wszShown3 = ShellPanel_PathOf(nRow3)
+                                Check "        with its name in the case the disk holds", _
+                                      (PsPathName(wszShown3) = "open_probe3.bas"), _
+                                      PsPathName(wszShown3).Utf8
+
+                                '' CLICKING IT OPENS IT FROM DISK. Until step 8 GotoRow called
+                                '' ShellTabs_Show with a tab index, and Show is a SILENT no-op
+                                '' for a bad one -- so this row would have jumped to a line in
+                                '' whatever tab was current, in the WRONG FILE, with no error.
+                                dim as long nTabsWas = g_nTabDocs
+                                Check "      clicking it succeeds", _
+                                      (ShellPanel_GotoRow(nRow3) = true)
+                                Check "        by opening it from disk", _
+                                      (g_nTabDocs = nTabsWas + 1), _
+                                      str(nTabsWas) & " -> " & str(g_nTabDocs)
+                                Check "        and it now has a tab", _
+                                      (ShellTabs_FindByPath( wszFile3 ) >= 0), _
+                                      str(ShellTabs_FindByPath( wszFile3 ))
+
+                                '' A SECOND CLICK MUST NOT OPEN A SECOND COPY. This is what
+                                '' fails if FilenameOriginalCase ever hands back PsCore's
+                                '' forward slashes: the document lookup misses and the file
+                                '' is opened again, which looks like nothing at all.
+                                dim as long nTabsNow = g_nTabDocs
+                                ShellPanel_GotoRow(nRow3)
+                                Check "        clicking again reuses the tab", _
+                                      (g_nTabDocs = nTabsNow), _
+                                      str(nTabsNow) & " -> " & str(g_nTabDocs)
 
                                 '' NO DUPLICATES, which is the failure mode a wrong merge
                                 '' produces -- RecomputeContrib suppresses the project
@@ -4024,9 +4088,35 @@ end function
                                       (gSymDb.EnumProcsInFile(wszFile, rsA()) = 3), _
                                       str(gSymDb.EnumProcsInFile(wszFile, rsA()))
                                 ShellPanel_Reload()
-                                Check "      and the pane still lists both", _
-                                      (g_panel->GetCount() = 5), str(g_panel->GetCount())
+                                Check "      and the pane still lists all three", _
+                                      (g_panel->GetCount() = 7), str(g_panel->GetCount())
                                 ShellPanel_SetMode( SHPANEL_BOOKMARKS )
+                            end scope
+
+                            '' ---- CLOSE THE THIRD PROBE FIRST (7c step 8) --------------
+                            '' The pane OPENED this one, by being clicked, so the suite has a
+                            '' tab it did not ask for and has to close it or the "left gApp's
+                            '' list as it found it" assertion at the end fails -- which is
+                            '' exactly what it caught on the first run of this block, and is
+                            '' the reason that assertion is worth its line.
+                            ''
+                            '' HIGHEST INDEX FIRST, because closing a lower one would move it.
+                            scope
+                                dim as long idxC = ShellTabs_FindByPath( wszFile3 )
+                                if idxC >= 0 then
+                                    dim as clsDocument ptr pC = g_tabDocs(idxC).pDoc
+                                    ShellTabs_Show( idx1 )
+                                    if g_tabs <> 0 then g_tabs->DeleteTab( idxC )
+                                    if g_tabDocs(idxC).pSciDoc <> 0 then
+                                        g_view->Msg( SCI_RELEASEDOCUMENT, 0, _
+                                                     cast(integer, g_tabDocs(idxC).pSciDoc) )
+                                    end if
+                                    gApp.RemoveDocument( pC )
+                                    g_tabDocs(idxC).pDoc    = 0
+                                    g_tabDocs(idxC).pSciDoc = 0
+                                    g_nTabDocs -= 1
+                                    g_nTabCur  = idx1
+                                end if
                             end scope
 
                             '' Tidy: drop B's bookmark, its tab and its document.
@@ -4043,6 +4133,7 @@ end function
                             ShellPanel_Clear()
                         end if
                         PsFileDelete( wszFile2 )
+                        PsFileDelete( wszFile3 )
                     end scope
 
                     '' ---- CLEANUP, and it has to be complete: this suite runs before the
@@ -4088,6 +4179,11 @@ end function
             end scope
 
             '' ---- THE ROW'S TWO DATA SLOTS -----------------------------------------------
+            '' SLOT 1 IS A FILE INDEX SINCE STEP 8, not a tab index -- ShellPanel_TabOf now
+            '' resolves it through the panel's file table and answers -1 for a file with no
+            '' tab, which is a normal answer rather than an error. These assertions are about
+            '' the SLOTS THEMSELVES, so they read the raw one (ShellPanel_FileIdxOf); the
+            '' resolution is asserted where there are real files and real tabs to resolve.
             '' THESE ASSERTIONS USED TO TEST A BIT-PACKING. PsPlatform's PsListTree had one
             '' data slot per row where tiko's Win32 control has two, so this shell shifted a
             '' tab index and a line number into a single 64-bit integer and carried a mask, a
@@ -4103,8 +4199,8 @@ end function
                     dim as DWSTRING sR
                     sR.Utf8 = "row"
                     g_panel->AddString( sR, 7, 42 )
-                    Check "a row round-trips its tab", (ShellPanel_TabOf(0) = 7), _
-                          str(ShellPanel_TabOf(0))
+                    Check "a row round-trips its first slot", _
+                          (ShellPanel_FileIdxOf(0) = 7), str(ShellPanel_FileIdxOf(0))
                     Check "  and its line", (ShellPanel_LineOf(0) = 42), _
                           str(ShellPanel_LineOf(0))
 
@@ -4114,8 +4210,8 @@ end function
                     '' one integer that was then zero; it is still the value a fresh slot
                     '' holds, so it is still the one an "is it set" test would swallow.
                     g_panel->AddString( sR, 0, 0 )
-                    Check "  tab 0 line 0 is a real value, not a hole", _
-                          (ShellPanel_TabOf(1) = 0) andalso (ShellPanel_LineOf(1) = 0)
+                    Check "  file 0 line 0 is a real value, not a hole", _
+                          (ShellPanel_FileIdxOf(1) = 0) andalso (ShellPanel_LineOf(1) = 0)
 
                     '' THE BIGGEST LINE AGAINST A NONZERO TAB, and the PAIRING is the point:
                     '' this is what fails if the two slots ever alias, or if either is
@@ -4126,8 +4222,9 @@ end function
                     '' clamp and a shl 16 -- because with the tab at ZERO it reads back zero
                     '' whatever the encoding does. The nonzero tab is why it can fail.
                     g_panel->AddString( sR, SH_MAX_DOCS - 1, 2147483647 )
-                    Check "  the biggest line does not disturb the tab beside it", _
-                          (ShellPanel_TabOf(2) = SH_MAX_DOCS - 1), str(ShellPanel_TabOf(2))
+                    Check "  the biggest line does not disturb the slot beside it", _
+                          (ShellPanel_FileIdxOf(2) = SH_MAX_DOCS - 1), _
+                          str(ShellPanel_FileIdxOf(2))
                     Check "    and reads back whole", _
                           (ShellPanel_LineOf(2) = 2147483647), str(ShellPanel_LineOf(2))
 
@@ -4141,8 +4238,8 @@ end function
                     Check "    and a real line passes through", _
                           (ShellPanel_ClampLine(42) = 42), str(ShellPanel_ClampLine(42))
                     g_panel->AddString( sR, 3, ShellPanel_ClampLine(-1) )
-                    Check "    a clamped row keeps its tab intact", _
-                          (ShellPanel_TabOf(3) = 3) andalso (ShellPanel_LineOf(3) = 0)
+                    Check "    a clamped row keeps its first slot intact", _
+                          (ShellPanel_FileIdxOf(3) = 3) andalso (ShellPanel_LineOf(3) = 0)
 
                     g_panel->Clear()
                 end if

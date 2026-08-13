@@ -51,7 +51,52 @@
 
 
 '' ---------------------------------------------------------------------------------------
-'' THE ROW'S TWO DATA SLOTS: slot 1 is the tab index, slot 2 is the line number.
+'' THE PANEL'S FILE TABLE.
+''
+'' A row's first slot is an index INTO THIS, not a tab index -- which is the change 7c step 8
+'' made and the reason the pane can list a file that is not open. tiko's panel is built the
+'' same way (gFuncPanelFiles, frmFunctions.inc:337) and for the same reason.
+''
+'' WHY NOT STORE THE PATH IN THE ROW: a list control's data slot is an integer. Storing a
+'' DWSTRING ptr there would mean owning its lifetime across every Clear, every reload and
+'' every theme change, to save one array.
+''
+'' REBUILT BY WHICHEVER LOADER RAN, so the two loaders agree on what a row carries and
+'' ShellPanel_GotoRow stays mode-agnostic. The bookmarks loader registers the open documents;
+'' the functions loader registers everything the symbol database knows.
+'' ---------------------------------------------------------------------------------------
+const SHP_MAX_FILES = 1024
+
+dim shared g_panelFiles(0 to SHP_MAX_FILES - 1) as DWSTRING
+dim shared as long g_nPanelFiles
+
+sub ShellPanel_ResetFiles()
+    for i as long = 0 to g_nPanelFiles - 1
+        g_panelFiles(i).Clear()
+    next
+    g_nPanelFiles = 0
+end sub
+
+'' Appends and returns the index, or -1 when the table is full. NOT de-duplicated: each
+'' loader adds a file once, in the order it means to display it, and a de-dupe here would
+'' hide a loader that had lost track of that.
+function ShellPanel_AddFile( byval wszPath as DWSTRING ) as long
+    if g_nPanelFiles >= SHP_MAX_FILES then return -1
+    g_panelFiles(g_nPanelFiles) = wszPath
+    g_nPanelFiles += 1
+    return g_nPanelFiles - 1
+end function
+
+function ShellPanel_PathOf( byval nRow as long ) as DWSTRING
+    if g_panel = 0 then return DWSTRING()
+    dim as long i = cast(long, g_panel->GetItemData( nRow ))
+    if (i < 0) orelse (i >= g_nPanelFiles) then return DWSTRING()
+    return g_panelFiles(i)
+end function
+
+
+'' ---------------------------------------------------------------------------------------
+'' THE ROW'S TWO DATA SLOTS: slot 1 is an index into g_panelFiles, slot 2 is the line.
 ''
 '' THE CLAMP SURVIVED THE UNPACKING. Scintilla answers -1 for "no such line", and -1 in a
 '' slot of its own no longer corrupts the tab index the way it corrupted the packed one --
@@ -67,9 +112,18 @@ function ShellPanel_ClampLine( byval nLine as long ) as long
     return nLine
 end function
 
-function ShellPanel_TabOf( byval nRow as long ) as long
+'' The RAW slot, for anything that wants the index itself rather than what it points at.
+function ShellPanel_FileIdxOf( byval nRow as long ) as long
     if g_panel = 0 then return -1
     return cast(long, g_panel->GetItemData( nRow ))
+end function
+
+'' THE TAB THIS ROW'S FILE IS OPEN IN, or -1 when it is not open at all -- which is now a
+'' normal answer rather than an error, and is exactly what GotoRow branches on.
+function ShellPanel_TabOf( byval nRow as long ) as long
+    dim as DWSTRING wszPath = ShellPanel_PathOf( nRow )
+    if PsLen( wszPath ) = 0 then return -1
+    return ShellTabs_FindByPath( wszPath )
 end function
 
 function ShellPanel_LineOf( byval nRow as long ) as long
@@ -96,13 +150,34 @@ function ShellPanel_GotoRow( byval nRow as long ) as boolean
     '' would fight that.
     if g_panel->IsHeader( nRow ) then return false
 
-    dim as long idxTab = ShellPanel_TabOf( nRow )
-    dim as long nLine  = ShellPanel_LineOf( nRow )
+    dim as DWSTRING wszPath = ShellPanel_PathOf( nRow )
+    dim as long     nLine   = ShellPanel_LineOf( nRow )
+    if PsLen( wszPath ) = 0 then return false
 
-    '' SWITCH FIRST. ShellTabs_Show is a no-op when the tab is already current, which is the
-    '' common case -- and when it is not, it is what points the single view at the right
-    '' document before anything below reads or moves a caret in it.
-    ShellTabs_Show( idxTab )
+    '' ---- RESOLVE THE FILE, AND IT MAY NOT BE OPEN ------------------------------------
+    ''
+    '' A REAL BRANCH, NOT A FALLTHROUGH. Until step 8 this called ShellTabs_Show with the
+    '' row's tab index and read ShellTabs_CurrentDoc afterwards. Show is a SILENT no-op for
+    '' an out-of-range index (shelltabs.bi:78), so a row naming a file with no tab would
+    '' have jumped to a line in WHATEVER TAB HAPPENED TO BE CURRENT -- the wrong file, no
+    '' error, no clue. The Functions pane lists unopened files now, so that row exists.
+    ''
+    '' tiko does the same thing at the same point: match the document, and fall back to
+    '' opening it from disk (frmFunctions.inc:191-204).
+    dim as long idxTab = ShellTabs_FindByPath( wszPath )
+    if idxTab >= 0 then
+        '' ShellTabs_Show is a no-op when the tab is already current, which is the common
+        '' case -- and when it is not, it is what points the single view at the right
+        '' document before anything below reads or moves a caret in it.
+        ShellTabs_Show( idxTab )
+    else
+        '' OPENS FROM DISK. Note what ShellTabs_Open does NOT do: it sets g_nTabCur itself
+        '' (shelltabs.bi:203) without going through ShellTabs_Show, so a Show afterwards
+        '' would early-return and the caret work below is this function's to do -- which it
+        '' was already doing, for its own reasons.
+        idxTab = ShellTabs_Open( wszPath )
+        if idxTab < 0 then return false
+    end if
 
     dim as clsDocument ptr pDoc = ShellTabs_CurrentDoc()
     if pDoc = 0 then return false
@@ -201,7 +276,16 @@ enum ShellPanelMode
     SHPANEL_FUNCTIONS
 end enum
 
-dim shared as ShellPanelMode g_panelMode = SHPANEL_BOOKMARKS
+'' FUNCTIONS AT STARTUP, changed in step 8, and the report that caused it is worth keeping:
+'' "the functions pane (or explorer pane) is not visible when the program starts up. nothing
+'' displays."
+''
+'' A BOOKMARKS PANE ON A FRESHLY OPENED FILE IS EMPTY BY CONSTRUCTION -- no bookmark exists
+'' until someone sets one -- so the first pane a user ever saw could only be blank. tiko's
+'' first pane is the EXPLORER, which this binary does not have; Functions is the first pane
+'' it has that tiko also has, and the only one with something to show before the user has
+'' done anything.
+dim shared as ShellPanelMode g_panelMode = SHPANEL_FUNCTIONS
 
 '' BOTH loaders are forward-declared, not just the functions one. ShellPanel_Reload
 '' dispatches to a pair defined below it, and a declaration for one of two is how you get
@@ -394,6 +478,7 @@ sub ShellBookmarks_Load()
     dim as long nCurSel   = g_panel->GetCurSel()
     dim as long nTopIndex = g_panel->GetTopIndex()
 
+    ShellPanel_ResetFiles()
     g_panel->clear()
     g_panel->BeginUpdate()
 
@@ -440,8 +525,9 @@ sub ShellBookmarks_Load()
         end if
 
         if len(sBookmarks) then
+            dim as long idxFile = ShellPanel_AddFile( pDoc->DiskFilename )
             dim as DWSTRING wszText = PsPathName( pDoc->DiskFilename )
-            g_panel->AddHeader( wszText, idxTab, 0 )
+            g_panel->AddHeader( wszText, idxFile, 0 )
 
             dim as long nCount = PsStrParseCount( sBookmarks, "," )
             for i as long = 1 to nCount
@@ -450,7 +536,7 @@ sub ShellBookmarks_Load()
                 '' this narrow, and every row would start at a different column.
                 dim as string sDescription = ltrim( pDoc->GetLine(nLineNum) )
                 wszText.Utf8 = sDescription
-                g_panel->AddString( wszText, idxTab, ShellPanel_ClampLine(nLineNum) )
+                g_panel->AddString( wszText, idxFile, ShellPanel_ClampLine(nLineNum) )
             next
         end if
 
@@ -496,10 +582,13 @@ end sub
 ''
 '' ---- THREE DIFFERENCES FROM tiko, ALL OF THEM THIS BINARY'S SHAPE ----------------------
 ''
-'' 1. THE FILE LIST IS THE OPEN TABS. tiko walks gSymDb.EnumUserFiles and keeps whatever
-''    the EXPLORER is displaying (frmFunctions_BuildFileList). There is no Explorer here,
-''    and the shell's equivalent of "the files the user has in front of them" is the tab
-''    bar -- which is also what makes a row's tab index meaningful.
+'' 1. THE FILE LIST IS THE WHOLE DATABASE, since 7c step 8. It used to be the open tabs,
+''    and on a real project that meant the pane showed ONE heading -- the author opened
+''    src\tiko.bas, whose 4,496 symbols live in 133 files it #includes, and got an empty
+''    pane. tiko walks gSymDb.EnumUserFiles and then keeps whatever the EXPLORER is
+''    displaying (frmFunctions_BuildFileList, frmFunctions.inc:340); there is no Explorer
+''    here, so the filter has nothing to consult and the list is UNFILTERED -- which makes
+''    it larger than tiko's, not merely different.
 '' 2. THE ROW IS A NAME, NOT A NAME AND A PROTOTYPE. tiko packs "name%prototype" and its
 ''    control splits that into two cells; PsListTree stores one string per row and has no
 ''    separator convention, so the prototype has nowhere to go. It is what a tooltip would
@@ -532,22 +621,56 @@ private sub ShellFunctions_SortByName( rows() as ShellFuncRow, byval nCount as l
 end sub
 
 
+'' Insertion sort over the DISPLAY names, which is what the user reads -- tiko sorts the
+'' same array with a quicksort (QuickSortFilenames, frmFunctions.inc:284) that lives in its
+'' Win32 half and is not reachable from here. A hundred-odd files is nothing to insert.
+private sub ShellFunctions_SortFiles( files() as DWSTRING, byval nCount as long )
+    for i as long = 1 to nCount - 1
+        dim as DWSTRING tmp = files(i)
+        dim as DWSTRING keyT = PsUCase( PsPathName( tmp ) )
+        dim as long j = i - 1
+        do while (j >= 0) andalso (PsUCase( PsPathName( files(j) ) ) > keyT)
+            files(j + 1) = files(j)
+            j -= 1
+        loop
+        files(j + 1) = tmp
+    next
+end sub
+
+
 sub ShellFunctions_Load()
     if g_panel = 0 then exit sub
 
     dim as long nCurSel   = g_panel->GetCurSel()
     dim as long nTopIndex = g_panel->GetTopIndex()
 
+    ShellPanel_ResetFiles()
     g_panel->clear()
     g_panel->BeginUpdate()
 
-    '' A HEADER PER OPEN FILE, procedures beneath it. The tab order is the panel order,
-    '' which is the order the user arranged themselves.
-    for idxTab as long = 0 to g_nTabDocs - 1
-        dim as clsDocument ptr pDoc = g_tabDocs(idxTab).pDoc
-        if pDoc = 0 then continue for
+    '' ---- THE FILE LIST, WHICH IS THE WHOLE POINT OF THIS COMMIT ------------------------
+    ''
+    '' EnumUserFiles answers for BOTH TIERS and honours the merge suppression, so the active
+    '' file's live-as-you-type symbols and every other file's last-scanned ones arrive in one
+    '' list with nothing counted twice. It has always been able to do this; the pane simply
+    '' never asked.
+    ''
+    '' EVERY NAME GOES THROUGH FilenameOriginalCase. They come straight out of the parser's
+    '' string pool, which holds them UPPERCASED -- so without this the headings read
+    '' TIKO.BAS and CLSDOCUMENT.BI. tiko normalises at the same point, for the same reason
+    '' (frmFunctions.inc:346), and the shell could not until step 8 made that function real.
+    redim as DWSTRING files( 0 to 63 )
+    dim as long nFiles = gSymDb.EnumUserFiles( files() )
+    for i as long = 0 to nFiles - 1
+        files(i) = FilenameOriginalCase( files(i) )
+    next
+    ShellFunctions_SortFiles( files(), nFiles )
 
-        dim as DWSTRING wszFile = pDoc->DiskFilename
+    '' A HEADER PER FILE, procedures beneath it, sorted by display name. Files with no
+    '' procedures are skipped rather than shown empty -- an #include of nothing but constants
+    '' is most of a real project's file list and a heading per one would bury the code.
+    for i as long = 0 to nFiles - 1
+        dim as DWSTRING wszFile = files(i)
         if PsLen( wszFile ) = 0 then continue for
 
         dim rs() as SYMBOLREF
@@ -574,9 +697,19 @@ sub ShellFunctions_Load()
 
         ShellFunctions_SortByName( rows(), nKeep )
 
-        g_panel->AddHeader( PsPathName( wszFile ), idxTab, 0 )
+        '' REGISTERED ONLY ONCE IT HAS ROWS, so the table holds no entry that no row points
+        '' at. NOTHING OBSERVABLE DEPENDS ON THIS and the suite says so: registering early
+        '' instead fails no assertion, because the table is only ever read THROUGH a row's
+        '' slot and an unreferenced entry is invisible. It is here because a file list with
+        '' junk in it is a file list the next reader has to reason about, not because it
+        '' fixes a defect -- which is a weaker claim than the first draft of this comment
+        '' made, and the revert is what corrected it.
+        dim as long idxFile = ShellPanel_AddFile( wszFile )
+        if idxFile < 0 then exit for
+
+        g_panel->AddHeader( PsPathName( wszFile ), idxFile, 0 )
         for r as long = 0 to nKeep - 1
-            g_panel->AddString( rows(r).sName, idxTab, ShellPanel_ClampLine(rows(r).nLine) )
+            g_panel->AddString( rows(r).sName, idxFile, ShellPanel_ClampLine(rows(r).nLine) )
         next
     next
 
