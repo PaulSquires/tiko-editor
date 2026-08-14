@@ -6,7 +6,7 @@ on Show and could not be gated, because each owns a `GetMessage` loop and nothin
 `frmAbout` and `frmFormatOptions` had already solved that — `PostMessage(WM_CLOSE)` behind an env
 var. **The pattern existed and had simply never been applied to the other four.**
 
-**25 report lines → 33. 19,965 assertions → 20,329.**
+**25 report lines → 33. 19,965 assertions → 20,328.**
 
 ---
 
@@ -26,9 +26,10 @@ file reference, `LICPAGE_ENUM`, the reader's branch and the two-panel *GPL-3 / P
 selector are all gone. A selector over one item is dead UI — step 13's judgement on the Character
 Set combo.
 
-> **Lang id 397 "Proprietary" STAYS.** I blanked it, then found three live references: it labels
-> the hero pill describing the *components*, which is still true. The file reader is deprecated;
-> the dual-licensing statement is not. Caught by grepping before committing, not after.
+> **Lang id 397 "Proprietary" STAYED, at this point.** I blanked it, then found three live
+> references: it labelled the hero pill describing the *components*, which was still true while
+> that pill existed. Caught by grepping before committing, not after. It is blanked for real
+> further down — see "And then the screenshot", which is what removed the pill.
 
 ---
 
@@ -72,19 +73,44 @@ test.
 
 ---
 
+## And then the screenshot
+
+The author looked at the result and found two things no assertion could: the tab still read
+**"Licenses"** for a page that now shows one, and the hero still carried a **"Proprietary"** pill
+beside "GPL v3".
+
+Both are gone. Id 362 is singular in all six `.lang` files with a real translation in each
+(`Lizenz`, `Licencia`, `Licence`, `Lisens`, `许可证`), and **id 397 is now genuinely unused and
+blanked** — never renumbered, so the slot is free.
+
+> **THE ORDER MATTERED.** I blanked 397 one commit earlier, on the reasoning that the proprietary
+> licence was gone, and had to put it back: it still had three live references. It labelled the
+> hero pill, which describes the *components* and was still true at that point. The commit that
+> removed the pill is what made blanking it correct. **Grepping before committing is what caught
+> it, not the gate** — a lang id with no references is not a failure anywhere.
+
+The pill row also stopped depending on a translation: it was three pills and the widest was the
+translated word. Both survivors are literals, so it can only overflow now if the version string or
+the DPI grows. The fit assertion stays — the row is painted, so an overflow is still clipped in
+silence.
+
+`frmAbout` 27 → 26 assertions: the id-397 check had nothing left to assert.
+
+---
+
 ## Verification
 
 | gate | result |
 | --- | --- |
-| `_check_selftests.bat` | **33 suites, 20,329 passed, 0 failed** |
+| `_check_selftests.bat` | **33 suites, 20,328 passed, 0 failed** |
 | user state after a run | `settings.ini` and `tiko.tiko` **byte-identical** |
 | `_check_scihost`, `_check_app_layer`, `_check_shell`, `_check_package` | green |
 | `_check_app_standalone` | 18 clean, **debt 0, no baseline** |
 | shell `--selftest` | **395**, encoding **48** |
 | both binaries | exit 0, **0 warnings** |
 
-**NOT VERIFIED BY ME:** how the About box looks with one licence panel instead of two, and
-anything on Linux.
+**NOT VERIFIED BY ME:** how the About box looks, and anything on Linux. The author's
+screenshot of the first version is what produced the section above.
 
 ---
 
