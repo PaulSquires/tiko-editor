@@ -40,7 +40,6 @@ end type
 
 dim shared ghColorFonts    as HWND      ' PsListTree (per-font preview)
 dim shared ghColorSize     as HWND      ' PsComboBox
-dim shared ghColorCharset  as HWND      ' PsComboBox
 dim shared ghColorSpacing  as HWND      ' PsNumericUpDown
 dim shared ghColorTabSize  as HWND      ' PsNumericUpDown -- moved here from the Code Editor page
 dim shared ghColorCase     as HWND      ' PsComboBox      -- moved here from the Code Editor page
@@ -128,13 +127,22 @@ private sub frmOptionsColors_FillSizes( byval hCombo as HWND, byval wszFont as D
 end sub
 
 
-private sub frmOptionsColors_FillCharsets( byval hCombo as HWND )
-    dim as string cs = "Default,Ansi,Arabic,Baltic,Chinese Big 5,East Europe,GB 2312,Greek," & _
-                       "Hangul,Hebrew,Johab,Mac,OEM,Russian,Shiftjis,Symbol,Thai,Turkish,Vietnamese"
-    for i as long = 1 to PsStrParseCount( cs, "," )
-        PsComboBox_AddItem( hCombo, PsStrParse( cs, i, "," ) )
-    next
-end sub
+' ---- THE CHARACTER SET COMBO IS GONE, IN 7c STEP 13 ------------------------------------
+'
+' It listed nineteen GDI charsets and had done NOTHING since the Scintilla swap:
+' SCI_STYLESETCHARACTERSET reached PlatPs.cxx, which renders through FreeType and never
+' consults lfCharSet.
+'
+' STEP 12 REMOVED ITS LAST POSSIBLE PURPOSE. A charset was GDI's way of saying which face
+' should cover a script; the coverage chain now answers that per codepoint, from Windows'
+' own font-link table, without being told.
+'
+' IT WAS NOT HARMLESS WHILE IT SAT THERE. A control that cannot affect anything gets tried
+' FIRST when something looks wrong, and this one cost two wrong diagnoses during the Korean
+' investigation before anyone opened the renderer.
+'
+' The settings.ini key is no longer written or read. An existing file keeps its line and is
+' simply not consulted; nothing rewrites those files to remove it.
 
 
 ' ========================================================================================
@@ -148,7 +156,6 @@ sub frmOptionsColors_Reset()
     gColorBuilt    = false
     ghColorFonts   = 0
     ghColorSize    = 0
-    ghColorCharset = 0
     ghColorSpacing = 0
     ghColorTabSize = 0
     ghColorCase    = 0
@@ -169,11 +176,6 @@ end sub
 private sub frmOptionsColors_SizeSelChange( byval hCombo as HWND, byval idxOld as long, byval idxNew as long )
     if idxNew < 0 then exit sub
     gOptWork.EditorFontSize = PsComboBox_GetItemText( hCombo, idxNew )
-end sub
-
-private sub frmOptionsColors_CharsetSelChange( byval hCombo as HWND, byval idxOld as long, byval idxNew as long )
-    if idxNew < 0 then exit sub
-    gOptWork.EditorFontCharSet = PsComboBox_GetItemText( hCombo, idxNew )
 end sub
 
 ' Tab Size and Case were table-driven rows on the Code Editor page; here they are native
@@ -308,16 +310,11 @@ sub frmOptionsColors_Build( byval hPage as HWND )
     PsListTree_SetFont( ghColorFonts, OptionsFont_Base() )
     PsListTree_SetScrollBarWidth( ghColorFonts, SCROLLBAR_WIDTH_PANEL )
 
-    ' Size and character-set combos.
+    ' The size combo. The character-set one beside it came out in 7c step 13.
     ghColorSize = PsComboBox_Create( hPage, IDC_FRMOPTIONSCOLORS_COMBOSIZE )
     PsComboBox_SetFont( ghColorSize, OptionsFont_Base() )
     PsComboBox_SetSelChangeCallback( ghColorSize, @frmOptionsColors_SizeSelChange )
     OptionsRows_RegisterCombo( ghColorSize )
-
-    ghColorCharset = PsComboBox_Create( hPage, IDC_FRMOPTIONSCOLORS_COMBOCHARSET )
-    PsComboBox_SetFont( ghColorCharset, OptionsFont_Base() )
-    PsComboBox_SetSelChangeCallback( ghColorCharset, @frmOptionsColors_CharsetSelChange )
-    OptionsRows_RegisterCombo( ghColorCharset )
 
     ' Extra line spacing.
     ghColorSpacing = PsNumericUpDown_Create( hPage, IDC_FRMOPTIONSCOLORS_NUMSPACING )
@@ -364,10 +361,6 @@ sub frmOptionsColors_Build( byval hPage as HWND )
     dim as long idxSize = PsComboBox_FindItemByText( ghColorSize, gOptWork.EditorFontSize )
     if idxSize >= 0 then PsComboBox_SetCurSel( ghColorSize, idxSize )
 
-    frmOptionsColors_FillCharsets( ghColorCharset )
-    dim as long idxCs = PsComboBox_FindItemByText( ghColorCharset, gOptWork.EditorFontCharSet )
-    if idxCs >= 0 then PsComboBox_SetCurSel( ghColorCharset, idxCs )
-
     gColorBuilt = true
     frmOptionsColors_ApplyTheme()
 end sub
@@ -387,8 +380,8 @@ sub frmOptionsColors_ApplyTheme()
     dim as PSCOMBOBOX_COLORS cc
     dim as PSPOPUPMENU_COLORS pc
     OptionsTheme_FillCombo( @cc, @pc )
-    dim as HWND hCombos(0 to 2) = { ghColorSize, ghColorCharset, ghColorCase }
-    for i as long = 0 to 2
+    dim as HWND hCombos(0 to 1) = { ghColorSize, ghColorCase }
+    for i as long = 0 to 1
         PsComboBox_SetColors( hCombos(i), @cc )
         PsComboBox_SetListColors( hCombos(i), @pc )
         PsComboBox_Refresh( hCombos(i) )
@@ -411,7 +404,6 @@ sub frmOptionsColors_Show( byval bShow as boolean )
     dim as long nCmd = iif( bShow, SW_SHOW, SW_HIDE )
     ShowWindow( ghColorFonts, nCmd )
     ShowWindow( ghColorSize, nCmd )
-    ShowWindow( ghColorCharset, nCmd )
     ShowWindow( ghColorSpacing, nCmd )
     ShowWindow( ghColorTabSize, nCmd )
     ShowWindow( ghColorCase, nCmd )
@@ -490,10 +482,6 @@ function frmOptionsColors_Layout( byval hPage as HWND, byval cxPanel as long ) a
     PsComboBox_GetIdealSize( ghColorSize, cw, ch )
     if cw < AfxScaleX(COLORS_COMBOWIDTH) then cw = AfxScaleX(COLORS_COMBOWIDTH)
     CTLROW( ghColorSize, L(285,"Size"), cw, ch )
-
-    PsComboBox_GetIdealSize( ghColorCharset, cw, ch )
-    if cw < AfxScaleX(COLORS_COMBOWIDTH) then cw = AfxScaleX(COLORS_COMBOWIDTH)
-    CTLROW( ghColorCharset, L(286,"Character Set"), cw, ch )
 
     PsNumericUpDown_GetIdealSize( ghColorSpacing, cw, ch )
     if cw < AfxScaleX(COLORS_NUMWIDTH) then cw = AfxScaleX(COLORS_NUMWIDTH)

@@ -48,7 +48,6 @@ declare function SafeCopyDataString( byval pData as any ptr, byval cbData as ulo
 declare sub CopyData_RunSelfTest()
 declare function ReloadDocument( byval wszFilename as DWSTRING ) as long
 declare function GetTemporaryFilename( byval wszFolder as DWSTRING, byval wszExtension as DWSTRING) as string
-declare function GetFontCharSetID(byref wzCharsetName as DWSTRING ) as long
 ' Scintilla_GetTextBytes / Scintilla_StripTrailingWhitespace moved to
 ' app/modSciText.bi -- see there for the repaint the caller now owns.
 ' NEITHER of these could move to app/ -- see modRoutines.inc for what each is bound to.

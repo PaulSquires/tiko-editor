@@ -330,7 +330,6 @@ function clsConfig.SaveConfigFileBody() as long
     wszOut &= "StripTrailingWhitespace=" & this.StripTrailingWhitespace & vbcrlf
     wszOut &= "EditorFontname="        & this.EditorFontname & vbcrlf
     wszOut &= "EditorFontsize="        & this.EditorFontsize & vbcrlf
-    wszOut &= "EditorFontCharSet="     & this.EditorFontCharSet & vbcrlf
     wszOut &= "FontExtraSpace="        & this.FontExtraSpace & vbcrlf
     wszOut &= "Theme="                 & this.ThemeShortFilename & vbcrlf
     wszOut &= "ExplorerPositionRight=" & this.ExplorerPositionRight & vbcrlf
@@ -794,7 +793,9 @@ function clsConfig.LoadConfigFileBody( byval isHotReload as boolean ) as long
                 end if
             case "EditorFontname":           this.EditorFontname        = wData
             case "EditorFontsize":           this.EditorFontsize        = wData
-            case "EditorFontCharSet":        this.EditorFontCharSet     = wData
+            ' EditorFontCharSet: READ AND WRITE BOTH REMOVED, 7c step 13. An existing
+            ' settings.ini keeps its line; an unrecognised key is ignored here, so the
+            ' file needs no rewriting and an older tiko still reads it.
             case "FontExtraSpace":           this.FontExtraSpace        = wData
             case "Theme":                    this.ThemeShortFilename    = wData
             case "ExplorerPositionRight":    this.ExplorerPositionRight = nData

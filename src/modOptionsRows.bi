@@ -181,7 +181,6 @@ type OPTIONS_WORK
     ThemeShortFilename    as DWSTRING
     EditorFontname        as DWSTRING
     EditorFontSize        as DWSTRING
-    EditorFontCharSet     as DWSTRING
     FontExtraSpace        as long       ' DWSTRING in clsConfig -- see type trap 2
 end type
 

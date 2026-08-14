@@ -4,8 +4,9 @@
 '' ---- WHY THIS IS NOT IN THE DOCUMENT MODEL ---------------------------------------------
 ''
 '' It was clsDocument.ApplyPropertiesToView, and it held 87 of that class's 88 references to
-'' the THEME record -- plus every other thing keeping the file in src/: Ctrue, GetDoubleClickTime,
-'' GetFontCharSetID and COLORREF.
+'' the THEME record -- plus every other thing keeping the file in src/: Ctrue, GetDoubleClickTime
+'' and COLORREF. (GetFontCharSetID was on that list until 7c step 13 deleted it, with the
+'' Character Set combo it served -- see modRoutines.inc.)
 ''
 '' THE THEME CANNOT MOVE AND WILL NOT FOR SOME TIME. COLORREF appears 552 times across src/,
 '' which is a type migration on the scale of the DWSTRING swap and deserves its own phase
@@ -101,7 +102,6 @@ sub ViewStyle_Apply( byval pSciView as any ptr, _
         SciMsg( pSciView, SCI_STYLESETSIZE, STYLE_DEFAULT, nFontSize )
         SciMsg( pSciView, SCI_SETEXTRAASCENT, nFontExtraSpace, 0 )
         SciMsg( pSciView, SCI_SETEXTRADESCENT, nFontExtraSpace, 0 )
-        SciMsg( pSciView, SCI_STYLESETCHARACTERSET, STYLE_DEFAULT, GetFontCharSetID(gConfig.EditorFontCharset) )
 
         SciMsg( pSciView, SCI_STYLESETFORE, STYLE_DEFAULT, theme.editor.text.forecolor)
         SciMsg( pSciView, SCI_STYLESETBACK, STYLE_DEFAULT, theme.editor.text.backcolor)
@@ -113,7 +113,6 @@ sub ViewStyle_Apply( byval pSciView as any ptr, _
         ' Set the style for the AutoComplete popup list
         SciMsg( pSciView, SCI_STYLESETFONT, STYLE_AUTOCOMPLETE, cast(integer, gAppHost.ViewUiFontName(pOwnerView)) )
         SciMsg( pSciView, SCI_STYLESETSIZE, STYLE_AUTOCOMPLETE, gAppHost.ViewUiFontSize(pOwnerView))
-        SciMsg( pSciView, SCI_STYLESETCHARACTERSET, STYLE_AUTOCOMPLETE, GetFontCharSetID(gConfig.EditorFontCharset) )
 
         ' define bookmark marker (white circle)
         SciMsg( pSciView, SCI_MARKERDEFINE, MARKER_BOOKMARK, SC_MARK_VERTICALBOOKMARK )

@@ -328,7 +328,6 @@ sub OptionsWork_Load()
     gOptWork.ThemeShortFilename    = gConfig.ThemeShortFilename
     gOptWork.EditorFontname        = gConfig.EditorFontname
     gOptWork.EditorFontSize        = gConfig.EditorFontSize
-    gOptWork.EditorFontCharSet     = gConfig.EditorFontCharSet
     gOptWork.FontExtraSpace        = PsVal( gConfig.FontExtraSpace )
 end sub
 
@@ -392,7 +391,6 @@ sub OptionsWork_Commit()
     gConfig.ThemeShortFilename     = gOptWork.ThemeShortFilename
     gConfig.EditorFontname         = gOptWork.EditorFontname
     gConfig.EditorFontSize         = gOptWork.EditorFontSize
-    gConfig.EditorFontCharSet      = gOptWork.EditorFontCharSet
     gConfig.FontExtraSpace         = str(gOptWork.FontExtraSpace)
 end sub
 

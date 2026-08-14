@@ -177,7 +177,6 @@ type clsConfig
         TabSize                   as DWSTRING = "4"
         LocalizationFile          as DWSTRING = "english.lang"
         EditorFontname            as DWSTRING = "Consolas"
-        EditorFontCharSet         as DWSTRING = "Default"
         EditorFontsize            as DWSTRING = "11"
         FontExtraSpace            as DWSTRING = "2"
         ThemeShortFilename        as DWSTRING = "default_dark.theme"

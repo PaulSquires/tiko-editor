@@ -25,7 +25,9 @@
 #Define IDC_FRMOPTIONSCOLORS_LSTTHEMES    9400
 #Define IDC_FRMOPTIONSCOLORS_LSTFONTS     9401
 #Define IDC_FRMOPTIONSCOLORS_COMBOSIZE    9402
-#Define IDC_FRMOPTIONSCOLORS_COMBOCHARSET 9403
+' 9403 was COMBOCHARSET, removed in 7c step 13. THE ID IS NOT REUSED and the ones after
+' it are not renumbered: control ids are matched by value in the theme and layout code,
+' and shifting them silently repoints every row below.
 #Define IDC_FRMOPTIONSCOLORS_NUMSPACING   9404
 #Define IDC_FRMOPTIONSCOLORS_NUMTABSIZE  9405
 #Define IDC_FRMOPTIONSCOLORS_COMBOCASE   9406

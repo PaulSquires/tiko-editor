@@ -372,40 +372,14 @@ function GetTemporaryFilename( _
 end function
 
 
-' ========================================================================================
-' Get the Scintilla value for a character sets
-' ========================================================================================
-function GetFontCharSetID(byref wzCharsetName as DWSTRING ) as long
+' GetFontCharSetID DELETED in 7c step 13, with the Character Set combo it served.
+'
+' It mapped nineteen GDI charset NAMES to SC_CHARSET_* values for
+' SCI_STYLESETCHARACTERSET, which PlatPs.cxx has never read: the renderer is FreeType
+' and there is no lfCharSet anywhere below it. Step 12's coverage chain then removed the
+' last thing a charset could have meant -- which face covers a script is answered per
+' codepoint now, from Windows' own font-link table.
 
-    if PsLen(wzCharsetName) = 0 then return SC_CHARSET_DEFAULT
-    
-    ' .Utf8 on the selector -- `select case <DWSTRING>` binds today only because
-    ' AfxNova's DWSTRING extends WSTRING. Every `case` label below is ASCII, so
-    ' the ANSI-vs-UTF-8 difference between the two conversions cannot change a
-    ' match. See clsConfig.inc for the long form.
-    select case wzCharsetName.Utf8
-        case "Default"       : function = SC_CHARSET_DEFAULT
-        case "Ansi"          : function = SC_CHARSET_ANSI
-        case "Arabic"        : function = SC_CHARSET_ARABIC
-        case "Baltic"        : function = SC_CHARSET_BALTIC
-        case "Chinese Big 5" : function = SC_CHARSET_CHINESEBIG5
-        case "East Europe"   : function = SC_CHARSET_EASTEUROPE
-        case "GB 2312"       : function = SC_CHARSET_GB2312
-        case "Greek"         : function = SC_CHARSET_GREEK
-        case "Hangul"        : function = SC_CHARSET_HANGUL
-        case "Hebrew"        : function = SC_CHARSET_HEBREW
-        case "Johab"         : function = SC_CHARSET_JOHAB
-        case "Mac"           : function = SC_CHARSET_MAC
-        case "OEM"           : function = SC_CHARSET_OEM
-        case "Russian"       : function = SC_CHARSET_RUSSIAN
-        case "Shiftjis"      : function = SC_CHARSET_SHIFTJIS
-        case "Symbol"        : function = SC_CHARSET_SYMBOL
-        case "Thai"          : function = SC_CHARSET_THAI
-        case "Turkish"       : function = SC_CHARSET_TURKISH
-        case "Vietnamese"    : function = SC_CHARSET_VIETNAMESE
-    end select
-
-end function
 
 
 ' Scintilla_GetTextBytes and Scintilla_StripTrailingWhitespace MOVED to
