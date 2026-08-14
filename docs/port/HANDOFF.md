@@ -22,9 +22,9 @@ platforms, and `PlatPs` ASKS the host instead of holding a value. Windows' chain
 `FontLink\SystemLink` — the table GDI itself used, which is why the pre-port editor rendered
 Korean in Consolas without being asked to. See [`7c-step12.md`](7c-step12.md).
 
-**AWAITING THE AUTHOR'S GATE**: that `korean_text.bas` renders **in Consolas**, without changing
-the font setting, and that a bold style in the current theme looks bold. Nothing visual was
-verified here.
+**CONFIRMED BY THE AUTHOR (2026-08-14): the interactive pass passed.** Korean renders in
+Consolas with the font setting untouched, and bold renders bold. That is the gate that mattered —
+no suite in this document can see a glyph.
 
 **THE EDITOR FONT SETTING WORKS, AND DID NOT BEFORE STEP 11.** `SCI_STYLESETFONT` carries a family
 NAME and `FontPs` discarded it, so the editor rendered `consola.ttf` hard-coded whatever Options

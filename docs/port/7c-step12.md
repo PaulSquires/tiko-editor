@@ -140,8 +140,12 @@ the first entry is the one with no scaled twin. Removing the dedup entirely stay
 changed no output.** It had been calling `TE_Shape` on every draw — re-shaping every visible line
 on every caret blink — while the header calls that cache "not optional" and measures it at 33.7×.
 
-**NOT VERIFIED BY ME:** anything visual, and everything on Linux. The fontconfig path compiles and
-has never been executed; that is said in the header, in the suite and in the commit.
+**THE AUTHOR'S INTERACTIVE PASS PASSED (2026-08-14)**, and it is the gate that mattered: nothing
+in the table above can see a glyph. Korean renders **in Consolas**, with the font setting
+untouched — which is the whole of item 9 — and bold renders bold.
+
+**STILL NOT VERIFIED BY ANYONE: everything on Linux.** The fontconfig path compiles and has never
+been executed. That is said in the header, in the suite, in the commit and here.
 
 ---
 
