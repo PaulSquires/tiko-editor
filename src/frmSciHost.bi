@@ -99,10 +99,15 @@ declare function SciHost_DirectPointer(byval hWnd as HWND) as any ptr
 
 '' Set once, before any editor window is created.
 declare sub SciHost_SetFontPath(byref sPath as string)
-'' A font FAMILY name -> the font FILE FreeType must open. See the body.
+'' A font FAMILY name -> "path" or "path|faceName". NEVER "": falls back to
+'' Consolas, because an unopenable font is an editor window that never appears.
 declare function SciHost_ResolveFontFile(byref wszFamily as const wstring) as string
-'' Env-gated (TIKO_FONTFILE_SELFTEST=1).
-'' Resolve gConfig.EditorFontname and push it to BOTH places that need it.
+'' The same, for ONE STYLE, and it DOES answer "" -- see the body for why the
+'' two rules are opposite and why that is not an inconsistency.
+declare function SciHost_ResolveFontStyle(byref wszFamily as const wstring, _
+                                          byval bBold as boolean, _
+                                          byval bItalic as boolean) as string
+'' Resolve gConfig.EditorFontname and install the whole font seam.
 declare sub SciHost_ApplyConfiguredFont()
 '' Env-gated (TIKO_FONTFILE_SELFTEST=1).
 declare sub SciHost_RunFontFileSelfTest()

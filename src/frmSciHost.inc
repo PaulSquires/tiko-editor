@@ -32,128 +32,86 @@ end sub
 '' ---------------------------------------------------------------------------
 '' A FONT FAMILY NAME IS NOT A FONT FILE, AND THIS LAYER NEEDS THE FILE.
 ''
-'' PsPlatform's Scintilla renders through FreeType: PlatPs.cxx's FontPs takes
-'' Scintilla's FontParameters, uses ONLY fp.size, and opens the process-global
-'' path that PlatPs_SetFontPath holds. The face NAME is discarded -- so
-'' SCI_STYLESETFONT, which is what every editor in the world uses to choose a
-'' font, does nothing at all here.
+'' THE REGISTRY WALK THAT USED TO BE HERE HAS MOVED INTO PsCore, as
+'' PsFontResolveFile. It was never tiko's: every PsPlatform control paints
+'' through the same text engine, so a Korean filename in a tab bar tofued for
+'' exactly the reason a Korean source file did, and a resolver that only tiko
+'' could call fixed one of them.
 ''
-'' That is why the Options font combo appeared to do nothing for so long: it
-'' wrote gConfig.EditorFontname, ViewStyle_Apply dutifully sent it to Scintilla,
-'' and the value was dropped one layer further down. The old build drew through
-'' Scintilla64.dll -- Win32 GDI -- which honoured the name.
+'' What stays here is the part that IS tiko's -- the unconditional fallback to
+'' Consolas. PsCore deliberately answers "" for a family it cannot find and
+'' lets the caller decide; tiko cannot afford "", because TE_Init returning 0
+'' makes SciHost_GlobalInit return false, which is an editor window that never
+'' appears. A toolkit that named a Windows file for everyone would be wrong on
+'' every other platform.
 ''
-'' ---- THE REGISTRY IS WHERE WINDOWS KEEPS THE MAPPING -----------------------
-''
-''     "Consolas (TrueType)"      = "consola.ttf"
-''     "Malgun Gothic (TrueType)" = "malgun.ttf"
-''
-'' under SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts. HKCU IS READ
-'' FIRST and it is not optional: fonts a user installs without admin rights go
-'' there and ONLY there, so an HKLM-only lookup silently cannot see them.
-''
-'' ---- EXACT MATCH, DELIBERATELY ---------------------------------------------
-''
-'' The value name is the family plus a style plus a parenthesised format. Strip
-'' the parentheses and compare the whole remainder:
-''
-''   "Malgun Gothic (TrueType)"      -> "Malgun Gothic"      MATCHES
-''   "Malgun Gothic Bold (TrueType)" -> "Malgun Gothic Bold" does not
-''
-'' which is what picks the REGULAR face rather than whichever weight happens to
-'' enumerate first.
-''
-'' COLLECTIONS ARE NOT MATCHED, AND THAT IS THE SAFE ANSWER. Several CJK
-'' families ship as one .ttc under a value name listing several families:
-'' "Batang & BatangChe & Gungsuh & GungsuhChe (TrueType)". Such a name never
-'' equals a single family, so it falls through to the Consolas fallback below.
-'' The alternative -- splitting on "&" and using the file -- would hand
-'' FT_New_Face a collection whose face INDEX 0 is very likely a different family
-'' from the one asked for, and render the wrong typeface while reporting
-'' success. A readable fallback beats a confident wrong answer.
+'' ENTRIES ARE "path" OR "path|faceName". The face name selects within a .ttc
+'' COLLECTION, and it matters for the PRIMARY font and not only the fallbacks:
+'' a user may pick MS UI Gothic, and face 0 of msgothic.ttc is MS Gothic.
 '' ---------------------------------------------------------------------------
-'' PLAIN FreeBASIC STRING BUILT-INS, NOT AfxNova's Ps* HELPERS. This file is
-'' compiled by _check_scihost.bas as well as by tiko, and that probe deliberately
-'' includes the minimum -- AfxNova's string layer is not in its translation unit.
-'' ucase/instrrev/left/trim on a wstring do the same work with no dependency, and
-'' they keep this function compilable anywhere frmSciHost is.
-private function SciHost_FontFileFromHive( byval hRoot as HKEY, _
-                                           byref wszFamily as const wstring ) as string
-    dim as HKEY hk
-    '' A wstring VARIABLE, not @"literal": RegOpenKeyExW takes LPCWSTR and fbc
-    '' gives a literal's @ as a zstring ptr, which compiles with a warning and
-    '' reads the wrong bytes.
-    dim as wstring * 64 wszKey = "SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"
-    if RegOpenKeyExW( hRoot, @wszKey, 0, KEY_READ, @hk ) <> ERROR_SUCCESS then return ""
 
-    dim as wstring * 256 wszWant = ucase( *@wszFamily )
-    dim as string sFound
-
-    dim as DWORD idx = 0
-    do
-        dim as wstring * 512 wszName
-        dim as wstring * 512 wszData
-        dim as DWORD cchName = 511
-        dim as DWORD cbData  = 511 * 2
-        dim as DWORD dwType  = 0
-
-        dim as long rc = RegEnumValueW( hk, idx, @wszName, @cchName, 0, @dwType, _
-                                        cast(BYTE PTR, @wszData), @cbData )
-        if rc <> ERROR_SUCCESS then exit do
-        idx += 1
-        if dwType <> REG_SZ then continue do
-
-        '' Strip the trailing " (TrueType)" / " (OpenType)" / anything in parens.
-        dim as wstring * 512 wszEntry = wszName
-        dim as long nParen = instrrev( wszEntry, "(" )
-        if nParen > 1 then wszEntry = left( wszEntry, nParen - 1 )
-        wszEntry = trim( wszEntry )
-
-        if ucase( wszEntry ) = wszWant then
-            sFound = str( wszData )
-            exit do
-        end if
-    loop
-
-    RegCloseKey( hk )
-    return sFound
+'' The exact style, or "" when this machine does not have it. Empty is a real
+'' answer and not a failure: the caller falls back to the regular cut, which is
+'' what "Consolas has no italic" should look like rather than "Consolas is not
+'' installed".
+function SciHost_ResolveFontStyle( byref wszFamily as const wstring, _
+                                   byval bBold as boolean, _
+                                   byval bItalic as boolean ) as string
+    dim as string sFamily = str( wszFamily )
+    return PsFontResolveFile( sFamily, bBold, bItalic )
 end function
 
 
-'' The family the user chose, as a path FreeType can open. Never returns "" --
-'' see the fallback note below.
+'' The family the user chose, as something FreeType can open. Never returns "".
 function SciHost_ResolveFontFile( byref wszFamily as const wstring ) as string
 
-    '' THE FALLBACK IS UNCONDITIONAL AND IT IS LOAD-BEARING. TE_Init returning 0
-    '' makes SciHost_GlobalInit return false, which is an editor window that
-    '' never appears -- so an unresolvable family must degrade to a font that is
-    '' present on every Windows install, not to "".
+    '' THE FALLBACK IS UNCONDITIONAL AND IT IS LOAD-BEARING. See above.
     dim as string sFallback = environ("WINDIR") & "\Fonts\consola.ttf"
 
     if len( wszFamily ) = 0 then return sFallback
 
-    '' HKCU FIRST: a font installed without admin rights exists only there.
-    dim as string sFile = SciHost_FontFileFromHive( HKEY_CURRENT_USER, wszFamily )
-    if len( sFile ) = 0 then
-        sFile = SciHost_FontFileFromHive( HKEY_LOCAL_MACHINE, wszFamily )
-    end if
-    if len( sFile ) = 0 then return sFallback
+    dim as string sEntry = SciHost_ResolveFontStyle( wszFamily, false, false )
+    if len( sEntry ) = 0 then return sFallback
+    return sEntry
+end function
 
-    '' The value is USUALLY a bare filename relative to the Fonts directory, but
-    '' it is allowed to be absolute -- and is, for fonts installed per-user.
-    dim as boolean bAbsolute = false
-    if len( sFile ) > 2 then
-        if mid( sFile, 2, 1 ) = ":" then bAbsolute = true
-        if left( sFile, 2 ) = "\\" then bAbsolute = true
-    end if
-    if bAbsolute = false then sFile = environ("WINDIR") & "\Fonts\" & sFile
 
-    '' A registry entry whose file is gone is not rare -- an uninstall that left
-    '' the key behind. FileExists rather than PsFileExists, for the dependency
-    '' reason at the top of the hive reader.
-    if len( dir( sFile ) ) = 0 then return sFallback
+'' ---------------------------------------------------------------------------
+'' THE RESOLVER SCINTILLA CALLS, once per Font it builds.
+''
+'' cdecl, because PlatPs_SetFontResolver is a C function pointer and FreeBASIC's
+'' own convention would unwind the stack the wrong way.
+''
+'' IT WRITES INTO THE CALLER'S BUFFER. Returning a pointer would need this side
+'' to keep the string alive for a lifetime neither side can state.
+''
+'' RETURNING 0 IS MEANINGFUL and is not an error: it tells PlatPs "this machine
+'' has no such style", and PlatPs then asks for the regular cut of the same
+'' family before falling back to the default path. Answering with Consolas here
+'' instead would turn "no italic Cascadia" into "Consolas", losing the family
+'' the user actually chose.
+'' ---------------------------------------------------------------------------
+private function SciHost_FontResolverCb cdecl( byval pFamily as const zstring ptr, _
+                                               byval bBold as long, _
+                                               byval bItalic as long, _
+                                               byval pOut as zstring ptr, _
+                                               byval cbOut as long ) as long
+    if pOut = 0 then return 0
+    if cbOut <= 1 then return 0
+    if pFamily = 0 then return 0
 
-    return sFile
+    dim as string sFamily = *pFamily
+    if len( trim(sFamily) ) = 0 then return 0
+
+    dim as string sEntry = PsFontResolveFile( sFamily, (bBold <> 0), (bItalic <> 0) )
+    if len( sEntry ) = 0 then return 0
+    if len( sEntry ) >= cbOut then return 0        '' never a truncated path
+
+    '' The NUL is written by the caller from the returned length, but writing it
+    '' here too costs nothing and means a caller that forgets still gets a
+    '' terminated string rather than whatever was in the buffer.
+    *pOut = sEntry
+    return len( sEntry )
 end function
 
 
@@ -197,47 +155,54 @@ sub SciHost_RunFontFileSelfTest()
     dim as string sCon = SciHost_ResolveFontFile( "Consolas" )
     FFASSERT( len(sCon) > 0, "Consolas resolved to nothing" )
     FFASSERT( len(dir(sCon)) > 0, "Consolas resolved to a file that is not there: " & sCon )
-    FFASSERT( lcase(right(sCon, 4)) = ".ttf", "Consolas did not resolve to a .ttf: " & sCon )
 
-    '' THE SUFFIX STRIP, proved by the fact that the value name in the registry is
-    '' "Consolas (TrueType)" and never the bare family. If the strip were missing,
-    '' the case above would already have fallen back -- so this asserts the two are
-    '' the SAME answer for the right reason rather than by luck.
-    FFASSERT( lcase(sCon) = lcase(sFallback), _
-              "Consolas should resolve to the same file the fallback names: " & sCon )
-
-    '' CASE-INSENSITIVE. Config files, and users, carry either spelling.
-    FFASSERT( lcase(SciHost_ResolveFontFile("CONSOLAS")) = lcase(sCon), _
-              "an uppercased family did not resolve to the same file" )
-    FFASSERT( lcase(SciHost_ResolveFontFile("consolas")) = lcase(sCon), _
-              "a lowercased family did not resolve to the same file" )
-
-    '' THE FALLBACK, three ways in. None of these may ever return "".
+    '' THE REGISTRY MECHANICS ARE NO LONGER ASSERTED HERE -- the suffix strip,
+    '' the case handling, the relative-path join, the exactness of the style
+    '' match and the collection split all moved into PsPlatform's tests/psfont
+    '' with the code. Asserting them twice would mean two suites drifting apart
+    '' about one implementation.
+    ''
+    '' WHAT IS LEFT IS WHAT IS TIKO'S, and it is the assertion that always
+    '' mattered most: THE FALLBACK. PsCore answers "" for a family it cannot
+    '' find, deliberately. tiko cannot pass that on -- TE_Init returning 0 makes
+    '' SciHost_GlobalInit return false, which is an editor window that never
+    '' appears -- so every path out of here must name a real file.
     FFASSERT( SciHost_ResolveFontFile("") = sFallback, _
               "an empty family did not fall back to Consolas" )
     FFASSERT( SciHost_ResolveFontFile("No Such Font Family At All") = sFallback, _
               "an unknown family did not fall back to Consolas" )
-    '' EXACT MATCH DISCRIMINATES, and this is what that buys.
-    ''
-    '' THIS ASSERTION WAS WRONG WHEN IT WAS WRITTEN. It read
-    ''     ResolveFontFile("Consolas Bold") = sFallback
-    '' on the reasoning that a style is not a family and should not resolve. But
-    '' "Consolas Bold (TrueType)" is a real VALUE NAME in that registry key, and
-    '' this function maps NAME -> FILE: resolving it is correct, and the suite was
-    '' asserting a rule the code had no reason to follow. It failed on the first
-    '' run, which is the assertion doing its job in the wrong direction.
-    ''
-    '' The property that actually matters is that the two names give DIFFERENT
-    '' files. A prefix or "starts with" match would answer consolab.ttf for both
-    '' and silently make the bold face the regular one for the whole editor.
-    dim as string sBold = SciHost_ResolveFontFile( "Consolas Bold" )
-    FFASSERT( len(dir(sBold)) > 0, "Consolas Bold resolved to nothing on disk: " & sBold )
-    FFASSERT( lcase(sBold) <> lcase(sCon), _
-              "Consolas and Consolas Bold resolved to the SAME file: " & sBold )
+    FFASSERT( len(dir(SciHost_ResolveFontFile("No Such Font Family At All"))) > 0, _
+              "the fallback itself names a file that is not there" )
 
-    '' A RELATIVE VALUE IS JOINED TO THE FONTS DIRECTORY. The registry stores bare
-    '' filenames, so a resolved path that is not absolute means the join is gone.
-    FFASSERT( mid(sCon, 2, 1) = ":", "the resolved path is not absolute: " & sCon )
+    '' THE STYLED FORM ANSWERS "" AND MUST, which is the opposite rule from the
+    '' one above and the reason there are two functions. PlatPs reads the empty
+    '' answer as "this machine has no such style" and asks for the regular cut
+    '' of the SAME family; a Consolas substituted here would quietly replace the
+    '' family the user chose.
+    FFASSERT( SciHost_ResolveFontStyle("No Such Font Family At All", false, false) = "", _
+              "the styled resolver invented a font for an unknown family" )
+    FFASSERT( len(SciHost_ResolveFontStyle("Consolas", true, false)) > 0, _
+              "Consolas Bold did not resolve" )
+    FFASSERT( lcase(SciHost_ResolveFontStyle("Consolas", true, false)) <> lcase(sCon), _
+              "Consolas and Consolas Bold resolved to the SAME file" )
+
+    '' THE CALLBACK ITSELF, driven exactly as PlatPs drives it. It is cdecl and
+    '' writes into a caller buffer, and neither of those is checked by anything
+    '' that merely calls the resolver.
+    dim as zstring * 1024 zBuf
+    dim as long nLen = SciHost_FontResolverCb( @"Consolas", 0, 0, @zBuf, 1024 )
+    FFASSERT( nLen > 0, "the resolver callback answered nothing for Consolas" )
+    FFASSERT( len(zBuf) = nLen, "the returned length disagrees with the buffer" )
+    FFASSERT( lcase(zBuf) = lcase(sCon), "the callback and the resolver disagree" )
+
+    nLen = SciHost_FontResolverCb( @"No Such Font Family At All", 0, 0, @zBuf, 1024 )
+    FFASSERT( nLen = 0, "the callback invented a font for an unknown family" )
+
+    '' A BUFFER TOO SMALL MUST REFUSE, NOT TRUNCATE. A truncated path is a font
+    '' file that does not exist, which reaches FreeType as a failure to open and
+    '' reads as "the font is broken".
+    nLen = SciHost_FontResolverCb( @"Consolas", 0, 0, @zBuf, 4 )
+    FFASSERT( nLen = 0, "the callback truncated a path into a short buffer" )
 
     ? "--- font file self-test: " & nPass & " passed, " & nFail & " failed ---"
 

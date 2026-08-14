@@ -465,7 +465,30 @@ end sub
 sub SciHost_ApplyConfiguredFont()
     '' .Wz() rather than the DWSTRING itself: the resolver takes a plain wstring so
     '' that _check_scihost, which has no AfxNova string layer, can compile it.
-    dim as string sPath = SciHost_ResolveFontFile( *(gConfig.EditorFontname).Wz() )
+    dim as string sEntry = SciHost_ResolveFontFile( *(gConfig.EditorFontname).Wz() )
+
+    '' THE FACE NAME IS SPLIT OFF HERE. Both of these take a bare FILE: the
+    '' chrome engine opens it with TE_Init, and PlatPs keeps it as the default
+    '' for a Font the resolver could not answer for. The face travels through the
+    '' resolver instead, which is the path that can carry it.
+    dim as string sPath, sFace
+    PsFontSplitEntry( sEntry, sPath, sFace )
     SciHost_SetFontPath( sPath )
     PlatPs_SetFontPath( strptr(sPath) )
+
+    '' THE RESOLVER, which is what makes bold and italic real. Step 11 pushed
+    '' ONE file and that was all a process-global path could carry; Scintilla
+    '' asks per style, and until it could be answered per style every bold token
+    '' in every theme rendered regular.
+    PlatPs_SetFontResolver( @SciHost_FontResolverCb )
+
+    '' THE FALLBACK CHAIN, from Windows' own font-link table. This is the
+    '' mechanism the pre-port editor got for free by drawing through GDI, and
+    '' losing it is why a Korean file became a row of boxes.
+    ''
+    '' Keyed on the CONFIGURED FAMILY, because SystemLink is: a family with its
+    '' own entry gets its own chain, and everything else gets the generic one.
+    dim as string sBase = str( *(gConfig.EditorFontname).Wz() )
+    dim as string sChain = PsFontFallbackChain( sBase )
+    PlatPs_SetFallbackChain( strptr(sChain) )
 end sub

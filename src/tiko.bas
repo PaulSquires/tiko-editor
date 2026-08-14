@@ -52,6 +52,7 @@ using AfxNova
 #include once "core/PsPath.inc"
 #include once "core/PsFile.inc"
 #include once "core/PsEncoding.inc"
+#include once "core/PsFont.inc"
 
 '' The way back from AfxNova, which is still linked and still owns the windows.
 '' Its header is the argument for why one named function beats a cast at each site.

@@ -70,6 +70,7 @@
 '' first the const already exists and tiko's #Define becomes the duplicate,
 '' which no guard on the library side can prevent.
 #include once "app/modScintilla.bi"
+#include once "core/PsFont.inc"
 #include once "bind/Blend2D.bi"
 #include once "bind/FreeType.bi"
 #include once "bind/HarfBuzz.bi"
