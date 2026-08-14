@@ -21,6 +21,10 @@ FOURTH stated blocker in that file not to survive being re-read. The Character S
 and "two tiers, two workers" turned out not to be a scheduling decision at all — the parser is a
 single global compiler instance and says so in its own header. See [`7c-step13.md`](7c-step13.md).
 
+**CONFIRMED BY THE AUTHOR (2026-08-14): the interactive pass passed.** A project round-trips
+through the moved `ProjectSaveToFile` with its tab order and active tab intact, and Options ->
+Colors lays out correctly without the Character Set row.
+
 **AND ONE FAILURE THAT IS IN NO GATE LIST**: `TIKO_OPTIONS_SELFTEST` reports **11 passed, 6
 failed**, and did so before step 13 — verified by stashing the step's own commit and re-running.
 Four rows carry no label id and one reports a row/field mismatch. **Nothing runs that suite**,

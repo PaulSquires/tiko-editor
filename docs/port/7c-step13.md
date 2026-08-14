@@ -110,6 +110,12 @@ point: whatever the number, a second worker cannot overlap two scans it is not a
 Three rules reverted to red, each failing for its own reason: the saved index reduced to the tab
 index, the untitled-active case removed, and `TabDocAt`'s bounds check removed.
 
+**THE AUTHOR'S INTERACTIVE PASS PASSED (2026-08-14).** A project round-trips through the moved
+writer -- closed and reopened with the same tab active and the same files in the same order --
+and Options -> Colors lays out correctly with the Character Set row gone. Neither is visible to
+anything in the table above: one writes the file the author's own workspace lives in, and the
+other is a layout.
+
 ### Two things the suites caught that the code did not
 
 **The first draft of the tab assertions was wrong.** It assumed the files opened earlier in
