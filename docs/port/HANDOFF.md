@@ -3,15 +3,17 @@
 **7c STEP 13 COMPLETE, AND THE LIVE LIST IS EMPTY.** Verified 2026-08-14 by running every
 gate, not reading it:
 
-| repo | branch | HEAD | state |
-| --- | --- | --- | --- |
-| tiko | `feat/cross-platform` | `22a12fabe` | clean, **NOT pushed** |
-| PsPlatform | `main` | `708ede5` | clean, **NOT pushed** |
-| HelpCenter | `main` | `02a4c18` | untouched since 7c began |
+| repo | branch | where the work is |
+| --- | --- | --- |
+| tiko | `feat/cross-platform` | steps 1-13 |
+| PsPlatform | `main` | `PsFont`, the face chain, the font seam |
+| HelpCenter | `main` | untouched since 7c began |
 
-**Run `git log origin/<branch>..HEAD` rather than believing that column.** It has now been wrong
-in both directions on this page, and a claim about what is pushed is stale the moment anyone
-commits.
+**THE HEAD AND PUSH COLUMNS ARE GONE, DELIBERATELY.** They were wrong in BOTH directions across
+steps 11-13 -- once claiming pushed work that was not, once the reverse -- because a commit hash
+and a push state are stale the moment anyone commits, which is the next thing that happens after
+this page is written. `git log origin/<branch>..HEAD` answers it in a second and is never wrong.
+Everything through step 13 was pushed on 2026-08-14.
 
 Both tiko binaries build **warning-free**; every gate in the table below is green; tiko runs.
 
