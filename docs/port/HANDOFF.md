@@ -1,9 +1,15 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ **the commit that added [`7c-step10.md`](7c-step10.md)** — 7c
-**step 10 complete**, shell code at `b21df72c3`; PsPlatform **`main`** @ **the commit that
-corrected the UTF-16BE comment**; HelpCenter **`main`** @ `02a4c18`. All build warning-free and
+tiko `feat/cross-platform` @ **the commit that added [`7c-step11.md`](7c-step11.md)** — 7c
+**step 11 complete**, shell code at `de2db3cba`; PsPlatform **`main`** @ **the commit that
+declared `PlatPs_SetFontPath`**; HelpCenter **`main`** @ `02a4c18`. All build warning-free and
 tiko runs.
+
+**THE EDITOR FONT SETTING WORKS NOW, AND DID NOT BEFORE.** `SCI_STYLESETFONT` carries a family
+NAME and `PlatPs`'s `FontPs` discards it, so the editor rendered `consola.ttf` hard-coded
+whatever Options said. Step 11 resolves the family to a FILE and pushes it to the platform layer.
+**Confirmed by the author: changing the font applies LIVE, with no restart.** See
+[`7c-step11.md`](7c-step11.md).
 
 **STEP 10 CLOSED THREE ITEMS THIS PAGE CALLED BLOCKED, AND NONE OF THEM WAS.** UTF-16BE has an
 encoding id; `AppHostServices.LoadFileText` is deleted (the seam is 19 fields); and the app layer
@@ -90,7 +96,10 @@ evidence.
 **AND IT WAS MISDIAGNOSED TWICE BEFORE THE CODE WAS OPENED**, which is the same failure this
 page already has a table about: first as an encoding bug (it was not — the bytes were always
 intact and Notepad proved it), then as a font-charset setting (inert: `PlatPs.cxx` never
-reads `lfCharSet`). The question that found it was "why did this work in the ORIGINAL tiko?"
+reads `lfCharSet`). The question that found it was the author's: **"why did this work in the
+ORIGINAL tiko using the same Consolas font?"** — and the answer was a THIRD thing again, bigger
+than either guess: **the font setting had never reached the renderer at all**, so no font could
+have been chosen to work around it. Step 11 fixed that. The fallback gap is what remains.
 
 **THREE REPOS NOW, NOT TWO.** `C:\dev\HelpCenter` was version-controlled on 2026-08-09 and
 lives at `PaulSquires/HelpCenter`. The GENERATOR is tracked; the OUTPUT is not — `site/`,
@@ -172,22 +181,26 @@ Read in this order, and do not skip the first:
     `PsTimerNow()`, which is a **settable virtual clock**, not a wall clock — and *"the clock
     never moved"* is indistinguishable from *"the work was free"*, which was the answer the step
     wanted to hear.
-11. [`7c-step10.md`](7c-step10.md) — **three items closed, three false comments, and one of
+11. [`7c-step11.md`](7c-step11.md) — **the step that started as an encoding bug and was
+    neither.** Read "What was actually wrong": a setting that had never reached the code it
+    named. Then the assertion that failed on its first run — the CODE was right and the SUITE
+    was wrong, which is the other way round from every other failure on this page.
+12. [`7c-step10.md`](7c-step10.md) — **three items closed, three false comments, and one of
     them mine.** Read the three-row table at the top. Then the revert-to-red section: every rule
     went red for the first time in six steps, and the one that nearly did not is instructive —
     `Doc_EncodingName`'s `case else` is `"ANSI"`, so a missing arm does not fail, it puts the
     word ANSI beside a UTF-16 file.
-12. [`7c-step9.md`](7c-step9.md) — **the encoding step, and the third blocker in three steps
+13. [`7c-step9.md`](7c-step9.md) — **the encoding step, and the third blocker in three steps
     that had already been removed.** Read the table at the top, then "A defect found next to the
     one being fixed": the seam's `LoadFileText` had NO AGREED POLARITY — one implementation
     returned false on success, the other true — which was invisible with one implementation and
     live from the moment there were two.
-13. [`7c-step8.md`](7c-step8.md) — **the step where two blockers turned out to have been
+14. [`7c-step8.md`](7c-step8.md) — **the step where two blockers turned out to have been
     removed before anyone noticed.** The pane went 0 → 51 rows, but read the two intermediate
     tables first: the one that shows the pane's ceiling is fbcParser (573 procedure symbols, 41
     with a body line) and the revert-to-red table, where one revert found not a missing test but
     a **false claim in a comment** — which is the other thing reverting is for.
-14. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
+15. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
    irreducible, investigated. **It was not a blocker and never had been.** Short, and it is the
    clearest example on this whole shelf of a claim that survived because nobody checked it.
    **Its recommendation has since been implemented**: WebView2 is gone from the tree.
@@ -535,7 +548,8 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | `_check_app_layer.bat` | `src/app` names no Win32 or AfxNova token (**48 files**, 2026-08-11) | green |
 | `_check_app_standalone.bat` | `src/app` compiles against PsCore alone **and LINKS as one unit** | green — **18 clean**, 0 errors, **debt 1** (2026-08-11) |
 | `_check_shell.bat` | `src/shell` includes no Win32 shell header, and carries no `PsC.` | green |
-| `_run_shell.bat --selftest` | the shell's own suite — **389 assertions** (2026-08-11) | green |
+| `_run_shell.bat --selftest` | the shell's own suite — **383 assertions** (2026-08-11, after the ANSI revert) | green |
+| tiko `TIKO_FONTFILE_SELFTEST=1` | the font-file resolver — **11 assertions**, GUI-gated | green (author-run) |
 | ...and the encoding suite it now runs | **48 assertions**, moved into `app/` in step 9 | green |
 | PsPlatform `build.cmd check` | **47 suites** (2026-08-11, `psthread` is the newest) | green, 0 failures |
 | PsPlatform `pstree` | **271 assertions** (was 242 before step 8's three gaps) | green |
@@ -827,8 +841,24 @@ represent the workload.**
    next face) plus a platform way to choose the fallback list (DirectWrite on Windows,
    fontconfig on Linux). Real work, touching the layer everything paints through, and the
    engine's own comment about fractional monospace advances says the metrics are
-   load-bearing. **Workaround today: pick a font that covers the script** — on this machine
-   Malgun Gothic is the ONLY Hangul-capable font of 355 installed, and it is proportional.
+   load-bearing.
+
+   **STEP 11 MADE THE WORKAROUND POSSIBLE, WHICH IT WAS NOT WHEN THIS ITEM WAS WRITTEN.**
+   "Pick a font that covers the script" could not work while the font setting did nothing; it
+   does now. On this machine Malgun Gothic is the ONLY Hangul-capable font of 355 installed,
+   and it is proportional — so the workaround costs monospace alignment.
+
+9b. **BOLD AND ITALIC ARE IGNORED, EVERYWHERE.** Found alongside the above. `FontPs` drops
+   `fp.weight` and `fp.italic` (`PlatPs.cxx:102-107`) and `PsTextEngine` has no weight concept
+   at all — no `FT_Outline_Embolden`, no oblique matrix, nothing in `PsTextEngine.bi:97-138`.
+   **Every bold style in every theme renders regular**, in the editor and in every PsPlatform
+   control. Scintilla asks correctly (`ViewStyle.cxx:63-72`); nothing below listens.
+
+   Fixing it means a family resolving to FOUR files and `FontPs` keying its engine on
+   `(path, pxSize)` derived from `(faceName, bold, italic, size)` — `F1Markdown/mdFonts.inc`'s
+   design, generalised. **It is the same subsystem as item 9 and should be one step with it**:
+   a fallback chain that ignores weight still renders bold flat, and a weight map with no
+   fallback still renders boxes.
 
 10. **THE OPTIONS "CHARACTER SET" COMBO IS DEAD UI.** `modViewStyle.inc` still sends
     `SCI_STYLESETCHARACTERSET` from `gConfig.EditorFontCharSet`, and `PlatPs.cxx` never
