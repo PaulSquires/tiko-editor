@@ -1,7 +1,7 @@
 # Handoff — the tiko → PsPlatform port
 
-**7c STEP 16 COMPLETE, AND PsPlatform RUNS ON LINUX.** Verified 2026-08-14 by running every
-gate, not reading it:
+**7c STEP 17 COMPLETE. LINUX RUNS, WITH A WINDOW.** Verified 2026-08-14 by running every gate,
+not reading it:
 
 | repo | branch | where the work is |
 | --- | --- | --- |
@@ -24,8 +24,16 @@ FOURTH stated blocker in that file not to survive being re-read. The Character S
 and "two tiers, two workers" turned out not to be a scheduling decision at all — the parser is a
 single global compiler instance and says so in its own header. See [`7c-step13.md`](7c-step13.md).
 
-**`ALL GREEN [linux64]` -- 48 suites, 0 build failures, 0 test failures**, on Fedora 42 with
-GCC 15.
+**THE DEMOS RUN ON FEDORA AT 150%, UNDER X11 AND WAYLAND.** `platformprobe` 28/28;
+`widgets` drags correctly at fractional scale; **`build.sh check` 48 suites, 0 failures** on
+Fedora 42 / GCC 15.
+
+**STEP 17 GOT THREE BUG REPORTS AND THEY HAD THREE DIFFERENT VERDICTS**, which was the whole
+step: ideshell's tabs were never wired to anything (not a defect); its splitters had never been
+draggable ON ANY PLATFORM (`SetPos` clamped to a `[0,0]` default and nothing ever called
+`SetRange`); and minieditor's Ctrl+Space was a real Linux defect (SDL gives a popup the keyboard,
+so the editor was told it lost focus and Scintilla cancelled autocompletion). Both fixed, both
+confirmed by the author on Fedora. See [`7c-step17.md`](7c-step17.md).
 
 **AND "THE FIRST LINUX RUN" IS WRONG -- I SAID IT REPEATEDLY BEFORE CHECKING.** PsPlatform's own
 `docs/STATUS.md` and `README.md` record native Fedora from the start: Gates 0-4 closed there, the
@@ -38,8 +46,8 @@ five defects sit in or behind that work.
 or a gate. `structsizes` passed first time (the LP64 layouts were right), and the render digest
 matched Windows BYTE FOR BYTE. See [`7c-step16.md`](7c-step16.md).
 
-**NOTHING HAS BEEN DISPLAYED ON LINUX.** `build.sh check` is headless; X11 and Wayland are both
-built and neither has been asked to draw. fontconfig has still never executed.
+**STILL NEVER RUN ANYWHERE: the fontconfig path in `PsFont.inc`.** And `tikoshell` has never been
+built for Linux -- it lives in THIS repo, so it needs both trees checked out side by side.
 
 **THIRTY-THREE SELF-TEST REPORT LINES, 20,329 ASSERTIONS, IN ONE GATE.** `_check_selftests.bat`
 covered the STARTUP suites in step 14; step 15 added the five that need a real dialog, which
@@ -255,49 +263,55 @@ Read in this order, and do not skip the first:
     `PsTimerNow()`, which is a **settable virtual clock**, not a wall clock — and *"the clock
     never moved"* is indistinguishable from *"the work was free"*, which was the answer the step
     wanted to hear.
-11. [`7c-step16.md`](7c-step16.md) — **phase 7c's code meets Linux, and the step where I made
+11. [`7c-step17.md`](7c-step17.md) — **three bug reports, three different verdicts, and the
+    only thing that told them apart was running both platforms.** Read "What actually solved it":
+    two of my diagnoses died, and the one-sentence observation that settled the third was
+    "right click popup menus work perfectly". Also the sharpest variant yet of this page's
+    recurring shape -- a SUITE that drove the widget correctly and passed, because its FIXTURE
+    did the one thing no real caller did.
+12. [`7c-step16.md`](7c-step16.md) — **phase 7c's code meets Linux, and the step where I made
     this page's own mistake.** Five real defects, all in bindings, build scripts and gates rather
     than in portable code — and one of them made a suite report a PASS for the wrong reason on a
     platform where the feature did not work at all. Then read "What this step is really about":
     I called it "the first Linux run" repeatedly without opening PsPlatform's STATUS.md, which
     says on its second screen that Fedora had been in use since Gate 0.
-12. [`7c-step15.md`](7c-step15.md) — **the step where a revert-to-red falsified the CORRECTION,
+13. [`7c-step15.md`](7c-step15.md) — **the step where a revert-to-red falsified the CORRECTION,
     not the code.** Two explanations for the same hook, both plausible, both measured, both
     false -- and the second one was mine, written in this step. Read "Two claims about why
     these hooks exist".
-13. [`7c-step14.md`](7c-step14.md) — **READ "What this step is really about".** Every stale
+14. [`7c-step14.md`](7c-step14.md) — **READ "What this step is really about".** Every stale
     claim this port has found was in PROSE; this one was in a SUITE, and that is worse. A number
     carries authority a sentence does not, and "11 passed" was believed for as long as it was
     printed. A suite nothing runs is indistinguishable from a suite that passes.
-14. [`7c-step13.md`](7c-step13.md) — **the step where the live list emptied, and four of its
+15. [`7c-step13.md`](7c-step13.md) — **the step where the live list emptied, and four of its
     items closed as "the blocker was not one".** Read the last section: a suite that has been
     failing six assertions because nothing runs it. That is this port's recurring failure
     wearing a suite instead of a comment.
-15. [`7c-step12.md`](7c-step12.md) — **the step where the revert-to-red pass caught the SUITES
+16. [`7c-step12.md`](7c-step12.md) — **the step where the revert-to-red pass caught the SUITES
     rather than the code, twice.** A prefix match left every style assertion green because
     `RegEnumValueW` happens to enumerate in the helpful order; removing a whole feature dropped
     a suite from 35 assertions to 30 and still printed "0 failed". Read that section before
     writing any assertion that depends on a lookup order or is wrapped in a skip.
-16. [`7c-step11.md`](7c-step11.md) — **the step that started as an encoding bug and was
+17. [`7c-step11.md`](7c-step11.md) — **the step that started as an encoding bug and was
     neither.** Read "What was actually wrong": a setting that had never reached the code it
     named. Then the assertion that failed on its first run — the CODE was right and the SUITE
     was wrong, which is the other way round from every other failure on this page.
-17. [`7c-step10.md`](7c-step10.md) — **three items closed, three false comments, and one of
+18. [`7c-step10.md`](7c-step10.md) — **three items closed, three false comments, and one of
     them mine.** Read the three-row table at the top. Then the revert-to-red section: every rule
     went red for the first time in six steps, and the one that nearly did not is instructive —
     `Doc_EncodingName`'s `case else` is `"ANSI"`, so a missing arm does not fail, it puts the
     word ANSI beside a UTF-16 file.
-18. [`7c-step9.md`](7c-step9.md) — **the encoding step, and the third blocker in three steps
+19. [`7c-step9.md`](7c-step9.md) — **the encoding step, and the third blocker in three steps
     that had already been removed.** Read the table at the top, then "A defect found next to the
     one being fixed": the seam's `LoadFileText` had NO AGREED POLARITY — one implementation
     returned false on success, the other true — which was invisible with one implementation and
     live from the moment there were two.
-19. [`7c-step8.md`](7c-step8.md) — **the step where two blockers turned out to have been
+20. [`7c-step8.md`](7c-step8.md) — **the step where two blockers turned out to have been
     removed before anyone noticed.** The pane went 0 → 51 rows, but read the two intermediate
     tables first: the one that shows the pane's ceiling is fbcParser (573 procedure symbols, 41
     with a body line) and the revert-to-red table, where one revert found not a missing test but
     a **false claim in a comment** — which is the other thing reverting is for.
-20. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
+21. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
    irreducible, investigated. **It was not a blocker and never had been.** Short, and it is the
    clearest example on this whole shelf of a claim that survived because nobody checked it.
    **Its recommendation has since been implemented**: WebView2 is gone from the tree.
@@ -655,6 +669,7 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | ...and the encoding suite it now runs | **48 assertions**, moved into `app/` in step 9 | green |
 | PsPlatform `build.cmd check` | **48 suites** (2026-08-14, `psfont` is the newest). Now builds the Scintilla library FIRST -- it never did, which is invisible on Windows and fatal on a clean tree | green, 0 failures |
 | **PsPlatform `build.sh check` on LINUX** | **48 suites** on Fedora 42 / GCC 15 (2026-08-14). `structsizes` confirms the LP64 layouts; the render digest `377B903CA1166763` is IDENTICAL to Windows | green, 0 failures |
+| **the DEMOS on Linux** | `platformprobe` 28/28 on Wayland (density 1.5, input converted to pixels); `widgets` on X11 AND Wayland; `ideshell` and `minieditor` driven by hand at 150% (2026-08-14) | green after two fixes |
 | `deps/check-host.sh` | what a Linux host is missing. Said "Host is ready" while `libstdc++-static` was absent, which only surfaces at the final link after every dependency has been built | green, and it checks that now |
 | PsPlatform `pstree` | **271 assertions** (was 242 before step 8's three gaps) | green |
 | PsPlatform `psfile` | **94 assertions** (was 91; the three that cover `PsFileRealCase`'s useful direction) | green |
