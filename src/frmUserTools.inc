@@ -1522,7 +1522,22 @@ sub frmUserTools_RunSelfTest()
     loop until h = hFirst
 
     UTASSERT( bSawList, "the tools list is in the tab order" )
-    UTASSERT( bSawName, "the Tool Name field is in the tab order" )
+
+    ' THE NAME FIELD IS ONLY A TAB STOP WHEN THERE IS A TOOL, and this assertion did not
+    ' say so until 7c step 15. With no user tools configured -- which is the state a fresh
+    ' install and this author's own settings.ini are in -- LoadDetail(-1) hides the whole
+    ' detail column, and a hidden control is not in the tab order. The assertion twelve
+    ' lines below already guards for exactly this case ("if nWas >= 0"); this one did not,
+    ' so it failed for a configuration rather than for a defect.
+    '
+    ' It went unnoticed because NOTHING RAN THIS SUITE: it needs the dialog open, and no
+    ' gate opened one until _check_selftests.bat armed TIKO_USERTOOLS_AUTOOPEN in step 15.
+    ' The first thing that gate did was report it.
+    if gUTCurrent >= 0 then
+        UTASSERT( bSawName, "the Tool Name field is in the tab order" )
+    else
+        ? "  NOT VERIFIED: the Tool Name field's tab stop -- no user tools are configured"
+    end if
     UTASSERT( bSawOK,   "the OK button is in the tab order" )
     UTASSERT( nStops <= 40, "the tab order is a closed cycle" )
 
@@ -1851,6 +1866,28 @@ function frmUserTools_Show( byval hWndParent as HWND ) as LRESULT
     ' AFTER the SetFocus above, deliberately: one of its assertions walks the tab order, and
     ' running it any earlier would sample it before anything had been focused at all.
     frmUserTools_RunSelfTest()
+
+    '' UNATTENDED CLOSE, so the layout suite above can run in a gate.
+    ''
+    '' WITHOUT IT THE PROCESS NEVER EXITS. This dialog is modal and owns the GetMessage
+    '' loop below, so nothing ends the run; a gate then falls back on killing it, takes its
+    '' full poll ceiling and returns an exit code that means nothing.
+    ''
+    '' IT IS NOT THAT LATER SUITES STOP RUNNING -- that was this comment's first draft and
+    '' it is false, caught by removing an AUTOCLOSE and watching all 33 suites report
+    '' anyway. GetMessage takes messages for every window in the thread, so they are
+    '' dispatched from inside this dialog's own loop. Nor is it about console buffering,
+    '' which frmAbout and frmFormatOptions claimed for years; also measured, also false.
+    ''
+    '' WM_CLOSE SAVES NOTHING HERE -- checked before this was added, not assumed. The commit
+    '' is on the OK path only, so a gate that opens this dialog on every run leaves
+    '' gConfig.Tools, settings.ini and the accelerator table exactly as it found it. Any dialog where that is not true must not get
+    '' one of these.
+    ''
+    '' Posted rather than sent: the loop below has to start first.
+    if environ("TIKO_USERTOOLS_AUTOCLOSE") = "1" then
+        PostMessage( HWND_FRMUSERTOOLS, WM_CLOSE, 0, 0 )
+    end if
 
     ' Open the Assign Shortcut dialog straight away on the selected tool, so it can be looked
     ' at without a human clicking the button. Companion to TIKO_USERTOOLS_AUTOOPEN, and to

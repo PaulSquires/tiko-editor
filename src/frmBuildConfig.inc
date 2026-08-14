@@ -2243,6 +2243,28 @@ function frmBuildConfig_Show( byval hWndParent as HWND ) as LRESULT
     ' running it any earlier would sample it before anything had been focused at all.
     frmBuildConfig_RunLayoutSelfTest()
 
+    '' UNATTENDED CLOSE, so the layout suite above can run in a gate.
+    ''
+    '' WITHOUT IT THE PROCESS NEVER EXITS. This dialog is modal and owns the GetMessage
+    '' loop below, so nothing ends the run; a gate then falls back on killing it, takes its
+    '' full poll ceiling and returns an exit code that means nothing.
+    ''
+    '' IT IS NOT THAT LATER SUITES STOP RUNNING -- that was this comment's first draft and
+    '' it is false, caught by removing an AUTOCLOSE and watching all 33 suites report
+    '' anyway. GetMessage takes messages for every window in the thread, so they are
+    '' dispatched from inside this dialog's own loop. Nor is it about console buffering,
+    '' which frmAbout and frmFormatOptions claimed for years; also measured, also false.
+    ''
+    '' WM_CLOSE SAVES NOTHING HERE -- checked before this was added, not assumed. The commit
+    '' is on the OK path only, so a gate that opens this dialog on every run leaves
+    '' the build configurations and the project file exactly as it found it. Any dialog where that is not true must not get
+    '' one of these.
+    ''
+    '' Posted rather than sent: the loop below has to start first.
+    if environ("TIKO_BUILDCONFIG_AUTOCLOSE") = "1" then
+        PostMessage( HWND_FRMBUILDCONFIG, WM_CLOSE, 0, 0 )
+    end if
+
     if environ("TIKO_BUILDCONFIG_AUTOASSIGN") = "1" then
         PostMessage( HWND_FRMBUILDCONFIG, MSG_USER_SHOW_TOOLKEY, 0, 0 )
     end if

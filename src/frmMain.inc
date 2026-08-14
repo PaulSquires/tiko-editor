@@ -1640,6 +1640,21 @@ function frmMain_WndProc( _
                 frmUnusedSymbols_Show( hwnd )
             end if
 
+            ' ---- TIKO_SELFTEST_EXIT=1: quit, now that every suite has run ---------------
+            '
+            ' THE LAST SUITE IN THE PROCESS IS ABOVE THIS LINE, which is the whole reason
+            ' the hook is here and not in the startup block: the Explorer, Workspace, Find
+            ' in Project and Unused suites all run from this handler, long after the modal
+            ' dialogs in frmMain_Show have come and gone.
+            '
+            ' It lets _check_selftests.bat END tiko rather than tree-kill it. Killing did
+            ' work -- measured, twice, under two redirect styles -- but a gate that exits
+            ' its subject cleanly cannot be argued with, and it stops the exit code being
+            ' something nobody looks at.
+            if environ("TIKO_SELFTEST_EXIT") = "1" then
+                PostMessage( hwnd, WM_CLOSE, 0, 0 )
+            end if
+
         case MSG_USER_PROCESS_STARTUPUSERTOOLS
             ' process any User Tools that must display immediately after the main editor
             ' user interface is created and displayed.
@@ -1895,10 +1910,24 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' otherwise reachable only by a human picking File > Settings > Format Options.
     '
     ' AUTOOPEN opens it here so the LAYOUT half -- which measures real windows at the real
-    ' DPI -- can run at all. AUTOEXIT then quits, and that one is not a convenience: tiko is
-    ' a console-subsystem exe whose output is BLOCK-BUFFERED when redirected, so a run that
-    ' is killed rather than exited loses every line the suites printed, including their own
-    ' pass/fail report. (frmAbout's TIKO_ABOUT_AUTOCLOSE exists for exactly this.)
+    ' DPI -- can run at all, and its AUTOCLOSE companion closes it again.
+    '
+    ' TWO CLAIMS ABOUT WHY THAT COMPANION IS NEEDED HAVE BEEN MEASURED, AND BOTH WERE WRONG.
+    '
+    ' This said tiko's output is "BLOCK-BUFFERED when redirected, so a run that is killed
+    ' loses every line the suites printed". FALSE: _check_selftests.bat tree-killed tiko on
+    ' every run and got all 25 report lines, and a 78-byte log survived a kill under two
+    ' redirect styles. That claim had already been copied into frmAbout.inc and
+    ' frmFormatOptions.inc, which is how it earned a correction rather than a shrug.
+    '
+    ' The replacement -- "a modal dialog owns the loop, so every suite after it never runs"
+    ' -- is ALSO false, and was caught the same way, by removing an AUTOCLOSE and watching:
+    ' all 33 suites still reported. GetMessage takes messages for every window in the
+    ' thread, so the later suites are dispatched from inside the dialog's own loop.
+    '
+    ' WHAT IS TRUE: without it the process never exits. The run falls back on the gate's
+    ' kill backstop, takes the full poll ceiling (40s against 20s, measured) and returns an
+    ' exit code that means nothing.
     if environ("TIKO_FORMATOPTIONS_AUTOOPEN") = "1" then
         frmFormatOptions_Show( HWND_FRMMAIN )
     end if
@@ -1981,11 +2010,20 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' windows. Also modal: startup stops here until it is closed.
     if environ("TIKO_ABOUT_AUTOOPEN") = "1" then
         frmAbout_Show( HWND_FRMMAIN )
-        ' With TIKO_ABOUT_AUTOCLOSE the dialog closes itself, so shut the whole editor down
-        ' too and let the run terminate on its own. Posted rather than sent: the main message
-        ' loop has not started yet, so this is picked up the moment it does.
-        if environ("TIKO_ABOUT_AUTOCLOSE") = "1" then PostMessage( HWND_FRMMAIN, WM_CLOSE, 0, 0 )
     end if
+
+    ' THIS USED TO SHUT THE WHOLE EDITOR DOWN, and doing so from here was wrong in a way
+    ' that only showed once more than one suite was armed at a time.
+    '
+    ' TIKO_ABOUT_AUTOCLOSE closes the About DIALOG -- frmAbout.inc posts that itself. This
+    ' spot additionally posted WM_CLOSE to the MAIN window, so that a run testing About alone
+    ' would terminate. With _check_selftests.bat arming everything at once that post RACED
+    ' MSG_USER_PROCESS_COMMANDLINE and won: the Explorer, Workspace and Find in Project
+    ' suites -- 169 assertions -- silently stopped running, and the gate's report simply had
+    ' three fewer lines in it.
+    '
+    ' Shutting down is now its own concern, TIKO_SELFTEST_EXIT, posted from the END of that
+    ' handler where every suite has already run. See it there.
 
     ' Create the main application topmenu menubar
     frmMenuBar_Show( HWND_FRMMAIN )

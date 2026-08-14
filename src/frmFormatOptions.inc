@@ -833,10 +833,24 @@ function frmFormatOptions_Show( byval hWndParent as HWND ) as LRESULT
 
     frmFormatOptions_RunSelfTest( true )
 
-    ' Unattended close, so the layout half above can run without a human. Same reason as the
-    ' AUTOEXIT hook in frmMain: this dialog is modal and owns its own GetMessage loop, so a
-    ' run that is killed rather than closed never flushes the buffered console output that
-    ' IS the suite result. Posted rather than sent -- the loop below has to start first.
+    ' Close the dialog immediately, so an unattended run can END.
+    '
+    ' TWO CLAIMS ABOUT THIS HOOK HAVE NOW BEEN MEASURED AND BOTH WERE WRONG.
+    '
+    ' It used to say a killed run "loses every buffered line, including the self-test's own
+    ' report". FALSE: _check_selftests.bat tree-killed tiko on every run and got all 25
+    ' report lines, and a 78-byte log survived a kill under two redirect styles.
+    '
+    ' The replacement said that while a modal dialog is up, every suite after it never runs.
+    ' ALSO FALSE, and caught by removing an AUTOCLOSE and watching: all 33 suites still
+    ' reported. A modal dialog owns the message loop but GetMessage takes messages for every
+    ' window in the thread, so the later suites are dispatched from inside it.
+    '
+    ' WHAT IS ACTUALLY TRUE: without this, the process never exits on its own. The run then
+    ' depends on the gate's kill backstop and takes the full poll ceiling -- 40s against 20s,
+    ' measured. Nothing is lost; it is slow, and it makes the gate's exit code meaningless.
+    '
+    ' Posted rather than sent -- the loop below has to start first.
     if environ("TIKO_FORMATOPTIONS_AUTOCLOSE") = "1" then
         PostMessage( HWND_FRMFORMATOPTIONS, WM_CLOSE, 0, 0 )
     end if
