@@ -20,7 +20,7 @@
 ' ========================================================================================
 dim shared as long gAboutPage
 
-' Which licence the Licenses page is showing. Held rather than read back from the sub-strip
+' Which licence the Licence page is showing. Held rather than read back from the sub-strip
 ' because the strip is created after the first SetText and a re-theme must not disturb it.
 
 ' The wordmark on the icon plate. Two lowercase letters, NOT the application icon: the .ico
@@ -383,20 +383,19 @@ private sub frmAbout_PaintHero( byval pb as PsBufferPaint ptr, byval rcHero as R
     pb->PaintText( L(359,"Programmer's code editor for the FreeBASIC compiler"), _
                    @r, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
 
-    ' ---- the three pills ---------------------------------------------------------------
+    ' ---- the two pills -------------------------------------------------------------------
     '
-    ' BOTH LICENCES ARE NAMED HERE, not just the GPL. The hero is the one thing every user
-    ' of this dialog reads, and a lone "GPL v3" pill on a program that ships two proprietary
-    ' DLLs states something that is not true of the whole product.
+    ' A "Proprietary" pill stood beside "GPL v3" until 7c step 15, saying that the product as
+    ' a whole was not purely GPL. It went with the proprietary LICENCE PAGE it belonged to --
+    ' author's call, and a pill naming a licence the dialog no longer shows would be pointing
+    ' at nothing.
     y += lineH + gap2
 
     dim as DWSTRING wszVersion = APPVERSION & "  " & wchr(183) & "  " & trim(APPBITS, any " ()")
     dim as DWSTRING wszLicense = "GPL v3"
-    dim as DWSTRING wszPropr   = L(397,"Proprietary")
 
     dim as long w1 = frmAbout_MeasurePill( pb, wszVersion )
     dim as long w2 = frmAbout_MeasurePill( pb, wszLicense )
-    dim as long w3 = frmAbout_MeasurePill( pb, wszPropr )
 
     dim as RECT rcPill
     rcPill.left   = tx
@@ -409,17 +408,17 @@ private sub frmAbout_PaintHero( byval pb as PsBufferPaint ptr, byval rcHero as R
     rcPill.right  = rcPill.left + w2
     frmAbout_PaintPill( pb, @rcPill, wszLicense, false )
 
-    rcPill.left   = rcPill.right + AfxScaleX(FRMABOUT_PILL_GAP)
-    rcPill.right  = rcPill.left + w3
-    frmAbout_PaintPill( pb, @rcPill, wszPropr, false )
-
 end sub
 
 
 ' ========================================================================================
-' Where the pill row ends. Split out of the painter so the self-test can ask whether three
-' pills still fit the hero at this DPI in this language -- the painter measures them and
-' then draws, and a pill that ran off the edge would simply be clipped in silence.
+' Where the pill row ends. Split out of the painter so the self-test can ask whether the
+' pills still fit the hero at this DPI -- the painter measures them and then draws, and a
+' pill that ran off the edge would simply be clipped in silence.
+'
+' IT NO LONGER DEPENDS ON A TRANSLATION. The row was three pills and the widest was the
+' translated "Proprietary"; both remaining captions are literals, so this can only overflow
+' now if the version string or the DPI grows.
 ' ========================================================================================
 private function frmAbout_PillRowRight( byval pb as PsBufferPaint ptr, byval rcHero as RECT ptr ) as long
 
@@ -431,7 +430,6 @@ private function frmAbout_PillRowRight( byval pb as PsBufferPaint ptr, byval rcH
 
     dim as long w = frmAbout_MeasurePill( pb, wszVersion )
     w += AfxScaleX(FRMABOUT_PILL_GAP) + frmAbout_MeasurePill( pb, "GPL v3" )
-    w += AfxScaleX(FRMABOUT_PILL_GAP) + frmAbout_MeasurePill( pb, L(397,"Proprietary") )
 
     function = tx + w
 
@@ -555,10 +553,9 @@ private sub frmAbout_ShowPage( byval hwnd as HWND, byval nPage as long )
 
     ShowWindow( HWND_FRMABOUT_CREDITS, iif( nPage = ABOUTPAGE_CREDITS, SW_SHOW, SW_HIDE ) )
     ShowWindow( HWND_FRMABOUT_LICENSE, iif( nPage = ABOUTPAGE_LICENSE, SW_SHOW, SW_HIDE ) )
-    ' The GPL-3 / Proprietary strip and the field's scrollbar both belong to the Licenses
-    ' page and travel with it. The strip in particular MUST be hidden off the page: it sits
-    ' on top of the tab strip, so leaving it up would paint two licence captions over the
-    ' right-hand end of a tab row that has nothing to do with them.
+    ' The field's scrollbar belongs to the Licence page and travels with it. The GPL-3 /
+    ' Proprietary strip did too, and had to be hidden off the page because it sat on top of
+    ' the tab strip; it was removed in 7c step 15 with the licence it named.
     ShowWindow( HWND_FRMABOUT_LICVSCROLL, iif( nPage = ABOUTPAGE_LICENSE, SW_SHOW, SW_HIDE ) )
 
     ' The About page is PAINTED, so leaving a page has to invalidate the body band -- hiding a
@@ -580,7 +577,7 @@ end sub
 
 
 ' ========================================================================================
-' Swap which licence the Licenses page shows.
+' Swap which licence the Licence page shows.
 '
 ' The text is re-read from disk on every switch rather than cached in two DWSTRINGs. The
 ' files are small, this runs on a mouse click, and holding no copy means the dialog cannot
@@ -680,12 +677,6 @@ private sub frmAbout_ApplyTheme( byval hwnd as HWND )
     sc.IndicatorColor    = theme.ui.accent
     PsSelectBar_SetColors( HWND_FRMABOUT_TABS, @sc )
 
-    ' ---- the GPL-3 / Proprietary strip -------------------------------------------------
-    ' The SAME struct, deliberately: it is the same widget one level down, and giving the
-    ' inner strip its own palette would make the page look like it had two unrelated tab
-    ' bars rather than one subordinate to the other. Size is what separates them (a smaller
-    ' font and a shorter band), not colour.
-
     ' ---- the Credits list -------------------------------------------------------------
     PsListTree_SetBackColor( HWND_FRMABOUT_CREDITS, theme.panel.text.backcolor )
     PsListTree_SetScrollBarColors( HWND_FRMABOUT_CREDITS, theme.panel.scrollbar.backcolor, _
@@ -759,7 +750,7 @@ private sub frmAbout_PositionWindows( byval hwnd as HWND )
                   rcTabs.right, rcTabs.bottom - rcTabs.top, SWP_NOZORDER or SWP_NOACTIVATE )
 
     ' ---- the body band's inner rect ----------------------------------------------------
-    ' The Credits list takes it whole; the Licenses page divides it below. (This used to say
+    ' The Credits list takes it whole; the Licence page divides it below. (This used to say
     ' "the two body controls, sharing one rect", which stopped being true when the licence
     ' strip arrived.)
     dim as long bx = mx
@@ -770,7 +761,7 @@ private sub frmAbout_PositionWindows( byval hwnd as HWND )
 
     SetWindowPos( HWND_FRMABOUT_CREDITS, 0, bx, by, bw, bh, SWP_NOZORDER or SWP_NOACTIVATE )
 
-    ' ---- the Licenses page: the field and its scrollbar --------------------------------
+    ' ---- the Licence page: the field and its scrollbar --------------------------------
     ' Together they fill the body rect the Credits list occupies whole -- the licence
     ' selector does not live in the body at all. The bar takes the right edge and the field
     ' gives up exactly that width, so the two never overlap and no pixel of the band is
@@ -792,22 +783,6 @@ private sub frmAbout_PositionWindows( byval hwnd as HWND )
     ' layout pass there is.
     frmAbout_LicenseScrollChanged( HWND_FRMABOUT_LICENSE )
 
-    ' ---- the GPL-3 / Proprietary strip, ON THE TAB STRIP'S OWN LINE --------------------
-    '
-    ' Same band as the page tabs, pushed to the right margin, so the row reads "About |
-    ' Credits | Licenses ............ GPL-3 | Proprietary" -- one line, two ends. It sat
-    ' under the tabs before and read as a second row of them competing for the same job.
-    '
-    ' It OVERLAPS the tab strip, which spans the full width and paints its own background.
-    ' That works because both carry the same palette (see frmAbout_ApplyTheme) and because
-    ' this window is explicitly raised to the TOP of the sibling Z-order below -- creation
-    ' order already puts it there, but relying on that would make a later re-ordering of
-    ' frmAbout_Show silently paint the tab strip's background over these two captions.
-    '
-    ' Width is the two captions and nothing more, so the empty middle of the line belongs to
-    ' the tab strip underneath and stays inert. Clamped to the body: a translation wide
-    ' enough to exceed it would otherwise be positioned at a negative x and lose its FIRST
-    ' caption -- the one that starts selected -- off the left edge.
     ' ---- the footer buttons, laid out right to left -----------------------------------
     dim as long btnW = AfxScaleX(FRMABOUT_BTN_W)
     dim as long btnH = AfxScaleY(FRMABOUT_BTN_H)
@@ -894,7 +869,7 @@ private sub frmAbout_RunLayoutSelfTest( byval hwnd as HWND )
     end scope
 
     ' ---- both body pages occupy the SAME rect -----------------------------------------
-    ' The Licenses page is two windows -- field plus scrollbar -- so the claim is that the
+    ' The Licence page is two windows -- field plus scrollbar -- so the claim is that the
     ' PAIR tiles the rect the Credits list takes whole: same top, same bottom, same outer
     ' edges, and the seam between them shared exactly. They are shown one at a time, so a
     ' divergence is invisible until someone switches tabs and the panel jumps.
@@ -906,7 +881,7 @@ private sub frmAbout_RunLayoutSelfTest( byval hwnd as HWND )
 
         ABOUTASSERT( (r1.top = r2.top) andalso (r1.bottom = r2.bottom) andalso _
                      (r1.top = rV.top) andalso (r1.bottom = rV.bottom), _
-                     "the Credits and Licenses pages do not share the body's top and bottom" )
+                     "the Credits and Licence pages do not share the body's top and bottom" )
         ABOUTASSERT( r1.left = r2.left, "the licence field is not on the body's left margin" )
         ABOUTASSERT( rV.right = r1.right, "the scrollbar does not reach the body's right margin" )
         ' The seam. An off-by-one here is a hairline of dialog background showing between the
@@ -943,9 +918,8 @@ private sub frmAbout_RunLayoutSelfTest( byval hwnd as HWND )
                      "the licence text is only " & str(PsLen(wszTextG)) & " chars -- the fallback?" )
     end scope
 
-    ' ---- the three hero pills fit the hero ---------------------------------------------
-    ' The pill row is PAINTED, so an overflow is clipped in silence. It grew a third pill and
-    ' the widest of the three is a translated word.
+    ' ---- the hero pills fit the hero ---------------------------------------------------
+    ' The pill row is PAINTED, so an overflow is clipped in silence.
     scope
         dim as RECT rcTmp
         dim as HDC hdcTmp = GetDC( hwnd )
@@ -1006,11 +980,9 @@ private sub frmAbout_RunLayoutSelfTest( byval hwnd as HWND )
             end if
         next
         ABOUTASSERT( nBlank = 0, "one or more of ids 370-385 is missing from english.lang" )
-        ' 408 is this dialog's one id outside that run -- claimed from the blank slots rather
-        ' than appended, so it does not sit beside its neighbours and would be missed by the
-        ' loop above. It is used TWICE (the hero pill and the sub-strip), so a blank value
-        ' costs two captions.
-        ABOUTASSERT( len(LL(397)) > 0, "localization id 397 (Proprietary) is blank" )
+        ' Id 397 ("Proprietary") was asserted here. It had TWO uses, the hero pill and the
+        ' licence sub-strip, and 7c step 15 removed both -- so the id is retired and blanked
+        ' rather than renumbered, and there is nothing left to assert about it.
     end scope
 
     scope
@@ -1115,7 +1087,10 @@ function frmAbout_Show( byval hWndParent as HWND ) as LRESULT
     PsSelectBar_AddPanel( HWND_FRMABOUT_TABS, L(361,"Credits") )
     ' PLURAL. tiko ships under two licences and this page shows both; a singular caption
     ' over a two-panel strip reads as a mistake before it reads as a licence statement.
-    PsSelectBar_AddPanel( HWND_FRMABOUT_TABS, L(362,"Licenses") )
+    '' SINGULAR since 7c step 15: there is one licence page now, not two. The default here
+    '' is DISCARDED by L() -- the real text is id 362 in all six .lang files, changed with
+    '' it.
+    PsSelectBar_AddPanel( HWND_FRMABOUT_TABS, L(362,"License") )
     PsSelectBar_SetPanelPadding( HWND_FRMABOUT_TABS, 0, _
                                  AfxScaleX(FRMABOUT_MARGIN), AfxScaleX(14) )
     PsSelectBar_SetIndicator( HWND_FRMABOUT_TABS, AfxScaleY(2), AfxScaleY(6) )
@@ -1138,14 +1113,6 @@ function frmAbout_Show( byval hWndParent as HWND ) as LRESULT
     ' PsListTree is the odd one out in its own API here: RowHeight above IS scaled internally.
     PsListTree_SetBorderWidth( HWND_FRMABOUT_CREDITS, 1 )
 
-    ' ---- the GPL-3 / Proprietary strip, ABOVE the field --------------------------------
-    ' Created before the field for the same reason the tab strip is created first: creation
-    ' order is Z-order is tab order.
-    '
-    ' A PsSelectBar rather than two painted labels, because "a flat row of text labels,
-    ' exactly one current, hot-tracked, reporting user clicks" is exactly what that control
-    ' is -- and the alternative is hit-testing and hover-tracking two rects by hand in the
-    ' dialog's own WM_MOUSEMOVE.
     ' ---- the License field -------------------------------------------------------------
     ' Multiline (creation-time, not a setter) and read-only. This is the one control that
     ' makes PsTextBox_FilterMessage mandatory in the pump below.
