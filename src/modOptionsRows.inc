@@ -802,13 +802,40 @@ sub OptionsRows_RunBindTest()
 
     if environ("TIKO_OPTIONS_SELFTEST") <> "1" then exit sub
 
-    dim as long nPass, nFail
+    dim as long nPass, nFail, nSkip
     dim as string sLine
+
+    '' THE LABEL TEXTS BELOW ARE ENGLISH. Asserting them against a French .lang would
+    '' fail every one of them for the wrong reason, so they are checked only when
+    '' english.lang is the loaded file -- and the count of what was skipped is printed.
+    dim as boolean bEnglish = (lcase(gConfig.LocalizationFile.Utf8) = "english.lang")
 
     OptionsRows_Init()
     OptionsWork_Load()
 
-    #macro BINDCHK( labelid, cfgfield, nm )
+    '' ---- THREE THINGS PER ROW, AND THE OLD MACRO CHECKED ONE ---------------------
+    ''
+    '' It compared *pField to a gConfig VALUE. Every field here is a boolean stored as
+    '' 0 or -1, so ANY TWO UNRELATED ROWS AGREE HALF THE TIME -- and that is not a
+    '' hypothetical: this suite reported "11 passed, 6 failed" for some time, and the
+    '' eleven passes were false. `BINDCHK(115, gConfig.MultipleInstances)` was finding
+    '' the row labelled 115, which is "Enable Auto Indentation", and agreeing with it
+    '' because both happened to be -1.
+    ''
+    '' So the macro now pins:
+    ''
+    ''   1. THE POINTER, not the value. gOptRows(n).pField must BE @gOptWork.<field>.
+    ''      Coincidence cannot survive this; it is the assertion the suite was missing.
+    ''   2. The value, still -- it proves OptionsWork_Load actually copied gConfig.
+    ''   3. THE VISIBLE TEXT. The failure that started all this was an id pointing at
+    ''      the wrong STRING (216 is "Description", 275 is "Windows API Keywords"),
+    ''      which no value check and no pointer check can see. Only reading the label
+    ''      catches it.
+    ''
+    '' THE TEXT CHECK IS ENGLISH-ONLY and says so rather than skipping: with another
+    '' .lang loaded it prints NOT VERIFIED and counts as neither pass nor fail. A quiet
+    '' skip is what let the rest of this sit unnoticed.
+    #macro BINDCHK( labelid, wkfield, cfgfield, engtext, nm )
         scope
             dim as long nFound = -1
             for i as long = lbound(gOptRows) to ubound(gOptRows)
@@ -822,29 +849,69 @@ sub OptionsRows_RunBindTest()
                 nFail += 1
                 sLine = "  FAIL: row for " & nm & " has a null field pointer"
                 ? sLine
+            elseif gOptRows(nFound).pField <> cast(any ptr, @wkfield) then
+                nFail += 1
+                sLine = "  FAIL: " & nm & " (id " & str(labelid) & ") is bound to a " & _
+                        "DIFFERENT field than the one that label names -- WRONG ROW"
+                ? sLine
             elseif *cast(long ptr, gOptRows(nFound).pField) <> cfgfield then
                 nFail += 1
                 sLine = "  FAIL: " & nm & " row shows " & _
                         str(*cast(long ptr, gOptRows(nFound).pField)) & _
-                        " but gConfig holds " & str(cfgfield) & " -- ROW/FIELD MISMATCH"
+                        " but gConfig holds " & str(cfgfield) & _
+                        " -- OptionsWork_Load did not copy it"
                 ? sLine
             else
                 nPass += 1
+            end if
+
+            '' The label the USER reads. Separate assertion, separate count.
+            if bEnglish then
+                dim as DWSTRING wszGot = LL(labelid)
+                if wszGot = engtext then
+                    nPass += 1
+                else
+                    nFail += 1
+                    dim as DWSTRING wszMsg = "  FAIL: label id " & str(labelid) & " reads " & chr(34) & _
+                            wszGot & chr(34) & ", not " & chr(34) & engtext & chr(34) & _
+                            " -- the id names another string"
+                    ? wszMsg.Utf8
+                end if
+            else
+                nSkip += 1
             end if
         end scope
     #endmacro
 
     ? "--- TIKO_OPTIONS_SELFTEST (row/field binding) ---"
 
-    BINDCHK( 115, gConfig.MultipleInstances,    "Allow multiple instances" )
-    BINDCHK( 117, gConfig.CompileAutosave,      "Autosave before compiling" )
-    BINDCHK( 216, gConfig.AskExit,              "Ask before exiting" )
-    BINDCHK( 275, gConfig.RestoreSession,       "Restore previous session" )
-    BINDCHK( 129, gConfig.CompactMenus,         "Use Compact Menu Interface" )
-    BINDCHK(  88, gConfig.CheckUpdates,         "Check for Updates" )
-    BINDCHK( 110, gConfig.SyntaxHighlighting,   "Syntax highlighting" )
-    BINDCHK( 120, gConfig.LineNumbering,        "Show line numbers" )
-    BINDCHK(  81, gConfig.NewFileEncoding,      "Default encoding for new files" )
+    '' EVERY ID HERE WAS WRONG UNTIL 7c STEP 14, and the English text beside it is why
+    '' they can no longer be. Each was checked against settings/languages/english.lang:
+    '' the old 216 was "Description", 275 was "Windows API Keywords", 81 was "Next
+    '' Function", 129 was "Font (applies to all styles)", 88 was "Cannot Open Browser",
+    '' and 115/117/110/120 all found a real but DIFFERENT row.
+    ''
+    '' This list is still written by hand and NOT derived from OptionsRows_Init -- the
+    '' header above says an oracle copied from the thing it checks proves nothing, and
+    '' that is what has to survive being repaired.
+    BINDCHK( 114, gOptWork.MultipleInstances,  gConfig.MultipleInstances,  _
+             "Allow multiple instances",              "Allow multiple instances" )
+    BINDCHK( 116, gOptWork.CompileAutosave,    gConfig.CompileAutosave,    _
+             "Autosave files before compiling",       "Autosave before compiling" )
+    BINDCHK( 212, gOptWork.AskExit,            gConfig.AskExit,            _
+             "Ask before exiting the editor",         "Ask before exiting" )
+    BINDCHK( 269, gOptWork.RestoreSession,     gConfig.RestoreSession,     _
+             "Restore previous session/project file on startup", "Restore previous session" )
+    BINDCHK( 128, gOptWork.CompactMenus,       gConfig.CompactMenus,       _
+             "Use Compact Menu Interface",            "Use Compact Menu Interface" )
+    BINDCHK(  87, gOptWork.CheckUpdates,       gConfig.CheckUpdates,       _
+             "Check for Updates",                     "Check for Updates" )
+    BINDCHK( 109, gOptWork.SyntaxHighlighting, gConfig.SyntaxHighlighting, _
+             "Syntax highlighting",                   "Syntax highlighting" )
+    BINDCHK( 119, gOptWork.LineNumbering,      gConfig.LineNumbering,      _
+             "Show line numbers",                     "Show line numbers" )
+    BINDCHK(  80, gOptWork.NewFileEncoding,    gConfig.NewFileEncoding,    _
+             "Default encoding for new files",        "Default encoding for new files" )
 
     ' ---- The new-file-encoding combo: index == FILE_ENCODING_* value ------------------
     ' The row's item list is built by walking the encoding constants through
@@ -893,6 +960,12 @@ sub OptionsRows_RunBindTest()
         end if
     end scope
 
+    if nSkip > 0 then
+        '' NOT a silent skip. This suite exists because something went unnoticed.
+        sLine = "  NOT VERIFIED: " & str(nSkip) & " label texts -- loaded language is " & _
+                gConfig.LocalizationFile.Utf8 & ", not english.lang"
+        ? sLine
+    end if
     sLine = "--- options bind test: " & str(nPass) & " passed, " & str(nFail) & " failed ---"
     ? sLine
 
