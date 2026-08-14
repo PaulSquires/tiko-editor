@@ -287,6 +287,34 @@ private function ShellScan_RunParse( byval nTier as long, _
 end function
 
 
+
+'' ========================================================================================
+'' WHY THERE IS ONE WORKER AND NOT TWO -- ANSWERED 7c STEP 13, AND THE QUESTION WAS WRONG.
+''
+'' The handoff carried "whether two tiers deserve two workers" as an open decision for six
+'' steps, on the observation that a buffer scan and a project scan serialise here. It is not
+'' a scheduling decision. THE PARSER CANNOT BE ENTERED TWICE:
+''
+''     fbcParser.bi:166-169
+''     "THREADING CONTRACT: the engine is a single global compiler instance. Exactly one scan
+''      may run at a time, and all calls must come from the same thread (serialize scans on
+''      one worker thread; a second concurrent call returns FBCP_E_BUSY as a safety net, not
+''      as a synchronization mechanism)."
+''
+'' fbcParser is a fork of the fbc front end and carries module-level state in symb.bas,
+'' fb.bas and lex.bas. A second worker would either block on the same global instance --
+'' buying nothing -- or corrupt it. The same-thread half of that contract is already visible
+'' from here: it is why the retire queue exists, in both binaries.
+''
+'' SO THE DECISION IS PARSER REENTRANCY, WHICH IS A COMPILER FRONT-END REWRITE, and nothing
+'' about the queue above changes it. Buffer-before-project stays the right priority: the
+'' buffer tier is what the user is looking at.
+''
+'' The "1.3s + 1.3s on tiko.bas" figure this was argued from is docs/port/7c-step7.md's,
+'' measured then. It is also beside the point -- whatever the number is, a second worker
+'' cannot overlap two scans.
+'' ========================================================================================
+
 '' ---------------------------------------------------------------------------------------
 '' THE WORKER LOOP. Mirrors clsScanMgr.WorkerLoop (clsScanMgr.inc:395) with the Win32 event
 '' objects replaced by one condition, and the two tiers kept in the same latest-wins slots.
