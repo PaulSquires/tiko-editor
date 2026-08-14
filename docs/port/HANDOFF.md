@@ -1,7 +1,11 @@
 # Handoff — the tiko → PsPlatform port
 
-**7c STEP 17 COMPLETE. LINUX RUNS, WITH A WINDOW.** Verified 2026-08-14 by running every gate,
-not reading it:
+**7c STEP 17 COMPLETE. LINUX RUNS, WITH A WINDOW.**
+
+**Every Windows gate below was RE-RUN on 2026-08-14, not read.** That pass corrected one number:
+the self-test gate said 20,329 assertions and reports **20,328** — frmAbout lost an assertion when
+the Proprietary pill went in step 15, and the page was never told. The Linux rows are marked
+AUTHOR-RUN because no session here can reproduce them.
 
 | repo | branch | where the work is |
 | --- | --- | --- |
@@ -49,7 +53,7 @@ matched Windows BYTE FOR BYTE. See [`7c-step16.md`](7c-step16.md).
 **STILL NEVER RUN ANYWHERE: the fontconfig path in `PsFont.inc`.** And `tikoshell` has never been
 built for Linux -- it lives in THIS repo, so it needs both trees checked out side by side.
 
-**THIRTY-THREE SELF-TEST REPORT LINES, 20,329 ASSERTIONS, IN ONE GATE.** `_check_selftests.bat`
+**THIRTY-THREE SELF-TEST REPORT LINES, 20,328 ASSERTIONS, IN ONE GATE.** `_check_selftests.bat`
 covered the STARTUP suites in step 14; step 15 added the five that need a real dialog, which
 needed AUTOCLOSE hooks the pattern already existed for. **Its first run found three failures in
 suites that had never run.** See [`7c-step15.md`](7c-step15.md).
@@ -661,15 +665,15 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | `_check_shell.bat` | `src/shell` includes no Win32 shell header, and carries no `PsC.` | green |
 | `_run_shell.bat --selftest` | the shell's own suite — **395 assertions** (2026-08-14, +12 for the tab seam) | green |
 | tiko `TIKO_FONTFILE_SELFTEST=1` | the font resolver and the callback Scintilla drives — **13 assertions** (2026-08-14) | green |
-| **`_check_selftests.bat`** | **EVERY self-test, startup AND dialog, in one tiko run — 33 report lines, 20,329 assertions** (2026-08-14). Fails on any failure AND on fewer than 33 report lines, so "it did not run" cannot look like "it passed". Backs up and restores `settings.ini` and `tiko.tiko`, because a clean exit saves them. Opens real dialogs, so it needs a desktop. ~20s; run it deliberately, not on every build. | green |
+| **`_check_selftests.bat`** | **EVERY self-test, startup AND dialog, in one tiko run — 33 report lines, 20,328 assertions** (re-run 2026-08-14; the page said 20,329 until then — frmAbout lost the id-397 assertion when the Proprietary pill went). Fails on any failure AND on fewer than 33 report lines, so "it did not run" cannot look like "it passed". Backs up and restores `settings.ini` and `tiko.tiko`, because a clean exit saves them. Opens real dialogs, so it needs a desktop. ~20s; run it deliberately, not on every build. | green |
 | ...including `TIKO_THEME_SELFTEST` | **929** | green |
 | ...and `TIKO_OPTIONS_SELFTEST` | the options rows bind to gConfig — **26** (was 11 passed / 6 failed until step 14 repaired the ORACLE) | green |
 | ...and the five DIALOG suites | Keyboard layout, User Tools, Build Configurations, Project Options, About — reachable only since step 15 gave them AUTOCLOSE hooks | green |
 | ...and `TIKO_KEYBOARD_SELFTEST` | **18,148**, which is most of the total | green |
 | ...and the encoding suite it now runs | **48 assertions**, moved into `app/` in step 9 | green |
 | PsPlatform `build.cmd check` | **48 suites** (2026-08-14, `psfont` is the newest). Now builds the Scintilla library FIRST -- it never did, which is invisible on Windows and fatal on a clean tree | green, 0 failures |
-| **PsPlatform `build.sh check` on LINUX** | **48 suites** on Fedora 42 / GCC 15 (2026-08-14). `structsizes` confirms the LP64 layouts; the render digest `377B903CA1166763` is IDENTICAL to Windows | green, 0 failures |
-| **the DEMOS on Linux** | `platformprobe` 28/28 on Wayland (density 1.5, input converted to pixels); `widgets` on X11 AND Wayland; `ideshell` and `minieditor` driven by hand at 150% (2026-08-14) | green after two fixes |
+| **PsPlatform `build.sh check` on LINUX** | **48 suites** on Fedora 42 / GCC 15. `structsizes` confirms the LP64 layouts; the render digest `377B903CA1166763` is IDENTICAL to Windows. **AUTHOR-RUN, 2026-08-14** — no Windows session can re-run this, so it is a report, not a measurement | green, 0 failures |
+| **the DEMOS on Linux** | `platformprobe` 28/28 on Wayland (density 1.5, input converted to pixels); `widgets` on X11 AND Wayland; `ideshell` and `minieditor` driven by hand at 150%. **AUTHOR-RUN, 2026-08-14**, and the two fixes it produced are NOT verifiable on Windows — one is invisible there by construction, the other was equally broken | green after both fixes |
 | `deps/check-host.sh` | what a Linux host is missing. Said "Host is ready" while `libstdc++-static` was absent, which only surfaces at the final link after every dependency has been built | green, and it checks that now |
 | PsPlatform `pstree` | **271 assertions** (was 242 before step 8's three gaps) | green |
 | PsPlatform `psfile` | **94 assertions** (was 91; the three that cover `PsFileRealCase`'s useful direction) | green |
@@ -677,6 +681,7 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | PsPlatform `pstext` | **78 assertions** (was 47 before step 12's face chain) | green |
 | PsPlatform `psfont` | **38 assertions**, new in step 12 | green |
 | PsPlatform `pstec` | **18 assertions** (was 16; `AddFallback` across the C ABI, both directions) | green |
+| PsPlatform `psdrag` | **67 assertions** (was 64; the three that catch a splitter with NO range — see step 17) | green |
 
 The ratchet is the weak one and knows it: it greps a hand-written vocabulary, and has had
 three gaps in three audits — **five now**. The fourth was `KeyBindings_PickListKeyToValue`,
@@ -1005,8 +1010,9 @@ represent the workload.**
    reported was its own. It pins the field POINTER and the visible LABEL TEXT now, and
    11 passed / 6 failed became 26 / 0.
 
-   **AND NOTHING RAN ANY OF THEM.** Twenty-five report lines fire at startup behind
-   `TIKO_*_SELFTEST` variables -- 19,965 assertions -- and no gate started a tiko.
+   **AND NOTHING RAN ANY OF THEM.** Twenty-five report lines fired at startup behind
+   `TIKO_*_SELFTEST` variables -- 19,965 assertions AS AT STEP 14, which is history now; the
+   gate is 33 lines and 20,328 today -- and no gate started a tiko.
    `_check_selftests.bat` does, and it asserts a MINIMUM SUITE COUNT as well as zero
    failures: a tiko that crashes before the suites prints nothing, sums to zero failures and
    would otherwise pass. Proved by reverting to red: one suite disabled gives "24 suites,
