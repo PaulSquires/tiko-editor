@@ -1,9 +1,14 @@
 # Handoff — the tiko → PsPlatform port
 
-tiko `feat/cross-platform` @ **the commit that added [`7c-step11.md`](7c-step11.md)** — 7c
-**step 11 complete**, shell code at `de2db3cba`; PsPlatform **`main`** @ **the commit that
-declared `PlatPs_SetFontPath`**; HelpCenter **`main`** @ `02a4c18`. All build warning-free and
-tiko runs.
+**7c STEP 11 COMPLETE.** Verified 2026-08-11, by running every gate rather than reading it:
+
+| repo | branch | HEAD | state |
+| --- | --- | --- | --- |
+| tiko | `feat/cross-platform` | `8f3c71cc4` (last code change `de2db3cba`) | clean, pushed |
+| PsPlatform | `main` | `045f6bf` | clean, pushed |
+| HelpCenter | `main` | `02a4c18` | untouched since 7c began |
+
+Both tiko binaries build **warning-free**; every gate in the table below is green; tiko runs.
 
 **THE EDITOR FONT SETTING WORKS NOW, AND DID NOT BEFORE.** `SCI_STYLESETFONT` carries a family
 NAME and `PlatPs`'s `FontPs` discards it, so the editor rendered `consola.ttf` hard-coded
@@ -75,10 +80,11 @@ was fast-forwarded back into `feat/cross-platform` on 2026-08-10 and then delete
 on the remote. Both workstreams share this branch again — so the warning above about commit
 subjects applies going forward, not only to the history.
 
-**PsPlatform is pushed. tiko's last commits are NOT** — `origin/feat/cross-platform` was at
-`d79163672` when this was written. **Run `git log origin/feat/cross-platform..HEAD` rather
-than believing that sentence**; this page's own record is that its numbers rot faster than its
-prose.
+**EVERYTHING IS PUSHED as of 2026-08-11**: tiko `feat/cross-platform` at `8f3c71cc4`,
+PsPlatform `main` at `045f6bf`, HelpCenter `main` at `02a4c18`, all three with a clean tree.
+**Run `git log origin/feat/cross-platform..HEAD` rather than believing that sentence** — it has
+already been wrong in BOTH directions on this page, and a claim about what is pushed is stale
+the moment anyone commits.
 
 **THERE ARE TWO BINARIES IN tiko NOW.** `tiko.exe` from `tiko.bas`, unchanged and building at
 every commit; and `_shell\tikoshell.exe` from `src\shell\tikoshell.bas`, which is phase 7c's
@@ -120,15 +126,19 @@ public site until someone publishes.
 that names the old one — a script, a checkout, a `git show master:…` — is now silently pointing
 at nothing. tiko's own branches are unaffected: `main`, `development`, `feat/cross-platform`.
 
-**Every count on this page was re-verified on 2026-08-09**, and the gate table and shell
-figures again at the end of that day. If you are reading this later, re-run them before quoting
-them — the commands are beside each number, and this page's record is that its numbers rot
-faster than its prose.
+**EVERY COUNT AND EVERY GATE ON THIS PAGE WAS RE-RUN ON 2026-08-11**, at the end of step 11 —
+not read, run. The gate table below is that pass. If you are reading this later, do it again
+before quoting anything: the commands are beside each number.
 
-**Three of them rotted inside a single day and were caught by re-running, not by reading**:
-`_check_app_layer` went 30 files → 36, `_check_app_standalone` 7 clean → 11, and the binding
-count quoted as "112" is **109** — 112 was a `grep -c` of the call sites, not the array. That
-last one had already been corrected once and came back.
+**What that pass found: the gate table was correct and the PROSE was not.** Every number
+matched. The sentence that had to change was "PsPlatform is pushed, tiko's last commits are
+NOT", which had been true when written and was false by the time it was read — the same failure
+mode as the counts, in a sentence nobody thinks to re-run.
+
+**And three counts rotted inside a single day earlier in this port**, caught by re-running
+rather than by reading: `_check_app_layer` went 30 files → 36, `_check_app_standalone` 7 clean →
+11, and the binding count quoted as "112" is **109** — 112 was a `grep -c` of the call sites,
+not the array. That last one had already been corrected once and came back.
 
 ## If you are picking this up cold
 
@@ -288,7 +298,7 @@ tiko's `_check_scihost` fail to LINK. `PsTheme.inc` is reached from `PsWidget.in
 `PsFile.inc` into it dragged `vbcompat.bi` inside tiko's `namespace PsC`, where `now()` mangles
 to `PSC::fb_Now`. Clean compile, link failure, invisible in the repo that caused it.
 **That probe is the only coverage PsPlatform has of being CONSUMED rather than built**, and it
-is worth more than its 26 assertions suggest. Run tiko's gates after touching PsPlatform's
+is worth more than its 42 assertions suggest. Run tiko's gates after touching PsPlatform's
 include graph, not just PsPlatform's own suites.
 
 ---
@@ -543,7 +553,7 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | script | asserts | state |
 | --- | --- | --- |
 | `_compile_fast.bat` | gas64 build, zero warnings | green |
-| `_check_scihost.bat` | the editor works — 26 assertions, incl. an **A/B against a stock Scintilla window in the same process** | green |
+| `_check_scihost.bat` | the editor works — **42 assertions** (2026-08-11; this line said 26 until it was re-run), incl. an **A/B against a stock Scintilla window in the same process** | green |
 | `_check_package.bat` | tiko runs with **only the Windows directories on PATH** | green, ~1s |
 | `_check_app_layer.bat` | `src/app` names no Win32 or AfxNova token (**48 files**, 2026-08-11) | green |
 | `_check_app_standalone.bat` | `src/app` compiles against PsCore alone **and LINKS as one unit** | green — **18 clean**, 0 errors, **debt 1** (2026-08-11) |
