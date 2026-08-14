@@ -1,10 +1,11 @@
 # Handoff — the tiko → PsPlatform port
 
-**7c STEP 12 COMPLETE.** Verified 2026-08-14 by running every gate, not reading it:
+**7c STEP 13 COMPLETE, AND THE LIVE LIST IS EMPTY.** Verified 2026-08-14 by running every
+gate, not reading it:
 
 | repo | branch | HEAD | state |
 | --- | --- | --- | --- |
-| tiko | `feat/cross-platform` | `bdf1df3b0` | clean, **NOT pushed** |
+| tiko | `feat/cross-platform` | `22a12fabe` | clean, **NOT pushed** |
 | PsPlatform | `main` | `708ede5` | clean, **NOT pushed** |
 | HelpCenter | `main` | `02a4c18` | untouched since 7c began |
 
@@ -13,6 +14,17 @@ in both directions on this page, and a claim about what is pushed is stale the m
 commits.
 
 Both tiko binaries build **warning-free**; every gate in the table below is green; tiko runs.
+
+**THE LAST LINK DEBT IS CLOSED AND THE RATCHET HAS NO BASELINE.** Step 13 took
+`_check_app_standalone` from 1 to 0 without touching `clsTopTabCtl`, whose involvement was the
+FOURTH stated blocker in that file not to survive being re-read. The Character Set combo is gone,
+and "two tiers, two workers" turned out not to be a scheduling decision at all — the parser is a
+single global compiler instance and says so in its own header. See [`7c-step13.md`](7c-step13.md).
+
+**AND ONE FAILURE THAT IS IN NO GATE LIST**: `TIKO_OPTIONS_SELFTEST` reports **11 passed, 6
+failed**, and did so before step 13 — verified by stashing the step's own commit and re-running.
+Four rows carry no label id and one reports a row/field mismatch. **Nothing runs that suite**,
+which is how it came to be failing unnoticed. It is step 14's first item.
 
 **BOLD IS BOLD AND FALLBACK EXISTS.** Step 12 closes handoff items 9 and 9b, which were never two
 problems: `FontPs` used `fp.size` and dropped the face name, the weight and the italic flag, so
@@ -206,31 +218,35 @@ Read in this order, and do not skip the first:
     `PsTimerNow()`, which is a **settable virtual clock**, not a wall clock — and *"the clock
     never moved"* is indistinguishable from *"the work was free"*, which was the answer the step
     wanted to hear.
-11. [`7c-step12.md`](7c-step12.md) — **the step where the revert-to-red pass caught the SUITES
+11. [`7c-step13.md`](7c-step13.md) — **the step where the live list emptied, and four of its
+    items closed as "the blocker was not one".** Read the last section: a suite that has been
+    failing six assertions because nothing runs it. That is this port's recurring failure
+    wearing a suite instead of a comment.
+12. [`7c-step12.md`](7c-step12.md) — **the step where the revert-to-red pass caught the SUITES
     rather than the code, twice.** A prefix match left every style assertion green because
     `RegEnumValueW` happens to enumerate in the helpful order; removing a whole feature dropped
     a suite from 35 assertions to 30 and still printed "0 failed". Read that section before
     writing any assertion that depends on a lookup order or is wrapped in a skip.
-12. [`7c-step11.md`](7c-step11.md) — **the step that started as an encoding bug and was
+13. [`7c-step11.md`](7c-step11.md) — **the step that started as an encoding bug and was
     neither.** Read "What was actually wrong": a setting that had never reached the code it
     named. Then the assertion that failed on its first run — the CODE was right and the SUITE
     was wrong, which is the other way round from every other failure on this page.
-13. [`7c-step10.md`](7c-step10.md) — **three items closed, three false comments, and one of
+14. [`7c-step10.md`](7c-step10.md) — **three items closed, three false comments, and one of
     them mine.** Read the three-row table at the top. Then the revert-to-red section: every rule
     went red for the first time in six steps, and the one that nearly did not is instructive —
     `Doc_EncodingName`'s `case else` is `"ANSI"`, so a missing arm does not fail, it puts the
     word ANSI beside a UTF-16 file.
-14. [`7c-step9.md`](7c-step9.md) — **the encoding step, and the third blocker in three steps
+15. [`7c-step9.md`](7c-step9.md) — **the encoding step, and the third blocker in three steps
     that had already been removed.** Read the table at the top, then "A defect found next to the
     one being fixed": the seam's `LoadFileText` had NO AGREED POLARITY — one implementation
     returned false on success, the other true — which was invisible with one implementation and
     live from the moment there were two.
-15. [`7c-step8.md`](7c-step8.md) — **the step where two blockers turned out to have been
+16. [`7c-step8.md`](7c-step8.md) — **the step where two blockers turned out to have been
     removed before anyone noticed.** The pane went 0 → 51 rows, but read the two intermediate
     tables first: the one that shows the pane's ceiling is fbcParser (573 procedure symbols, 41
     with a body line) and the revert-to-red table, where one revert found not a missing test but
     a **false claim in a comment** — which is the other thing reverting is for.
-16. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
+17. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
    irreducible, investigated. **It was not a blocker and never had been.** Short, and it is the
    clearest example on this whole shelf of a claim that survived because nobody checked it.
    **Its recommendation has since been implemented**: WebView2 is gone from the tree.
@@ -576,10 +592,12 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | `_check_scihost.bat` | the editor works — **42 assertions** (2026-08-11; this line said 26 until it was re-run), incl. an **A/B against a stock Scintilla window in the same process** | green |
 | `_check_package.bat` | tiko runs with **only the Windows directories on PATH** | green, ~1s |
 | `_check_app_layer.bat` | `src/app` names no Win32 or AfxNova token (**48 files**, 2026-08-11) | green |
-| `_check_app_standalone.bat` | `src/app` compiles against PsCore alone **and LINKS as one unit** | green — **18 clean**, 0 errors, **debt 1** (2026-08-11) |
+| `_check_app_standalone.bat` | `src/app` compiles against PsCore alone **and LINKS as one unit** | green — **18 clean**, 0 errors, **debt 0 and NO BASELINE** (2026-08-14) |
 | `_check_shell.bat` | `src/shell` includes no Win32 shell header, and carries no `PsC.` | green |
-| `_run_shell.bat --selftest` | the shell's own suite — **383 assertions** (2026-08-11, after the ANSI revert) | green |
+| `_run_shell.bat --selftest` | the shell's own suite — **395 assertions** (2026-08-14, +12 for the tab seam) | green |
 | tiko `TIKO_FONTFILE_SELFTEST=1` | the font resolver and the callback Scintilla drives — **13 assertions** (2026-08-14) | green |
+| tiko `TIKO_THEME_SELFTEST=1` | **929 assertions** (2026-08-14) | green |
+| tiko `TIKO_OPTIONS_SELFTEST=1` | the options rows bind to gConfig — **17 assertions** | **RED: 11 passed, 6 FAILED** (2026-08-14). It was not in this table until step 13, which is how it came to be failing unnoticed. See live-list item 12. |
 | ...and the encoding suite it now runs | **48 assertions**, moved into `app/` in step 9 | green |
 | PsPlatform `build.cmd check` | **48 suites** (2026-08-14, `psfont` is the newest) | green, 0 failures |
 | PsPlatform `pstree` | **271 assertions** (was 242 before step 8's three gaps) | green |
@@ -777,7 +795,13 @@ PsCore now declares `operator len`, so unconverted sites are right rather than q
 
 ---
 
-## What 7c step 7 has to decide — the live list
+## The live list — EMPTY as of 7c step 13
+
+**Every item that was on this list is closed, and FOUR of them closed as "the recorded blocker
+was not one".** The list is left in place with its outcomes rather than deleted: what happened
+to it is more useful than the list was.
+
+Item 12 is not an inheritance from this list -- it is a defect step 13 found while closing it.
 
 The four items below this one are all closed and are kept as a record. **These are the open
 ones**, and each is a decision rather than a task.
@@ -818,24 +842,27 @@ represent the workload.**
    bytes and called them UTF-8;
    tiko's read path decodes UTF-16 through `WideCharToMultiByte` and is still shell-side.
    The shell *saves* now, so a UTF-16 file opened there will not round-trip.
-5. **`clsTopTabCtl`: portable rewrite, or a Win32 facade forever?** The shell shows the
-   *model* half is small — 258 lines including its comments. The class as it stands stores the
-   `clsDocument ptr` inside the control and reads it back with `PsTabBar_GetItemData`.
-6. **The ONE link-debt body** (was four, then three, then two).
-   **`KeyBindings_PickListKeyToValue` closed in step 10** — and it was never the right function
-   for the caller to be using: its own header said membership, not the non-zero return, was the
-   validity test, and the non-zero return is the `VK_*` that `app/` may not name. The
-   `#include "../modKeyBindings.bi"` went with it, so **no `app/` file reaches up any more.**
+5. ~~**`clsTopTabCtl`: portable rewrite, or a Win32 facade forever?**~~ **NEITHER, AND THE
+   TREE HAD ALREADY ANSWERED.** There are TWO implementations behind one seam --
+   `src/shell/shelltabs.bi`, 311 lines on `PsTabBar` since step 3, and
+   `src/clsTopTabCtl.inc`, 424 lines of Win32 -- which is the pattern the whole port runs
+   on. It was a facade only while something in `app/` had to reach through it, and step 13
+   stopped that being true. No rewrite is owed.
 
-   **What remains is `clsConfig::ProjectSaveToFile`, and it is blocked on something real**: it
-   calls `gTTabCtl` at four sites. It cannot close until item 5 does. THE OLD TEXT, for the
-   record: `FilenameOriginalCase` closed in step 8
-   — and the entry that had said it "needs a PsCore canonical-path call first" was wrong when
-   written and wrong at three audits after it: `PsFileRealCase` already existed. **tiko gave up
-   symlink and junction resolution with it**, deliberately, because
-   `GetFinalPathNameByHandleW` was doing that as a side effect of fixing the case. What remains
-   includes `KeyBindings_PickListKeyToValue` — an `app/*.inc` reaching UP into the shell **by
-   relative path**, which no token scan can see.
+6. ~~**The ONE link-debt body**~~ **CLOSED IN STEP 13, AND THE BASELINE IS DELETED.**
+   `_check_app_standalone` is a plain failure now, not a ratchet with a floor of 0 -- which
+   would have reported the next undefined symbol as "debt" instead of failing.
+
+   **ITS STATED BLOCKER WAS THE FOURTH IN THAT FILE NOT TO SURVIVE BEING RE-READ.** It said
+   `ProjectSaveToFile` "cannot close until the tab control does, which is the largest open
+   item in the port". `clsTopTabCtl` was not touched. A project file records which documents
+   are open and in what ORDER -- a question about a list -- so four fields went onto
+   `AppHostServices` and `SaveActiveTabIndex`'s twenty lines became `Tabs_SaveActiveIndex`
+   in `app/`, where the shell's suite can reach them.
+
+   **AND CLOSING IT EXPOSED THE NEXT ONE INSIDE THE SAME COMMIT**: `ProcessToCurdriveProject`
+   became undefined and moved too. 1 -> 1 -> 0. That is what the counter was always for.
+
 7. **What the per-form ratio actually depends on.** Step 4 measured 1.35 on a whole form; step
    5's panel came in UNDER 1 — and did less, while its scanner replaced 382 lines with 112
    because most of `clsScanMgr` was thread machinery. **The cost tracks what the platform
@@ -877,21 +904,43 @@ represent the workload.**
    ships all four files. **`PsTextEngine` still has no weight concept**, and does not need one
    while the resolution happens above it.
 
-10. **THE OPTIONS "CHARACTER SET" COMBO IS DEAD UI.** `modViewStyle.inc` still sends
-    `SCI_STYLESETCHARACTERSET` from `gConfig.EditorFontCharSet`, and `PlatPs.cxx` never
-    consults `lfCharSet` — the setting was live under `Scintilla64.dll` and does nothing now.
-    Either wire it into the fallback work above or remove it; a control that cannot affect
-    anything is worse than no control, because it gets tried first when something looks
-    wrong. (It was tried first here.)
+10. ~~**THE OPTIONS "CHARACTER SET" COMBO IS DEAD UI.**~~ **REMOVED IN STEP 13.** The
+    combo, the `gConfig` field, both `settings.ini` directions, `GetFontCharSetID` and the two
+    `SCI_STYLESETCHARACTERSET` sends. Step 12 had removed its last possible meaning -- a
+    charset was GDI's way of saying which face covers a script, and the coverage chain answers
+    that per codepoint without being told.
 
-    **STEP 12 MADE THIS DECIDABLE, WHICH IT WAS NOT WHEN THIS WAS WRITTEN.** "Wire it into
-    the fallback work" named work that did not exist. It does now, and the honest reading is
-    that the combo has NOTHING LEFT TO DO: a charset was GDI's way of choosing which face
-    covered a script, and the coverage chain answers that per codepoint without being told.
-    Removing it is the likely right answer, and it is a decision, not a cleanup.
+    Lang id 286 is BLANKED in all six files and never renumbered; control id 9403 is retired
+    rather than reused. The `settings.ini` READ went too, so an existing file keeps its line
+    and is simply not consulted.
 
-11. **Whether two tiers deserve two workers.** They share one thread and serialise, so
-   `tiko.bas` is 1.3s + 1.3s before both are current.
+11. ~~**Whether two tiers deserve two workers.**~~ **THE QUESTION WAS WRONG, ANSWERED IN STEP
+   13.** Not a scheduling decision: `fbcParser.bi:166-169` says the engine is a single global
+   compiler instance, one scan at a time, all calls from one thread, with `FBCP_E_BUSY` as a
+   safety net rather than a lock. A second worker would block on that instance or corrupt it.
+   The real decision is parser reentrancy, which is a compiler front-end rewrite.
+
+   **The same-thread half of that contract was already visible from both worker loops** -- it
+   is why the retire queue exists in both binaries -- and neither loop said what it was a
+   consequence of. Both do now.
+
+12. **THE OPTIONS BIND SUITE IS FAILING, AND NOTHING RUNS IT.** Found in step 13 and NOT
+   caused by it -- verified by stashing that step's own commit, rebuilding and re-running:
+   the same six failures, line for line.
+
+   ```
+   FAIL: no row carries label id 216 (Ask before exiting)
+   FAIL: no row carries label id 275 (Restore previous session)
+   FAIL: no row carries label id 129 (Use Compact Menu Interface)
+   FAIL: no row carries label id 88  (Check for Updates)
+   FAIL: Show line numbers row shows 0 but gConfig holds -1 -- ROW/FIELD MISMATCH
+   FAIL: no row carries label id 81  (Default encoding for new files)
+   ```
+
+   `TIKO_OPTIONS_SELFTEST` is in NO gate list, in no `_check_*`, and fires only behind an
+   environment variable inside a started GUI. **That is this page's recurring failure wearing
+   a suite instead of a comment**, and the "Show line numbers" one claims a real row/field
+   mismatch rather than a missing label. STEP 14's FIRST ITEM.
 
 **And one process point steps 3 and 4 both earned: drive every milestone by hand before calling
 it done.** Every claim a suite supports has survived. Every claim about what the user sees came
