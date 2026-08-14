@@ -1,10 +1,21 @@
-# Phase 7c, step 16 — Linux, for the first time
+# Phase 7c, step 16 — phase 7c's own code meets Linux
 
 **`ALL GREEN [linux64]` — 48 suites, 0 build failures, 0 test failures**, on Fedora 42 with
-GCC 15. Nothing in phase 7c had been executed on that platform at any point before this.
+GCC 15.
 
-Four defects, and **not one of them was in the portable code**. Every one was in a binding, a
-build script or a gate.
+**"THE FIRST LINUX RUN" WOULD BE WRONG, AND I SAID IT SEVERAL TIMES BEFORE CHECKING.**
+`docs/STATUS.md` and `README.md` in PsPlatform record native Fedora from the start: Gates 0–4
+were closed there, the `hellotext` pixel digest `8CEED5802EF1431A` is pinned as matching on
+Windows, WSL2 Ubuntu **and Fedora**, and Gate 4 was closed *"after two rounds on native Fedora"*
+with an interactive pass at fractional scale that found two real bugs.
+
+What had never run on Linux is **phase 7c's own additions** — and, specifically, everything
+behind Scintilla. `STATUS.md`'s own table says it plainly: `Scintilla spike | 15/15 | 15/15 | not
+run`. That is why all five defects below cluster where they do.
+
+Five defects, and **not one of them was in the portable code**. Every one was in a binding, a
+build script or a gate — and every one sits in or behind the Scintilla work, which is exactly the
+part Fedora had never seen.
 
 ---
 
@@ -12,21 +23,20 @@ build script or a gate.
 
 Worth saying first, because it is the part that could have gone badly and did not.
 
-**`structsizes` passed on the first run.** `FT_FaceRec` = 248, `FT_GlyphSlotRec` = 304 on LP64 —
-the layouts `FreeType.bi` worked out from an offsetof probe, for a platform nobody had run. The
-header's long warning about `long` being 4 bytes on LLP64 and 8 on LP64 was correct in every
-field it described.
+**`structsizes` passed on the first run.** `FT_FaceRec` = 248, `FT_GlyphSlotRec` = 304 on LP64.
+The header's long warning about `long` being 4 bytes on LLP64 and 8 on LP64 is correct in every
+field it describes.
 
-**The render digest matched byte for byte.** `377B903CA1166763`, the same value Windows produces.
-Blend2D, FreeType and HarfBuzz rasterise identically across the two platforms, which is the thing
-a pinned digest exists to prove and had never had the chance to.
+**The render digest matched byte for byte.** `377B903CA1166763`, the same value Windows produces —
+and `STATUS.md` had it as `pending` for Fedora, so this is the column filling in rather than a
+first proof.
 
 **`-z noexecstack` was already there**, with a comment saying it is *"a Fedora problem
 specifically, not a cosmetic warning"* — written before anyone had a Fedora box.
 
 ---
 
-## The four defects
+## The five defects
 
 ### 1. The clone URL
 
@@ -134,10 +144,15 @@ been asked to display anything. The fontconfig path in `PsFont.inc` still has ne
 Fifteen steps of this port have found the same shape over and over: **a claim nothing tested.** A
 comment, a handoff entry, a suite nobody ran, a reason nobody checked.
 
-Linux is that shape at the largest scale available. Every one of these five defects had been sitting
-in the tree — some for the whole project — in code that was *written for* Linux, reviewed as
-correct, and never once executed there. The `FT_Long` binding was wrong the day it was typed. The
-clone URL has never worked.
+**AND I COMMITTED IT MYSELF IN THIS STEP.** I called this "the first Linux run" repeatedly, in
+chat and in a commit message, without opening `STATUS.md` — which says on its second screen that
+Gates 0–4 were closed on native Fedora and pins a digest as matching there. The handoff entry I
+inherited said "nothing in phase 7c", which is true and narrower; I widened it while repeating it.
+
+The accurate version is more interesting anyway. Fedora had seen the toolkit and had never seen
+**Scintilla** — `STATUS.md` says `not run` in that row — and every one of the five defects lives
+in or behind that work. The `FT_Long` binding was wrong the day it was typed, but the path that
+exposes it (`face_index = -1`) only arrived in step 12. The clone URL has never worked.
 
 **And the portable code was fine.** Every defect was in a binding, a build script or a gate — in
 the machinery around the port rather than the port. That is the genuinely good news in this step,

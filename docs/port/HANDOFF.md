@@ -25,7 +25,14 @@ and "two tiers, two workers" turned out not to be a scheduling decision at all �
 single global compiler instance and says so in its own header. See [`7c-step13.md`](7c-step13.md).
 
 **`ALL GREEN [linux64]` -- 48 suites, 0 build failures, 0 test failures**, on Fedora 42 with
-GCC 15. Nothing in phase 7c had been executed on Linux at any point before this.
+GCC 15.
+
+**AND "THE FIRST LINUX RUN" IS WRONG -- I SAID IT REPEATEDLY BEFORE CHECKING.** PsPlatform's own
+`docs/STATUS.md` and `README.md` record native Fedora from the start: Gates 0-4 closed there, the
+`hellotext` digest pinned as matching on Fedora, and Gate 4 closed *"after two rounds on native
+Fedora"* with an interactive pass that found two real bugs. What had never run there is phase 7c's
+own additions -- and specifically SCINTILLA, which `STATUS.md` lists as `not run` on Fedora. All
+five defects sit in or behind that work.
 
 **FIVE DEFECTS, AND NOT ONE IN THE PORTABLE CODE** -- every one was in a binding, a build script
 or a gate. `structsizes` passed first time (the LP64 layouts were right), and the render digest
@@ -248,11 +255,12 @@ Read in this order, and do not skip the first:
     `PsTimerNow()`, which is a **settable virtual clock**, not a wall clock — and *"the clock
     never moved"* is indistinguishable from *"the work was free"*, which was the answer the step
     wanted to hear.
-11. [`7c-step16.md`](7c-step16.md) — **the first Linux run, and the largest instance of this
-    page's recurring shape.** Five defects that had sat in the tree -- some since the day they
-    were typed -- in code written FOR Linux, reviewed as correct, and never once executed there.
-    Read "The four defects": one of them made a suite report a PASS for the wrong reason on a
-    platform where the feature did not work at all.
+11. [`7c-step16.md`](7c-step16.md) — **phase 7c's code meets Linux, and the step where I made
+    this page's own mistake.** Five real defects, all in bindings, build scripts and gates rather
+    than in portable code — and one of them made a suite report a PASS for the wrong reason on a
+    platform where the feature did not work at all. Then read "What this step is really about":
+    I called it "the first Linux run" repeatedly without opening PsPlatform's STATUS.md, which
+    says on its second screen that Fedora had been in use since Gate 0.
 12. [`7c-step15.md`](7c-step15.md) — **the step where a revert-to-red falsified the CORRECTION,
     not the code.** Two explanations for the same hook, both plausible, both measured, both
     false -- and the second one was mine, written in this step. Read "Two claims about why
