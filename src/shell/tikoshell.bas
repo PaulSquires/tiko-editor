@@ -5237,6 +5237,81 @@ end function
         '' would be a real defect rather than an untidy test.
         Check "the surface is windowless", (surf.hWin = 0)
 
+        '' ---- THE PROJECT FILE'S ACTIVE-TAB INDEX -----------------------------------
+        '' Tabs_SaveActiveIndex was clsTopTabCtl.SaveActiveTabIndex until 7c step 13 --
+        '' twenty lines of counting inside a Win32 control, with no Win32 in them, which
+        '' nothing could reach to test. It is app-layer logic now and this binary runs it
+        '' through its own tab array.
+        ''
+        '' THE RULE IS SUBTLE AND IS WHY IT IS NOT A SEAM FIELD: a project records only
+        '' documents with a file on disk, so the saved index counts positions in the
+        '' WRITTEN list, not in the tab bar. Made a fifth seam field it would exist twice,
+        '' in two hosts, with nothing checking the two agreed.
+        scope
+            '' TWO TABS OF ITS OWN, and the first draft of this block did NOT do that --
+            '' it assumed the files opened earlier in this suite were still tabbed. They
+            '' are not; the earlier scope restores the tab state it found. Three
+            '' assertions failed and one PASSED FOR THE WRONG REASON: "TabDocAt agrees
+            '' with the array" compared 0 with 0.
+            dim as DWSTRING wszDir = environ("TEMP") & "\tiko_shelltabs"
+            PsDirCreate( wszDir )
+            dim as DWSTRING wszA = wszDir & "\tabseam_a.bas"
+            dim as DWSTRING wszB = wszDir & "\tabseam_b.bas"
+            dim as boolean bW = PsFileWriteAll( wszA, !"' a\n" )
+            bW = bW andalso PsFileWriteAll( wszB, !"' b\n" )
+
+            if bW = false then
+                Check "the tab-seam probes could be written to %TEMP%", false, wszA.Utf8
+            else
+                dim as long nWasCount = g_nTabDocs
+                dim as long idxA = ShellTabs_Open( wszA )
+                dim as long idxB = ShellTabs_Open( wszB )
+                Check "two probe files opened into tabs", (idxA >= 0) andalso (idxB > idxA)
+
+                '' ---- THE SEAM READS THE SHELL'S OWN ARRAY -------------------------
+                Check "TabCount is the tab count", (gAppHost.TabCount() = g_nTabDocs)
+                Check "  and it grew by two", (g_nTabDocs = nWasCount + 2)
+                Check "TabDocAt returns the same pointer the array holds", _
+                      (gAppHost.TabDocAt(idxA) = g_tabDocs(idxA).pDoc) andalso _
+                      (gAppHost.TabDocAt(idxA) <> 0)
+
+                '' OUT OF RANGE IS 0, BOTH ENDS. This is the fold that removed a separate
+                '' IsValidTab call, so it is the assertion that keeps the fold honest.
+                Check "a negative index is no document", (gAppHost.TabDocAt(-1) = 0)
+                Check "  and so is one past the end", (gAppHost.TabDocAt(g_nTabDocs) = 0)
+
+                Check "TabIndexOfDoc finds a tabbed document", _
+                      (gAppHost.TabIndexOfDoc( g_tabDocs(idxB).pDoc ) = idxB)
+                Check "  and answers -1 for one that is not tabbed", _
+                      (gAppHost.TabIndexOfDoc( 0 ) = -1)
+
+                '' ---- AND THE RULE THAT IS WHY THIS IS LOGIC, NOT A FIFTH FIELD -----
+                '' A project records only documents with a file on disk, so the saved
+                '' index counts positions in the WRITTEN list, not in the tab bar.
+                dim as long nCur = gAppHost.TabActiveIndex()
+                Check "the newly opened tab is the active one", (nCur = idxB)
+                Check "with every tab on disk, saved index = tab index", _
+                      (Tabs_SaveActiveIndex() = nCur)
+
+                '' THE DISCRIMINATING CASE. Everything above passes under an
+                '' implementation that simply returns the tab index.
+                dim as clsDocument ptr pA = g_tabDocs(idxA).pDoc
+                dim as boolean bWasA = pA->IsNewFlag
+                pA->IsNewFlag = true
+                Check "an untitled tab AHEAD of it is not counted", _
+                      (Tabs_SaveActiveIndex() = nCur - 1)
+                pA->IsNewFlag = bWasA
+
+                '' An untitled ACTIVE tab has no honest answer, and 0 is the harmless one.
+                dim as clsDocument ptr pB = g_tabDocs(idxB).pDoc
+                dim as boolean bWasB = pB->IsNewFlag
+                pB->IsNewFlag = true
+                Check "an untitled ACTIVE tab lands on the first restored document", _
+                      (Tabs_SaveActiveIndex() = 0)
+                pB->IsNewFlag = bWasB
+            end if
+        end scope
+
         '' ---- AND tiko's OWN ENCODING SUITE, WHICH THIS BINARY CAN NOW RUN ----------
         '' 27 assertions that lived in src/ until 7c step 9 because they named
         '' WideCharToMultiByte, CFileStream and GetFileToString. They are in app/ now, so

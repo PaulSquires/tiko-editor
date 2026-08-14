@@ -208,6 +208,31 @@ private function AppHostW32_IsFindVisible() as boolean
     return (IsWindowVisible( HWND_FRMMAIN_FIND ) <> 0)
 end function
 
+'' ---- the tab ORDER, which is the one thing gApp.pDocList cannot answer ------------------
+'' Four forwards to clsTopTabCtl. Their whole content is that tiko's tab order lives in a
+'' Win32 control and the shell's lives in an array, which is precisely the kind of
+'' difference this record exists for.
+private function AppHostW32_TabCount() as long
+    return gTTabCtl.GetItemCount
+end function
+
+'' 0 for an index that is not a tab AND for a tab holding no document -- the Find in Project
+'' tab is real and has none. Folding IsValidTab in here is not a shortcut: every caller
+'' tested validity and then immediately asked for the pointer, so two calls could disagree
+'' only by being written wrongly.
+private function AppHostW32_TabDocAt( byval i as long ) as clsDocument ptr
+    if gTTabCtl.IsValidTab(i) = false then return 0
+    return gTTabCtl.GetpDoc(i)
+end function
+
+private function AppHostW32_TabActiveIndex() as long
+    return gTTabCtl.GetCurSel()
+end function
+
+private function AppHostW32_TabIndexOfDoc( byval pDoc as clsDocument ptr ) as long
+    return gTTabCtl.GetTabIndexByDocumentPtr( pDoc )
+end function
+
 private sub AppHostW32_CloseTab( byval nTabIdx as long )
     OnCommand_FileClose( HWND_FRMMAIN, EFC_CLOSECURRENT, nTabIdx )
 end sub
@@ -230,6 +255,10 @@ sub AppHostW32_Install()
     gAppHost.AskOpenPath    = @AppHostW32_AskOpenPath
     gAppHost.AskSavePath    = @AppHostW32_AskSavePath
     gAppHost.IsFindVisible  = @AppHostW32_IsFindVisible
+    gAppHost.TabCount       = @AppHostW32_TabCount
+    gAppHost.TabDocAt       = @AppHostW32_TabDocAt
+    gAppHost.TabActiveIndex = @AppHostW32_TabActiveIndex
+    gAppHost.TabIndexOfDoc  = @AppHostW32_TabIndexOfDoc
     gAppHost.LastErrorText      = @AppHostW32_LastErrorText
     gAppHost.ResolveIncludePath = @AppHostW32_ResolveIncludePath
     gAppHost.ConfirmLossySave   = @AppHostW32_ConfirmLossySave

@@ -83,27 +83,14 @@ end function
 
 
 
-' ========================================================================================
-' Process prefix {CURDRIVE} and convert to current drive letter.
-' ========================================================================================
-function ProcessToCurdriveProject( byval wszFilename as DWSTRING ) as DWSTRING
-    ' for each folder location determine if it resides on the same drive as
-    ' the project file. if it does then substitute the replaceable parameter
-    ' {CURDRIVE} for the drive letter. This allows you to easily run the editor
-    ' on different media (eg. thumb drive) that may be assigned a different
-    ' drive letter.
-    dim wszText as DWSTRING = gApp.ProjectFilename
-
-    dim wszCurDrive as DWSTRING = PsLCase(PsLeft(wszText, 3))  ' eg. D:\
-
-    ' if the incoming filename is a relative file name then the following test
-    ' will have no effect.
-    if PsLCase(PsLeft(wszFilename, 3)) = wszCurDrive then 
-        wszFilename = wstr("{CURDRIVE}") & PsMid(wszFilename, 2)
-    end if
-
-    return wszFilename
-end function
+' ProcessToCurdriveProject MOVED to app/modPaths.inc (7c step 13). Its declaration has
+' been in app/modPaths.bi since step 1 and the body is pure gApp + PsCore, so it was on
+' the same list as ProcessFromCurdriveApp above -- things that move as soon as something
+' needs them. ProjectSaveToFile moving into app/ is what finally needed it: closing one
+' link debt exposed the next, which is exactly what that counter is for.
+'
+' ProcessFromCurdriveProject, below, STAYS. Only the project LOADER calls it, and the
+' loader is shell code.
 
 
 ' ========================================================================================

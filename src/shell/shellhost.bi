@@ -26,18 +26,21 @@
 
 #pragma once
 
-'' ---------------------------------------------------------------------------------------
-'' The two bodies the linker demands and this binary has no feature for.
+'' ---- ProjectSaveToFile's SHELL STUB IS GONE, IN 7c STEP 13 -----------------------------
 ''
-'' clsConfig is SPLIT -- header and constructor in app\, the rest in src\clsConfig.inc since
-'' 7c step 1 -- so the shell has to supply this method itself. TodoStore_RemoveFile is
-'' declared in app\clsSymbolDb.bi and bodied in the shell's symbol database.
-function clsConfig.ProjectSaveToFile() as boolean
-    print "tikoshell: ProjectSaveToFile -- this binary has no project system yet."
-    return false
-end function
-
-
+'' This binary supplied a body that printed "no project system yet" and returned false,
+'' because the real one lived in src\clsConfig.inc and called gTTabCtl at five sites.
+''
+'' It does not any more. Those five calls became four AppHostServices fields plus
+'' Tabs_SaveActiveIndex, the function moved into app\clsConfig.inc, and the shell now runs
+'' the SAME project writer tiko does -- through its own tab array, which it has had since
+'' step 3 commit 6. THE STUB WOULD NOW BE A DUPLICATE DEFINITION, which is how this was
+'' noticed: the shell failed to compile the moment the move landed, which is the gate doing
+'' exactly what it is for.
+''
+'' It also took the last link debt to 0. See _check_app_standalone.bat, which no longer has
+'' a baseline.
+''
 '' ---- FilenameOriginalCase's SHELL BODY IS GONE, AND THAT IS THE POINT ------------------
 '' This binary supplied its own -- the IDENTITY function, handing every path straight back --
 '' because tiko's was real Win32 and could not be linked here. In 7c step 8 the real one
@@ -252,6 +255,29 @@ private function ShellHost_IsFindVisible() as boolean
 end function
 
 
+'' ---- the tab ORDER ---------------------------------------------------------------------
+'' NOT STUBS, and that is the difference between these and CloseTab above. The project file
+'' records which documents are open and in what order; a shell that answered 0 here would
+'' write a project with no tabs in it and lose the arrangement on the next save. These are
+'' the real array, which commit 6 of step 3 built.
+private function ShellHost_TabCount() as long
+    return g_nTabDocs
+end function
+
+private function ShellHost_TabDocAt( byval i as long ) as clsDocument ptr
+    if (i < 0) orelse (i >= g_nTabDocs) then return 0
+    return g_tabDocs(i).pDoc
+end function
+
+private function ShellHost_TabActiveIndex() as long
+    return g_nTabCur
+end function
+
+private function ShellHost_TabIndexOfDoc( byval pDoc as clsDocument ptr ) as long
+    return ShellTabs_IndexOfDoc( pDoc )
+end function
+
+
 '' ---------------------------------------------------------------------------------------
 '' NOTIFICATIONS. Several are empty, and the record's own header explains why that is
 '' correct rather than lazy: this binary has no TODO pane, no Explorer and no MRU lists.
@@ -349,6 +375,10 @@ sub ShellHost_Install()
     gAppHost.AskOpenPath        = @ShellHost_AskOpenPath
     gAppHost.AskSavePath        = @ShellHost_AskSavePath
     gAppHost.IsFindVisible      = @ShellHost_IsFindVisible
+    gAppHost.TabCount           = @ShellHost_TabCount
+    gAppHost.TabDocAt           = @ShellHost_TabDocAt
+    gAppHost.TabActiveIndex     = @ShellHost_TabActiveIndex
+    gAppHost.TabIndexOfDoc      = @ShellHost_TabIndexOfDoc
 
     gAppNotify.CloseTab          = @ShellHost_CloseTab
     gAppNotify.OnDocumentClosing = @ShellHost_OnDocumentClosing

@@ -168,6 +168,45 @@ type AppHostServices
     '' Whether the Find bar is up. The tab control clears selection highlighting on a switch
     '' unless a find is active.
     IsFindVisible  as function() as boolean
+
+    '' ---- and what the app layer asks the TAB CONTROL ------------------------------------
+    ''
+    '' THE LAST LINK DEBT WAS HERE, and its recorded blocker was not one.
+    '' `_check_app_standalone` sat at 1 for three steps with this comment against it:
+    ''
+    ''     "clsConfig::ProjectSaveToFile ... is blocked on something real: it calls gTTabCtl
+    ''      -- clsTopTabCtl, Win32 to its bones -- at four sites. It cannot close until the
+    ''      tab control does, which is the largest open item in the port."
+    ''
+    '' Nothing had to happen to clsTopTabCtl. A project file records WHICH DOCUMENTS ARE
+    '' OPEN AND IN WHAT ORDER, and that is a question about a list, not about a control.
+    '' Four fields, and the two implementations were already written -- tiko's
+    '' clsTopTabCtl and the shell's ShellTabs, which is exactly the arrangement every other
+    '' difference in this seam already has.
+    ''
+    '' ORDER IS THE WHOLE POINT. These are not "the open documents" -- gApp.pDocList is
+    '' that, and ProjectSaveToFile walks it separately for the untabbed ones. This is the
+    '' order the user arranged their tabs in, which is a thing only the tab control knows
+    '' and the only reason the seam needs them at all.
+    TabCount       as function() as long
+
+    '' The document at a tab index, or 0.
+    ''
+    '' ZERO COVERS BOTH "no such tab" AND "a tab with no document", folding away what used
+    '' to be a separate IsValidTab call. The two were only ever used together -- every
+    '' caller tested validity and then immediately asked for the pointer -- and a tab
+    '' holding no document (the Find in Project tab) has to be skipped by the same test as
+    '' an index out of range.
+    TabDocAt       as function(byval i as long) as clsDocument ptr
+
+    '' The raw current selection. NOT the index written to a project file: see
+    '' Tabs_SaveActiveIndex, which is app-layer logic built on these four and deliberately
+    '' not a fifth field here.
+    TabActiveIndex as function() as long
+
+    '' The tab showing this document, or -1. Used to answer "is this document already
+    '' tabbed?" while walking the full document list.
+    TabIndexOfDoc  as function(byval pDoc as clsDocument ptr) as long
 end type
 
 extern gAppHost as AppHostServices
@@ -238,6 +277,27 @@ extern gAppNotify as AppHostNotify
 '' TRUE only when every field is set. Called once at startup by both binaries -- see the note
 '' above about why there is no per-call fallback.
 declare function AppHost_IsComplete() as boolean
+
+
+'' ========================================================================================
+'' THE ACTIVE-TAB INDEX AS A PROJECT FILE MEANS IT, which is not the same number the tab
+'' control has.
+''
+'' A project records only documents that HAVE A FILE ON DISK, so the saved index counts
+'' positions in the WRITTEN list, not in the tab bar. With an untitled document sitting at
+'' tab 0, the tab bar's index 2 is the project's index 1, and restoring the wrong one puts
+'' the user on the wrong file every time they reopen.
+''
+'' Returns 0 -- the first restored document -- when the active tab is one that will not be
+'' written: an untitled buffer, or the Find in Project tab. There is no honest answer in
+'' that case and 0 is the harmless one.
+''
+'' THIS IS LOGIC, NOT A SEAM FIELD, and the distinction is the point. It was
+'' clsTopTabCtl.SaveActiveTabIndex -- twenty lines of counting inside a Win32 control, with
+'' no Win32 in them. Made a fifth field it would exist twice, in two hosts, with nothing
+'' checking that the two agreed about a rule this subtle. Here there is one copy and the
+'' shell's suite can reach it.
+declare function Tabs_SaveActiveIndex() as long
 
 '' Which field is missing, for the message. Empty when the record is complete.
 declare function AppHost_FirstMissing() as string

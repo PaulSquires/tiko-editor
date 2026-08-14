@@ -170,8 +170,23 @@ rem why it took five steps: the blocker it named had already been removed, by so
 rem was not looking for it. A debt list is only as good as the last time its entries were
 rem re-read rather than re-counted.
 rem
-rem WHEN THE COUNT REACHES 0, delete the baseline and make this a plain failure.
-set /a LINKBASELINE=1
+rem 7c STEP 13 TOOK IT 1 -> 0, AND THE BASELINE IS GONE. This file said to delete it when
+rem the count reached zero, and leaving a baseline of 0 in place would have been a licence
+rem rather than a ratchet: the next undefined symbol would have been compared against it and
+rem reported as "debt" instead of failing.
+rem
+rem THE LAST ENTRY'S STATED BLOCKER WAS THE FOURTH IN THIS FILE NOT TO SURVIVE BEING
+rem RE-READ. It said ProjectSaveToFile "cannot close until the tab control does, which is the
+rem largest open item in the port". clsTopTabCtl was not touched. A project file records
+rem which documents are open and in what ORDER -- a question about a list -- so four fields
+rem went onto AppHostServices (TabCount, TabDocAt, TabActiveIndex, TabIndexOfDoc), the
+rem twenty lines of SaveActiveTabIndex became Tabs_SaveActiveIndex in app\, and the function
+rem moved down.
+rem
+rem AND CLOSING IT EXPOSED THE NEXT ONE, which is what this counter has always done: with
+rem ProjectSaveToFile in app\, ProcessToCurdriveProject became undefined. It moved too --
+rem pure gApp and PsCore, and on the same "moves as soon as something needs it" list
+rem ProcessFromCurdriveApp was on in step 5. 1 -> 1 -> 0 inside one commit.
 set /a LINKBAD=0
 %FBC% -i ..\..\PsPlatform\src -maxerr 999 -x _standalone_link.exe _standalone_link.bas > _standalone_link.log 2>&1
 if !errorlevel! neq 0 (
@@ -179,13 +194,9 @@ if !errorlevel! neq 0 (
     rem several call sites and ld reports each of them.
     for /f %%C in ('%SystemRoot%\system32\findstr.exe /c:"undefined reference" _standalone_link.log ^| %SystemRoot%\system32\find.exe /c "undefined"') do set /a LINKREFS=%%C
     for /f %%C in ('powershell -NoProfile -Command "(Select-String -Path _standalone_link.log -Pattern 'undefined reference to .(.+).$' | ForEach-Object { $_.Matches[0].Groups[1].Value } | Sort-Object -Unique).Count"') do set /a LINKSYMS=%%C
-    if !LINKSYMS! gtr !LINKBASELINE! (
-        set /a LINKBAD=1
-        echo   FAIL    the app layer has !LINKSYMS! bodies outside it, baseline is !LINKBASELINE!:
-        powershell -NoProfile -Command "Select-String -Path _standalone_link.log -Pattern 'undefined reference to .(.+).$' | ForEach-Object { '            ' + $_.Matches[0].Groups[1].Value } | Sort-Object -Unique"
-    ) else (
-        echo   debt    !LINKSYMS! app-layer bodies still live in the shell ^(baseline !LINKBASELINE!, !LINKREFS! call sites^)
-    )
+    set /a LINKBAD=1
+    echo   FAIL    the app layer has !LINKSYMS! bodies outside it ^(!LINKREFS! call sites^):
+    powershell -NoProfile -Command "Select-String -Path _standalone_link.log -Pattern 'undefined reference to .(.+).$' | ForEach-Object { '            ' + $_.Matches[0].Groups[1].Value } | Sort-Object -Unique"
 )
 
 del /q _standalone.bas _standalone.log _standalone.o _prelude.txt 2>nul
@@ -202,10 +213,12 @@ if %BAD% neq 0 (
 )
 if !LINKBAD! neq 0 (
     echo.
-    echo   A NEW app-layer body now lives outside the app layer. It compiles
-    echo   cleanly file by file -- -c never links -- and breaks the moment
-    echo   anything builds a binary out of the layer. Either move the body into
-    echo   app\, or raise the baseline in this file and say why.
+    echo   AN app-layer body lives outside the app layer. It compiles cleanly
+    echo   file by file -- -c never links -- and breaks the moment anything
+    echo   builds a binary out of the layer. Move the body into app\.
+    echo.
+    echo   THERE IS NO BASELINE ANY MORE. The count reached 0 in 7c step 13 and
+    echo   this became a plain failure; do not reintroduce one to get green.
     exit /b 1
 )
 echo   ok      src\app builds against PsCore alone

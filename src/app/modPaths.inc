@@ -98,3 +98,26 @@ function FilenameOriginalCase( byval wszFilename as DWSTRING ) as DWSTRING
     if PsLen( wszReal ) = 0 then return wszFilename
     return PsPathToNative( wszReal )
 end function
+
+
+' ========================================================================================
+' Process prefix {CURDRIVE} and convert to current drive letter.
+' ========================================================================================
+function ProcessToCurdriveProject( byval wszFilename as DWSTRING ) as DWSTRING
+    ' for each folder location determine if it resides on the same drive as
+    ' the project file. if it does then substitute the replaceable parameter
+    ' {CURDRIVE} for the drive letter. This allows you to easily run the editor
+    ' on different media (eg. thumb drive) that may be assigned a different
+    ' drive letter.
+    dim wszText as DWSTRING = gApp.ProjectFilename
+
+    dim wszCurDrive as DWSTRING = PsLCase(PsLeft(wszText, 3))  ' eg. D:\
+
+    ' if the incoming filename is a relative file name then the following test
+    ' will have no effect.
+    if PsLCase(PsLeft(wszFilename, 3)) = wszCurDrive then 
+        wszFilename = wstr("{CURDRIVE}") & PsMid(wszFilename, 2)
+    end if
+
+    return wszFilename
+end function

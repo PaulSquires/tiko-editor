@@ -32,6 +32,10 @@ function AppHost_FirstMissing() as string
     if gAppHost.AskOpenPath    = 0 then return "AskOpenPath"
     if gAppHost.AskSavePath    = 0 then return "AskSavePath"
     if gAppHost.IsFindVisible  = 0 then return "IsFindVisible"
+    if gAppHost.TabCount       = 0 then return "TabCount"
+    if gAppHost.TabDocAt       = 0 then return "TabDocAt"
+    if gAppHost.TabActiveIndex = 0 then return "TabActiveIndex"
+    if gAppHost.TabIndexOfDoc  = 0 then return "TabIndexOfDoc"
     return ""
 end function
 
@@ -57,4 +61,28 @@ end function
 
 function AppNotify_IsComplete() as boolean
     return (len(AppNotify_FirstMissing()) = 0)
+end function
+
+
+'' ========================================================================================
+'' See modAppHost.bi for why this is here and not a fifth seam field.
+'' ========================================================================================
+function Tabs_SaveActiveIndex() as long
+    dim as long nCur = gAppHost.TabActiveIndex()
+
+    dim as clsDocument ptr pCur = gAppHost.TabDocAt( nCur )
+    if pCur = 0 then return 0
+    if pCur->IsNewFlag then return 0
+
+    '' Count only the tabs AHEAD of it that will actually be written -- the same test
+    '' ProjectSaveToFile applies when it decides what to write. The two must agree, and
+    '' they now read the same way in the same layer.
+    dim as long nWritten = 0
+    for i as long = 0 to nCur - 1
+        dim as clsDocument ptr pDoc = gAppHost.TabDocAt( i )
+        if pDoc = 0 then continue for
+        if pDoc->IsNewFlag then continue for
+        nWritten += 1
+    next
+    return nWritten
 end function
