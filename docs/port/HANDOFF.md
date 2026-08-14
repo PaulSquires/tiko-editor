@@ -1,19 +1,34 @@
 # Handoff — the tiko → PsPlatform port
 
-**7c STEP 11 COMPLETE.** Verified 2026-08-11, by running every gate rather than reading it:
+**7c STEP 12 COMPLETE.** Verified 2026-08-14 by running every gate, not reading it:
 
 | repo | branch | HEAD | state |
 | --- | --- | --- | --- |
-| tiko | `feat/cross-platform` | `8f3c71cc4` (last code change `de2db3cba`) | clean, pushed |
-| PsPlatform | `main` | `045f6bf` | clean, pushed |
+| tiko | `feat/cross-platform` | `bdf1df3b0` | clean, **NOT pushed** |
+| PsPlatform | `main` | `708ede5` | clean, **NOT pushed** |
 | HelpCenter | `main` | `02a4c18` | untouched since 7c began |
+
+**Run `git log origin/<branch>..HEAD` rather than believing that column.** It has now been wrong
+in both directions on this page, and a claim about what is pushed is stale the moment anyone
+commits.
 
 Both tiko binaries build **warning-free**; every gate in the table below is green; tiko runs.
 
-**THE EDITOR FONT SETTING WORKS NOW, AND DID NOT BEFORE.** `SCI_STYLESETFONT` carries a family
-NAME and `PlatPs`'s `FontPs` discards it, so the editor rendered `consola.ttf` hard-coded
-whatever Options said. Step 11 resolves the family to a FILE and pushes it to the platform layer.
-**Confirmed by the author: changing the font applies LIVE, with no restart.** See
+**BOLD IS BOLD AND FALLBACK EXISTS.** Step 12 closes handoff items 9 and 9b, which were never two
+problems: `FontPs` used `fp.size` and dropped the face name, the weight and the italic flag, so
+one path could express neither "Consolas bold italic" nor "and if the glyph is missing, try
+these". `PsTextEngine` now holds a chain of faces, `PsFont` maps a name to a file on both
+platforms, and `PlatPs` ASKS the host instead of holding a value. Windows' chain comes from
+`FontLink\SystemLink` — the table GDI itself used, which is why the pre-port editor rendered
+Korean in Consolas without being asked to. See [`7c-step12.md`](7c-step12.md).
+
+**AWAITING THE AUTHOR'S GATE**: that `korean_text.bas` renders **in Consolas**, without changing
+the font setting, and that a bold style in the current theme looks bold. Nothing visual was
+verified here.
+
+**THE EDITOR FONT SETTING WORKS, AND DID NOT BEFORE STEP 11.** `SCI_STYLESETFONT` carries a family
+NAME and `FontPs` discarded it, so the editor rendered `consola.ttf` hard-coded whatever Options
+said. **Confirmed by the author: changing the font applies LIVE, with no restart.** See
 [`7c-step11.md`](7c-step11.md).
 
 **STEP 10 CLOSED THREE ITEMS THIS PAGE CALLED BLOCKED, AND NONE OF THEM WAS.** UTF-16BE has an
@@ -191,26 +206,31 @@ Read in this order, and do not skip the first:
     `PsTimerNow()`, which is a **settable virtual clock**, not a wall clock — and *"the clock
     never moved"* is indistinguishable from *"the work was free"*, which was the answer the step
     wanted to hear.
-11. [`7c-step11.md`](7c-step11.md) — **the step that started as an encoding bug and was
+11. [`7c-step12.md`](7c-step12.md) — **the step where the revert-to-red pass caught the SUITES
+    rather than the code, twice.** A prefix match left every style assertion green because
+    `RegEnumValueW` happens to enumerate in the helpful order; removing a whole feature dropped
+    a suite from 35 assertions to 30 and still printed "0 failed". Read that section before
+    writing any assertion that depends on a lookup order or is wrapped in a skip.
+12. [`7c-step11.md`](7c-step11.md) — **the step that started as an encoding bug and was
     neither.** Read "What was actually wrong": a setting that had never reached the code it
     named. Then the assertion that failed on its first run — the CODE was right and the SUITE
     was wrong, which is the other way round from every other failure on this page.
-12. [`7c-step10.md`](7c-step10.md) — **three items closed, three false comments, and one of
+13. [`7c-step10.md`](7c-step10.md) — **three items closed, three false comments, and one of
     them mine.** Read the three-row table at the top. Then the revert-to-red section: every rule
     went red for the first time in six steps, and the one that nearly did not is instructive —
     `Doc_EncodingName`'s `case else` is `"ANSI"`, so a missing arm does not fail, it puts the
     word ANSI beside a UTF-16 file.
-13. [`7c-step9.md`](7c-step9.md) — **the encoding step, and the third blocker in three steps
+14. [`7c-step9.md`](7c-step9.md) — **the encoding step, and the third blocker in three steps
     that had already been removed.** Read the table at the top, then "A defect found next to the
     one being fixed": the seam's `LoadFileText` had NO AGREED POLARITY — one implementation
     returned false on success, the other true — which was invisible with one implementation and
     live from the moment there were two.
-14. [`7c-step8.md`](7c-step8.md) — **the step where two blockers turned out to have been
+15. [`7c-step8.md`](7c-step8.md) — **the step where two blockers turned out to have been
     removed before anyone noticed.** The pane went 0 → 51 rows, but read the two intermediate
     tables first: the one that shows the pane's ceiling is fbcParser (573 procedure symbols, 41
     with a body line) and the revert-to-red table, where one revert found not a missing test but
     a **false claim in a comment** — which is the other thing reverting is for.
-15. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
+16. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
    irreducible, investigated. **It was not a blocker and never had been.** Short, and it is the
    clearest example on this whole shelf of a claim that survived because nobody checked it.
    **Its recommendation has since been implemented**: WebView2 is gone from the tree.
@@ -559,12 +579,15 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | `_check_app_standalone.bat` | `src/app` compiles against PsCore alone **and LINKS as one unit** | green — **18 clean**, 0 errors, **debt 1** (2026-08-11) |
 | `_check_shell.bat` | `src/shell` includes no Win32 shell header, and carries no `PsC.` | green |
 | `_run_shell.bat --selftest` | the shell's own suite — **383 assertions** (2026-08-11, after the ANSI revert) | green |
-| tiko `TIKO_FONTFILE_SELFTEST=1` | the font-file resolver — **11 assertions**, GUI-gated | green (author-run) |
+| tiko `TIKO_FONTFILE_SELFTEST=1` | the font resolver and the callback Scintilla drives — **13 assertions** (2026-08-14) | green |
 | ...and the encoding suite it now runs | **48 assertions**, moved into `app/` in step 9 | green |
-| PsPlatform `build.cmd check` | **47 suites** (2026-08-11, `psthread` is the newest) | green, 0 failures |
+| PsPlatform `build.cmd check` | **48 suites** (2026-08-14, `psfont` is the newest) | green, 0 failures |
 | PsPlatform `pstree` | **271 assertions** (was 242 before step 8's three gaps) | green |
 | PsPlatform `psfile` | **94 assertions** (was 91; the three that cover `PsFileRealCase`'s useful direction) | green |
 | PsPlatform `psencoding` | **54 assertions** (was 53; the one that pins BE ENCODING, not just its round trip) | green |
+| PsPlatform `pstext` | **78 assertions** (was 47 before step 12's face chain) | green |
+| PsPlatform `psfont` | **38 assertions**, new in step 12 | green |
+| PsPlatform `pstec` | **18 assertions** (was 16; `AddFallback` across the C ABI, both directions) | green |
 
 The ratchet is the weak one and knows it: it greps a hand-written vocabulary, and has had
 three gaps in three audits — **five now**. The fourth was `KeyBindings_PickListKeyToValue`,
@@ -826,49 +849,33 @@ represent the workload.**
    573 procedure symbols, **41 with a body line**. Line-continued signatures are not recorded
    with one, and type members are filed against the header that declares them. Whether any of
    those belong in a Functions pane is a parser question, not a port one.
-9. **NO FONT FALLBACK IN PsPlatform'S TEXT ENGINE, AND IT IS A REGRESSION FROM THE WIN32
-   BUILD.** Found 2026-08-11 by the author opening a UTF-8 Korean file: every glyph is a
-   box.
+9. ~~**NO FONT FALLBACK IN PsPlatform'S TEXT ENGINE.**~~ **DONE IN STEP 12.**
+   `PsTextEngine` holds a chain of up to twelve faces; the first covering a codepoint wins.
+   Windows' chain comes from `FontLink\SystemLink` — the table GDI itself used, which is
+   exactly why the pre-port build rendered Korean without being asked to. Linux uses
+   fontconfig and **has never been run**.
 
-   `PsTextEngine` holds ONE `FT_Face` and one `hb_font_t` (`paint/PsTextEngine.bi:99-100`),
-   loaded by the single `FT_New_Face` in the whole paint layer (`PsTextEngine.inc:24`).
-   There is no fallback chain, no `.notdef` handling, no second face. A codepoint the
-   selected font lacks returns glyph 0 and paints as a box, and nothing can be configured
-   around it.
+   **THE CAP WAS MEASURED, NOT CHOSEN.** It was 8 until the real chain was read back: eight
+   installed files plus the primary is nine, so the symbol font fell off the end — a chain
+   that fails at exactly the codepoints it exists for and reports nothing. Now 12.
 
-   **THE OLD BUILD DID NOT HAVE THIS PROBLEM.** tiko drew through `Scintilla64.dll` — Win32
-   GDI/Uniscribe — which font-links: Consolas has no Hangul, Windows substituted silently,
-   and Korean rendered. `libpsscintilla` replaces Scintilla's Win32 platform layer with
-   `scintilla/PlatPs.cxx` → PsTextEngine → FreeType/HarfBuzz/Blend2D, and that substitution
-   is gone.
+   Two things this item asserted are worth correcting rather than deleting. **The workaround
+   it recommended is no longer needed** — "pick a font that covers the script" was the answer
+   while there was no chain, and it cost monospace alignment. And **`.ttc` collections are
+   handled**, which step 11 recorded as unsupported and dodged: entries carry `path|faceName`,
+   the face is selected by matching `family_name`, and a name that is not in the file is
+   REFUSED rather than silently becoming index 0.
 
-   **IT IS NOT AN EDITOR PROBLEM, IT IS A TOOLKIT PROBLEM.** Every PsPlatform control paints
-   through this engine, so a non-Latin filename in a tab, a path in the Functions pane or a
-   menu caption tofus identically. It is also a CROSS-PLATFORM correctness issue, which is
-   the point of the whole port.
+9b. ~~**BOLD AND ITALIC ARE IGNORED, EVERYWHERE.**~~ **DONE IN STEP 12.** `FontPs` keys its
+   engine on `(faceName, bold, italic, size)` and the host answers with a file per style. The
+   threshold is `FontWeight::SemiBold`, not `Bold`, because that is where Scintilla's own
+   `ViewStyle` puts it — treating only 700 as bold would leave half the themes flat.
 
-   The fix is a face CHAIN — per-run coverage check (`FT_Get_Char_Index` returns 0 → try the
-   next face) plus a platform way to choose the fallback list (DirectWrite on Windows,
-   fontconfig on Linux). Real work, touching the layer everything paints through, and the
-   engine's own comment about fractional monospace advances says the metrics are
-   load-bearing.
-
-   **STEP 11 MADE THE WORKAROUND POSSIBLE, WHICH IT WAS NOT WHEN THIS ITEM WAS WRITTEN.**
-   "Pick a font that covers the script" could not work while the font setting did nothing; it
-   does now. On this machine Malgun Gothic is the ONLY Hangul-capable font of 355 installed,
-   and it is proportional — so the workaround costs monospace alignment.
-
-9b. **BOLD AND ITALIC ARE IGNORED, EVERYWHERE.** Found alongside the above. `FontPs` drops
-   `fp.weight` and `fp.italic` (`PlatPs.cxx:102-107`) and `PsTextEngine` has no weight concept
-   at all — no `FT_Outline_Embolden`, no oblique matrix, nothing in `PsTextEngine.bi:97-138`.
-   **Every bold style in every theme renders regular**, in the editor and in every PsPlatform
-   control. Scintilla asks correctly (`ViewStyle.cxx:63-72`); nothing below listens.
-
-   Fixing it means a family resolving to FOUR files and `FontPs` keying its engine on
-   `(path, pxSize)` derived from `(faceName, bold, italic, size)` — `F1Markdown/mdFonts.inc`'s
-   design, generalised. **It is the same subsystem as item 9 and should be one step with it**:
-   a fallback chain that ignores weight still renders bold flat, and a weight map with no
-   fallback still renders boxes.
+   **A family with no bold cut still renders regular** — the author's decision, taken
+   deliberately: no synthetic embolden, no oblique matrix. Emboldening an outline when a real
+   bold exists elsewhere looks worse than not doing it, and every editor font in common use
+   ships all four files. **`PsTextEngine` still has no weight concept**, and does not need one
+   while the resolution happens above it.
 
 10. **THE OPTIONS "CHARACTER SET" COMBO IS DEAD UI.** `modViewStyle.inc` still sends
     `SCI_STYLESETCHARACTERSET` from `gConfig.EditorFontCharSet`, and `PlatPs.cxx` never
@@ -876,6 +883,12 @@ represent the workload.**
     Either wire it into the fallback work above or remove it; a control that cannot affect
     anything is worse than no control, because it gets tried first when something looks
     wrong. (It was tried first here.)
+
+    **STEP 12 MADE THIS DECIDABLE, WHICH IT WAS NOT WHEN THIS WAS WRITTEN.** "Wire it into
+    the fallback work" named work that did not exist. It does now, and the honest reading is
+    that the combo has NOTHING LEFT TO DO: a charset was GDI's way of choosing which face
+    covered a script, and the coverage chain answers that per codepoint without being told.
+    Removing it is the likely right answer, and it is a decision, not a cleanup.
 
 11. **Whether two tiers deserve two workers.** They share one thread and serialise, so
    `tiko.bas` is 1.3s + 1.3s before both are current.
