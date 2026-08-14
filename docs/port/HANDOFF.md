@@ -1,7 +1,7 @@
 # Handoff — the tiko → PsPlatform port
 
-**7c STEP 13 COMPLETE, AND THE LIVE LIST IS EMPTY.** Verified 2026-08-14 by running every
-gate, not reading it:
+**7c STEP 14 COMPLETE.** Verified 2026-08-14 by running every gate, not reading it -- and
+there is a new one:
 
 | repo | branch | where the work is |
 | --- | --- | --- |
@@ -23,14 +23,19 @@ FOURTH stated blocker in that file not to survive being re-read. The Character S
 and "two tiers, two workers" turned out not to be a scheduling decision at all — the parser is a
 single global compiler instance and says so in its own header. See [`7c-step13.md`](7c-step13.md).
 
-**CONFIRMED BY THE AUTHOR (2026-08-14): the interactive pass passed.** A project round-trips
+**TWENTY-FIVE SELF-TEST REPORT LINES FIRE AT tiko STARTUP AND, UNTIL STEP 14, NOTHING RAN THEM.**
+`_check_selftests.bat` now does: one bounded run, every `TIKO_*_SELFTEST` armed, **19,965
+assertions**. One of them had been failing indefinitely -- which is the whole point, and is why
+correcting it was the smaller half of the step. See [`7c-step14.md`](7c-step14.md).
+
+**AND THE FAILING ONE WAS THE ORACLE, NOT THE CODE.** Every label id in the options bind test was
+wrong; five found no row and failed honestly, and FOUR FOUND THE WRONG ROW AND PASSED because the
+macro compared a boolean value and any two unrelated rows agree half the time. It pins the field
+POINTER and the visible LABEL TEXT now.
+
+**CONFIRMED BY THE AUTHOR (2026-08-14): step 13's interactive pass passed.** A project round-trips
 through the moved `ProjectSaveToFile` with its tab order and active tab intact, and Options ->
 Colors lays out correctly without the Character Set row.
-
-**AND ONE FAILURE THAT IS IN NO GATE LIST**: `TIKO_OPTIONS_SELFTEST` reports **11 passed, 6
-failed**, and did so before step 13 — verified by stashing the step's own commit and re-running.
-Four rows carry no label id and one reports a row/field mismatch. **Nothing runs that suite**,
-which is how it came to be failing unnoticed. It is step 14's first item.
 
 **BOLD IS BOLD AND FALLBACK EXISTS.** Step 12 closes handoff items 9 and 9b, which were never two
 problems: `FontPs` used `fp.size` and dropped the face name, the weight and the italic flag, so
@@ -224,35 +229,39 @@ Read in this order, and do not skip the first:
     `PsTimerNow()`, which is a **settable virtual clock**, not a wall clock — and *"the clock
     never moved"* is indistinguishable from *"the work was free"*, which was the answer the step
     wanted to hear.
-11. [`7c-step13.md`](7c-step13.md) — **the step where the live list emptied, and four of its
+11. [`7c-step14.md`](7c-step14.md) — **READ "What this step is really about".** Every stale
+    claim this port has found was in PROSE; this one was in a SUITE, and that is worse. A number
+    carries authority a sentence does not, and "11 passed" was believed for as long as it was
+    printed. A suite nothing runs is indistinguishable from a suite that passes.
+12. [`7c-step13.md`](7c-step13.md) — **the step where the live list emptied, and four of its
     items closed as "the blocker was not one".** Read the last section: a suite that has been
     failing six assertions because nothing runs it. That is this port's recurring failure
     wearing a suite instead of a comment.
-12. [`7c-step12.md`](7c-step12.md) — **the step where the revert-to-red pass caught the SUITES
+13. [`7c-step12.md`](7c-step12.md) — **the step where the revert-to-red pass caught the SUITES
     rather than the code, twice.** A prefix match left every style assertion green because
     `RegEnumValueW` happens to enumerate in the helpful order; removing a whole feature dropped
     a suite from 35 assertions to 30 and still printed "0 failed". Read that section before
     writing any assertion that depends on a lookup order or is wrapped in a skip.
-13. [`7c-step11.md`](7c-step11.md) — **the step that started as an encoding bug and was
+14. [`7c-step11.md`](7c-step11.md) — **the step that started as an encoding bug and was
     neither.** Read "What was actually wrong": a setting that had never reached the code it
     named. Then the assertion that failed on its first run — the CODE was right and the SUITE
     was wrong, which is the other way round from every other failure on this page.
-14. [`7c-step10.md`](7c-step10.md) — **three items closed, three false comments, and one of
+15. [`7c-step10.md`](7c-step10.md) — **three items closed, three false comments, and one of
     them mine.** Read the three-row table at the top. Then the revert-to-red section: every rule
     went red for the first time in six steps, and the one that nearly did not is instructive —
     `Doc_EncodingName`'s `case else` is `"ANSI"`, so a missing arm does not fail, it puts the
     word ANSI beside a UTF-16 file.
-15. [`7c-step9.md`](7c-step9.md) — **the encoding step, and the third blocker in three steps
+16. [`7c-step9.md`](7c-step9.md) — **the encoding step, and the third blocker in three steps
     that had already been removed.** Read the table at the top, then "A defect found next to the
     one being fixed": the seam's `LoadFileText` had NO AGREED POLARITY — one implementation
     returned false on success, the other true — which was invisible with one implementation and
     live from the moment there were two.
-16. [`7c-step8.md`](7c-step8.md) — **the step where two blockers turned out to have been
+17. [`7c-step8.md`](7c-step8.md) — **the step where two blockers turned out to have been
     removed before anyone noticed.** The pane went 0 → 51 rows, but read the two intermediate
     tables first: the one that shows the pane's ceiling is fbcParser (573 procedure symbols, 41
     with a body line) and the revert-to-red table, where one revert found not a missing test but
     a **false claim in a comment** — which is the other thing reverting is for.
-17. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
+18. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
    irreducible, investigated. **It was not a blocker and never had been.** Short, and it is the
    clearest example on this whole shelf of a claim that survived because nobody checked it.
    **Its recommendation has since been implemented**: WebView2 is gone from the tree.
@@ -602,8 +611,10 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | `_check_shell.bat` | `src/shell` includes no Win32 shell header, and carries no `PsC.` | green |
 | `_run_shell.bat --selftest` | the shell's own suite — **395 assertions** (2026-08-14, +12 for the tab seam) | green |
 | tiko `TIKO_FONTFILE_SELFTEST=1` | the font resolver and the callback Scintilla drives — **13 assertions** (2026-08-14) | green |
-| tiko `TIKO_THEME_SELFTEST=1` | **929 assertions** (2026-08-14) | green |
-| tiko `TIKO_OPTIONS_SELFTEST=1` | the options rows bind to gConfig — **17 assertions** | **RED: 11 passed, 6 FAILED** (2026-08-14). It was not in this table until step 13, which is how it came to be failing unnoticed. See live-list item 12. |
+| **`_check_selftests.bat`** | **EVERY startup self-test, in one bounded tiko run — 25 report lines, 19,965 assertions** (2026-08-14). Fails on any failure AND on fewer than 25 report lines, so "it did not run" cannot look like "it passed". ~20s; run it deliberately, not on every build. | green |
+| ...including `TIKO_THEME_SELFTEST` | **929** | green |
+| ...and `TIKO_OPTIONS_SELFTEST` | the options rows bind to gConfig — **26** (was 11 passed / 6 failed until step 14 repaired the ORACLE) | green |
+| ...and `TIKO_KEYBOARD_SELFTEST` | **18,148**, which is most of the total | green |
 | ...and the encoding suite it now runs | **48 assertions**, moved into `app/` in step 9 | green |
 | PsPlatform `build.cmd check` | **48 suites** (2026-08-14, `psfont` is the newest) | green, 0 failures |
 | PsPlatform `pstree` | **271 assertions** (was 242 before step 8's three gaps) | green |
@@ -930,23 +941,26 @@ represent the workload.**
    is why the retire queue exists in both binaries -- and neither loop said what it was a
    consequence of. Both do now.
 
-12. **THE OPTIONS BIND SUITE IS FAILING, AND NOTHING RUNS IT.** Found in step 13 and NOT
-   caused by it -- verified by stashing that step's own commit, rebuilding and re-running:
-   the same six failures, line for line.
+12. ~~**THE OPTIONS BIND SUITE IS FAILING, AND NOTHING RUNS IT.**~~ **BOTH HALVES CLOSED IN
+   STEP 14, and the second half was the larger one.**
 
-   ```
-   FAIL: no row carries label id 216 (Ask before exiting)
-   FAIL: no row carries label id 275 (Restore previous session)
-   FAIL: no row carries label id 129 (Use Compact Menu Interface)
-   FAIL: no row carries label id 88  (Check for Updates)
-   FAIL: Show line numbers row shows 0 but gConfig holds -1 -- ROW/FIELD MISMATCH
-   FAIL: no row carries label id 81  (Default encoding for new files)
-   ```
+   **The suite was wrong, not the code.** Every label id in it named a different string --
+   216 is "Description", 275 is "Windows API Keywords", 81 is "Next Function". Five found no
+   row and failed honestly; FOUR FOUND THE WRONG ROW AND PASSED, because the macro compared a
+   boolean VALUE and every field it checks is 0 or -1. The one "ROW/FIELD MISMATCH" it
+   reported was its own. It pins the field POINTER and the visible LABEL TEXT now, and
+   11 passed / 6 failed became 26 / 0.
 
-   `TIKO_OPTIONS_SELFTEST` is in NO gate list, in no `_check_*`, and fires only behind an
-   environment variable inside a started GUI. **That is this page's recurring failure wearing
-   a suite instead of a comment**, and the "Show line numbers" one claims a real row/field
-   mismatch rather than a missing label. STEP 14's FIRST ITEM.
+   **AND NOTHING RAN ANY OF THEM.** Twenty-five report lines fire at startup behind
+   `TIKO_*_SELFTEST` variables -- 19,965 assertions -- and no gate started a tiko.
+   `_check_selftests.bat` does, and it asserts a MINIMUM SUITE COUNT as well as zero
+   failures: a tiko that crashes before the suites prints nothing, sums to zero failures and
+   would otherwise pass. Proved by reverting to red: one suite disabled gives "24 suites,
+   19948 passed, 0 failed" and the gate still fails.
+
+   **WHAT IS STILL NOT GATED**: the `*_AUTOOPEN` family, which drives real dialogs. Whether a
+   gate can drive those without becoming interactive is open -- and it is the same question
+   step 11 answered "no" to for the font suite, wrongly, before step 12 did it anyway.
 
 **And one process point steps 3 and 4 both earned: drive every milestone by hand before calling
 it done.** Every claim a suite supports has survived. Every claim about what the user sees came
