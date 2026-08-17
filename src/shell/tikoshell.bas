@@ -3567,6 +3567,45 @@ end function
                                   str(nWithBody)
                         end scope
 
+                        '' ---- THE SAME FILE, SPELLED THE OTHER WAY -- 7c step 18 ------
+                        '' A path is not a string, and both of these lookups compared it
+                        '' as one until step 18. Asserted rather than described, because
+                        '' the failure is a Functions pane with no rows and a SECOND
+                        '' clsDocument for a file already open -- neither of which is an
+                        '' error anywhere.
+                        ''
+                        '' THE QUERY IS BUILT BY SWAPPING SEPARATORS, not by hardcoding a
+                        '' spelling: on Linux the probe path has no backslash to swap, so
+                        '' the swapped form is IDENTICAL to the original and this asserts
+                        '' only that a path still matches itself. That is the honest thing
+                        '' for it to assert there. The Windows run is where it bites.
+                        scope
+                            dim as DWSTRING wszAlt = wszFile
+                            dim as ushort ptr pu = wszAlt.Units()
+                            if pu <> 0 then
+                                for i as uinteger = 0 to wszAlt.Length - 1
+                                    if pu[i] = asc("/") then
+                                        pu[i] = asc("\")
+                                    elseif pu[i] = asc("\") then
+                                        pu[i] = asc("/")
+                                    end if
+                                next
+                            end if
+                            '' AGAINST 3, NOT AGAINST nProcs. The first draft compared the
+                            '' two lookups to each other and PASSED with the fix reverted:
+                            '' the parser's file table holds a MIXED spelling -- the
+                            '' include directory backslashed, the filename appended with
+                            '' '/' -- so without the fold BOTH spellings miss and the
+                            '' assertion compared 0 with 0. Caught by reverting to red,
+                            '' which is the only reason it is not still in the file.
+                            Check "    the same file with the other separator is the same file", _
+                                  (gSymDb.EnumProcsInFile( wszAlt, rs() ) = 3), wszAlt.Utf8
+                            Check "      and gApp agrees it is one document", _
+                                  (gApp.GetDocumentPtrByFilename( wszAlt ) <> 0) andalso _
+                                  (gApp.GetDocumentPtrByFilename( wszAlt ) = _
+                                   gApp.GetDocumentPtrByFilename( wszFile ))
+                        end scope
+
                         '' A NAME AND A LINE, because a count alone would pass on two
                         '' entries that say nothing useful. The line is what commit 4's
                         '' click will jump to.
