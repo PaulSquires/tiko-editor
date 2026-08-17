@@ -65,8 +65,37 @@ end function
 '   - ON LINUX PATHS ARE CASE-SENSITIVE, so a portable symbol database cannot
 '     lean on case-insensitive path equality at all. The question is only which
 '     way to be wrong on the way there, and ASCII-folding is the smaller step.
+'
+' ---- AND SEPARATORS FOLD TOO, since 7c step 18 -----------------------------------------
+'
+' A PATH IS NOT A SYMBOL NAME, and this used SymDb_NameEqW unchanged, so "C:/dev/a.bas" and
+' "C:\dev\a.bas" were different files. Nothing noticed while every path in the process had
+' been through FilenameOriginalCase, which ends in PsPathToNative and hands back backslashes.
+' The moment a caller built a path the PsPath house way -- forward slashes, which is what
+' PsPath.bi tells shared logic to use -- the file table missed and EnumProcsInFile returned
+' ZERO. That is a Functions pane with no rows and no error: the same shape as a suite that
+' does not run.
+'
+' Folded in the COMPARISON rather than by normalising both sides, because SymDb_FileIndexOf
+' calls this once per entry in the file table -- 134 entries for tiko.bas -- and a
+' PsPathNormalise per call would allocate twice per entry per lookup. This allocates nothing.
+private function SymDb_PathEqW( byval pName as const wstring ptr, byval pQuery as const wstring ptr ) as boolean
+    dim as long i = 0
+    do
+        dim as ulong a = pName[i]
+        dim as ulong b = pQuery[i]
+        if (a >= 97) andalso (a <= 122) then a -= 32
+        if (b >= 97) andalso (b <= 122) then b -= 32
+        if a = 92 then a = 47                   ' '\' and '/' are the same separator here
+        if b = 92 then b = 47
+        if a <> b then return false
+        if a = 0 then return true
+        i += 1
+    loop
+end function
+
 private function SymDb_FileNameEq( byval a as DWSTRING, byval b as DWSTRING ) as boolean
-    return SymDb_NameEqW( a.Wz(), b.Wz() )
+    return SymDb_PathEqW( a.Wz(), b.Wz() )
 end function
 
 ' Index of wszFile in pRSet's file table, or -1.

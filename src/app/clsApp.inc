@@ -140,11 +140,33 @@ end function
 
 ''
 ''
+'' ---- PATH IDENTITY IS NOT SPELLING IDENTITY -- 7c step 18 ------------------------------
+''
+'' This compared the two strings RAW, so "C:/dev/a.bas" and "C:\dev\a.bas" were different
+'' files. That was survivable while every path in the process came from FilenameOriginalCase,
+'' which ends in PsPathToNative and hands back backslashes -- see modPaths.inc, which says so
+'' at length -- and it stopped being survivable the moment anything portable produced a path
+'' the PsPath house way, with forward slashes. The failure is silent and specific: a second
+'' clsDocument for a file already open, two Scintilla documents, and saving one discards the
+'' other's edits. Normalising both sides costs one pass and removes the class.
+''
+'' CASE-INSENSITIVITY IS WINDOWS-ONLY, and that is not tidiness either. On Linux "Makefile"
+'' and "makefile" are two files; folding them here would return the wrong document for one of
+'' them, with nothing to say so. PsFileCaseCheck exists in PsCore for the same reason.
+'' ---------------------------------------------------------------------------------------
 function clsApp.GetDocumentPtrByFilename( byval wszName as DWSTRING ) as clsDocument ptr
     if PsLen(wszName) = 0 then return 0
+    dim as DWSTRING wszWant = PsPathNormalise( wszName )
+    #ifdef __FB_WIN32__
+        wszWant = PsUCase( wszWant )
+    #endif
     dim pDoc as clsDocument ptr = this.pDocList
     do until pDoc = 0
-        if ucase(pDoc->DiskFilename) = PsUCase(wszName) then return pDoc
+        dim as DWSTRING wszHave = PsPathNormalise( pDoc->DiskFilename )
+        #ifdef __FB_WIN32__
+            wszHave = PsUCase( wszHave )
+        #endif
+        if wszHave = wszWant then return pDoc
         pDoc = pDoc->pDocNext
     loop
     function = 0
