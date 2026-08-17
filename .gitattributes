@@ -13,6 +13,16 @@
 *.rc        eol=crlf
 *.wfbe      eol=crlf
 
+# ---- AND THE OPPOSITE, for the Linux scripts 7c step 18 added --------------
+# This repo sets core.autocrlf=true, so a .sh checked out on Windows and edited
+# there can go back with CRLF -- and a shebang script with CRLF does not fail
+# usefully on Linux, it fails as
+#     bash: ./_run_shell.sh: /usr/bin/env^M: bad interpreter
+# naming a file that plainly exists. Pinned rather than left to auto, because
+# every other extension in this file is pinned and the default is the one thing
+# nobody re-reads.
+*.sh        eol=lf
+
 
 # Standard to msysgit
 *.doc	 diff=astextplain
