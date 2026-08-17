@@ -3343,7 +3343,7 @@ end function
                 '' out of the show for exactly this reason -- see shellhost.bi.
                 scope
                     dim as PsMessageBox box
-                    BuildLossySaveBox( box, DWSTRING("C:\x\a.bas"), 0 )
+                    BuildLossySaveBox( box, DWSTRING("C:/x/a.bas"), 0 )
                     Check "  the lossy box offers OK and Cancel", _
                           (box.GetButtonCount() = 2), str(box.GetButtonCount())
                     Check "    with OK first", (box.ButtonId(0) = MBX_ID_OK)
@@ -3363,7 +3363,7 @@ end function
 
                 scope
                     dim as PsMessageBox box
-                    BuildWriteFailedBox( box, DWSTRING("C:\x\a.bas"), DWSTRING("locked") )
+                    BuildWriteFailedBox( box, DWSTRING("C:/x/a.bas"), DWSTRING("locked") )
                     Check "  the write-failure box is OK-only", _
                           (box.GetButtonCount() = 1), str(box.GetButtonCount())
                     Check "    and Escape dismisses it", (box.ResolveCancelId() = MBX_ID_OK)
@@ -3422,7 +3422,7 @@ end function
                 '' clsApp.GetDocumentPtrByFilename and is tiko's, not the shell's.
                 Check "  a path finds nothing while gApp's list is empty", _
                       (gApp.pDocList = 0) andalso _
-                      (ShellTabs_FindByPath(DWSTRING("C:\dev\one.bas")) = -1)
+                      (ShellTabs_FindByPath(DWSTRING("C:/dev/one.bas")) = -1)
                 Check "  and neither does an empty path", _
                       (ShellTabs_FindByPath(DWSTRING("")) = -1)
 
@@ -3451,12 +3451,23 @@ end function
             '' walk in the app layer saw no documents at all. Nothing failed. Nothing could.
             ''
             '' Windowless is fine here: `--selftest` builds the whole tree, so g_view and
-            '' g_tabs are real, and modSaveSelfTest already establishes that %TEMP% is a
-            '' legitimate place for a suite to put a file.
+            '' g_tabs are real, and modSaveSelfTest already establishes that the temp
+            '' directory is a legitimate place for a suite to put a file.
+            ''
+            '' ---- PsKnownFolder, NOT environ("TEMP") -- 7c step 18 --------------------
+            '' All four scratch directories in this suite read %TEMP% directly until step
+            '' 18. TEMP IS NOT SET ON LINUX, so each one resolved to a bare relative name
+            '' and the suite scattered probe files into the current directory -- or failed
+            '' to create them at all, which is the same as a suite that never ran.
+            '' PsKnownFolder(PSFOLDER_TEMP) answers %TEMP% on Windows and $TMPDIR-or-/tmp
+            '' on Linux, and it has existed in PsCore since before this file did.
+            ''
+            '' And '/' rather than '\' in every join below, per PsPath.bi's house rule:
+            '' shared logic uses forward slashes and PsFile converts at the API boundary.
             scope
-                dim as DWSTRING wszDir = environ("TEMP") & "\tiko_shellopen"
+                dim as DWSTRING wszDir = PsPathJoin( PsKnownFolder( PSFOLDER_TEMP ), DWSTRING("tiko_shellopen") )
                 PsDirCreate( wszDir )
-                dim as DWSTRING wszFile = wszDir & "\open_probe.bas"
+                dim as DWSTRING wszFile = wszDir & "/open_probe.bas"
                 '' ---- REAL SOURCE, NOT TWO LINES OF FILLER, since 7c step 5 ------------
                 '' The probe used to be "' probe" and one print. It carries two PROCEDURES
                 '' now because the scanner assertions below need something to find, and one
@@ -3682,9 +3693,9 @@ end function
                         '' mentions the name being undefined.
                         dim as clsDocument ptr pD = ShellTabs_CurrentDoc()
                         dim as DWSTRING sNameWas = pD->DiskFilename
-                        pD->DiskFilename = "C:\dev\notsource.txt"
+                        pD->DiskFilename = "C:/dev/notsource.txt"
                         Check "    a .txt is not scanned", (ShellScan_Buffer(pD) = false)
-                        pD->DiskFilename = "C:\dev\notsource.bi"
+                        pD->DiskFilename = "C:/dev/notsource.bi"
                         Check "      but a .bi is", ShellScan_Buffer(pD)
                         '' That last one ASKED for a scan of a file called .bi that does
                         '' not exist under that name. Drained here so it cannot land in the
@@ -3858,11 +3869,11 @@ end function
                         '' reached only through probe2's #include and is never handed to
                         '' ShellTabs_Open -- which is what makes the assertions below able
                         '' to fail if the pane quietly went back to listing tabs.
-                        dim as DWSTRING wszFile3 = wszDir & "\open_probe3.bas"
+                        dim as DWSTRING wszFile3 = wszDir & "/open_probe3.bas"
                         PsFileWriteAll( wszFile3, _
                                 !"' three\nsub ThirdProc()\n  print 3\nend sub\n" )
 
-                        dim as DWSTRING wszFile2 = wszDir & "\open_probe2.bas"
+                        dim as DWSTRING wszFile2 = wszDir & "/open_probe2.bas"
                         if PsFileWriteAll( wszFile2, _
                                 !"' two\n#include once \"open_probe3.bas\"\n" & _
                                 !"sub SecondProc()\n  print 2\nend sub\n" ) then
@@ -4253,13 +4264,13 @@ end function
             '' Doc_ReadFromDisk), not the decoder directly, because psencoding already
             '' covers the decoder with 53 assertions and what was broken was the WIRING.
             scope
-                dim as DWSTRING wszDirE = environ("TEMP") & "\tiko_shellenc"
+                dim as DWSTRING wszDirE = PsPathJoin( PsKnownFolder( PSFOLDER_TEMP ), DWSTRING("tiko_shellenc") )
                 PsDirCreate( wszDirE )
 
                 '' ---- UTF-16LE WITH A BOM, which is the case that was mojibake -----------
                 '' Built byte by byte rather than by encoding a DWSTRING, so the test does
                 '' not depend on the encoder to check the decoder.
-                dim as DWSTRING wszU16 = wszDirE & "\probe_utf16.txt"
+                dim as DWSTRING wszU16 = wszDirE & "/probe_utf16.txt"
                 dim as string sU16 = chr(&hFF) & chr(&hFE)          '' BOM
                 sU16 &= chr(&h41) & chr(&h00)                       '' A
                 sU16 &= chr(&hE9) & chr(&h00)                       '' e-acute
@@ -4315,7 +4326,7 @@ end function
                     dim as clsDocument ptr pH = gApp.CreateEmptyDocument()
                     if pH <> 0 then
                         pH->FileEncoding = FILE_ENCODING_UTF8
-                        dim as DWSTRING wszIns = wszDirE & "\probe_insert.txt"
+                        dim as DWSTRING wszIns = wszDirE & "/probe_insert.txt"
                         if PsFileWriteAll( wszIns, chr(&hFF) & chr(&hFE) & chr(&h41) & chr(&h00) ) then
                             dim as string sIns
                             dim as long nInsEnc = FILE_ENCODING_UTF8
@@ -4335,7 +4346,7 @@ end function
                 '' Read correctly and SILENTLY RE-SAVED LITTLE ENDIAN until 7c step 10,
                 '' because tiko had no id for it -- PsCore detected and decoded BE, and
                 '' Doc_PsToEnc then folded it onto the LE id.
-                dim as DWSTRING wszU16BE = wszDirE & "\probe_utf16be.txt"
+                dim as DWSTRING wszU16BE = wszDirE & "/probe_utf16be.txt"
                 dim as string sU16BE = chr(&hFE) & chr(&hFF)        '' BOM, big endian
                 sU16BE &= chr(&h00) & chr(&h41)                     '' A
                 sU16BE &= chr(&h00) & chr(&hE9)                     '' e-acute
@@ -4382,7 +4393,7 @@ end function
                 end if
 
                 '' ---- UTF-8 WITH A BOM: the label must survive, or the BOM is lost --------
-                dim as DWSTRING wszU8B = wszDirE & "\probe_utf8bom.txt"
+                dim as DWSTRING wszU8B = wszDirE & "/probe_utf8bom.txt"
                 if PsFileWriteAll( wszU8B, chr(&hEF) & chr(&hBB) & chr(&hBF) & "hello" ) then
                     dim as clsDocument ptr pE = gApp.CreateEmptyDocument()
                     if pE <> 0 then
@@ -4401,7 +4412,7 @@ end function
                 '' 0xE9 alone is invalid UTF-8, so strict validation must reject it and the
                 '' ladder must fall through to ANSI. A lenient validator would call this
                 '' UTF-8 and the file would round-trip as garbage.
-                dim as DWSTRING wszAnsi = wszDirE & "\probe_ansi.txt"
+                dim as DWSTRING wszAnsi = wszDirE & "/probe_ansi.txt"
                 if PsFileWriteAll( wszAnsi, "caf" & chr(&hE9) ) then
                     dim as clsDocument ptr pE = gApp.CreateEmptyDocument()
                     if pE <> 0 then
@@ -4417,7 +4428,7 @@ end function
                 '' ---- AN EMPTY FILE IS UTF-8, NOT ANSI -----------------------------------
                 '' PsEncDetect's deliberate choice, and it matters: a new empty file that
                 '' acquired a codepage would save its first typed character as CP-1252.
-                dim as DWSTRING wszEmpty = wszDirE & "\probe_empty.txt"
+                dim as DWSTRING wszEmpty = wszDirE & "/probe_empty.txt"
                 if PsFileWriteAll( wszEmpty, "" ) then
                     dim as clsDocument ptr pE = gApp.CreateEmptyDocument()
                     if pE <> 0 then
@@ -4437,7 +4448,7 @@ end function
                 '' binary and never in the other. THE SEAM IS GONE in step 10, so what is
                 '' left to assert is the reader's own status, which is where the meaning
                 '' now lives.
-                dim as DWSTRING wszGoneE = wszDirE & "\no_such_file.txt"
+                dim as DWSTRING wszGoneE = wszDirE & "/no_such_file.txt"
                 scope
                     dim as string sGot
                     dim as long nGoneEnc = -1
@@ -4457,7 +4468,7 @@ end function
                 '' polarity backwards the shell reached that line on failures and never on
                 '' successes. The stamp is what the file-watch and the reload prompt compare
                 '' against, so a zero here is a document that can never look stale.
-                dim as DWSTRING wszStamp = wszDirE & "\probe_stamp.bas"
+                dim as DWSTRING wszStamp = wszDirE & "/probe_stamp.bas"
                 if PsFileWriteAll( wszStamp, "' stamp" ) then
                     dim as clsDocument ptr pS = gApp.CreateEmptyDocument()
                     if pS <> 0 then
@@ -4509,13 +4520,13 @@ end function
             '' repair itself, against PsFileRealCase; what is shell-specific and asserted
             '' here is the two things wrapped around it, both of which break silently.
             scope
-                dim as DWSTRING wszDirF = environ("TEMP") & "\tiko_shellcase"
+                dim as DWSTRING wszDirF = PsPathJoin( PsKnownFolder( PSFOLDER_TEMP ), DWSTRING("tiko_shellcase") )
                 PsDirCreate( wszDirF )
-                dim as DWSTRING wszProbeF = wszDirF & "\CaseProbe.bas"
+                dim as DWSTRING wszProbeF = wszDirF & "/CaseProbe.bas"
                 if PsFileWriteAll( wszProbeF, "' probe" & chr(13) & chr(10) ) then
                     '' THE CASE, end to end through the shell's own wrapper -- shouted the
                     '' way the parser's string pool shouts.
-                    dim as DWSTRING wszShout = wszDirF & "\CASEPROBE.BAS"
+                    dim as DWSTRING wszShout = wszDirF & "/CASEPROBE.BAS"
                     dim as DWSTRING wszFixed = FilenameOriginalCase( wszShout )
                     Check "FilenameOriginalCase repairs a shouted name", _
                           (PsPathName(wszFixed) = "CaseProbe.bas"), PsPathName(wszFixed).Utf8
@@ -4532,7 +4543,7 @@ end function
                     '' there, and the names this is asked about are routinely gone -- deleted
                     '' since the scan, or synthetic. Returning that empty string would blank
                     '' a filename in the panel and turn a symbol-database key into "".
-                    dim as DWSTRING wszGone = wszDirF & "\no_such_file_at_all.bas"
+                    dim as DWSTRING wszGone = wszDirF & "/no_such_file_at_all.bas"
                     Check "  a path that is not there comes back UNCHANGED", _
                           (FilenameOriginalCase( wszGone ) = wszGone), _
                           FilenameOriginalCase( wszGone ).Utf8
@@ -5253,10 +5264,10 @@ end function
             '' are not; the earlier scope restores the tab state it found. Three
             '' assertions failed and one PASSED FOR THE WRONG REASON: "TabDocAt agrees
             '' with the array" compared 0 with 0.
-            dim as DWSTRING wszDir = environ("TEMP") & "\tiko_shelltabs"
+            dim as DWSTRING wszDir = PsPathJoin( PsKnownFolder( PSFOLDER_TEMP ), DWSTRING("tiko_shelltabs") )
             PsDirCreate( wszDir )
-            dim as DWSTRING wszA = wszDir & "\tabseam_a.bas"
-            dim as DWSTRING wszB = wszDir & "\tabseam_b.bas"
+            dim as DWSTRING wszA = wszDir & "/tabseam_a.bas"
+            dim as DWSTRING wszB = wszDir & "/tabseam_b.bas"
             dim as boolean bW = PsFileWriteAll( wszA, !"' a\n" )
             bW = bW andalso PsFileWriteAll( wszB, !"' b\n" )
 

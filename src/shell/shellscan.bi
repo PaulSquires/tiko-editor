@@ -146,7 +146,12 @@ end sub
 private function ShellScan_IsScannable( byval pDoc as clsDocument ptr ) as boolean
     if pDoc = 0 then return false
     dim as DWSTRING wszFile = pDoc->DiskFilename
-    if PsInStr( wszFile, "\" ) = 0 then return true
+    '' PsPathIsAbsolute, NOT a search for a backslash. tiko tests for a separator because on
+    '' Windows that is the same question; on Linux it is not, and every saved document would
+    '' have answered "unsaved". PsPathIsAbsolute normalises first, so it accepts BOTH "C:\a"
+    '' and "/a" on either platform -- which matters here, because a project file written on
+    '' Windows and opened on Linux carries Windows paths.
+    if PsPathIsAbsolute( wszFile ) = false then return true
     select case PsLCase( PsPathExt(wszFile) ).Utf8
         case ".bas", ".bi", ".inc" : return true
     end select
@@ -159,7 +164,7 @@ end function
 '' collide in the symbol database.
 private function ShellScan_RootName( byval pDoc as clsDocument ptr ) as DWSTRING
     dim as DWSTRING wszFile = pDoc->DiskFilename
-    if PsInStr( wszFile, "\" ) > 0 then return wszFile
+    if PsPathIsAbsolute( wszFile ) then return wszFile
     return PsExePath & "UNTITLED-" & hex( cast( uinteger, pDoc ) ) & ".BAS"
 end function
 
@@ -522,9 +527,10 @@ function ShellScan_Project() as boolean
 
     dim as DWSTRING wszRoot = pRoot->DiskFilename
     '' NEVER SAVED MEANS NOTHING ON DISK TO SCAN -- tiko's own guard, and the reason it
-    '' tests for a backslash rather than for emptiness: an untitled document's name is
+    '' tests for a separator rather than for emptiness: an untitled document's name is
     '' "Untitled1", which is a perfectly good string and a perfectly bad path.
-    if PsInStr( wszRoot, "\" ) = 0 then return false
+    '' PsPathIsAbsolute asks the same question portably -- see ShellScan_IsScannable.
+    if PsPathIsAbsolute( wszRoot ) = false then return false
 
     '' ONE INCLUDE PATH: the root's own directory. See the header for why the other two
     '' entries tiko adds are absent. It is resolved HERE rather than on the worker because
