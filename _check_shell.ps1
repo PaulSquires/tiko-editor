@@ -92,14 +92,92 @@ if ($psc.Count -gt 0) {
     $bad += $psc.Count
 }
 
+# ---- AND NO WINDOWS SEPARATOR IN A PATH LITERAL -- 7c step 18 -------------
+#
+# THE SAME REASON THIS FILE EXISTS AT ALL: a path is not an identifier. The
+# app-layer token ratchet greps a vocabulary of Win32 and AfxNova NAMES, and
+# `"settings\settings.ini"` contains none of them, so both layers were full of
+# Windows separators while every gate was green.
+#
+# What that cost, before anyone ran it on Linux:
+#   - four %TEMP% scratch directories in the shell suite that resolved to bare
+#     relative names, so the suite wrote nowhere and failed silently
+#   - clsConfig's seven settings paths, which were ALREADY MIXED -- PsExePath
+#     returns forward slashes on both platforms, so they read
+#     "C:/dev/tiko/settings\settings.ini" and Windows opened them anyway
+#
+# PsPath.bi states the rule: shared logic uses '/', PsFile converts at the API
+# boundary with PsPathToNative. This checks both layers, because app\ is the
+# half tiko.exe shares.
+#
+# THREE LITERALS ARE ALLOWED, BY THEIR EXACT TEXT and not by file:
+#   "\"              -- the separator ITSELF, in a comparison. modProjectFolders
+#                       accepts both separators on purpose and is correct.
+#   "Ctrl+\"
+#   "Ctrl+Shift+\"   -- the backslash KEY in a key binding name. Not a path.
+# Escaped literals (!"...\n") are skipped: their backslashes are escapes.
+$layers = @((Join-Path $PSScriptRoot 'src\shell'), (Join-Path $PSScriptRoot 'src\app'))
+$pathFiles = @()
+foreach ($d in $layers) {
+    if (-not (Test-Path $d)) { Write-Host "  FAIL  $d does not exist"; exit 2 }
+    $pathFiles += Get-ChildItem -Path $d -Include *.bas, *.inc, *.bi -File -Recurse
+}
+if ($pathFiles.Count -eq 0) {
+    Write-Host "  FAIL  no source files found for the separator check"
+    exit 2
+}
+
+$allowed = @('"\"', '"Ctrl+\"', '"Ctrl+Shift+\"')
+$sepBad  = 0
+foreach ($f in $pathFiles) {
+    $n = 0
+    foreach ($line in [System.IO.File]::ReadAllLines($f.FullName)) {
+        $n++
+        $t = $line.TrimStart()
+        if ($t.StartsWith("'") -or $t -match '^(?i)rem\s') { continue }
+        # Drop escaped string literals and then the allowed ones, in that order.
+        # An escaped literal ends at the first UNESCAPED quote: !"...\"...\n" is
+        # one string, and a naive [^"]* stops at the \" in the middle of it.
+        $probe = [regex]::Replace($line, '!"(?:\\.|[^"\\])*"', '')
+        foreach ($a in $allowed) { $probe = $probe.Replace($a, '') }
+        if ($probe -match '"[^"]*\\[^"]*"') {
+            Write-Host ("  FAIL  {0}:{1}  Windows separator in a path literal  {2}" -f `
+                        $f.Name, $n, $line.Trim())
+            $sepBad++
+        }
+        # %TEMP% IS THE SAME CLASS WEARING AN ENVIRONMENT VARIABLE, and the
+        # literal rule above cannot see it -- environ("TEMP") has no backslash
+        # in it. It is UNSET ON LINUX, so the result is an empty string that
+        # concatenates into a plausible relative path and fails silently.
+        if ($probe -match 'environ\s*\(\s*"(TEMP|TMP)"') {
+            Write-Host ("  FAIL  {0}:{1}  %TEMP% directly -- use PsKnownFolder(PSFOLDER_TEMP)  {2}" -f `
+                        $f.Name, $n, $line.Trim())
+            $sepBad++
+        }
+    }
+}
+$bad += $sepBad
+
 Write-Host ""
 if ($bad -gt 0) {
-    Write-Host "  $bad violation(s) in src\shell across $($files.Count) file(s)."
-    Write-Host ""
-    Write-Host "  The shell binary is the translation unit with no AfxNova in it,"
-    Write-Host "  which is what lets it take PsPlatform's UI at global scope. Move"
-    Write-Host "  the code, or move the dependency down into app\ -- not an #ifdef."
+    Write-Host "  $bad violation(s): $($bad - $sepBad) reach/prefix in src\shell"
+    Write-Host "  ($($files.Count) file(s)), $sepBad separator in src\shell + src\app"
+    Write-Host "  ($($pathFiles.Count) file(s))."
+    if ($bad -gt $sepBad) {
+        Write-Host ""
+        Write-Host "  The shell binary is the translation unit with no AfxNova in it,"
+        Write-Host "  which is what lets it take PsPlatform's UI at global scope. Move"
+        Write-Host "  the code, or move the dependency down into app\ -- not an #ifdef."
+    }
+    if ($sepBad -gt 0) {
+        Write-Host ""
+        Write-Host "  Use '/' and let PsFile convert at the API boundary -- PsPath.bi's"
+        Write-Host "  house rule, and PsExePath has returned '/' on both platforms all"
+        Write-Host "  along, so a '\' literal makes a MIXED path even on Windows. For a"
+        Write-Host "  scratch directory use PsKnownFolder(PSFOLDER_TEMP), not %TEMP%."
+    }
     exit 1
 }
 Write-Host "  ok      src\shell reaches no Win32 shell header, and carries no PsC. ($($files.Count) file(s))"
+Write-Host "  ok      no Windows separator and no %TEMP% in src\shell or src\app ($($pathFiles.Count) file(s))"
 exit 0
