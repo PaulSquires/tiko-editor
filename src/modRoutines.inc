@@ -687,9 +687,7 @@ function AfxIFileOpenDialogW( _
             SHCreateItemFromParsingName (wszDefaultFolder.Wz(), null, @IID_IShellItem, @pFolder)
             if pFolder then
                 hr = pofd->lpVtbl->SetFolder(pofd, pFolder)
-                if SUCCEEDED(hr) then
-                    pFolder->lpVtbl->Release(pFolder)
-                end if      
+                pFolder->lpVtbl->Release(pFolder)
             end if
 
         case IDC_FRMUSERTOOLS_CMDBROWSEEXE
@@ -704,9 +702,7 @@ function AfxIFileOpenDialogW( _
             SHCreateItemFromParsingName (wszDefaultFolder.Wz(), null, @IID_IShellItem, @pFolder)
             if pFolder then
                 hr = pofd->lpVtbl->SetFolder(pofd, pFolder)
-                if SUCCEEDED(hr) then
-                    pFolder->lpVtbl->Release(pFolder)
-                end if      
+                pFolder->lpVtbl->Release(pFolder)
             end if
 
         ' (The IDC_FRMOPTIONSCOMPILER_CMDFBHELPFILE case is gone with the control that
@@ -790,9 +786,7 @@ function AfxIFileOpenDialogMultiple( _
     SHCreateItemFromParsingName (wszDefaultFolder, null, @IID_IShellItem, @pFolder)
     if pFolder then
         hr = pofd->lpVtbl->SetFolder(pofd, pFolder)
-        if SUCCEEDED(hr) then
-            pFolder->lpVtbl->Release(pFolder)
-        end if      
+        pFolder->lpVtbl->Release(pFolder)
     end if
     
     ' Allow multiselection
@@ -892,9 +886,7 @@ function AfxIFileSaveDialog( _
             SHCreateItemFromParsingName (wszDefaultFolder.Wz(), null, @IID_IShellItem, @pFolder)
             if pFolder then
                 hr = psfd->lpVtbl->SetFolder(psfd, pFolder)
-                if SUCCEEDED(hr) then
-                    pFolder->lpVtbl->Release(pFolder)
-                end if      
+                pFolder->lpVtbl->Release(pFolder)
             end if
 
         case IDC_THEMES_SAVEAS
@@ -910,9 +902,7 @@ function AfxIFileSaveDialog( _
             SHCreateItemFromParsingName (wszDefaultFolder.Wz(), null, @IID_IShellItem, @pFolder)
             if pFolder then
                 hr = psfd->lpVtbl->SetFolder(psfd, pFolder)
-                if SUCCEEDED(hr) then
-                    pFolder->lpVtbl->Release(pFolder)
-                end if
+                pFolder->lpVtbl->Release(pFolder)
             end if
 
         case else
@@ -947,9 +937,7 @@ function AfxIFileSaveDialog( _
             SHCreateItemFromParsingName (wszFilePath.Wz(), null, @IID_IShellItem, @pFolder)
             if pFolder then
                 hr = psfd->lpVtbl->SetFolder(psfd, pFolder)
-                if SUCCEEDED(hr) then
                 pFolder->lpVtbl->Release(pFolder)
-                end if      
             end if
         end if
     end if
