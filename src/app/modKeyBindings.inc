@@ -267,7 +267,7 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
 
     ' Load the keybindings settings file. This will update the gKeys array with any
     ' user defined key mappings.
-    dim as DWSTRING wszFilename = PsExePath & "settings\keybindings.ini"
+    dim as DWSTRING wszFilename = PsExePath & "settings/keybindings.ini"
 
     redim as DWSTRING lines(any)
     if TextFile_ReadLines( wszFilename, lines() ) then

@@ -45,15 +45,25 @@
 #include once "app/modProjectFolders.bi"
 #include once "app/modTextFile.inc"
 
+'' ---- FORWARD SLASHES, per PsPath.bi's house rule -- 7c step 18 -------------------------
+''
+'' These read `exe_path & "settings\..."` until step 18, which produced a MIXED path:
+'' PsExePath has always returned forward slashes with a trailing '/' on BOTH platforms
+'' (PsFile.inc:662), so the result was "C:/dev/tiko/settings\settings.ini". Windows opens
+'' that happily, which is why nothing ever said so -- and on Linux the second half is not a
+'' path at all, it is one filename with backslashes in its name.
+''
+'' So the profile-API risk of this change is smaller than it looks: ConfigFilename already
+'' reached WritePrivateProfileString with forward slashes in its first half and worked.
 constructor clsConfig
     dim as DWSTRING exe_path = PsExePath
-    ConfigFilename            = exe_path & "settings\settings.ini"
-    FBKeywordsFilename        = exe_path & "settings\keywords\freebasic_keywords.txt"
-    WinApiKeywordsFilename    = exe_path & "settings\keywords\winapi_keywords.txt"
-    ExtraKeywordsFilename     = exe_path & "settings\keywords\extra_keywords.txt"
-    FBKeywordsDefaultFilename = exe_path & "settings\keywords\freebasic_keywords_default.txt"
-    FBCodetipsFilename        = exe_path & "settings\keywords\codetips.ini"
-    UntitledProjectFilename   = exe_path & "settings\default" & APPEXTENSION
+    ConfigFilename            = exe_path & "settings/settings.ini"
+    FBKeywordsFilename        = exe_path & "settings/keywords/freebasic_keywords.txt"
+    WinApiKeywordsFilename    = exe_path & "settings/keywords/winapi_keywords.txt"
+    ExtraKeywordsFilename     = exe_path & "settings/keywords/extra_keywords.txt"
+    FBKeywordsDefaultFilename = exe_path & "settings/keywords/freebasic_keywords_default.txt"
+    FBCodetipsFilename        = exe_path & "settings/keywords/codetips.ini"
+    UntitledProjectFilename   = exe_path & "settings/default" & APPEXTENSION
 
     ' ---- UI LAYOUT DEFAULTS -----------------------------------------------------
     ' The split is between the FIELD and its DEFAULT. A stored panel height and a
