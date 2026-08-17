@@ -1,5 +1,46 @@
 # Handoff — the tiko → PsPlatform port
 
+**7c STEP 18 COMPLETE. THE LINUX BUILD PATH EXISTS AND HAS NOT BEEN RUN.**
+
+**Three `.sh` files, and there was not one in this repo before.** `src/fbcParser/build.sh`,
+`_compile_shell.sh`, `_run_shell.sh`. **NOTHING IN THEM IS VERIFIED** — no Windows session
+compiles a `.so`. `bash -n` and the guard chains are all that was exercised. Run them in this
+order and the first failure is worth more than anything on this line:
+
+```
+bash src/fbcParser/build.sh && bash _compile_shell.sh && bash _run_shell.sh --selftest
+```
+
+**AND THE SCRIPTS WERE THE SMALL HALF.** `src/shell` and `src/app` were clean of Win32
+IDENTIFIERS — which is all `_check_app_layer` and `_check_shell` ever checked — and full of Win32
+SEPARATORS and `%TEMP%`. Four scratch directories that resolve to nothing on Linux; ~35 backslash
+path literals; three *"does this document have a path"* tests answered by searching for `\`.
+**A separator is not an identifier, which is the same blind spot this page already records one
+layer down.**
+
+**AND clsConfig's SETTINGS PATHS WERE ALREADY BROKEN ON WINDOWS.** `PsExePath` has returned
+FORWARD slashes on both platforms since it was written, so `exe_path & "settings\settings.ini"`
+built `C:/dev/tiko/settings\settings.ini` and handed it to `WritePrivateProfileString`. Windows
+opens it, so nothing ever said so.
+
+**FIXING IT TOOK --selftest FROM 395/0 TO 377/17, AND THAT IS THE STEP.** Two lookups compared
+paths as RAW STRINGS: `clsApp.GetDocumentPtrByFilename` (a miss opens a SECOND clsDocument for a
+file already in a tab, and saving one discards the other's edits) and `SymDb_FileNameEq` (a miss
+is a Functions pane with no rows). Both survivable only because every path had been through
+`FilenameOriginalCase`, which ends in `PsPathToNative` and hands back backslashes — **two
+documented conventions, both correct on their own terms, meeting at a raw `=`.**
+
+**AND THE ASSERTION WRITTEN TO PIN IT WAS VACUOUS.** It compared the two lookups to each other;
+the parser's file table holds a MIXED spelling, so with the fix reverted BOTH miss and it compared
+0 with 0 and printed `ok` beside two real failures. **Fourth time in this port the obvious
+assertion constrained nothing, and the fourth time reverting the fix is what said so.** The
+revert-to-red harness ALSO failed silently first — a patch matching `\n` against a CRLF file
+changed nothing and reported green, which reads exactly like "the fix was not load-bearing". The
+assert on the patch application is the only reason that was one line and not a conclusion.
+See [`7c-step18.md`](7c-step18.md).
+
+---
+
 **7c STEP 17 COMPLETE. LINUX RUNS, WITH A WINDOW.**
 
 **Every Windows gate below was RE-RUN on 2026-08-14, not read.** That pass corrected one number:
@@ -50,8 +91,9 @@ five defects sit in or behind that work.
 or a gate. `structsizes` passed first time (the LP64 layouts were right), and the render digest
 matched Windows BYTE FOR BYTE. See [`7c-step16.md`](7c-step16.md).
 
-**STILL NEVER RUN ANYWHERE: the fontconfig path in `PsFont.inc`.** And `tikoshell` has never been
-built for Linux -- it lives in THIS repo, so it needs both trees checked out side by side.
+**STILL NEVER RUN ANYWHERE: the fontconfig path in `PsFont.inc`.** `tikoshell` has a Linux BUILD PATH
+now -- step 18's three `.sh` files -- and has still never been BUILT there. It lives in THIS repo, so
+it needs both trees checked out side by side, and every line of those scripts is unverified.
 
 **THIRTY-THREE SELF-TEST REPORT LINES, 20,328 ASSERTIONS, IN ONE GATE.** `_check_selftests.bat`
 covered the STARTUP suites in step 14; step 15 added the five that need a real dialog, which
@@ -267,55 +309,60 @@ Read in this order, and do not skip the first:
     `PsTimerNow()`, which is a **settable virtual clock**, not a wall clock — and *"the clock
     never moved"* is indistinguishable from *"the work was free"*, which was the answer the step
     wanted to hear.
-11. [`7c-step17.md`](7c-step17.md) — **three bug reports, three different verdicts, and the
+11. [`7c-step18.md`](7c-step18.md) — **a whole portability class that every gate was blind
+    to, because a separator is not an identifier.** Read "The defect the fix exposed": two
+    documented conventions, both correct on their own terms, meeting at a raw `=`. Then the
+    vacuous assertion -- and the revert-to-red HARNESS that failed silently before it, which is
+    the sharper of the two.
+12. [`7c-step17.md`](7c-step17.md) — **three bug reports, three different verdicts, and the
     only thing that told them apart was running both platforms.** Read "What actually solved it":
     two of my diagnoses died, and the one-sentence observation that settled the third was
     "right click popup menus work perfectly". Also the sharpest variant yet of this page's
     recurring shape -- a SUITE that drove the widget correctly and passed, because its FIXTURE
     did the one thing no real caller did.
-12. [`7c-step16.md`](7c-step16.md) — **phase 7c's code meets Linux, and the step where I made
+13. [`7c-step16.md`](7c-step16.md) — **phase 7c's code meets Linux, and the step where I made
     this page's own mistake.** Five real defects, all in bindings, build scripts and gates rather
     than in portable code — and one of them made a suite report a PASS for the wrong reason on a
     platform where the feature did not work at all. Then read "What this step is really about":
     I called it "the first Linux run" repeatedly without opening PsPlatform's STATUS.md, which
     says on its second screen that Fedora had been in use since Gate 0.
-13. [`7c-step15.md`](7c-step15.md) — **the step where a revert-to-red falsified the CORRECTION,
+14. [`7c-step15.md`](7c-step15.md) — **the step where a revert-to-red falsified the CORRECTION,
     not the code.** Two explanations for the same hook, both plausible, both measured, both
     false -- and the second one was mine, written in this step. Read "Two claims about why
     these hooks exist".
-14. [`7c-step14.md`](7c-step14.md) — **READ "What this step is really about".** Every stale
+15. [`7c-step14.md`](7c-step14.md) — **READ "What this step is really about".** Every stale
     claim this port has found was in PROSE; this one was in a SUITE, and that is worse. A number
     carries authority a sentence does not, and "11 passed" was believed for as long as it was
     printed. A suite nothing runs is indistinguishable from a suite that passes.
-15. [`7c-step13.md`](7c-step13.md) — **the step where the live list emptied, and four of its
+16. [`7c-step13.md`](7c-step13.md) — **the step where the live list emptied, and four of its
     items closed as "the blocker was not one".** Read the last section: a suite that has been
     failing six assertions because nothing runs it. That is this port's recurring failure
     wearing a suite instead of a comment.
-16. [`7c-step12.md`](7c-step12.md) — **the step where the revert-to-red pass caught the SUITES
+17. [`7c-step12.md`](7c-step12.md) — **the step where the revert-to-red pass caught the SUITES
     rather than the code, twice.** A prefix match left every style assertion green because
     `RegEnumValueW` happens to enumerate in the helpful order; removing a whole feature dropped
     a suite from 35 assertions to 30 and still printed "0 failed". Read that section before
     writing any assertion that depends on a lookup order or is wrapped in a skip.
-17. [`7c-step11.md`](7c-step11.md) — **the step that started as an encoding bug and was
+18. [`7c-step11.md`](7c-step11.md) — **the step that started as an encoding bug and was
     neither.** Read "What was actually wrong": a setting that had never reached the code it
     named. Then the assertion that failed on its first run — the CODE was right and the SUITE
     was wrong, which is the other way round from every other failure on this page.
-18. [`7c-step10.md`](7c-step10.md) — **three items closed, three false comments, and one of
+19. [`7c-step10.md`](7c-step10.md) — **three items closed, three false comments, and one of
     them mine.** Read the three-row table at the top. Then the revert-to-red section: every rule
     went red for the first time in six steps, and the one that nearly did not is instructive —
     `Doc_EncodingName`'s `case else` is `"ANSI"`, so a missing arm does not fail, it puts the
     word ANSI beside a UTF-16 file.
-19. [`7c-step9.md`](7c-step9.md) — **the encoding step, and the third blocker in three steps
+20. [`7c-step9.md`](7c-step9.md) — **the encoding step, and the third blocker in three steps
     that had already been removed.** Read the table at the top, then "A defect found next to the
     one being fixed": the seam's `LoadFileText` had NO AGREED POLARITY — one implementation
     returned false on success, the other true — which was invisible with one implementation and
     live from the moment there were two.
-20. [`7c-step8.md`](7c-step8.md) — **the step where two blockers turned out to have been
+21. [`7c-step8.md`](7c-step8.md) — **the step where two blockers turned out to have been
     removed before anyone noticed.** The pane went 0 → 51 rows, but read the two intermediate
     tables first: the one that shows the pane's ceiling is fbcParser (573 procedure symbols, 41
     with a body line) and the revert-to-red table, where one revert found not a missing test but
     a **false claim in a comment** — which is the other thing reverting is for.
-21. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
+22. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
    irreducible, investigated. **It was not a blocker and never had been.** Short, and it is the
    clearest example on this whole shelf of a claim that survived because nobody checked it.
    **Its recommendation has since been implemented**: WebView2 is gone from the tree.
@@ -662,8 +709,8 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | `_check_package.bat` | tiko runs with **only the Windows directories on PATH** | green, ~1s |
 | `_check_app_layer.bat` | `src/app` names no Win32 or AfxNova token (**48 files**, 2026-08-11) | green |
 | `_check_app_standalone.bat` | `src/app` compiles against PsCore alone **and LINKS as one unit** | green — **18 clean**, 0 errors, **debt 0 and NO BASELINE** (2026-08-14) |
-| `_check_shell.bat` | `src/shell` includes no Win32 shell header, and carries no `PsC.` | green |
-| `_run_shell.bat --selftest` | the shell's own suite — **395 assertions** (2026-08-14, +12 for the tab seam) | green |
+| `_check_shell.bat` | `src/shell` includes no Win32 shell header, and carries no `PsC.` (5 files); **and NO WINDOWS SEPARATOR IN A PATH LITERAL and no `environ("TEMP")` across `src/shell` + `src/app` -- 53 files, new in step 18.** Two rules, because a separator is not an identifier and `%TEMP%` has no separator in it | green |
+| `_run_shell.bat --selftest` | the shell's own suite — **397 assertions** (2026-08-17, +2 for path identity — see step 18) | green |
 | tiko `TIKO_FONTFILE_SELFTEST=1` | the font resolver and the callback Scintilla drives — **13 assertions** (2026-08-14) | green |
 | **`_check_selftests.bat`** | **EVERY self-test, startup AND dialog, in one tiko run — 33 report lines, 20,328 assertions** (re-run 2026-08-14; the page said 20,329 until then — frmAbout lost the id-397 assertion when the Proprietary pill went). Fails on any failure AND on fewer than 33 report lines, so "it did not run" cannot look like "it passed". Backs up and restores `settings.ini` and `tiko.tiko`, because a clean exit saves them. Opens real dialogs, so it needs a desktop. ~20s; run it deliberately, not on every build. | green |
 | ...including `TIKO_THEME_SELFTEST` | **929** | green |
