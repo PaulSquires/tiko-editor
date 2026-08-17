@@ -82,3 +82,15 @@ src/_prelude.txt
 # install state exactly like settings.ini, not source. The generator in mdConfig.inc
 # is where the format is documented.
 /f1markdown.ini
+
+# ---- THE LINUX BUILD ARTEFACTS, added by 7c step 18 -------------------------
+# fbcParser.dll IS tracked in this root; its Linux twin is not, and the
+# asymmetry is deliberate rather than an oversight. The DLL is tracked because
+# tiko.exe ships beside it and every Windows checkout needs it working; the .so
+# can only be produced on a Linux host that has already built PsPlatform, and no
+# session on Windows can produce it or verify it. Committing one would mean
+# committing a binary nobody here can rebuild.
+# (tikoshell itself is covered by /_shell/ above.)
+/libfbcParser.so
+/src/fbcParser/libfbcParser.so
+/src/fbcParser/tiko_fbctest
