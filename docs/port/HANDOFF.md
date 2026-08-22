@@ -29,7 +29,11 @@ it stops implying coverage it does not have.
 pane-switcher assertions, and it does so on `HEAD` too. Step 27's page said "zero warnings" for both
 compile gates; **that was measured on `_compile_fast` only.**
 
-**NOT VERIFIED BY ME:** the pair on screen. [`7c-step28.md`](7c-step28.md) carries the pass, and
+**THE INTERACTIVE PASS RAN FOR BOTH BARS AND FOUND NOTHING, 2026-08-22.** Steps 27 and 28 are the
+first pair in this run to survive it clean -- step 26's found four things in under a minute. Every
+defect in these two was found by an ASSERTION or a REVERT before the author ever saw the bars.
+
+[`7c-step28.md`](7c-step28.md) carries the pass, and
 names the one piece read from a header rather than observed -- Preserve Case's glyph is the literal
 text `"AB"`, resolved by the text engine's per-character fallback chain.
 

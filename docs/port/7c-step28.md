@@ -107,6 +107,9 @@ which emits the same one, so it is not this step's. **Step 27's page said "zero 
 compile gates; that was measured on `_compile_fast` only.** Left alone rather than fixed in a
 Replace-bar commit.
 
+**VERIFIED BY THE AUTHOR, 2026-08-22 — the whole pass below ran and passed**, including the
+literal `"AB"` glyph, which was the one piece read from a header rather than observed.
+
 **NOT VERIFIED BY ME:** the bar on screen, and one thing on it specifically — **Preserve Case's
 glyph is the literal text `"AB"`**, which is tiko's own (`wszIconPreserveCase`), not a symbol
 codepoint. tiko needs two font handles for that, one per panel; this relies on `PsTextEngine`'s

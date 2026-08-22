@@ -92,6 +92,9 @@ flipping again.
 repaint has no model effect. Its **installation** is gated — the seam's completeness check exits 2
 if it is unset, which is how step 26 found it in the first place.
 
+**VERIFIED BY THE AUTHOR, 2026-08-22 — the whole pass below ran and passed.** What follows is
+left as written, because what it asked for is what was confirmed.
+
 **NOT VERIFIED BY ME:** the bar on screen. Its geometry is arithmetic against a band the oracle
 pins, and the search behind it is asserted — but whether the field, the two strips and the count
 land where they should is the author's, and **step 26 is why that sentence is not boilerplate.**
