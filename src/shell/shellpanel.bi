@@ -1035,10 +1035,23 @@ end sub
 '' (frmExplorer.inc:89), with its document pointer replaced by a path -- the row carries an
 '' index into g_panelFiles, so the comparison is on what the index resolves to.
 ''
-'' RETURNS FALSE WHEN THE ROW IS COLLAPSED, which is tiko's behaviour and looks like a
-'' refusal until you see what the alternative is: SetCurSel on a row inside a collapsed
-'' subtree selects something the user cannot see, and the pane then scrolls to a blank
-'' place. Expanding the tree under them to satisfy a tab switch is worse.
+'' RETURNS FALSE WHEN THE ROW IS NOT VISIBLE, which is tiko's intent and looks like a
+'' refusal until you see the alternative: SetCurSel on a row inside a collapsed subtree
+'' selects something the user cannot see, and the pane then scrolls to a blank place.
+'' Expanding the tree under them to satisfy a tab switch is worse.
+''
+'' ---- AND tiko's OWN GUARD NEVER FIRES, WHICH IS WHY THIS ONE IS NOT A COPY ------------
+''
+'' frmExplorer.inc:109 reads `if PsListTree_IsCollapsed(hCtrl, i) then return false`, and
+'' IsCollapsed asks whether ROW i IS ITSELF COLLAPSED -- whether its own subtree is folded
+'' shut. A FILE ROW IS A LEAF. It has no subtree, so it is never collapsed, so that test is
+'' false for every row it is ever applied to and the guard has never refused anything in
+'' either binary.
+''
+'' The question actually being asked is "can the user see this row", and the answer is the
+'' VISIBLE MAP: ModelToVisible returns -1 for a row hidden under a folded ancestor, at any
+'' depth. Ported as IsCollapsed first, and an assertion written for the ported behaviour is
+'' what said so -- collapsing the group left the guard entirely unmoved.
 ''
 '' EnsureVisible RATHER THAN tiko's top-index arithmetic. tiko computes ItemsPerPage, tests
 '' whether the row is in range and otherwise sets the top index to i-8 so the selection
@@ -1053,8 +1066,15 @@ function ShellExplorer_SelectPath( byval wszPath as DWSTRING ) as boolean
 
     '' Already there. Checked first, as tiko does, so a tab switch onto the file the pane
     '' is already showing does not scroll the pane.
+    ''
+    '' AND STILL VISIBLE, which tiko's version does not ask. The selection survives a
+    '' collapse -- it is a model index and the fold does not clear it -- so without this the
+    '' early-out reports "yes, it is selected" for a row that is no longer on screen, and
+    '' the visibility test below never runs. Found by asserting the refusal: collapsing the
+    '' group left SelectPath returning true, and the guard it was meant to reach was three
+    '' lines further down and unreachable.
     dim as long nCurSel = g_panel->GetCurSel()
-    if nCurSel >= 0 then
+    if (nCurSel >= 0) andalso (g_panel->ModelToVisible( nCurSel ) >= 0) then
         if ShellPanel_KindOf( nCurSel ) = EXPKIND_FILE then
             if PsUCase( ShellPanel_PathOf( nCurSel ) ) = PsUCase( wszPath ) then return true
         end if
@@ -1064,7 +1084,7 @@ function ShellExplorer_SelectPath( byval wszPath as DWSTRING ) as boolean
     for i as long = 0 to nCount - 1
         if ShellPanel_KindOf( i ) <> EXPKIND_FILE then continue for
         if PsUCase( ShellPanel_PathOf( i ) ) <> PsUCase( wszPath ) then continue for
-        if g_panel->IsCollapsed( i ) then return false
+        if g_panel->ModelToVisible( i ) < 0 then return false
         g_panel->EnsureVisible( i )
         g_panel->SetCurSel( i )
         if g_pSurf <> 0 then g_pSurf->InvalidateAll()

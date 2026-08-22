@@ -3860,6 +3860,34 @@ end function
                                       str(nSel2) & " wanted " & str(nHit)
                                 Check "      while a path not in the workspace finds nothing", _
                                       (ShellExplorer_SelectPath(DWSTRING("C:/nowhere/x.bas")) = false)
+
+                                '' ---- A ROW INSIDE A COLLAPSED SUBTREE IS REFUSED ----
+                                ''
+                                '' tiko's behaviour, and it looks like a refusal until you
+                                '' see the alternative: selecting a row the user cannot see
+                                '' scrolls the pane to a blank place, and expanding the
+                                '' tree under them to satisfy a tab switch is worse.
+                                ''
+                                '' WRITTEN BECAUSE REVERTING THE GUARD CHANGED NOTHING.
+                                '' Deleting `if IsCollapsed then return false` left the
+                                '' suite at 411/0 -- no fixture here had ever collapsed
+                                '' anything, so the guard was carried by prose alone. That
+                                '' is this port's oldest finding wearing a new costume.
+                                scope
+                                    dim as long nOwner = g_panel->GetParent( nHit )
+                                    do while (nOwner >= 0) andalso (g_panel->GetParent(nOwner) >= 0)
+                                        nOwner = g_panel->GetParent( nOwner )
+                                    loop
+                                    Check "      the file sits under a collapsible group", _
+                                          (nOwner >= 0) andalso g_panel->CanCollapse(nOwner), _
+                                          str(nOwner)
+                                    g_panel->CollapseRow( nOwner )
+                                    Check "        and collapsing it makes SelectPath refuse", _
+                                          (ShellExplorer_SelectPath( wszFile ) = false)
+                                    g_panel->ExpandRow( nOwner )
+                                    Check "        expanding it again restores the hit", _
+                                          ShellExplorer_SelectPath( wszFile )
+                                end scope
                             end scope
 
                             '' IsFileDisplayed READS THE MODEL, NOT THE ROWS -- so it
