@@ -31,8 +31,14 @@ also turned out to be the only cover for the multi-line seeding branch.
 the last match rather than what the user had, everywhere but the Selection arm. Closing that is a
 PsPlatform change.
 
-[`7c-step29.md`](7c-step29.md) carries the pass -- and it is the longest one yet, because almost
-every rule in this step is a rule about what happens WHEN THE BAR OPENS.
+**AND THE PASS FOUND THAT SELECTION DID NOT WORK, TWICE OVER.** The capture runs at SHOW time and
+nothing re-ran it, so selecting lines AFTER opening Find was invisible and the icon refused -- the
+"searching ignores the selection" half was that one's SHADOW. And `= true` is **-1** while the shell
+wrote **1**, so the engine's navigation range stayed the whole document; **every assertion here
+tested `<> 0`, which is true of both.** Fixed, with five assertions covering the end-to-end path
+nothing did. **A comment had the mechanism wrong too**: the restriction is the MARKERS, not the flag.
+
+[`7c-step29.md`](7c-step29.md) carries both, and the pass.
 
 ---
 

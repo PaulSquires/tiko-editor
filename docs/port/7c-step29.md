@@ -98,7 +98,50 @@ arms 551/5, no sync 555/1, closing keeps the latch 555/1, closing keeps markers 
 search the live selection is the last match rather than what the user had, everywhere except the
 Selection arm. Closing that needs a focus hook on the view, which is a **PsPlatform** change.
 
-**NOT VERIFIED BY ME:** any of it on screen.
+---
+
+## The interactive pass ran and Selection did not work. Twice over.
+
+Reported in one gesture: **"the icon does not light when a selection exists; searching does not
+honour the selected area."** Both real, and **none of this step's twenty-four assertions could see
+either.**
+
+**The capture runs at show time and nothing re-runs it.** Select lines *after* opening Find and the
+rule is reading a selection captured before they existed — so the icon refuses to arm, and with no
+markers laid there is no range for the search to honour. **The second symptom was the first one's
+shadow.** The section above named the missing `SCEN_SETFOCUS` restore and even called it "not
+cosmetic", then followed the consequence into exactly one case and stopped. tiko has no hole here
+because it re-captures on *every* focus loss. The Selection arm now re-captures from the live
+selection **when that one spans lines** — only then, because after a search the live selection is
+the last match and re-capturing it would discard the range the user chose.
+
+**And `= true` is `-1`, while this shell wrote `1`.** `UpdateResultsFromCaret` and `NextSelection`
+both test `gFind.nSelection = true`, so `1 = -1` was false and the navigation range stayed the whole
+document. tiko writes `not gFind.nSelection` and `= true`, which are `-1`. **Every assertion above
+tested `<> 0` — true of both values.** An assertion measuring a property the defect preserves is
+this port's oldest recurring shape, and this is its fourth appearance.
+
+**And the mechanism was wrong in a comment.** I read the `nSelection` test in
+`UpdateResultsFromCaret` as what restricts the *search*. It is not: `HighlightSearches` narrows its
+target range to `First`/`LastMarkerHighlight`. **The flag decides whether markers are laid; the
+markers do the work.** Found by the first draft of the new assertion demanding five matches and
+getting two — the previous scope's markers were still down. The fixture was dirty and the engine was
+right, for the third time in three steps.
+
+Five assertions now cover the path nothing did: unrestricted **5**, select two lines **with the bar
+already open**, click the icon, **fewer**, click it off, **five again**. `--selftest` **561 → 566**.
+
+**And the harness lied for the sixth time in this run.** Both mutations first reported `566/0` —
+Windows python cannot open an msys `/c/...` path, the patch step died, and the loop did not check its
+exit status, so it built and ran the *unmutated* file twice and printed a pass. The re-capture
+revert, actually applied, is `563/3`; `nSelection` back to `1` is `564/2`.
+
+**The re-capture revert was still green after that**, because the previous scope had left a
+multi-line `CurrentSelection` for the rule to arm from. The fixture throws it away first now.
+
+---
+
+**NOT VERIFIED BY ME:** the fixes on screen.
 
 The pass: select a few lines, **Ctrl+F** — the box is **empty** and **Selection is already lit**,
 with the chosen lines shaded; searching finds matches only inside them. Select a single word,
