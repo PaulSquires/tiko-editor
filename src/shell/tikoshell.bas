@@ -655,9 +655,13 @@ const SHFIND_ICON_UNITS = 24
 
 
 type ShellFindBar extends PsWidget
+    '' The rounded frame the bar paints around the field AND its toggles. Computed in
+    '' OnLayout and used in OnPaint, so the two cannot disagree about where it is.
+    rcFrame as PsRect
     pField  as PsTextBox ptr
     pToggle as PsIconPanel ptr
     pNav    as PsIconPanel ptr
+    pClose  as PsIconPanel ptr
     declare constructor()
     declare virtual sub OnLayout()
     declare virtual sub OnPaint(byval p as PsBufferPaint_ ptr)
@@ -703,6 +707,11 @@ constructor ShellFindBar()
         '' Checked against the .lang file rather than guessed from the word; tiko's own
         '' frmFind.inc:591 uses 134 for exactly this string.
         this.pField->SetCueBannerText( L(134, "Find") & "..." )
+        '' NO BORDER OF ITS OWN: the BAR paints one rounded frame around this field and the
+        '' Aa / W strip together. tiko sets PsTextBox_SetBorderWidth(hCtl, 0) for the same
+        '' reason -- two borders would draw a line between a field and the icons that are
+        '' meant to look like they are in it.
+        this.pField->nBorderWidth = 0
     end if
 
     '' TOGGLES, NOT COMMANDS -- the one place step 20 found the toolkit simpler than tiko.
@@ -732,8 +741,6 @@ constructor ShellFindBar()
             '' those were codepoints -- not by any gate.
             this.pToggle->AddItem( DWSTRING("Aa"), SHFIND_ID_MATCHCASE, 0, PSICON_TOGGLE )
             this.pToggle->AddItem( DWSTRING("W"),  SHFIND_ID_WHOLEWORD, 0, PSICON_TOGGLE )
-            g.Utf8 = chr(&hEE, &h85, &h8C)   '' U+E14C  selection    (tiko wszIconSelection)
-            this.pToggle->AddItem( g, SHFIND_ID_SELECTION, 0, PSICON_TOGGLE )
         end scope
         this.pToggle->OnClick( @ShellFind_OnIcon, 0 )
     end if
@@ -749,6 +756,16 @@ constructor ShellFindBar()
         this.pNav->bVertical = false
         scope
             dim as DWSTRING g
+            '' ---- THE NAV STRIP, ARRANGED AS THE REFERENCE DRAWS IT ---------------
+            '' Toggle-Replace and Selection, a SEPARATOR, then previous and next. Aa and
+            '' W stay behind in the field's own frame; Selection does NOT -- it moved out
+            '' of the toggle strip to sit here, which is where tiko's frmFind puts it and
+            '' where the reference shows it.
+            g.Utf8 = chr(&hEE, &hA2, &hB4)   '' U+E8B4  toggle replace (tiko)
+            this.pNav->AddItem( g, IDM_REPLACE, 0, PSICON_TOGGLE )
+            g.Utf8 = chr(&hEE, &h85, &h8C)   '' U+E14C  selection      (tiko)
+            this.pNav->AddItem( g, SHFIND_ID_SELECTION, 0, PSICON_TOGGLE )
+            this.pNav->AddSeparator()
             '' ---- tiko'S OWN, CHECKED AGAINST modDeclares.bi THIS TIME -------------
             '' Step 27 used E015, E013 and E011 and called them "chevron up / chevron down /
             '' close". Two were the WRONG GLYPH and the third does not exist in tiko's table:
@@ -759,10 +776,24 @@ constructor ShellFindBar()
             this.pNav->AddItem( g, IDM_FINDPREV, 0, PSICON_COMMAND )
             g.Utf8 = chr(&hEE, &h80, &h93)   '' U+E013  ChevronRight  (tiko, FINDTIP_DOWNARROW)
             this.pNav->AddItem( g, IDM_FINDNEXT, 0, PSICON_COMMAND )
-            g.Utf8 = chr(&hEE, &h84, &h8A)   '' U+E10A  light X       (tiko wszIconClose)
-            this.pNav->AddItem( g, IDM_FIND, 0, PSICON_COMMAND )
         end scope
         this.pNav->OnClick( @ShellFind_OnIcon, 0 )
+    end if
+
+    '' ---- THE CLOSE BUTTON IS ITS OWN STRIP -------------------------------------------
+    '' Because it is pinned to the BAR'S right edge while the rest of the navigation sits
+    '' against the field, with the count between them. One strip cannot do both, and tiko
+    '' keeps a separate ghFindIconsClose panel for exactly this reason.
+    this.pClose = new PsIconPanel
+    if this.pClose <> 0 then
+        this.AddChild( this.pClose )
+        scope
+            dim as DWSTRING g
+            g.Utf8 = chr(&hEE, &h84, &h8A)   '' U+E10A  light X  (tiko wszIconClose)
+            this.pClose->AddItem( g, IDM_FIND, 0, PSICON_COMMAND )
+        end scope
+        this.pClose->bVertical = false
+        this.pClose->OnClick( @ShellFind_OnIcon, 0 )
     end if
 end constructor
 
@@ -777,50 +808,59 @@ end constructor
 '' ---------------------------------------------------------------------------------------
 sub ShellFindBar.OnLayout()
     '' ---- THE STRIPS TAKE THE BAR'S OWN BACKGROUND --------------------------------------
-    '' PsIconPanel paints its own clrBack, which is the activity bar's darker slab, so both
+    '' PsIconPanel paints its own clrBack, which is the activity bar's darker slab, so the
     '' strips sat as visibly lighter blocks on a bar of a different colour. Pushed on every
     '' layout rather than once at construction, because OnThemeChanged re-reads the control's
     '' colours from the theme and would take it straight back.
     dim as PsColor clrBand = PsThemeRoleColor( PSTHEME_BACKGROUNDRAISED )
     if this.pToggle <> 0 then this.pToggle->clrBack = clrBand
     if this.pNav <> 0 then this.pNav->clrBack = clrBand
+    if this.pClose <> 0 then this.pClose->clrBack = clrBand
 
     dim as single f = 1.0
     if this.pSurface <> 0 then f = this.pSurface->fScale
     dim as long pad  = PsScaleBy( SHFIND_PAD_UNITS, f )
-    dim as long icon = PsScaleBy( SHFIND_ICON_UNITS, f )
     dim as long h    = this.bounds.h
-    dim as long y    = 0
 
-    '' ---- THE CELL SIZE IS PUSHED IN, AND THE WIDTH IS ASKED FOR --------------------
-    '' These two lines used to be `icon * GetCount()`, and the control's own cell is
-    '' nCellSize = 36 against SHFIND_ICON_UNITS = 24 -- so every strip was laid out THREE
-    '' CELLS WIDE INSIDE A TWO-AND-A-BIT-CELL RECT and the last icon hung outside its own
-    '' panel. Same shape as the Replace field's rect: a number derived twice instead of
-    '' asked for once.
-    dim as long nNavW = 0, nTogW = 0
-    if this.pNav <> 0 then
-        this.pNav->nCellSize = SHFIND_ICON_UNITS
-        nNavW = this.pNav->ContentExtent()
-    end if
-    if this.pToggle <> 0 then
-        this.pToggle->nCellSize = SHFIND_ICON_UNITS
-        nTogW = this.pToggle->ContentExtent()
-    end if
+    '' ---- Aa AND W LIVE INSIDE THE FIELD'S FRAME ----------------------------------------
+    '' Which is the arrangement the reference draws, and tiko's: ghFindIconsField sits INSIDE
+    '' the rounded rect and ghFindIconsNav outside it. The frame is painted by THIS BAR --
+    '' the textbox's own border is off -- so one rounded rect can enclose a control and a
+    '' strip that are siblings.
+    if this.pToggle <> 0 then this.pToggle->nCellSize = SHFIND_ICON_UNITS
+    if this.pNav <> 0 then this.pNav->nCellSize = SHFIND_ICON_UNITS
+    if this.pClose <> 0 then this.pClose->nCellSize = SHFIND_ICON_UNITS
 
-    '' Navigation hard right; the results text sits to ITS left and is measured in OnPaint.
-    if this.pNav <> 0 then
-        this.pNav->SetBounds( PsRc(this.bounds.w - pad - nNavW, y, nNavW, h) )
-    end if
-    '' Toggles immediately after the field.
-    dim as long xTog = this.bounds.w - pad - nNavW - PsScaleBy(SHFIND_RESULTS_UNITS, f) - nTogW
+    dim as long nTogW = 0, nNavW = 0, nCloseW = 0
+    if this.pToggle <> 0 then nTogW = this.pToggle->ContentExtent()
+    if this.pNav <> 0 then nNavW = this.pNav->ContentExtent()
+    if this.pClose <> 0 then nCloseW = this.pClose->ContentExtent()
+
+    dim as long nResultsW = PsScaleBy( SHFIND_RESULTS_UNITS, f )
+
+    '' Right to left: close hard against the bar's edge, then the count, then the nav.
+    dim as long xClose = this.bounds.w - pad - nCloseW
+    dim as long xRes   = xClose - pad - nResultsW
+    dim as long xNav   = xRes - nNavW
+    dim as long wFrame = xNav - pad - pad
+    if wFrame < 0 then wFrame = 0
+
+    this.rcFrame = PsRc( pad, pad \ 2, wFrame, h - pad )
+
+    if this.pClose <> 0 then this.pClose->SetBounds( PsRc(xClose, 0, nCloseW, h) )
+    if this.pNav <> 0 then this.pNav->SetBounds( PsRc(xNav, 0, nNavW, h) )
+
+    '' Inside the frame: the field takes what the toggles do not.
+    dim as long inset = PsScaleBy( 4, f )
     if this.pToggle <> 0 then
-        this.pToggle->SetBounds( PsRc(xTog, y, nTogW, h) )
+        this.pToggle->SetBounds( PsRc(this.rcFrame.x + this.rcFrame.w - inset - nTogW, _
+                                      this.rcFrame.y, nTogW, this.rcFrame.h) )
     end if
     if this.pField <> 0 then
-        dim as long w = xTog - pad - pad
-        if w < 0 then w = 0
-        this.pField->SetBounds( PsRc(pad, y + pad \ 2, w, h - pad) )
+        dim as long wBox = this.rcFrame.w - inset - inset - nTogW
+        if wBox < 0 then wBox = 0
+        this.pField->SetBounds( PsRc(this.rcFrame.x + inset, this.rcFrame.y, _
+                                     wBox, this.rcFrame.h) )
     end if
 end sub
 
@@ -832,17 +872,30 @@ sub ShellFindBar.OnPaint(byval p as PsBufferPaint_ ptr)
     p->SetBackColor( PsThemeRoleColor(PSTHEME_BACKGROUNDRAISED) )
     p->PaintRect( @rcAll )
 
-    '' The "3/17". Between the toggles and the navigation, which is where tiko puts it and
-    '' why its own close icon sits in a panel of its own.
+    '' ---- ONE ROUNDED FRAME AROUND THE FIELD AND ITS TOGGLES ------------------------
+    '' The field's own border is off (see the constructor), so this is the only frame --
+    '' which is what lets Aa and W sit INSIDE it while being siblings of the textbox
+    '' rather than children of it. tiko does the same thing for the same reason.
+    if this.rcFrame.w > 0 then
+        p->SetBackColor( PsThemeRoleColor(PSTHEME_BACKGROUND) )
+        p->SetPenColor( PsThemeRoleColor(PSTHEME_BORDER) )
+        p->PaintRoundRect( @this.rcFrame, PsScaleBy(8, _
+            iif(this.pSurface <> 0, this.pSurface->fScale, 1.0)) )
+    end if
+
+    '' The "0/0". AFTER the navigation and before the close, which is where the reference
+    '' puts it -- and why the close icon needs a panel of its own: one strip cannot be both
+    '' against the field and against the bar's right edge with a number between.
     if this.pNav = 0 then exit sub
+    if this.pClose = 0 then exit sub
     dim as single f = 1.0
     if this.pSurface <> 0 then f = this.pSurface->fScale
     dim as PsRect rcR
-    rcR.w = PsScaleBy( SHFIND_RESULTS_UNITS, f )
-    rcR.x = this.pNav->bounds.x - this.bounds.x - rcR.w
+    rcR.x = this.pNav->bounds.x + this.pNav->bounds.w
+    rcR.w = this.pClose->bounds.x - rcR.x
     rcR.y = 0
     rcR.h = this.bounds.h
-    if rcR.x < 0 then exit sub
+    if rcR.w <= 0 then exit sub
     p->SetForeColor( PsThemeRoleColor(PSTHEME_FOREGROUNDDIM) )
     p->PaintText( gFind.wszResults, @rcR, PSTF_CENTER or PSTF_VCENTER )
 end sub
@@ -1039,6 +1092,7 @@ const SHREPL_ID_PRESERVE = -1
 
 
 type ShellReplaceBar extends PsWidget
+    rcFrame   as PsRect
     pField    as PsTextBox ptr
     pPreserve as PsIconPanel ptr
     pActions  as PsIconPanel ptr
@@ -1069,6 +1123,7 @@ constructor ShellReplaceBar()
         '' -- and what handleKeysFindReplace does with it in the pump.
         this.pField->OnEnterPressed( @ShellReplace_OnFieldEnter, 0 )
         this.pField->SetCueBannerText( L(138, "Replace") & "..." )
+        this.pField->nBorderWidth = 0
     end if
 
     '' PRESERVE CASE. "AB" is tiko's own glyph for it (wszIconPreserveCase) and it is LITERAL
@@ -1119,57 +1174,51 @@ end constructor
 '' Find bar has one.
 '' ---------------------------------------------------------------------------------------
 sub ShellReplaceBar.OnLayout()
-    '' Same as the Find bar's: see the note there.
+    '' Same as the Find bar's: see the notes there. This bar's frame is the SAME WIDTH as
+    '' the Find bar's, asked for rather than re-derived, so the two rounded rects line up
+    '' however the bar above rearranges itself.
     dim as PsColor clrBand = PsThemeRoleColor( PSTHEME_BACKGROUNDRAISED )
     if this.pPreserve <> 0 then this.pPreserve->clrBack = clrBand
     if this.pActions <> 0 then this.pActions->clrBack = clrBand
 
     dim as single f = 1.0
     if this.pSurface <> 0 then f = this.pSurface->fScale
-    dim as long pad  = PsScaleBy( SHFIND_PAD_UNITS, f )
-    dim as long icon = PsScaleBy( SHFIND_ICON_UNITS, f )
-    dim as long h    = this.bounds.h
+    dim as long pad = PsScaleBy( SHFIND_PAD_UNITS, f )
+    dim as long h   = this.bounds.h
 
-    dim as long xField = pad
-    dim as long wField = this.bounds.w - pad - pad
-    if wField < 0 then wField = 0
-    if (g_barFind <> 0) andalso (g_barFind->pField <> 0) then
-        if g_barFind->pField->bounds.w > 0 then
-            '' A CHILD'S bounds ARE ITS PARENT'S COORDINATES, not the surface's, so
-            '' this is taken as-is. The first draft subtracted g_barFind->bounds.x to
-            '' "convert" it and produced -413 against 6 -- caught by the assertion that
-            '' the two left edges match, which is the only reason the sign was noticed.
-            ''
-            '' IT IS ONLY VALID BECAUSE THE TWO BANDS SHARE A LEFT EDGE AND A WIDTH:
-            '' Shell_LayoutAll gives both PsRc(nLeft, ..., W - nPanelReserve, ...). If a
-            '' band ever gains its own inset, this borrows the wrong origin -- which the
-            '' shared-left-edge assertion would then say out loud.
-            xField = g_barFind->pField->bounds.x
-            wField = g_barFind->pField->bounds.w
-        end if
+    if this.pPreserve <> 0 then this.pPreserve->nCellSize = SHFIND_ICON_UNITS
+    if this.pActions <> 0 then this.pActions->nCellSize = SHFIND_ICON_UNITS
+    dim as long nPres = 0, nAct = 0
+    if this.pPreserve <> 0 then nPres = this.pPreserve->ContentExtent()
+    if this.pActions <> 0 then nAct = this.pActions->ContentExtent()
+
+    dim as long xFrame = pad
+    dim as long wFrame = this.bounds.w - pad - pad
+    if (g_barFind <> 0) andalso (g_barFind->rcFrame.w > 0) then
+        xFrame = g_barFind->rcFrame.x
+        wFrame = g_barFind->rcFrame.w
     end if
+    if wFrame < 0 then wFrame = 0
+    this.rcFrame = PsRc( xFrame, pad \ 2, wFrame, h - pad )
 
-    '' Preserve Case sits INSIDE the field's frame, so it comes OUT OF the field's width
-    '' rather than being placed after it -- tiko's "make the width of the textbox smaller
-    '' because we want to visually fit the Preserve Case icon into the Replace text rect".
-    dim as long nPres = 0
+    dim as long inset = PsScaleBy( 4, f )
     if this.pPreserve <> 0 then
-        this.pPreserve->nCellSize = SHFIND_ICON_UNITS
-        nPres = this.pPreserve->ContentExtent()
+        this.pPreserve->SetBounds( PsRc(this.rcFrame.x + this.rcFrame.w - inset - nPres, _
+                                        this.rcFrame.y, nPres, this.rcFrame.h) )
     end if
-    dim as long wBox = wField - nPres
-    if wBox < 0 then wBox = 0
-
     if this.pField <> 0 then
-        this.pField->SetBounds( PsRc(xField, pad \ 2, wBox, h - pad) )
+        dim as long wBox = this.rcFrame.w - inset - inset - nPres
+        if wBox < 0 then wBox = 0
+        this.pField->SetBounds( PsRc(this.rcFrame.x + inset, this.rcFrame.y, _
+                                     wBox, this.rcFrame.h) )
     end if
-    if this.pPreserve <> 0 then
-        this.pPreserve->SetBounds( PsRc(xField + wBox, 0, nPres, h) )
-    end if
+    '' The two actions sit OUTSIDE the frame, aligned with the Find bar's nav strip above.
     if this.pActions <> 0 then
-        this.pActions->nCellSize = SHFIND_ICON_UNITS
-        dim as long nAct = this.pActions->ContentExtent()
-        this.pActions->SetBounds( PsRc(xField + wField + pad, 0, nAct, h) )
+        dim as long xAct = this.rcFrame.x + this.rcFrame.w + pad
+        if (g_barFind <> 0) andalso (g_barFind->pNav <> 0) then
+            if g_barFind->pNav->bounds.w > 0 then xAct = g_barFind->pNav->bounds.x
+        end if
+        this.pActions->SetBounds( PsRc(xAct, 0, nAct, h) )
     end if
 end sub
 
@@ -1182,6 +1231,13 @@ sub ShellReplaceBar.OnPaint(byval p as PsBufferPaint_ ptr)
     rcAll.x = 0 : rcAll.y = 0 : rcAll.w = this.bounds.w : rcAll.h = this.bounds.h
     p->SetBackColor( PsThemeRoleColor(PSTHEME_BACKGROUNDRAISED) )
     p->PaintRect( @rcAll )
+
+    if this.rcFrame.w > 0 then
+        p->SetBackColor( PsThemeRoleColor(PSTHEME_BACKGROUND) )
+        p->SetPenColor( PsThemeRoleColor(PSTHEME_BORDER) )
+        p->PaintRoundRect( @this.rcFrame, PsScaleBy(8, _
+            iif(this.pSurface <> 0, this.pSurface->fScale, 1.0)) )
+    end if
 end sub
 
 
@@ -1233,8 +1289,14 @@ sub ShellFind_SyncToggles()
     '' SELECTION IS THE ONE THAT NEEDED THIS FIRST. Its handler can refuse the latch the
     '' control has already applied, so this is not only a stale-state guard for it -- it is
     '' the path by which the refusal reaches the icon.
-    i = g_barFind->pToggle->FindItemByID( SHFIND_ID_SELECTION )
-    if i >= 0 then g_barFind->pToggle->SetSelected( i, cbool(gFind.nSelection <> 0) )
+    '' SELECTION IS ON THE NAV STRIP since the arrangement landed, and BOTH HALVES OF THIS
+    '' HAVE TO MOVE TOGETHER. A bulk rename converted the lookup and left the SetSelected
+    '' pointing at pToggle, so an index from one control was applied to another -- which is
+    '' not an error, just an item that never changed. The refusal stopped reaching the icon.
+    if g_barFind->pNav <> 0 then
+        i = g_barFind->pNav->FindItemByID( SHFIND_ID_SELECTION )
+        if i >= 0 then g_barFind->pNav->SetSelected( i, cbool(gFind.nSelection <> 0) )
+    end if
 end sub
 
 sub ShellReplace_SyncToggle()
@@ -4977,13 +5039,22 @@ end function
 
                         Check "  the find bar is a real bar", (g_barFind <> 0)
                         Check "    with a field", (g_barFind->pField <> 0)
-                        '' THREE SINCE 7c STEP 29 added Selection. Two through step 28.
-                        Check "    three toggles", (g_barFind->pToggle <> 0) andalso _
-                              (g_barFind->pToggle->GetCount() = 3), _
+                        '' TWO: Aa and W, INSIDE the field's frame -- which is where the
+                        '' reference draws them and where tiko puts them. Selection sat here
+                        '' from step 29 until the arrangement moved it to the nav strip.
+                        Check "    two toggles inside the frame", (g_barFind->pToggle <> 0) andalso _
+                              (g_barFind->pToggle->GetCount() = 2), _
                               str(g_barFind->pToggle->GetCount())
-                        Check "    and three navigation buttons", (g_barFind->pNav <> 0) andalso _
-                              (g_barFind->pNav->GetCount() = 3), _
+                        '' FIVE: toggle-replace, selection, a SEPARATOR, previous, next.
+                        '' The separator is an item with a position and no target -- the
+                        '' vertical rule the reference draws between the two pairs.
+                        Check "    five things on the nav strip", (g_barFind->pNav <> 0) andalso _
+                              (g_barFind->pNav->GetCount() = 5), _
                               str(g_barFind->pNav->GetCount())
+                        Check "      and the close is its OWN strip, pinned right", _
+                              (g_barFind->pClose <> 0) andalso _
+                              (g_barFind->pClose->GetCount() = 1) andalso _
+                              (g_barFind->pClose->FindItemByID( IDM_FIND ) >= 0)
 
                         '' BOTH TOGGLES LATCH. A COMMAND item never selects, so Match
                         '' Case would read as permanently off and the flag the engine
@@ -5000,7 +5071,7 @@ end function
                         Check "      while the navigation carries menu ids", _
                               (g_barFind->pNav->FindItemByID( IDM_FINDPREV ) >= 0) andalso _
                               (g_barFind->pNav->FindItemByID( IDM_FINDNEXT ) >= 0) andalso _
-                              (g_barFind->pNav->FindItemByID( IDM_FIND ) >= 0)
+                              (g_barFind->pNav->FindItemByID( IDM_REPLACE ) >= 0)
 
                         '' ---- AND IT SEARCHES ------------------------------------
                         '' EVERY NUMBER BELOW IS DERIVED FROM THE PROBE FILE, and the
@@ -5181,13 +5252,13 @@ end function
                         '' the CONSEQUENCE, and it stays true if the control ever grows
                         '' another way to be laid out wrong.
                         scope
-                            dim as PsIconPanel ptr strips(0 to 4) = { _
+                            dim as PsIconPanel ptr strips(0 to 5) = { _
                                 g_barFind->pToggle, g_barFind->pNav, _
                                 g_barReplace->pPreserve, g_barReplace->pActions, _
-                                g_panelMenu }
+                                g_panelMenu, g_barFind->pClose }
                             dim as boolean bAllRows = true, bAllFit = true
                             dim as string sWhich = "", sFit = ""
-                            for k as long = 0 to 4
+                            for k as long = 0 to 5
                                 dim as PsIconPanel ptr p = strips(k)
                                 if p = 0 then continue for
                                 if p->bVertical then
@@ -5272,11 +5343,16 @@ end function
                               (g_barReplace->pField->bounds.x = g_barFind->pField->bounds.x), _
                               str(g_barReplace->pField->bounds.x) & "/" & _
                               str(g_barFind->pField->bounds.x)
-                        Check "      and Preserve Case eats into the field, not past it", _
-                              (g_barReplace->pField->bounds.w > 0) andalso _
-                              (g_barReplace->pField->bounds.w < g_barFind->pField->bounds.w), _
-                              str(g_barReplace->pField->bounds.w) & "/" & _
-                              str(g_barFind->pField->bounds.w)
+                        '' BOTH FRAMES ARE THE SAME WIDTH -- the Replace bar asks the Find
+                        '' bar for its rect rather than deriving one. The FIELDS differ now,
+                        '' because one frame holds two toggles and the other holds one, so
+                        '' comparing the fields (as this did until the arrangement landed)
+                        '' compares icon counts and not the alignment anybody looks at.
+                        Check "      and the two FRAMES line up", _
+                              (g_barReplace->rcFrame.x = g_barFind->rcFrame.x) andalso _
+                              (g_barReplace->rcFrame.w = g_barFind->rcFrame.w), _
+                              str(g_barReplace->rcFrame.x) & "+" & str(g_barReplace->rcFrame.w) & _
+                              " vs " & str(g_barFind->rcFrame.x) & "+" & str(g_barFind->rcFrame.w)
 
                         '' ---- THE FIELD IS THE ONE WRITER OF gFind.txtReplace ----
                         '' Driven through the control's own callback. The defect this
@@ -5405,8 +5481,9 @@ end function
                     '' porting the rule alone re-imports the case-only echo that step
                     '' 26 fixed by request.
                     scope
-                        dim as long iSel = g_barFind->pToggle->FindItemByID( SHFIND_ID_SELECTION )
-                        Check "  Selection is on the toggle strip", (iSel >= 0), str(iSel)
+                        dim as long iSel = g_barFind->pNav->FindItemByID( SHFIND_ID_SELECTION )
+                        Check "  Selection is on the NAV strip, beside Toggle-Replace", _
+                              (iSel >= 0), str(iSel)
 
                         dim pDoc as clsDocument ptr = FindReplace_ActiveDoc()
                         Check "    and there is a document to select in", (pDoc <> 0)
@@ -5419,12 +5496,12 @@ end function
                         gFind.nSelection = 0
                         pDoc->RemoveMarkerHighlight()
                         pDoc->CurrentSelection.isInitialized = false
-                        g_barFind->pToggle->SetSelected( iSel, true )
-                        ShellFind_OnIcon( g_barFind->pToggle, iSel, 0 )
+                        g_barFind->pNav->SetSelected( iSel, true )
+                        ShellFind_OnIcon( g_barFind->pNav, iSel, 0 )
                         Check "    Selection refuses to arm with no multi-line selection", _
                               (gFind.nSelection = 0), str(gFind.nSelection)
                         Check "      and the icon does not stay lit", _
-                              (g_barFind->pToggle->GetSelected( iSel ) = false)
+                              (g_barFind->pNav->GetSelected( iSel ) = false)
 
                         '' ---- AND ARMS WHEN THERE IS ONE --------------------------
                         '' CurrentSelection is what the rule reads, not the live
@@ -5440,8 +5517,8 @@ end function
                         pDoc->CurrentSelection.endpos       = _
                             SciMsg( pDoc->GetActiveScintillaPtr(), SCI_POSITIONFROMLINE, 3, 0 )
                         pDoc->CurrentSelection.isInitialized = true
-                        g_barFind->pToggle->SetSelected( iSel, true )
-                        ShellFind_OnIcon( g_barFind->pToggle, iSel, 0 )
+                        g_barFind->pNav->SetSelected( iSel, true )
+                        ShellFind_OnIcon( g_barFind->pNav, iSel, 0 )
                         '' `= true`, NOT `<> 0`. THE ENGINE COMPARES AGAINST true,
                         '' which is -1, and this assertion said `<> 0` while the code
                         '' wrote 1 -- so it passed against a flag the engine could not
@@ -5452,7 +5529,7 @@ end function
                               (gFind.nSelection = true), str(gFind.nSelection)
                         Check "      laying down a marker highlight", pDoc->HasMarkerHighlight
                         Check "      with the icon lit", _
-                              g_barFind->pToggle->GetSelected( iSel )
+                              g_barFind->pNav->GetSelected( iSel )
 
                         '' ---- CLOSING DROPS IT ------------------------------------
                         '' tiko's bClosing branch. A reopened bar with Selection lit
@@ -5573,7 +5650,7 @@ end function
                             Check "      and arms Selection on its own", _
                                   (gFind.nSelection = true), str(gFind.nSelection)
                             Check "        with the icon lit to match", _
-                                  g_barFind->pToggle->GetSelected( iSel )
+                                  g_barFind->pNav->GetSelected( iSel )
                             '' ---- AND THE SEARCH ACTUALLY SHRINKS ---------------
                             '' THE ASSERTION THIS STEP WAS MISSING, and the author's
                             '' report is what asked for it: "searching does not honor
@@ -5616,8 +5693,8 @@ end function
                                 SciMsg( pS2, SCI_SETSELECTIONSTART, 0, 0 )
                                 SciMsg( pS2, SCI_SETSELECTIONEND, _
                                         SciMsg( pS2, SCI_POSITIONFROMLINE, 2, 0 ), 0 )
-                                g_barFind->pToggle->SetSelected( iSel, true )
-                                ShellFind_OnIcon( g_barFind->pToggle, iSel, 0 )
+                                g_barFind->pNav->SetSelected( iSel, true )
+                                ShellFind_OnIcon( g_barFind->pNav, iSel, 0 )
                                 Check "    selecting AFTER the bar opened still arms it", _
                                       (gFind.nSelection = true), str(gFind.nSelection)
                                 Check "      with markers actually down", _
@@ -5630,8 +5707,8 @@ end function
                                 '' AND OFF AGAIN RESTORES THE WHOLE DOCUMENT, which is
                                 '' the half that proves the number above was the range
                                 '' talking rather than the buffer having changed.
-                                g_barFind->pToggle->SetSelected( iSel, false )
-                                ShellFind_OnIcon( g_barFind->pToggle, iSel, 0 )
+                                g_barFind->pNav->SetSelected( iSel, false )
+                                ShellFind_OnIcon( g_barFind->pNav, iSel, 0 )
                                 Check "    and turning it off searches all five again", _
                                       (gFind.foundCount = nWhole), str(gFind.foundCount)
 
@@ -5654,8 +5731,8 @@ end function
                                 SciMsg( pS2, SCI_SETSELECTIONSTART, 0, 0 )
                                 SciMsg( pS2, SCI_SETSELECTIONEND, _
                                         SciMsg( pS2, SCI_POSITIONFROMLINE, 2, 0 ), 0 )
-                                g_barFind->pToggle->SetSelected( iSel, true )
-                                ShellFind_OnIcon( g_barFind->pToggle, iSel, 0 )
+                                g_barFind->pNav->SetSelected( iSel, true )
+                                ShellFind_OnIcon( g_barFind->pNav, iSel, 0 )
                                 Check "      and selecting AFTER it opened still arms it", _
                                       (gFind.nSelection = true), str(gFind.nSelection)
 
@@ -5678,8 +5755,8 @@ end function
                                 SciMsg( pS2, SCI_SETSELECTIONSTART, 0, 0 )
                                 SciMsg( pS2, SCI_SETSELECTIONEND, _
                                         SciMsg( pS2, SCI_POSITIONFROMLINE, 2, 0 ), 0 )
-                                g_barFind->pToggle->SetSelected( iSel, false )
-                                ShellFind_OnIcon( g_barFind->pToggle, iSel, 0 )
+                                g_barFind->pNav->SetSelected( iSel, false )
+                                ShellFind_OnIcon( g_barFind->pNav, iSel, 0 )
                                 Check "    disarming drops the text selection with it", _
                                       (SciMsg( pS2, SCI_GETSELECTIONSTART, 0, 0 ) = _
                                        SciMsg( pS2, SCI_GETSELECTIONEND, 0, 0 )), _
@@ -5696,8 +5773,8 @@ end function
                                 pDoc->CurrentSelection.isInitialized = false
                                 pDoc->RemoveMarkerHighlight()
                                 gFind.nSelection = false
-                                g_barFind->pToggle->SetSelected( iSel, true )
-                                ShellFind_OnIcon( g_barFind->pToggle, iSel, 0 )
+                                g_barFind->pNav->SetSelected( iSel, true )
+                                ShellFind_OnIcon( g_barFind->pNav, iSel, 0 )
                                 Check "    a REFUSAL leaves the text selection alone", _
                                       (SciMsg( pS2, SCI_GETSELECTIONEND, 0, 0 ) > _
                                        SciMsg( pS2, SCI_GETSELECTIONSTART, 0, 0 )), _
