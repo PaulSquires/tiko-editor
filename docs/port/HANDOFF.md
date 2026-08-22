@@ -21,6 +21,15 @@ LOCALE-DEPENDENT answer above 0x7F into a layer where PsUCase and SymDb_NameEqW 
 only -- and the difference would present as "replace mangled my accented text" on one machine and
 not another.
 
+**AND ONE OF THE SIX FUNCTIONS WAS NOT PORTED AT ALL -- IT WAS RECONSTRUCTED FROM ITS DOC
+COMMENT.** My read of the original had been truncated, and rather than going back for the
+remaining thirty lines I wrote an implementation of what the comment described. It compiled, it
+linked, it left 20,328 assertions standing, and **the author found it in under a minute**: Match
+Case and a tab switch both left the old n/m on screen until F3. Three early returns the original
+does not have. Restored verbatim, and the other five then checked MECHANICALLY -- **the first
+attempt at that check reported all six identical and was a NOTHING**, because the extractor failed
+on every file and `diff -q` on two empty files says they match.
+
 **THIS IS A MOVE OF LIVE CODE, NOT AN ADDITION**, and the gates cannot see what matters. Every one
 of them proves it compiles, links and leaves 20,328 assertions standing; **none proves it still
 finds anything.** [`7c-step26.md`](7c-step26.md) carries the six-item interactive pass it needs.
@@ -577,7 +586,9 @@ Read in this order, and do not skip the first:
     `PsTimerNow()`, which is a **settable virtual clock**, not a wall clock — and *"the clock
     never moved"* is indistinguishable from *"the work was free"*, which was the answer the step
     wanted to hear.
-11. [`7c-step26.md`](7c-step26.md) — **a move of LIVE code, where the gates cannot see
+11. [`7c-step26.md`](7c-step26.md) — **the step where a function was RECONSTRUCTED FROM ITS
+    DOC COMMENT instead of ported, and every gate passed.** Read "And one of the six was not
+    ported at all". Then the rest of it: a move of LIVE code, where the gates cannot see
     what matters.** Every one of them proves the find engine compiles, links and leaves
     20,328 assertions standing; none proves it still FINDS anything. Read the interactive
     pass at the end -- it is six specific gestures, and it is the whole verification.
