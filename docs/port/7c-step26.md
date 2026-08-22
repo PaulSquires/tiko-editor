@@ -116,6 +116,67 @@ earlier, that the gates could not see whether the engine still found anything �
 next thing that happened was a defect the gates could not see. **The claim was right and I acted
 as though it were rhetorical.**
 
+## THE INTERACTIVE PASS RAN, AND IT FOUND FOUR THINGS
+
+Confirmed by the author, in order, after the gates had all been green for hours:
+
+| | |
+| --- | --- |
+| type in the find field | works |
+| **Match Case** did not update `n/m` until F3 | **defect** |
+| **switching tabs** did not update `n/m` until F3 | same defect |
+| **Replace** / **Replace All** replaced with an empty string | **defect** |
+| **Replace** behaved like **Replace All** | **defect** |
+| the find term echoed back in the document's casing | pre-existing, changed by request |
+| **Preserve Case** | works |
+| **F3 / Shift+F3**, including the wrap at each end | works |
+
+**Three of the four were mine, and every one of them was a thing the gates cannot see.**
+
+1. **`UpdateResultsFromCaret` was reconstructed from its doc comment**, not ported. Three early
+   returns the original does not have. Section above.
+2. **`gFind.txtReplace` has never been written by anything.** `DoReplace` used to read the control
+   directly; once it was in `app/` it read a permanently-empty field. My commit message for the
+   move asserted the opposite — *"the field's change handler writes those, so they agree by
+   construction"* — and one grep would have shown `txtFind` with seven writers and `txtReplace`
+   with none.
+3. **The new `clrOccurrence` parameter went first**, and `boolean` converts to `ulong` silently, so
+   all three `DoReplace` call sites kept compiling and shifted one place.
+   `DoReplace(false, true)` — *replace this one, then move on* — became `fReplaceAll = TRUE`.
+
+   The twelve `HighlightSearches` call sites were caught by the compiler because that function
+   takes **one** parameter. `DoReplace` already had two optional ones, so adding a third at the
+   front broke nothing and changed everything. **The fix was the signature, not the call sites**:
+   the colour is last and mandatory now, so an un-updated caller is a compile error.
+
+**The pattern across all three is one thing: an equivalence asserted without being checked.** That
+the body matched its comment. That two sources of a string agreed. That adding a parameter was
+additive. Each was cheap to verify and none of them was verified.
+
+---
+
+## What the gate had to say, and what it did not
+
+`_check_selftests` was **green for every one of those defects**. 20,328 assertions, zero failures,
+through a find engine that could not update a count, could not replace text, and replaced the
+wrong number of matches.
+
+Its header already said the right thing — *"a DROP in assertions is visible"* — and **visible is
+not asserted**. It floors the suite count and now floors the assertion total too.
+
+**But that floor would not have caught these either**, and the comment in the gate says so:
+re-introducing defect 1 deliberately left the total unchanged. It catches a suite that stops; it
+does not catch a suite that never tested the thing.
+
+**And the totals moved twice today in ways I could not attribute** — 33/20,328 versus 34/20,443,
+then 20,443 versus 20,440 — both in suites that count data rather than statements, both with zero
+failures, neither reproducible from a code change. That is why the floor sits at the lowest
+observed number rather than the highest, and why this gate's absolute total is not a signal at
+three-assertion granularity.
+
+**The honest summary of step 26's verification is: the gates proved the move compiled and linked,
+and the author proved it worked.** Four defects, four found by hand, none found by any gate.
+
 ## Verification
 
 | | |
@@ -128,18 +189,19 @@ as though it were rhetorical.**
 | `_check_shell`, `_check_scihost`, `_check_package` | green |
 | revert-to-red | unsetting `RefreshFindBar` in the shell → `exit 2` and the field named, before any assertion |
 
-**NOT VERIFIED BY ME, AND THIS IS THE STEP WHERE THAT MATTERS MOST SO FAR.** This is a move of
+**NOT VERIFIED BY ME, AND THIS IS THE STEP WHERE THAT MATTERED MOST -- SEE ABOVE FOR WHAT THE
+PASS THEN FOUND.** This is a move of
 **live code that `tiko.exe` runs every time anyone presses Ctrl+F** — not an addition beside
 existing behaviour. Every gate here proves it compiles, links, and leaves 20,328 assertions
 standing. **None of them proves it still finds anything.**
 
-The interactive pass this needs is narrow and specific:
+The interactive pass this needed was narrow and specific, and ALL OF IT HAS NOW RUN:
 
-* type in the find field — the count should read `n/m`, not `0/0`
-* **F3 and Shift+F3**, including the wrap at each end
-* **Match Case**, **Whole Word**, **Selection** — each should change the count
-* **Replace** and **Replace All**, and **Preserve Case** on a mixed-case match
-* switching tabs with a search active — the count should follow the document
+* [confirmed] type in the find field — the count should read `n/m`, not `0/0`
+* [confirmed] **F3 and Shift+F3**, including the wrap at each end
+* [confirmed, after a fix] **Match Case**, **Whole Word**, **Selection** — each should change the count
+* [confirmed, after two fixes] **Replace** and **Replace All**, and **Preserve Case** on a mixed-case match
+* [confirmed, after a fix] switching tabs with a search active — the count should follow the document
 
 **The one A/B break:** `DoReplace` read the two text boxes through `GetDlgItem` +
 `AfxGetWindowText` and now reads `gFind.txtFind` / `txtReplace`. The field's change handler writes
