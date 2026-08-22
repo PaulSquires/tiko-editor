@@ -2338,6 +2338,17 @@ end function
         end 1
     end if
 
+    '' ---- THE EXPLORER CATEGORIES, AFTER THE LANGUAGE AND NOT BEFORE -- 7c step 19 -----
+    ''
+    '' Six filetype ids and six captions, and the captions are L() lookups -- so this cannot
+    '' live in the constructor and cannot run before the block above. tiko.bas calls it at
+    '' the same point and says the same thing.
+    ''
+    '' WITHOUT IT ubound(gConfig.Cat) IS -1 AND THE EXPLORER RENDERS NOTHING. Every category
+    '' loop runs zero times, which is not an error and not a warning: it is an empty tree,
+    '' and an empty tree is exactly what a workspace with no files in it looks like.
+    gConfig.SetCategoryDefaults()
+
     dim as PsSurface surf
     g_pSurf     = @surf
     surf.fScale = 1.0
@@ -3719,6 +3730,148 @@ end function
                                 Check "      and its file header still goes nowhere", _
                                       (ShellPanel_GotoRow(0) = false)
                             end scope
+
+
+                            '' ---- THE EXPLORER PANE, 7c step 19 ----------------------
+                            ''
+                            '' The pane's SHAPE, not its pixels. Everything below is
+                            '' reachable without a mouse because the loader and the row
+                            '' scheme are separate from the painter -- which is the same
+                            '' split the other two panes already have.
+                            OnMenuCommand( 0, IDM_VIEWEXPLORER, 0 )
+                            Check "  IDM_VIEWEXPLORER switches to the explorer", _
+                                  (g_panelMode = SHPANEL_EXPLORER)
+
+                            '' SIX CATEGORIES, FIVE OF THEM DISPLAYED. CATINDEX_FILES is
+                            '' deliberately outside the loop's range, so the count is
+                            '' ubound(Cat) - CATINDEX_MAIN + 1.
+                            ''
+                            '' THIS IS THE ASSERTION THAT WOULD HAVE CAUGHT AN EMPTY Cat,
+                            '' and it is the reason it is written as a count rather than
+                            '' as "more than zero rows": ubound(Cat) was -1 in this binary
+                            '' until SetCategoryDefaults moved into the app layer, and the
+                            '' pane rendered NOTHING with no error of any kind.
+                            scope
+                                dim as long nRoots = 0
+                                for r as long = 0 to g_panel->GetCount() - 1
+                                    if ShellPanel_KindOf(r) = EXPKIND_ROOT then nRoots += 1
+                                next
+                                Check "    one root group per displayed category", _
+                                      (nRoots = ubound(gConfig.Cat) - CATINDEX_MAIN + 1), _
+                                      str(nRoots) & " of " & str(ubound(gConfig.Cat) + 1)
+                            end scope
+
+                            '' NO ROW IS UNTAGGED. EXPKIND_NONE is what an un-tagged row
+                            '' silently reads as, and slot 1 would then be read as a file
+                            '' index -- so "every row has a kind" is the assertion that
+                            '' makes the scheme safe rather than merely intended.
+                            scope
+                                dim as long nUntagged = 0
+                                for r as long = 0 to g_panel->GetCount() - 1
+                                    if ShellPanel_KindOf(r) = EXPKIND_NONE then nUntagged += 1
+                                next
+                                Check "    and every row carries a kind", (nUntagged = 0), _
+                                      str(nUntagged) & " untagged"
+                            end scope
+
+                            '' A ROOT GROUP IS NOT SELECTABLE, which is what keeps it
+                            '' undraggable -- drag eligibility is computed from
+                            '' selectability, and a header would have got that for free
+                            '' where a plain parent does not.
+                            scope
+                                dim as long nRoot = -1
+                                for r as long = 0 to g_panel->GetCount() - 1
+                                    if ShellPanel_KindOf(r) = EXPKIND_ROOT then nRoot = r : exit for
+                                next
+                                Check "    a root group is not selectable", _
+                                      (nRoot >= 0) andalso _
+                                      (g_panel->GetRowSelectable(nRoot) = false), str(nRoot)
+                                '' AND IT IS NOT A HEADER, which is the half that matters:
+                                '' IsHeader is GotoRow's other guard, so a root that WAS a
+                                '' header would be refused for the wrong reason and this
+                                '' assertion would pass while the kind test did nothing.
+                                Check "      and is a parent rather than a header", _
+                                      (nRoot >= 0) andalso (g_panel->IsHeader(nRoot) = false)
+                            end scope
+
+                            '' ---- THE OPEN FILE IS IN THE TREE, EXACTLY ONCE ---------
+                            scope
+                                dim as long nHit = -1
+                                dim as long nSeen = 0
+                                for r as long = 0 to g_panel->GetCount() - 1
+                                    if ShellPanel_KindOf(r) <> EXPKIND_FILE then continue for
+                                    if PsUCase(ShellPanel_PathOf(r)) <> PsUCase(wszFile) then continue for
+                                    nSeen += 1
+                                    if nHit < 0 then nHit = r
+                                next
+                                Check "    the open file appears once as a file row", _
+                                      (nSeen = 1), str(nSeen)
+
+                                '' SLOT 2 IS A KIND HERE, NOT A LINE, and this is the
+                                '' assertion for the mode guard inside ShellPanel_LineOf.
+                                '' Without it this reads EXPKIND_FILE -- which is 3 -- and
+                                '' every click on a file row throws the caret to line 3.
+                                Check "      and its slot 2 reads as a line of 0, not a kind", _
+                                      (nHit >= 0) andalso (ShellPanel_LineOf(nHit) = 0), _
+                                      str(ShellPanel_LineOf(nHit))
+
+                                '' A FOLDER OR A GROUP IS NOT A PLACE. Three of the four
+                                '' kinds must be refused, and NONE of them is a header --
+                                '' so IsHeader alone lets all three through and slot 1
+                                '' would be read as a file index. A category index of 2
+                                '' would have opened g_panelFiles(2): a real file, and the
+                                '' wrong one.
+                                dim as long nRoot2 = -1
+                                for r as long = 0 to g_panel->GetCount() - 1
+                                    if ShellPanel_KindOf(r) = EXPKIND_ROOT then nRoot2 = r : exit for
+                                next
+                                Check "      a group row goes nowhere", _
+                                      (ShellPanel_GotoRow(nRoot2) = false)
+                                Check "        but a file row does", _
+                                      (nHit >= 0) andalso ShellPanel_GotoRow(nHit)
+
+                                '' SELECTION FOLLOWS THE FILE, which is what a tab switch
+                                '' drives. Asserted through the same entry point
+                                '' ShellTabs_Show calls, with a row number to compare
+                                '' against -- the only part of a tab click reachable here.
+                                '' ---- THE RESULT IS TAKEN INTO A LOCAL FIRST, and
+                                '' that is not tidiness. Written inline, this read
+                                ''     Check "...", SelectPath(f) andalso (GetCurSel() = nHit), _
+                                ''           str(GetCurSel()) & " wanted " & str(nHit)
+                                '' and printed "ok ... (-1 wanted 2)" -- a PASSING
+                                '' assertion whose own evidence contradicted it. fbc does
+                                '' not promise the order in which it evaluates arguments,
+                                '' and here it built the MESSAGE before running the call
+                                '' that changes what the message reports. The assertion was
+                                '' right and unreadable; anyone reading the log would have
+                                '' gone looking for a bug that was not there.
+                                dim as boolean bSel1 = ShellExplorer_SelectPath( wszFile )
+                                dim as long    nSel1 = g_panel->GetCurSel()
+                                Check "    SelectPath lands on that row", _
+                                      bSel1 andalso (nSel1 = nHit), _
+                                      str(nSel1) & " wanted " & str(nHit)
+                                '' Idempotent, and tiko checks this first for the same
+                                '' reason: re-selecting the row already selected must not
+                                '' scroll the pane.
+                                dim as boolean bSel2 = ShellExplorer_SelectPath( wszFile )
+                                dim as long    nSel2 = g_panel->GetCurSel()
+                                Check "      and again, without moving anything", _
+                                      bSel2 andalso (nSel2 = nHit), _
+                                      str(nSel2) & " wanted " & str(nHit)
+                                Check "      while a path not in the workspace finds nothing", _
+                                      (ShellExplorer_SelectPath(DWSTRING("C:/nowhere/x.bas")) = false)
+                            end scope
+
+                            '' IsFileDisplayed READS THE MODEL, NOT THE ROWS -- so it
+                            '' answers correctly with the pane on another mode, which is
+                            '' the whole reason it is not a row walk. Asserted from
+                            '' BOOKMARKS mode, where a row walk would answer false.
+                            ShellPanel_SetMode( SHPANEL_BOOKMARKS )
+                            Check "    IsFileDisplayed answers from the model, not the pane", _
+                                  ShellExplorer_IsFileDisplayed( wszFile ) andalso _
+                                  (g_panelMode = SHPANEL_BOOKMARKS)
+                            Check "      and says no to a file not in the workspace", _
+                                  (ShellExplorer_IsFileDisplayed(DWSTRING("C:/nowhere/x.bas")) = false)
 
                             '' Leave the document as this block found it -- no bookmarks --
                             '' so the assertions after it see what they expect.

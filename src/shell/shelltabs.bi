@@ -74,6 +74,13 @@ end sub
 
 
 '' Point the single view at this tab's document and put the user back where they were.
+'' ---- FORWARD, BECAUSE shellpanel.bi IS INCLUDED AFTER THIS FILE -- 7c step 19 --------
+'' tikoshell.bas takes shelltabs.bi first and says why: the panel needs the tab model, not
+'' the other way round. This is the one call that runs the other way, so it is a declaration
+'' rather than a reordering -- moving the include would break the reason for the order.
+declare function ShellExplorer_SelectPath( byval wszPath as DWSTRING ) as boolean
+
+
 sub ShellTabs_Show( byval idx as long )
     if (idx < 0) orelse (idx >= g_nTabDocs) then exit sub
     if g_view = 0 then exit sub
@@ -119,6 +126,20 @@ sub ShellTabs_Show( byval idx as long )
     '' It costs a parse per tab switch: 4-20ms on the files measured in
     '' docs/port/7c-step5.md, on the click that changed the tab.
     if g_tabDocs(idx).pDoc <> 0 then gAppNotify.RequestBufferScan( g_tabDocs(idx).pDoc )
+
+    '' ---- AND THE EXPLORER FOLLOWS THE TAB, since 7c step 19 --------------------------
+    ''
+    '' tiko calls frmExplorer_SelectItemData on a tab change so the pane highlights the file
+    '' being edited. SelectPath is a NO-OP unless the pane is actually showing the Explorer,
+    '' so this costs a mode compare in the other two modes.
+    ''
+    '' IT CAN FAIL, AND THE FAILURE IS CORRECT: a file inside a collapsed group has no
+    '' visible row, and selecting one would scroll the pane to a blank place. tiko refuses
+    '' for the same reason. The return value is deliberately not checked here -- there is
+    '' nothing a tab switch could do about it.
+    if g_tabDocs(idx).pDoc <> 0 then
+        ShellExplorer_SelectPath( g_tabDocs(idx).pDoc->DiskFilename )
+    end if
 
     if g_pSurf <> 0 then g_pSurf->InvalidateAll()
 end sub

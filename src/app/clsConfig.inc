@@ -45,6 +45,46 @@
 #include once "app/modProjectFolders.bi"
 #include once "app/modTextFile.inc"
 
+'' ---------------------------------------------------------------------------------------
+'' Default values for the Explorer categories, when none exist.
+''
+'' MOVED HERE FROM src/clsConfig.inc IN 7c STEP 19, unchanged. The Explorer pane walks
+'' gConfig.Cat, and the array was populated from ONE call in tiko.bas -- so in tikoshell
+'' ubound(Cat) was -1, every category loop ran zero times, and the pane rendered NOTHING.
+'' Not an error, not a warning: an empty tree, which looks exactly like a workspace with no
+'' files in it.
+''
+'' NOT CALLED FROM THE CONSTRUCTOR, and tiko's comment at its old call site says why: the
+'' captions are L() lookups, so the localization file has to be loaded first. Both binaries
+'' call it after that load, and a constructor cannot.
+'' ---------------------------------------------------------------------------------------
+function clsConfig.SetCategoryDefaults() as long
+    if ubound(this.Cat) = -1 then
+        redim this.Cat(CATINDEX_NORMAL)
+
+        this.Cat(CATINDEX_FILES).idFileType = FILETYPE_UNDEFINED
+        this.Cat(CATINDEX_FILES).wszDescription = L(2, "File")
+
+        this.Cat(CATINDEX_MAIN).idFileType = FILETYPE_MAIN
+        this.Cat(CATINDEX_MAIN).wszDescription = L(173, "Main")
+
+        this.Cat(CATINDEX_RESOURCE).idFileType = FILETYPE_RESOURCE
+        this.Cat(CATINDEX_RESOURCE).wszDescription = L(174, "Resource")
+
+        this.Cat(CATINDEX_HEADER).idFileType = FILETYPE_HEADER
+        this.Cat(CATINDEX_HEADER).wszDescription = L(140, "Header")
+
+        this.Cat(CATINDEX_MODULE).idFileType = FILETYPE_MODULE
+        this.Cat(CATINDEX_MODULE).wszDescription = L(172, "Module")
+
+        this.Cat(CATINDEX_NORMAL).idFileType = FILETYPE_NORMAL
+        this.Cat(CATINDEX_NORMAL).wszDescription = L(171, "Normal")
+    end if
+
+    function = 0
+end function
+
+
 '' ---- FORWARD SLASHES, per PsPath.bi's house rule -- 7c step 18 -------------------------
 ''
 '' These read `exe_path & "settings\..."` until step 18, which produced a MIXED path:
@@ -55,6 +95,7 @@
 ''
 '' So the profile-API risk of this change is smaller than it looks: ConfigFilename already
 '' reached WritePrivateProfileString with forward slashes in its first half and worked.
+'' ---------------------------------------------------------------------------------------
 constructor clsConfig
     dim as DWSTRING exe_path = PsExePath
     ConfigFilename            = exe_path & "settings/settings.ini"

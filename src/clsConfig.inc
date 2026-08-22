@@ -541,34 +541,12 @@ function clsConfig.WriteMRUProjects() as long
 end function
 
 
+'' MOVED TO app/clsConfig.inc IN 7c STEP 19.
 ''
-''  Set default values for Explorer Categories should none exist
-''
-function clsConfig.SetCategoryDefaults() as long
-    if ubound(this.Cat) = -1 then
-        redim this.Cat(CATINDEX_NORMAL)
-
-        this.Cat(CATINDEX_FILES).idFileType = FILETYPE_UNDEFINED
-        this.Cat(CATINDEX_FILES).wszDescription = L(2, "File")
-
-        this.Cat(CATINDEX_MAIN).idFileType = FILETYPE_MAIN
-        this.Cat(CATINDEX_MAIN).wszDescription = L(173, "Main")
-
-        this.Cat(CATINDEX_RESOURCE).idFileType = FILETYPE_RESOURCE
-        this.Cat(CATINDEX_RESOURCE).wszDescription = L(174, "Resource")
-
-        this.Cat(CATINDEX_HEADER).idFileType = FILETYPE_HEADER
-        this.Cat(CATINDEX_HEADER).wszDescription = L(140, "Header")
-
-        this.Cat(CATINDEX_MODULE).idFileType = FILETYPE_MODULE
-        this.Cat(CATINDEX_MODULE).wszDescription = L(172, "Module")
-
-        this.Cat(CATINDEX_NORMAL).idFileType = FILETYPE_NORMAL
-        this.Cat(CATINDEX_NORMAL).wszDescription = L(171, "Normal")
-    end if
-
-    function = 0
-end function
+'' It is the Explorer's category table -- six filetype ids and six localized captions, no
+'' Win32 anywhere -- and the Explorer pane is in the app layer's reach now. The shell half
+'' of this class kept it only because tiko.bas was the only thing that had ever called it,
+'' which is the same reason ProjectSaveToFile was still here before step 13.
 
 
 ''

@@ -1028,3 +1028,70 @@ sub ShellExplorer_Load()
 
     if g_pSurf <> 0 then g_pSurf->InvalidateAll()
 end sub
+
+
+'' ---------------------------------------------------------------------------------------
+'' SELECT THE ROW FOR A PATH, and scroll it into view. tiko's frmExplorer_SelectItemData
+'' (frmExplorer.inc:89), with its document pointer replaced by a path -- the row carries an
+'' index into g_panelFiles, so the comparison is on what the index resolves to.
+''
+'' RETURNS FALSE WHEN THE ROW IS COLLAPSED, which is tiko's behaviour and looks like a
+'' refusal until you see what the alternative is: SetCurSel on a row inside a collapsed
+'' subtree selects something the user cannot see, and the pane then scrolls to a blank
+'' place. Expanding the tree under them to satisfy a tab switch is worse.
+''
+'' EnsureVisible RATHER THAN tiko's top-index arithmetic. tiko computes ItemsPerPage, tests
+'' whether the row is in range and otherwise sets the top index to i-8 so the selection
+'' lands a little down the list. PsListTree has EnsureVisible, which is the same intent
+'' expressed once; the eight-row lead is the part that does not survive, and it is a
+'' cosmetic difference rather than a behavioural one.
+'' ---------------------------------------------------------------------------------------
+function ShellExplorer_SelectPath( byval wszPath as DWSTRING ) as boolean
+    if g_panel = 0 then return false
+    if g_panelMode <> SHPANEL_EXPLORER then return false
+    if PsLen( wszPath ) = 0 then return false
+
+    '' Already there. Checked first, as tiko does, so a tab switch onto the file the pane
+    '' is already showing does not scroll the pane.
+    dim as long nCurSel = g_panel->GetCurSel()
+    if nCurSel >= 0 then
+        if ShellPanel_KindOf( nCurSel ) = EXPKIND_FILE then
+            if PsUCase( ShellPanel_PathOf( nCurSel ) ) = PsUCase( wszPath ) then return true
+        end if
+    end if
+
+    dim as long nCount = g_panel->GetCount()
+    for i as long = 0 to nCount - 1
+        if ShellPanel_KindOf( i ) <> EXPKIND_FILE then continue for
+        if PsUCase( ShellPanel_PathOf( i ) ) <> PsUCase( wszPath ) then continue for
+        if g_panel->IsCollapsed( i ) then return false
+        g_panel->EnsureVisible( i )
+        g_panel->SetCurSel( i )
+        if g_pSurf <> 0 then g_pSurf->InvalidateAll()
+        return true
+    next
+
+    return false
+end function
+
+
+'' ---------------------------------------------------------------------------------------
+'' Does this file appear in the Explorer? tiko's frmExplorer_IsFileDisplayed, and its
+'' header applies here word for word: this is the ONE place the display rule is stated, so
+'' anything wanting to mirror it cannot drift from what the loader actually renders.
+''
+'' Two conditions, both imposed by the loader's own loop: the file must be a document in the
+'' workspace at all, and its ProjectFiletype must name one of the categories that loop walks
+'' -- CATINDEX_FILES is deliberately outside the range, so a document under it is displayed
+'' nowhere.
+''
+'' READS THE MODEL, NOT THE CONTROL, which is why it answers correctly with the pane showing
+'' Functions or Bookmarks. A version that walked the rows would answer "no" for every file
+'' whenever the pane happened to be on another mode.
+'' ---------------------------------------------------------------------------------------
+function ShellExplorer_IsFileDisplayed( byval wszFilename as DWSTRING ) as boolean
+    if PsLen( wszFilename ) = 0 then return false
+    dim pDoc as clsDocument ptr = gApp.GetDocumentPtrByFilename( wszFilename )
+    if pDoc = 0 then return false
+    return ( ShellExplorer_CatIndexForDoc( pDoc ) >= 0 )
+end function
