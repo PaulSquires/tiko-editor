@@ -3235,32 +3235,35 @@ end sub
 '' PsCore's whole value is that the toolkit and the application share one implementation,
 '' and that applies to the font the text engine measures with as much as to the code.
 '' ---------------------------------------------------------------------------------------
-'' THE SYMBOL FACES, AND WHY THERE WAS NO CHAIN UNTIL NOW.
+'' THE ICON FACE, AND WHY IT IS VENDORED RATHER THAN BORROWED.
 ''
-'' TE_Init opens CascadiaCode.ttf and NOTHING ELSE, so every private-use codepoint this
-'' shell has ever drawn came out as a TOFU BOX: the pane switcher since step 20, the
-'' Explorer's action icons, and the Find and Replace bars' chevrons since steps 27-29.
-'' Nobody had seen the window since step 22.
+'' TE_Init opens CascadiaCode.ttf and NOTHING ELSE, so until this existed every private-use
+'' codepoint this shell drew came out as a TOFU BOX: the pane switcher since step 20, the
+'' Explorer's action icons, and both bars' chevrons since steps 27-29. A comment in this file
+'' asserted the fallback chain resolved them. The chain is real; nothing had been put in it.
 ''
-'' AND A COMMENT IN THIS FILE ASSERTED THE OPPOSITE. Step 28 explained that "AB" needs no
-'' second font handle because "PsTextEngine's fallback chain resolves A and B in the primary
-'' UI face and the PUA glyphs below in the symbol face, per character". The chain is real;
-'' this binary had never put anything in it.
+'' POINTING AT C:/Windows/Fonts/SegoeIcons.ttf WAS HALF A FIX. "Segoe Fluent Icons" is
+'' licensed for use ON Windows, not for redistribution with an application, and a subset is
+'' still its outlines -- so that arrangement leaves Linux, which phase 7c has been building
+'' for since step 16, drawing boxes.
 ''
-'' BOTH FACES, MOST SPECIFIC FIRST. tiko names "Segoe Fluent Icons" (SegoeIcons.ttf) as its
-'' SYMBOLFONT, but its table also spends codepoints that predate it, and segmdl2.ttf covers
-'' those. TE_AddFallback returns false and changes nothing when a file will not open, which
-'' is exactly what happens on Linux -- so this is a no-op there rather than a build break,
-'' and the tofu that remains is a MISSING FONT rather than a missing chain.
+'' PsIcons.ttf IS MICROSOFT'S OWN MIT-LICENSED FLUENT UI SYSTEM ICONS, subset to the glyphs
+'' this application uses and REMAPPED ONTO TIKO'S CODEPOINTS -- see
+'' PsPlatform/assets/fonts/build-psicons.py. 2,312 bytes for nine glyphs. Every call site
+'' still says U+E8A9 for the Explorer icon, so tiko (Segoe, Windows-only) and this shell
+'' (PsIcons, everywhere) share one vocabulary and one set of constants.
+''
+'' AND SEGOE IS NOT KEPT AS A SECOND FALLBACK, deliberately. It would make a codepoint nobody
+'' added to build-psicons.py render on Windows and box on Linux -- the exact asymmetry that
+'' hid the missing chain for eleven steps. A missing icon should be missing on both.
 '' ---- ONE DOOR, BECAUSE TWO CALLS IS ONE TOO MANY --------------------------------------
-'' The first version had each caller do TE_Init and then remember to add the fallbacks, in
-'' two places. Deleting the STARTUP one left the suite at 575/0: the harness runs at 175%,
-'' where the DPI path reopens the engine on the way in and rebuilds the chain anyway. AT
-'' 100% NOTHING WOULD HAVE REOPENED IT and every icon would have been a box, with every
-'' assertion still green -- a defect visible only on the displays the suite does not run on.
+'' The first version had each caller do TE_Init and then remember to add the fallback, in
+'' two places. Deleting the STARTUP one left the suite green: the harness runs at 175%, where
+'' the DPI path reopens the engine on the way in and rebuilds the chain anyway. AT 100%
+'' NOTHING WOULD HAVE REOPENED IT and every icon would have been a box with every assertion
+'' still passing -- a defect visible only on the displays the suite does not run on.
 ''
-'' Not asserted, REMOVED: opening the engine and filling its chain are one call now, so
-'' there is no second place to forget.
+'' Not asserted, REMOVED: opening the engine and filling its chain are one call now.
 function ShellFonts_OpenEngine( byval px as long ) as long
     if TE_Init( g_te, strptr(g_sFont), px ) = 0 then return 0
     ShellFonts_AddSymbolFallbacks()
@@ -3269,20 +3272,19 @@ end function
 
 
 sub ShellFonts_AddSymbolFallbacks()
-    dim as string sWin = environ("SystemRoot")
-    '' FORWARD SLASH -- _check_shell's rule since step 18, and it caught this literal on the
-    '' first run. PsExePath has returned '/' on both platforms all along, so a backslash here
-    '' makes a MIXED path even on Windows.
-    if len(sWin) = 0 then sWin = "C:/Windows"
-    for i as integer = 0 to len(sWin) - 1
-        if sWin[i] = asc("\") then sWin[i] = asc("/")
-    next
-    '' strptr WANTS A VARIABLE, not an expression -- fbc reports the concatenation as
-    '' "Expected ')', found '&'", which names the paren and not the reason.
-    dim as string sFluent = sWin & "/Fonts/SegoeIcons.ttf"
-    dim as string sMdl2   = sWin & "/Fonts/segmdl2.ttf"
-    TE_AddFallback( g_te, strptr(sFluent), "Segoe Fluent Icons" )
-    TE_AddFallback( g_te, strptr(sMdl2),   "Segoe MDL2 Assets" )
+    '' Beside CascadiaCode.ttf, and reached the same way: PsPlatform's assets, not a copy.
+    '' PsCore's whole value is that the toolkit and the application share one implementation,
+    '' and that applies to the icon face as much as to the code.
+    '' PsPathDirWithSep, and DWSTRING throughout until the last step -- g_sFont is a plain
+    '' string because TE_Init wants a zstring ptr, so the conversion happens once, here,
+    '' rather than being smuggled through an operator that has no overload for the mix.
+    dim as DWSTRING wszIcons = PsPathDirWithSep( DWSTRING(g_sFont) ) & "PsIcons.ttf"
+    dim as string sIcons = wszIcons.Utf8
+    if TE_AddFallback( g_te, strptr(sIcons), "PsIcons" ) = false then
+        '' LOUD, because the alternative is a window full of boxes and no explanation, and
+        '' this is the one failure in the font path that still produces a running program.
+        print "tikoshell: no icon face -- every icon will be a box: " & sIcons
+    end if
 end sub
 
 
