@@ -266,16 +266,36 @@ function OnCommand_SearchFindActions( _
     elseif hFocus = hEdit then    
         dim as string sFindText = pDoc->GetSelText
         if len(sFindText) then 
-            ' Update the Find search term if the frmFind pane is open.
-            '' HOISTED TO A BOOLEAN. IsWindowVisible returns a BOOL, and mixing that with a
-            '' boolean in `andalso` is fbc warning 38 -- see C:\dev\Learnings.md.
-            dim as boolean bFindVisible = (IsWindowVisible(HWND_FRMMAIN_FIND) <> 0)
-            if (sFindText <> gFind.txtFind) andalso bFindVisible then
-                dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
-                AfxSetWindowText( hCtl, sFindText )
+            '' ---- THE SAME WORD IN THE DOCUMENT'S CASE IS NOT A NEW TERM -----------------
+            '' The second of the two reseed sites, and it had the same surprise as
+            '' FindControls_Show: the selection carries the DOCUMENT's casing, so a term
+            '' typed as "afxnova" came back as "AfxNova" the moment focus was in the editor.
+            '' Same rule, same reason -- it is the same word and it finds the same matches.
+            ''
+            '' EQUAL IGNORING CASE BUT NOT EQUAL EXACTLY, so a genuinely different selection
+            '' still reseeds. And LIKE-FOR-LIKE comparisons: the fold is DWSTRING against
+            '' DWSTRING, the exact test string against string via .Utf8. The line below used
+            '' to compare a string with a DWSTRING and let fbc pick the conversion.
+            dim as string sTyped = gFind.txtFind.Utf8
+            dim as boolean bCaseOnlyEcho = (PsUCase(sFindText) = PsUCase(gFind.txtFind)) andalso _
+                                           (sFindText <> sTyped)
+
+            if bCaseOnlyEcho = false then
+                ' Update the Find search term if the frmFind pane is open.
+                '' HOISTED TO A BOOLEAN. IsWindowVisible returns a BOOL, and mixing that with a
+                '' boolean in `andalso` is fbc warning 38 -- see C:\dev\Learnings.md.
+                dim as boolean bFindVisible = (IsWindowVisible(HWND_FRMMAIN_FIND) <> 0)
+                if (sFindText <> sTyped) andalso bFindVisible then
+                    dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
+                    AfxSetWindowText( hCtl, sFindText )
+                end if
+                '' THE COUNT RESET STAYS INSIDE THE GUARD. It means "the term changed, so the
+                '' tally is stale". When the term did not effectively change, the tally is
+                '' still good -- and zeroing it here would make the next Replace bail, since
+                '' OnCommand_SearchReplaceActions exits on foundCount = 0.
+                gFind.foundCount = 0
+                gFind.txtFind = sFindText
             end if
-            gFind.foundCount = 0
-            gFind.txtFind = sFindText
         end if
     end if
 
