@@ -1570,6 +1570,14 @@ sub BuildTree( byref surf as PsSurface )
     '' activity bar it was built for, and far too heavy for a tab row this size. tiko's own
     '' panel menu draws 1 device pixel along the bottom of the selected cell.
     g_panelMenu->nMarkerSize = 1
+    '' NO FILL BEHIND THE SELECTED ICON -- the underline is the whole indicator, which is
+    '' what tiko's panel menu draws and what a tab row reads as. PsIconPanel's default is
+    '' both, because the activity bar it was built for wants a lit cell.
+    g_panelMenu->bFillSelected = false
+    '' AND NARROWER CELLS. 36 design units is the activity bar's square against a window
+    '' edge; this strip is 30 tall, so a 36-wide cell is wider than it is high and the
+    '' icons swim in it.
+    g_panelMenu->nCellSize = 26
     scope
         dim as DWSTRING g
         g.Utf8 = chr(&hEE, &hA2, &hA9)   '' U+E8A9  Explorer   (tiko wszIconExplorer)
@@ -3524,6 +3532,18 @@ end function
                       str(it.y + it.h)
                 Check "      and a hairline, not the activity bar's slab", _
                       (g_panelMenu->nMarkerSize = 1), str(g_panelMenu->nMarkerSize)
+                '' ---- AND NO FILL BEHIND IT --------------------------------------
+                '' Asserted on the FACE THE PAINTER USES, not on the flag. PsPlatform
+                '' learned that one minutes ago: turning the fill off in the painter
+                '' left its own suite green, because a painted colour is not something
+                '' a test can look at.
+                Check "      with no fill behind the selected icon", _
+                      (g_panelMenu->CellFace( iExp ) = g_panelMenu->clrBack)
+                '' A CELL NARROWER THAN THE ACTIVITY BAR'S SQUARE. The strip is 30
+                '' units tall; 36 wide is wider than high and the icons swim in it.
+                Check "    and cells narrower than they are tall", _
+                      (g_panelMenu->nCellSize < SH_PANELMENU_H), _
+                      str(g_panelMenu->nCellSize) & " vs " & str(SH_PANELMENU_H)
             end if
         end scope
 
