@@ -254,27 +254,10 @@ private sub frmFind_IconClick( byval hIconPanel as HWND, byval idx as long, byva
             PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_FINDNEXT, 0), 0 )
 
         case FINDTIP_SELECTION
-            dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-            if pDoc = 0 then exit sub
-            ' Clicking this icon does not necessarily take the focus off the editor, so the
-            ' capture the test below reads may never have been filled. See
-            ' FindReplace_EnsureSelectionCaptured -- without it the icon refused to latch
-            ' against a selection that was plainly on screen.
-            FindReplace_EnsureSelectionCaptured( pDoc )
-            dim as boolean isOriginalSelectionMultiline = _
-                (pDoc->CurrentSelection.endline - pDoc->CurrentSelection.startline)
-            if pDoc->CurrentSelection.isInitialized = false then isOriginalSelectionMultiline = false
-            if (isOriginalSelectionMultiline) orelse (pDoc->HasMarkerHighlight) then
-                gFind.nSelection = not gFind.nSelection
-            else
-                gFind.nSelection = false
-            end if
-            if gFind.nSelection then
-                pDoc->SetMarkerHighlight
-            else
-                pDoc->RemoveMarkerHighlight
-            end if
-            FindReplace_HighlightSearches( theme.editor.occurrence )
+            ' THE BODY MOVED OUT so a harness can press this button. It was unreachable from
+            ' one -- a private sub in this file -- and the two defects reported against it
+            ' were both invisible to a suite that could only set the flag by hand.
+            FindReplace_ToggleSelection()
             AfxRedrawWindow( hIconPanel )
 
         case FINDTIP_CLOSE

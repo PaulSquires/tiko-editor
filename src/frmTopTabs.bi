@@ -41,6 +41,7 @@ declare function TopTabsInfoPanel_Show() as long
 ' selected, since the find phrase is that tab's whole subject. Declared here for the same
 ' reason TopTabsInfoPanel_Show above is.
 declare function FindReplace_EnsureSelectionCaptured( byval pDoc as clsDocument ptr ) as long
+declare function FindReplace_ToggleSelection() as long
 declare function FindControls_Show() as long
 ' Env-gated harness: TIKO_FINDSEL_SELFTEST=1. Real window, real document, real bar.
 declare sub      FindReplace_RunSelectionTest()

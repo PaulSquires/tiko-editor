@@ -36,6 +36,46 @@
 ' waiting for a focus change that has not happened yet. Guarded on isInitialized, so a
 ' capture that DID come from a real focus loss is never overwritten -- which matters,
 ' because by the time the incremental search has run the live selection is the last match.
+
+' ========================================================================================
+' The Selection icon's whole behaviour. Called by the icon, and by the harness.
+' ========================================================================================
+function FindReplace_ToggleSelection() as long
+    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+    if pDoc = 0 then return 0
+    dim as boolean bWasOn = cbool( gFind.nSelection <> 0 )
+    ' Clicking this icon does not necessarily take the focus off the editor, so the capture
+    ' the test below reads may never have been filled.
+    FindReplace_EnsureSelectionCaptured( pDoc )
+    dim as boolean isOriginalSelectionMultiline = _
+        (pDoc->CurrentSelection.endline - pDoc->CurrentSelection.startline)
+    if pDoc->CurrentSelection.isInitialized = false then isOriginalSelectionMultiline = false
+    if (isOriginalSelectionMultiline) orelse (pDoc->HasMarkerHighlight) then
+        gFind.nSelection = not gFind.nSelection
+    else
+        gFind.nSelection = false
+    end if
+    if gFind.nSelection then
+        pDoc->SetMarkerHighlight
+    else
+        pDoc->RemoveMarkerHighlight
+        ' TURNING IT OFF DROPS THE TEXT SELECTION AS WELL, by request: "editor remains
+        ' selected. it should unselect." ONLY ON THE ON -> OFF TRANSITION -- a REFUSAL also
+        ' lands in this branch, and collapsing a selection the user just made because the
+        ' button declined to arm would be the opposite of what was asked for.
+        if bWasOn then
+            dim as HWND hEdit = pDoc->hWndActiveScintilla
+            if IsWindow( hEdit ) then
+                SciExec( hEdit, SCI_SETEMPTYSELECTION, _
+                         SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0 ), 0 )
+            end if
+        end if
+    end if
+    FindReplace_HighlightSearches( theme.editor.occurrence )
+    return 0
+end function
+
+
 function FindReplace_EnsureSelectionCaptured( byval pDoc as clsDocument ptr ) as long
     if pDoc = 0 then return 0
     if pDoc->CurrentSelection.isInitialized then return 0
@@ -94,6 +134,14 @@ function FindReplace_SetVisible( byval bFind as boolean, byval bReplace as boole
             if pDoc = null then continue for
             pDoc->RemoveMarkerHighlight()
             pDoc->RemoveSelectionAttributes()
+            ' AND THE CAPTURE GOES WITH THEM. Until FindReplace_EnsureSelectionCaptured
+            ' existed, CurrentSelection was only ever filled on the editor's KILLFOCUS and
+            ' was empty at every moment FindControls_Show looked at it -- so nothing here
+            ' needed to clear it. NOW THAT Ctrl+F FILLS IT, a capture left behind is a
+            ' multi-line range that no longer describes anything, and the next Ctrl+F arms
+            ' Selection against it whatever is selected. Reported as "closing Find and
+            ' ctrl+f a second time always has the icon lit".
+            pDoc->CurrentSelection.isInitialized = false
         next
     end if
 
@@ -394,6 +442,39 @@ sub FindReplace_RunSelectionTest()
     FindReplace_HighlightSearches( theme.editor.occurrence )
     FindSel_Check( "  and the search finds only the three inside it", _
         (gFind.foundCount = 3), str(gFind.foundCount) & "/" & str(nWhole) )
+
+    ' ---- CLICKING THE ICON WHILE IT IS LIT MUST DISARM IT -------------------------------
+    ' REPORTED: "immediately click icon. editor remains selected. it should unselect."
+    ' Driven through the icon's own body, which is why that body was moved out of
+    ' frmFind_IconClick -- a private sub no harness could reach, which is how both defects
+    ' against this button got here.
+    FindReplace_ToggleSelection()
+    FindSel_Pump()
+    FindSel_Check( "clicking the lit icon disarms it", _
+        (gFind.nSelection = 0), str(gFind.nSelection) )
+    FindSel_Check( "  and takes the shading off the editor", _
+        (pT->HasMarkerHighlight = false) )
+    FindSel_Check( "  and drops the text selection with it", _
+        (SciExec( hEdit, SCI_GETSELECTIONSTART, 0, 0 ) = _
+         SciExec( hEdit, SCI_GETSELECTIONEND, 0, 0 )), _
+        str(SciExec( hEdit, SCI_GETSELECTIONSTART, 0, 0 )) & ".." & _
+        str(SciExec( hEdit, SCI_GETSELECTIONEND, 0, 0 )) )
+    gFind.txtFind = "Zeta"
+    FindReplace_HighlightSearches( theme.editor.occurrence )
+    FindSel_Check( "  and the search covers the whole file again", _
+        (gFind.foundCount = nWhole), str(gFind.foundCount) & "/" & str(nWhole) )
+
+    ' ---- AND A SECOND Ctrl+F WITH NO SELECTION MUST NOT ARM -----------------------------
+    ' REPORTED: "closing Find and ctrl+f a second time always has the icon lit regardless if
+    ' there is an editor selection."
+    FindReplaceControls_Hide()
+    FindSel_Pump()
+    SciExec( hEdit, SCI_SETEMPTYSELECTION, 0, 0 )
+    FindControls_Show()
+    FindSel_Pump()
+    FindSel_Check( "reopening with NO selection leaves the icon dark", _
+        (gFind.nSelection = 0), str(gFind.nSelection) )
+    FindSel_Check( "  and lays no shading", (pT->HasMarkerHighlight = false) )
 
     ' ---- CLOSING DROPS BOTH ------------------------------------------------------------
     FindReplaceControls_Hide()
