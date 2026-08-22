@@ -695,6 +695,14 @@ constructor ShellFindBar()
         '' through handleKeysFindReplace. Taking it here means the bar never needs a key
         '' filter of its own.
         this.pField->OnEnterPressed( @ShellFind_OnFieldEnter, 0 )
+        '' A CUE BANNER, through L() so it is the same string tiko shows. tiko sets one on
+        '' both fields and this port had neither, which leaves two identical empty boxes
+        '' with nothing to say which is which.
+        '' L(134), NOT L(45). 45 is "Find Previous" -- and L() DISCARDS THE DEFAULT, so the
+        '' banner would have read "Find Previous..." with nothing in the build to say so.
+        '' Checked against the .lang file rather than guessed from the word; tiko's own
+        '' frmFind.inc:591 uses 134 for exactly this string.
+        this.pField->SetCueBannerText( L(134, "Find") & "..." )
     end if
 
     '' TOGGLES, NOT COMMANDS -- the one place step 20 found the toolkit simpler than tiko.
@@ -768,6 +776,15 @@ end constructor
 '' widget for it would be a widget to invalidate.
 '' ---------------------------------------------------------------------------------------
 sub ShellFindBar.OnLayout()
+    '' ---- THE STRIPS TAKE THE BAR'S OWN BACKGROUND --------------------------------------
+    '' PsIconPanel paints its own clrBack, which is the activity bar's darker slab, so both
+    '' strips sat as visibly lighter blocks on a bar of a different colour. Pushed on every
+    '' layout rather than once at construction, because OnThemeChanged re-reads the control's
+    '' colours from the theme and would take it straight back.
+    dim as PsColor clrBand = PsThemeRoleColor( PSTHEME_BACKGROUNDRAISED )
+    if this.pToggle <> 0 then this.pToggle->clrBack = clrBand
+    if this.pNav <> 0 then this.pNav->clrBack = clrBand
+
     dim as single f = 1.0
     if this.pSurface <> 0 then f = this.pSurface->fScale
     dim as long pad  = PsScaleBy( SHFIND_PAD_UNITS, f )
@@ -1051,6 +1068,7 @@ constructor ShellReplaceBar()
         '' ENTER IS REPLACE, which is what tiko's own tooltip promises -- "Replace (Enter)"
         '' -- and what handleKeysFindReplace does with it in the pump.
         this.pField->OnEnterPressed( @ShellReplace_OnFieldEnter, 0 )
+        this.pField->SetCueBannerText( L(138, "Replace") & "..." )
     end if
 
     '' PRESERVE CASE. "AB" is tiko's own glyph for it (wszIconPreserveCase) and it is LITERAL
@@ -1101,6 +1119,11 @@ end constructor
 '' Find bar has one.
 '' ---------------------------------------------------------------------------------------
 sub ShellReplaceBar.OnLayout()
+    '' Same as the Find bar's: see the note there.
+    dim as PsColor clrBand = PsThemeRoleColor( PSTHEME_BACKGROUNDRAISED )
+    if this.pPreserve <> 0 then this.pPreserve->clrBack = clrBand
+    if this.pActions <> 0 then this.pActions->clrBack = clrBand
+
     dim as single f = 1.0
     if this.pSurface <> 0 then f = this.pSurface->fScale
     dim as long pad  = PsScaleBy( SHFIND_PAD_UNITS, f )
@@ -5213,6 +5236,34 @@ end function
                                       str(g_barFind->pToggle->bounds.h)
                             end scope
                         end scope
+
+                        '' ---- THE CUE BANNERS, AND THE ID THEY CAME FROM ---------
+                        '' tiko sets one on both fields and this port had neither: two
+                        '' identical empty boxes with nothing to say which is which.
+                        ''
+                        '' ASSERTED ON THE TEXT, NOT ON "it is non-empty". The first
+                        '' draft used L(45) for Find because the word looked right; 45
+                        '' is "Find Previous", and L() DISCARDS THE DEFAULT -- so the
+                        '' banner rendered the wrong string with nothing in the build to
+                        '' say so. A length check would have passed on it.
+                        Check "    the find field has a cue banner", _
+                              (g_barFind->pField->sCue = DWSTRING("Find...")), _
+                              g_barFind->pField->sCue.Utf8
+                        Check "      and the replace field its own", _
+                              (g_barReplace->pField->sCue = DWSTRING("Replace...")), _
+                              g_barReplace->pField->sCue.Utf8
+
+                        '' ---- AND THE STRIPS SIT ON THE BAR'S OWN COLOUR ----------
+                        '' PsIconPanel paints its own clrBack -- the activity bar's
+                        '' darker slab -- so both strips were visibly lighter blocks on
+                        '' a bar of a different colour.
+                        Check "    the icon strips share the bar's background", _
+                              (g_barFind->pToggle->clrBack = _
+                               PsThemeRoleColor(PSTHEME_BACKGROUNDRAISED)) andalso _
+                              (g_barFind->pNav->clrBack = _
+                               PsThemeRoleColor(PSTHEME_BACKGROUNDRAISED)) andalso _
+                              (g_barReplace->pActions->clrBack = _
+                               PsThemeRoleColor(PSTHEME_BACKGROUNDRAISED))
 
                         Check "    the find field has a real rect to borrow", _
                               (g_barFind->pField->bounds.w > 0), _
