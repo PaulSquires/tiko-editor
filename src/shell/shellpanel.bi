@@ -50,6 +50,74 @@
 #pragma once
 
 
+'' ========================================================================================
+'' THE PANEL HAS A MODE NOW.
+''
+'' tiko's side panel is THREE PANES behind a PsIconPanel strip -- Explorer, Functions,
+'' Bookmarks -- switched by IDM_VIEWEXPLORER / IDM_FUNCTIONLIST / IDM_BOOKMARKSLIST. This
+'' binary has ONE PsListTree and, since 7c step 19, ALL THREE of those panes. The STRIP is
+'' still not ported -- PsPlatform has no PsIconPanel -- so the three commands switch a mode
+'' instead, which is all the strip does for the user anyway.
+''
+'' NO NEW MENU IDS AND NO NEW .lang ENTRIES: all three commands already exist in
+'' app/modMenuIds.bi and all three already have captions in all six language files.
+''
+'' THIS BLOCK MOVED TO THE TOP OF THE FILE IN STEP 19. It used to sit halfway down, which
+'' was fine while nothing above it named a mode; ShellPanel_LineOf reads g_panelMode now,
+'' and fbc reports that as "Variable not declared" at a line that is plainly correct.
+'' ========================================================================================
+enum ShellPanelMode
+    SHPANEL_BOOKMARKS = 0
+    SHPANEL_FUNCTIONS
+    '' THE THIRD PANE, 7c step 19. tiko's is the FIRST pane a user ever sees; this binary
+    '' could not offer it until now, which is the whole reason step 8 had to argue about
+    '' which pane to start on.
+    SHPANEL_EXPLORER
+end enum
+
+
+'' ---------------------------------------------------------------------------------------
+'' WHAT AN EXPLORER ROW IS, carried in slot 2. frmExplorer.bi's enum, unchanged in meaning
+'' and unchanged in VALUE -- there is no reason for the two binaries to disagree about a
+'' number that appears in both.
+''
+''   EXPKIND_ROOT     slot 1 = index into gConfig.Cat()
+''   EXPKIND_FOLDER   slot 1 = index into gProjectFolders
+''   EXPKIND_FILE     slot 1 = index into g_panelFiles     <-- NOT a clsDocument ptr
+''   EXPKIND_PROMOTE  slot 1 = 0
+''
+'' AN INDEX, NOT A POINTER, and that is this binary's rule rather than a translation
+'' accident: tiko stores `cast(integer, pDoc)` in the slot, and a pointer parked inside a
+'' list control outlives nothing safely. shelltabs.bi and both existing loaders are
+'' index-based for the same reason.
+''
+'' EXPKIND_NONE = 0 DELIBERATELY, and the reason is tiko's: slot 2 defaults to zero for any
+'' row added without one, so whatever sits at zero is what an un-tagged row silently claims.
+'' The safe thing to claim is "not a file". Putting EXPKIND_FILE at zero would make every
+'' un-tagged row present its slot 1 as a file index.
+'' ---------------------------------------------------------------------------------------
+enum ShellExpKind
+    EXPKIND_NONE    = 0
+    EXPKIND_ROOT    = 1
+    EXPKIND_FOLDER  = 2
+    EXPKIND_FILE    = 3
+    EXPKIND_PROMOTE = 4
+end enum
+
+'' FUNCTIONS AT STARTUP, changed in step 8, and the report that caused it is worth keeping:
+'' "the functions pane (or explorer pane) is not visible when the program starts up. nothing
+'' displays."
+''
+'' A BOOKMARKS PANE ON A FRESHLY OPENED FILE IS EMPTY BY CONSTRUCTION -- no bookmark exists
+'' until someone sets one -- so the first pane a user ever saw could only be blank. tiko's
+'' first pane is the EXPLORER, which this binary does not have; Functions is the first pane
+'' it has that tiko also has, and the only one with something to show before the user has
+'' done anything.
+dim shared as ShellPanelMode g_panelMode = SHPANEL_FUNCTIONS
+
+
+
+
 '' ---------------------------------------------------------------------------------------
 '' THE PANEL'S FILE TABLE.
 ''
@@ -61,9 +129,12 @@
 '' DWSTRING ptr there would mean owning its lifetime across every Clear, every reload and
 '' every theme change, to save one array.
 ''
-'' REBUILT BY WHICHEVER LOADER RAN, so the two loaders agree on what a row carries and
-'' ShellPanel_GotoRow stays mode-agnostic. The bookmarks loader registers the open documents;
-'' the functions loader registers everything the symbol database knows.
+'' REBUILT BY WHICHEVER LOADER RAN, so all three loaders agree on what SLOT 1 carries and
+'' ShellPanel_GotoRow needs no mode of its own to read it. The bookmarks loader registers the
+'' open documents; the functions loader registers everything the symbol database knows; the
+'' explorer loader registers every document in the workspace.
+''
+'' SLOT 2 IS THE HALF THAT IS NOT MODE-AGNOSTIC -- see ShellPanel_LineOf.
 '' ---------------------------------------------------------------------------------------
 const SHP_MAX_FILES = 1024
 
@@ -126,9 +197,30 @@ function ShellPanel_TabOf( byval nRow as long ) as long
     return ShellTabs_FindByPath( wszPath )
 end function
 
+'' ---- SLOT 2 MEANS A LINE ONLY IN TWO OF THE THREE MODES -- 7c step 19 -----------------
+''
+'' The Explorer needs slot 2 for the row KIND, and there are only two slots. So what slot 2
+'' holds is a function of the panel MODE, exactly as what slot 1 holds is a function of the
+'' KIND -- which is frmExplorer.bi's own rule, one level up.
+''
+'' THE GUARD IS HERE RATHER THAN AT EVERY CALLER because ShellPanel_GotoRow reads this on
+'' every click. Without it a click on an Explorer file row would read EXPKIND_FILE, which is
+'' 3, and jump the caret to line 3 of the file it just opened -- a defect that looks like a
+'' scroll bug and is a units bug.
 function ShellPanel_LineOf( byval nRow as long ) as long
     if g_panel = 0 then return 0
+    if g_panelMode = SHPANEL_EXPLORER then return 0
     return cast(long, g_panel->GetItemData2( nRow ))
+end function
+
+
+'' The row's KIND, and the mirror of the above: meaningful only in Explorer mode, where an
+'' invalid row and an un-tagged row both read EXPKIND_NONE.
+function ShellPanel_KindOf( byval nRow as long ) as ShellExpKind
+    if g_panel = 0 then return EXPKIND_NONE
+    if g_panelMode <> SHPANEL_EXPLORER then return EXPKIND_NONE
+    if g_panel->IsValidRow( nRow ) = false then return EXPKIND_NONE
+    return cast(ShellExpKind, cast(long, g_panel->GetItemData2( nRow )))
 end function
 
 
@@ -142,6 +234,15 @@ end function
 ''
 '' RETURNS FALSE when the row is a header or carries nothing -- tiko's `if IsHeader = false`
 '' guard, and the reason a click on a filename row does not move the caret.
+''
+'' ---- AND IN EXPLORER MODE, WHEN THE ROW IS NOT A FILE -- 7c step 19 ------------------
+''
+'' The other two panes have exactly one kind of clickable row, so "is it a header" was the
+'' whole test. The Explorer has four kinds and THREE OF THEM ARE NOT PLACES: a root group,
+'' a folder, and the Save-as-Project prompt. None of them is a header -- the group is a
+'' plain parent on purpose -- so IsHeader lets all three through, and slot 1 would then be
+'' read as a file index. A folder index of 2 would have opened whatever g_panelFiles(2)
+'' happened to be: a real file, silently the wrong one.
 '' ---------------------------------------------------------------------------------------
 function ShellPanel_GotoRow( byval nRow as long ) as boolean
     if g_panel = 0 then return false
@@ -149,6 +250,9 @@ function ShellPanel_GotoRow( byval nRow as long ) as boolean
     '' A HEADER IS A FILENAME, NOT A PLACE. Clicking one collapses it; jumping somewhere
     '' would fight that.
     if g_panel->IsHeader( nRow ) then return false
+    if g_panelMode = SHPANEL_EXPLORER then
+        if ShellPanel_KindOf( nRow ) <> EXPKIND_FILE then return false
+    end if
 
     dim as DWSTRING wszPath = ShellPanel_PathOf( nRow )
     dim as long     nLine   = ShellPanel_LineOf( nRow )
@@ -260,39 +364,13 @@ sub ShellPanel_Install()
 end sub
 
 
-'' ========================================================================================
-'' THE PANEL HAS A MODE NOW.
-''
-'' tiko's side panel is THREE PANES behind a PsIconPanel strip -- Explorer, Functions,
-'' Bookmarks -- switched by IDM_VIEWEXPLORER / IDM_FUNCTIONLIST / IDM_BOOKMARKSLIST. This
-'' binary has ONE PsListTree and two of those three panes, so the strip is not ported and
-'' the two commands switch a mode instead.
-''
-'' NO NEW MENU IDS AND NO NEW .lang ENTRIES: both commands already exist in
-'' app/modMenuIds.bi and both already have captions in all six language files.
-'' ========================================================================================
-enum ShellPanelMode
-    SHPANEL_BOOKMARKS = 0
-    SHPANEL_FUNCTIONS
-end enum
-
-'' FUNCTIONS AT STARTUP, changed in step 8, and the report that caused it is worth keeping:
-'' "the functions pane (or explorer pane) is not visible when the program starts up. nothing
-'' displays."
-''
-'' A BOOKMARKS PANE ON A FRESHLY OPENED FILE IS EMPTY BY CONSTRUCTION -- no bookmark exists
-'' until someone sets one -- so the first pane a user ever saw could only be blank. tiko's
-'' first pane is the EXPLORER, which this binary does not have; Functions is the first pane
-'' it has that tiko also has, and the only one with something to show before the user has
-'' done anything.
-dim shared as ShellPanelMode g_panelMode = SHPANEL_FUNCTIONS
-
 '' BOTH loaders are forward-declared, not just the functions one. ShellPanel_Reload
 '' dispatches to a pair defined below it, and a declaration for one of two is how you get
 '' "Variable not declared, ShellBookmarks_Load" pointing at a sub that is plainly there
 '' three hundred lines further down.
 declare sub ShellBookmarks_Load()
 declare sub ShellFunctions_Load()
+declare sub ShellExplorer_Load()
 
 
 '' Rebuild whatever the panel is currently showing. THE ONE ENTRY POINT anything outside
@@ -301,6 +379,7 @@ declare sub ShellFunctions_Load()
 sub ShellPanel_Reload()
     select case g_panelMode
         case SHPANEL_FUNCTIONS : ShellFunctions_Load()
+        case SHPANEL_EXPLORER  : ShellExplorer_Load()
         case else              : ShellBookmarks_Load()
     end select
 end sub
@@ -717,6 +796,234 @@ sub ShellFunctions_Load()
 
     g_panel->SetTopIndex( nTopIndex )
     nCurSel = iif( nCurSel > g_panel->GetCount() - 1, g_panel->GetCount() - 1, nCurSel )
+    g_panel->SetCurSel( nCurSel )
+
+    if g_pSurf <> 0 then g_pSurf->InvalidateAll()
+end sub
+
+
+'' =======================================================================================
+'' THE EXPLORER PANE -- 7c step 19. A port of frmExplorer.inc's LoadExplorerFiles (1208)
+'' and frmExplorer_AddFolderLevel (1136), which between them are the whole read-only half
+'' of tiko's largest form.
+''
+'' ---- WHAT PORTED WITH NO CHANGE AT ALL, WHICH IS THE MODEL ---------------------------
+''
+'' gProjectFolders, ProjectFolders_ParentPath, ProjectFolders_LeafName,
+'' ProjectFolders_Exists, gConfig.Cat, gApp.pDocList, gApp.IsProjectNamed,
+'' clsDocument.docData.wszFolder and ProjectFiletype are all in app/ already. Not one of
+'' them needed a line. The port is the CONTROL half and the row scheme.
+''
+'' ---- AND WHAT DID NOT: THE ROW CARRIES AN INDEX -------------------------------------
+''
+'' tiko puts a clsDocument POINTER in a file row. This puts a g_panelFiles index, for the
+'' reason the two existing loaders already give -- and it costs nothing, because
+'' ShellPanel_GotoRow resolves an index to a path and opens the file WHETHER OR NOT it is
+'' currently in a tab. That was written for the Functions pane in step 8 and is exactly
+'' what an Explorer click needs.
+'' =======================================================================================
+
+
+'' The gConfig.Cat() index a document is displayed under, or -1. tiko's
+'' frmExplorer_CatIndexForDoc, unchanged.
+private function ShellExplorer_CatIndexForDoc( byval pDoc as clsDocument ptr ) as long
+    if pDoc = 0 then return -1
+    dim as DWSTRING wszFileType = pDoc->ProjectFiletype
+    for ii as long = CATINDEX_MAIN to ubound(gConfig.Cat)
+        if wszFileType = gConfig.Cat(ii).idFileType then return ii
+    next
+    return -1
+end function
+
+
+'' ---------------------------------------------------------------------------------------
+'' Forget any document folder that does not name a folder that actually exists.
+''
+'' tiko's frmExplorer_NormalizeDocFolders, and its reasoning transfers whole: the tree is
+'' built by walking folders and asking which files sit in each, so a file naming a folder
+'' that is not in the table is never asked for by anybody. It disappears from the pane while
+'' remaining in the workspace.
+''
+'' Run from the LOADER rather than from the project loader, so every path that can
+'' invalidate a folder is covered without each having to remember.
+'' ---------------------------------------------------------------------------------------
+private sub ShellExplorer_NormalizeDocFolders()
+    dim pDoc as clsDocument ptr = gApp.pDocList
+    do until pDoc = 0
+        if PsLen( pDoc->docData.wszFolder ) then
+            dim as long catIndex = ShellExplorer_CatIndexForDoc( pDoc )
+            if ProjectFolders_Exists( catIndex, pDoc->docData.wszFolder ) = false then
+                pDoc->docData.wszFolder = ""
+            end if
+        end if
+        pDoc = pDoc->pDocNext
+    loop
+end sub
+
+
+'' Insertion sort by DiskFilename, ascending, ASCII-folded. tiko uses a quicksort here; a
+'' folder level holds the files of one directory of one project, so the sort's cost is
+'' irrelevant and its simplicity is not -- the same call the folder half already makes.
+private sub ShellExplorer_SortDocs( pDocs() as clsDocument ptr, byval nCount as long )
+    for i as long = 1 to nCount - 1
+        dim as clsDocument ptr pHold = pDocs(i)
+        dim as DWSTRING wszHold = PsUCase( pHold->DiskFilename )
+        dim as long j = i - 1
+        do while j >= 0
+            if PsUCase( pDocs(j)->DiskFilename ) <= wszHold then exit do
+            pDocs(j + 1) = pDocs(j)
+            j -= 1
+        loop
+        pDocs(j + 1) = pHold
+    next
+end sub
+
+
+'' ---------------------------------------------------------------------------------------
+'' Emit one level of a group's tree beneath nParentRow: the folders directly inside
+'' wszParentPath, each recursed into, and then the files that sit at this level.
+''
+'' FOLDERS BEFORE FILES, each half alphabetical -- tiko's order, derived on every load
+'' rather than persisted, because drag/drop chooses which folder a file lands in and never
+'' where it sits among its siblings.
+''
+'' AddNode, NOT AddString, for the files. AddString derives its level from the PRECEDING
+'' row, so with the group a plain parent it would put every file at level 0 -- a flat list
+'' with no subtree to collapse, unable to express a nested folder at all. tiko's comment
+'' says the same thing about its own control, and PsListTree behaves the same way.
+''
+'' Recursion depth is the folder depth the user created, which is unbounded by design.
+'' ---------------------------------------------------------------------------------------
+private sub ShellExplorer_AddFolderLevel( byval catIndex as long, _
+                                          byval wszParentPath as DWSTRING, _
+                                          byval nParentRow as long )
+    if g_panel = 0 then exit sub
+
+    '' ---- the folders directly inside this level ---------------------------------------
+    redim nFolders(any) as long
+    for i as long = lbound(gProjectFolders) to ubound(gProjectFolders)
+        if gProjectFolders(i).catIndex <> catIndex then continue for
+        if PsUCase( ProjectFolders_ParentPath( gProjectFolders(i).wszPath ) ) <> _
+           PsUCase( wszParentPath ) then continue for
+        dim as long ub = ubound(nFolders) + 1
+        redim preserve nFolders(ub)
+        nFolders(ub) = i
+    next
+
+    for i as long = lbound(nFolders) + 1 to ubound(nFolders)
+        dim as long nHold = nFolders(i)
+        dim as DWSTRING wszHold = PsUCase( ProjectFolders_LeafName( gProjectFolders(nHold).wszPath ) )
+        dim as long j = i - 1
+        do while j >= lbound(nFolders)
+            if PsUCase( ProjectFolders_LeafName( gProjectFolders(nFolders(j)).wszPath ) ) <= wszHold then exit do
+            nFolders(j + 1) = nFolders(j)
+            j -= 1
+        loop
+        nFolders(j + 1) = nHold
+    next
+
+    for i as long = lbound(nFolders) to ubound(nFolders)
+        dim as long nIdx = nFolders(i)
+        '' The row shows the LEAF name; the full path is recovered from the table through
+        '' the slot-1 index, so nothing has to parse a caption back into a path.
+        dim as long nRow = g_panel->AddNode( nParentRow, _
+                               ProjectFolders_LeafName( gProjectFolders(nIdx).wszPath ), _
+                               nIdx, EXPKIND_FOLDER )
+        ShellExplorer_AddFolderLevel( catIndex, gProjectFolders(nIdx).wszPath, nRow )
+    next
+
+    '' ---- the files at this level ------------------------------------------------------
+    redim pDocs(any) as clsDocument ptr
+    dim as long nDocs = 0
+    dim pDoc as clsDocument ptr = gApp.pDocList
+    do until pDoc = 0
+        if pDoc->ProjectFiletype = gConfig.Cat(catIndex).idFileType then
+            if PsUCase( pDoc->docData.wszFolder ) = PsUCase( wszParentPath ) then
+                redim preserve pDocs(0 to nDocs)
+                pDocs(nDocs) = pDoc
+                nDocs += 1
+            end if
+        end if
+        pDoc = pDoc->pDocNext
+    loop
+
+    ShellExplorer_SortDocs( pDocs(), nDocs )
+
+    for i as long = 0 to nDocs - 1
+        '' REGISTERED IN THE FILE TABLE, which is what makes the row clickable: GotoRow
+        '' reads slot 1 as an index into it and opens the path whether or not it is tabbed.
+        dim as long nFile = ShellPanel_AddFile( pDocs(i)->DiskFilename )
+        if nFile < 0 then exit for
+        g_panel->AddNode( nParentRow, PsPathName( pDocs(i)->DiskFilename ), _
+                          nFile, EXPKIND_FILE )
+    next
+end sub
+
+
+'' ---------------------------------------------------------------------------------------
+'' Rebuild the Explorer pane. tiko's LoadExplorerFiles.
+''
+'' WHAT DID NOT COME ACROSS: the hide/show dance around the load. tiko hides the control
+'' while it fills so the empty listbox does not flash white, and its own comment is mostly
+'' about the ways that goes wrong -- a control left hidden, a visibility read that walks the
+'' ancestor chain. BeginUpdate/EndUpdate is what PsListTree offers for the same purpose and
+'' it suppresses the REPAINT rather than the window, so there is no state to restore and no
+'' way to leave the pane hidden.
+''
+'' CATINDEX_FILES IS SKIPPED, as in tiko: it stays in the Cat() array -- two menu paths
+'' index that array by an offset from a command id, and the table is persisted in
+'' settings.ini besides -- and nothing is ever displayed under it.
+'' ---------------------------------------------------------------------------------------
+sub ShellExplorer_Load()
+    if g_panel = 0 then exit sub
+
+    dim as long nCurSel   = g_panel->GetCurSel()
+    dim as long nTopIndex = g_panel->GetTopIndex()
+
+    ShellPanel_ResetFiles()
+    g_panel->clear()
+    g_panel->BeginUpdate()
+
+    '' While the workspace is untitled, offer to make it a real project. Pinned at index 0,
+    '' above every group, and present only until the user names it.
+    ''
+    '' THE ROW IS INERT HERE, and deliberately: EXPKIND_PROMOTE has no handler in this
+    '' binary because Save As is not ported. It is emitted so the pane's SHAPE matches
+    '' tiko's -- an assertion that counts rows would otherwise disagree for a reason that
+    '' has nothing to do with the tree.
+    if gApp.IsProjectNamed() = false then
+        g_panel->AddString( L(398,"Save as Project..."), 0, EXPKIND_PROMOTE )
+    end if
+
+    '' Before any group row is emitted: a file whose folder cannot be resolved must be
+    '' pulled back to its group's top level, or the walk below never asks for it.
+    ShellExplorer_NormalizeDocFolders()
+
+    for ii as long = CATINDEX_MAIN to ubound(gConfig.Cat)
+        '' A ROOT GROUP IS A PARENT, NOT A HEADER, and tiko's reason holds for PsListTree
+        '' too: a header toggles on a click ANYWHERE in it, and does so before the host is
+        '' offered the event -- so the host cannot own the gesture. As a plain parent
+        '' nothing toggles by itself.
+        ''
+        '' NON-SELECTABLE for the second half of it: a root group must never be draggable,
+        '' and drag eligibility is computed from selectability. Headers get that exclusion
+        '' for free; plain parents do not. Nothing here depends on selecting a group row.
+        dim as long nRootRow = g_panel->AddNode( -1, gConfig.Cat(ii).wszDescription, _
+                                                 ii, EXPKIND_ROOT )
+        g_panel->SetRowSelectable( nRootRow, false )
+
+        '' The group's whole subtree, from its top level (""). A group that allows no
+        '' folders simply has none in the table, so Main and Resource need no special case.
+        ShellExplorer_AddFolderLevel( ii, "", nRootRow )
+    next
+
+    g_panel->EndUpdate()
+
+    '' Restore the view as it was found. Clamped, because a reload can shorten the tree --
+    '' a folder deleted, a file closed -- and SetCurSel past the end is a silent no-op that
+    '' would leave the OLD selection highlighted on a row that now means something else.
+    g_panel->SetTopIndex( nTopIndex )
+    if nCurSel > g_panel->GetCount() - 1 then nCurSel = g_panel->GetCount() - 1
     g_panel->SetCurSel( nCurSel )
 
     if g_pSurf <> 0 then g_pSurf->InvalidateAll()

@@ -218,6 +218,13 @@
 '' and on the standalone gate's own list of things that move when something needs them.
 #include once "app/modPaths.inc"
 
+'' THE FOLDER TABLE'S BODY, since 7c step 19 -- the Explorer pane walks it. Only the HEADER
+'' was here before, which was enough while nothing called anything in it: a header that
+'' declares and a body that is never compiled link cleanly right up to the first caller, and
+'' then report undefined references to functions whose source plainly exists. Step 16 spent
+'' two rounds on exactly that shape.
+#include once "app/modProjectFolders.inc"
+
 
 '' ---- THE COMMIT-4 STUB, NOW REAL -------------------------------------------------------
 '' createToolsMenuShortcut composes a User Tools shortcut LABEL by asking what a stored key
@@ -2002,6 +2009,7 @@ sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any pt
         '' nothing is added to modMenuIds.bi or to any .lang file.
         case IDM_BOOKMARKSLIST : ShellPanel_SetMode( SHPANEL_BOOKMARKS )
         case IDM_FUNCTIONLIST  : ShellPanel_SetMode( SHPANEL_FUNCTIONS )
+        case IDM_VIEWEXPLORER  : ShellPanel_SetMode( SHPANEL_EXPLORER )
 
         case IDM_BOOKMARKTOGGLE   : ShellBookmarks_Toggle()
         case IDM_BOOKMARKNEXT     : ShellBookmarks_Next()
