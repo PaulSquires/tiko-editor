@@ -652,6 +652,9 @@ dim shared as ShellFindBar ptr g_barFind
 '' FORWARD, because the Selection arm of ShellFind_OnIcon calls it and its body lives with
 '' the Replace bar -- which is where the reason for it was found, one step later.
 declare sub ShellFind_SyncToggles()
+'' FORWARD for the same reason: the Selection arm captures before it decides, and the
+'' body lives beside ShellFind_SetVisible where it needs LayoutAll's neighbours.
+declare sub ShellFind_CaptureSelection()
 
 declare sub ShellFind_OnFieldChange(byval pTb as any ptr, byval ud as any ptr)
 declare sub ShellFind_OnFieldEnter(byval pTb as any ptr, byval ud as any ptr)
@@ -833,6 +836,7 @@ sub ShellFind_OnIcon(byval pPanel as any ptr, byval nIndex as long, byval ud as 
         case SHFIND_ID_SELECTION
             scope
                 dim pDoc as clsDocument ptr = FindReplace_ActiveDoc()
+                dim as boolean bWasOn = cbool( gFind.nSelection <> 0 )
                 if pDoc <> 0 then
                     '' ---- RE-CAPTURE FROM A LIVE MULTI-LINE SELECTION ----------------
                     '' THE BAR IS ALREADY OPEN WHEN THIS RUNS, and the capture happens at
@@ -844,17 +848,7 @@ sub ShellFind_OnIcon(byval pPanel as any ptr, byval nIndex as long, byval ud as 
                     '' ONLY WHEN THE LIVE ONE SPANS LINES. After a search the live
                     '' selection is the last match, one line, and re-capturing that would
                     '' throw away the range the user actually chose.
-                    scope
-                        dim as long sl, el, sp, ep
-                        pDoc->GetSelectedLineRange( sl, el, sp, ep )
-                        if el > sl then
-                            pDoc->CurrentSelection.startline     = sl
-                            pDoc->CurrentSelection.endline       = el
-                            pDoc->CurrentSelection.startpos      = sp
-                            pDoc->CurrentSelection.endpos        = ep
-                            pDoc->CurrentSelection.isInitialized = true
-                        end if
-                    end scope
+                    ShellFind_CaptureSelection()
 
                     dim as boolean bMulti = _
                         cbool(pDoc->CurrentSelection.endline - pDoc->CurrentSelection.startline)
@@ -894,6 +888,17 @@ sub ShellFind_OnIcon(byval pPanel as any ptr, byval nIndex as long, byval ud as 
                         pDoc->SetMarkerHighlight()
                     else
                         pDoc->RemoveMarkerHighlight()
+                        '' TURNING IT OFF DROPS THE TEXT SELECTION TOO, by request against
+                        '' tiko. ONLY ON THE ON -> OFF TRANSITION: a REFUSAL lands in this
+                        '' same branch, and collapsing a selection the user just made
+                        '' because the button declined to arm is the opposite of the ask.
+                        if bWasOn then
+                            dim as any ptr pE = pDoc->GetActiveScintillaPtr()
+                            if pE <> 0 then
+                                SciMsg( pE, SCI_SETEMPTYSELECTION, _
+                                        SciMsg( pE, SCI_GETCURRENTPOS, 0, 0 ), 0 )
+                            end if
+                        end if
                     end if
                     FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
                 end if
@@ -2141,9 +2146,23 @@ end sub
 sub ShellFind_CaptureSelection()
     dim pDoc as clsDocument ptr = FindReplace_ActiveDoc()
     if pDoc = 0 then exit sub
-    if pDoc->CurrentSelection.isInitialized then exit sub
+
     dim as long sl, el, sp, ep
     pDoc->GetSelectedLineRange( sl, el, sp, ep )
+
+    '' ---- A LIVE MULTI-LINE SELECTION IS NEWER NEWS THAN ANY CAPTURE ------------------
+    '' THIS SAID `if isInitialized then exit sub` UNTIL tiko GREW THE SAME FUNCTION AND
+    '' THE SAME BUG. Opening the bar with nothing selected fills the capture with an EMPTY
+    '' range, and selecting lines afterwards can then never get past the guard -- the
+    '' Selection icon reads the empty range and refuses.
+    ''
+    '' ONLY WHEN THE LIVE ONE SPANS LINES, which is the whole reason a capture exists:
+    '' after the incremental search the live selection is the LAST MATCH, one line, and
+    '' taking that would shrink "within these three lines" to "within this match".
+    ''
+    '' The Selection arm used to carry its own copy of this rule. It does not now -- one
+    '' rule, one place, and the arm just calls this.
+    if pDoc->CurrentSelection.isInitialized andalso (el <= sl) then exit sub
     pDoc->CurrentSelection.startline    = sl
     pDoc->CurrentSelection.endline      = el
     pDoc->CurrentSelection.startpos     = sp
@@ -5141,6 +5160,77 @@ end function
                                 ShellFind_OnIcon( g_barFind->pToggle, iSel, 0 )
                                 Check "    and turning it off searches all five again", _
                                       (gFind.foundCount = nWhole), str(gFind.foundCount)
+
+                                '' ---- THE FOUR RULES tiko HAD TO LEARN BY HAND -----
+                                '' Every one of these was reported against tiko by the
+                                '' author and none was visible to a headless suite until
+                                '' it was written to drive the GESTURE rather than the
+                                '' flag. They are asserted here so the port does not have
+                                '' to learn them a second time.
+
+                                '' 1. OPEN FIRST, SELECT AFTERWARDS. The capture used to
+                                '' return early whenever it was initialized, so opening
+                                '' over nothing filled it with an EMPTY range that
+                                '' selecting lines afterwards could never get past.
+                                ShellFind_SetVisible( false )
+                                SciMsg( pS2, SCI_SETEMPTYSELECTION, 0, 0 )
+                                ShellFind_SetVisible( true )
+                                Check "    opening over nothing leaves it dark", _
+                                      (gFind.nSelection = 0), str(gFind.nSelection)
+                                SciMsg( pS2, SCI_SETSELECTIONSTART, 0, 0 )
+                                SciMsg( pS2, SCI_SETSELECTIONEND, _
+                                        SciMsg( pS2, SCI_POSITIONFROMLINE, 2, 0 ), 0 )
+                                g_barFind->pToggle->SetSelected( iSel, true )
+                                ShellFind_OnIcon( g_barFind->pToggle, iSel, 0 )
+                                Check "      and selecting AFTER it opened still arms it", _
+                                      (gFind.nSelection = true), str(gFind.nSelection)
+
+                                '' 2. A SEARCH MUST NOT STEAL THE RANGE. After any search
+                                '' the live selection is the LAST MATCH, one line -- and a
+                                '' capture that took it would shrink the armed range to
+                                '' that match. This is the clause the guard exists FOR,
+                                '' and in tiko removing it left the suite green.
+                                gFind.txtFind = DWSTRING("Probe")
+                                FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
+                                FindReplace_NextSelection( 0, true, true )
+                                ShellFind_CaptureSelection()
+                                Check "    a search does not steal the captured range", _
+                                      ((pDoc->CurrentSelection.endline - _
+                                        pDoc->CurrentSelection.startline) > 0), _
+                                      str(pDoc->CurrentSelection.startline) & ".." & _
+                                      str(pDoc->CurrentSelection.endline)
+
+                                '' 3. DISARMING DROPS THE TEXT SELECTION, by request.
+                                SciMsg( pS2, SCI_SETSELECTIONSTART, 0, 0 )
+                                SciMsg( pS2, SCI_SETSELECTIONEND, _
+                                        SciMsg( pS2, SCI_POSITIONFROMLINE, 2, 0 ), 0 )
+                                g_barFind->pToggle->SetSelected( iSel, false )
+                                ShellFind_OnIcon( g_barFind->pToggle, iSel, 0 )
+                                Check "    disarming drops the text selection with it", _
+                                      (SciMsg( pS2, SCI_GETSELECTIONSTART, 0, 0 ) = _
+                                       SciMsg( pS2, SCI_GETSELECTIONEND, 0, 0 )), _
+                                      str(SciMsg( pS2, SCI_GETSELECTIONSTART, 0, 0 )) & ".." & _
+                                      str(SciMsg( pS2, SCI_GETSELECTIONEND, 0, 0 ))
+
+                                '' 4. BUT A REFUSAL MUST NOT. It lands in the same branch,
+                                '' and collapsing a selection the user just made because
+                                '' the button declined to arm is the opposite of the ask.
+                                ShellFind_SetVisible( false )
+                                ShellFind_SetVisible( true )
+                                SciMsg( pS2, SCI_SETSELECTIONSTART, 0, 0 )
+                                SciMsg( pS2, SCI_SETSELECTIONEND, 4, 0 )
+                                pDoc->CurrentSelection.isInitialized = false
+                                pDoc->RemoveMarkerHighlight()
+                                gFind.nSelection = false
+                                g_barFind->pToggle->SetSelected( iSel, true )
+                                ShellFind_OnIcon( g_barFind->pToggle, iSel, 0 )
+                                Check "    a REFUSAL leaves the text selection alone", _
+                                      (SciMsg( pS2, SCI_GETSELECTIONEND, 0, 0 ) > _
+                                       SciMsg( pS2, SCI_GETSELECTIONSTART, 0, 0 )), _
+                                      str(SciMsg( pS2, SCI_GETSELECTIONSTART, 0, 0 )) & ".." & _
+                                      str(SciMsg( pS2, SCI_GETSELECTIONEND, 0, 0 ))
+                                gFind.nSelection = false
+                                pDoc->RemoveMarkerHighlight()
                             end scope
 
                             ShellFind_SetVisible( false )
