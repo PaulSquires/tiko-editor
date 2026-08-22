@@ -77,6 +77,45 @@ had to say so about a field added in the same commit.
 
 ---
 
+## AND ONE OF THE SIX WAS NOT PORTED AT ALL
+
+**`FindReplace_UpdateResultsFromCaret` was reconstructed from its doc comment.** My read of the
+original had been truncated at the comment, and rather than going back for the remaining thirty
+lines I wrote an implementation of what the comment described.
+
+It compiled, it linked, it left 20,328 assertions standing, and **the author found it in under a
+minute**:
+
+* clicking **Match Case** did not update `n/m` until F3
+* **switching tabs** did not update `n/m` until F3
+
+**The cause is three early returns the original does not have.** It guards the *count* with
+`(lenFind > 0) andalso (endPos > 0)` and then writes `gFind.wszResults` and repaints
+**unconditionally**. Mine returned early on a zero count, an empty term and a zero `endPos` — so
+every caller that had just changed something and wanted the number refreshed got the *previous*
+document's number left on screen, until F3 came through the navigating path and rewrote it.
+
+The matching rule differed too: the original takes the first match whose **end** is at or past the
+caret, which is what makes a caret at either edge of a match report *that* match rather than the
+next one.
+
+**Restored verbatim.** The other five were then checked mechanically against `feacc7d33~1`, and
+every difference in all five is an intended substitution — the seam, the `any ptr`, the colour
+parameter, `gFind.txtFind`, the comment-marker style. One worth naming: `DoReplace`'s selection
+compare was `ucase(string) <> PsUCase(DWSTRING)` and is now `PsUCase` on both sides — consistent
+where it was mixed, which is a change however small.
+
+**The first attempt at that check reported all six identical and was a nothing.** The `awk`
+extracting each body failed on every file, both sides came out empty, and `diff -q` on two empty
+files says they match. **Fourth harness to lie in this session, and the first outside the
+revert-to-red script** — which is the argument for the guard being a property of *every* comparison
+rather than of one script.
+
+**The lesson is not "read the whole function".** It is that this report claimed, one paragraph
+earlier, that the gates could not see whether the engine still found anything — and then the very
+next thing that happened was a defect the gates could not see. **The claim was right and I acted
+as though it were rhetorical.**
+
 ## Verification
 
 | | |
