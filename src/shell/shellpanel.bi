@@ -56,8 +56,14 @@
 '' tiko's side panel is THREE PANES behind a PsIconPanel strip -- Explorer, Functions,
 '' Bookmarks -- switched by IDM_VIEWEXPLORER / IDM_FUNCTIONLIST / IDM_BOOKMARKSLIST. This
 '' binary has ONE PsListTree and, since 7c step 19, ALL THREE of those panes. The STRIP is
-'' still not ported -- PsPlatform has no PsIconPanel -- so the three commands switch a mode
-'' instead, which is all the strip does for the user anyway.
+'' still not ported, and the three commands switch a mode instead.
+''
+'' THIS COMMENT SAID "PsPlatform HAS NO PsIconPanel" AND THAT WAS FALSE, for one commit.
+'' src/ui/controls/PsIconPanel.bi is exactly the activity-bar strip tiko uses -- AddItem,
+'' AddSeparator, SetSelected, OnClick, HitTestIndex -- it is covered by tests/pslists and
+'' demoed in demos/gallery, and its own header names tiko as the source of its model. The
+'' claim was made from PsListTree's callback list without looking at the controls directory.
+'' Porting the strip is a step's worth of wiring, not a control's worth of building.
 ''
 '' NO NEW MENU IDS AND NO NEW .lang ENTRIES: all three commands already exist in
 '' app/modMenuIds.bi and all three already have captions in all six language files.

@@ -115,29 +115,51 @@ states, the twisty, the indent and the text.
 painter would have to re-resolve them from `PsThemeColorK` with the same keys — a second copy of
 the control's own theme resolution, drifting the moment either side changes.
 
-Deferred as **a fifth PsPlatform gap**: the paint hook is replace-only, and what this wants is an
-overlay called after the default row paint. The tree renders correctly meanwhile, with the
-control's own twisty, indent, text and theme colours; what is missing is the file/folder glyph.
+Deferred as a PsPlatform gap: the paint hook is replace-only, and what this wants is an overlay
+called after the default row paint. The tree renders correctly meanwhile, with the control's own
+twisty, indent, text and theme colours; what is missing is the file/folder glyph.
+
+**This is the ONLY one of the gaps below that survived being checked**, and the section under it
+says what happened to the others.
 
 ---
 
-## What is deferred, and each is a named PsPlatform gap
+## What is deferred — AND THIS SECTION WAS WRONG WHEN IT WAS WRITTEN
 
-`PsListTree` has six callbacks; tiko's Win32 control has paint, message, can-drop, begin/end label
-edit and tooltip.
+**CORRECTED THE FOLLOWING DAY. Three of the claims below were false, and I made all three the
+same way: by reading `PsListTree`'s callback list and concluding about THE TOOLKIT.** I never
+opened `src/ui/controls/`. This is the exact failure this port has a table about — *a blocker is
+a claim about two things, and the second one moves* — and the handoff page's own record is that
+it keeps happening to whoever last wrote "there is no X".
+
+| I wrote | what is actually in the tree |
+| --- | --- |
+| *"the `PsIconPanel` strip — PsPlatform has no equivalent, a control-sized job"* | **`PsIconPanel.bi/.inc` exists.** `AddItem`, `AddSeparator`, `SetSelected`, `OnClick`, `HitTestIndex`. Covered by `tests/pslists`, demoed in `demos/gallery`, and **its own header names tiko as the source of its model** |
+| *"Tooltips — no hook"* | **`PsTooltip.bi/.inc` exists**, with `OnTipText`, and is covered by `tests/pstip` AND `tests/pstiphost`. `PsListTree`'s header parks tooltips on *"popup surfaces, which are tier 7"* — and `PsPopupHost.inc` has been in `src/ui/core/` since before step 17 used it |
+| *"In-place label edit — no begin/end hooks"* | `PsListTree`'s header parks it on *"a real single-line editor with a caret and a selection, which is PsTextBox's phase"*. **`PsTextBox.bi/.inc` exists** — caret, selection, undo, clipboard, blink, UTF-8 byte offsets snapped to character boundaries — covered by `tests/pstextbox` |
+
+**What is narrowly true is that `PsListTree` itself has none of those four hooks.** What is false
+is every claim about why they cannot be added. In all three rows the stated prerequisite is
+present and tested; the header that named it was written before its own prerequisite landed, and
+I quoted the header instead of checking it.
+
+So the honest list is **four hooks missing from one control, each of them wiring rather than
+building**:
 
 1. **Drop validation** — no `CanDropCallback`. `SetDragReorder` exists with no way to veto a drop,
-   so file-into-folder reordering cannot be ported correctly.
-2. **In-place label edit** — no begin/end hooks. Folder **new / rename / delete** are all built on
-   it, so all three defer with it.
-3. **Tooltips** — no hook.
-4. **A row-paint OVERLAY** — see above. New in this step.
+   so file-into-folder reordering cannot be ported correctly. (This one I did not overclaim.)
+2. **In-place label edit** — `BeginEdit` and its begin/end callbacks. Folder **new / rename /
+   delete** are built on it. **`PsTextBox` is the editor it needs and it is already there.**
+3. **A tooltip hook on the row** — `PsTooltip` supplies the surface and the text callback;
+   `PsListTree` needs to route a row to it.
+4. **A row-paint OVERLAY** — the one gap in this list with no existing part to wire. The hook
+   runs before the built-in painter and replaces it wholesale, and the resolved colours are
+   private with no getters.
 5. **Raw message callback** — deliberately NOT wanted. `frmExplorer_MessageCallback` is 180 lines
    of `WM_*`; the portable half is the two row callbacks that already exist.
 
-Also deferred: the action icons and the folder context menu (both need 2 and 4), and the
-`PsIconPanel` strip — PsPlatform has no equivalent, and the mode enum already does what the strip
-does for the user.
+The action icons and the folder context menu need 2 and 4. **The `PsIconPanel` strip needs
+nothing that does not exist** and is a step's worth of wiring.
 
 ---
 
@@ -176,7 +198,9 @@ step 3's were found by the author running the binary and none by any gate.
 ## What is left
 
 1. **The interactive pass**, which is the gate that matters for a panel.
-2. **The five PsPlatform gaps above**, in the order folder CRUD needs them: label edit, then drop
-   validation, then the paint overlay.
-3. **Run step 18's Linux scripts.**
-4. **fontconfig** — still never executed anywhere.
+2. **The four missing `PsListTree` hooks**, in the order folder CRUD needs them: label edit
+   (`PsTextBox` is already there), then drop validation, then the row tooltip (`PsTooltip` is
+   already there), then the paint overlay — which is the only one with nothing to wire.
+3. **The `PsIconPanel` strip**, which needs nothing that does not exist.
+4. **Run step 18's Linux scripts.**
+5. **fontconfig** — still never executed anywhere.

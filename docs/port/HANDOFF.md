@@ -24,10 +24,26 @@ the early "already selected" branch returns true first, and a selection SURVIVES
 on that row  (-1 wanted 2)`. fbc does not promise argument evaluation order and built the MESSAGE
 before the call that changes what the message reports. Right, and unreadable.
 
-**THE GLYPH PAINTER WAS DROPPED, AND IT IS A FIFTH PsPlatform GAP RATHER THAN A CUT.**
-PsListTree's paint hook runs BEFORE the built-in painter and replaces the row wholesale -- there
-is no overlay point -- and the resolved colours are private with no getters, so a host painter
-would carry a second copy of the control's theme resolution. See [`7c-step19.md`](7c-step19.md).
+**THE GLYPH PAINTER WAS DROPPED, AND IT IS A PsPlatform GAP RATHER THAN A CUT.** PsListTree's
+paint hook runs BEFORE the built-in painter and replaces the row wholesale -- there is no overlay
+point -- and the resolved colours are private with no getters, so a host painter would carry a
+second copy of the control's theme resolution.
+
+**AND IT IS THE ONLY ONE OF STEP 19'S "GAPS" THAT SURVIVED BEING CHECKED. THREE OF THE OTHERS
+WERE FALSE AND I COMMITTED ALL THREE.** I read PsListTree's callback list and concluded about THE
+TOOLKIT without opening `src/ui/controls/`:
+
+| I wrote | what is in the tree |
+| --- | --- |
+| "PsPlatform has no PsIconPanel -- a control-sized job" | **PsIconPanel.bi/.inc exists**, is covered by `tests/pslists`, is demoed in `demos/gallery`, and ITS OWN HEADER NAMES tiko AS THE SOURCE OF ITS MODEL |
+| "Tooltips -- no hook" | **PsTooltip.bi/.inc exists** with `OnTipText`, covered by `tests/pstip` and `tests/pstiphost`; PsListTree parks tooltips on "tier 7" popup surfaces and `PsPopupHost.inc` landed before step 17 used it |
+| "In-place label edit -- no begin/end hooks" | PsListTree parks it on "a real single-line editor... which is PsTextBox's phase". **PsTextBox.bi/.inc exists** -- caret, selection, undo, clipboard -- covered by `tests/pstextbox` |
+
+**What is narrowly true is that PsListTree has none of those four hooks. What is false is every
+claim about why they cannot be added** -- in all three rows the stated prerequisite is present and
+tested, and I quoted a header written before its own prerequisite landed instead of checking it.
+This page has a TABLE about exactly this, seven rows long, and it now has an eighth entry
+contributed by the person maintaining it. See [`7c-step19.md`](7c-step19.md).
 
 **AND THE REVERT-TO-RED HARNESS DESTROYED UNCOMMITTED WORK.** Restoring with `git checkout --
 <file>` reverts to HEAD, not to the pre-patch state, so two reverts ran against a half-built tree,
@@ -212,11 +228,22 @@ consecutive steps:
 | 10 | UTF-16BE is "decoded, never written" | a complete BE arm in `PsEncEncode`, round-tripped by the suite |
 | 10 | menu ids are "persisted in keybindings.ini" as numbers | the file stores the NAME; `app/modKeyBindings.bi:48` says so |
 | 10 | `app/` needs a `VK_*` to validate a key name | that function's header: **membership** is the test, not the return |
+| **19** | **"PsPlatform has no PsIconPanel -- a control-sized job"** | **`PsIconPanel.bi/.inc`, tested in `tests/pslists`, demoed in `demos/gallery`, its header naming tiko** |
+| **19** | **"Tooltips -- no hook"** | **`PsTooltip` with `OnTipText`, plus `PsPopupHost` -- the "tier 7" prerequisite its header waits on** |
+| **19** | **"label edit -- no begin/end hooks"** | **`PsTextBox`, the "real single-line editor with a caret and a selection" PsListTree's header waits on** |
 
 **Every one of those notes was accurate about the code in front of it and was never checked
 against the library it was ruling out.** Several were re-read at an audit and re-COUNTED rather
 than re-tested. If you take one habit from this page, take that one: a blocker is a claim about
 two things, and the second one moves.
+
+**THE LAST THREE ROWS WERE ADDED BY THE PERSON MAINTAINING THIS TABLE, ONE STEP AFTER WRITING
+IT UP.** Not from a stale note inherited from someone else -- written fresh in step 19, from
+`PsListTree`'s callback list, about a directory I did not open. **And two of the three were the
+control's OWN HEADER naming a prerequisite that had since landed** -- reading the header felt
+like checking, and it is not: a header is a claim with a date on it. The rule the last three
+rows add to the seven above them is that the file most likely to be out of date about a
+dependency is the file that depends on it.
 
 **AND THE STEP-9 ROW WAS WRITTEN BY SOMEONE WHO THEN MADE THE STEP-10 MISTAKE IN THE SAME STEP.**
 The "decoded, never written" comment was believed, and the conclusion drawn from it went into a
