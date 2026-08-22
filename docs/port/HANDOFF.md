@@ -1,5 +1,31 @@
 # Handoff — the tiko → PsPlatform port
 
+**7c STEP 22 COMPLETE. THE EXPLORER'S ROWS HAVE THEIR GLYPH.**
+
+**CONFIRMED BY THE AUTHOR: THE PANE SWITCHER'S GLYPHS RENDER.** Step 20 shipped Segoe MDL2
+private-use codepoints that nothing on this machine could see, and step 21 held the Explorer's
+glyph back rather than build a second feature on the same unproven assumption. That assumption is
+now a fact.
+
+**AND THE OVERLAY DRAWS LESS THAN tiko'S PAINTER, which is what the toolkit catching up looks
+like.** tiko replaces the row wholesale and paints a chevron, a dot and the caption, because it
+leaves SetTreeIndent OFF and does its own indent arithmetic. This panel has SetTreeIndent and
+ShowTwisty ON, so PsListTree draws the chevron and reserves its band; the overlay adds the ONE
+thing the control has no notion of -- a file row's U+00B7.
+
+**U+00B7 IS NOT A PRIVATE-USE CODEPOINT AND THE ASSERTION CHECKS THE VALUE**, not "not empty". A
+middle dot is in every text font and cannot come out as a box, which is why this glyph was safe to
+write before any interactive pass where the switcher's were not -- and `PsLen(g) = 1` would have
+been satisfied by a PUA character just as well.
+
+**THEN REMOVING THE OnPaintOverlay CALL LEFT ALL FIVE ASSERTIONS GREEN.** They test a pure
+function that NOTHING HAD TO BE CALLING. A correct decision reaching no painter is a pane with no
+icons and a suite that says otherwise. Three assertions added that the hooks are installed at all
+-- and **the two row callbacks carrying every click since step 4 had never been checked either.**
+They work, so nothing ever asked. See [`7c-step22.md`](7c-step22.md).
+
+---
+
 **7c STEP 21 COMPLETE. PsListTree HEARS THE RIGHT BUTTON, AND THE EXPLORER HAS FOLDERS.**
 
 **IT WAS A DEFECT, NOT A GAP.** `PsListTree`'s PSEV_MOUSE_DOWN never inspected
@@ -434,75 +460,79 @@ Read in this order, and do not skip the first:
     `PsTimerNow()`, which is a **settable virtual clock**, not a wall clock — and *"the clock
     never moved"* is indistinguishable from *"the work was free"*, which was the answer the step
     wanted to hear.
-11. [`7c-step21.md`](7c-step21.md) — **the right button was a DEFECT, and two of the
+11. [`7c-step22.md`](7c-step22.md) — **a correct decision wired to nothing.** Read "The
+    finding": five assertions over a pure function stayed green when the call that reaches
+    it was deleted -- and the two row callbacks carrying every click since step 4 turned
+    out never to have been checked either. They work, so nothing asked.
+12. [`7c-step21.md`](7c-step21.md) — **the right button was a DEFECT, and two of the
     guards written against it were redundant.** Read "What the reverts bought": two reverts
     came back green because the MODEL already enforced the rule, and each bought an
     assertion for the guard that does fire. The usual finding here is a claim nothing
     tested; this one is a guard nothing needed.
-12. [`7c-step20.md`](7c-step20.md) — **the step where the first three reverts all came
+13. [`7c-step20.md`](7c-step20.md) — **the step where the first three reverts all came
     back GREEN.** Read "THE FIRST THREE REVERTS": a zero-height strip satisfies every
     relation written for it, which is step 1's finding arriving again nineteen steps later
     in a file that quotes it. Also the first time the toolkit made something SHORTER than
     tiko's original.
-13. [`7c-step19.md`](7c-step19.md) — **the Explorer pane, and three defects each found
+14. [`7c-step19.md`](7c-step19.md) — **the Explorer pane, and three defects each found
     by a different thing.** Read "Three defects": a pane that rendered NOTHING with nothing
     to say so, an assertion that passed while printing evidence against itself, and a guard
     tiko has never once run. Then "The painter was dropped" -- a gap named rather than a
     corner cut.
-14. [`7c-step18.md`](7c-step18.md) — **a whole portability class that every gate was blind
+15. [`7c-step18.md`](7c-step18.md) — **a whole portability class that every gate was blind
     to, because a separator is not an identifier.** Read "The defect the fix exposed": two
     documented conventions, both correct on their own terms, meeting at a raw `=`. Then the
     vacuous assertion -- and the revert-to-red HARNESS that failed silently before it, which is
     the sharper of the two.
-15. [`7c-step17.md`](7c-step17.md) — **three bug reports, three different verdicts, and the
+16. [`7c-step17.md`](7c-step17.md) — **three bug reports, three different verdicts, and the
     only thing that told them apart was running both platforms.** Read "What actually solved it":
     two of my diagnoses died, and the one-sentence observation that settled the third was
     "right click popup menus work perfectly". Also the sharpest variant yet of this page's
     recurring shape -- a SUITE that drove the widget correctly and passed, because its FIXTURE
     did the one thing no real caller did.
-16. [`7c-step16.md`](7c-step16.md) — **phase 7c's code meets Linux, and the step where I made
+17. [`7c-step16.md`](7c-step16.md) — **phase 7c's code meets Linux, and the step where I made
     this page's own mistake.** Five real defects, all in bindings, build scripts and gates rather
     than in portable code — and one of them made a suite report a PASS for the wrong reason on a
     platform where the feature did not work at all. Then read "What this step is really about":
     I called it "the first Linux run" repeatedly without opening PsPlatform's STATUS.md, which
     says on its second screen that Fedora had been in use since Gate 0.
-17. [`7c-step15.md`](7c-step15.md) — **the step where a revert-to-red falsified the CORRECTION,
+18. [`7c-step15.md`](7c-step15.md) — **the step where a revert-to-red falsified the CORRECTION,
     not the code.** Two explanations for the same hook, both plausible, both measured, both
     false -- and the second one was mine, written in this step. Read "Two claims about why
     these hooks exist".
-18. [`7c-step14.md`](7c-step14.md) — **READ "What this step is really about".** Every stale
+19. [`7c-step14.md`](7c-step14.md) — **READ "What this step is really about".** Every stale
     claim this port has found was in PROSE; this one was in a SUITE, and that is worse. A number
     carries authority a sentence does not, and "11 passed" was believed for as long as it was
     printed. A suite nothing runs is indistinguishable from a suite that passes.
-19. [`7c-step13.md`](7c-step13.md) — **the step where the live list emptied, and four of its
+20. [`7c-step13.md`](7c-step13.md) — **the step where the live list emptied, and four of its
     items closed as "the blocker was not one".** Read the last section: a suite that has been
     failing six assertions because nothing runs it. That is this port's recurring failure
     wearing a suite instead of a comment.
-20. [`7c-step12.md`](7c-step12.md) — **the step where the revert-to-red pass caught the SUITES
+21. [`7c-step12.md`](7c-step12.md) — **the step where the revert-to-red pass caught the SUITES
     rather than the code, twice.** A prefix match left every style assertion green because
     `RegEnumValueW` happens to enumerate in the helpful order; removing a whole feature dropped
     a suite from 35 assertions to 30 and still printed "0 failed". Read that section before
     writing any assertion that depends on a lookup order or is wrapped in a skip.
-21. [`7c-step11.md`](7c-step11.md) — **the step that started as an encoding bug and was
+22. [`7c-step11.md`](7c-step11.md) — **the step that started as an encoding bug and was
     neither.** Read "What was actually wrong": a setting that had never reached the code it
     named. Then the assertion that failed on its first run — the CODE was right and the SUITE
     was wrong, which is the other way round from every other failure on this page.
-22. [`7c-step10.md`](7c-step10.md) — **three items closed, three false comments, and one of
+23. [`7c-step10.md`](7c-step10.md) — **three items closed, three false comments, and one of
     them mine.** Read the three-row table at the top. Then the revert-to-red section: every rule
     went red for the first time in six steps, and the one that nearly did not is instructive —
     `Doc_EncodingName`'s `case else` is `"ANSI"`, so a missing arm does not fail, it puts the
     word ANSI beside a UTF-16 file.
-23. [`7c-step9.md`](7c-step9.md) — **the encoding step, and the third blocker in three steps
+24. [`7c-step9.md`](7c-step9.md) — **the encoding step, and the third blocker in three steps
     that had already been removed.** Read the table at the top, then "A defect found next to the
     one being fixed": the seam's `LoadFileText` had NO AGREED POLARITY — one implementation
     returned false on success, the other true — which was invisible with one implementation and
     live from the moment there were two.
-24. [`7c-step8.md`](7c-step8.md) — **the step where two blockers turned out to have been
+25. [`7c-step8.md`](7c-step8.md) — **the step where two blockers turned out to have been
     removed before anyone noticed.** The pane went 0 → 51 rows, but read the two intermediate
     tables first: the one that shows the pane's ceiling is fbcParser (573 procedure symbols, 41
     with a body line) and the revert-to-red table, where one revert found not a missing test but
     a **false claim in a comment** — which is the other thing reverting is for.
-25. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
+26. [`webview2-decision.md`](webview2-decision.md) — the constraint that page called
    irreducible, investigated. **It was not a blocker and never had been.** Short, and it is the
    clearest example on this whole shelf of a claim that survived because nobody checked it.
    **Its recommendation has since been implemented**: WebView2 is gone from the tree.
@@ -850,7 +880,7 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | `_check_app_layer.bat` | `src/app` names no Win32 or AfxNova token (**48 files**, 2026-08-11) | green |
 | `_check_app_standalone.bat` | `src/app` compiles against PsCore alone **and LINKS as one unit** | green — **18 clean**, 0 errors, **debt 0 and NO BASELINE** (2026-08-14) |
 | `_check_shell.bat` | `src/shell` includes no Win32 shell header, and carries no `PsC.` (5 files); **and NO WINDOWS SEPARATOR IN A PATH LITERAL and no `environ("TEMP")` across `src/shell` + `src/app` -- 53 files, new in step 18.** Two rules, because a separator is not an identifier and `%TEMP%` has no separator in it | green |
-| `_run_shell.bat --selftest` | the shell's own suite — **443 assertions** (2026-08-17; +2 step 18, +17 the Explorer pane in step 19, +12 the pane switcher in step 20, +17 the folder commands in step 21) | green |
+| `_run_shell.bat --selftest` | the shell's own suite — **452 assertions** (2026-08-17; +2 step 18, +17 step 19, +12 step 20, +17 step 21, +9 the row glyph and the callback wiring in step 22) | green |
 | tiko `TIKO_FONTFILE_SELFTEST=1` | the font resolver and the callback Scintilla drives — **13 assertions** (2026-08-14) | green |
 | **`_check_selftests.bat`** | **EVERY self-test, startup AND dialog, in one tiko run — 33 report lines, 20,328 assertions** (re-run 2026-08-14; the page said 20,329 until then — frmAbout lost the id-397 assertion when the Proprietary pill went). Fails on any failure AND on fewer than 33 report lines, so "it did not run" cannot look like "it passed". Backs up and restores `settings.ini` and `tiko.tiko`, because a clean exit saves them. Opens real dialogs, so it needs a desktop. ~20s; run it deliberately, not on every build. | green |
 | ...including `TIKO_THEME_SELFTEST` | **929** | green |
