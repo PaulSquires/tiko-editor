@@ -1,5 +1,26 @@
 # Handoff — the tiko → PsPlatform port
 
+**AND THE SAME BUG WAS IN tiko, WHICH IS THE BINARY IT WAS REPORTED AGAINST.** Two rounds of fixes
+went into **tikoshell** before a screenshot settled it: `"Aa"` and `"W"` sitting INSIDE the field
+frame is tiko's arrangement, and `wszIconMatchCase`/`wszIconWholeWord` are those literal strings.
+The shell's toggles are PUA glyphs in a strip outside it. **Read the binary off the screenshot before
+diagnosing the code.**
+
+**tiko's cause is structural, not intermittent.** `CurrentSelection` has exactly two writers -- the
+editor's `SCEN_KILLFOCUS` fills it, the editor's `SCEN_SETFOCUS` clears it -- so **while the editor
+has the focus it is always uninitialized, and that is when Ctrl+F is pressed.** `FindControls_Show`
+checks `isInitialized` before believing the line range, so the multi-line branch could never run:
+no clearing, no arming, no markers, nothing for the search to narrow to. `FindReplace_
+EnsureSelectionCaptured` does what `SCEN_KILLFOCUS` would have, at the moment it is needed.
+
+**ASSERTED IN THE REAL BINARY**, in the `TIKO_FINDPROJ_*` family: `TIKO_FINDSEL_SELFTEST=1` opens a
+six-line temp file, selects lines 1..3 **the way a drag does** (column 0 to column 0, because
+`GetSelectedLineRange` decrements `endLine` at column 0), throws the capture away to reproduce the
+focused-editor state, and drives Ctrl+F. Nine assertions. **Reverted, it reproduces the report line
+for line** -- `the box is EMPTY, not seeded with the selected text   got: dim Zeta as long`.
+
+---
+
 **7c STEP 29 COMPLETE. SELECTION AND THE SEEDING.** The two halves step 27 deferred, and they
 arrive together because they cannot be separated: the rule is *"the box is a picture of the
 selection"*, and the same code is where the **case-only echo** lives. Porting the rule without the
@@ -1172,7 +1193,7 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | `_check_shell.bat` | `src/shell` includes no Win32 shell header, and carries no `PsC.` (5 files); **and NO WINDOWS SEPARATOR IN A PATH LITERAL and no `environ("TEMP")` across `src/shell` + `src/app` -- 53 files, new in step 18.** Two rules, because a separator is not an identifier and `%TEMP%` has no separator in it | green |
 | `_run_shell.bat --selftest` | the shell's own suite — **561 assertions** (2026-08-22; +2 step 18, +17 step 19, +12 step 20, +17 step 21, +9 step 22, +12 step 23, +17 step 24, +12 drag and drop in step 25, +18 the Find bar in step 27, +26 the Replace bar in step 28, +24 Selection and the seeding in step 29 -- **including a real search AND a real replace over a known buffer**, the only assertions here that would notice the engine going dead) | green |
 | tiko `TIKO_FONTFILE_SELFTEST=1` | the font resolver and the callback Scintilla drives — **13 assertions** (2026-08-14) | green |
-| **`_check_selftests.bat`** | **34 report lines, 20,440 assertions as of step 26. It FLOORS BOTH since step 26, at 33 and 20,328 — and the totals have moved twice UNATTRIBUTED (step 26), so they are not a signal at three-assertion granularity.** Step 23 found that the number DEPENDS ON WHAT IS IN THE DIRECTORY: two untracked .bas files in the tiko root take it to 34 / 20,362, reproducibly, with no source change. Quote the floor, not the total (re-run 2026-08-14; the page said 20,329 until then — frmAbout lost the id-397 assertion when the Proprietary pill went). Fails on any failure AND on fewer than 33 report lines, so "it did not run" cannot look like "it passed". Backs up and restores `settings.ini` and `tiko.tiko`, because a clean exit saves them. Opens real dialogs, so it needs a desktop. ~20s; run it deliberately, not on every build. | green |
+| **`_check_selftests.bat`** | **35 report lines, 20,449 assertions since TIKO_FINDSEL_SELFTEST joined (2026-08-22); 34 / 20,440 before it. It FLOORS BOTH since step 26, at 33 and 20,328 — and the totals have moved twice UNATTRIBUTED (step 26), so they are not a signal at three-assertion granularity.** Step 23 found that the number DEPENDS ON WHAT IS IN THE DIRECTORY: two untracked .bas files in the tiko root take it to 34 / 20,362, reproducibly, with no source change. Quote the floor, not the total (re-run 2026-08-14; the page said 20,329 until then — frmAbout lost the id-397 assertion when the Proprietary pill went). Fails on any failure AND on fewer than 33 report lines, so "it did not run" cannot look like "it passed". Backs up and restores `settings.ini` and `tiko.tiko`, because a clean exit saves them. Opens real dialogs, so it needs a desktop. ~20s; run it deliberately, not on every build. | green |
 | ...including `TIKO_THEME_SELFTEST` | **929** | green |
 | ...and `TIKO_OPTIONS_SELFTEST` | the options rows bind to gConfig — **26** (was 11 passed / 6 failed until step 14 repaired the ORACLE) | green |
 | ...and the five DIALOG suites | Keyboard layout, User Tools, Build Configurations, Project Options, About — reachable only since step 15 gave them AUTOCLOSE hooks | green |
