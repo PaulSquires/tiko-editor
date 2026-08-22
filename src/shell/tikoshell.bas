@@ -2102,6 +2102,14 @@ sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any pt
         case IDM_FUNCTIONLIST  : ShellPanel_SetMode( SHPANEL_FUNCTIONS )
         case IDM_VIEWEXPLORER  : ShellPanel_SetMode( SHPANEL_EXPLORER )
 
+        '' ---- THE EXPLORER'S FOLDER COMMANDS, 7c step 21 --------------------------------
+        '' Delegated rather than handled here, because they act on a REMEMBERED ROW: the
+        '' popup is not modal, so this runs after it closed, and both commands rebuild the
+        '' tree -- an index resolved at this point would name a different row. tiko keeps
+        '' the same variable for the same reason (gExpMenuRow, modContextMenus.inc:491).
+        case IDM_EXPLORER_NEWFOLDER, IDM_EXPLORER_DELETEFOLDER
+            ShellExplorer_FolderCommand( nId )
+
         case IDM_BOOKMARKTOGGLE   : ShellBookmarks_Toggle()
         case IDM_BOOKMARKNEXT     : ShellBookmarks_Next()
         case IDM_BOOKMARKPREV     : ShellBookmarks_Prev()
@@ -3981,6 +3989,159 @@ end function
                                     Check "        expanding it again restores the hit", _
                                           ShellExplorer_SelectPath( wszFile )
                                 end scope
+                            end scope
+
+
+                            '' ---- THE FOLDER COMMANDS, 7c step 21 -------------------
+                            ''
+                            '' Driven by ROW rather than by a click, which is the only
+                            '' part of a context menu reachable without a mouse -- the
+                            '' same split ShellPanel_GotoRow already has.
+                            ''
+                            '' THE MENU ITSELF IS NOT ASSERTED and cannot be: OpenRoot
+                            '' needs a compositor. What is asserted is everything the
+                            '' menu would do once it closed.
+                            ShellPanel_SetMode( SHPANEL_EXPLORER )
+                            scope
+                                '' A category that ALLOWS folders. Main and Resource hold
+                                '' one file each by construction and refuse -- which is
+                                '' itself asserted below, because "New Folder did nothing"
+                                '' and "New Folder is not offered here" look identical
+                                '' from outside.
+                                dim as long nGroup = -1
+                                dim as long nCat   = -1
+                                for r as long = 0 to g_panel->GetCount() - 1
+                                    if ShellPanel_KindOf(r) <> EXPKIND_ROOT then continue for
+                                    dim as long ci = cast(long, g_panel->GetItemData(r))
+                                    if ProjectFolders_CatAllowsFolders( ci ) then
+                                        nGroup = r : nCat = ci : exit for
+                                    end if
+                                next
+                                Check "  a group that allows folders exists", _
+                                      (nGroup >= 0) andalso (nCat >= 0), str(nGroup)
+
+                                '' ---- AND ONE THAT DOES NOT, WHICH HAS TO REFUSE -----
+                                '' Main and Resource hold one file each by construction,
+                                '' and CATINDEX_FILES is displayed nowhere. Without this
+                                '' the CatAllowsFolders guard is unasserted -- removing it
+                                '' left the suite GREEN, because every other assertion here
+                                '' picks a group that allows folders anyway.
+                                ''
+                                '' "New Folder did nothing" and "New Folder is not offered
+                                '' here" look identical from outside, which is exactly why
+                                '' the refusal needs pinning rather than trusting.
+                                scope
+                                    dim as long nNo = -1
+                                    for r as long = 0 to g_panel->GetCount() - 1
+                                        if ShellPanel_KindOf(r) <> EXPKIND_ROOT then continue for
+                                        dim as long ci = cast(long, g_panel->GetItemData(r))
+                                        if ProjectFolders_CatAllowsFolders( ci ) = false then
+                                            nNo = r : exit for
+                                        end if
+                                    next
+                                    Check "    a group that forbids folders exists too", _
+                                          (nNo >= 0), str(nNo)
+                                    dim as long nB = ProjectFolders_Count()
+                                    Check "      and New Folder is refused there", _
+                                          (ShellExplorer_NewFolder( nNo ) = -1)
+                                    Check "        changing nothing", _
+                                          (ProjectFolders_Count() = nB), str(ProjectFolders_Count())
+                                end scope
+
+                                dim as long nWas = ProjectFolders_Count()
+                                dim as long nNew = ShellExplorer_NewFolder( nGroup )
+                                Check "    New Folder makes one", (nNew >= 0), str(nNew)
+                                Check "      and the table grew by exactly one", _
+                                      (ProjectFolders_Count() = nWas + 1), _
+                                      str(ProjectFolders_Count()) & " was " & str(nWas)
+                                Check "      under the group it was asked on", _
+                                      (nNew >= 0) andalso _
+                                      (gProjectFolders(nNew).catIndex = nCat), str(nCat)
+
+                                '' A SECOND ONE MUST NOT COLLIDE. tiko's uniquifier matters
+                                '' more here than there: tiko opens an editor immediately
+                                '' so its generated name is a placeholder, and this binary
+                                '' has no editor, so the name it picks is the name that
+                                '' stays. Without the loop, ProjectFolders_Add would refuse
+                                '' the duplicate and "New Folder" would silently do nothing
+                                '' the second time.
+                                dim as long nNew2 = ShellExplorer_NewFolder( nGroup )
+                                Check "    a second one gets its own name", _
+                                      (nNew2 >= 0) andalso (nNew2 <> nNew), str(nNew2)
+                                Check "      so the table grew again", _
+                                      (ProjectFolders_Count() = nWas + 2), _
+                                      str(ProjectFolders_Count())
+
+                                '' THE NEW ROW IS SELECTED, which is what tiko does before
+                                '' opening its editor -- and is the only feedback this
+                                '' binary gives that anything happened.
+                                scope
+                                    dim as long nSel = g_panel->GetCurSel()
+                                    Check "    and the new row is selected", _
+                                          (nSel >= 0) andalso _
+                                          (ShellPanel_KindOf(nSel) = EXPKIND_FOLDER) andalso _
+                                          (cast(long, g_panel->GetItemData(nSel)) = nNew2), _
+                                          str(nSel)
+                                end scope
+
+                                '' ---- DELETE IS A DISSOLVE ---------------------------
+                                '' Nothing is destroyed: children re-attach to the parent.
+                                '' That is why tiko asks for no confirmation, and it is
+                                '' why the count falls by exactly one rather than by a
+                                '' subtree.
+                                dim as long nRow2 = -1
+                                for r as long = 0 to g_panel->GetCount() - 1
+                                    if ShellPanel_KindOf(r) <> EXPKIND_FOLDER then continue for
+                                    if cast(long, g_panel->GetItemData(r)) = nNew2 then nRow2 = r : exit for
+                                next
+                                Check "    the second folder has a row", (nRow2 >= 0), str(nRow2)
+                                Check "      and deleting it succeeds", _
+                                      ShellExplorer_DeleteFolder( nRow2 )
+                                Check "        leaving the table one shorter", _
+                                      (ProjectFolders_Count() = nWas + 1), _
+                                      str(ProjectFolders_Count())
+
+                                '' A FILE ROW IS NOT A FOLDER. DeleteFolder reads slot 1 as
+                                '' a folder-table index, and on a file row that index is a
+                                '' g_panelFiles index -- a small number that would name a
+                                '' real and entirely unrelated folder.
+                                scope
+                                    dim as long nFileRow = -1
+                                    for r as long = 0 to g_panel->GetCount() - 1
+                                        if ShellPanel_KindOf(r) = EXPKIND_FILE then nFileRow = r : exit for
+                                    next
+                                    if nFileRow >= 0 then
+                                        '' THE LOAD-BEARING GUARD, asserted directly.
+                                        '' DeleteFolder tests the kind first, but removing
+                                        '' that test leaves the suite GREEN -- proved by
+                                        '' reverting it -- because FolderPathFromRow
+                                        '' answers -1 for every kind it does not handle and
+                                        '' the catIndex test catches them all. So the thing
+                                        '' worth pinning is THAT, not the early-out.
+                                        dim as long ciFile = 0
+                                        ShellExplorer_FolderPathFromRow( nFileRow, ciFile )
+                                        Check "    a file row denotes no category", _
+                                              (ciFile = -1), str(ciFile)
+                                        dim as long nBefore = ProjectFolders_Count()
+                                        Check "      so deleting a FILE row is refused", _
+                                              (ShellExplorer_DeleteFolder( nFileRow ) = false)
+                                        Check "      and changes nothing", _
+                                              (ProjectFolders_Count() = nBefore), _
+                                              str(ProjectFolders_Count())
+                                    end if
+                                end scope
+
+                                '' Clean up: the workspace is shared with everything after
+                                '' this block, and a stray folder changes the tree's shape.
+                                dim as long nRow1 = -1
+                                for r as long = 0 to g_panel->GetCount() - 1
+                                    if ShellPanel_KindOf(r) <> EXPKIND_FOLDER then continue for
+                                    if cast(long, g_panel->GetItemData(r)) = nNew then nRow1 = r : exit for
+                                next
+                                if nRow1 >= 0 then ShellExplorer_DeleteFolder( nRow1 )
+                                Check "    and the suite leaves the folder table as it found it", _
+                                      (ProjectFolders_Count() = nWas), _
+                                      str(ProjectFolders_Count()) & " was " & str(nWas)
                             end scope
 
                             '' IsFileDisplayed READS THE MODEL, NOT THE ROWS -- so it

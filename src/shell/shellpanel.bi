@@ -356,11 +356,21 @@ private sub ShellPanel_OnRowActivated( byval pList as any ptr, byval nRow as lon
 end sub
 
 
+'' The right-click handler lives at the bottom, with the folder commands it opens a menu
+'' for; ShellPanel_Install is near the top and needs its address.
+declare sub ShellExplorer_OnContext( byval pList as any ptr, byval nRow as long, _
+                                     byval nX as long, byval nY as long, byval ud as any ptr )
+
+
 '' Wire the panel's callbacks. Called once, beside ShellTabs_Install.
 sub ShellPanel_Install()
     if g_panel = 0 then exit sub
     g_panel->OnSelChange( @ShellPanel_OnRowSelected,  0 )
     g_panel->OnActivate(  @ShellPanel_OnRowActivated, 0 )
+    '' THE RIGHT BUTTON, new in 7c step 21 and new in PsListTree in the same step. Installed
+    '' for every mode; the handler bails unless the pane is the Explorer, so Bookmarks and
+    '' Functions are unaffected and get PsListTree's fixed right-click behaviour for free.
+    g_panel->OnContextMenu( @ShellExplorer_OnContext, 0 )
     '' NO ZEBRA STRIPES. Reported by the author -- "the bookmark rows colored weird". The
     '' rows here are a file's bookmarks, not records, and tiko's own panel paints every row
     '' the same. Set ONCE, at install: SetAltRows is a flag the control keeps, unlike the
@@ -1145,4 +1155,226 @@ function ShellExplorer_IsFileDisplayed( byval wszFilename as DWSTRING ) as boole
     dim pDoc as clsDocument ptr = gApp.GetDocumentPtrByFilename( wszFilename )
     if pDoc = 0 then return false
     return ( ShellExplorer_CatIndexForDoc( pDoc ) >= 0 )
+end function
+
+
+'' =======================================================================================
+'' THE EXPLORER'S FOLDER COMMANDS -- 7c step 21.
+''
+'' The model half is entirely app/modProjectFolders.inc, which has been linked into this
+'' binary since step 19. What arrived in step 21 is PsListTree reporting a right-click at
+'' all -- it used to select the row, arm a drag and swallow the event.
+''
+'' ---- WHAT DID NOT COME ACROSS: BeginEdit ----------------------------------------------
+''
+'' tiko's NewFolder ends by opening the in-place editor on the row it just made, so the
+'' user names the folder immediately. PsListTree has no editor yet -- that is PsTextBox's
+'' to lend and step 22's to wire -- so this stops one line earlier. The unique-name loop
+'' below is tiko's OWN, and it already produces "New Folder", "New Folder (2)" and so on,
+'' which is a usable name rather than a placeholder. RENAME IS ABSENT FROM THE MENU rather
+'' than greyed: a disabled item promises a feature.
+'' =======================================================================================
+
+'' The folder path a row denotes, and the category it lives under. tiko's
+'' frmExplorer_FolderPathFromRow, with the pointer read replaced by the slot-1 index.
+'' A ROOT GROUP RETURNS "" WITH A VALID catIndex -- that is the group's top level, not a
+'' failure, and it is what lets New Folder work on a group row.
+private function ShellExplorer_FolderPathFromRow( byval nRow as long, _
+                                                  byref catIndex as long ) as DWSTRING
+    catIndex = -1
+    if g_panel = 0 then return DWSTRING()
+    select case ShellPanel_KindOf( nRow )
+        case EXPKIND_ROOT
+            catIndex = cast(long, g_panel->GetItemData( nRow ))
+            return DWSTRING()
+        case EXPKIND_FOLDER
+            dim as long idx = cast(long, g_panel->GetItemData( nRow ))
+            if idx < lbound(gProjectFolders) then return DWSTRING()
+            if idx > ubound(gProjectFolders) then return DWSTRING()
+            catIndex = gProjectFolders(idx).catIndex
+            return gProjectFolders(idx).wszPath
+    end select
+    return DWSTRING()
+end function
+
+
+'' ---------------------------------------------------------------------------------------
+'' Create a folder under the row's level. Returns its table index, or -1.
+''
+'' RETURNS THE INDEX rather than nothing, because the suite has no mouse and the only way
+'' to assert "the right folder was made in the right place" is to be handed it.
+'' ---------------------------------------------------------------------------------------
+function ShellExplorer_NewFolder( byval nRow as long ) as long
+    dim as long catIndex
+    dim as DWSTRING wszParent = ShellExplorer_FolderPathFromRow( nRow, catIndex )
+    if catIndex < 0 then return -1
+    '' ANOTHER EARLY-OUT THAT IS NOT THE GUARD. ProjectFolders_Add tests the same thing on
+    '' its first line (modProjectFolders.inc:225), so removing this leaves the suite green
+    '' and the behaviour correct. Kept because the menu asks the same question before
+    '' OFFERING the command and the two must agree, and labelled so that nobody reads the
+    '' shell layer as the place the rule lives. IT LIVES IN THE MODEL, which was written
+    '' defensively long before any of this had a caller -- and that, rather than anything
+    '' added in this step, is what actually protects Main and Resource.
+    if ProjectFolders_CatAllowsFolders( catIndex ) = false then return -1
+
+    '' tiko's uniquifier, unchanged. It matters more here than it does there: tiko opens an
+    '' editor straight afterwards so the generated name is a two-second placeholder, and
+    '' this binary has no editor, so the name it picks is the name that stays.
+    dim as DWSTRING wszBase = L(462, "New Folder")
+    dim as DWSTRING wszName = wszBase
+    dim as long nTry = 2
+    do while ProjectFolders_Exists( catIndex, ProjectFolders_Combine( wszParent, wszName ) )
+        wszName = wszBase & " (" & str(nTry) & ")"
+        nTry += 1
+    loop
+
+    dim as DWSTRING wszNew = ProjectFolders_Combine( wszParent, wszName )
+    if ProjectFolders_Add( catIndex, wszNew ) < 0 then return -1
+
+    '' The container has to be OPEN or the new row lands inside a collapsed subtree and the
+    '' user is told nothing happened. tiko expands for the same reason, one line before
+    '' opening its editor.
+    if g_panel <> 0 then
+        if g_panel->IsCollapsed( nRow ) then g_panel->ExpandRow( nRow )
+    end if
+
+    ShellExplorer_Load()
+
+    '' The rebuild invalidated every row index, so the new row is found by WHAT IT IS.
+    dim as long nIdx = ProjectFolders_Find( catIndex, wszNew )
+    if (g_panel <> 0) andalso (nIdx >= 0) then
+        for i as long = 0 to g_panel->GetCount() - 1
+            if ShellPanel_KindOf(i) <> EXPKIND_FOLDER then continue for
+            if cast(long, g_panel->GetItemData(i)) = nIdx then
+                g_panel->SetCurSel( i )
+                exit for
+            end if
+        next
+    end if
+    return nIdx
+end function
+
+
+'' ---------------------------------------------------------------------------------------
+'' Delete the folder this row denotes. Its contents move UP one level.
+''
+'' tiko's frmExplorer_DeleteFolder, ported whole, and its header is worth repeating because
+'' it explains the absence of a confirmation: NOTHING IS DESTROYED. Child files and child
+'' folders re-attach to the deleted folder's parent, which is a dissolve rather than a
+'' delete. Root groups are unreachable -- the menu offers this on a folder row only -- which
+'' is what keeps the five categories permanent.
+''
+'' The path is resolved BEFORE the table is touched: ProjectFolders_RemoveAt compacts, so a
+'' row's stored folder index is stale the instant anything is removed.
+'' ---------------------------------------------------------------------------------------
+function ShellExplorer_DeleteFolder( byval nRow as long ) as boolean
+    '' A CHEAP EARLY-OUT, AND IT IS NOT THE GUARD. Removing this line leaves the suite
+    '' green, because ShellExplorer_FolderPathFromRow answers catIndex = -1 for every kind
+    '' it does not handle -- a file row, the Save-as-Project prompt, an invalid index -- and
+    '' the test below catches all of them. Kept for the reader and for the cost, and
+    '' labelled so that nobody narrowing FolderPathFromRow later assumes this covers them.
+    if ShellPanel_KindOf( nRow ) <> EXPKIND_FOLDER then return false
+
+    dim as long catIndex
+    dim as DWSTRING wszPath = ShellExplorer_FolderPathFromRow( nRow, catIndex )
+    if catIndex < 0 then return false
+    if PsLen( wszPath ) = 0 then return false
+
+    '' Dissolving IS rebasing onto the parent: descendants lose one level, documents follow,
+    '' and the folder's own record maps onto its parent and is dropped as a duplicate. ONE
+    '' implementation shared with rename rather than a second path walk that could disagree.
+    ProjectFolders_Rebase( catIndex, wszPath, ProjectFolders_ParentPath( wszPath ), _
+                           gApp.pDocList, gConfig.Cat(catIndex).idFileType )
+
+    ShellExplorer_Load()
+    return true
+end function
+
+
+'' ---------------------------------------------------------------------------------------
+'' THE ROW THE MENU WILL ACT ON, remembered rather than re-derived when it closes.
+''
+'' tiko's gExpMenuRow, and its reason ports word for word: the popup is NOT modal, so the
+'' command callback runs LATER -- and every one of these commands rebuilds the tree, so an
+'' index resolved at that point would be meaningless. Cleared on the way in, so a second
+'' delivery cannot act twice.
+'' ---------------------------------------------------------------------------------------
+dim shared as long g_expMenuRow = -1
+
+
+'' ---------------------------------------------------------------------------------------
+'' The Explorer's right-click. Installed as PsListTree's context callback, which did not
+'' exist until 7c step 21 -- before that the control selected the row, armed a drag and
+'' swallowed the event, so this could not be written at all.
+''
+'' NO MENU ON A FILE OR ON EMPTY SPACE. tiko offers a different menu for a document row
+'' (close, save, remove from project) and this binary has none of those commands, so an
+'' empty popup would be worse than none. A group or a folder gets the folder menu; nRow = -1
+'' -- below the last row -- gets nothing, which is narrower than tiko and honest.
+''
+'' RENAME IS NOT OFFERED. PsListTree has no in-place editor yet; a greyed item promises a
+'' feature and an absent one does not.
+'' ---------------------------------------------------------------------------------------
+sub ShellExplorer_OnContext( byval pList as any ptr, byval nRow as long, _
+                             byval nX as long, byval nY as long, byval ud as any ptr )
+    if g_panel = 0 then exit sub
+    if g_pSurf = 0 then exit sub
+    if g_panelMode <> SHPANEL_EXPLORER then exit sub
+
+    dim as ShellExpKind kind = ShellPanel_KindOf( nRow )
+    if (kind <> EXPKIND_ROOT) andalso (kind <> EXPKIND_FOLDER) then exit sub
+
+    '' A category that allows no folders offers no folder commands -- Main and Resource hold
+    '' one file each by construction. ProjectFolders_CatAllowsFolders is the one place that
+    '' rule lives, so asking it here cannot drift from what NewFolder will do.
+    dim as long catIndex
+    ShellExplorer_FolderPathFromRow( nRow, catIndex )
+    if catIndex < 0 then exit sub
+    if ProjectFolders_CatAllowsFolders( catIndex ) = false then exit sub
+
+    g_expMenuRow = nRow
+
+    dim as PsPopupMenu ptr pM = new PsPopupMenu
+    if pM = 0 then exit sub
+    pM->AddItem( L(462,"New Folder"), IDM_EXPLORER_NEWFOLDER )
+    if kind = EXPKIND_FOLDER then
+        pM->AddSeparator()
+        pM->AddItem( L(463,"Delete Folder"), IDM_EXPLORER_DELETEFOLDER )
+    end if
+
+    '' ---- WIDGET COORDINATES TO SURFACE COORDINATES ------------------------------------
+    '' The callback reports where the click was IN THE LIST; OpenRoot anchors in the
+    '' surface. Adding the panel's origin is the whole conversion, and getting it wrong puts
+    '' the menu in the top-left corner of the window rather than under the pointer -- which
+    '' looks like the menu opening on the wrong thing rather than in the wrong place.
+    dim as PsRect rc
+    rc.x = g_panel->bounds.x + nX
+    rc.y = g_panel->bounds.y + nY
+    rc.w = 1 : rc.h = 1
+    g_menus.OpenRoot( g_pSurf, rc, pM )
+end sub
+
+
+'' ---------------------------------------------------------------------------------------
+'' The folder commands, dispatched from OnMenuCommand once the menu has closed.
+''
+'' TRUE when the id was one of ours, so the caller can fall through for everything else.
+'' Reads g_expMenuRow rather than the live selection, and clears it first -- see the note on
+'' the variable.
+'' ---------------------------------------------------------------------------------------
+function ShellExplorer_FolderCommand( byval nId as long ) as boolean
+    select case nId
+        case IDM_EXPLORER_NEWFOLDER, IDM_EXPLORER_DELETEFOLDER
+        case else : return false
+    end select
+
+    dim as long nRow = g_expMenuRow
+    g_expMenuRow = -1
+    if nRow < 0 then return true          '' ours, and there is nothing to do with it
+
+    select case nId
+        case IDM_EXPLORER_NEWFOLDER    : ShellExplorer_NewFolder( nRow )
+        case IDM_EXPLORER_DELETEFOLDER : ShellExplorer_DeleteFolder( nRow )
+    end select
+    return true
 end function
