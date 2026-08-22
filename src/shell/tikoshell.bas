@@ -339,6 +339,10 @@ dim shared as string g_barInitial(0 to 15)
 '' The font path, shared because ApplyScale reopens the engine and both the windowed path
 '' and the self-test go through it.
 dim shared as string g_sFont
+'' FORWARD: the DPI-change path reopens the text engine and must rebuild the symbol
+'' fallback chain with it, and that runs well before this is defined.
+declare sub ShellFonts_AddSymbolFallbacks()
+declare function ShellFonts_OpenEngine( byval px as long ) as long
 '' The pixel size the engine is currently open at. Tracked here because the text engine has
 '' no query for it -- and reopening it unconditionally on every resize would rebuild the
 '' atlas for nothing.
@@ -709,11 +713,17 @@ constructor ShellFindBar()
         this.AddChild( this.pNav )
         scope
             dim as DWSTRING g
-            g.Utf8 = chr(&hEE, &h80, &h95)   '' U+E015  chevron up    -> previous
+            '' ---- tiko'S OWN, CHECKED AGAINST modDeclares.bi THIS TIME -------------
+            '' Step 27 used E015, E013 and E011 and called them "chevron up / chevron down /
+            '' close". Two were the WRONG GLYPH and the third does not exist in tiko's table:
+            '' E015 is ChevronDOWN, E011 is nothing, and tiko's find bar draws
+            '' ChevronLeft/ChevronRight for previous/next with E10A for close. All three sat
+            '' in this file as tofu, so nothing on screen contradicted the comment either.
+            g.Utf8 = chr(&hEE, &h80, &h92)   '' U+E012  ChevronLeft   (tiko, FINDTIP_UPARROW)
             this.pNav->AddItem( g, IDM_FINDPREV, 0, PSICON_COMMAND )
-            g.Utf8 = chr(&hEE, &h80, &h93)   '' U+E013  chevron down  -> next
+            g.Utf8 = chr(&hEE, &h80, &h93)   '' U+E013  ChevronRight  (tiko, FINDTIP_DOWNARROW)
             this.pNav->AddItem( g, IDM_FINDNEXT, 0, PSICON_COMMAND )
-            g.Utf8 = chr(&hEE, &h80, &h91)   '' U+E011  close         -> toggle the bar off
+            g.Utf8 = chr(&hEE, &h84, &h8A)   '' U+E10A  light X       (tiko wszIconClose)
             this.pNav->AddItem( g, IDM_FIND, 0, PSICON_COMMAND )
         end scope
         this.pNav->OnClick( @ShellFind_OnIcon, 0 )
@@ -3181,7 +3191,11 @@ sub ApplyScale( byref surf as PsSurface, byval f as single )
     dim as long px = PsScaleBy( SH_FONT_PX, f )
     if px <> g_nFontPx then
         TE_Free( g_te )
-        if TE_Init( g_te, strptr(g_sFont), px ) = 0 then
+        '' TE_Free DROPS THE FALLBACKS WITH THE ENGINE, which is why this goes through
+        '' ShellFonts_OpenEngine rather than TE_Init: without the chain every icon turns to
+        '' tofu the first time the window crosses to a monitor at another scale -- and only
+        '' then, which is the kind of thing reported as "the icons vanished" months later.
+        if ShellFonts_OpenEngine( px ) = 0 then
             print "tikoshell: could not reopen the font at " & str(px) & "px"
         end if
         g_nFontPx = px
@@ -3220,6 +3234,58 @@ end sub
 '' PsPlatform's assets, reached from _shell\ two levels up. tiko does not vendor a copy --
 '' PsCore's whole value is that the toolkit and the application share one implementation,
 '' and that applies to the font the text engine measures with as much as to the code.
+'' ---------------------------------------------------------------------------------------
+'' THE SYMBOL FACES, AND WHY THERE WAS NO CHAIN UNTIL NOW.
+''
+'' TE_Init opens CascadiaCode.ttf and NOTHING ELSE, so every private-use codepoint this
+'' shell has ever drawn came out as a TOFU BOX: the pane switcher since step 20, the
+'' Explorer's action icons, and the Find and Replace bars' chevrons since steps 27-29.
+'' Nobody had seen the window since step 22.
+''
+'' AND A COMMENT IN THIS FILE ASSERTED THE OPPOSITE. Step 28 explained that "AB" needs no
+'' second font handle because "PsTextEngine's fallback chain resolves A and B in the primary
+'' UI face and the PUA glyphs below in the symbol face, per character". The chain is real;
+'' this binary had never put anything in it.
+''
+'' BOTH FACES, MOST SPECIFIC FIRST. tiko names "Segoe Fluent Icons" (SegoeIcons.ttf) as its
+'' SYMBOLFONT, but its table also spends codepoints that predate it, and segmdl2.ttf covers
+'' those. TE_AddFallback returns false and changes nothing when a file will not open, which
+'' is exactly what happens on Linux -- so this is a no-op there rather than a build break,
+'' and the tofu that remains is a MISSING FONT rather than a missing chain.
+'' ---- ONE DOOR, BECAUSE TWO CALLS IS ONE TOO MANY --------------------------------------
+'' The first version had each caller do TE_Init and then remember to add the fallbacks, in
+'' two places. Deleting the STARTUP one left the suite at 575/0: the harness runs at 175%,
+'' where the DPI path reopens the engine on the way in and rebuilds the chain anyway. AT
+'' 100% NOTHING WOULD HAVE REOPENED IT and every icon would have been a box, with every
+'' assertion still green -- a defect visible only on the displays the suite does not run on.
+''
+'' Not asserted, REMOVED: opening the engine and filling its chain are one call now, so
+'' there is no second place to forget.
+function ShellFonts_OpenEngine( byval px as long ) as long
+    if TE_Init( g_te, strptr(g_sFont), px ) = 0 then return 0
+    ShellFonts_AddSymbolFallbacks()
+    return 1
+end function
+
+
+sub ShellFonts_AddSymbolFallbacks()
+    dim as string sWin = environ("SystemRoot")
+    '' FORWARD SLASH -- _check_shell's rule since step 18, and it caught this literal on the
+    '' first run. PsExePath has returned '/' on both platforms all along, so a backslash here
+    '' makes a MIXED path even on Windows.
+    if len(sWin) = 0 then sWin = "C:/Windows"
+    for i as integer = 0 to len(sWin) - 1
+        if sWin[i] = asc("\") then sWin[i] = asc("/")
+    next
+    '' strptr WANTS A VARIABLE, not an expression -- fbc reports the concatenation as
+    '' "Expected ')', found '&'", which names the paren and not the reason.
+    dim as string sFluent = sWin & "/Fonts/SegoeIcons.ttf"
+    dim as string sMdl2   = sWin & "/Fonts/segmdl2.ttf"
+    TE_AddFallback( g_te, strptr(sFluent), "Segoe Fluent Icons" )
+    TE_AddFallback( g_te, strptr(sMdl2),   "Segoe MDL2 Assets" )
+end sub
+
+
 function FontPath() as string
     dim as string sExe = exepath()
     for i as integer = 0 to len(sExe) - 1
@@ -3270,7 +3336,7 @@ end function
     end if
     PsTextEngineInstallApi()
     g_sFont = FontPath()
-    if TE_Init( g_te, strptr(g_sFont), SH_FONT_PX ) = 0 then
+    if ShellFonts_OpenEngine( SH_FONT_PX ) = 0 then
         print "tikoshell: the text engine would not start -- " & g_sFont
         end 1
     end if
@@ -4598,6 +4664,40 @@ end function
                     '' bar whose widgets all exist and whose search finds nothing would
                     '' look identical from here.
                     scope
+                        '' ---- THE SYMBOL FONT IS IN THE CHAIN, 7c step 31 --------
+                        '' EVERY PUA GLYPH IN THIS BINARY WAS A TOFU BOX until this
+                        '' step, because TE_Init opens CascadiaCode.ttf and the shell
+                        '' added no fallback -- the pane switcher since step 20, the
+                        '' Explorer's icons, and both bars' chevrons. A comment in this
+                        '' file asserted the chain resolved them. Nobody had looked at
+                        '' the window since step 22.
+                        ''
+                        '' ASSERTED ON THE FACE INDEX, not on "it did not crash": a
+                        '' missing codepoint still shapes, to gid 0 in face 0, and every
+                        '' painter draws that box without complaint. faceIdx > 0 is the
+                        '' only thing that says a FALLBACK answered.
+                        scope
+                            dim as string sPua = chr(&hEE, &hA2, &hA9)   '' U+E8A9
+                            dim as PsShapedRun ptr r = TE_ShapeCached( g_te, sPua )
+                            Check "  a private-use glyph shapes to something", _
+                                  (r <> 0) andalso (r->nGlyphs > 0)
+                            if (r <> 0) andalso (r->nGlyphs > 0) then
+                                Check "    resolved by a FALLBACK face, not the primary", _
+                                      (r->glyphs[0].faceIdx > 0), str(r->glyphs[0].faceIdx)
+                                Check "      and it is a real glyph, not notdef", _
+                                      (r->glyphs[0].gid <> 0), str(r->glyphs[0].gid)
+                            end if
+                            '' AND THE PRIMARY STILL WINS FOR TEXT IT COVERS. A chain that
+                            '' answered everything would put the UI font's own letters in
+                            '' the icon face -- "Aa" and "AB" are literal text on these
+                            '' bars, so that is not hypothetical.
+                            dim as PsShapedRun ptr r2 = TE_ShapeCached( g_te, "Aa" )
+                            if (r2 <> 0) andalso (r2->nGlyphs > 0) then
+                                Check "    and ordinary letters still come from the primary", _
+                                      (r2->glyphs[0].faceIdx = 0), str(r2->glyphs[0].faceIdx)
+                            end if
+                        end scope
+
                         Check "  the find bar is a real bar", (g_barFind <> 0)
                         Check "    with a field", (g_barFind->pField <> 0)
                         '' THREE SINCE 7c STEP 29 added Selection. Two through step 28.
