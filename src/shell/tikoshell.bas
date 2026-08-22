@@ -4356,6 +4356,160 @@ end function
                                     g_panel->SetBounds( rcPanelWas )
                                 end scope
 
+                                '' ---- DRAG AND DROP, 7c step 25 ------------------------
+                                ''
+                                '' The DECISIONS, driven by row. Dragging with a mouse is
+                                '' PsPlatform's and asserted there; what is asserted here is
+                                '' the Explorer's policy about what may land where.
+                                ''
+                                '' EVERY PATH RETURNS FALSE, because the rows are a VIEW of
+                                '' gProjectFolders -- so "did it move anything" is the
+                                '' question, never the return value.
+                                scope
+                                    dim as long nFold = -1, nFile4 = -1, nGrp = -1
+                                    for r as long = 0 to g_panel->GetCount() - 1
+                                        select case ShellPanel_KindOf(r)
+                                            case EXPKIND_FOLDER : if nFold  < 0 then nFold  = r
+                                            case EXPKIND_FILE   : if nFile4 < 0 then nFile4 = r
+                                            case EXPKIND_ROOT   : if nGrp   < 0 then nGrp   = r
+                                        end select
+                                    next
+                                    Check "    a folder, a file and a group all have rows", _
+                                          (nFold >= 0) andalso (nFile4 >= 0) andalso (nGrp >= 0), _
+                                          str(nFold) & "," & str(nFile4) & "," & str(nGrp)
+
+                                    '' ---- A FILE LANDS IN THE FOLDER IT WAS DROPPED ON --
+                                    ''
+                                    '' THE PATH AND THE DESTINATION ARE CAPTURED FIRST, and
+                                    '' the first draft did not: the drop calls
+                                    '' ShellExplorer_Load, every row index is rebuilt, and
+                                    '' the lookup afterwards read a row that now means
+                                    '' something else. It reported "(no doc)" -- the
+                                    '' handler's own rule about snapshotting the source,
+                                    '' arriving in the assertion written to check it.
+                                    scope
+                                        dim as DWSTRING wszDropped = ShellPanel_PathOf( nFile4 )
+                                        dim as long catF
+                                        dim as DWSTRING wszFolder = ShellExplorer_FolderPathFromRow( nFold, catF )
+
+                                        '' THE RETURN IS ALWAYS FALSE. Asserted once and
+                                        '' explicitly, because every other assertion here
+                                        '' reads it as meaningless and that is only safe if
+                                        '' it really is.
+                                        Check "    the handler never asks for a reorder", _
+                                              (ShellExplorer_OnDrop( g_panel, nFile4, nFold, true, 0 ) = false)
+
+                                        dim pD2 as clsDocument ptr = gApp.GetDocumentPtrByFilename( wszDropped )
+                                        Check "      and the file now names that folder", _
+                                              (pD2 <> 0) andalso _
+                                              (PsUCase(pD2->docData.wszFolder) = PsUCase(wszFolder)), _
+                                              iif(pD2 <> 0, pD2->docData.wszFolder.Utf8, "(no doc)")
+                                    end scope
+
+                                    '' ---- A GROUP IS NOT A DRAGGABLE THING --------------
+                                    '' Its caption and its existence are structural. Dragging
+                                    '' one would either be undone by the next load or appear
+                                    '' to work, which is worse.
+                                    scope
+                                        dim as long nBefore = ProjectFolders_Count()
+                                        ShellExplorer_OnDrop( g_panel, nGrp, nFold, true, 0 )
+                                        Check "      dropping a GROUP changes nothing", _
+                                              (ProjectFolders_Count() = nBefore), _
+                                              str(ProjectFolders_Count())
+                                    end scope
+
+                                    '' ---- A FOLDER MAY NOT LAND ON ITSELF ---------------
+                                    scope
+                                        '' RE-FOUND, because the file drop above reloaded the
+                                        '' tree and nFold has meant nothing since. Every
+                                        '' assertion in this block that reused an index
+                                        '' across a drop was wrong for the same reason -- the
+                                        '' handler's own first rule, arriving in the suite
+                                        '' written to check it, for the second time.
+                                        dim as long nFold2 = -1
+                                        for r as long = 0 to g_panel->GetCount() - 1
+                                            if ShellPanel_KindOf(r) = EXPKIND_FOLDER then nFold2 = r : exit for
+                                        next
+                                        dim as long catF
+                                        dim as DWSTRING wszWas = ShellExplorer_FolderPathFromRow( nFold2, catF )
+                                        Check "      the folder row is still findable", _
+                                              (nFold2 >= 0) andalso (PsLen(wszWas) > 0), wszWas.Utf8
+                                        ShellExplorer_OnDrop( g_panel, nFold2, nFold2, true, 0 )
+                                        '' BY PATH, NOT BY COUNT. The first draft compared
+                                        '' ProjectFolders_Count(), and a MOVE PRESERVES THE
+                                        '' COUNT -- so the assertion held whether the folder
+                                        '' had moved or not, and reverting the guard came
+                                        '' back green. The path is the thing that changes.
+                                        Check "      a folder dropped on ITSELF does not move", _
+                                              (ProjectFolders_Find( catF, wszWas ) >= 0), wszWas.Utf8
+                                    end scope
+
+                                    '' ---- NOR INTO ITS OWN DESCENDANT -------------------
+                                    '' The one refusal that prevents CORRUPTION rather than a
+                                    '' no-op: the folder would become its own ancestor and the
+                                    '' tree walk would not terminate.
+                                    scope
+                                        dim as long nFold3 = -1
+                                        for r as long = 0 to g_panel->GetCount() - 1
+                                            if ShellPanel_KindOf(r) = EXPKIND_FOLDER then nFold3 = r : exit for
+                                        next
+                                        dim as long catP = -1
+                                        dim as DWSTRING wszParent = ShellExplorer_FolderPathFromRow( nFold3, catP )
+                                        if (catP >= 0) andalso (PsLen(wszParent) > 0) then
+                                            dim as DWSTRING wszChild = ProjectFolders_Combine( wszParent, DWSTRING("Inner") )
+                                            dim as long nIdxC = ProjectFolders_Add( catP, wszChild )
+                                            Check "      a child folder exists to drop into", _
+                                                  (nIdxC >= 0), str(nIdxC)
+                                            ShellExplorer_Load()
+
+                                            dim as long nChildRow = -1, nParentRow = -1
+                                            for r as long = 0 to g_panel->GetCount() - 1
+                                                if ShellPanel_KindOf(r) <> EXPKIND_FOLDER then continue for
+                                                dim as long ci = cast(long, g_panel->GetItemData(r))
+                                                if PsUCase(gProjectFolders(ci).wszPath) = PsUCase(wszChild) then nChildRow = r
+                                                if PsUCase(gProjectFolders(ci).wszPath) = PsUCase(wszParent) then nParentRow = r
+                                            next
+                                            Check "        and both have rows", _
+                                                  (nChildRow >= 0) andalso (nParentRow >= 0), _
+                                                  str(nParentRow) & "," & str(nChildRow)
+
+                                            ShellExplorer_OnDrop( g_panel, nParentRow, nChildRow, true, 0 )
+                                            '' BY PATH, for the reason above -- and here it
+                                            '' matters twice over, because a move INTO A
+                                            '' DESCENDANT does not change the count either
+                                            '' and would have gone entirely unnoticed.
+                                            Check "        dropping a folder INTO ITS OWN CHILD is refused", _
+                                                  (ProjectFolders_Find( catP, wszParent ) >= 0), _
+                                                  wszParent.Utf8
+                                            Check "          and the child is still under it", _
+                                                  (ProjectFolders_Find( catP, wszChild ) >= 0), _
+                                                  wszChild.Utf8
+                                        end if
+                                    end scope
+                                end scope
+
+                                '' ---- THE DROP BLOCK'S OWN LEFTOVER --------------------
+                                '' It created a child folder to drop INTO, and nothing else
+                                '' removes it: deleting its parent DISSOLVES rather than
+                                '' deletes, so the child would survive one level up and the
+                                '' count assertion below would report it. Removed by PATH,
+                                '' because every row index in this block is long stale.
+                                scope
+                                    for cat as long = CATINDEX_MAIN to ubound(gConfig.Cat)
+                                        dim as long idx = -1
+                                        do
+                                            idx = -1
+                                            for i as long = lbound(gProjectFolders) to ubound(gProjectFolders)
+                                                if gProjectFolders(i).catIndex <> cat then continue for
+                                                if PsUCase( ProjectFolders_LeafName( gProjectFolders(i).wszPath ) ) = _
+                                                   PsUCase( DWSTRING("Inner") ) then idx = i : exit for
+                                            next
+                                            if idx >= 0 then ProjectFolders_RemoveAt( idx )
+                                        loop while idx >= 0
+                                    next
+                                    ShellExplorer_Load()
+                                end scope
+
                                 '' Clean up: the workspace is shared with everything after
                                 '' this block, and a stray folder changes the tree's shape.
                                 dim as long nRow1 = -1
@@ -4427,6 +4581,13 @@ end function
                                       (g_panel->pfnEndEdit <> 0)
                                 Check "      and the left-click hook", _
                                       (g_panel->pfnClick <> 0)
+                                Check "      and the drop hook", (g_panel->pfnDrop <> 0)
+                                '' AND THE GESTURE IS ON, which is separate from the hook
+                                '' being installed: with SetDragReorder false nothing can
+                                '' ever be dragged and every drop assertion below would be
+                                '' testing a handler nothing can reach.
+                                Check "        with dragging enabled in this mode", _
+                                      g_panel->bDragReorder
                             end scope
 
                             '' IsFileDisplayed READS THE MODEL, NOT THE ROWS -- so it

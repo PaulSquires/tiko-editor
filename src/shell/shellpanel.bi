@@ -376,6 +376,9 @@ declare function ShellExplorer_PaintIcons( byval pi as PsLtPaintInfo ptr ) as bo
 declare function ShellExplorer_OnRowClick( byval pList as any ptr, byval nRow as long, _
                                            byval nX as long, byval nY as long, _
                                            byval ud as any ptr ) as boolean
+declare function ShellExplorer_OnDrop( byval pList as any ptr, byval nSrcRow as long, _
+                                       byval nTargetRow as long, byval bOnTarget as boolean, _
+                                       byval ud as any ptr ) as boolean
 
 
 '' Wire the panel's callbacks. Called once, beside ShellTabs_Install.
@@ -400,6 +403,18 @@ sub ShellPanel_Install()
     '' ONLY an action icon on the hot Explorer row and declines everything else, so
     '' selection, folding and the other two panes are untouched.
     g_panel->OnRowClick( @ShellExplorer_OnRowClick, 0 )
+    '' DRAG AND DROP, new in 7c step 25. The handler returns FALSE on every path -- it
+    '' either moved something in gProjectFolders or refused to, and in neither case may the
+    '' tree reorder rows that are a VIEW of that table. SetDragReorder is what turns the
+    '' gesture on at all, and it is on for the Explorer only.
+    g_panel->OnDrop( @ShellExplorer_OnDrop, 0 )
+    '' AND THE GESTURE ITSELF, matched to the mode the panel starts in.
+    ''
+    '' ANOTHER EARLY-OUT: ShellPanel_SetMode sets this on every switch, so removing this
+    '' line leaves the suite green -- the first switch into the Explorer repairs it. Kept
+    '' for the pane the binary OPENS on, which is the one case SetMode never sees, and
+    '' labelled so it does not read as the place the rule lives.
+    g_panel->SetDragReorder( g_panelMode = SHPANEL_EXPLORER )
     '' NO ZEBRA STRIPES. Reported by the author -- "the bookmark rows colored weird". The
     '' rows here are a file's bookmarks, not records, and tiko's own panel paints every row
     '' the same. Set ONCE, at install: SetAltRows is a flag the control keeps, unlike the
@@ -460,6 +475,15 @@ sub ShellPanel_SetMode( byval m as ShellPanelMode )
     if m = g_panelMode then exit sub
     g_panelMode = m
     ShellPanelMenu_SyncToMode( m )
+    '' ---- DRAGGING IS THE EXPLORER'S ALONE, 7c step 25 ---------------------------------
+    '' A bookmark's position in its file and a procedure's position in the symbol database
+    '' are FACTS, not preferences -- dragging one somewhere else would either be undone by
+    '' the next reload or, worse, look like it had worked. Only the Explorer has an order
+    '' that means anything a user can change, and even there the change is to
+    '' gProjectFolders rather than to the rows.
+    ''
+    '' Set on the MODE rather than once at install, because the answer differs per pane.
+    if g_panel <> 0 then g_panel->SetDragReorder( m = SHPANEL_EXPLORER )
     ShellPanel_Reload()
 end sub
 
@@ -1783,4 +1807,153 @@ function ShellExplorer_OnRowClick( byval pList as any ptr, byval nRow as long, _
         case EXPICON_DELETE : ShellExplorer_DeleteFolder( nRow )
     end select
     return true
+end function
+
+
+'' =======================================================================================
+'' DRAG AND DROP -- 7c step 25, and the last of frmExplorer.inc.
+''
+'' A port of frmExplorer_CanDropCallback, whose NAME IS A MISNOMER worth restating here: it
+'' is not a validator that permits the control's reorder. It performs the whole move itself
+'' and returns FALSE every single time, because the Explorer's rows are a VIEW of
+'' gProjectFolders and gApp.pDocList -- reordering them would be reordering a rendering.
+'' PsListTree's OnDrop is shaped around exactly that, and this returns false too.
+''
+'' ---- ONE SOURCE ROW, AND THE REASON IS THE SELECTION MODE ----------------------------
+''
+'' tiko's handler carries a snapshot loop over p->srcRows because its Explorer is
+'' multi-select. This panel is PSLT_SEL_SINGLE, so a multi-row drag cannot happen, and the
+'' loop would be dead code that looked like a feature. It defers WITH the selection mode
+'' that would produce it.
+'' =======================================================================================
+function ShellExplorer_OnDrop( byval pList as any ptr, byval nSrcRow as long, _
+                               byval nTargetRow as long, byval bOnTarget as boolean, _
+                               byval ud as any ptr ) as boolean
+    '' FALSE THROUGHOUT: every exit from here means "the tree must not reorder", whether
+    '' this moved something or refused to. There is no path on which a row order change
+    '' would be right.
+    if g_panelMode <> SHPANEL_EXPLORER then return false
+    if g_panel = 0 then return false
+    if nSrcRow < 0 then return false
+
+    '' ---- WHERE IS THIS GOING? --------------------------------------------------------
+    dim as long catDest = -1
+    dim as DWSTRING wszDest
+    select case ShellPanel_KindOf( nTargetRow )
+        case EXPKIND_ROOT, EXPKIND_FOLDER
+            wszDest = ShellExplorer_FolderPathFromRow( nTargetRow, catDest )
+        case EXPKIND_FILE
+            '' INTO THE DROPPED-ON FILE'S OWN CONTAINER, which is what dropping a file on
+            '' another file means. Refusing it instead would make the target's own row a
+            '' dead zone in the middle of the folder it belongs to.
+            dim as DWSTRING wszT = ShellPanel_PathOf( nTargetRow )
+            dim pT as clsDocument ptr = gApp.GetDocumentPtrByFilename( wszT )
+            if pT = 0 then return false
+            catDest = ShellExplorer_CatIndexForDoc( pT )
+            wszDest = pT->docData.wszFolder
+        case else
+            return false        '' the Save-as-Project row, or past the last row
+    end select
+    '' UNTESTED RATHER THAN REDUNDANT, and the distinction is worth the line. Removing this
+    '' leaves the suite green -- but not because something below repeats it, as with the two
+    '' folder guards further down. It is because no fixture here can produce the state that
+    '' reaches it: a document whose ProjectFiletype matches no category at all. The guard is
+    '' real and this suite cannot see it.
+    if catDest < 0 then return false
+
+    '' ---- SNAPSHOT THE SOURCE BEFORE ANYTHING MOVES -----------------------------------
+    '' Row indices stop meaning anything the moment the model changes, so every decision
+    '' below is taken against a pointer and a path captured here. tiko's rule, and it
+    '' matters more here than there: ShellExplorer_Load rebuilds the whole tree.
+    dim as ShellExpKind srcKind = ShellPanel_KindOf( nSrcRow )
+    dim pSrcDoc as clsDocument ptr = 0
+    dim as DWSTRING wszSrcFolder
+    dim as long catSrc = -1
+
+    select case srcKind
+        case EXPKIND_FILE
+            pSrcDoc = gApp.GetDocumentPtrByFilename( ShellPanel_PathOf( nSrcRow ) )
+            if pSrcDoc = 0 then return false
+            catSrc = ShellExplorer_CatIndexForDoc( pSrcDoc )
+        case EXPKIND_FOLDER
+            wszSrcFolder = ShellExplorer_FolderPathFromRow( nSrcRow, catSrc )
+            if PsLen( wszSrcFolder ) = 0 then return false
+        case else
+            return false        '' a group and the promote row are not draggable things
+    end select
+
+    '' ---- VALIDATE EVERYTHING BEFORE MOVING ANYTHING ----------------------------------
+    '' A refused drop must change NOTHING, so nothing is applied until the whole gesture is
+    '' known to be legal. tiko's reason for the ordering, and it survives with one source
+    '' as well as with many: a partial move is silent.
+    if srcKind = EXPKIND_FOLDER then
+        '' A folder cannot enter a group that holds no folders.
+        if ProjectFolders_CatAllowsFolders( catDest ) = false then return false
+        '' ---- AND THESE TWO ARE EARLY-OUTS, NOT THE GUARD ------------------------------
+        '' ProjectFolders_MoveFolder tests both on its own lines 409-412, under the same
+        '' catFrom = catTo condition and in the same order -- so removing either leaves the
+        '' behaviour correct and the suite green, which is how they were found.
+        ''
+        '' THAT IS THE THIRD PAIR OF REDUNDANT SHELL-SIDE GUARDS IN THIS PORT (step 21 found
+        '' two), and the pattern is worth more than the lines: modProjectFolders was written
+        '' DEFENSIVELY long before it had a caller, so a handler ported from tiko re-states
+        '' rules the model already enforces. Kept, because the port is a port and tiko's
+        '' shape is the reference -- but labelled, so nobody reads this layer as the place
+        '' the rules live.
+        if catSrc = catDest then
+            if PsUCase( wszSrcFolder ) = PsUCase( wszDest ) then return false
+            if ProjectFolders_IsDescendantOf( wszDest, wszSrcFolder ) then return false
+        end if
+    end if
+
+    '' MAIN AND RESOURCE HOLD EXACTLY ONE FILE. A folder there is refused outright; a single
+    '' file is allowed and DEMOTES the incumbent, which is the gesture whose result the user
+    '' can actually see.
+    if (catDest = CATINDEX_MAIN) orelse (catDest = CATINDEX_RESOURCE) then
+        if srcKind = EXPKIND_FOLDER then return false
+    end if
+
+    '' ---- APPLY -----------------------------------------------------------------------
+    if srcKind = EXPKIND_FOLDER then
+        '' The documents inside the subtree are collected BEFORE the move: afterwards their
+        '' folders name the destination and nothing identifies them as having come from the
+        '' source. Only needed for a CROSS-CATEGORY move, which is the only case that
+        '' changes their type.
+        redim moved(any) as clsDocument ptr
+        dim as long nMoved = 0
+        if catSrc <> catDest then
+            dim pScan as clsDocument ptr = gApp.pDocList
+            do until pScan = 0
+                if ShellExplorer_CatIndexForDoc( pScan ) = catSrc then
+                    dim as DWSTRING wszF = pScan->docData.wszFolder
+                    dim as boolean bInside = ( PsUCase(wszF) = PsUCase(wszSrcFolder) )
+                    if ProjectFolders_IsDescendantOf( wszF, wszSrcFolder ) then bInside = true
+                    if bInside then
+                        redim preserve moved(0 to nMoved)
+                        moved(nMoved) = pScan
+                        nMoved += 1
+                    end if
+                end if
+                pScan = pScan->pDocNext
+            loop
+        end if
+
+        if ProjectFolders_MoveFolder( catSrc, wszSrcFolder, catDest, wszDest, _
+                                      gApp.pDocList, gConfig.Cat(catSrc).idFileType ) then
+            for j as long = 0 to nMoved - 1
+                if moved(j) then gApp.ProjectSetFileType( moved(j), gConfig.Cat(catDest).idFileType )
+            next
+        end if
+    else
+        '' THE TYPE CHANGE GOES THROUGH ProjectSetFileType rather than assigning the field,
+        '' because that is what carries the Main/Resource demotion -- so a drag inherits the
+        '' context menu's rule instead of restating it and drifting from it.
+        if catSrc <> catDest then
+            gApp.ProjectSetFileType( pSrcDoc, gConfig.Cat(catDest).idFileType )
+        end if
+        pSrcDoc->docData.wszFolder = wszDest
+    end if
+
+    ShellExplorer_Load()
+    return false
 end function
