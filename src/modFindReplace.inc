@@ -78,9 +78,21 @@ end function
 
 function FindReplace_EnsureSelectionCaptured( byval pDoc as clsDocument ptr ) as long
     if pDoc = 0 then return 0
-    if pDoc->CurrentSelection.isInitialized then return 0
+
     dim as long startline, endline, startpos, endpos
     pDoc->GetSelectedLineRange( startLine, endLine, startPos, endPos )
+
+    ' ---- A LIVE MULTI-LINE SELECTION IS NEWER NEWS THAN ANY CAPTURE ---------------------
+    ' The first version of this returned early whenever isInitialized was set, and that made
+    ' the reported gesture impossible: press Ctrl+F with nothing selected and the capture is
+    ' filled with an EMPTY range, so selecting lines afterwards and clicking the icon read
+    ' that empty range and refused. "ctrl+f, then select text in editor, try clicking the
+    ' selection icon - it does not light up."
+    '
+    ' ONLY WHEN THE LIVE ONE SPANS LINES, and that clause is the whole reason the capture
+    ' exists: after the incremental search the live selection is the LAST MATCH, one line,
+    ' and overwriting a real range with it would throw away what the user chose.
+    if pDoc->CurrentSelection.isInitialized andalso (endLine <= startLine) then return 0
     pDoc->CurrentSelection.startline     = startline
     pDoc->CurrentSelection.endline       = endline
     pDoc->CurrentSelection.startpos      = startpos
@@ -475,6 +487,101 @@ sub FindReplace_RunSelectionTest()
     FindSel_Check( "reopening with NO selection leaves the icon dark", _
         (gFind.nSelection = 0), str(gFind.nSelection) )
     FindSel_Check( "  and lays no shading", (pT->HasMarkerHighlight = false) )
+
+    ' ---- Ctrl+F FIRST, SELECT AFTERWARDS ------------------------------------------------
+    ' REPORTED: "ctrl+f, then select text in editor, try clicking the selection icon -- it
+    ' does not light up."
+    '
+    ' DRIVEN IN BOTH FOCUS ORDERS, because the answer may depend on which one a real click
+    ' produces and this harness cannot know that from the code alone: an owner-drawn icon
+    ' panel may or may not take the focus off the editor before its handler runs, and the
+    ' editor's SCEN_SETFOCUS / SCEN_KILLFOCUS are what clear and fill the capture.
+    FindReplaceControls_Hide()
+    FindSel_Pump()
+    SciExec( hEdit, SCI_SETEMPTYSELECTION, 0, 0 )
+    FindControls_Show()          ' Ctrl+F with nothing selected
+    FindSel_Pump()
+    FindSel_Check( "setup: opening with no selection leaves it dark", _
+        (gFind.nSelection = 0), str(gFind.nSelection) )
+
+    ' The user clicks into the editor and drags. The click is the SCEN_SETFOCUS.
+    SetFocus( hEdit )
+    FindSel_Pump()
+    SciExec( hEdit, SCI_SETSELECTIONSTART, SciExec( hEdit, SCI_POSITIONFROMLINE, 1, 0 ), 0 )
+    SciExec( hEdit, SCI_SETSELECTIONEND,   SciExec( hEdit, SCI_POSITIONFROMLINE, 4, 0 ), 0 )
+    FindSel_Check( "  and the editor holds a three-line selection", _
+        (SciExec( hEdit, SCI_GETSELECTIONEND, 0, 0 ) > _
+         SciExec( hEdit, SCI_GETSELECTIONSTART, 0, 0 )) )
+
+    ' VARIANT A: the icon does NOT take the focus. Nothing has re-filled the capture, so
+    ' FindReplace_EnsureSelectionCaptured inside the toggle is the only thing that can.
+    FindReplace_ToggleSelection()
+    FindSel_Pump()
+    FindSel_Check( "selecting AFTER Ctrl+F still arms the icon (icon keeps focus)", _
+        (gFind.nSelection = true), str(gFind.nSelection) )
+    FindSel_Check( "  with the shading down", pT->HasMarkerHighlight )
+
+    ' VARIANT B: the icon DOES take the focus first, so the editor's SCEN_KILLFOCUS runs
+    ' before the handler and fills the capture itself.
+    FindReplaceControls_Hide()
+    FindSel_Pump()
+    ' THE SELECTION IS COLLAPSED BEFORE THIS OPEN, and the first draft did not do it: the
+    ' lines from variant A were still selected, so Ctrl+F armed the icon on the way in and
+    ' the click below correctly DISARMED it. The assertion read 0 and looked like the bug it
+    ' was written to catch. The gesture under test starts from an UNARMED bar.
+    SciExec( hEdit, SCI_SETEMPTYSELECTION, 0, 0 )
+    FindControls_Show()
+    FindSel_Pump()
+    FindSel_Check( "setup: and this one opens unarmed too", _
+        (gFind.nSelection = 0), str(gFind.nSelection) )
+    SetFocus( hEdit )
+    FindSel_Pump()
+    SciExec( hEdit, SCI_SETSELECTIONSTART, SciExec( hEdit, SCI_POSITIONFROMLINE, 1, 0 ), 0 )
+    SciExec( hEdit, SCI_SETSELECTIONEND,   SciExec( hEdit, SCI_POSITIONFROMLINE, 4, 0 ), 0 )
+    dim as HWND hFindFld = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND )
+    if IsWindow( hFindFld ) then SetFocus( hFindFld )
+    FindSel_Pump()
+    FindReplace_ToggleSelection()
+    FindSel_Pump()
+    FindSel_Check( "selecting AFTER Ctrl+F still arms the icon (focus leaves the editor)", _
+        (gFind.nSelection = true), str(gFind.nSelection) )
+    FindSel_Check( "  with the shading down", pT->HasMarkerHighlight )
+
+    ' ---- AND A SEARCH MUST NOT STEAL THE RANGE ------------------------------------------
+    ' THE CLAUSE THIS ASSERTS IS THE WHOLE REASON THE CAPTURE EXISTS, and removing it left
+    ' the suite at 22/0 -- every assertion above happens to look while the live selection is
+    ' still the user's, so none of them could tell "refresh when the live one spans lines"
+    ' from "refresh always".
+    '
+    ' After ANY search the live selection is the LAST MATCH, one line. A capture that took
+    ' that would shrink "search within these three lines" down to "within this match" on the
+    ' next glance at the icon -- and the shading would follow it.
+    FindReplaceControls_Hide()
+    FindSel_Pump()
+    SciExec( hEdit, SCI_SETSELECTIONSTART, SciExec( hEdit, SCI_POSITIONFROMLINE, 1, 0 ), 0 )
+    SciExec( hEdit, SCI_SETSELECTIONEND,   SciExec( hEdit, SCI_POSITIONFROMLINE, 4, 0 ), 0 )
+    pT->CurrentSelection.isInitialized = false
+    FindControls_Show()
+    FindSel_Pump()
+    FindSel_Check( "setup: armed over three lines", _
+        (gFind.nSelection = true) andalso _
+        ((pT->CurrentSelection.endline - pT->CurrentSelection.startline) = 2), _
+        str(pT->CurrentSelection.startline) & ".." & str(pT->CurrentSelection.endline) )
+
+    gFind.txtFind = "Zeta"
+    FindReplace_HighlightSearches( theme.editor.occurrence )
+    FindReplace_NextSelection( 0, true, true )
+    FindSel_Check( "  and a search has moved the live selection onto ONE line", _
+        (SciExec( hEdit, SCI_LINEFROMPOSITION, SciExec( hEdit, SCI_GETSELECTIONSTART, 0, 0 ), 0 ) = _
+         SciExec( hEdit, SCI_LINEFROMPOSITION, SciExec( hEdit, SCI_GETSELECTIONEND, 0, 0 ), 0 )) )
+
+    FindReplace_EnsureSelectionCaptured( pT )
+    FindSel_Check( "  the captured range is STILL the three the user chose", _
+        ((pT->CurrentSelection.endline - pT->CurrentSelection.startline) = 2), _
+        str(pT->CurrentSelection.startline) & ".." & str(pT->CurrentSelection.endline) )
+    FindReplace_HighlightSearches( theme.editor.occurrence )
+    FindSel_Check( "  and the search still covers three of the five", _
+        (gFind.foundCount = 3), str(gFind.foundCount) & "/" & str(nWhole) )
 
     ' ---- CLOSING DROPS BOTH ------------------------------------------------------------
     FindReplaceControls_Hide()
