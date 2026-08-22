@@ -30,6 +30,27 @@ does not have. Restored verbatim, and the other five then checked MECHANICALLY -
 attempt at that check reported all six identical and was a NOTHING**, because the extractor failed
 on every file and `diff -q` on two empty files says they match.
 
+**THE INTERACTIVE PASS RAN AND FOUND FOUR THINGS. THREE WERE MINE.** In order: Match Case and a
+tab switch left the old n/m on screen (the reconstructed function); Replace and Replace All
+replaced with an EMPTY STRING (`gFind.txtReplace` has never been written by anything, and
+DoReplace used to read the control directly); and Replace behaved like Replace All -- **the new
+colour parameter went FIRST, boolean converts to ulong silently, and all three call sites shifted
+one place**. The fourth was pre-existing and changed by request: the find term echoing back in the
+document's casing, now skipped at BOTH reseed sites when it differs only in case.
+
+**THE PATTERN ACROSS ALL THREE IS ONE THING: AN EQUIVALENCE ASSERTED WITHOUT BEING CHECKED.** That
+a body matched its comment. That two sources of a string agreed -- asserted in a commit message,
+when one grep showed txtFind with seven writers and txtReplace with none. That adding a parameter
+was additive. Each was cheap to verify and none was verified.
+
+**AND `_check_selftests` WAS GREEN THROUGH ALL OF IT** -- 20,328 assertions, zero failures, on a
+find engine that could not update a count, could not replace text, and replaced the wrong number
+of matches. It floors the assertion total now as well as the suite count, **and that would not
+have caught these either**: re-introducing the first defect deliberately left the total unchanged.
+
+Confirmed working by the author since: the count, F3/Shift+F3 and the wrap, Match Case, Whole
+Word, Selection, Replace, Replace All, Preserve Case, and the tab switch.
+
 **THIS IS A MOVE OF LIVE CODE, NOT AN ADDITION**, and the gates cannot see what matters. Every one
 of them proves it compiles, links and leaves 20,328 assertions standing; **none proves it still
 finds anything.** [`7c-step26.md`](7c-step26.md) carries the six-item interactive pass it needs.
@@ -1027,7 +1048,7 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | `_check_shell.bat` | `src/shell` includes no Win32 shell header, and carries no `PsC.` (5 files); **and NO WINDOWS SEPARATOR IN A PATH LITERAL and no `environ("TEMP")` across `src/shell` + `src/app` -- 53 files, new in step 18.** Two rules, because a separator is not an identifier and `%TEMP%` has no separator in it | green |
 | `_run_shell.bat --selftest` | the shell's own suite — **493 assertions** (2026-08-17; +2 step 18, +17 step 19, +12 step 20, +17 step 21, +9 step 22, +12 step 23, +17 step 24, +12 drag and drop in step 25) | green |
 | tiko `TIKO_FONTFILE_SELFTEST=1` | the font resolver and the callback Scintilla drives — **13 assertions** (2026-08-14) | green |
-| **`_check_selftests.bat`** | **EVERY self-test, startup AND dialog, in one tiko run — 33 report lines, 20,328 assertions IN A CLEAN TREE.** Step 23 found that the number DEPENDS ON WHAT IS IN THE DIRECTORY: two untracked .bas files in the tiko root take it to 34 / 20,362, reproducibly, with no source change. Quote the floor, not the total (re-run 2026-08-14; the page said 20,329 until then — frmAbout lost the id-397 assertion when the Proprietary pill went). Fails on any failure AND on fewer than 33 report lines, so "it did not run" cannot look like "it passed". Backs up and restores `settings.ini` and `tiko.tiko`, because a clean exit saves them. Opens real dialogs, so it needs a desktop. ~20s; run it deliberately, not on every build. | green |
+| **`_check_selftests.bat`** | **34 report lines, 20,440 assertions as of step 26. It FLOORS BOTH since step 26, at 33 and 20,328 — and the totals have moved twice UNATTRIBUTED (step 26), so they are not a signal at three-assertion granularity.** Step 23 found that the number DEPENDS ON WHAT IS IN THE DIRECTORY: two untracked .bas files in the tiko root take it to 34 / 20,362, reproducibly, with no source change. Quote the floor, not the total (re-run 2026-08-14; the page said 20,329 until then — frmAbout lost the id-397 assertion when the Proprietary pill went). Fails on any failure AND on fewer than 33 report lines, so "it did not run" cannot look like "it passed". Backs up and restores `settings.ini` and `tiko.tiko`, because a clean exit saves them. Opens real dialogs, so it needs a desktop. ~20s; run it deliberately, not on every build. | green |
 | ...including `TIKO_THEME_SELFTEST` | **929** | green |
 | ...and `TIKO_OPTIONS_SELFTEST` | the options rows bind to gConfig — **26** (was 11 passed / 6 failed until step 14 repaired the ORACLE) | green |
 | ...and the five DIALOG suites | Keyboard layout, User Tools, Build Configurations, Project Options, About — reachable only since step 15 gave them AUTOCLOSE hooks | green |
