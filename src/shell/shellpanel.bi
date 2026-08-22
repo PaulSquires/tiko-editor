@@ -360,6 +360,7 @@ end sub
 '' for; ShellPanel_Install is near the top and needs its address.
 declare sub ShellExplorer_OnContext( byval pList as any ptr, byval nRow as long, _
                                      byval nX as long, byval nY as long, byval ud as any ptr )
+declare function ShellExplorer_PaintOverlay( byval pi as PsLtPaintInfo ptr ) as boolean
 
 
 '' Wire the panel's callbacks. Called once, beside ShellTabs_Install.
@@ -371,6 +372,10 @@ sub ShellPanel_Install()
     '' for every mode; the handler bails unless the pane is the Explorer, so Bookmarks and
     '' Functions are unaffected and get PsListTree's fixed right-click behaviour for free.
     g_panel->OnContextMenu( @ShellExplorer_OnContext, 0 )
+    '' THE ROW GLYPH, new in 7c step 22 on the hook step 21 added. Installed for every mode
+    '' and drawn in none but the Explorer -- the handler bails on the mode, so Bookmarks and
+    '' Functions keep the plain rows they have always had.
+    g_panel->OnPaintOverlay( @ShellExplorer_PaintOverlay )
     '' NO ZEBRA STRIPES. Reported by the author -- "the bookmark rows colored weird". The
     '' rows here are a file's bookmarks, not records, and tiko's own panel paints every row
     '' the same. Set ONCE, at install: SetAltRows is a flag the control keeps, unlike the
@@ -1377,4 +1382,91 @@ function ShellExplorer_FolderCommand( byval nId as long ) as boolean
         case IDM_EXPLORER_DELETEFOLDER : ShellExplorer_DeleteFolder( nRow )
     end select
     return true
+end function
+
+
+'' =======================================================================================
+'' THE EXPLORER'S ROW GLYPH -- 7c step 22, on the overlay hook step 21 added to PsListTree.
+''
+'' ---- WHAT tiko DRAWS, AND WHY THIS DRAWS LESS ----------------------------------------
+''
+'' frmExplorer_PaintCallback replaces the row wholesale and paints THREE things in the icon
+'' column: a chevron for a container, a dot for a file, and the caption. It has to paint the
+'' chevron itself because tiko deliberately leaves SetTreeIndent OFF and does its own indent
+'' arithmetic (frmExplorer.inc:405).
+''
+'' THIS PANEL HAS SetTreeIndent AND ShowTwisty ON, so PsListTree already draws the chevron
+'' and already reserves the band it sits in. What is left is the ONE thing the control has
+'' no notion of: a file row's document glyph. So the overlay draws a single character, on
+'' one kind of row, and everything else on screen is the control's.
+''
+'' ---- U+00B7 IS NOT A PRIVATE-USE CODEPOINT, AND THAT IS THE POINT --------------------
+''
+'' tiko's own comment on wszIconDocument (modDeclares.bi:332) says "use the regular Segoe UI
+'' font for this one" -- it is MIDDLE DOT, present in every text font, not a Segoe MDL2 glyph
+'' from the private-use area. So unlike the pane switcher's icons this needs nothing from the
+'' font fallback chain and cannot come out as a box.
+'' =======================================================================================
+
+'' The glyph a row kind shows, or "" for a row that shows none.
+''
+'' A PURE FUNCTION OF THE KIND, and split out for the same reason PsModalRouteEvent was in
+'' step 2: the painter needs a compositor and this does not, so the DECISION is assertable
+'' even though the drawing is not. Every kind is listed, including the ones that draw
+'' nothing, so a new kind added later fails the exhaustive assertion rather than silently
+'' inheriting "no glyph".
+function ShellExplorer_GlyphFor( byval kind as ShellExpKind ) as DWSTRING
+    dim as DWSTRING g
+    select case kind
+        case EXPKIND_FILE
+            '' U+00B7 MIDDLE DOT, as UTF-8 bytes. tiko's wszIconDocument.
+            g.Utf8 = chr(&hC2, &hB7)
+        case EXPKIND_ROOT, EXPKIND_FOLDER
+            '' Nothing: PsListTree's own twisty is already in this band, and a second glyph
+            '' beside it would be two controls for one piece of state.
+        case EXPKIND_PROMOTE, EXPKIND_NONE
+            '' Nothing. tiko paints the promote row in the accent colour instead of giving
+            '' it a glyph -- which an OVERLAY cannot do, because the caption is already on
+            '' screen by the time it runs. Recorded rather than approximated.
+    end select
+    return g
+end function
+
+
+'' ---------------------------------------------------------------------------------------
+'' Draw it. Runs AFTER the control has painted the row, which is what the overlay hook is
+'' for -- the pre-paint hook replaces the row and would mean re-implementing the background,
+'' the hot/selected cascade, the twisty, the indent and the text.
+''
+'' THE COLOUR IS THE ROW'S OWN, handed over in the paint info. Without that field the glyph
+'' would need its own resolution of the same cascade and would be the wrong colour on
+'' exactly the rows that are easiest not to look at -- the selected one and the hot one.
+''
+'' ---- THE BAND IS APPROXIMATED, AND HERE IS THE APPROXIMATION -------------------------
+''
+'' nIndent is the text's x offset and already includes the reserved twisty band, so the band
+'' is what sits immediately to its left. Its WIDTH is the control's nTwisty, which is not
+'' exposed -- so this uses the row's HEIGHT instead, which is the same order and is what the
+'' band is sized from by convention. The glyph is centred in whatever rect that gives, so a
+'' few pixels of difference is invisible; if it ever stops being, the fix is a getter rather
+'' than arithmetic here.
+'' ---------------------------------------------------------------------------------------
+private function ShellExplorer_PaintOverlay( byval pi as PsLtPaintInfo ptr ) as boolean
+    if pi = 0 then return false
+    if g_panelMode <> SHPANEL_EXPLORER then return false
+
+    dim as DWSTRING g = ShellExplorer_GlyphFor( ShellPanel_KindOf( pi->nRow ) )
+    if PsLen( g ) = 0 then return false
+
+    dim as PsRect rc
+    rc.h = pi->rc.h
+    rc.w = pi->rc.h
+    rc.y = pi->rc.y
+    rc.x = pi->rc.x + pi->nIndent - rc.w
+    if rc.x < pi->rc.x then rc.x = pi->rc.x
+    if rc.w <= 0 then return false
+
+    pi->p->SetForeColor( pi->clrText )
+    pi->p->PaintText( g, @rc, PSTF_CENTER or PSTF_VCENTER )
+    return false
 end function

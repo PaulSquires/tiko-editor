@@ -4144,6 +4144,56 @@ end function
                                       str(ProjectFolders_Count()) & " was " & str(nWas)
                             end scope
 
+                            '' ---- THE ROW GLYPH, 7c step 22 -----------------------
+                            ''
+                            '' THE DECISION, NOT THE DRAWING. The painter needs a
+                            '' compositor; which glyph a kind shows does not, which is why
+                            '' it is a pure function -- the same split PsModalRouteEvent
+                            '' got in step 2 for the same reason.
+                            ''
+                            '' EXHAUSTIVE OVER THE KINDS, including the four that draw
+                            '' nothing. A kind added later and forgotten would otherwise
+                            '' inherit "no glyph" silently, and an Explorer row with no
+                            '' icon looks like a row that is still loading.
+                            scope
+                                dim as DWSTRING gFile = ShellExplorer_GlyphFor( EXPKIND_FILE )
+                                Check "  a file row shows a glyph", (PsLen(gFile) = 1), _
+                                      str(PsLen(gFile))
+                                '' U+00B7 MIDDLE DOT, and asserted by CODEPOINT rather than
+                                '' by "not empty": the whole reason this one is safe where
+                                '' the pane switcher's are unproven is that it is not a
+                                '' private-use character, and only its value says so.
+                                Check "    which is U+00B7, not a private-use codepoint", _
+                                      (gFile.At(0) = &hB7), hex(gFile.At(0))
+
+                                Check "    a group shows none -- the twisty is already there", _
+                                      (PsLen(ShellExplorer_GlyphFor(EXPKIND_ROOT)) = 0)
+                                Check "    nor does a folder", _
+                                      (PsLen(ShellExplorer_GlyphFor(EXPKIND_FOLDER)) = 0)
+                                Check "    nor the Save-as-Project row", _
+                                      (PsLen(ShellExplorer_GlyphFor(EXPKIND_PROMOTE)) = 0)
+                                Check "    and an untagged row shows none", _
+                                      (PsLen(ShellExplorer_GlyphFor(EXPKIND_NONE)) = 0)
+
+                                '' ---- AND THE DECISION IS ACTUALLY WIRED TO A PAINTER --
+                                '' Removing the OnPaintOverlay call left every assertion
+                                '' above GREEN: they test a pure function that nothing had
+                                '' to be calling. A correct decision reaching no painter is
+                                '' a pane with no icons and a suite that says otherwise --
+                                '' which is this port's oldest failure, one layer along.
+                                ''
+                                '' The two row callbacks get the same treatment, because
+                                '' the same argument applies to them and neither was
+                                '' checked either.
+                                Check "    the overlay is installed on the panel", _
+                                      (g_panel->pfnOverlay <> 0)
+                                Check "      as is the context handler", _
+                                      (g_panel->pfnContext <> 0)
+                                Check "      and the two row callbacks", _
+                                      (g_panel->pfnSelChange <> 0) andalso _
+                                      (g_panel->pfnActivate <> 0)
+                            end scope
+
                             '' IsFileDisplayed READS THE MODEL, NOT THE ROWS -- so it
                             '' answers correctly with the pane on another mode, which is
                             '' the whole reason it is not a row walk. Asserted from
