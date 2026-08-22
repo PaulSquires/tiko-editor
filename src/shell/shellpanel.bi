@@ -367,6 +367,15 @@ declare function ShellExplorer_OnEndEdit( byval pList as any ptr, byval nRow as 
                                           byref sText as DWSTRING, _
                                           byval ud as any ptr ) as boolean
 declare function ShellExplorer_RenameFolder( byval nRow as long ) as boolean
+'' The action icons, 7c step 24. The overlay chains to the painter and the painter needs the
+'' rects, and both live at the bottom with the rest of the icon code.
+declare sub ShellExplorer_IconRects( byval nRow as long, byref rcRow as PsRect, _
+                                     byref rcAdd as PsRect, byref rcRen as PsRect, _
+                                     byref rcDel as PsRect )
+declare function ShellExplorer_PaintIcons( byval pi as PsLtPaintInfo ptr ) as boolean
+declare function ShellExplorer_OnRowClick( byval pList as any ptr, byval nRow as long, _
+                                           byval nX as long, byval nY as long, _
+                                           byval ud as any ptr ) as boolean
 
 
 '' Wire the panel's callbacks. Called once, beside ShellTabs_Install.
@@ -387,6 +396,10 @@ sub ShellPanel_Install()
     '' Bookmarks and Functions, so neither pane becomes editable.
     g_panel->OnBeginEdit( @ShellExplorer_OnBeginEdit, 0 )
     g_panel->OnEndEdit( @ShellExplorer_OnEndEdit, 0 )
+    '' THE LEFT CLICK, new in 7c step 24 and new in PsListTree in the same step. It claims
+    '' ONLY an action icon on the hot Explorer row and declines everything else, so
+    '' selection, folding and the other two panes are untouched.
+    g_panel->OnRowClick( @ShellExplorer_OnRowClick, 0 )
     '' NO ZEBRA STRIPES. Reported by the author -- "the bookmark rows colored weird". The
     '' rows here are a file's bookmarks, not records, and tiko's own panel paints every row
     '' the same. Set ONCE, at install: SetAltRows is a flag the control keeps, unlike the
@@ -1476,6 +1489,11 @@ private function ShellExplorer_PaintOverlay( byval pi as PsLtPaintInfo ptr ) as 
     if pi = 0 then return false
     if g_panelMode <> SHPANEL_EXPLORER then return false
 
+    '' THE ICONS SHARE THIS HOOK. PsListTree has ONE overlay slot, so the two painters are
+    '' chained here rather than each asking for their own -- which also fixes their order:
+    '' the icons must come last, because they clear the band they sit in.
+    ShellExplorer_PaintIcons( pi )
+
     dim as DWSTRING g = ShellExplorer_GlyphFor( ShellPanel_KindOf( pi->nRow ) )
     if PsLen( g ) = 0 then return false
 
@@ -1489,6 +1507,68 @@ private function ShellExplorer_PaintOverlay( byval pi as PsLtPaintInfo ptr ) as 
 
     pi->p->SetForeColor( pi->clrText )
     pi->p->PaintText( g, @rc, PSTF_CENTER or PSTF_VCENTER )
+    return false
+end function
+
+
+'' ---------------------------------------------------------------------------------------
+'' The action icons, painted over the hot row. Also an overlay, and it runs after the row
+'' glyph above so the two cannot fight over the buffer state.
+''
+'' ---- THE CAPTION IS ALREADY ON SCREEN, WHICH IS THIS HOOK'S ONE REAL LIMIT ------------
+''
+'' tiko clips the text short of the icons BEFORE drawing it (frmExplorer.inc:400) -- it
+'' replaces the whole row, so it can. An overlay cannot: by the time it runs, a long folder
+'' name has already been painted, and PaintText ellipsizes without reporting that it did.
+''
+'' So the icons paint their own band of the row's OWN background first. The result is the
+'' same -- a long caption ends where the icons begin -- and the mechanism is different, so
+'' it is worth saying rather than leaving the next reader to wonder why there is a fill
+'' here. clrBack is the resolved colour the row was actually painted with, which is why
+'' PsLtPaintInfo carries it.
+'' ---------------------------------------------------------------------------------------
+function ShellExplorer_PaintIcons( byval pi as PsLtPaintInfo ptr ) as boolean
+    if pi = 0 then return false
+    if g_panelMode <> SHPANEL_EXPLORER then return false
+    '' THE HOT ROW ONLY. A column of these down every row would compete with the filenames
+    '' and read as chrome rather than as controls -- and they have no idle appearance to get
+    '' wrong, because they are only ever drawn in the hot colour.
+    if pi->bHot = false then return false
+
+    dim as PsRect rcAdd, rcRen, rcDel
+    ShellExplorer_IconRects( pi->nRow, pi->rc, rcAdd, rcRen, rcDel )
+    if (rcAdd.w = 0) andalso (rcRen.w = 0) andalso (rcDel.w = 0) then return false
+
+    '' The band the icons occupy, cleared to the row's own background so a long caption
+    '' cannot run underneath them.
+    dim as long xLeft = pi->rc.x + pi->rc.w
+    if (rcAdd.w > 0) andalso (rcAdd.x < xLeft) then xLeft = rcAdd.x
+    if (rcRen.w > 0) andalso (rcRen.x < xLeft) then xLeft = rcRen.x
+    if (rcDel.w > 0) andalso (rcDel.x < xLeft) then xLeft = rcDel.x
+    dim as PsRect rcBand
+    rcBand.x = xLeft
+    rcBand.y = pi->rc.y
+    rcBand.w = (pi->rc.x + pi->rc.w) - xLeft
+    rcBand.h = pi->rc.h
+    if rcBand.w > 0 then
+        pi->p->SetBackColor( pi->clrBack )
+        pi->p->PaintRect( @rcBand )
+    end if
+
+    pi->p->SetForeColor( pi->clrText )
+    dim as DWSTRING g
+    if rcAdd.w > 0 then
+        g.Utf8 = chr(&hEE, &hA3, &hB4)   '' U+E8F4  new folder  (tiko wszIconNewFolder)
+        pi->p->PaintText( g, @rcAdd, PSTF_CENTER or PSTF_VCENTER )
+    end if
+    if rcRen.w > 0 then
+        g.Utf8 = chr(&hEE, &hA2, &hAC)   '' U+E8AC  rename      (tiko wszIconRename)
+        pi->p->PaintText( g, @rcRen, PSTF_CENTER or PSTF_VCENTER )
+    end if
+    if rcDel.w > 0 then
+        g.Utf8 = chr(&hEE, &h9D, &h8D)   '' U+E74D  trash       (tiko wszIconTrash)
+        pi->p->PaintText( g, @rcDel, PSTF_CENTER or PSTF_VCENTER )
+    end if
     return false
 end function
 
@@ -1562,4 +1642,145 @@ function ShellExplorer_RenameFolder( byval nRow as long ) as boolean
     if ShellPanel_KindOf( nRow ) <> EXPKIND_FOLDER then return false
     g_panel->SetCurSel( nRow )
     return g_panel->BeginEdit( nRow )
+end function
+
+
+'' =======================================================================================
+'' THE ACTION ICONS -- 7c step 24, the last of tiko's Explorer.
+''
+'' Up to three glyph buttons at the right of the HOT row: add, rename, delete. All three
+'' commands already existed; what arrived in step 24 is PsListTree handing a host a LEFT
+'' click with its position, which is what makes a button inside a row possible at all.
+'' =======================================================================================
+
+enum ShellExpIcon
+    EXPICON_NONE   = 0
+    EXPICON_ADD    = 1
+    EXPICON_RENAME = 2
+    EXPICON_DELETE = 3
+end enum
+
+'' UNSCALED, like every other layout constant in this binary; scaled at the point of use.
+const SHP_ICON_UNITS = 22
+const SHP_ICONPAD_UNITS = 2
+
+
+'' ---------------------------------------------------------------------------------------
+'' Which action icons a row offers, and where they sit.
+''
+'' ONE IMPLEMENTATION, CALLED BY BOTH THE PAINTER AND THE HIT TEST -- tiko says so in its
+'' own header and it is the whole reason this is a function rather than two blocks of
+'' arithmetic. Two copies drift, and the way they drift is an icon that is drawn one place
+'' and clicked another, which reads as the button not working.
+''
+'' This version is better placed to honour it than tiko's. tiko's hit test has to REBUILD
+'' the row rect from the control's client rect and hope it matches what the painter drew
+'' into; here the overlay is handed pi->rc and the click can ask RowRect, so both callers
+'' pass in the same rect from the same source.
+''
+'' EMPTY RECTS MEAN "NOT OFFERED", which is how both callers test them.
+'' ---------------------------------------------------------------------------------------
+sub ShellExplorer_IconRects( byval nRow as long, byref rcRow as PsRect, _
+                             byref rcAdd as PsRect, byref rcRen as PsRect, _
+                             byref rcDel as PsRect )
+    rcAdd.x = 0 : rcAdd.y = 0 : rcAdd.w = 0 : rcAdd.h = 0
+    rcRen = rcAdd
+    rcDel = rcAdd
+    if g_panel = 0 then exit sub
+
+    dim as boolean bWantAdd = false, bWantRen = false, bWantDel = false
+    select case ShellPanel_KindOf( nRow )
+        case EXPKIND_ROOT
+            '' A GROUP CAN BE ADDED TO BUT NEVER RENAMED OR DELETED. Its caption comes from
+            '' gConfig.Cat and its existence is what every file's ProjectFiletype names --
+            '' the five categories are structural, not user data. And only where the
+            '' category takes folders at all: Main and Resource hold one file each.
+            bWantAdd = ProjectFolders_CatAllowsFolders( cast(long, g_panel->GetItemData(nRow)) )
+        case EXPKIND_FOLDER
+            bWantAdd = true
+            bWantRen = true
+            bWantDel = true
+    end select
+    if (bWantAdd = false) andalso (bWantRen = false) andalso (bWantDel = false) then exit sub
+
+    dim as single f = 1.0
+    if g_pSurf <> 0 then f = g_pSurf->fScale
+    dim as long nIcon = PsScaleBy( SHP_ICON_UNITS, f )
+    dim as long nPad  = PsScaleBy( SHP_ICONPAD_UNITS, f )
+    dim as long xRight = rcRow.x + rcRow.w - nPad
+
+    '' LAID OUT FROM THE RIGHT INWARDS, so reading order left-to-right ends up Add, Rename,
+    '' Delete. Each row right-aligns its OWN set, so a group row -- which has only Add --
+    '' puts it at the margin rather than three columns in where a folder's Add sits. tiko's
+    '' choice, with tiko's reason: a ragged left edge across rows with different icon counts
+    '' reads worse than a straight right one.
+    if bWantDel then
+        rcDel.x = xRight - nIcon : rcDel.y = rcRow.y : rcDel.w = nIcon : rcDel.h = rcRow.h
+        xRight = rcDel.x
+    end if
+    if bWantRen then
+        rcRen.x = xRight - nIcon : rcRen.y = rcRow.y : rcRen.w = nIcon : rcRen.h = rcRow.h
+        xRight = rcRen.x
+    end if
+    if bWantAdd then
+        rcAdd.x = xRight - nIcon : rcAdd.y = rcRow.y : rcAdd.w = nIcon : rcAdd.h = rcRow.h
+    end if
+end sub
+
+
+'' Which icon, if any, sits under x on this row. ONLY X IS COMPARED: the icons span the
+'' row's full height, so being on the row at all is established by having a row index.
+function ShellExplorer_IconHitTest( byval nRow as long, byval nX as long ) as ShellExpIcon
+    if g_panel = 0 then return EXPICON_NONE
+    dim as PsRect rcRow
+    if g_panel->RowRect( nRow, @rcRow ) = false then return EXPICON_NONE
+
+    dim as PsRect rcAdd, rcRen, rcDel
+    ShellExplorer_IconRects( nRow, rcRow, rcAdd, rcRen, rcDel )
+
+    if rcDel.w > 0 then
+        if (nX >= rcDel.x) andalso (nX < rcDel.x + rcDel.w) then return EXPICON_DELETE
+    end if
+    if rcRen.w > 0 then
+        if (nX >= rcRen.x) andalso (nX < rcRen.x + rcRen.w) then return EXPICON_RENAME
+    end if
+    if rcAdd.w > 0 then
+        if (nX >= rcAdd.x) andalso (nX < rcAdd.x + rcAdd.w) then return EXPICON_ADD
+    end if
+    return EXPICON_NONE
+end function
+
+
+'' ---------------------------------------------------------------------------------------
+'' The left click, offered by PsListTree before it does anything of its own.
+''
+'' CLAIMS ONLY AN ICON. Everything else on the row -- the caption, the twisty band, the
+'' empty space to the left of the icons -- is the tree's, and returning true for any of it
+'' would break selection and folding for the sake of three buttons.
+''
+'' A COMMAND MAY REBUILD THE TREE UNDER US, which is why the row is resolved to what it
+'' MEANS before anything is run: NewFolder and DeleteFolder both call ShellExplorer_Load,
+'' and an index read afterwards would name a different row.
+'' ---------------------------------------------------------------------------------------
+function ShellExplorer_OnRowClick( byval pList as any ptr, byval nRow as long, _
+                                   byval nX as long, byval nY as long, _
+                                   byval ud as any ptr ) as boolean
+    if g_panelMode <> SHPANEL_EXPLORER then return false
+    if nRow < 0 then return false
+
+    '' THE ICONS ARE ON THE HOT ROW ONLY, and the hit test has to agree with the painter
+    '' about that or a click lands on a button nobody can see. bHot is the painter's rule;
+    '' nHotRow is the same fact, read from the other side.
+    if g_panel = 0 then return false
+    if g_panel->nHotRow <> nRow then return false
+
+    dim as ShellExpIcon hit = ShellExplorer_IconHitTest( nRow, nX )
+    if hit = EXPICON_NONE then return false
+
+    select case hit
+        case EXPICON_ADD    : ShellExplorer_NewFolder( nRow )
+        case EXPICON_RENAME : ShellExplorer_RenameFolder( nRow )
+        case EXPICON_DELETE : ShellExplorer_DeleteFolder( nRow )
+    end select
+    return true
 end function

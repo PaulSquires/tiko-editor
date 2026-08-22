@@ -4196,6 +4196,166 @@ end function
                                     end scope
                                 end scope
 
+                                '' ---- THE ACTION ICONS, 7c step 24 ---------------------
+                                ''
+                                '' The ARITHMETIC and the HIT TEST, which are pure and
+                                '' assertable; where they land on screen is not.
+                                ''
+                                '' Both come from ONE function called by the painter and the
+                                '' hit test alike -- tiko's rule, and the failure it prevents
+                                '' is an icon drawn one place and clicked another, which
+                                '' reads as the button not working rather than as a bug.
+                                scope
+                                    '' ---- THE PANE NEEDS A RECTANGLE, and until this line
+                                    '' it did not have one. Shell_LayoutAll runs much later
+                                    '' in this suite, so g_panel's bounds are 0x0 here --
+                                    '' and RowRect answers FALSE with the rect ZEROED for a
+                                    '' row it cannot place, which is the only reason the
+                                    '' icon arithmetic looked wrong.
+                                    ''
+                                    '' Restored at the end of the scope: the geometry block
+                                    '' below drives the real layout and would otherwise be
+                                    '' asserting against a rectangle this fixture invented.
+                                    dim as PsRect rcPanelWas = g_panel->bounds
+                                    g_panel->SetBounds( PsRc(0, 0, 400, 600) )
+
+                                    '' ---- AND CLOSE ANY OPEN EDITOR FIRST -------------
+                                    '' NewFolder ends by opening one (step 23), and the
+                                    '' folder-commands block above ran it twice -- so an
+                                    '' editor is open when this scope starts. The first
+                                    '' EnsureVisible then SCROLLS, the scroll commits the
+                                    '' edit, the commit calls ShellExplorer_Load, and the
+                                    '' rebuild lands in the middle of a block that had
+                                    '' already resolved its row indices.
+                                    ''
+                                    '' Cancelled rather than committed: this fixture has no
+                                    '' business renaming anything, and the block below wants
+                                    '' the tree it measured.
+                                    if g_panel->IsEditing() then g_panel->EndEdit( false )
+                                    g_panel->Layout()
+
+                                    dim as PsRect rcRow, rcAdd, rcRen, rcDel
+                                    dim as long nFolderRow = -1
+                                    for r as long = 0 to g_panel->GetCount() - 1
+                                        if ShellPanel_KindOf(r) = EXPKIND_FOLDER then nFolderRow = r : exit for
+                                    next
+                                    Check "    a folder row exists to test icons on", _
+                                          (nFolderRow >= 0), str(nFolderRow)
+
+                                    '' ---- A FOLDER OFFERS ALL THREE ------------------
+                                    '' THE ROW HAS TO BE ON SCREEN, and the first draft of
+                                    '' this block did not check. RowRect answers FALSE for a
+                                    '' row outside the viewport and leaves the rect ZEROED,
+                                    '' so IconRects laid its icons out from a right edge of
+                                    '' 0 -- at negative x -- and the hit test, which calls
+                                    '' RowRect again, found nothing at all.
+                                    ''
+                                    '' Three assertions failed and TWO PASSED ON THE ZEROED
+                                    '' RECT: "offers all three" and "in reading order" are
+                                    '' about widths and relative order, and both hold
+                                    '' perfectly at the wrong place. Relations again.
+                                    g_panel->EnsureVisible( nFolderRow )
+                                    Check "      the folder row is on screen", _
+                                          g_panel->RowRect( nFolderRow, @rcRow ), _
+                                          str(rcRow.x) & "," & str(rcRow.y) & _
+                                          " " & str(rcRow.w) & "x" & str(rcRow.h)
+                                    ShellExplorer_IconRects( nFolderRow, rcRow, rcAdd, rcRen, rcDel )
+                                    Check "      a folder offers all three", _
+                                          (rcAdd.w > 0) andalso (rcRen.w > 0) andalso (rcDel.w > 0)
+                                    '' READING ORDER IS Add, Rename, Delete -- laid out from
+                                    '' the RIGHT inwards, so this is what says the order did
+                                    '' not come out mirrored.
+                                    Check "        in reading order, left to right", _
+                                          (rcAdd.x < rcRen.x) andalso (rcRen.x < rcDel.x), _
+                                          str(rcAdd.x) & "," & str(rcRen.x) & "," & str(rcDel.x)
+                                    Check "        and all inside the row", _
+                                          (rcAdd.x >= rcRow.x) andalso _
+                                          (rcDel.x + rcDel.w <= rcRow.x + rcRow.w)
+
+                                    '' ---- A GROUP OFFERS ADD ONLY --------------------
+                                    '' Its caption comes from gConfig.Cat and its existence
+                                    '' is what every file's ProjectFiletype names, so it can
+                                    '' be added to and never renamed or deleted.
+                                    g_panel->EnsureVisible( nGroup )
+                                    Check "      the group row is on screen too", _
+                                          g_panel->RowRect( nGroup, @rcRow )
+                                    ShellExplorer_IconRects( nGroup, rcRow, rcAdd, rcRen, rcDel )
+                                    Check "      a group offers Add and nothing else", _
+                                          (rcAdd.w > 0) andalso (rcRen.w = 0) andalso (rcDel.w = 0)
+                                    '' AND IT SITS AT THE MARGIN, not three columns in where
+                                    '' a folder's Add is. Each row right-aligns its OWN set;
+                                    '' tiko chose that because a ragged left edge across rows
+                                    '' with different counts reads worse than a straight
+                                    '' right one, and this is the assertion for it.
+                                    Check "        right-aligned, at the margin", _
+                                          (rcAdd.x + rcAdd.w > rcRow.x + rcRow.w - _
+                                           PsScaleBy(SHP_ICON_UNITS, 1.0) - _
+                                           PsScaleBy(SHP_ICONPAD_UNITS, 1.0)), str(rcAdd.x)
+
+                                    '' ---- A GROUP THAT FORBIDS FOLDERS OFFERS NONE ---
+                                    scope
+                                        dim as long nNo2 = -1
+                                        for r as long = 0 to g_panel->GetCount() - 1
+                                            if ShellPanel_KindOf(r) <> EXPKIND_ROOT then continue for
+                                            if ProjectFolders_CatAllowsFolders( cast(long, g_panel->GetItemData(r)) ) = false then
+                                                nNo2 = r : exit for
+                                            end if
+                                        next
+                                        if nNo2 >= 0 then
+                                            g_panel->RowRect( nNo2, @rcRow )
+                                            ShellExplorer_IconRects( nNo2, rcRow, rcAdd, rcRen, rcDel )
+                                            Check "      a group that forbids folders offers none", _
+                                                  (rcAdd.w = 0) andalso (rcRen.w = 0) andalso (rcDel.w = 0)
+                                        end if
+                                    end scope
+
+                                    '' ---- AND A FILE ROW OFFERS NONE -----------------
+                                    scope
+                                        dim as long nFile3 = -1
+                                        for r as long = 0 to g_panel->GetCount() - 1
+                                            if ShellPanel_KindOf(r) = EXPKIND_FILE then nFile3 = r : exit for
+                                        next
+                                        if nFile3 >= 0 then
+                                            g_panel->RowRect( nFile3, @rcRow )
+                                            ShellExplorer_IconRects( nFile3, rcRow, rcAdd, rcRen, rcDel )
+                                            Check "      a file row offers none", _
+                                                  (rcAdd.w = 0) andalso (rcRen.w = 0) andalso (rcDel.w = 0)
+                                        end if
+                                    end scope
+
+                                    '' ---- THE HIT TEST AGREES WITH THE ARITHMETIC ----
+                                    '' At each icon's CENTRE, and in the gap to their left.
+                                    '' Sampling the centre rather than an edge on purpose:
+                                    '' an off-by-one in the half-open range would pass at
+                                    '' the centre and is not what this assertion is for --
+                                    '' the boundaries are asserted by the caption test.
+                                    g_panel->EnsureVisible( nFolderRow )
+                                    g_panel->RowRect( nFolderRow, @rcRow )
+                                    ShellExplorer_IconRects( nFolderRow, rcRow, rcAdd, rcRen, rcDel )
+                                    Check "      the hit test finds Add", _
+                                          (ShellExplorer_IconHitTest( nFolderRow, rcAdd.x + rcAdd.w \ 2 ) = EXPICON_ADD)
+                                    Check "        and Rename", _
+                                          (ShellExplorer_IconHitTest( nFolderRow, rcRen.x + rcRen.w \ 2 ) = EXPICON_RENAME)
+                                    Check "        and Delete", _
+                                          (ShellExplorer_IconHitTest( nFolderRow, rcDel.x + rcDel.w \ 2 ) = EXPICON_DELETE)
+                                    Check "        and nothing where the caption is", _
+                                          (ShellExplorer_IconHitTest( nFolderRow, rcRow.x + 4 ) = EXPICON_NONE)
+
+                                    '' ---- THE CLICK CLAIMS AN ICON AND NOTHING ELSE --
+                                    '' The row must be HOT or the icons are not on screen,
+                                    '' and a hit test that disagreed with the painter about
+                                    '' that would put a live button under an invisible one.
+                                    g_panel->nHotRow = nFolderRow
+                                    Check "      a click on the caption is NOT claimed", _
+                                          (ShellExplorer_OnRowClick( g_panel, nFolderRow, rcRow.x + 4, 0, 0 ) = false)
+                                    g_panel->nHotRow = -1
+                                    Check "      nor is a click on an icon of a COLD row", _
+                                          (ShellExplorer_OnRowClick( g_panel, nFolderRow, _
+                                                                     rcAdd.x + rcAdd.w \ 2, 0, 0 ) = false)
+
+                                    g_panel->SetBounds( rcPanelWas )
+                                end scope
+
                                 '' Clean up: the workspace is shared with everything after
                                 '' this block, and a stray folder changes the tree's shape.
                                 dim as long nRow1 = -1
@@ -4265,6 +4425,8 @@ end function
                                 Check "      and the label-edit pair", _
                                       (g_panel->pfnBeginEdit <> 0) andalso _
                                       (g_panel->pfnEndEdit <> 0)
+                                Check "      and the left-click hook", _
+                                      (g_panel->pfnClick <> 0)
                             end scope
 
                             '' IsFileDisplayed READS THE MODEL, NOT THE ROWS -- so it
