@@ -87,7 +87,8 @@ function FindControls_Show() as long
                         cbool(pDoc->CurrentSelection.endline - pDoc->CurrentSelection.startline)
         if pDoc->CurrentSelection.isInitialized = false then isOriginalSelectionMultiline = false
         
-        ' THE FIELD ALWAYS SHOWS THE SELECTION, INCLUDING WHEN THERE ISN'T ONE. Opening Find
+        ' THE FIELD SHOWS THE SELECTION, INCLUDING WHEN THERE ISN'T ONE -- WITH ONE
+        ' EXCEPTION ADDED BELOW, which is why this no longer says ALWAYS. Opening Find
         ' with nothing selected clears the box rather than re-offering the last phrase, which
         ' is by request: the box is a picture of the selection, so an empty selection is an
         ' empty box and Ctrl+F is always ready to be typed into. There used to be a bSeedField
@@ -102,16 +103,42 @@ function FindControls_Show() as long
             gFind.nSelection = true
             pDoc->SetMarkerHighlight
         end if
-        ' One assignment for both paths, so the box and the model cannot disagree about what
-        ' is being searched for -- the multi-line branch used to clear the box and leave
-        ' gFind.txtFind holding the previous phrase.
-        gFind.txtFind = sFindText
 
-        dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
-        if sFindText <> AfxGetWindowText(hCtl) then
-            AfxSetWindowText( hCtl, sFindText )
-            dim as long nLen = len(sFindText)
-            Edit_SetSel( hCtl, nLen, nLen )
+        ' ---- ONE EXCEPTION: THE SAME WORD IN THE DOCUMENT'S CASE -------------------------
+        '
+        ' Type "afxnova", press Ctrl+H, and the field became "AfxNova" -- because the
+        ' incremental search had already selected the match, and the selection is the
+        ' document's casing rather than what was typed. The rule above is right; this is the
+        ' one case where it takes something the user authored and hands back something they
+        ' did not, for no gain: it is the SAME WORD and it will find the same matches.
+        '
+        ' EQUAL IGNORING CASE BUT NOT EQUAL EXACTLY. Both halves matter. An exact match is
+        ' already a no-op below, and a genuinely different word must still reseed -- that is
+        ' the behaviour the comment above records as requested and it is untouched.
+        '
+        ' BOTH COMPARISONS ARE LIKE-FOR-LIKE, and that is not fussiness. This file has been
+        ' bitten twice by string/DWSTRING conversions that compile and mean something else:
+        ' the fold is DWSTRING against DWSTRING (PsUCase returns one), and the exact test is
+        ' string against string via .Utf8. Neither leaves fbc a conversion to choose.
+        dim as string sTyped = gFind.txtFind.Utf8
+        dim as boolean bCaseOnlyEcho = false
+        if len(sFindText) then
+            if (PsUCase(sFindText) = PsUCase(gFind.txtFind)) andalso _
+               (sFindText <> sTyped) then bCaseOnlyEcho = true
+        end if
+
+        if bCaseOnlyEcho = false then
+            ' One assignment for both paths, so the box and the model cannot disagree about
+            ' what is being searched for -- the multi-line branch used to clear the box and
+            ' leave gFind.txtFind holding the previous phrase.
+            gFind.txtFind = sFindText
+
+            dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
+            if sFindText <> AfxGetWindowText(hCtl) then
+                AfxSetWindowText( hCtl, sFindText )
+                dim as long nLen = len(sFindText)
+                Edit_SetSel( hCtl, nLen, nLen )
+            end if
         end if
     end if
         
