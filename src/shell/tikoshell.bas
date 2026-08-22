@@ -688,6 +688,12 @@ constructor ShellFindBar()
     this.pToggle = new PsIconPanel
     if this.pToggle <> 0 then
         this.AddChild( this.pToggle )
+        '' HORIZONTAL. PsIconPanel DEFAULTS TO A COLUMN -- bVertical = true, the
+        '' activity-bar case it was built for -- and every strip in this shell is a
+        '' ROW. Not setting it drew the items straight down and out through the
+        '' bottom of the band, which is what the first screenshot of this window
+        '' actually showed; the tofu was only the more obvious half.
+        this.pToggle->bVertical = false
         scope
             dim as DWSTRING g
             '' ---- THESE ARE tiko'S OWN, AND THEY ARE LITERAL TEXT ------------------
@@ -711,6 +717,12 @@ constructor ShellFindBar()
     this.pNav = new PsIconPanel
     if this.pNav <> 0 then
         this.AddChild( this.pNav )
+        '' HORIZONTAL. PsIconPanel DEFAULTS TO A COLUMN -- bVertical = true, the
+        '' activity-bar case it was built for -- and every strip in this shell is a
+        '' ROW. Not setting it drew the items straight down and out through the
+        '' bottom of the band, which is what the first screenshot of this window
+        '' actually showed; the tofu was only the more obvious half.
+        this.pNav->bVertical = false
         scope
             dim as DWSTRING g
             '' ---- tiko'S OWN, CHECKED AGAINST modDeclares.bi THIS TIME -------------
@@ -747,9 +759,21 @@ sub ShellFindBar.OnLayout()
     dim as long h    = this.bounds.h
     dim as long y    = 0
 
+    '' ---- THE CELL SIZE IS PUSHED IN, AND THE WIDTH IS ASKED FOR --------------------
+    '' These two lines used to be `icon * GetCount()`, and the control's own cell is
+    '' nCellSize = 36 against SHFIND_ICON_UNITS = 24 -- so every strip was laid out THREE
+    '' CELLS WIDE INSIDE A TWO-AND-A-BIT-CELL RECT and the last icon hung outside its own
+    '' panel. Same shape as the Replace field's rect: a number derived twice instead of
+    '' asked for once.
     dim as long nNavW = 0, nTogW = 0
-    if this.pNav <> 0 then nNavW = icon * this.pNav->GetCount()
-    if this.pToggle <> 0 then nTogW = icon * this.pToggle->GetCount()
+    if this.pNav <> 0 then
+        this.pNav->nCellSize = SHFIND_ICON_UNITS
+        nNavW = this.pNav->ContentExtent()
+    end if
+    if this.pToggle <> 0 then
+        this.pToggle->nCellSize = SHFIND_ICON_UNITS
+        nTogW = this.pToggle->ContentExtent()
+    end if
 
     '' Navigation hard right; the results text sits to ITS left and is measured in OnPaint.
     if this.pNav <> 0 then
@@ -1020,6 +1044,12 @@ constructor ShellReplaceBar()
     this.pPreserve = new PsIconPanel
     if this.pPreserve <> 0 then
         this.AddChild( this.pPreserve )
+        '' HORIZONTAL. PsIconPanel DEFAULTS TO A COLUMN -- bVertical = true, the
+        '' activity-bar case it was built for -- and every strip in this shell is a
+        '' ROW. Not setting it drew the items straight down and out through the
+        '' bottom of the band, which is what the first screenshot of this window
+        '' actually showed; the tofu was only the more obvious half.
+        this.pPreserve->bVertical = false
         this.pPreserve->AddItem( DWSTRING("AB"), SHREPL_ID_PRESERVE, 0, PSICON_TOGGLE )
         this.pPreserve->OnClick( @ShellReplace_OnIcon, 0 )
     end if
@@ -1027,6 +1057,12 @@ constructor ShellReplaceBar()
     this.pActions = new PsIconPanel
     if this.pActions <> 0 then
         this.AddChild( this.pActions )
+        '' HORIZONTAL. PsIconPanel DEFAULTS TO A COLUMN -- bVertical = true, the
+        '' activity-bar case it was built for -- and every strip in this shell is a
+        '' ROW. Not setting it drew the items straight down and out through the
+        '' bottom of the band, which is what the first screenshot of this window
+        '' actually showed; the tofu was only the more obvious half.
+        this.pActions->bVertical = false
         scope
             dim as DWSTRING g
             g.Utf8 = chr(&hEE, &h85, &h8B)   '' U+E14B  replace      (tiko wszIconReplace)
@@ -1078,7 +1114,10 @@ sub ShellReplaceBar.OnLayout()
     '' rather than being placed after it -- tiko's "make the width of the textbox smaller
     '' because we want to visually fit the Preserve Case icon into the Replace text rect".
     dim as long nPres = 0
-    if this.pPreserve <> 0 then nPres = icon * this.pPreserve->GetCount()
+    if this.pPreserve <> 0 then
+        this.pPreserve->nCellSize = SHFIND_ICON_UNITS
+        nPres = this.pPreserve->ContentExtent()
+    end if
     dim as long wBox = wField - nPres
     if wBox < 0 then wBox = 0
 
@@ -1089,7 +1128,8 @@ sub ShellReplaceBar.OnLayout()
         this.pPreserve->SetBounds( PsRc(xField + wBox, 0, nPres, h) )
     end if
     if this.pActions <> 0 then
-        dim as long nAct = icon * this.pActions->GetCount()
+        this.pActions->nCellSize = SHFIND_ICON_UNITS
+        dim as long nAct = this.pActions->ContentExtent()
         this.pActions->SetBounds( PsRc(xField + wField + pad, 0, nAct, h) )
     end if
 end sub
@@ -1520,6 +1560,12 @@ sub BuildTree( byref surf as PsSurface )
     '' the constructor now -- but .Utf8 is what the gallery uses, it is unambiguous at the
     '' call site, and the codepoint is visible in the comment either way.
     g_panelMenu = new PsIconPanel
+    '' HORIZONTAL, and the band above says so: SH_PANELMENU_H is a HEIGHT and the strip
+    '' spans the panel's full WIDTH. PsIconPanel defaults to a column, so without this
+    '' the three items ran down the panel and out of their own rect -- and the step 20
+    '' assertion that pins the band's height could not see it, because the band was
+    '' right and the CONTENT was sideways.
+    g_panelMenu->bVertical = false
     scope
         dim as DWSTRING g
         g.Utf8 = chr(&hEE, &hA2, &hA9)   '' U+E8A9  Explorer   (tiko wszIconExplorer)
@@ -4893,6 +4939,75 @@ end function
                         if (g_pSurf <> 0) andalso (g_pSurf->pRoot <> 0) then
                             g_pSurf->pRoot->EnsureLayout()
                         end if
+                        '' ---- EVERY STRIP IS A ROW, AND ITS ITEMS FIT IN IT ------
+                        '' PsIconPanel DEFAULTS TO A COLUMN. Five strips in this shell
+                        '' are rows and not one of them said so, which drew the items
+                        '' straight down and out through the bottom of their own rect --
+                        '' visible in the first screenshot of this window, invisible to
+                        '' every assertion, including step 20's, which pins the BAND's
+                        '' height. The band was right and the content was sideways.
+                        ''
+                        '' ASSERTED ON CONTAINMENT, NOT ONLY ON THE FLAG. The flag is the
+                        '' wiring; a last item that lies inside the strip's own rect is
+                        '' the CONSEQUENCE, and it stays true if the control ever grows
+                        '' another way to be laid out wrong.
+                        scope
+                            dim as PsIconPanel ptr strips(0 to 4) = { _
+                                g_barFind->pToggle, g_barFind->pNav, _
+                                g_barReplace->pPreserve, g_barReplace->pActions, _
+                                g_panelMenu }
+                            dim as boolean bAllRows = true, bAllFit = true
+                            dim as string sWhich = "", sFit = ""
+                            for k as long = 0 to 4
+                                dim as PsIconPanel ptr p = strips(k)
+                                if p = 0 then continue for
+                                if p->bVertical then
+                                    bAllRows = false
+                                    sWhich = sWhich & str(k) & " "
+                                end if
+                                if p->GetCount() > 0 then
+                                    dim as PsRect ri = p->ItemRect( p->GetCount() - 1 )
+                                    if ((ri.y + ri.h) > p->bounds.h) orelse _
+                                       ((ri.x + ri.w) > p->bounds.w) then
+                                        bAllFit = false
+                                        sFit = sFit & str(k) & ":" & _
+                                               str(ri.x + ri.w) & "x" & str(ri.y + ri.h) & _
+                                               ">" & str(p->bounds.w) & "x" & _
+                                               str(p->bounds.h) & " "
+                                    end if
+                                end if
+                            next
+                            Check "    all five icon strips are ROWS, not columns", _
+                                  bAllRows, sWhich
+                            Check "      and every strip's last item fits inside it", _
+                                  bAllFit, sFit
+
+                            '' ---- AND THE CELLS ARE THE SIZE THE BAR WAS DRAWN FOR --
+                            '' PsIconPanel's own default is nCellSize = 36 against this
+                            '' bar's 24, and CONTAINMENT ALONE CANNOT SEE THE DIFFERENCE:
+                            '' the layout asks the control for its width, so a 36-unit
+                            '' cell just makes a wider strip that still fits. Reverting
+                            '' either half of the fix left 577/0 for exactly that reason.
+                            '' This pins the SIZE, which is the part a screenshot showed
+                            '' and no relation between two of the control's own numbers
+                            '' ever will.
+                            scope
+                                dim as long want = PsScaleBy( SHFIND_ICON_UNITS, _
+                                                              g_pSurf->fScale )
+                                '' A ROW'S ITEM IS CELL-WIDE AND STRIP-TALL, not square.
+                                '' The first draft of this demanded a square and read
+                                '' 24x40 -- the control was right and the expectation was
+                                '' mine, for the fifth time in this run of fixtures.
+                                dim as PsRect r0 = g_barFind->pToggle->ItemRect( 0 )
+                                Check "    and a cell is the bar's own icon size wide", _
+                                      (r0.w = want), str(r0.w) & " wanted " & str(want)
+                                Check "      and as tall as the strip", _
+                                      (r0.h = g_barFind->pToggle->bounds.h), _
+                                      str(r0.h) & " wanted " & _
+                                      str(g_barFind->pToggle->bounds.h)
+                            end scope
+                        end scope
+
                         Check "    the find field has a real rect to borrow", _
                               (g_barFind->pField->bounds.w > 0), _
                               str(g_barFind->pField->bounds.w)
