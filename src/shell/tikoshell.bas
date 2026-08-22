@@ -826,13 +826,42 @@ sub ShellFind_OnIcon(byval pPanel as any ptr, byval nIndex as long, byval ud as 
             scope
                 dim pDoc as clsDocument ptr = FindReplace_ActiveDoc()
                 if pDoc <> 0 then
+                    '' ---- RE-CAPTURE FROM A LIVE MULTI-LINE SELECTION ----------------
+                    '' THE BAR IS ALREADY OPEN WHEN THIS RUNS, and the capture happens at
+                    '' SHOW time -- so selecting lines AFTER opening Find was invisible to
+                    '' the rule below and the icon simply refused. tiko does not have the
+                    '' hole because it re-captures on EVERY editor focus loss, which is
+                    '' the mechanism this port replaced with a single show-time read.
+                    ''
+                    '' ONLY WHEN THE LIVE ONE SPANS LINES. After a search the live
+                    '' selection is the last match, one line, and re-capturing that would
+                    '' throw away the range the user actually chose.
+                    scope
+                        dim as long sl, el, sp, ep
+                        pDoc->GetSelectedLineRange( sl, el, sp, ep )
+                        if el > sl then
+                            pDoc->CurrentSelection.startline     = sl
+                            pDoc->CurrentSelection.endline       = el
+                            pDoc->CurrentSelection.startpos      = sp
+                            pDoc->CurrentSelection.endpos        = ep
+                            pDoc->CurrentSelection.isInitialized = true
+                        end if
+                    end scope
+
                     dim as boolean bMulti = _
                         cbool(pDoc->CurrentSelection.endline - pDoc->CurrentSelection.startline)
                     if pDoc->CurrentSelection.isInitialized = false then bMulti = false
+                    '' ---- true, NOT 1 -----------------------------------------------
+                    '' THE ENGINE TESTS `gFind.nSelection = true`, and in FreeBASIC that
+                    '' is -1. This wrote 1, so `1 = -1` was false and the restricted-range
+                    '' branch NEVER RAN: the icon lit and the search still covered the
+                    '' whole document. Every assertion in step 29 tested `<> 0`, which is
+                    '' the shape of assertion that cannot see this -- and the author found
+                    '' it in one gesture.
                     if bMulti orelse pDoc->HasMarkerHighlight then
-                        gFind.nSelection = iif( gFind.nSelection, 0, 1 )
+                        gFind.nSelection = iif( gFind.nSelection <> 0, false, true )
                     else
-                        gFind.nSelection = 0
+                        gFind.nSelection = false
                     end if
                     if gFind.nSelection then
                         '' ---- THE RESTORE, AND IT IS NOT OPTIONAL ------------------
@@ -2147,7 +2176,9 @@ sub ShellFind_SeedFromSelection()
         '' A MULTI-LINE SELECTION IS NOT A PHRASE, it is a RANGE. The box clears for a
         '' different reason from the empty case above, and the same gesture arms Selection.
         sFindText = ""
-        gFind.nSelection = 1
+        '' true, NOT 1 -- see the note in ShellFind_OnIcon. The engine compares against
+        '' `true`, which is -1.
+        gFind.nSelection = true
         pDoc->SetMarkerHighlight()
     end if
 
@@ -2203,7 +2234,7 @@ sub ShellFind_SetVisible( byval bShow as boolean )
         ''
         '' EVERY DOCUMENT, not the active one: the highlights were painted into whichever
         '' buffers were searched, and a tab switched away from keeps them otherwise.
-        gFind.nSelection = 0
+        gFind.nSelection = false
         if gAppHost.TabCount andalso gAppHost.TabDocAt then
             for i as long = 0 to gAppHost.TabCount() - 1
                 dim pD as clsDocument ptr = gAppHost.TabDocAt( i )
@@ -4910,8 +4941,14 @@ end function
                         pDoc->CurrentSelection.isInitialized = true
                         g_barFind->pToggle->SetSelected( iSel, true )
                         ShellFind_OnIcon( g_barFind->pToggle, iSel, 0 )
+                        '' `= true`, NOT `<> 0`. THE ENGINE COMPARES AGAINST true,
+                        '' which is -1, and this assertion said `<> 0` while the code
+                        '' wrote 1 -- so it passed against a flag the engine could not
+                        '' read. The icon lit and the search still covered the whole
+                        '' document. Assert the VALUE the reader tests, not a property
+                        '' of it that the defect preserves.
                         Check "    and arms against a multi-line one", _
-                              (gFind.nSelection <> 0), str(gFind.nSelection)
+                              (gFind.nSelection = true), str(gFind.nSelection)
                         Check "      laying down a marker highlight", pDoc->HasMarkerHighlight
                         Check "      with the icon lit", _
                               g_barFind->pToggle->GetSelected( iSel )
@@ -5033,9 +5070,71 @@ end function
                             Check "    a multi-line selection empties the box", _
                                   (PsLen(gFind.txtFind) = 0), gFind.txtFind.Utf8
                             Check "      and arms Selection on its own", _
-                                  (gFind.nSelection <> 0), str(gFind.nSelection)
+                                  (gFind.nSelection = true), str(gFind.nSelection)
                             Check "        with the icon lit to match", _
                                   g_barFind->pToggle->GetSelected( iSel )
+                            '' ---- AND THE SEARCH ACTUALLY SHRINKS ---------------
+                            '' THE ASSERTION THIS STEP WAS MISSING, and the author's
+                            '' report is what asked for it: "searching does not honor
+                            '' selected area". Every check above is about the FLAG and
+                            '' the ICON. None looked at what the ENGINE does.
+                            ''
+                            '' AND THE RESTRICTION IS THE MARKERS, NOT THE FLAG. I had
+                            '' read the nSelection test in UpdateResultsFromCaret as the
+                            '' mechanism; it is not. HighlightSearches narrows its target
+                            '' range to First/LastMarkerHighlight, so the flag decides
+                            '' whether markers get LAID and the markers do the work.
+                            '' The first draft of this scope asserted five matches and
+                            '' got two -- because the previous scope's markers were still
+                            '' down and the search was already restricted. THE FIXTURE
+                            '' WAS DIRTY; the engine was right.
+                            scope
+                                dim as long nWhole, nInSel
+                                pDoc->RemoveMarkerHighlight()
+                                gFind.nSelection = false
+                                gFind.txtFind = DWSTRING("Probe")
+                                gFind.nMatchCase = 0 : gFind.nWholeWord = 0
+                                FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
+                                nWhole = gFind.foundCount
+                                Check "    unrestricted, the probe file holds five Probes", _
+                                      (nWhole = 5), str(nWhole)
+
+                                '' DRIVEN THROUGH THE ICON, over a LIVE selection made
+                                '' while the bar is already open -- which is the gesture
+                                '' that was broken: the capture runs at SHOW time, so
+                                '' selecting afterwards was invisible and the icon simply
+                                '' refused to arm.
+                                '' THE CAPTURE IS THROWN AWAY FIRST, and without that
+                                '' this assertion was vacuous: the previous scope had
+                                '' left a multi-line CurrentSelection behind, so the rule
+                                '' armed from THAT and disabling the re-capture changed
+                                '' nothing -- 566/0 with the fix reverted. This is what
+                                '' the real gesture looks like: the bar opened over no
+                                '' selection, so nothing worth having was captured.
+                                pDoc->CurrentSelection.isInitialized = false
+                                SciMsg( pS2, SCI_SETSELECTIONSTART, 0, 0 )
+                                SciMsg( pS2, SCI_SETSELECTIONEND, _
+                                        SciMsg( pS2, SCI_POSITIONFROMLINE, 2, 0 ), 0 )
+                                g_barFind->pToggle->SetSelected( iSel, true )
+                                ShellFind_OnIcon( g_barFind->pToggle, iSel, 0 )
+                                Check "    selecting AFTER the bar opened still arms it", _
+                                      (gFind.nSelection = true), str(gFind.nSelection)
+                                Check "      with markers actually down", _
+                                      pDoc->HasMarkerHighlight
+                                nInSel = gFind.foundCount
+                                Check "      and the search finds FEWER of them", _
+                                      (nInSel < nWhole) andalso (nInSel > 0), _
+                                      str(nInSel) & "/" & str(nWhole)
+
+                                '' AND OFF AGAIN RESTORES THE WHOLE DOCUMENT, which is
+                                '' the half that proves the number above was the range
+                                '' talking rather than the buffer having changed.
+                                g_barFind->pToggle->SetSelected( iSel, false )
+                                ShellFind_OnIcon( g_barFind->pToggle, iSel, 0 )
+                                Check "    and turning it off searches all five again", _
+                                      (gFind.foundCount = nWhole), str(gFind.foundCount)
+                            end scope
+
                             ShellFind_SetVisible( false )
                         end scope
 
