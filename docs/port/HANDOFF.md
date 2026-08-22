@@ -1,5 +1,18 @@
 # Handoff — the tiko → PsPlatform port
 
+**7c STEP 30 COMPLETE. THE FOUR SELECTION RULES COME BACK FROM tiko.** Four defects were reported
+against tiko's Selection icon over three rounds; the shell is the PORT of that bar and had two of
+them. **This step is not a port of code -- it is a port of four things that were learned by hand.**
+One capture rule in one place (the arm had carried its own copy since step 29), and a disarm that
+drops the text selection but a REFUSAL that does not.
+
+**AND IT IS THE FIRST PLACE IN THE RUN WHERE A CONDITION WAS PINNED RATHER THAN A BRANCH:** the
+guard is reverted to `false` AND to `true`, each failing exactly one assertion. One revert would
+have proved only that the branch runs sometimes. `--selftest` 566 -> 571, all five driving the
+GESTURE -- open, select, click.
+
+---
+
 **AND THE SAME BUG WAS IN tiko, WHICH IS THE BINARY IT WAS REPORTED AGAINST.** Two rounds of fixes
 went into **tikoshell** before a screenshot settled it: `"Aa"` and `"W"` sitting INSIDE the field
 frame is tiko's arrangement, and `wszIconMatchCase`/`wszIconWholeWord` are those literal strings.
@@ -738,107 +751,111 @@ Read in this order, and do not skip the first:
     `PsTimerNow()`, which is a **settable virtual clock**, not a wall clock — and *"the clock
     never moved"* is indistinguishable from *"the work was free"*, which was the answer the step
     wanted to hear.
-11. [`7c-step29.md`](7c-step29.md) — **a headless assertion finding the flaw in a decision
+11. [`7c-step30.md`](7c-step30.md) — **porting what was learned, not what was written.** Four
+    defects found by hand in tiko, two of them live in the shell too. Read "Pinning a
+    condition, not a branch": the first revert pair in this run that flips a guard BOTH ways,
+    because the wrong answer was a condition that is always true.
+12. [`7c-step29.md`](7c-step29.md) — **a headless assertion finding the flaw in a decision
     whose rationale had just been written down.** Read "And the assertion found what that
     decision cost": two different notions of "the selection", one captured and one live, and
     a feature that would have marked the wrong lines or none. Then the fifth unasserted
     wiring in five such steps.
-12. [`7c-step28.md`](7c-step28.md) — **the step where porting the SIBLING found the defect
+13. [`7c-step28.md`](7c-step28.md) — **the step where porting the SIBLING found the defect
     the first one shipped.** Read "Preserve Case is step 27's question, answered the other
     way": tiko refuses to keep a second copy of a flag the engine owns, this port kept one,
     and tiko has the site that would have broken it. Then the revert that came back GREEN --
     where the thing that was wrong was the COMMENT, not the code.
-13. [`7c-step27.md`](7c-step27.md) — **a fixture that was wrong three times over while the
+14. [`7c-step27.md`](7c-step27.md) — **a fixture that was wrong three times over while the
     code under it was right every time.** Read "Every count in the search assertion was wrong
     on the first run": three expected match counts, all guessed from a glance at the file, all
     contradicted by the engine. Then the fourth-consecutive unasserted wiring below it.
-14. [`7c-step26.md`](7c-step26.md) — **the step where a function was RECONSTRUCTED FROM ITS
+15. [`7c-step26.md`](7c-step26.md) — **the step where a function was RECONSTRUCTED FROM ITS
     DOC COMMENT instead of ported, and every gate passed.** Read "And one of the six was not
     ported at all". Then the rest of it: a move of LIVE code, where the gates cannot see
     what matters.** Every one of them proves the find engine compiles, links and leaves
     20,328 assertions standing; none proves it still FINDS anything. Read the interactive
     pass at the end -- it is six specific gestures, and it is the whole verification.
-15. [`7c-step25.md`](7c-step25.md) — **an assertion measuring a quantity the defect does
+16. [`7c-step25.md`](7c-step25.md) — **an assertion measuring a quantity the defect does
     not change.** Two checks compared ProjectFolders_Count(), and a MOVE PRESERVES THE
     COUNT -- so they held whether the folder had moved or not. Read "The suite broke this
     handler's own first rule, twice". frmExplorer.inc is ported as of this step.
-16. [`7c-step24.md`](7c-step24.md) — **geometry that answered nothing before the first
+17. [`7c-step24.md`](7c-step24.md) — **geometry that answered nothing before the first
     paint, and a harness that lied for the third time.** Read "The defect the assertions
     found" and then "Two harness failures": four reverts reported green because every
     patch had failed to apply. tiko's Explorer is ported as of this step.
-17. [`7c-step23.md`](7c-step23.md) — **a note that outlived its own condition, and a gate
+18. [`7c-step23.md`](7c-step23.md) — **a note that outlived its own condition, and a gate
     number that depends on stray files.** PsListTree said label editing was blocked on
     PsTextBox; PsTextBox had landed. Then read "A gate number that depends on stray
     files": two untracked .bas files in the tiko root move _check_selftests by a whole
     suite, reproducibly, with no source change.
-18. [`7c-step22.md`](7c-step22.md) — **a correct decision wired to nothing.** Read "The
+19. [`7c-step22.md`](7c-step22.md) — **a correct decision wired to nothing.** Read "The
     finding": five assertions over a pure function stayed green when the call that reaches
     it was deleted -- and the two row callbacks carrying every click since step 4 turned
     out never to have been checked either. They work, so nothing asked.
-19. [`7c-step21.md`](7c-step21.md) — **the right button was a DEFECT, and two of the
+20. [`7c-step21.md`](7c-step21.md) — **the right button was a DEFECT, and two of the
     guards written against it were redundant.** Read "What the reverts bought": two reverts
     came back green because the MODEL already enforced the rule, and each bought an
     assertion for the guard that does fire. The usual finding here is a claim nothing
     tested; this one is a guard nothing needed.
-20. [`7c-step20.md`](7c-step20.md) — **the step where the first three reverts all came
+21. [`7c-step20.md`](7c-step20.md) — **the step where the first three reverts all came
     back GREEN.** Read "THE FIRST THREE REVERTS": a zero-height strip satisfies every
     relation written for it, which is step 1's finding arriving again nineteen steps later
     in a file that quotes it. Also the first time the toolkit made something SHORTER than
     tiko's original.
-21. [`7c-step19.md`](7c-step19.md) — **the Explorer pane, and three defects each found
+22. [`7c-step19.md`](7c-step19.md) — **the Explorer pane, and three defects each found
     by a different thing.** Read "Three defects": a pane that rendered NOTHING with nothing
     to say so, an assertion that passed while printing evidence against itself, and a guard
     tiko has never once run. Then "The painter was dropped" -- a gap named rather than a
     corner cut.
-22. [`7c-step18.md`](7c-step18.md) — **a whole portability class that every gate was blind
+23. [`7c-step18.md`](7c-step18.md) — **a whole portability class that every gate was blind
     to, because a separator is not an identifier.** Read "The defect the fix exposed": two
     documented conventions, both correct on their own terms, meeting at a raw `=`. Then the
     vacuous assertion -- and the revert-to-red HARNESS that failed silently before it, which is
     the sharper of the two.
-23. [`7c-step17.md`](7c-step17.md) — **three bug reports, three different verdicts, and the
+24. [`7c-step17.md`](7c-step17.md) — **three bug reports, three different verdicts, and the
     only thing that told them apart was running both platforms.** Read "What actually solved it":
     two of my diagnoses died, and the one-sentence observation that settled the third was
     "right click popup menus work perfectly". Also the sharpest variant yet of this page's
     recurring shape -- a SUITE that drove the widget correctly and passed, because its FIXTURE
     did the one thing no real caller did.
-24. [`7c-step16.md`](7c-step16.md) — **phase 7c's code meets Linux, and the step where I made
+25. [`7c-step16.md`](7c-step16.md) — **phase 7c's code meets Linux, and the step where I made
     this page's own mistake.** Five real defects, all in bindings, build scripts and gates rather
     than in portable code — and one of them made a suite report a PASS for the wrong reason on a
     platform where the feature did not work at all. Then read "What this step is really about":
     I called it "the first Linux run" repeatedly without opening PsPlatform's STATUS.md, which
     says on its second screen that Fedora had been in use since Gate 0.
-25. [`7c-step15.md`](7c-step15.md) — **the step where a revert-to-red falsified the CORRECTION,
+26. [`7c-step15.md`](7c-step15.md) — **the step where a revert-to-red falsified the CORRECTION,
     not the code.** Two explanations for the same hook, both plausible, both measured, both
     false -- and the second one was mine, written in this step. Read "Two claims about why
     these hooks exist".
-26. [`7c-step14.md`](7c-step14.md) — **READ "What this step is really about".** Every stale
+27. [`7c-step14.md`](7c-step14.md) — **READ "What this step is really about".** Every stale
     claim this port has found was in PROSE; this one was in a SUITE, and that is worse. A number
     carries authority a sentence does not, and "11 passed" was believed for as long as it was
     printed. A suite nothing runs is indistinguishable from a suite that passes.
-27. [`7c-step13.md`](7c-step13.md) — **the step where the live list emptied, and four of its
+28. [`7c-step13.md`](7c-step13.md) — **the step where the live list emptied, and four of its
     items closed as "the blocker was not one".** Read the last section: a suite that has been
     failing six assertions because nothing runs it. That is this port's recurring failure
     wearing a suite instead of a comment.
-28. [`7c-step12.md`](7c-step12.md) — **the step where the revert-to-red pass caught the SUITES
+29. [`7c-step12.md`](7c-step12.md) — **the step where the revert-to-red pass caught the SUITES
     rather than the code, twice.** A prefix match left every style assertion green because
     `RegEnumValueW` happens to enumerate in the helpful order; removing a whole feature dropped
     a suite from 35 assertions to 30 and still printed "0 failed". Read that section before
     writing any assertion that depends on a lookup order or is wrapped in a skip.
-29. [`7c-step11.md`](7c-step11.md) — **the step that started as an encoding bug and was
+30. [`7c-step11.md`](7c-step11.md) — **the step that started as an encoding bug and was
     neither.** Read "What was actually wrong": a setting that had never reached the code it
     named. Then the assertion that failed on its first run — the CODE was right and the SUITE
     was wrong, which is the other way round from every other failure on this page.
-30. [`7c-step10.md`](7c-step10.md) — **three items closed, three false comments, and one of
+31. [`7c-step10.md`](7c-step10.md) — **three items closed, three false comments, and one of
     them mine.** Read the three-row table at the top. Then the revert-to-red section: every rule
     went red for the first time in six steps, and the one that nearly did not is instructive —
     `Doc_EncodingName`'s `case else` is `"ANSI"`, so a missing arm does not fail, it puts the
     word ANSI beside a UTF-16 file.
-31. [`7c-step9.md`](7c-step9.md) — **the encoding step, and the third blocker in three steps
+32. [`7c-step9.md`](7c-step9.md) — **the encoding step, and the third blocker in three steps
     that had already been removed.** Read the table at the top, then "A defect found next to the
     one being fixed": the seam's `LoadFileText` had NO AGREED POLARITY — one implementation
     returned false on success, the other true — which was invisible with one implementation and
     live from the moment there were two.
-32. [`7c-step8.md`](7c-step8.md) — **the step where two blockers turned out to have been
+33. [`7c-step8.md`](7c-step8.md) — **the step where two blockers turned out to have been
     removed before anyone noticed.** The pane went 0 → 51 rows, but read the two intermediate
     tables first: the one that shows the pane's ceiling is fbcParser (573 procedure symbols, 41
     with a body line) and the revert-to-red table, where one revert found not a missing test but
@@ -1191,7 +1208,7 @@ one unchanged binary). Movement in that one is noise. The runner's own header re
 | `_check_app_layer.bat` | `src/app` names no Win32 or AfxNova token (**50 files**, 2026-08-17 — the find engine came down in step 26) | green |
 | `_check_app_standalone.bat` | `src/app` compiles against PsCore alone **and LINKS as one unit** | green — **18 clean**, 0 errors, **debt 0 and NO BASELINE** (2026-08-14) |
 | `_check_shell.bat` | `src/shell` includes no Win32 shell header, and carries no `PsC.` (5 files); **and NO WINDOWS SEPARATOR IN A PATH LITERAL and no `environ("TEMP")` across `src/shell` + `src/app` -- 53 files, new in step 18.** Two rules, because a separator is not an identifier and `%TEMP%` has no separator in it | green |
-| `_run_shell.bat --selftest` | the shell's own suite — **561 assertions** (2026-08-22; +2 step 18, +17 step 19, +12 step 20, +17 step 21, +9 step 22, +12 step 23, +17 step 24, +12 drag and drop in step 25, +18 the Find bar in step 27, +26 the Replace bar in step 28, +24 Selection and the seeding in step 29 -- **including a real search AND a real replace over a known buffer**, the only assertions here that would notice the engine going dead) | green |
+| `_run_shell.bat --selftest` | the shell's own suite — **571 assertions** (2026-08-22; +2 step 18, +17 step 19, +12 step 20, +17 step 21, +9 step 22, +12 step 23, +17 step 24, +12 drag and drop in step 25, +18 the Find bar in step 27, +26 the Replace bar in step 28, +24 Selection and the seeding in step 29, +10 the fixes and the four rules in step 30 -- **including a real search AND a real replace over a known buffer**, the only assertions here that would notice the engine going dead) | green |
 | tiko `TIKO_FONTFILE_SELFTEST=1` | the font resolver and the callback Scintilla drives — **13 assertions** (2026-08-14) | green |
 | **`_check_selftests.bat`** | **35 report lines, 20,449 assertions since TIKO_FINDSEL_SELFTEST joined (2026-08-22); 34 / 20,440 before it. It FLOORS BOTH since step 26, at 33 and 20,328 — and the totals have moved twice UNATTRIBUTED (step 26), so they are not a signal at three-assertion granularity.** Step 23 found that the number DEPENDS ON WHAT IS IN THE DIRECTORY: two untracked .bas files in the tiko root take it to 34 / 20,362, reproducibly, with no source change. Quote the floor, not the total (re-run 2026-08-14; the page said 20,329 until then — frmAbout lost the id-397 assertion when the Proprietary pill went). Fails on any failure AND on fewer than 33 report lines, so "it did not run" cannot look like "it passed". Backs up and restores `settings.ini` and `tiko.tiko`, because a clean exit saves them. Opens real dialogs, so it needs a desktop. ~20s; run it deliberately, not on every build. | green |
 | ...including `TIKO_THEME_SELFTEST` | **929** | green |
