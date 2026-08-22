@@ -337,11 +337,11 @@ function OnCommand_SearchReplaceActions( _
         case IDM_REPLACENEXT, IDM_REPLACEPREV, IDM_REPLACEALL
             if gFind.foundCount = 0 then exit function
             if id = IDM_REPLACEPREV then 
-                FindReplace_DoReplace( false, false )
+                FindReplace_DoReplace( false, false, theme.editor.occurrence )
             elseif id = IDM_REPLACENEXT then 
-                FindReplace_DoReplace( false, true )
+                FindReplace_DoReplace( false, true, theme.editor.occurrence )
             elseif id = IDM_REPLACEALL then 
-                FindReplace_DoReplace( true, true )
+                FindReplace_DoReplace( true, true, theme.editor.occurrence )
             end if   
             FindReplace_HighlightSearches( theme.editor.occurrence )
             pDoc->CenterCurrentLine

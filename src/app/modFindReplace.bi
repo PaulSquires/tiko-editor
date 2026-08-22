@@ -111,8 +111,16 @@ declare function FindReplace_UpdateResultsFromCaret() as long
 declare function FindReplace_HighlightSearches( byval clrOccurrence as ulong ) as long
 
 '' Replace the current match, or every match. Reads gFind.txtFind / gFind.txtReplace.
+'' ---- clrOccurrence IS LAST, AND IT HAS NO DEFAULT ------------------------------------
+'' It went FIRST when this moved down, and boolean converts to ulong without a murmur -- so
+'' every existing call site kept compiling and shifted one place. `DoReplace(false, true)`,
+'' which meant "replace this one, then move on", became clrOccurrence = 0 and
+'' fReplaceAll = TRUE. Replace did Replace All, silently, and no gate could see it.
+''
+'' LAST AND MANDATORY means a call site that was not updated is a COMPILE ERROR rather than
+'' a different meaning. That is the only property of a signature change that matters here.
 declare function FindReplace_DoReplace( _
-            byval clrOccurrence as ulong, _
-            byval fReplaceAll as boolean = false, _
-            byval fMovenext as boolean = true _
+            byval fReplaceAll as boolean, _
+            byval fMovenext as boolean, _
+            byval clrOccurrence as ulong _
             ) as long

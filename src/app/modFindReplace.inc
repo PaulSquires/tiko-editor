@@ -355,9 +355,9 @@ end function
 '' own change handler, so the two agree by construction -- and where they ever did NOT, the
 '' stored value is the one every other function in this file already used.
 function FindReplace_DoReplace( _
-            byval clrOccurrence as ulong, _
-            byval fReplaceAll as boolean = false, _
-            byval fMovenext as boolean = true _
+            byval fReplaceAll as boolean, _
+            byval fMovenext as boolean, _
+            byval clrOccurrence as ulong _
             ) as long
 
     dim pDoc as clsDocument ptr = FindReplace_ActiveDoc()
