@@ -225,7 +225,7 @@ private sub frmFind_IconClick( byval hIconPanel as HWND, byval idx as long, byva
             if frmFindInProject_IsActive() then
                 frmFindInProject_RerunSearch()
             else
-                FindReplace_HighlightSearches()
+                FindReplace_HighlightSearches( theme.editor.occurrence )
             end if
             AfxRedrawWindow( hIconPanel )
 
@@ -234,7 +234,7 @@ private sub frmFind_IconClick( byval hIconPanel as HWND, byval idx as long, byva
             if frmFindInProject_IsActive() then
                 frmFindInProject_RerunSearch()
             else
-                FindReplace_HighlightSearches()
+                FindReplace_HighlightSearches( theme.editor.occurrence )
             end if
             AfxRedrawWindow( hIconPanel )
 
@@ -269,7 +269,7 @@ private sub frmFind_IconClick( byval hIconPanel as HWND, byval idx as long, byva
             else
                 pDoc->RemoveMarkerHighlight
             end if
-            FindReplace_HighlightSearches()
+            FindReplace_HighlightSearches( theme.editor.occurrence )
             AfxRedrawWindow( hIconPanel )
 
         case FINDTIP_CLOSE
@@ -418,10 +418,10 @@ function frmFind_PositionWindows() as LRESULT
                   SWP_NOZORDER or iif( isProjectSearch, SWP_HIDEWINDOW, SWP_SHOWWINDOW ) )
 
     ' Results from search eg. "1 of 10"
-    gFind.rcResults.left       = xNav + nNavW + pWindow->ScaleX(4)
-    gFind.rcResults.top        = nTop
-    gFind.rcResults.right      = xCloseRight - nCloseW
-    gFind.rcResults.bottom     = nTop + nHeight
+    gFindResultsRect.left       = xNav + nNavW + pWindow->ScaleX(4)
+    gFindResultsRect.top        = nTop
+    gFindResultsRect.right      = xCloseRight - nCloseW
+    gFindResultsRect.bottom     = nTop + nHeight
 
     ' Also covers LEAVING the tab: this runs on every tab switch, so a field left red by a
     ' fruitless project search goes back to normal for an ordinary Ctrl+F.
@@ -448,7 +448,7 @@ sub frmFind_TextBoxChange( byval hTextBox as HWND )
     frmFind_ApplyErrorState()
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc then
-        FindReplace_HighlightSearches()
+        FindReplace_HighlightSearches( theme.editor.occurrence )
         dim as hwnd hEdit = pDoc->hWndActiveScintilla
         dim as long startPos = SendMessage( hEdit, SCI_GETANCHOR, 0, 0) - 1
         FindReplace_NextSelection(startPos, true, true)
@@ -563,7 +563,7 @@ function frmFind_WndProc( _
         ' around the find field and the results count beside the chevrons.
         b.SetFont( ghFont(GUIFONT_9) )
         b.SetBackColor( theme.toptabs.texthot.backcolor )
-        b.PaintText( gFind.wszResults, @gFind.rcResults, DT_LEFT )
+        b.PaintText( gFind.wszResults, @gFindResultsRect, DT_LEFT )
 
         b.EndDoubleBuffer()
         

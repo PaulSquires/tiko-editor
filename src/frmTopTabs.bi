@@ -33,7 +33,8 @@ declare function frmTopTabsInfo_Show( byval hwndParent as HWND ) as LRESULT
 
 '' frmReplace
 declare function TopTabsInfoPanel_Show() as long
-declare function FindReplace_HighlightSearches() as long
+'' FindReplace_HighlightSearches moved to app/modFindReplace.bi in 7c step 26, and takes
+'' the occurrence COLOUR now -- see that file for why the theme could not come with it.
 
 ' Both live in modFindReplace.inc, which is included AFTER clsTopTabCtl.inc -- and
 ' clsTopTabCtl.SetFocusTab forces the Find bar open when the Find in Project tab is

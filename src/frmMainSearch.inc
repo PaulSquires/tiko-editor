@@ -149,14 +149,14 @@ function OnCommand_SearchFindDialog() as LRESULT
     dim as boolean bHasDoc  = cbool( pDoc <> 0 )
     dim as boolean bHasTerm = cbool( PsLen(gFind.txtFind) > 0 )
     If bHasDoc andalso bHasTerm Then
-        FindReplace_HighlightSearches()
+        FindReplace_HighlightSearches( theme.editor.occurrence )
         dim as hwnd hEdit = pDoc->hWndActiveScintilla
         dim as long startPos = SendMessage( hEdit, SCI_GETANCHOR, 0, 0) - 1
         FindReplace_NextSelection(startPos, true, true)
     elseif bHasDoc then
         ' Still drop the old term's highlights -- they belong to a phrase that is no longer
         ' in the box.
-        FindReplace_HighlightSearches()
+        FindReplace_HighlightSearches( theme.editor.occurrence )
         gFind.wszResults = ""
         gFind.foundCount = 0
     end if
@@ -288,22 +288,22 @@ function OnCommand_SearchFindActions( _
 
     select case id
         case IDM_FINDPREV
-            FindReplace_HighlightSearches()
+            FindReplace_HighlightSearches( theme.editor.occurrence )
             if FindReplace_NextSelection(startPos, false, true) then pDoc->CenterCurrentLine
             if IsWindowVisible(HWND_FRMMAIN_FIND) then AfxRedrawWindow( HWND_FRMMAIN_FIND )
 
         case IDM_FINDNEXT
-            FindReplace_HighlightSearches()
+            FindReplace_HighlightSearches( theme.editor.occurrence )
             if FindReplace_NextSelection(startPos, true, true) then pDoc->CenterCurrentLine
             if IsWindowVisible(HWND_FRMMAIN_FIND) then AfxRedrawWindow( HWND_FRMMAIN_FIND )
 
         case IDM_FINDPREVACCEL
-            FindReplace_HighlightSearches()
+            FindReplace_HighlightSearches( theme.editor.occurrence )
             if FindReplace_NextSelection(startPos, false, true) then pDoc->CenterCurrentLine
             if IsWindowVisible(HWND_FRMMAIN_FIND) = 0 then pDoc->RemoveSelectionAttributes()
 
         case IDM_FINDNEXTACCEL
-            FindReplace_HighlightSearches()
+            FindReplace_HighlightSearches( theme.editor.occurrence )
             if FindReplace_NextSelection(startPos, true, true) then pDoc->CenterCurrentLine
             if IsWindowVisible(HWND_FRMMAIN_FIND) = 0 then pDoc->RemoveSelectionAttributes()
 
@@ -343,7 +343,7 @@ function OnCommand_SearchReplaceActions( _
             elseif id = IDM_REPLACEALL then 
                 FindReplace_DoReplace( true, true )
             end if   
-            FindReplace_HighlightSearches()
+            FindReplace_HighlightSearches( theme.editor.occurrence )
             pDoc->CenterCurrentLine
             AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
     end select

@@ -251,6 +251,14 @@ type AppHostNotify
     '' threading or synchronisation service at all. Background parsing belongs to whoever owns
     '' the UI thread -- see docs/port/document-model-blockers.md.
     RequestBufferScan as sub(byval pDoc as clsDocument ptr)
+    '' ---- THE FIND BAR WANTS REPAINTING, 7c step 26 --------------------------------
+    '' The search engine writes gFind.wszResults ("3/17") and the bar paints it. Fired
+    '' from four places in app/modFindReplace.inc, each of which changed that string.
+    ''
+    '' NOTIFY RATHER THAN SERVICES, and the distinction is this seam's whole design: a
+    '' binary with no find bar leaves this empty and is CORRECT. tikoshell does exactly
+    '' that today -- the search works, and nothing repaints because nothing is there.
+    RefreshFindBar    as sub()
 
     '' The document's root name for the TODO store -- ScanMgr's, and shell-side with it.
     DocRootName       as function(byval pDoc as clsDocument ptr) as DWSTRING

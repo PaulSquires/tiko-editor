@@ -183,43 +183,17 @@ dim shared ghFont(MAXFONTS) as HFONT
 ''
 ''  Save information related to Find/Replace and Find in Files operations
 ''
-type FINDREPLACE_TYPE
-    bFirstTimeInvoked   as boolean = true
-    hCueBannerFont      as HFONT
-    foundCount          as long 
-    txtFind             as DWSTRING
-    txtReplace          as DWSTRING
-    txtFindCombo(10)    as DWSTRING
-    txtReplaceCombo(10) as DWSTRING
-    txtFilesCombo(10)   as DWSTRING
-    txtFolderCombo(10)  as DWSTRING
-    txtLastFind         as DWSTRING
-    txtFiles            as DWSTRING         ' *.*, *.bas, etc (FindInFolder)
-    txtFolder           as DWSTRING         ' start search from this folder (FindInFolder)
-    nSearchSubFolders   as long          ' search sub folders as well (FindInFolder)
-    nWholeWord          as long          ' find/replace whole word search
-    nMatchCase          as long          ' match case when searching
-    nSelection          as long          ' search only selected text
-    nPreserve           as long          ' search only selected text
-    nSearchCurrentDoc   as long
-    nSearchAllOpenDocs  as long
-    nSearchProject      as long
-    wszResults          as DWSTRING = "0/0"
-    bShowInfoPanel      as boolean = true
-    bShowFindPanel      as boolean = false
-    bShowReplacePanel   as boolean = false
-    bProjectReplaceActive as boolean = false
-    ' The Find bar's seven icon rects (Match Case, Whole Word, Toggle Replace, Selection,
-    ' Prev, Next, Close) and its divider are three PsIconPanels now (frmFind.inc) -- the
-    ' controls own those cells, so there is nothing left for the host to store. rcResults
-    ' stays: the results count is still painted by the bar itself.
-    ' ...and the Replace bar's three (Preserve Case, Replace, Replace All) are two more
-    ' (frmReplace.inc). rcResults is the only icon-strip rect left in this type, because the
-    ' results count is still painted by the Find bar itself.
-    rcResults           as RECT
-end type
-dim shared gFind as FINDREPLACE_TYPE
-dim shared gFindInFiles as FINDREPLACE_TYPE
+'' FINDREPLACE_TYPE, gFind and gFindInFiles MOVED TO app/modFindReplace.bi in 7c step 26,
+'' along with the search functions that read them. Two members did not go with it:
+''
+''   hCueBannerFont as HFONT   DELETED. Nothing read it, and nothing has since the cue
+''                             banner became the text control's own business.
+''
+''   rcResults as RECT         KEPT HERE, as gFindResultsRect below. Five reads in
+''                             frmFind.inc, all layout -- a rectangle measured by a Win32
+''                             window belongs with the window. Same split clsConfig took
+''                             in 7c step 3.
+dim shared gFindResultsRect as RECT
 
 
 ' (LASTPOSITION_TYPE / gLastPosition are gone. The navigation history that replaced them

@@ -255,7 +255,7 @@ function clsTopTabCtl.SetFocusTab( byval idx as long ) as long
                     gAppHost.InvalidateView( pDoc->hWindow(1) )
 
                     ' We have moved to a new Tab. If Find is open then highlight any search phrase.   
-                    FindReplace_HighlightSearches()
+                    FindReplace_HighlightSearches( theme.editor.occurrence )
 
                     ' Set the focus to the Scintilla window. This will call frmMain_SetStatusbar.
                     frmMain_SetFocusToCurrentCodeWindow()

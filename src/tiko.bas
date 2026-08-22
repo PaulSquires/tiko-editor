@@ -218,6 +218,9 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 '' link the constructor. The other ~90 methods stay in the shell's clsConfig.inc at line 225.
 #include once "app/clsConfig.inc"
 #include once "app/modProjectFolders.bi"
+'' gFind and the search engine's declarations. EARLY, with the other app headers, because
+'' clsTopTabCtl and four frm* files read gFind long before modFindReplace.inc is reached.
+#include once "app/modFindReplace.bi"
 #include once "app/clsApp.bi"
 #include once "app/clsSymbolDb.bi"
 #include once "clsScanMgr.bi"
@@ -323,6 +326,9 @@ dim shared gTTabCtl as clsTopTabCtl
 ' needs only clsApp/clsDocument/modScintilla, all already in scope. Ahead of
 ' modFindReplace.inc because the Find bar drives the project search.
 #include once "modFindProject.inc"
+'' The ENGINE, in app/ since 7c step 26 -- the search functions and gFind itself. Before the
+'' shell half below, which calls into it.
+#include once "app/modFindReplace.inc"
 #include once "modFindReplace.inc"
 #include once "app/modFuzzy.inc"
 ' The keyboard shortcut MODEL (gKeys, the defaults table, keybindings.ini, the accelerator

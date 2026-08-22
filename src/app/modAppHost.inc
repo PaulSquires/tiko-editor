@@ -56,6 +56,7 @@ function AppNotify_FirstMissing() as string
     if gAppNotify.RelayoutMain      = 0 then return "RelayoutMain"
     if gAppNotify.RelayoutTopTabs   = 0 then return "RelayoutTopTabs"
     if gAppNotify.RefreshTodoList   = 0 then return "RefreshTodoList"
+    if gAppNotify.RefreshFindBar    = 0 then return "RefreshFindBar"
     return ""
 end function
 

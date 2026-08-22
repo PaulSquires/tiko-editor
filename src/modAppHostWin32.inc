@@ -169,6 +169,11 @@ private sub AppHostW32_RelayoutTopTabs()
     frmTopTabsInfo_PositionWindows()
 end sub
 
+'' The Find bar paints gFind.wszResults itself, so a repaint is all this is.
+private sub AppHostW32_RefreshFindBar()
+    AfxRedrawWindow( HWND_FRMMAIN_FIND )
+end sub
+
 private sub AppHostW32_RefreshTodoList()
     frmOutput_UpdateToDoListview()
 end sub
@@ -274,4 +279,5 @@ sub AppHostW32_Install()
     gAppNotify.RelayoutMain      = @AppHostW32_RelayoutMain
     gAppNotify.RelayoutTopTabs   = @AppHostW32_RelayoutTopTabs
     gAppNotify.RefreshTodoList   = @AppHostW32_RefreshTodoList
+    gAppNotify.RefreshFindBar    = @AppHostW32_RefreshFindBar
 end sub
