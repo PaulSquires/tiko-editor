@@ -683,10 +683,18 @@ constructor ShellFindBar()
         this.AddChild( this.pToggle )
         scope
             dim as DWSTRING g
-            g.Utf8 = chr(&hEE, &hA2, &hB1)   '' U+E8B1  match case   (tiko wszIconMatchCase)
-            this.pToggle->AddItem( g, SHFIND_ID_MATCHCASE, 0, PSICON_TOGGLE )
-            g.Utf8 = chr(&hEE, &hA2, &hB2)   '' U+E8B2  whole word   (tiko wszIconWholeWord)
-            this.pToggle->AddItem( g, SHFIND_ID_WHOLEWORD, 0, PSICON_TOGGLE )
+            '' ---- THESE ARE tiko'S OWN, AND THEY ARE LITERAL TEXT ------------------
+            '' Step 27 used U+E8B1 and U+E8B2 here and labelled them "tiko
+            '' wszIconMatchCase / wszIconWholeWord". THAT ATTRIBUTION WAS INVENTED:
+            '' modDeclares.bi:313 says wszIconMatchCase = "Aa" and :314 says
+            '' wszIconWholeWord = "W" -- plain strings, which is why tiko gives the field
+            '' panel GUIFONT_9 and the nav panel SYMBOLFONT_9. Step 28 took the trouble to
+            '' copy "AB" for Preserve Case and this pair was guessed two steps earlier.
+            ''
+            '' Found by a SCREENSHOT of tiko's bar reading "Aa  W" while this file claimed
+            '' those were codepoints -- not by any gate.
+            this.pToggle->AddItem( DWSTRING("Aa"), SHFIND_ID_MATCHCASE, 0, PSICON_TOGGLE )
+            this.pToggle->AddItem( DWSTRING("W"),  SHFIND_ID_WHOLEWORD, 0, PSICON_TOGGLE )
             g.Utf8 = chr(&hEE, &h85, &h8C)   '' U+E14C  selection    (tiko wszIconSelection)
             this.pToggle->AddItem( g, SHFIND_ID_SELECTION, 0, PSICON_TOGGLE )
         end scope
