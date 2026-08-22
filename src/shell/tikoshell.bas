@@ -624,6 +624,8 @@ declare sub OnMenusClosed( byval pHost as any ptr, byval ud as any ptr )
 '' by a handler that forgets to check which panel it came from.
 const SHFIND_ID_MATCHCASE = -1
 const SHFIND_ID_WHOLEWORD = -2
+'' SELECTION -- 7c step 29. Same strip, same rule about the sign.
+const SHFIND_ID_SELECTION = -3
 
 '' The results text's band, unscaled. Wide enough for "999/999" at the bar's font,
 '' which is the widest thing it has to hold before the count stops being useful.
@@ -646,6 +648,10 @@ end type
 '' and g_tabs' are: a control that chose its own height could not be checked against the
 '' oracle.
 dim shared as ShellFindBar ptr g_barFind
+
+'' FORWARD, because the Selection arm of ShellFind_OnIcon calls it and its body lives with
+'' the Replace bar -- which is where the reason for it was found, one step later.
+declare sub ShellFind_SyncToggles()
 
 declare sub ShellFind_OnFieldChange(byval pTb as any ptr, byval ud as any ptr)
 declare sub ShellFind_OnFieldEnter(byval pTb as any ptr, byval ud as any ptr)
@@ -681,6 +687,8 @@ constructor ShellFindBar()
             this.pToggle->AddItem( g, SHFIND_ID_MATCHCASE, 0, PSICON_TOGGLE )
             g.Utf8 = chr(&hEE, &hA2, &hB2)   '' U+E8B2  whole word   (tiko wszIconWholeWord)
             this.pToggle->AddItem( g, SHFIND_ID_WHOLEWORD, 0, PSICON_TOGGLE )
+            g.Utf8 = chr(&hEE, &h85, &h8C)   '' U+E14C  selection    (tiko wszIconSelection)
+            this.pToggle->AddItem( g, SHFIND_ID_SELECTION, 0, PSICON_TOGGLE )
         end scope
         this.pToggle->OnClick( @ShellFind_OnIcon, 0 )
     end if
@@ -807,6 +815,54 @@ sub ShellFind_OnIcon(byval pPanel as any ptr, byval nIndex as long, byval ud as 
     dim as long id = pnl->items(nIndex).id
 
     select case id
+        '' ---- SELECTION, 7c step 29 -------------------------------------------------
+        '' THE ONLY TOGGLE ON EITHER BAR THAT CAN REFUSE TO LATCH. "Search within the
+        '' selection" needs a selection to be within: tiko turns it on only when the
+        '' ORIGINAL selection spanned lines, or when a marker highlight is already down,
+        '' and forces it off otherwise. The control has latched itself by the time this
+        '' runs, so the refusal has to be pushed back -- which is what SyncToggles is for
+        '' and the reason it now knows about three ids rather than two.
+        case SHFIND_ID_SELECTION
+            scope
+                dim pDoc as clsDocument ptr = FindReplace_ActiveDoc()
+                if pDoc <> 0 then
+                    dim as boolean bMulti = _
+                        cbool(pDoc->CurrentSelection.endline - pDoc->CurrentSelection.startline)
+                    if pDoc->CurrentSelection.isInitialized = false then bMulti = false
+                    if bMulti orelse pDoc->HasMarkerHighlight then
+                        gFind.nSelection = iif( gFind.nSelection, 0, 1 )
+                    else
+                        gFind.nSelection = 0
+                    end if
+                    if gFind.nSelection then
+                        '' ---- THE RESTORE, AND IT IS NOT OPTIONAL ------------------
+                        '' TWO DIFFERENT SELECTIONS ARE IN PLAY HERE and the assertion
+                        '' below found it: the RULE above reads CurrentSelection, the
+                        '' captured one, but SetMarkerHighlight reads the LIVE selection
+                        '' -- and by the time anyone clicks this icon the incremental
+                        '' search has moved the live one onto the last match. Arming
+                        '' Selection would mark that match's line instead of the range
+                        '' the user chose, or, when the match is one line, mark nothing
+                        '' at all and leave the flag set against no markers.
+                        ''
+                        '' THIS IS TIKO'S SCEN_SETFOCUS RESTORE, applied at the one
+                        '' moment it is needed rather than on every focus change. The
+                        '' header above says the restore is not ported; that is still
+                        '' true of the general case, and this is the exception it names.
+                        dim as any ptr pS = pDoc->GetActiveScintillaPtr()
+                        if pS <> 0 then
+                            SciMsg( pS, SCI_SETSELECTIONSTART, pDoc->CurrentSelection.startpos, 0 )
+                            SciMsg( pS, SCI_SETSELECTIONEND,   pDoc->CurrentSelection.endpos, 0 )
+                        end if
+                        pDoc->SetMarkerHighlight()
+                    else
+                        pDoc->RemoveMarkerHighlight()
+                    end if
+                    FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
+                end if
+                ShellFind_SyncToggles()
+            end scope
+
         case SHFIND_ID_MATCHCASE, SHFIND_ID_WHOLEWORD
             '' THE CONTROL HAS ALREADY LATCHED ITSELF -- a TOGGLE item flips on the click
             '' before the callback runs -- so the flag is READ FROM THE ITEM rather than
@@ -1043,6 +1099,11 @@ sub ShellFind_SyncToggles()
     if i >= 0 then g_barFind->pToggle->SetSelected( i, cbool(gFind.nMatchCase <> 0) )
     i = g_barFind->pToggle->FindItemByID( SHFIND_ID_WHOLEWORD )
     if i >= 0 then g_barFind->pToggle->SetSelected( i, cbool(gFind.nWholeWord <> 0) )
+    '' SELECTION IS THE ONE THAT NEEDED THIS FIRST. Its handler can refuse the latch the
+    '' control has already applied, so this is not only a stale-state guard for it -- it is
+    '' the path by which the refusal reaches the icon.
+    i = g_barFind->pToggle->FindItemByID( SHFIND_ID_SELECTION )
+    if i >= 0 then g_barFind->pToggle->SetSelected( i, cbool(gFind.nSelection <> 0) )
 end sub
 
 sub ShellReplace_SyncToggle()
@@ -2016,14 +2077,113 @@ sub LayoutAll( byref surf as PsSurface )
     Shell_LayoutAll( surf, g_state )
 end sub
 
+'' =======================================================================================
+'' THE SELECTION CAPTURE -- 7c step 29, and it is NOT ported from where tiko keeps it.
+''
+'' tiko fills pDoc->CurrentSelection from SCEN_KILLFOCUS: the Find bar is a separate HWND,
+'' so opening it takes the focus off the editor, and the selection as it was at that instant
+'' is what the bar has to reason about. It restores it on SCEN_SETFOCUS.
+''
+'' THE SHELL HAS NO SUCH MOMENT and building one would mean a focus hook on the view --
+'' PSEV_FOCUS_LOSE exists and PsSciView does not handle it, so that would be a PsPlatform
+'' change. It is also unnecessary: nothing about FOCUS clobbers the selection. What clobbers
+'' it is the incremental search that runs after the bar opens. So this reads the live
+'' selection AT SHOW TIME, one instruction before anything can disturb it, and the
+'' isInitialized latch means a second show over an open bar does not overwrite the original.
+''
+'' WHAT IS NOT PORTED WITH IT: the SETFOCUS restore, as a general rule. Nothing here puts
+'' the original selection back when the caret returns to the editor, so after a search the
+'' live selection is the last match rather than what the user had.
+''
+'' AND THAT IS NOT COSMETIC -- it has one place where it BITES, which an assertion found
+'' rather than this comment predicting it. TWO NOTIONS OF "the selection" are in play: the
+'' Selection toggle's RULE reads CurrentSelection, while SetMarkerHighlight reads the LIVE
+'' one. So the restore IS done, at that one moment, inside the Selection arm of
+'' ShellFind_OnIcon. See the note there.
+'' =======================================================================================
+sub ShellFind_CaptureSelection()
+    dim pDoc as clsDocument ptr = FindReplace_ActiveDoc()
+    if pDoc = 0 then exit sub
+    if pDoc->CurrentSelection.isInitialized then exit sub
+    dim as long sl, el, sp, ep
+    pDoc->GetSelectedLineRange( sl, el, sp, ep )
+    pDoc->CurrentSelection.startline    = sl
+    pDoc->CurrentSelection.endline      = el
+    pDoc->CurrentSelection.startpos     = sp
+    pDoc->CurrentSelection.endpos       = ep
+    pDoc->CurrentSelection.isInitialized = true
+end sub
+
+
+'' ---------------------------------------------------------------------------------------
+'' Seed the field from the selection -- tiko's FindControls_Show, the half step 27 deferred.
+''
+'' IT WAS DEFERRED BECAUSE OF THE EXCEPTION, not because of the rule. The rule is that the
+'' box is a PICTURE OF THE SELECTION, so opening Find with nothing selected CLEARS it rather
+'' than re-offering the last phrase -- by request, and the reason the old bSeedField flag is
+'' gone from tiko. Porting that without the exception below would have re-imported a bug
+'' that was fixed in step 26, which is why the two arrive together.
+''
+'' THE EXCEPTION: type "afxnova", press Ctrl+H, and the field came back "AfxNova" -- the
+'' incremental search had already selected the match, and a selection carries the DOCUMENT's
+'' casing, not what was typed. Same word, same matches, and the user's own text replaced for
+'' no gain. Skipped when the two differ ONLY in case: equal folded, unequal exactly.
+''
+'' BOTH COMPARISONS ARE LIKE-FOR-LIKE, and tiko's comment says why in a sentence worth
+'' keeping: this code has been bitten twice by string/DWSTRING conversions that compile and
+'' mean something else. The fold is DWSTRING against DWSTRING; the exact test is string
+'' against string through .Utf8. Neither leaves fbc a conversion to choose.
+'' ---------------------------------------------------------------------------------------
+sub ShellFind_SeedFromSelection()
+    dim pDoc as clsDocument ptr = FindReplace_ActiveDoc()
+    if pDoc = 0 then exit sub
+
+    dim as boolean bMulti = _
+        cbool(pDoc->CurrentSelection.endline - pDoc->CurrentSelection.startline)
+    if pDoc->CurrentSelection.isInitialized = false then bMulti = false
+
+    dim as string sFindText = pDoc->GetSelText
+    if bMulti then
+        '' A MULTI-LINE SELECTION IS NOT A PHRASE, it is a RANGE. The box clears for a
+        '' different reason from the empty case above, and the same gesture arms Selection.
+        sFindText = ""
+        gFind.nSelection = 1
+        pDoc->SetMarkerHighlight()
+    end if
+
+    dim as string sTyped = gFind.txtFind.Utf8
+    dim as boolean bCaseOnlyEcho = false
+    if len(sFindText) then
+        if (PsUCase(sFindText) = PsUCase(gFind.txtFind)) andalso _
+           (sFindText <> sTyped) then bCaseOnlyEcho = true
+    end if
+
+    if bCaseOnlyEcho = false then
+        '' ONE ASSIGNMENT FOR BOTH PATHS, so the box and the model cannot disagree about
+        '' what is being searched for. tiko's multi-line branch used to clear the box and
+        '' leave gFind.txtFind holding the previous phrase.
+        gFind.txtFind = sFindText
+        if g_barFind <> 0 then
+            if g_barFind->pField <> 0 then g_barFind->pField->SetText( gFind.txtFind )
+        end if
+    end if
+end sub
+
+
 '' ---------------------------------------------------------------------------------------
 '' Show or hide the bar, and put the caret where the user expects it.
-''
-'' SEEDING IS DELIBERATELY NOT PORTED. tiko's FindControls_Show reseeds the field from the
-'' selection, which is the behaviour that needed an exception in step 26 for the case-only
-'' echo. This binary has no selection-driven seeding at all yet, so there is nothing to
-'' except -- and adding the seeding without the exception would be re-importing a fixed bug.
 sub ShellFind_SetVisible( byval bShow as boolean )
+    '' OPENING AN ALREADY-OPEN BAR SEEDS NOTHING. Ctrl+H routes through here to satisfy
+    '' "Replace implies Find", so without this test a Ctrl+F followed by a Ctrl+H would
+    '' reseed the field from whatever the first search had selected -- which is the exact
+    '' gesture the case-only echo was reported against.
+    dim as boolean bWasShown = g_state.bShowFind
+
+    if bShow andalso (bWasShown = false) then
+        ShellFind_CaptureSelection()
+        ShellFind_SeedFromSelection()
+    end if
+
     g_state.bShowFind = bShow
     gFind.bShowFindPanel = bShow
 
@@ -2034,6 +2194,26 @@ sub ShellFind_SetVisible( byval bShow as boolean )
     if bShow = false then
         g_state.bShowReplace = false
         gFind.bShowReplacePanel = false
+
+        '' ---- AND CLOSING DROPS THE HIGHLIGHTS AND THE SELECTION LATCH ------------------
+        '' tiko's bClosing branch, verbatim in effect. Leaving nSelection set is how a
+        '' closed-and-reopened Find bar came back with Selection lit against a marker range
+        '' that no longer described anything -- and this port would show that MORE readily
+        '' than tiko does, because the icon here is a latch the model has to reach.
+        ''
+        '' EVERY DOCUMENT, not the active one: the highlights were painted into whichever
+        '' buffers were searched, and a tab switched away from keeps them otherwise.
+        gFind.nSelection = 0
+        if gAppHost.TabCount andalso gAppHost.TabDocAt then
+            for i as long = 0 to gAppHost.TabCount() - 1
+                dim pD as clsDocument ptr = gAppHost.TabDocAt( i )
+                if pD = 0 then continue for
+                pD->RemoveMarkerHighlight()
+                pD->RemoveSelectionAttributes()
+                pD->CurrentSelection.isInitialized = false
+            next
+        end if
+        ShellFind_SyncToggles()
     end if
 
     '' THE LATCHES ARE PUSHED FROM THE MODEL AT EVERY SHOW. See the Replace bar's header:
@@ -2075,9 +2255,23 @@ sub ShellReplace_SetVisible( byval bShow as boolean )
         ShellFind_SetVisible( true )
     end if
 
+    dim as boolean bWasShown = g_state.bShowReplace
     g_state.bShowReplace = bShow
     gFind.bShowReplacePanel = bShow
     if bShow then ShellReplace_SyncToggle()
+
+    '' ---- OPENING CLEARS THE REPLACEMENT, AND CLEARS IT IN BOTH PLACES ------------------
+    '' tiko's ReplaceControls_Show blanks the BOX on every open -- and only the box.
+    '' Programmatic setters are silent, so gFind.txtReplace keeps the previous replacement
+    '' while the field shows empty, and the next Replace uses a term nothing on screen names.
+    '' Both are cleared here. It is a deliberate divergence, and it is the one-source-of-
+    '' truth rule this pair already runs on rather than a new idea.
+    if bShow andalso (bWasShown = false) then
+        gFind.txtReplace = DWSTRING("")
+        if g_barReplace <> 0 then
+            if g_barReplace->pField <> 0 then g_barReplace->pField->SetText( DWSTRING("") )
+        end if
+    end if
 
     if g_pSurf <> 0 then
         LayoutAll( *g_pSurf )
@@ -4348,8 +4542,9 @@ end function
                     scope
                         Check "  the find bar is a real bar", (g_barFind <> 0)
                         Check "    with a field", (g_barFind->pField <> 0)
-                        Check "    two toggles", (g_barFind->pToggle <> 0) andalso _
-                              (g_barFind->pToggle->GetCount() = 2), _
+                        '' THREE SINCE 7c STEP 29 added Selection. Two through step 28.
+                        Check "    three toggles", (g_barFind->pToggle <> 0) andalso _
+                              (g_barFind->pToggle->GetCount() = 3), _
                               str(g_barFind->pToggle->GetCount())
                         Check "    and three navigation buttons", (g_barFind->pNav <> 0) andalso _
                               (g_barFind->pNav->GetCount() = 3), _
@@ -4668,6 +4863,195 @@ end function
 
                         ShellFind_SetVisible( false )
                         gFind.txtReplace = DWSTRING("")
+                        gFind.foundCount = 0
+                    end scope
+
+                    '' ---- SELECTION AND SEEDING, 7c step 29 -----------------------
+                    ''
+                    '' The two halves step 27 deferred, and they arrive together
+                    '' because the SEEDING RULE and its EXCEPTION cannot be separated:
+                    '' porting the rule alone re-imports the case-only echo that step
+                    '' 26 fixed by request.
+                    scope
+                        dim as long iSel = g_barFind->pToggle->FindItemByID( SHFIND_ID_SELECTION )
+                        Check "  Selection is on the toggle strip", (iSel >= 0), str(iSel)
+
+                        dim pDoc as clsDocument ptr = FindReplace_ActiveDoc()
+                        Check "    and there is a document to select in", (pDoc <> 0)
+
+                        '' ---- IT REFUSES TO LATCH WITH NOTHING TO BE WITHIN -------
+                        '' The only toggle on either bar that can say no. The control
+                        '' has ALREADY latched itself by the time the handler runs, so
+                        '' this asserts the push-back as much as the flag.
+                        ShellFind_SetVisible( false )
+                        gFind.nSelection = 0
+                        pDoc->RemoveMarkerHighlight()
+                        pDoc->CurrentSelection.isInitialized = false
+                        g_barFind->pToggle->SetSelected( iSel, true )
+                        ShellFind_OnIcon( g_barFind->pToggle, iSel, 0 )
+                        Check "    Selection refuses to arm with no multi-line selection", _
+                              (gFind.nSelection = 0), str(gFind.nSelection)
+                        Check "      and the icon does not stay lit", _
+                              (g_barFind->pToggle->GetSelected( iSel ) = false)
+
+                        '' ---- AND ARMS WHEN THERE IS ONE --------------------------
+                        '' CurrentSelection is what the rule reads, not the live
+                        '' selection: tiko's whole reason for capturing it is that the
+                        '' live one is about to be overwritten by the search.
+                        pDoc->CurrentSelection.startline    = 0
+                        pDoc->CurrentSelection.endline      = 2
+                        '' REAL POSITIONS, because arming now RESTORES the live
+                        '' selection from these before laying the markers -- a
+                        '' zero-length range would mark nothing and the assertion under
+                        '' it would be back to passing on an empty highlight.
+                        pDoc->CurrentSelection.startpos     = 0
+                        pDoc->CurrentSelection.endpos       = _
+                            SciMsg( pDoc->GetActiveScintillaPtr(), SCI_POSITIONFROMLINE, 3, 0 )
+                        pDoc->CurrentSelection.isInitialized = true
+                        g_barFind->pToggle->SetSelected( iSel, true )
+                        ShellFind_OnIcon( g_barFind->pToggle, iSel, 0 )
+                        Check "    and arms against a multi-line one", _
+                              (gFind.nSelection <> 0), str(gFind.nSelection)
+                        Check "      laying down a marker highlight", pDoc->HasMarkerHighlight
+                        Check "      with the icon lit", _
+                              g_barFind->pToggle->GetSelected( iSel )
+
+                        '' ---- CLOSING DROPS IT ------------------------------------
+                        '' tiko's bClosing branch. A reopened bar with Selection lit
+                        '' against a marker range that no longer describes anything is
+                        '' the defect this prevents, and this port would show it more
+                        '' readily than tiko because the icon is a latch.
+                        ShellFind_SetVisible( false )
+                        Check "    closing the bar drops the Selection latch", _
+                              (gFind.nSelection = 0), str(gFind.nSelection)
+                        Check "      and the marker highlight with it", _
+                              (pDoc->HasMarkerHighlight = false)
+                        Check "        and forgets the captured selection", _
+                              (pDoc->CurrentSelection.isInitialized = false)
+
+                        '' ---- THE SEEDING ------------------------------------------
+                        '' Driven the way the bar is: select a real match in the real
+                        '' buffer, then OPEN, and the field must be a picture of it.
+                        scope
+                            dim as any ptr pSci = pDoc->GetActiveScintillaPtr()
+                            gFind.txtFind = DWSTRING("ProbeAlpha")
+                            gFind.nMatchCase = 0 : gFind.nWholeWord = 0
+                            FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
+                            FindReplace_NextSelection( 0, true, true )
+                            Check "    a match is selected in the buffer", _
+                                  (pDoc->GetSelText = "ProbeAlpha"), pDoc->GetSelText
+
+                            '' A DIFFERENT WORD IN THE BOX, so the reseed has something
+                            '' to overwrite and "it was already right" cannot pass this.
+                            gFind.txtFind = DWSTRING("Zzz")
+                            g_barFind->pField->SetText( DWSTRING("Zzz") )
+                            ShellFind_SetVisible( true )
+                            Check "      and opening the bar seeds the field from it", _
+                                  (gFind.txtFind = DWSTRING("ProbeAlpha")), gFind.txtFind.Utf8
+                            Check "        in the FIELD, not only in the model", _
+                                  (g_barFind->pField->GetText() = DWSTRING("ProbeAlpha")), _
+                                  g_barFind->pField->GetText().Utf8
+
+                            '' ---- THE EXCEPTION -----------------------------------
+                            '' Type "probealpha", press Ctrl+H, and the field came back
+                            '' "ProbeAlpha" -- the selection carries the DOCUMENT's
+                            '' casing, not what was typed. Same word, same matches, the
+                            '' user's own text replaced for no gain.
+                            ShellFind_SetVisible( false )
+                            SciMsg( pSci, SCI_SETSELECTIONSTART, 0, 0 )
+                            SciMsg( pSci, SCI_SETSELECTIONEND, 0, 0 )
+                            gFind.txtFind = DWSTRING("ProbeAlpha")
+                            FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
+                            FindReplace_NextSelection( 0, true, true )
+                            gFind.txtFind = DWSTRING("probealpha")
+                            g_barFind->pField->SetText( DWSTRING("probealpha") )
+                            ShellFind_SetVisible( true )
+                            Check "    the same word in the document's case is NOT echoed back", _
+                                  (gFind.txtFind.Utf8 = "probealpha"), gFind.txtFind.Utf8
+
+                            '' ---- AND A GENUINELY DIFFERENT WORD STILL RESEEDS ----
+                            '' The exception is "equal folded AND unequal exactly". An
+                            '' assertion that only proved the skip would pass just as
+                            '' well against a seeder that had been deleted.
+                            ShellFind_SetVisible( false )
+                            gFind.txtFind = DWSTRING("Qqq")
+                            g_barFind->pField->SetText( DWSTRING("Qqq") )
+                            ShellFind_SetVisible( true )
+                            Check "      but a different word does", _
+                                  (gFind.txtFind = DWSTRING("ProbeAlpha")), gFind.txtFind.Utf8
+
+                            '' ---- REOPENING AN OPEN BAR SEEDS NOTHING -------------
+                            '' Ctrl+H routes through Find to satisfy "Replace implies
+                            '' Find", and without the guard it would reseed from
+                            '' whatever the first search selected -- the exact gesture
+                            '' the echo was reported against.
+                            gFind.txtFind = DWSTRING("Typed")
+                            ShellFind_SetVisible( true )
+                            Check "    reopening an already-open bar seeds nothing", _
+                                  (gFind.txtFind = DWSTRING("Typed")), gFind.txtFind.Utf8
+
+                            '' ---- AN EMPTY SELECTION EMPTIES THE BOX --------------
+                            '' By request, and the reason tiko's bSeedField flag is
+                            '' gone: the box is a picture of the selection, so no
+                            '' selection is an empty box rather than the last phrase.
+                            ShellFind_SetVisible( false )
+                            SciMsg( pSci, SCI_SETEMPTYSELECTION, 0, 0 )
+                            gFind.txtFind = DWSTRING("Leftover")
+                            ShellFind_SetVisible( true )
+                            Check "    and no selection empties it rather than re-offering", _
+                                  (PsLen(gFind.txtFind) = 0), gFind.txtFind.Utf8
+                        end scope
+
+                        '' ---- AND THE CAPTURE ITSELF, DRIVEN FOR REAL -------------
+                        '' EVERY ASSERTION ABOVE SETS CurrentSelection BY HAND, so none
+                        '' of them touched ShellFind_CaptureSelection -- gutting it left
+                        '' the suite at 556/0. Fifth step running (22, 23, 24, 27, 29)
+                        '' that a wiring went unasserted because the policy was driven
+                        '' straight.
+                        ''
+                        '' This makes a REAL multi-line selection in the buffer, closes
+                        '' the bar so nothing is captured, and opens it -- which is the
+                        '' whole gesture: capture, then seed, then arm.
+                        scope
+                            ShellFind_SetVisible( false )
+                            dim as any ptr pS2 = pDoc->GetActiveScintillaPtr()
+                            SciMsg( pS2, SCI_SETSELECTIONSTART, 0, 0 )
+                            SciMsg( pS2, SCI_SETSELECTIONEND, _
+                                    SciMsg( pS2, SCI_POSITIONFROMLINE, 3, 0 ), 0 )
+                            gFind.txtFind = DWSTRING("Leftover")
+                            ShellFind_SetVisible( true )
+                            Check "    opening captures the live selection", _
+                                  pDoc->CurrentSelection.isInitialized
+                            Check "      spanning the lines it actually spanned", _
+                                  (pDoc->CurrentSelection.endline > _
+                                   pDoc->CurrentSelection.startline), _
+                                  str(pDoc->CurrentSelection.startline) & ".." & _
+                                  str(pDoc->CurrentSelection.endline)
+                            '' A MULTI-LINE SELECTION IS A RANGE, NOT A PHRASE: the box
+                            '' clears and Selection ARMS ITSELF, which is the one place
+                            '' the feature turns on without anybody clicking it.
+                            Check "    a multi-line selection empties the box", _
+                                  (PsLen(gFind.txtFind) = 0), gFind.txtFind.Utf8
+                            Check "      and arms Selection on its own", _
+                                  (gFind.nSelection <> 0), str(gFind.nSelection)
+                            Check "        with the icon lit to match", _
+                                  g_barFind->pToggle->GetSelected( iSel )
+                            ShellFind_SetVisible( false )
+                        end scope
+
+                        '' ---- OPENING REPLACE CLEARS BOTH COPIES ------------------
+                        '' tiko blanks the BOX only, and programmatic setters are
+                        '' silent -- so gFind.txtReplace keeps the previous replacement
+                        '' while the field shows empty. A deliberate divergence.
+                        ShellFind_SetVisible( false )
+                        gFind.txtReplace = DWSTRING("Stale")
+                        ShellReplace_SetVisible( true )
+                        Check "    opening Replace clears the replacement in the model too", _
+                              (PsLen(gFind.txtReplace) = 0), gFind.txtReplace.Utf8
+                        Check "      and in the field", _
+                              (PsLen(g_barReplace->pField->GetText()) = 0)
+
+                        ShellFind_SetVisible( false )
                         gFind.foundCount = 0
                     end scope
 
