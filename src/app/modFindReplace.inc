@@ -159,24 +159,34 @@ function FindReplace_UpdateResultsFromCaret() as long
     else
         endPos = SciMsg( pEdit, SCI_GETLENGTH, 0, 0)
     end if
-    if endPos = 0 then exit function
-    if lenFind = 0 then exit function
 
-    dim as long nCount = FindReplace_CollectMatchPositions( pEdit, endPos, lenFind )
-    if nCount = 0 then exit function
+    '' ---- NO EARLY RETURN HERE, AND THAT IS THE WHOLE OF IT --------------------------
+    '' The count is guarded; the WRITE AND THE REPAINT ARE NOT. Every caller of this
+    '' function has just changed something -- the flags, the document, the term -- and the
+    '' number on screen is stale until it is rewritten. Returning early leaves the PREVIOUS
+    '' document's count sitting in the bar, and it stays there until something else
+    '' repaints, which in practice means F3.
+    dim as long nCount = 0
+    if (lenFind > 0) andalso (endPos > 0) then
+        nCount = FindReplace_CollectMatchPositions( pEdit, endPos, lenFind )
+    end if
 
     dim as long caretPos = SciMsg( pEdit, SCI_GETCURRENTPOS, 0, 0)
-
-    dim as long mainIdx = 0
+    dim as long idx = 0
     for i as long = 1 to nCount
-        if (caretPos >= gFindMatchPos(i)) andalso (caretPos <= gFindMatchPos(i) + lenFind) then
-            mainIdx = i : exit for
+        '' The match END, so a caret anywhere inside a match -- or at either edge of it --
+        '' reports that match rather than the following one.
+        if (gFindMatchPos(i) + lenFind) >= caretPos then
+            idx = i
+            exit for
         end if
-        if gFindMatchPos(i) > caretPos then mainIdx = i : exit for
     next
-    if mainIdx = 0 then mainIdx = 1
+    if (idx = 0) andalso (nCount > 0) then idx = 1     '' past the last match: wraps, as F3 does
 
-    gFind.wszResults = mainIdx & "/" & gFind.foundCount
+    if idx > gFind.foundCount then idx = gFind.foundCount
+
+    gFind.wszResults = idx & "/" & gFind.foundCount
+
     if gAppNotify.RefreshFindBar then gAppNotify.RefreshFindBar()
 
     function = 0
