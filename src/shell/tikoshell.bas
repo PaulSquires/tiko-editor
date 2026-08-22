@@ -471,7 +471,7 @@ dim shared as PsListTree ptr g_panel
 dim shared as PsIconPanel ptr g_panelMenu
 
 dim shared as ShellStub ptr g_splitPanel
-dim shared as ShellStub ptr g_barInfo, g_barReplace
+dim shared as ShellStub ptr g_barInfo
 '' g_barFind IS DECLARED WITH ITS TYPE, further down, and not here with its siblings -- the
 '' ShellFindBar type needs gFind and the app headers, so it cannot be defined this early and
 '' `dim shared as <unknown> ptr` is not an error in fbc, it is a variable of no type whose
@@ -827,6 +827,231 @@ sub ShellFind_OnIcon(byval pPanel as any ptr, byval nIndex as long, byval ud as 
             OnMenuCommand( 0, id, 0 )
     end select
 end sub
+
+'' =======================================================================================
+'' THE REPLACE BAR -- 7c step 28.
+''
+'' frmReplace.inc is 444 lines and is the second half of a pair; nearly all of the
+'' difference from what follows is the same hand-rolled painter and tooltip backend the
+'' Find bar's port left behind. What carries across is the ARRANGEMENT -- field, Preserve
+'' Case INSIDE the field's frame, Replace and Replace All outside it -- plus the two rules
+'' that only exist because the two bars are a pair.
+''
+'' ---- REPLACE IMPLIES FIND, AND IT IS NOT A CONVENIENCE --------------------------------
+''
+'' tiko's FindReplace_SetVisible opens with `if bReplace then bFind = true`, and the reason
+'' is that the replace ENGINE reads gFind.txtFind. A Replace bar without a Find bar is a box
+'' that replaces the empty string. Enforced in BOTH directions here: showing Replace shows
+'' Find, and hiding Find hides Replace.
+''
+'' ---- Ctrl+H FOCUSES THE **FIND** FIELD ------------------------------------------------
+''
+'' Not the Replace field, which is the surprising half, and it is tiko's behaviour verbatim:
+'' OnCommand_SearchReplaceDialog ends by focusing IDC_FRMFIND_TXTFIND. It follows from the
+'' rule above -- with no search term there is nothing to replace, so the term is what has to
+'' be typed first.
+''
+'' ---- AND PRESERVE CASE IS STEP 27'S QUESTION, ANSWERED THE OTHER WAY -------------------
+''
+'' tiko makes it IP_KIND_COMMAND and paints the latch from gFind.nPreserve, and frmReplace_
+'' IconPaint says why: "the control never keeps a second copy of state FindReplace_DoReplace
+'' already reads. Asking the model at paint time cannot go stale."
+''
+'' THAT IS A REAL DEFECT IN THE FIND BAR AS STEP 27 SHIPPED IT. PsIconPanel carries selection
+'' ON THE ITEM, so a PSICON_TOGGLE is exactly the second copy tiko refused -- and tiko HAS a
+'' site that breaks it: frmFindInProject.inc:3140 clears nMatchCase and nWholeWord behind the
+'' bar's back. Not live in this binary yet, so it would have arrived silently WITH Find in
+'' Project, one step after anybody could remember why the latch was a copy.
+''
+'' Answered by keeping the toggle and adding ShellFind_SyncToggles / ShellReplace_SyncToggle:
+'' a push from the model into the items at every show. The model is still the one truth; the
+'' copy is refreshed from it at the one moment it can be looked at.
+'' =======================================================================================
+
+'' Negative, for the reason the Find bar's two are: PsIconPanel hands the id straight back,
+'' IDM_* are positive, and one handler serves both of this bar's strips.
+const SHREPL_ID_PRESERVE = -1
+
+
+type ShellReplaceBar extends PsWidget
+    pField    as PsTextBox ptr
+    pPreserve as PsIconPanel ptr
+    pActions  as PsIconPanel ptr
+    declare constructor()
+    declare virtual sub OnLayout()
+    declare virtual sub OnPaint(byval p as PsBufferPaint_ ptr)
+end type
+
+'' THE REPLACE BAND, real since 7c step 28. Declared here and not with its ShellStub
+'' siblings for the same reason g_barFind is not: its type needs gFind and the app headers,
+'' so it cannot exist that early in the file.
+dim shared as ShellReplaceBar ptr g_barReplace
+
+declare sub ShellReplace_OnFieldChange(byval pTb as any ptr, byval ud as any ptr)
+declare sub ShellReplace_OnFieldEnter(byval pTb as any ptr, byval ud as any ptr)
+declare sub ShellReplace_OnIcon(byval pPanel as any ptr, byval nIndex as long, byval ud as any ptr)
+
+
+constructor ShellReplaceBar()
+    base()
+    this.bFocusable = false
+
+    this.pField = new PsTextBox
+    if this.pField <> 0 then
+        this.AddChild( this.pField )
+        this.pField->OnChange( @ShellReplace_OnFieldChange, 0 )
+        '' ENTER IS REPLACE, which is what tiko's own tooltip promises -- "Replace (Enter)"
+        '' -- and what handleKeysFindReplace does with it in the pump.
+        this.pField->OnEnterPressed( @ShellReplace_OnFieldEnter, 0 )
+    end if
+
+    '' PRESERVE CASE. "AB" is tiko's own glyph for it (wszIconPreserveCase) and it is LITERAL
+    '' TEXT, not a symbol codepoint -- which is why tiko needs two font handles here, one per
+    '' panel. This needs none: PsTextEngine's fallback chain resolves A and B in the primary
+    '' UI face and the PUA glyphs below in the symbol face, per character.
+    this.pPreserve = new PsIconPanel
+    if this.pPreserve <> 0 then
+        this.AddChild( this.pPreserve )
+        this.pPreserve->AddItem( DWSTRING("AB"), SHREPL_ID_PRESERVE, 0, PSICON_TOGGLE )
+        this.pPreserve->OnClick( @ShellReplace_OnIcon, 0 )
+    end if
+
+    this.pActions = new PsIconPanel
+    if this.pActions <> 0 then
+        this.AddChild( this.pActions )
+        scope
+            dim as DWSTRING g
+            g.Utf8 = chr(&hEE, &h85, &h8B)   '' U+E14B  replace      (tiko wszIconReplace)
+            this.pActions->AddItem( g, IDM_REPLACENEXT, 0, PSICON_COMMAND )
+            g.Utf8 = chr(&hEE, &h8A, &h99)   '' U+E299  replace all  (tiko wszIconReplaceAll)
+            this.pActions->AddItem( g, IDM_REPLACEALL, 0, PSICON_COMMAND )
+        end scope
+        this.pActions->OnClick( @ShellReplace_OnIcon, 0 )
+    end if
+end constructor
+
+
+'' ---------------------------------------------------------------------------------------
+'' THE FIELD'S RECT IS THE FIND FIELD'S RECT, asked for rather than re-derived.
+''
+'' tiko does the same in two lines: rcReplaceTextRect.left and .right are ASSIGNED from
+'' rcFindTextRect. Recomputing the same arithmetic here would make "the two fields line up" a
+'' coincidence that holds until one of the two bars gains an icon; borrowing the rect makes
+'' it structural. The fallback is this bar's own margins, for a layout that runs before the
+'' Find bar has one.
+'' ---------------------------------------------------------------------------------------
+sub ShellReplaceBar.OnLayout()
+    dim as single f = 1.0
+    if this.pSurface <> 0 then f = this.pSurface->fScale
+    dim as long pad  = PsScaleBy( SHFIND_PAD_UNITS, f )
+    dim as long icon = PsScaleBy( SHFIND_ICON_UNITS, f )
+    dim as long h    = this.bounds.h
+
+    dim as long xField = pad
+    dim as long wField = this.bounds.w - pad - pad
+    if wField < 0 then wField = 0
+    if (g_barFind <> 0) andalso (g_barFind->pField <> 0) then
+        if g_barFind->pField->bounds.w > 0 then
+            '' A CHILD'S bounds ARE ITS PARENT'S COORDINATES, not the surface's, so
+            '' this is taken as-is. The first draft subtracted g_barFind->bounds.x to
+            '' "convert" it and produced -413 against 6 -- caught by the assertion that
+            '' the two left edges match, which is the only reason the sign was noticed.
+            ''
+            '' IT IS ONLY VALID BECAUSE THE TWO BANDS SHARE A LEFT EDGE AND A WIDTH:
+            '' Shell_LayoutAll gives both PsRc(nLeft, ..., W - nPanelReserve, ...). If a
+            '' band ever gains its own inset, this borrows the wrong origin -- which the
+            '' shared-left-edge assertion would then say out loud.
+            xField = g_barFind->pField->bounds.x
+            wField = g_barFind->pField->bounds.w
+        end if
+    end if
+
+    '' Preserve Case sits INSIDE the field's frame, so it comes OUT OF the field's width
+    '' rather than being placed after it -- tiko's "make the width of the textbox smaller
+    '' because we want to visually fit the Preserve Case icon into the Replace text rect".
+    dim as long nPres = 0
+    if this.pPreserve <> 0 then nPres = icon * this.pPreserve->GetCount()
+    dim as long wBox = wField - nPres
+    if wBox < 0 then wBox = 0
+
+    if this.pField <> 0 then
+        this.pField->SetBounds( PsRc(xField, pad \ 2, wBox, h - pad) )
+    end if
+    if this.pPreserve <> 0 then
+        this.pPreserve->SetBounds( PsRc(xField + wBox, 0, nPres, h) )
+    end if
+    if this.pActions <> 0 then
+        dim as long nAct = icon * this.pActions->GetCount()
+        this.pActions->SetBounds( PsRc(xField + wField + pad, 0, nAct, h) )
+    end if
+end sub
+
+
+'' No results text on this bar. The count belongs to the SEARCH, and the Find bar carrying it
+'' is always open when this one is -- which is the implication above paying for itself.
+sub ShellReplaceBar.OnPaint(byval p as PsBufferPaint_ ptr)
+    if p = 0 then exit sub
+    dim as PsRect rcAll
+    rcAll.x = 0 : rcAll.y = 0 : rcAll.w = this.bounds.w : rcAll.h = this.bounds.h
+    p->SetBackColor( PsThemeRoleColor(PSTHEME_BACKGROUNDRAISED) )
+    p->PaintRect( @rcAll )
+end sub
+
+
+'' gFind.txtReplace IS WRITTEN HERE AND NOWHERE ELSE, and step 26 is what that sentence cost:
+'' DoReplace moved into app/, could no longer read the control, and read gFind.txtReplace
+'' instead -- which nothing had ever written. Replace and Replace All duly replaced every
+'' match with an empty string, through every gate this port has.
+sub ShellReplace_OnFieldChange(byval pTb as any ptr, byval ud as any ptr)
+    dim as PsTextBox ptr tb = cast(PsTextBox ptr, pTb)
+    if tb = 0 then exit sub
+    gFind.txtReplace = tb->GetText()
+end sub
+
+
+sub ShellReplace_OnFieldEnter(byval pTb as any ptr, byval ud as any ptr)
+    OnMenuCommand( 0, IDM_REPLACENEXT, 0 )
+end sub
+
+
+sub ShellReplace_OnIcon(byval pPanel as any ptr, byval nIndex as long, byval ud as any ptr)
+    dim as PsIconPanel ptr pnl = cast(PsIconPanel ptr, pPanel)
+    if pnl = 0 then exit sub
+    if pnl->IsValidItem( nIndex ) = false then exit sub
+    dim as long id = pnl->items(nIndex).id
+
+    if id = SHREPL_ID_PRESERVE then
+        '' Read FROM THE ITEM, which the control latched before this ran -- the same rule the
+        '' Find bar's toggles follow, and the reason SyncToggle exists to push the other way.
+        gFind.nPreserve = iif( pnl->GetSelected( nIndex ), 1, 0 )
+    else
+        '' Replace and Replace All carry real menu ids, so the icon and the Search menu are
+        '' one path -- step 20's rule, and the third bar to follow it.
+        OnMenuCommand( 0, id, 0 )
+    end if
+end sub
+
+
+'' ---- THE PUSH FROM THE MODEL INTO THE ITEMS -------------------------------------------
+'' See this bar's header. A PSICON_TOGGLE is a second copy of state the engine already owns,
+'' and the model is the copy that is true. These run at every show -- the only moment a latch
+'' can be looked at -- so a flag changed behind a bar's back cannot be seen stale.
+sub ShellFind_SyncToggles()
+    if g_barFind = 0 then exit sub
+    if g_barFind->pToggle = 0 then exit sub
+    dim as long i = g_barFind->pToggle->FindItemByID( SHFIND_ID_MATCHCASE )
+    if i >= 0 then g_barFind->pToggle->SetSelected( i, cbool(gFind.nMatchCase <> 0) )
+    i = g_barFind->pToggle->FindItemByID( SHFIND_ID_WHOLEWORD )
+    if i >= 0 then g_barFind->pToggle->SetSelected( i, cbool(gFind.nWholeWord <> 0) )
+end sub
+
+sub ShellReplace_SyncToggle()
+    if g_barReplace = 0 then exit sub
+    if g_barReplace->pPreserve = 0 then exit sub
+    dim as long i = g_barReplace->pPreserve->FindItemByID( SHREPL_ID_PRESERVE )
+    if i >= 0 then g_barReplace->pPreserve->SetSelected( i, cbool(gFind.nPreserve <> 0) )
+end sub
+
 
 
 
@@ -1200,7 +1425,7 @@ sub BuildTree( byref surf as PsSurface )
     root->AddChild( g_barInfo )
     g_barFind     = new ShellFindBar
     root->AddChild( g_barFind )
-    g_barReplace  = new ShellStub( @"REPLACE",     PSTHEME_BACKGROUNDRAISED )
+    g_barReplace  = new ShellReplaceBar
     root->AddChild( g_barReplace )
     g_splitOutput = new ShellStub( @"",            PSTHEME_BORDER )
     root->AddChild( g_splitOutput )
@@ -1801,6 +2026,24 @@ end sub
 sub ShellFind_SetVisible( byval bShow as boolean )
     g_state.bShowFind = bShow
     gFind.bShowFindPanel = bShow
+
+    '' HIDING FIND HIDES REPLACE -- the other half of tiko's `if bReplace then bFind = true`,
+    '' which says the pair cannot exist with only the lower bar. Written INLINE rather than as
+    '' a call to ShellReplace_SetVisible, because that one calls back into this one to show
+    '' Find and the pair would recurse. Two flags is the whole body it would have run anyway.
+    if bShow = false then
+        g_state.bShowReplace = false
+        gFind.bShowReplacePanel = false
+    end if
+
+    '' THE LATCHES ARE PUSHED FROM THE MODEL AT EVERY SHOW. See the Replace bar's header:
+    '' a PSICON_TOGGLE is a second copy of a flag the engine owns, and this is the moment it
+    '' can be seen.
+    if bShow then
+        ShellFind_SyncToggles()
+        ShellReplace_SyncToggle()
+    end if
+
     if g_pSurf <> 0 then
         LayoutAll( *g_pSurf )
         if bShow andalso (g_barFind <> 0) then
@@ -1817,6 +2060,43 @@ sub ShellFind_SetVisible( byval bShow as boolean )
         g_pSurf->InvalidateAll()
     end if
 end sub
+
+
+'' ---------------------------------------------------------------------------------------
+'' Show or hide the Replace bar. See ShellReplaceBar's header for the two rules in here.
+''
+'' SHOWING IT SHOWS FIND, and the Find call comes FIRST so its layout has run before this
+'' bar's OnLayout borrows the Find field's rect. Then the focus is put back on the FIND
+'' field, which ShellFind_SetVisible has just done -- so the only thing left to say is what
+'' happens on the way OUT.
+'' ---------------------------------------------------------------------------------------
+sub ShellReplace_SetVisible( byval bShow as boolean )
+    if bShow then
+        ShellFind_SetVisible( true )
+    end if
+
+    g_state.bShowReplace = bShow
+    gFind.bShowReplacePanel = bShow
+    if bShow then ShellReplace_SyncToggle()
+
+    if g_pSurf <> 0 then
+        LayoutAll( *g_pSurf )
+        if bShow andalso (g_barFind <> 0) andalso (g_barFind->pField <> 0) then
+            '' Ctrl+H PUTS THE CARET IN THE **FIND** FIELD, not this bar's. tiko's
+            '' OnCommand_SearchReplaceDialog ends on exactly that line, and the reason is the
+            '' implication above: with no term there is nothing for a replacement to replace.
+            g_pSurf->SetFocus( g_barFind->pField )
+            g_barFind->pField->SelectAll()
+        elseif (bShow = false) andalso (g_state.bShowFind = false) andalso (g_view <> 0) then
+            '' CLOSING ONLY RETURNS THE CARET WHEN THE PAIR IS GONE. Closing Replace while
+            '' Find stays open must leave the focus where the user put it, not yank it into
+            '' the editor -- the Find bar's own close does the yank because nothing is left.
+            g_pSurf->SetFocus( g_view )
+        end if
+        g_pSurf->InvalidateAll()
+    end if
+end sub
+
 
 sub OnMenusClosed( byval pHost as any ptr, byval ud as any ptr )
     if g_menubar then g_menubar->NotifyClosed()
@@ -2389,6 +2669,43 @@ sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any pt
                     FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
                     dim as long nStart = SciMsg( g_view->pSci, SCI_GETCURRENTPOS, 0, 0 )
                     FindReplace_NextSelection( nStart, bNext, true )
+                    if g_pSurf <> 0 then g_pSurf->InvalidateAll()
+                end if
+            end scope
+
+        '' ---- REPLACE, 7c step 28 -------------------------------------------------------
+        '' Toggles, like IDM_FIND, and for the same reason.
+        case IDM_REPLACE
+            ShellReplace_SetVisible( g_state.bShowReplace = false )
+
+        '' ---- THE THREE REPLACE ACTIONS -------------------------------------------------
+        '' foundCount = 0 IS TIKO'S FIRST LINE in OnCommand_SearchReplaceActions, and it is
+        '' kept for FIDELITY, not because its necessity could be shown. A first draft of the
+        '' comment here asserted that "DoReplace with no matches operates on wherever the
+        '' caret happens to be" -- INVENTED, and the revert-to-red pass said so: deleting the
+        '' guard left the suite at 537/0. DoReplace already refuses an empty term, and with a
+        '' term that matches nothing both of its branches find nothing to do.
+        ''
+        '' Left in because tiko has it and this is a port; recorded here because an
+        '' unexplained guard that nothing can break is how a real one gets deleted later.
+        ''
+        '' THE ARGUMENT ORDER IS THE ONE STEP 26 GOT WRONG: (fReplaceAll, fMovenext, colour).
+        '' Replace-previous does not move on, Replace-next does, Replace All does both.
+        case IDM_REPLACENEXT, IDM_REPLACEPREV, IDM_REPLACEALL
+            scope
+                if gFind.foundCount <> 0 then
+                    dim as ulong clr = ShellFind_OccurrenceColour()
+                    if nId = IDM_REPLACEPREV then
+                        FindReplace_DoReplace( false, false, clr )
+                    elseif nId = IDM_REPLACENEXT then
+                        FindReplace_DoReplace( false, true, clr )
+                    else
+                        FindReplace_DoReplace( true, true, clr )
+                    end if
+                    '' RE-HIGHLIGHT AFTER, because the replacement changed the buffer under
+                    '' the indicators -- tiko does the same at every one of its call sites,
+                    '' and the count on the Find bar is what goes stale without it.
+                    FindReplace_HighlightSearches( clr )
                     if g_pSurf <> 0 then g_pSurf->InvalidateAll()
                 end if
             end scope
@@ -4159,6 +4476,198 @@ end function
 
                         gFind.txtFind = sWas
                         gFind.bShowFindPanel = false
+                        gFind.foundCount = 0
+                    end scope
+
+                    '' ---- THE REPLACE BAR, 7c step 28 -----------------------------
+                    ''
+                    '' Same rule as the Find bar above: the assertion that matters is
+                    '' not the bar's shape, it is A REAL REPLACE OVER A KNOWN BUFFER,
+                    '' undone afterwards so the rest of the suite sees the file it
+                    '' expects.
+                    ''
+                    '' STEP 26 SHIPPED A REPLACE THAT PUT AN EMPTY STRING IN EVERY
+                    '' MATCH and every gate stayed green, because nothing had ever
+                    '' written gFind.txtReplace. That is precisely what a bar-shape
+                    '' assertion cannot see and this one can.
+                    scope
+                        Check "  the replace bar is a real bar", (g_barReplace <> 0)
+                        Check "    with a field", (g_barReplace->pField <> 0)
+                        Check "    a Preserve Case toggle", (g_barReplace->pPreserve <> 0) andalso _
+                              (g_barReplace->pPreserve->GetCount() = 1), _
+                              str(g_barReplace->pPreserve->GetCount())
+                        Check "    and two actions", (g_barReplace->pActions <> 0) andalso _
+                              (g_barReplace->pActions->GetCount() = 2), _
+                              str(g_barReplace->pActions->GetCount())
+                        Check "      which carry real menu ids", _
+                              (g_barReplace->pActions->FindItemByID( IDM_REPLACENEXT ) >= 0) andalso _
+                              (g_barReplace->pActions->FindItemByID( IDM_REPLACEALL ) >= 0)
+                        Check "      and Preserve Case latches", _
+                              (g_barReplace->pPreserve->items(0).kind = PSICON_TOGGLE)
+
+                        '' ---- REPLACE IMPLIES FIND, BOTH WAYS --------------------
+                        '' tiko's `if bReplace then bFind = true`, plus the half tiko
+                        '' gets for free by having one function do both. Asserted
+                        '' rather than described because a Replace bar over a hidden
+                        '' Find bar replaces the empty string.
+                        ShellFind_SetVisible( false )
+                        ShellReplace_SetVisible( true )
+                        Check "    showing Replace shows Find", g_state.bShowFind
+                        Check "      and the model agrees", gFind.bShowFindPanel
+                        ShellFind_SetVisible( false )
+                        Check "    and hiding Find hides Replace", (g_state.bShowReplace = false)
+                        Check "      and the model agrees there too", _
+                              (gFind.bShowReplacePanel = false)
+
+                        '' ---- THE FIELDS LINE UP, STRUCTURALLY -------------------
+                        '' Not arithmetic that happens to match: the Replace field's
+                        '' rect is ASKED OF the Find field, as tiko asks it of
+                        '' rcFindTextRect.
+                        ''
+                        '' LAYOUT IS LAZY, AND THE FIRST DRAFT OF THIS ASSERTED 0 = 0.
+                        '' SetBounds only marks the widget dirty; OnLayout runs from
+                        '' EnsureLayout, which a windowless run never reaches because
+                        '' nothing paints. The left-edge check PASSED that way and the
+                        '' width check underneath it is the only reason anyone found
+                        '' out -- step 24's finding, in a second control.
+                        ''
+                        '' DRIVEN FROM THE ROOT, in tree order, because this bar's
+                        '' OnLayout READS the Find field's rect: laying this one out
+                        '' alone would borrow a rect that is still zero.
+                        ShellReplace_SetVisible( true )
+                        if (g_pSurf <> 0) andalso (g_pSurf->pRoot <> 0) then
+                            g_pSurf->pRoot->EnsureLayout()
+                        end if
+                        Check "    the find field has a real rect to borrow", _
+                              (g_barFind->pField->bounds.w > 0), _
+                              str(g_barFind->pField->bounds.w)
+                        Check "      and the two fields share a left edge", _
+                              (g_barReplace->pField->bounds.x = g_barFind->pField->bounds.x), _
+                              str(g_barReplace->pField->bounds.x) & "/" & _
+                              str(g_barFind->pField->bounds.x)
+                        Check "      and Preserve Case eats into the field, not past it", _
+                              (g_barReplace->pField->bounds.w > 0) andalso _
+                              (g_barReplace->pField->bounds.w < g_barFind->pField->bounds.w), _
+                              str(g_barReplace->pField->bounds.w) & "/" & _
+                              str(g_barFind->pField->bounds.w)
+
+                        '' ---- THE FIELD IS THE ONE WRITER OF gFind.txtReplace ----
+                        '' Driven through the control's own callback. The defect this
+                        '' guards is not hypothetical -- it is what step 26 shipped.
+                        g_barReplace->pField->SetText( DWSTRING("ProbeZeta") )
+                        ShellReplace_OnFieldChange( g_barReplace->pField, 0 )
+                        Check "    typing in the field writes the replacement", _
+                              (gFind.txtReplace = DWSTRING("ProbeZeta")), gFind.txtReplace.Utf8
+
+                        '' ---- AND NOW A REAL REPLACE -----------------------------
+                        '' ProbeAlpha appears ONCE, which this file controls -- and
+                        '' unlike step 27's counts that number is derived from the same
+                        '' search rather than from a glance at the file: the assertion
+                        '' below it re-searches and demands the match is GONE.
+                        scope
+                            dim as DWSTRING sWasF = gFind.txtFind
+                            gFind.nMatchCase = 0 : gFind.nWholeWord = 0
+                            gFind.nPreserve = 0
+                            gFind.txtFind = DWSTRING("ProbeAlpha")
+                            FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
+                            Check "    ProbeAlpha is there exactly once to start with", _
+                                  (gFind.foundCount = 1), str(gFind.foundCount)
+
+                            '' REPLACE IS A TWO-PRESS GESTURE FROM A COLD CARET, and
+                            '' the first draft of this assertion did not know that.
+                            '' DoReplace's single-match branch opens by comparing the
+                            '' SELECTION against the find phrase and, when they differ,
+                            '' moves to the nearest match and RETURNS WITHOUT
+                            '' REPLACING. So the first press selects and the second
+                            '' replaces -- which is what the bar does under a user's
+                            '' hands and what this now does: Find Next, then Replace.
+                            OnMenuCommand( 0, IDM_FINDNEXT, 0 )
+                            Check "      Find Next selects the match", _
+                                  (PsUCase(FindReplace_ActiveDoc()->GetSelText) = _
+                                   PsUCase("ProbeAlpha"))
+                            OnMenuCommand( 0, IDM_REPLACENEXT, 0 )
+                            FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
+                            Check "      and after Replace it is gone", _
+                                  (gFind.foundCount = 0), str(gFind.foundCount)
+
+                            gFind.txtFind = DWSTRING("ProbeZeta")
+                            FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
+                            Check "        replaced by the REPLACEMENT, not by nothing", _
+                                  (gFind.foundCount = 1), str(gFind.foundCount)
+
+                            '' UNDONE, and the undo is asserted rather than assumed.
+                            '' DoReplace wraps its edits in SCI_BEGINUNDOACTION, so one
+                            '' undo is the whole thing -- and the rest of this suite
+                            '' reads the probe file after this scope.
+                            if g_view <> 0 then
+                                SciMsg( g_view->pSci, SCI_UNDO, 0, 0 )
+                                SciMsg( g_view->pSci, SCI_SETSAVEPOINT, 0, 0 )
+                            end if
+                            gFind.txtFind = DWSTRING("ProbeAlpha")
+                            FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
+                            Check "      and undo puts the buffer back", _
+                                  (gFind.foundCount = 1), str(gFind.foundCount)
+
+                            '' ---- A REPLACE THAT MATCHES NOTHING ----------------
+                            '' THIS DOES NOT COVER THE foundCount GUARD, and it is
+                            '' labelled that way because it looked like it did:
+                            '' deleting the guard leaves this green. What it does cover
+                            '' is the whole path -- a term with no matches must not
+                            '' disturb the buffer, guard or no guard.
+                            gFind.txtFind = DWSTRING("NoSuchTermAnywhereAtAll")
+                            FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
+                            OnMenuCommand( 0, IDM_REPLACEALL, 0 )
+                            gFind.txtFind = DWSTRING("ProbeAlpha")
+                            FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
+                            Check "    a term that matches nothing disturbs nothing", _
+                                  (gFind.foundCount = 1), str(gFind.foundCount)
+
+                            gFind.txtFind = sWasF
+                        end scope
+
+                        '' ---- PRESERVE CASE, THROUGH THE HANDLER -----------------
+                        '' Step 27 learned this the hard way four steps running: an
+                        '' assertion that sets the flag directly never touches the
+                        '' handler that is supposed to.
+                        scope
+                            dim as long iP = g_barReplace->pPreserve->FindItemByID( SHREPL_ID_PRESERVE )
+                            Check "    Preserve Case is findable by id", (iP >= 0), str(iP)
+                            gFind.nPreserve = 0
+                            g_barReplace->pPreserve->SetSelected( iP, true )
+                            ShellReplace_OnIcon( g_barReplace->pPreserve, iP, 0 )
+                            Check "      and clicking it sets the flag the engine reads", _
+                                  (gFind.nPreserve <> 0), str(gFind.nPreserve)
+
+                            '' ---- AND THE MODEL PUSHES BACK INTO THE LATCH -------
+                            '' The gap tiko avoided by painting from gFind and this
+                            '' port re-opened by using PSICON_TOGGLE. A flag cleared
+                            '' behind the bar's back -- which frmFindInProject.inc:3140
+                            '' does to the Find bar's two -- must not leave the icon lit.
+                            gFind.nPreserve = 0
+                            ShellReplace_SyncToggle()
+                            Check "      and clearing the flag behind its back unlatches it", _
+                                  (g_barReplace->pPreserve->GetSelected( iP ) = false)
+                            gFind.nMatchCase = 1
+                            ShellFind_SyncToggles()
+                            scope
+                                dim as long iMC2 = g_barFind->pToggle->FindItemByID( SHFIND_ID_MATCHCASE )
+                                Check "        and the Find bar's toggles sync the same way", _
+                                      g_barFind->pToggle->GetSelected( iMC2 )
+                            end scope
+                            gFind.nMatchCase = 0
+                            ShellFind_SyncToggles()
+                        end scope
+
+                        '' ---- THE CALLBACKS ARE INSTALLED ------------------------
+                        Check "    the replace field's change and enter hooks are installed", _
+                              (g_barReplace->pField->pfnChange <> 0) andalso _
+                              (g_barReplace->pField->pfnEnter <> 0)
+                        Check "      as are both icon strips'", _
+                              (g_barReplace->pPreserve->pfnClick <> 0) andalso _
+                              (g_barReplace->pActions->pfnClick <> 0)
+
+                        ShellFind_SetVisible( false )
+                        gFind.txtReplace = DWSTRING("")
                         gFind.foundCount = 0
                     end scope
 
