@@ -353,16 +353,18 @@ end sub
 private sub ShellHost_RefreshTodoList()
 end sub
 
-'' EMPTY, AND CORRECT -- 7c step 26. The search engine writes gFind.wszResults and asks the
-'' host to repaint whatever shows it; this binary has no Find bar yet, so there is nothing
-'' to repaint. That a Notify field can be legitimately empty is the whole distinction this
-'' seam is built on: no Services field can.
+'' REAL SINCE 7c STEP 27, and empty for exactly one step before that.
 ''
-'' AND THE COMPLETENESS CHECK STILL WANTS IT SET. It caught this the moment the field
-'' existed -- "tikoshell: AppNotify.RefreshFindBar is not set (build error)", exit 2, before
-'' a single assertion ran. An empty body is a DECISION; an unset pointer is an omission, and
-'' the seam refuses to let the second masquerade as the first.
+'' What it said in step 26: "EMPTY, AND CORRECT -- this binary has no Find bar yet, so there
+'' is nothing to repaint." True then, and precisely the sort of comment that stops being true
+'' the moment somebody builds the thing it names. Step 27 built it, one step later.
+''
+'' The engine writes gFind.wszResults and asks the host to repaint whatever shows it. Here
+'' that is the bar, which paints the count ITSELF rather than owning a widget for one string
+'' that changes on every keystroke.
 private sub ShellHost_RefreshFindBar()
+    if g_barFind = 0 then exit sub
+    g_barFind->Invalidate()
 end sub
 
 

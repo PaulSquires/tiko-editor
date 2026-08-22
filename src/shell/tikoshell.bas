@@ -172,6 +172,7 @@
 '' and is the one defect this commit found. See app/clsConfig.inc for the whole story.
 #include once "app/clsConfig.inc"
 #include once "app/modProjectFolders.bi"
+#include once "app/modFindReplace.bi"
 #include once "app/clsSymbolDb.bi"
 #include once "app/modUnusedSymbols.bi"
 #include once "app/modIniParse.bi"
@@ -231,6 +232,9 @@
 '' then report undefined references to functions whose source plainly exists. Step 16 spent
 '' two rounds on exactly that shape.
 #include once "app/modProjectFolders.inc"
+'' The find/replace ENGINE, in app/ since 7c step 26. The bar in this file writes gFind and
+'' calls into it; it does not search.
+#include once "app/modFindReplace.inc"
 
 
 '' ---- THE COMMIT-4 STUB, NOW REAL -------------------------------------------------------
@@ -393,6 +397,7 @@ end sub
 
 
 
+
 '' ---------------------------------------------------------------------------------------
 '' THE MENUS, BUILT FROM tiko's OWN VOCABULARY.
 ''
@@ -466,7 +471,11 @@ dim shared as PsListTree ptr g_panel
 dim shared as PsIconPanel ptr g_panelMenu
 
 dim shared as ShellStub ptr g_splitPanel
-dim shared as ShellStub ptr g_barInfo, g_barFind, g_barReplace
+dim shared as ShellStub ptr g_barInfo, g_barReplace
+'' g_barFind IS DECLARED WITH ITS TYPE, further down, and not here with its siblings -- the
+'' ShellFindBar type needs gFind and the app headers, so it cannot be defined this early and
+'' `dim shared as <unknown> ptr` is not an error in fbc, it is a variable of no type whose
+'' every USE then fails somewhere else entirely.
 dim shared as ShellStub ptr g_splitOutput, g_output, g_fip
 
 '' THE EDITOR, and the two scrollbars flanking it. tiko replaces Scintilla's own scrollbars
@@ -586,6 +595,240 @@ end sub
 '' further down, and BuildDropDown up here needs the address.
 declare sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any ptr )
 declare sub OnMenusClosed( byval pHost as any ptr, byval ud as any ptr )
+
+'' =======================================================================================
+'' THE FIND BAR -- 7c step 27, and the first thing in this binary that SEARCHES.
+''
+'' A port of frmFind.inc's shape rather than its code: tiko's is 662 lines, most of them a
+'' hand-rolled painter, a tooltip backend and three PsIconPanels laid out against a rect the
+'' tab control owns. What carries across is the ARRANGEMENT -- field, toggles, navigation,
+'' count -- and every piece of it is a control this port has already proven.
+''
+'' ---- WHAT THIS BAR DOES NOT DO, AND WHY IT IS NOT A GAP -------------------------------
+''
+'' It does not search. app/modFindReplace.inc does, since 7c step 26, and this bar only ever
+'' writes gFind and calls it. That split is the whole reason the engine moved down first: a
+'' bar that carried the search would have to be ported again for every host.
+''
+'' ---- THE TOGGLES CARRY NO MENU ID, AND THAT IS NOT AN OVERSIGHT ------------------------
+''
+'' Prev, Next and Close resolve to IDM_FINDPREV / IDM_FINDNEXT / IDM_FIND and go through
+'' OnMenuCommand, so a button and its View-menu entry cannot come apart -- the rule step 20
+'' established for the pane switcher. Match Case and Whole Word have NO menu id in tiko
+'' either: they are state on gFind, read by the engine, and inventing ids for them would
+'' mean inventing .lang entries for a menu nothing shows them in.
+'' =======================================================================================
+
+'' Shell-local item ids for the two toggles. NEGATIVE, deliberately: PsIconPanel hands the
+'' id straight back and IDM_* are positive, so a toggle can never be mistaken for a command
+'' by a handler that forgets to check which panel it came from.
+const SHFIND_ID_MATCHCASE = -1
+const SHFIND_ID_WHOLEWORD = -2
+
+'' The results text's band, unscaled. Wide enough for "999/999" at the bar's font,
+'' which is the widest thing it has to hold before the count stops being useful.
+const SHFIND_RESULTS_UNITS = 64
+const SHFIND_PAD_UNITS  = 6
+const SHFIND_ICON_UNITS = 24
+
+
+type ShellFindBar extends PsWidget
+    pField  as PsTextBox ptr
+    pToggle as PsIconPanel ptr
+    pNav    as PsIconPanel ptr
+    declare constructor()
+    declare virtual sub OnLayout()
+    declare virtual sub OnPaint(byval p as PsBufferPaint_ ptr)
+end type
+
+'' THE FIND BAND, and it is a real bar since 7c step 27 rather than a stub -- the first
+'' thing in this binary that searches. Its rect is still the LAYOUT's, exactly as g_panel's
+'' and g_tabs' are: a control that chose its own height could not be checked against the
+'' oracle.
+dim shared as ShellFindBar ptr g_barFind
+
+declare sub ShellFind_OnFieldChange(byval pTb as any ptr, byval ud as any ptr)
+declare sub ShellFind_OnFieldEnter(byval pTb as any ptr, byval ud as any ptr)
+declare sub ShellFind_OnIcon(byval pPanel as any ptr, byval nIndex as long, byval ud as any ptr)
+
+
+constructor ShellFindBar()
+    base()
+    '' THE BAR ITSELF TAKES NO FOCUS. Its FIELD does, and a Tab that stopped on the
+    '' container first would be a Tab order tiko does not have.
+    this.bFocusable = false
+
+    this.pField = new PsTextBox
+    if this.pField <> 0 then
+        this.AddChild( this.pField )
+        this.pField->OnChange( @ShellFind_OnFieldChange, 0 )
+        '' ENTER IS FIND NEXT, which is what every editor does and what tiko's pump does
+        '' through handleKeysFindReplace. Taking it here means the bar never needs a key
+        '' filter of its own.
+        this.pField->OnEnterPressed( @ShellFind_OnFieldEnter, 0 )
+    end if
+
+    '' TOGGLES, NOT COMMANDS -- the one place step 20 found the toolkit simpler than tiko.
+    '' tiko paints its own latch because its items are commands; PsIconPanel carries
+    '' selection ON THE ITEM, so "Match Case is on" is the control's state and the built-in
+    '' painter shows it.
+    this.pToggle = new PsIconPanel
+    if this.pToggle <> 0 then
+        this.AddChild( this.pToggle )
+        scope
+            dim as DWSTRING g
+            g.Utf8 = chr(&hEE, &hA2, &hB1)   '' U+E8B1  match case   (tiko wszIconMatchCase)
+            this.pToggle->AddItem( g, SHFIND_ID_MATCHCASE, 0, PSICON_TOGGLE )
+            g.Utf8 = chr(&hEE, &hA2, &hB2)   '' U+E8B2  whole word   (tiko wszIconWholeWord)
+            this.pToggle->AddItem( g, SHFIND_ID_WHOLEWORD, 0, PSICON_TOGGLE )
+        end scope
+        this.pToggle->OnClick( @ShellFind_OnIcon, 0 )
+    end if
+
+    this.pNav = new PsIconPanel
+    if this.pNav <> 0 then
+        this.AddChild( this.pNav )
+        scope
+            dim as DWSTRING g
+            g.Utf8 = chr(&hEE, &h80, &h95)   '' U+E015  chevron up    -> previous
+            this.pNav->AddItem( g, IDM_FINDPREV, 0, PSICON_COMMAND )
+            g.Utf8 = chr(&hEE, &h80, &h93)   '' U+E013  chevron down  -> next
+            this.pNav->AddItem( g, IDM_FINDNEXT, 0, PSICON_COMMAND )
+            g.Utf8 = chr(&hEE, &h80, &h91)   '' U+E011  close         -> toggle the bar off
+            this.pNav->AddItem( g, IDM_FIND, 0, PSICON_COMMAND )
+        end scope
+        this.pNav->OnClick( @ShellFind_OnIcon, 0 )
+    end if
+end constructor
+
+
+'' ---------------------------------------------------------------------------------------
+'' Field, toggles, [results], navigation -- left to right, with the two icon strips sized to
+'' their contents and the field taking what is left.
+''
+'' THE RESULTS TEXT IS NOT A CONTROL. It is painted by the bar, exactly as tiko paints it
+'' into gFind.rcResults, because it is one string that changes on every keystroke and a
+'' widget for it would be a widget to invalidate.
+'' ---------------------------------------------------------------------------------------
+sub ShellFindBar.OnLayout()
+    dim as single f = 1.0
+    if this.pSurface <> 0 then f = this.pSurface->fScale
+    dim as long pad  = PsScaleBy( SHFIND_PAD_UNITS, f )
+    dim as long icon = PsScaleBy( SHFIND_ICON_UNITS, f )
+    dim as long h    = this.bounds.h
+    dim as long y    = 0
+
+    dim as long nNavW = 0, nTogW = 0
+    if this.pNav <> 0 then nNavW = icon * this.pNav->GetCount()
+    if this.pToggle <> 0 then nTogW = icon * this.pToggle->GetCount()
+
+    '' Navigation hard right; the results text sits to ITS left and is measured in OnPaint.
+    if this.pNav <> 0 then
+        this.pNav->SetBounds( PsRc(this.bounds.w - pad - nNavW, y, nNavW, h) )
+    end if
+    '' Toggles immediately after the field.
+    dim as long xTog = this.bounds.w - pad - nNavW - PsScaleBy(SHFIND_RESULTS_UNITS, f) - nTogW
+    if this.pToggle <> 0 then
+        this.pToggle->SetBounds( PsRc(xTog, y, nTogW, h) )
+    end if
+    if this.pField <> 0 then
+        dim as long w = xTog - pad - pad
+        if w < 0 then w = 0
+        this.pField->SetBounds( PsRc(pad, y + pad \ 2, w, h - pad) )
+    end if
+end sub
+
+
+sub ShellFindBar.OnPaint(byval p as PsBufferPaint_ ptr)
+    if p = 0 then exit sub
+    dim as PsRect rcAll
+    rcAll.x = 0 : rcAll.y = 0 : rcAll.w = this.bounds.w : rcAll.h = this.bounds.h
+    p->SetBackColor( PsThemeRoleColor(PSTHEME_BACKGROUNDRAISED) )
+    p->PaintRect( @rcAll )
+
+    '' The "3/17". Between the toggles and the navigation, which is where tiko puts it and
+    '' why its own close icon sits in a panel of its own.
+    if this.pNav = 0 then exit sub
+    dim as single f = 1.0
+    if this.pSurface <> 0 then f = this.pSurface->fScale
+    dim as PsRect rcR
+    rcR.w = PsScaleBy( SHFIND_RESULTS_UNITS, f )
+    rcR.x = this.pNav->bounds.x - this.bounds.x - rcR.w
+    rcR.y = 0
+    rcR.h = this.bounds.h
+    if rcR.x < 0 then exit sub
+    p->SetForeColor( PsThemeRoleColor(PSTHEME_FOREGROUNDDIM) )
+    p->PaintText( gFind.wszResults, @rcR, PSTF_CENTER or PSTF_VCENTER )
+end sub
+
+
+'' ---------------------------------------------------------------------------------------
+'' The occurrence colour, which the engine takes as a parameter since 7c step 26.
+''
+'' "editor.occurrence" IS tiko's OWN THEME KEY -- app/modThemeKeys.bi:93 -- so a tiko .theme
+'' file drives the highlight here with nothing re-authored, which is the same property
+'' PsTheme was built for and the reason step 26 made this a parameter rather than moving the
+'' whole theme tree down.
+private function ShellFind_OccurrenceColour() as ulong
+    return PsThemeColorK( "editor.occurrence", PSTHEME_SELECTION )
+end function
+
+
+'' Typing re-runs the search. tiko's frmFind_TextBoxChange, minus the error-state repaint
+'' the bar has no red for yet.
+''
+'' gFind.txtFind IS WRITTEN HERE AND NOWHERE ELSE IN THIS BINARY. Step 26 spent two defects
+'' on that rule: the engine reads state, not controls, so the control has to write it.
+sub ShellFind_OnFieldChange(byval pTb as any ptr, byval ud as any ptr)
+    dim as PsTextBox ptr tb = cast(PsTextBox ptr, pTb)
+    if tb = 0 then exit sub
+    gFind.txtFind = tb->GetText()
+    FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
+end sub
+
+
+'' Enter in the field is Find Next, through the SAME id the menu and the icon use.
+sub ShellFind_OnFieldEnter(byval pTb as any ptr, byval ud as any ptr)
+    OnMenuCommand( 0, IDM_FINDNEXT, 0 )
+end sub
+
+
+'' ---------------------------------------------------------------------------------------
+'' One handler for both strips, because the id says which it was.
+''
+'' A NEGATIVE ID IS A TOGGLE and a positive one is a command -- see the constants. That is
+'' what lets one callback serve two panels without asking which panel called it, and it is
+'' why the toggle ids were made negative rather than 1 and 2.
+'' ---------------------------------------------------------------------------------------
+sub ShellFind_OnIcon(byval pPanel as any ptr, byval nIndex as long, byval ud as any ptr)
+    dim as PsIconPanel ptr pnl = cast(PsIconPanel ptr, pPanel)
+    if pnl = 0 then exit sub
+    if pnl->IsValidItem( nIndex ) = false then exit sub
+    dim as long id = pnl->items(nIndex).id
+
+    select case id
+        case SHFIND_ID_MATCHCASE, SHFIND_ID_WHOLEWORD
+            '' THE CONTROL HAS ALREADY LATCHED ITSELF -- a TOGGLE item flips on the click
+            '' before the callback runs -- so the flag is READ FROM THE ITEM rather than
+            '' flipped here. Two sources for one piece of state is what step 26 was about.
+            dim as boolean bOn = pnl->GetSelected( nIndex )
+            if id = SHFIND_ID_MATCHCASE then
+                gFind.nMatchCase = iif( bOn, 1, 0 )
+            else
+                gFind.nWholeWord = iif( bOn, 1, 0 )
+            end if
+            '' Re-search with the new flags. tiko does the same and it is what makes the
+            '' count change the instant a toggle is clicked -- the defect step 26's
+            '' interactive pass opened with.
+            FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
+
+        case else
+            '' Prev, Next and Close all carry a real menu id.
+            OnMenuCommand( 0, id, 0 )
+    end select
+end sub
+
+
 
 '' ---- THE PANE SWITCHER'S CLICK, 7c step 20 ------------------------------------------
 '' The strip and the menu are ONE command path. The click resolves the item to the menu id
@@ -955,7 +1198,7 @@ sub BuildTree( byref surf as PsSurface )
     root->AddChild( g_splitPanel )
     g_barInfo     = new ShellStub( @"TOPTABSINFO", PSTHEME_BACKGROUNDRAISED )
     root->AddChild( g_barInfo )
-    g_barFind     = new ShellStub( @"FIND",        PSTHEME_BACKGROUNDRAISED )
+    g_barFind     = new ShellFindBar
     root->AddChild( g_barFind )
     g_barReplace  = new ShellStub( @"REPLACE",     PSTHEME_BACKGROUNDRAISED )
     root->AddChild( g_barReplace )
@@ -1548,6 +1791,33 @@ sub LayoutAll( byref surf as PsSurface )
     Shell_LayoutAll( surf, g_state )
 end sub
 
+'' ---------------------------------------------------------------------------------------
+'' Show or hide the bar, and put the caret where the user expects it.
+''
+'' SEEDING IS DELIBERATELY NOT PORTED. tiko's FindControls_Show reseeds the field from the
+'' selection, which is the behaviour that needed an exception in step 26 for the case-only
+'' echo. This binary has no selection-driven seeding at all yet, so there is nothing to
+'' except -- and adding the seeding without the exception would be re-importing a fixed bug.
+sub ShellFind_SetVisible( byval bShow as boolean )
+    g_state.bShowFind = bShow
+    gFind.bShowFindPanel = bShow
+    if g_pSurf <> 0 then
+        LayoutAll( *g_pSurf )
+        if bShow andalso (g_barFind <> 0) then
+            if g_barFind->pField <> 0 then
+                g_pSurf->SetFocus( g_barFind->pField )
+                g_barFind->pField->SelectAll()
+            end if
+        elseif (bShow = false) andalso (g_view <> 0) then
+            '' CLOSING RETURNS THE FOCUS TO THE EDITOR. A bar that hides while holding the
+            '' focus leaves the caret nowhere -- the same defect ShellTabs_Show documents
+            '' for the tab bar.
+            g_pSurf->SetFocus( g_view )
+        end if
+        g_pSurf->InvalidateAll()
+    end if
+end sub
+
 sub OnMenusClosed( byval pHost as any ptr, byval ud as any ptr )
     if g_menubar then g_menubar->NotifyClosed()
 end sub
@@ -2101,6 +2371,27 @@ sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any pt
         case IDM_BOOKMARKSLIST : ShellPanel_SetMode( SHPANEL_BOOKMARKS )
         case IDM_FUNCTIONLIST  : ShellPanel_SetMode( SHPANEL_FUNCTIONS )
         case IDM_VIEWEXPLORER  : ShellPanel_SetMode( SHPANEL_EXPLORER )
+
+        '' ---- FIND, 7c step 27 ----------------------------------------------------------
+        '' IDM_FIND TOGGLES, which is tiko's behaviour and the reason the bar's own close
+        '' icon carries this id rather than one of its own: closing and reopening are the
+        '' same gesture and there is no second path to keep in step.
+        case IDM_FIND
+            ShellFind_SetVisible( g_state.bShowFind = false )
+
+        case IDM_FINDNEXT, IDM_FINDNEXTACCEL, IDM_FINDPREV, IDM_FINDPREVACCEL
+            '' THE HIGHLIGHT RUNS FIRST. NextSelection walks the INDICATORS, so a term that
+            '' has not been highlighted yet has nothing to walk -- which is why tiko calls
+            '' the two in this order at every one of its own call sites.
+            scope
+                dim as boolean bNext = (nId = IDM_FINDNEXT) orelse (nId = IDM_FINDNEXTACCEL)
+                if g_view <> 0 then
+                    FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
+                    dim as long nStart = SciMsg( g_view->pSci, SCI_GETCURRENTPOS, 0, 0 )
+                    FindReplace_NextSelection( nStart, bNext, true )
+                    if g_pSurf <> 0 then g_pSurf->InvalidateAll()
+                end if
+            end scope
 
         '' ---- THE EXPLORER'S FOLDER COMMANDS, 7c step 21 --------------------------------
         '' Delegated rather than handled here, because they act on a REMEMBERED ROW: the
@@ -3725,6 +4016,151 @@ end function
                                   (gApp.GetDocumentPtrByFilename( wszAlt ) = _
                                    gApp.GetDocumentPtrByFilename( wszFile ))
                         end scope
+
+                    '' ---- THE FIND BAR, 7c step 27 ---------------------------------
+                    ''
+                    '' The first thing in this binary that SEARCHES, so the assertion
+                    '' that matters is not the bar's shape -- it is a search over a
+                    '' known buffer returning a known count.
+                    ''
+                    '' STEP 26 IS WHY THAT IS THE ONE WRITTEN FIRST. Its gates were
+                    '' green through a find engine that could not update a count, could
+                    '' not replace text, and replaced the wrong number of matches. A
+                    '' bar whose widgets all exist and whose search finds nothing would
+                    '' look identical from here.
+                    scope
+                        Check "  the find bar is a real bar", (g_barFind <> 0)
+                        Check "    with a field", (g_barFind->pField <> 0)
+                        Check "    two toggles", (g_barFind->pToggle <> 0) andalso _
+                              (g_barFind->pToggle->GetCount() = 2), _
+                              str(g_barFind->pToggle->GetCount())
+                        Check "    and three navigation buttons", (g_barFind->pNav <> 0) andalso _
+                              (g_barFind->pNav->GetCount() = 3), _
+                              str(g_barFind->pNav->GetCount())
+
+                        '' BOTH TOGGLES LATCH. A COMMAND item never selects, so Match
+                        '' Case would read as permanently off and the flag the engine
+                        '' reads would never change -- which is the shape of the defect
+                        '' step 20 found in the pane switcher.
+                        dim as boolean bBothToggle = true
+                        for k as long = 0 to g_barFind->pToggle->GetCount() - 1
+                            if g_barFind->pToggle->items(k).kind <> PSICON_TOGGLE then bBothToggle = false
+                        next
+                        Check "      and the toggles latch", bBothToggle
+
+                        '' THE NAVIGATION CARRIES REAL MENU IDS, which is what makes a
+                        '' button and its menu entry the same path rather than two.
+                        Check "      while the navigation carries menu ids", _
+                              (g_barFind->pNav->FindItemByID( IDM_FINDPREV ) >= 0) andalso _
+                              (g_barFind->pNav->FindItemByID( IDM_FINDNEXT ) >= 0) andalso _
+                              (g_barFind->pNav->FindItemByID( IDM_FIND ) >= 0)
+
+                        '' ---- AND IT SEARCHES ------------------------------------
+                        '' EVERY NUMBER BELOW IS DERIVED FROM THE PROBE FILE, and the
+                        '' first draft guessed instead: it asserted 3 for "Probe"
+                        '' because there are three procedures, and got 5. The engine was
+                        '' right. The file this suite writes is
+                        ''
+                        ''     ' probe
+                        ''     #include once "open_probe2.bas"
+                        ''     sub ProbeAlpha() ... function ProbeBeta() ...
+                        ''     declare sub ProbeGamma()
+                        ''
+                        '' so case-insensitive "Probe" is FIVE -- the comment, the
+                        '' include's filename, and the three procedure names. Anything
+                        '' editing that file has to move these, exactly as it already
+                        '' has to move the two line numbers further up.
+                        dim as DWSTRING sWas = gFind.txtFind
+                        gFind.txtFind = DWSTRING("Probe")
+                        gFind.nMatchCase = 0
+                        gFind.nWholeWord = 0
+                        gFind.bShowFindPanel = true
+                        FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
+                        Check "    searching the probe file finds all five", _
+                              (gFind.foundCount = 5), str(gFind.foundCount)
+
+                        '' AND THE COUNT IS PUBLISHED, which is a separate fact from
+                        '' having been computed: the engine writes gFind.wszResults and
+                        '' asks the host to repaint. A number computed and never
+                        '' published is exactly what step 26 shipped.
+                        Check "      and publishes a count, not 0/0", _
+                              (gFind.wszResults <> DWSTRING("0/0")), gFind.wszResults.Utf8
+
+                        '' ---- WHOLE WORD CHANGES THE ANSWER ----------------------
+                        '' Only the comment's "probe" stands alone. In the three names
+                        '' it is a prefix, and in the include it is inside a filename --
+                        '' so Whole Word takes five to ONE, which is a sharper statement
+                        '' than "the number changed".
+                        gFind.nWholeWord = 1
+                        FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
+                        Check "    Whole Word keeps only the standalone one", _
+                              (gFind.foundCount = 1), str(gFind.foundCount)
+                        gFind.nWholeWord = 0
+
+                        '' ---- MATCH CASE CHANGES THE ANSWER ----------------------
+                        '' Lowercase "probe" occurs TWICE as typed -- the comment and
+                        '' the include's filename -- and five times ignoring case.
+                        gFind.txtFind = DWSTRING("probe")
+                        gFind.nMatchCase = 1
+                        FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
+                        Check "    Match Case keeps only the two written that way", _
+                              (gFind.foundCount = 2), str(gFind.foundCount)
+                        gFind.nMatchCase = 0
+                        FindReplace_HighlightSearches( ShellFind_OccurrenceColour() )
+                        Check "      and without it the same term finds all five", _
+                              (gFind.foundCount = 5), str(gFind.foundCount)
+
+                        '' ---- THE FIELD IS THE ONE WRITER OF gFind.txtFind -------
+                        '' Step 26 spent two defects on that rule. Driven through the
+                        '' control's own callback, not by assigning the field, so this
+                        '' asserts the WIRING as well as the assignment.
+                        g_barFind->pField->SetText( DWSTRING("Alpha") )
+                        ShellFind_OnFieldChange( g_barFind->pField, 0 )
+                        Check "    typing in the field writes the search term", _
+                              (gFind.txtFind = DWSTRING("Alpha")), gFind.txtFind.Utf8
+                        Check "      and re-searches on the way", _
+                              (gFind.foundCount = 1), str(gFind.foundCount)
+
+                        '' ---- AND THE TOGGLE ACTUALLY MOVES THE FLAG -------------
+                        '' Every assertion above sets gFind.nMatchCase DIRECTLY, so
+                        '' none of them touches the handler that is supposed to. Proved
+                        '' by reverting: deleting the assignment inside ShellFind_OnIcon
+                        '' left the suite at 508/0. Fourth step running that an
+                        '' installation or a wiring went unasserted because the policy
+                        '' was driven straight.
+                        ''
+                        '' DRIVEN THROUGH THE HANDLER, with the item latched first --
+                        '' the control flips a TOGGLE before the callback runs, and the
+                        '' handler READS that rather than flipping again, so the fixture
+                        '' has to do what the control would.
+                        scope
+                            dim as long iMC = g_barFind->pToggle->FindItemByID( SHFIND_ID_MATCHCASE )
+                            Check "    the Match Case toggle is findable by id", (iMC >= 0), str(iMC)
+                            gFind.nMatchCase = 0
+                            g_barFind->pToggle->SetSelected( iMC, true )
+                            ShellFind_OnIcon( g_barFind->pToggle, iMC, 0 )
+                            Check "      and clicking it sets the flag the engine reads", _
+                                  (gFind.nMatchCase <> 0), str(gFind.nMatchCase)
+                            g_barFind->pToggle->SetSelected( iMC, false )
+                            ShellFind_OnIcon( g_barFind->pToggle, iMC, 0 )
+                            Check "        and clicking it again clears it", _
+                                  (gFind.nMatchCase = 0), str(gFind.nMatchCase)
+                        end scope
+
+                        '' ---- THE CALLBACKS ARE INSTALLED ------------------------
+                        '' Three steps running an installation went unasserted because
+                        '' the policy was tested by calling the callback directly.
+                        Check "    the field's change and enter hooks are installed", _
+                              (g_barFind->pField->pfnChange <> 0) andalso _
+                              (g_barFind->pField->pfnEnter <> 0)
+                        Check "      as are both icon strips'", _
+                              (g_barFind->pToggle->pfnClick <> 0) andalso _
+                              (g_barFind->pNav->pfnClick <> 0)
+
+                        gFind.txtFind = sWas
+                        gFind.bShowFindPanel = false
+                        gFind.foundCount = 0
+                    end scope
 
                         '' A NAME AND A LINE, because a count alone would pass on two
                         '' entries that say nothing useful. The line is what commit 4's
