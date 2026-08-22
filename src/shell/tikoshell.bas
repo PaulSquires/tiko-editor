@@ -4131,6 +4131,71 @@ end function
                                     end if
                                 end scope
 
+                                '' ---- FOLDER RENAME, 7c step 23 ------------------------
+                                ''
+                                '' The editor itself is PsPlatform's and asserted there.
+                                '' What is asserted HERE is the Explorer's POLICY: which
+                                '' rows may be renamed, and which names are accepted.
+                                scope
+                                    dim as long nF = -1
+                                    for r as long = 0 to g_panel->GetCount() - 1
+                                        if ShellPanel_KindOf(r) <> EXPKIND_FOLDER then continue for
+                                        if cast(long, g_panel->GetItemData(r)) = nNew then nF = r : exit for
+                                    next
+                                    Check "    the first folder still has a row", (nF >= 0), str(nF)
+
+                                    '' ---- WHO MAY BE RENAMED -------------------------
+                                    Check "      a folder row may be renamed", _
+                                          ShellExplorer_OnBeginEdit( g_panel, nF, 0 )
+                                    Check "        a group row may not", _
+                                          (ShellExplorer_OnBeginEdit( g_panel, nGroup, 0 ) = false)
+                                    scope
+                                        dim as long nFile2 = -1
+                                        for r as long = 0 to g_panel->GetCount() - 1
+                                            if ShellPanel_KindOf(r) = EXPKIND_FILE then nFile2 = r : exit for
+                                        next
+                                        if nFile2 >= 0 then
+                                            Check "        nor a file row", _
+                                                  (ShellExplorer_OnBeginEdit( g_panel, nFile2, 0 ) = false)
+                                        end if
+                                    end scope
+
+                                    '' ---- WHICH NAMES ARE ACCEPTED -------------------
+                                    '' Driven through the end-edit callback, which is where
+                                    '' the policy lives and is reachable without a caret.
+                                    dim as DWSTRING sWas = gProjectFolders(nNew).wszPath
+                                    Check "      an empty name is refused", _
+                                          (ShellExplorer_OnEndEdit( g_panel, nF, DWSTRING(""), 0 ) = false)
+                                    Check "      a name with a separator is refused", _
+                                          (ShellExplorer_OnEndEdit( g_panel, nF, DWSTRING("a/b"), 0 ) = false)
+                                    Check "        and the folder is untouched by either", _
+                                          (gProjectFolders(nNew).wszPath = sWas), _
+                                          gProjectFolders(nNew).wszPath.Utf8
+
+                                    '' A REAL RENAME. The table is the truth, so the path is
+                                    '' what changes -- the row's caption is rebuilt from it.
+                                    Check "      a good name is accepted", _
+                                          ShellExplorer_OnEndEdit( g_panel, nF, DWSTRING("Renamed"), 0 )
+                                    Check "        and the table carries it", _
+                                          (ProjectFolders_Find( nCat, DWSTRING("Renamed") ) >= 0), _
+                                          gProjectFolders(nNew).wszPath.Utf8
+
+                                    '' ---- CASE-ONLY IS NOT A COLLISION ---------------
+                                    '' tiko's trap, ported with its comment: without the
+                                    '' early return the sibling test finds the folder ITSELF
+                                    '' and every attempt to fix a capital letter is refused.
+                                    scope
+                                        dim as long nR = -1
+                                        for r as long = 0 to g_panel->GetCount() - 1
+                                            if ShellPanel_KindOf(r) <> EXPKIND_FOLDER then continue for
+                                            if PsUCase(g_panel->GetText(r)) = PsUCase(DWSTRING("Renamed")) then nR = r : exit for
+                                        next
+                                        Check "      the renamed folder has a row", (nR >= 0), str(nR)
+                                        Check "        and a case-only change is ACCEPTED", _
+                                              ShellExplorer_OnEndEdit( g_panel, nR, DWSTRING("RENAMED"), 0 )
+                                    end scope
+                                end scope
+
                                 '' Clean up: the workspace is shared with everything after
                                 '' this block, and a stray folder changes the tree's shape.
                                 dim as long nRow1 = -1
@@ -4192,6 +4257,14 @@ end function
                                 Check "      and the two row callbacks", _
                                       (g_panel->pfnSelChange <> 0) andalso _
                                       (g_panel->pfnActivate <> 0)
+                                '' THE EDIT PAIR, added in step 23 for the same reason and
+                                '' after the same green revert: the rename policy is
+                                '' asserted by calling the two callbacks DIRECTLY, so
+                                '' removing the lines that install them changed nothing.
+                                '' Twice in two steps, which is why this list exists.
+                                Check "      and the label-edit pair", _
+                                      (g_panel->pfnBeginEdit <> 0) andalso _
+                                      (g_panel->pfnEndEdit <> 0)
                             end scope
 
                             '' IsFileDisplayed READS THE MODEL, NOT THE ROWS -- so it

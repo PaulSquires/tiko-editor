@@ -361,6 +361,12 @@ end sub
 declare sub ShellExplorer_OnContext( byval pList as any ptr, byval nRow as long, _
                                      byval nX as long, byval nY as long, byval ud as any ptr )
 declare function ShellExplorer_PaintOverlay( byval pi as PsLtPaintInfo ptr ) as boolean
+declare function ShellExplorer_OnBeginEdit( byval pList as any ptr, byval nRow as long, _
+                                            byval ud as any ptr ) as boolean
+declare function ShellExplorer_OnEndEdit( byval pList as any ptr, byval nRow as long, _
+                                          byref sText as DWSTRING, _
+                                          byval ud as any ptr ) as boolean
+declare function ShellExplorer_RenameFolder( byval nRow as long ) as boolean
 
 
 '' Wire the panel's callbacks. Called once, beside ShellTabs_Install.
@@ -376,6 +382,11 @@ sub ShellPanel_Install()
     '' and drawn in none but the Explorer -- the handler bails on the mode, so Bookmarks and
     '' Functions keep the plain rows they have always had.
     g_panel->OnPaintOverlay( @ShellExplorer_PaintOverlay )
+    '' LABEL EDITING, new in 7c step 23 and new in PsListTree in the same step. Installed
+    '' for every mode; the begin callback answers "is this a folder row", which is false in
+    '' Bookmarks and Functions, so neither pane becomes editable.
+    g_panel->OnBeginEdit( @ShellExplorer_OnBeginEdit, 0 )
+    g_panel->OnEndEdit( @ShellExplorer_OnEndEdit, 0 )
     '' NO ZEBRA STRIPES. Reported by the author -- "the bookmark rows colored weird". The
     '' rows here are a file's bookmarks, not records, and tiko's own panel paints every row
     '' the same. Set ONCE, at install: SetAltRows is a flag the control keeps, unlike the
@@ -1251,7 +1262,13 @@ function ShellExplorer_NewFolder( byval nRow as long ) as long
         for i as long = 0 to g_panel->GetCount() - 1
             if ShellPanel_KindOf(i) <> EXPKIND_FOLDER then continue for
             if cast(long, g_panel->GetItemData(i)) = nIdx then
+                '' ---- AND THE TAIL tiko HAS, RESTORED IN STEP 23 ------------------------
+                '' tiko ends NewFolder by opening the editor on the row it just made, so the
+                '' user names the folder immediately. Step 21 stopped one line short because
+                '' PsListTree had no editor; this is the line. The generated name is a
+                '' placeholder again rather than the name that stays.
                 g_panel->SetCurSel( i )
+                g_panel->BeginEdit( i )
                 exit for
             end if
         next
@@ -1343,6 +1360,9 @@ sub ShellExplorer_OnContext( byval pList as any ptr, byval nRow as long, _
     if pM = 0 then exit sub
     pM->AddItem( L(462,"New Folder"), IDM_EXPLORER_NEWFOLDER )
     if kind = EXPKIND_FOLDER then
+        '' RENAME IS BACK, since step 23. It was absent rather than greyed while
+        '' PsListTree had no editor -- a disabled item promises a feature.
+        pM->AddItem( L(464,"Rename Folder"), IDM_EXPLORER_RENAMEFOLDER )
         pM->AddSeparator()
         pM->AddItem( L(463,"Delete Folder"), IDM_EXPLORER_DELETEFOLDER )
     end if
@@ -1369,7 +1389,7 @@ end sub
 '' ---------------------------------------------------------------------------------------
 function ShellExplorer_FolderCommand( byval nId as long ) as boolean
     select case nId
-        case IDM_EXPLORER_NEWFOLDER, IDM_EXPLORER_DELETEFOLDER
+        case IDM_EXPLORER_NEWFOLDER, IDM_EXPLORER_DELETEFOLDER, IDM_EXPLORER_RENAMEFOLDER
         case else : return false
     end select
 
@@ -1380,6 +1400,7 @@ function ShellExplorer_FolderCommand( byval nId as long ) as boolean
     select case nId
         case IDM_EXPLORER_NEWFOLDER    : ShellExplorer_NewFolder( nRow )
         case IDM_EXPLORER_DELETEFOLDER : ShellExplorer_DeleteFolder( nRow )
+        case IDM_EXPLORER_RENAMEFOLDER : ShellExplorer_RenameFolder( nRow )
     end select
     return true
 end function
@@ -1469,4 +1490,76 @@ private function ShellExplorer_PaintOverlay( byval pi as PsLtPaintInfo ptr ) as 
     pi->p->SetForeColor( pi->clrText )
     pi->p->PaintText( g, @rc, PSTF_CENTER or PSTF_VCENTER )
     return false
+end function
+
+
+'' =======================================================================================
+'' FOLDER RENAME -- 7c step 23, on the label editor PsListTree gained in the same step.
+''
+'' Both callbacks are tiko's, almost verbatim: frmExplorer_BeginLabelEditCallback is one
+'' line and frmExplorer_EndLabelEditCallback is twenty of ProjectFolders_* calls, every one
+'' of which has been in app/ since before this pane existed.
+'' =======================================================================================
+
+'' Only a folder row. A group's caption comes from gConfig.Cat and a file's from the disk;
+'' neither is the user's to type over, and the Save-as-Project row is not a name at all.
+private function ShellExplorer_OnBeginEdit( byval pList as any ptr, byval nRow as long, _
+                                            byval ud as any ptr ) as boolean
+    return ( ShellPanel_KindOf( nRow ) = EXPKIND_FOLDER )
+end function
+
+
+'' ---------------------------------------------------------------------------------------
+'' Accept or refuse a renamed folder. tiko's frmExplorer_EndLabelEditCallback.
+''
+'' REFUSES SILENTLY rather than complaining: an empty name, a name carrying a path
+'' separator, and a name already taken by a sibling. Returning FALSE leaves the caption as
+'' it was -- which for a folder just created means it keeps its default name, a legal
+'' outcome rather than a failure.
+'' ---------------------------------------------------------------------------------------
+private function ShellExplorer_OnEndEdit( byval pList as any ptr, byval nRow as long, _
+                                          byref sText as DWSTRING, _
+                                          byval ud as any ptr ) as boolean
+    dim as long catIndex
+    dim as DWSTRING wszOld = ShellExplorer_FolderPathFromRow( nRow, catIndex )
+    if catIndex < 0 then return false
+    if PsLen( wszOld ) = 0 then return false
+
+    dim as DWSTRING wszName = PsTrim( sText )
+    if ProjectFolders_IsValidName( wszName ) = false then return false
+
+    '' UNCHANGED APART FROM CASE IS NOT A RENAME, and must not be refused as a
+    '' self-collision. tiko's comment, and a real trap: the sibling test below would
+    '' otherwise find the folder itself and reject every attempt to fix a capital letter.
+    if PsUCase( wszName ) = PsUCase( ProjectFolders_LeafName( wszOld ) ) then return true
+
+    dim as DWSTRING wszNew = ProjectFolders_Combine( ProjectFolders_ParentPath( wszOld ), _
+                                                     wszName )
+    if ProjectFolders_Exists( catIndex, wszNew ) then return false
+
+    ProjectFolders_Rebase( catIndex, wszOld, wszNew, _
+                           gApp.pDocList, gConfig.Cat(catIndex).idFileType )
+
+    '' The control would write the new caption into the row it has, but every row index is
+    '' about to be rebuilt from the table anyway -- and THE TABLE IS NOW THE TRUTH. Safe to
+    '' call from inside the callback because EndEdit clears its own state before running
+    '' this; see PsListTree.EndEdit.
+    ShellExplorer_Load()
+    return true
+end function
+
+
+'' ---------------------------------------------------------------------------------------
+'' Open the editor on a folder row.
+''
+'' ITS OWN ENTRY POINT rather than a bare BeginEdit at each call site, and tiko gives the
+'' reason: BeginEdit is happy to open on a row that is not the current one, which leaves the
+'' selection highlight somewhere else entirely while the user types. There are two call
+'' sites here -- the context menu and the tail of New Folder -- and tiko has three.
+'' ---------------------------------------------------------------------------------------
+function ShellExplorer_RenameFolder( byval nRow as long ) as boolean
+    if g_panel = 0 then return false
+    if ShellPanel_KindOf( nRow ) <> EXPKIND_FOLDER then return false
+    g_panel->SetCurSel( nRow )
+    return g_panel->BeginEdit( nRow )
 end function
