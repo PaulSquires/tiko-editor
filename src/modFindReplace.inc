@@ -15,6 +15,42 @@
 
 
 ' ========================================================================================
+' Make sure CurrentSelection describes something before anybody reasons about it.
+' ========================================================================================
+' CurrentSelection HAS EXACTLY TWO WRITERS and both are in frmMainOnCommand.inc: the
+' editor's SCEN_KILLFOCUS fills it, and the editor's SCEN_SETFOCUS clears it. So while the
+' editor HAS THE FOCUS the capture is always uninitialized -- and Ctrl+F is pressed with the
+' editor focused.
+'
+' THAT MADE "SEARCH WITHIN THE SELECTION" UNREACHABLE FROM Ctrl+F. FindControls_Show tests
+' isInitialized before believing the line range, so selecting two lines and pressing Ctrl+F
+' read an empty capture: the multi-line branch never ran, the box was seeded with the
+' selected TEXT instead of cleared, and Selection never armed. A multi-line string in a
+' single-line box shows its first line, which is what the bar displayed.
+'
+' The same hole is under the Selection icon: clicking it does not necessarily take the focus
+' off the editor first, so its own multi-line test read the same empty capture and the icon
+' refused to latch.
+'
+' THIS IS WHAT SCEN_KILLFOCUS WOULD HAVE DONE, done at the moment it is needed rather than
+' waiting for a focus change that has not happened yet. Guarded on isInitialized, so a
+' capture that DID come from a real focus loss is never overwritten -- which matters,
+' because by the time the incremental search has run the live selection is the last match.
+function FindReplace_EnsureSelectionCaptured( byval pDoc as clsDocument ptr ) as long
+    if pDoc = 0 then return 0
+    if pDoc->CurrentSelection.isInitialized then return 0
+    dim as long startline, endline, startpos, endpos
+    pDoc->GetSelectedLineRange( startLine, endLine, startPos, endPos )
+    pDoc->CurrentSelection.startline     = startline
+    pDoc->CurrentSelection.endline       = endline
+    pDoc->CurrentSelection.startpos      = startpos
+    pDoc->CurrentSelection.endpos        = endpos
+    pDoc->CurrentSelection.isInitialized = true
+    return 0
+end function
+
+
+' ========================================================================================
 ' THE ONE DOOR for the Find/Replace bars' visibility.
 ' ========================================================================================
 ' Sets the flags, repositions, and restores focus. Every mutator goes through here, so a
@@ -83,6 +119,9 @@ function FindControls_Show() as long
     ' pDoc can be null when the Find panel is being shown for Project Search.
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc then
+        ' SEE FindReplace_EnsureSelectionCaptured. Without this the test below reads an
+        ' uninitialized capture on every Ctrl+F, because the editor still has the focus.
+        FindReplace_EnsureSelectionCaptured( pDoc )
         dim as boolean isOriginalSelectionMultiline = _
                         cbool(pDoc->CurrentSelection.endline - pDoc->CurrentSelection.startline)
         if pDoc->CurrentSelection.isInitialized = false then isOriginalSelectionMultiline = false
@@ -209,3 +248,169 @@ end function
 '   the shell's modThemeTypes.bi and moving the whole theme tree to satisfy one indicator
 '   colour would have been the larger change by far.
 ' ========================================================================================
+
+' ========================================================================================
+' Env-gated harness: TIKO_FINDSEL_SELFTEST=1. Drives "search within the selection".
+' ========================================================================================
+' WRITTEN BECAUSE THE FEATURE WAS REPORTED BROKEN AND NOTHING HERE COULD HAVE SEEN IT.
+' Select two or more lines, press Ctrl+F, and the box was seeded with the selected TEXT
+' instead of cleared while Selection stayed dark. The cause is in
+' FindReplace_EnsureSelectionCaptured's header: CurrentSelection is filled on the editor's
+' KILLFOCUS and cleared on its SETFOCUS, so while the editor HAS the focus -- which is when
+' Ctrl+F is pressed -- it is always uninitialized, and the multi-line test read nothing.
+'
+' IT NEEDS A REAL WINDOW, A REAL DOCUMENT AND A REAL BAR, which is why it is an env-gated
+' harness in the family of TIKO_FINDPROJ_* rather than a pure suite. It runs from the same
+' posted message they do, for the same reason: the session has to be restored first.
+'
+' THE SELECTION IS MADE THE WAY A MOUSE MAKES ONE -- column 0 of a line to column 0 of a
+' later line -- because GetSelectedLineRange DECREMENTS endLine when the selection ends at
+' column 0. A harness that selected mid-line would prove the range arithmetic it was not
+' asking about and miss the case every real drag produces.
+dim shared as long gFindSelPass, gFindSelFail
+
+private sub FindSel_Check( byval sName as string, byval bCond as boolean, byval sGot as string = "" )
+    if bCond then
+        gFindSelPass += 1
+    else
+        gFindSelFail += 1
+        dim as string sLine = "  FAIL: " & sName
+        if len(sGot) then sLine = sLine & "   got: " & sGot
+        print sLine
+    end if
+end sub
+
+private sub FindSel_Pump()
+    dim as MSG uMsg
+    dim as long n = 0
+    do while PeekMessage( @uMsg, null, 0, 0, PM_REMOVE )
+        TranslateMessage( @uMsg )
+        DispatchMessage( @uMsg )
+        n += 1
+        if n > 2000 then exit do
+    loop
+end sub
+
+sub FindReplace_RunSelectionTest()
+    if environ("TIKO_FINDSEL_SELFTEST") <> "1" then exit sub
+
+    gFindSelPass = 0
+    gFindSelFail = 0
+    print "--- TIKO_FINDSEL_SELFTEST ---"
+
+    dim as DWSTRING wszTemp = environ("TEMP")
+    if PsLen(wszTemp) = 0 then wszTemp = "C:\"
+    if PsRight(wszTemp, 1) <> "\" then wszTemp = wszTemp & "\"
+    dim as DWSTRING wszFile = wszTemp & "tiko_findsel_test.bas"
+
+    ' A buffer already open on this path beats the bytes on disk -- the FINDPROJ harnesses
+    ' learned that from a killed run leaving the temp file in the restored session.
+    dim pStale as clsDocument ptr = gApp.pDocList
+    do until pStale = 0
+        dim pNextStale as clsDocument ptr = pStale->pDocNext
+        if PsUCase(pStale->DiskFilename) = PsUCase(wszFile) then
+            if IsWindow( DocView(pStale, 0) ) then
+                SciExec( DocView(pStale, 0), SCI_SETSAVEPOINT, 0, 0 )
+            end if
+            pStale->UserModified = false
+            dim as long idxStale = gTTabCtl.GetTabIndexByDocumentPtr( pStale )
+            if idxStale <> -1 then gTTabCtl.CloseTab( idxStale )
+        end if
+        pStale = pNextStale
+    loop
+    FindSel_Pump()
+
+    ' SIX LINES, WITH THE TOKEN ON FIVE OF THEM AND TWO OF THOSE OUTSIDE THE RANGE the test
+    ' selects. That is what makes "the search shrank" a real answer rather than a repeat of
+    ' the whole-document count.
+    dim as string sSeed = _
+        "' Zeta line zero"     & vbcrlf & _
+        "dim Zeta as long"     & vbcrlf & _
+        "print ""Zeta"""       & vbcrlf & _
+        "sub ZetaThree()"      & vbcrlf & _
+        "end sub"              & vbcrlf & _
+        "' Zeta line five"     & vbcrlf
+    if PsFileWriteAll( wszFile, sSeed ) = false then
+        print "  FAIL: could not create " & wszFile.Utf8
+        exit sub
+    end if
+
+    dim as wstring * MAX_PATH wszOpen = *wszFile.Wz()
+    dim pT as clsDocument ptr = OpenSelectedDocument( wszOpen )
+    if pT = 0 then
+        print "  FAIL: could not open the temporary file"
+        exit sub
+    end if
+    FindSel_Pump()
+
+    dim as HWND hEdit = pT->hWndActiveScintilla
+    if IsWindow( hEdit ) = 0 then
+        print "  FAIL: the temporary document has no editor window"
+        exit sub
+    end if
+
+    ' ---- the whole-document count, for the comparison later ----------------------------
+    FindReplaceControls_Hide()
+    FindSel_Pump()
+    pT->RemoveMarkerHighlight()
+    gFind.nSelection = false
+    gFind.nMatchCase = false
+    gFind.nWholeWord = false
+    gFind.txtFind = "Zeta"
+    FindReplace_HighlightSearches( theme.editor.occurrence )
+    dim as long nWhole = gFind.foundCount
+    FindSel_Check( "setup: the whole file holds five Zetas", (nWhole = 5), str(nWhole) )
+
+    ' ---- THE REPORTED GESTURE ----------------------------------------------------------
+    ' Lines 1..3, selected as a drag does it: column 0 of line 1 to column 0 of line 4.
+    SciExec( hEdit, SCI_SETSELECTIONSTART, SciExec( hEdit, SCI_POSITIONFROMLINE, 1, 0 ), 0 )
+    SciExec( hEdit, SCI_SETSELECTIONEND,   SciExec( hEdit, SCI_POSITIONFROMLINE, 4, 0 ), 0 )
+
+    ' AND THE CAPTURE IS THROWN AWAY, because that is the state the bug lives in: the editor
+    ' has the focus, so SCEN_SETFOCUS cleared it and SCEN_KILLFOCUS has not run.
+    pT->CurrentSelection.isInitialized = false
+    gFind.txtFind = "Leftover"
+
+    FindControls_Show()
+    FindSel_Pump()
+
+    FindSel_Check( "Ctrl+F captures the selection the editor still holds", _
+        pT->CurrentSelection.isInitialized )
+    FindSel_Check( "  and sees it as three lines", _
+        (pT->CurrentSelection.endline - pT->CurrentSelection.startline) = 2, _
+        str(pT->CurrentSelection.startline) & ".." & str(pT->CurrentSelection.endline) )
+    ' A MULTI-LINE SELECTION IS A RANGE, NOT A PHRASE. The reported symptom was this box
+    ' holding the selected text -- of which a single-line control shows the first line.
+    FindSel_Check( "  the box is EMPTY, not seeded with the selected text", _
+        (PsLen(gFind.txtFind) = 0), gFind.txtFind.Utf8 )
+    ' `= true`, NOT `<> 0`: the engine compares against true, which is -1.
+    FindSel_Check( "  Selection arms itself", (gFind.nSelection = true), str(gFind.nSelection) )
+    FindSel_Check( "  and the marker highlight is down", pT->HasMarkerHighlight )
+
+    ' ---- AND THE SEARCH IS ACTUALLY RESTRICTED -----------------------------------------
+    ' The half the icon assertions cannot give: HighlightSearches narrows its target range
+    ' to First/LastMarkerHighlight, so this is what the markers were for.
+    gFind.txtFind = "Zeta"
+    FindReplace_HighlightSearches( theme.editor.occurrence )
+    FindSel_Check( "  and the search finds only the three inside it", _
+        (gFind.foundCount = 3), str(gFind.foundCount) & "/" & str(nWhole) )
+
+    ' ---- CLOSING DROPS BOTH ------------------------------------------------------------
+    FindReplaceControls_Hide()
+    FindSel_Pump()
+    FindSel_Check( "closing the bar drops the Selection latch", _
+        (gFind.nSelection = 0), str(gFind.nSelection) )
+    FindSel_Check( "  and the marker highlight with it", (pT->HasMarkerHighlight = false) )
+
+    ' ---- teardown ----------------------------------------------------------------------
+    gFind.txtFind = ""
+    SciExec( hEdit, SCI_SETSAVEPOINT, 0, 0 )
+    pT->UserModified = false
+    dim as long idx = gTTabCtl.GetTabIndexByDocumentPtr( pT )
+    if idx <> -1 then gTTabCtl.CloseTab( idx )
+    FindSel_Pump()
+    PsFileDelete( wszFile )
+
+    print "--- TIKO_FINDSEL_SELFTEST: " & str(gFindSelPass) & " passed, " & _
+          str(gFindSelFail) & " failed ---"
+end sub

@@ -40,7 +40,10 @@ declare function TopTabsInfoPanel_Show() as long
 ' clsTopTabCtl.SetFocusTab forces the Find bar open when the Find in Project tab is
 ' selected, since the find phrase is that tab's whole subject. Declared here for the same
 ' reason TopTabsInfoPanel_Show above is.
+declare function FindReplace_EnsureSelectionCaptured( byval pDoc as clsDocument ptr ) as long
 declare function FindControls_Show() as long
+' Env-gated harness: TIKO_FINDSEL_SELFTEST=1. Real window, real document, real bar.
+declare sub      FindReplace_RunSelectionTest()
 declare function ReplaceControls_Show() as long
 
 ' Find in Project's collapse-all state, for the Find bar's fold icon. Declared here rather

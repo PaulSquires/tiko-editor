@@ -256,6 +256,11 @@ private sub frmFind_IconClick( byval hIconPanel as HWND, byval idx as long, byva
         case FINDTIP_SELECTION
             dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
             if pDoc = 0 then exit sub
+            ' Clicking this icon does not necessarily take the focus off the editor, so the
+            ' capture the test below reads may never have been filled. See
+            ' FindReplace_EnsureSelectionCaptured -- without it the icon refused to latch
+            ' against a selection that was plainly on screen.
+            FindReplace_EnsureSelectionCaptured( pDoc )
             dim as boolean isOriginalSelectionMultiline = _
                 (pDoc->CurrentSelection.endline - pDoc->CurrentSelection.startline)
             if pDoc->CurrentSelection.isInitialized = false then isOriginalSelectionMultiline = false

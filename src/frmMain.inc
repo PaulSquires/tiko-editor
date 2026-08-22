@@ -1602,6 +1602,10 @@ function frmMain_WndProc( _
             ' normal launch -- so the bottom of that function is unreachable for it.
             frmFindInProject_RunSelfTest()
 
+            ' Same placement, same reasoning: it opens a temporary file, selects lines in
+            ' it and drives Ctrl+F, so it needs the session restored and a real pump.
+            FindReplace_RunSelectionTest()
+
             ' Same placement, same reasoning: it opens a temporary file of its own and needs
             ' the session already restored so it is not fighting the startup document load.
             frmFindInProject_RunReplaceTest()
