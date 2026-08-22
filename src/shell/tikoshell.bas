@@ -1566,6 +1566,10 @@ sub BuildTree( byref surf as PsSurface )
     '' assertion that pins the band's height could not see it, because the band was
     '' right and the CONTENT was sideways.
     g_panelMenu->bVertical = false
+    '' A HAIRLINE, NOT A SLAB. PsIconPanel's marker is 3 design units -- right for the
+    '' activity bar it was built for, and far too heavy for a tab row this size. tiko's own
+    '' panel menu draws 1 device pixel along the bottom of the selected cell.
+    g_panelMenu->nMarkerSize = 1
     scope
         dim as DWSTRING g
         g.Utf8 = chr(&hEE, &hA2, &hA9)   '' U+E8A9  Explorer   (tiko wszIconExplorer)
@@ -1576,6 +1580,16 @@ sub BuildTree( byref surf as PsSurface )
         g_panelMenu->AddItem( g, IDM_BOOKMARKSLIST, 0, PSICON_TOGGLE )
     end scope
     g_panelMenu->OnClick( @ShellPanelMenu_OnClick, 0 )
+
+    '' AND THE STRIP IS SYNCED TO THE MODE ONCE, HERE -- AFTER THE ITEMS EXIST. SyncToMode
+    '' hangs off SetMode, which nothing calls at startup, so the pane came up on its default
+    '' with every icon dark and the first click on any pane was the first time the two
+    '' agreed. Step 22's note says the sync belongs to SetMode rather than to the click; it
+    '' is also owed at the one moment the mode is set WITHOUT one.
+    ''
+    '' The first draft of this call sat six lines up, before AddItem -- syncing a strip with
+    '' no items, which is a no-op that looks exactly like a fix.
+    ShellPanelMenu_SyncToMode( g_panelMode )
     root->AddChild( g_panelMenu )
 
     g_splitPanel  = new ShellStub( @"",            PSTHEME_BORDER )
@@ -3483,6 +3497,36 @@ end function
         '' through getMenuText -> L() -> the .lang table, so a caption here is proof that
         '' all three loaded. A blank one means the language file did not, which is the
         '' failure L() cannot report on its own.
+        '' ---- THE PANE THE SHELL COMES UP ON, 7c step 33 -------------------------------
+        '' FIRST, AND THAT IS THE POINT: this suite switches panes a dozen times further
+        '' down, so anywhere else it would be asserting its own last SetMode. The startup
+        '' value can only be read before anything has moved it.
+        ''
+        '' It was SHPANEL_FUNCTIONS -- what the pane happened to default to when it was
+        '' first built, never a decision. The Functions list of a document nobody has opened
+        '' is empty, so the shell came up showing nothing in a pane whose job is to show
+        '' something.
+        Check "the shell comes up on the Explorer", _
+              (g_panelMode = SHPANEL_EXPLORER), str(g_panelMode)
+        scope
+            dim as long iExp = g_panelMenu->FindItemByID( IDM_VIEWEXPLORER )
+            Check "  with the Explorer icon latched to match", _
+                  (iExp >= 0) andalso g_panelMenu->GetSelected( iExp )
+            '' A HAIRLINE ALONG THE BOTTOM, not a slab along the top. The control's own
+            '' suite pins the geometry; this pins the SHELL'S CHOICE of thickness, which is
+            '' the half a screenshot showed and the control cannot know.
+            if iExp >= 0 then
+                dim as PsRect mk = g_panelMenu->MarkerRect( iExp )
+                dim as PsRect it = g_panelMenu->ItemRect( iExp )
+                Check "    underlined, not overlined", _
+                      ((mk.y + mk.h) = (it.y + it.h)) andalso (mk.y > it.y), _
+                      str(mk.y) & "+" & str(mk.h) & " in " & str(it.y) & ".." & _
+                      str(it.y + it.h)
+                Check "      and a hairline, not the activity bar's slab", _
+                      (g_panelMenu->nMarkerSize = 1), str(g_panelMenu->nMarkerSize)
+            end if
+        end scope
+
         Check "eight menubar titles", (g_menubar->GetCount() = 8), str(g_menubar->GetCount())
         Check "  built from tiko's own gTopMenu rows", (ubound(gTopMenu) > 100), _
               "gTopMenu rows: " & str(ubound(gTopMenu) + 1)

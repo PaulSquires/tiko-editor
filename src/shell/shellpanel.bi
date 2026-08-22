@@ -119,7 +119,11 @@ end enum
 '' first pane is the EXPLORER, which this binary does not have; Functions is the first pane
 '' it has that tiko also has, and the only one with something to show before the user has
 '' done anything.
-dim shared as ShellPanelMode g_panelMode = SHPANEL_FUNCTIONS
+'' EXPLORER ON STARTUP, by request. It was SHPANEL_FUNCTIONS, which is what the pane
+'' happened to default to when it was first built and never a decision -- the Functions
+'' list of a document nobody has opened yet is empty, so the shell came up showing nothing
+'' in a pane whose whole job is to show something.
+dim shared as ShellPanelMode g_panelMode = SHPANEL_EXPLORER
 
 
 
