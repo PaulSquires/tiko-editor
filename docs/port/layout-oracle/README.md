@@ -107,6 +107,29 @@ Every Y coordinate and every height not downstream of `nLeft` matches exactly.
 is worth re-deriving rather than trusting: parse both files, compare the four edges of each
 child in each state, and take the maximum.
 
+## ONE ROW ON tiko's SIDE IS TWO ON THE SHELL'S — 7c step 20
+
+The shell's dump has a `PANELMENU` row that tiko's does not, and its `PANEL` is shorter by
+exactly that much. **That is not a difference and it is not a class 1 rounding.**
+
+`HWND_FRMPANEL` is a CONTAINER in tiko: the pane-switcher strip and the tree are its children,
+and `modLayoutDump` dumps the container. The shell has no container — both sit directly on the
+surface root — so what has to equal tiko's `PANEL 0,52,413,854` is the **union** of its two.
+
+```
+tiko    PANEL      0,52,413,854   (413x802)
+shell   PANELMENU  0,52,413,105   (413x53)
+        PANEL      0,105,413,749  (413x749)     53 + 749 = 802
+```
+
+**Asserted as the union, in the shell's own suite, rather than by editing the `PANEL` row
+here.** The union is the property tiko pins; either rect alone can be wrong in a way the other
+cancels, and a number hand-copied into this file would hide precisely that. Which is what
+*"regenerate it, don't hand-edit it"* above is for.
+
+The same holds in `PANEL_RIGHT` with no second case: the strip spans the panel's width, so it
+moves with the panel.
+
 ## Two tiko behaviours reproduced deliberately
 
 Both are recorded because a reader who finds them will otherwise assume the port is wrong.

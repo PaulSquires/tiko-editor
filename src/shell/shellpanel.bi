@@ -393,9 +393,34 @@ end sub
 
 '' Switch panes. Silent when the mode has not changed -- reloading a list the user is
 '' already looking at would lose their scroll position for nothing.
+'' ---------------------------------------------------------------------------------------
+'' THE STRIP FOLLOWS THE MODE, NOT THE CLICK, and that distinction is the whole of it.
+''
+'' Driving SelectExclusive from the click handler would light the right button whenever the
+'' user pressed one and leave it STALE whenever the pane changed any other way -- the View
+'' menu, an accelerator, or ShellPanel_Reload deciding for itself. There are already three
+'' such paths and step 19 added a fourth.
+''
+'' So the mode is the single source of truth and this is called from ShellPanel_SetMode.
+'' FindItemByID rather than a positional index: the items' ORDER is a layout decision and
+'' nothing here should depend on it.
+'' ---------------------------------------------------------------------------------------
+sub ShellPanelMenu_SyncToMode( byval m as ShellPanelMode )
+    if g_panelMenu = 0 then exit sub
+    dim as long id = IDM_FUNCTIONLIST
+    select case m
+        case SHPANEL_EXPLORER  : id = IDM_VIEWEXPLORER
+        case SHPANEL_BOOKMARKS : id = IDM_BOOKMARKSLIST
+    end select
+    dim as long idx = g_panelMenu->FindItemByID( id )
+    if idx >= 0 then g_panelMenu->SelectExclusive( idx )
+end sub
+
+
 sub ShellPanel_SetMode( byval m as ShellPanelMode )
     if m = g_panelMode then exit sub
     g_panelMode = m
+    ShellPanelMenu_SyncToMode( m )
     ShellPanel_Reload()
 end sub
 

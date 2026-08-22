@@ -108,6 +108,13 @@
 '' reported "Expected End-of-Line", seven errors deep into the file and none of them at the
 '' declaration. Worth knowing before hunting the wrong line.
 #include once "ui/controls/PsListTree.inc"
+'' The side panel's icon strip -- the pane switcher -- new in 7c step 19b/20.
+''
+'' STEP 19 SAID PsPlatform HAD NO PsIconPanel AND THAT WAS FALSE. It is covered by
+'' tests/pslists, demoed in demos/gallery, and its own header names tiko as the source of
+'' its model. The claim was made from PsListTree's callback list without opening the
+'' controls directory -- the handoff's blocker table has three new rows about it.
+#include once "ui/controls/PsIconPanel.inc"
 '' The worker thread, new in 7c step 7. The scan takes 1.2 seconds on a large include graph
 '' and used to take it on this thread; PsThread is what moves it, and g_plat.events.Post --
 '' thread-safe, and written for exactly this -- is what brings the result back.
@@ -443,6 +450,21 @@ dim shared as ShellStub ptr g_topTabsMenu
 '' THE LAYOUT STILL OWNS THE RECT, exactly as it does for g_tabs: Shell_LayoutAll drives it
 '' through SetBounds from g_state.nPanelW, so the control never gets to choose its own size.
 dim shared as PsListTree ptr g_panel
+
+'' ---- THE PANE SWITCHER, 7c step 20 -----------------------------------------------------
+'' tiko's frmPanelMenu: a strip of glyph buttons across the top of the side panel. Its two
+'' PsIconPanels are a LEFT group (the three panes plus Options) and a RIGHT group of build
+'' commands; this binary carries the left group's three pane buttons, because the right
+'' group's ids -- Debug, Compile, Build & Execute, Find in Project, Save All -- have no
+'' handlers here.
+''
+'' TOGGLE ITEMS, WHERE tiko USES COMMAND ITEMS, and this is the one place the port is
+'' SIMPLER than the original. tiko highlights the active pane inside its own painter, by
+'' checking each item's id against the current pane (frmPanelMenu.inc:74-78). PsIconPanel
+'' carries selection ON THE ITEM and has SelectExclusive, so the built-in painter shows the
+'' active pane with no host painting at all.
+dim shared as PsIconPanel ptr g_panelMenu
+
 dim shared as ShellStub ptr g_splitPanel
 dim shared as ShellStub ptr g_barInfo, g_barFind, g_barReplace
 dim shared as ShellStub ptr g_splitOutput, g_output, g_fip
@@ -564,6 +586,26 @@ end sub
 '' further down, and BuildDropDown up here needs the address.
 declare sub OnMenuCommand( byval pMenu as any ptr, byval nId as long, byval ud as any ptr )
 declare sub OnMenusClosed( byval pHost as any ptr, byval ud as any ptr )
+
+'' ---- THE PANE SWITCHER'S CLICK, 7c step 20 ------------------------------------------
+'' The strip and the menu are ONE command path. The click resolves the item to the menu id
+'' it carries and hands it to OnMenuCommand, so a pane button and its View-menu entry cannot
+'' come apart -- and anything a future item needs (an enable rule, a state) is written once.
+''
+'' IT LIVES HERE, BELOW OnMenuCommand'S DECLARATION, and not up beside g_panelMenu
+'' where it reads more naturally. Adding a second `declare sub OnMenuCommand` there --
+'' the identical prototype, spelled identically -- is error 4, Duplicated definition,
+'' reported at the line of the OLDER declaration. fbc does not merge identical
+'' prototypes.
+private sub ShellPanelMenu_OnClick( byval pPanel as any ptr, byval nIndex as long, _
+                                    byval ud as any ptr )
+    dim as PsIconPanel ptr p = cast( PsIconPanel ptr, pPanel )
+    if p = 0 then exit sub
+    if p->IsValidItem( nIndex ) = false then exit sub
+    dim as long id = p->items(nIndex).id
+    if id = 0 then exit sub
+    OnMenuCommand( 0, id, 0 )
+end sub
 declare sub OnBarCloseRequest( byval pBar as any ptr, byval ud as any ptr )
 
 function BuildDropDown( byval nParentId as long ) as PsPopupMenu ptr
@@ -877,6 +919,38 @@ sub BuildTree( byref surf as PsSurface )
     g_panel->SetTreeIndent( true )
     g_panel->ShowTwisty( true )
     root->AddChild( g_panel )
+
+    '' ---- THE PANE SWITCHER ------------------------------------------------------------
+    '' THE IDS ARE tiko's AND SO ARE THE GLYPHS. Segoe MDL2 Assets private-use codepoints,
+    '' copied from modDeclares.bi:346 rather than re-chosen, so the two binaries cannot
+    '' drift apart on what an Explorer icon looks like.
+    ''
+    '' WHETHER THEY RENDER IS NOT SETTLED HERE. PsIconPanel draws whatever DWSTRING it is
+    '' given in the SURFACE's font -- there is no per-widget face, PsTextEngine sets one per
+    '' surface -- so a PUA codepoint arrives only if step 12's fallback chain resolves a
+    '' face that covers it, and PUA is exactly what FontLink\SystemLink is least likely to
+    '' list. No assertion in this file can see a glyph. If they come out as boxes the pane
+    '' switching still works and the fix is an explicit glyph face, which is its own step.
+    '' ---- THE GLYPHS GO IN AS UTF-8 BYTES, NOT AS A WIDE LITERAL ---------------------
+    '' `dim as DWSTRING g = !"\uE8A9"` is the shape that cost this port a
+    '' STATUS_HEAP_CORRUPTION: PsCore had no constructor from a native wstring, fbc
+    '' silently bound the zstring ptr overload, and the crash landed in an allocation
+    '' nowhere near a string and MOVED every time a print was added to find it. PsCore has
+    '' the constructor now -- but .Utf8 is what the gallery uses, it is unambiguous at the
+    '' call site, and the codepoint is visible in the comment either way.
+    g_panelMenu = new PsIconPanel
+    scope
+        dim as DWSTRING g
+        g.Utf8 = chr(&hEE, &hA2, &hA9)   '' U+E8A9  Explorer   (tiko wszIconExplorer)
+        g_panelMenu->AddItem( g, IDM_VIEWEXPLORER,  0, PSICON_TOGGLE )
+        g.Utf8 = chr(&hEE, &hA2, &hBC)   '' U+E8BC  Functions  (tiko wszIconFunctions)
+        g_panelMenu->AddItem( g, IDM_FUNCTIONLIST,  0, PSICON_TOGGLE )
+        g.Utf8 = chr(&hEE, &h9C, &hA3)   '' U+E723  Bookmarks  (tiko wszIconBookmarks)
+        g_panelMenu->AddItem( g, IDM_BOOKMARKSLIST, 0, PSICON_TOGGLE )
+    end scope
+    g_panelMenu->OnClick( @ShellPanelMenu_OnClick, 0 )
+    root->AddChild( g_panelMenu )
+
     g_splitPanel  = new ShellStub( @"",            PSTHEME_BORDER )
     root->AddChild( g_splitPanel )
     g_barInfo     = new ShellStub( @"TOPTABSINFO", PSTHEME_BACKGROUNDRAISED )
@@ -1125,6 +1199,10 @@ dim shared as ShellLayoutState g_state
 const SH_SPLITTER_GRAB        = 6
 const SH_PANEL_MIN_WIDTH      = 236
 const SH_PANEL_MIN_CONTENT    = 240
+'' The pane-switcher strip's height, UNSCALED, like every other constant here -- the layout
+'' scales it through PsScaleBy at the point of use. tiko's strip is the same band
+'' (frmPanel_PositionWindows) and this is its measured height.
+const SH_PANELMENU_H          = 30
 const SH_OUTPUT_MIN_EDITOR    = 120
 const SH_OUTPUT_TABS_HEIGHT   = 40
 const SH_SCROLLBAR_WIDTH_EDITOR = 12
@@ -1207,8 +1285,20 @@ sub Shell_LayoutAll( byref surf as PsSurface, byref st as ShellLayoutState )
         if st.bExplorerRight then nPanelX = W - nPanelW
         dim as long nPanelH = H - nStatusH - nMenubarH
 
-        g_panel->SetBounds( PsRc(nPanelX, nTop, nPanelW, nPanelH) )
+        '' ---- THE PANE SWITCHER TAKES A BAND OFF THE TOP -- 7c step 20 ----------------
+        '' tiko's frmPanel puts the strip above the tree and gives the tree what is left;
+        '' this is that split. The strip spans the panel's full width, so it moves with the
+        '' panel when the Explorer is docked right without any second case.
+        ''
+        '' THE HEIGHT IS THE LAYOUT'S, not the control's -- the same rule the header on
+        '' g_panel and g_tabs states: a control that chooses its own height cannot be
+        '' checked against an oracle that pins the band.
+        dim as long nMenuH = PsScaleBy( SH_PANELMENU_H, f )
+        if nMenuH > nPanelH then nMenuH = nPanelH
+        g_panelMenu->SetBounds( PsRc(nPanelX, nTop, nPanelW, nMenuH) )
+        g_panel->SetBounds( PsRc(nPanelX, nTop + nMenuH, nPanelW, nPanelH - nMenuH) )
         g_splitPanel->SetBounds( PsRc(nBarPos, nTop, nGrabPanel, nPanelH) )
+        g_panelMenu->bVisible = true
         g_panel->bVisible = true
         g_splitPanel->bVisible = true
 
@@ -1217,6 +1307,7 @@ sub Shell_LayoutAll( byref surf as PsSurface, byref st as ShellLayoutState )
         if st.bExplorerRight then nLeft = 0
     else
         nPanelW = 0
+        g_panelMenu->bVisible = false
         g_panel->bVisible = false
         g_splitPanel->bVisible = false
     end if
@@ -2088,6 +2179,7 @@ sub DumpState( byref surf as PsSurface, byval szState as zstring ptr )
     print "[" & *szState & "]"
     DumpChild( @"MENUBAR",       g_menubar )
     DumpChild( @"STATUSBAR",     g_status )
+    DumpChild( @"PANELMENU",     g_panelMenu )
     DumpChild( @"PANEL",         g_panel )
     DumpChild( @"SPLITPANEL",    g_splitPanel )
     DumpChild( @"TOPTABS",       g_tabs )
@@ -2397,10 +2489,11 @@ end function
         print "--- tikoshell selftest ---"
 
         Check "the tree is built", (surf.pRoot <> 0)
-        '' Twenty, and that is the whole of frmMain's child list bar the panel's own
-        '' contents: the real menubar and statusbar, TWO real PsSciViews, and sixteen stubs.
-        '' The plan called this "twenty children" before any of it was written.
-        Check "  twenty children", (surf.pRoot->ChildCount() = 20), _
+        '' TWENTY-ONE SINCE 7c STEP 20 added the pane switcher. It was twenty from the
+        '' plan -- written before any of it was -- through eighteen steps, so the number
+        '' moving is worth a line rather than a silent edit: the menubar and statusbar, TWO
+        '' real PsSciViews, the panel and its icon strip, and fifteen stubs.
+        Check "  twenty-one children", (surf.pRoot->ChildCount() = 21), _
               str(surf.pRoot->ChildCount())
 
         '' ---- THE MENU VOCABULARY CAME FROM tiko ---------------------------------------
@@ -3901,6 +3994,79 @@ end function
                             Check "      and says no to a file not in the workspace", _
                                   (ShellExplorer_IsFileDisplayed(DWSTRING("C:/nowhere/x.bas")) = false)
 
+
+                            '' ---- THE PANE SWITCHER, 7c step 20 ----------------------
+                            ''
+                            '' WRITTEN BECAUSE THREE REVERTS CAME BACK GREEN. Removing the
+                            '' SyncToMode call, turning the items into COMMAND items so
+                            '' nothing latches, and setting the strip's height to ZERO each
+                            '' left the suite at 417/0. The geometry assertions in the
+                            '' layout block are RELATIONS -- strip above tree, union equals
+                            '' tiko's band -- and a zero-height strip satisfies every one
+                            '' of them. That is step 1's finding word for word: relations
+                            '' hold perfectly at the wrong size.
+                            scope
+                                Check "  the pane switcher has the three panes", _
+                                      (g_panelMenu <> 0) andalso (g_panelMenu->GetCount() = 3), _
+                                      str(g_panelMenu->GetCount())
+
+                                '' BY ID, NOT BY POSITION. The order is a layout decision;
+                                '' what must not drift is which glyph carries which command.
+                                dim as long iExp = g_panelMenu->FindItemByID( IDM_VIEWEXPLORER )
+                                dim as long iFun = g_panelMenu->FindItemByID( IDM_FUNCTIONLIST )
+                                dim as long iBmk = g_panelMenu->FindItemByID( IDM_BOOKMARKSLIST )
+                                Check "    each carrying its own menu id", _
+                                      (iExp >= 0) andalso (iFun >= 0) andalso (iBmk >= 0), _
+                                      str(iExp) & "," & str(iFun) & "," & str(iBmk)
+
+                                '' EVERY ITEM MUST BE A TOGGLE. A COMMAND item never
+                                '' latches -- PsIconPanel refuses it in SetSelected -- so
+                                '' the active pane would never be lit and every assertion
+                                '' below would be about a selection that cannot happen.
+                                '' tiko's items ARE commands, and it hand-paints the
+                                '' highlight instead; this is the one place the port is
+                                '' simpler than the original, so it is worth pinning.
+                                dim as boolean bAllToggle = true
+                                for k as long = 0 to g_panelMenu->GetCount() - 1
+                                    if g_panelMenu->items(k).kind <> PSICON_TOGGLE then bAllToggle = false
+                                next
+                                Check "    and all three latch", bAllToggle
+
+                                '' ---- THE STRIP FOLLOWS THE MODE ---------------------
+                                '' Driven through ShellPanel_SetMode, so this is the
+                                '' assertion for the sync being CALLED as well as correct.
+                                ShellPanel_SetMode( SHPANEL_EXPLORER )
+                                Check "    explorer mode lights the explorer icon", _
+                                      g_panelMenu->GetSelected( iExp )
+                                Check "      and nothing else", _
+                                      (g_panelMenu->GetSelected(iFun) = false) andalso _
+                                      (g_panelMenu->GetSelected(iBmk) = false)
+
+                                ShellPanel_SetMode( SHPANEL_BOOKMARKS )
+                                Check "    switching mode moves the highlight", _
+                                      g_panelMenu->GetSelected( iBmk ) andalso _
+                                      (g_panelMenu->GetSelected(iExp) = false)
+
+                                '' AND FROM THE MENU, which is the path that would leave the
+                                '' strip stale if the sync were driven from the click
+                                '' handler instead. This is the whole reason SyncToMode
+                                '' hangs off SetMode and not off OnClick.
+                                OnMenuCommand( 0, IDM_FUNCTIONLIST, 0 )
+                                Check "    and the MENU moves it too, not just a click", _
+                                      (g_panelMode = SHPANEL_FUNCTIONS) andalso _
+                                      g_panelMenu->GetSelected( iFun ) andalso _
+                                      (g_panelMenu->GetSelected(iBmk) = false)
+
+                                '' ---- AND A CLICK IS THE SAME PATH -------------------
+                                '' ShellPanelMenu_OnClick resolves the item to its id and
+                                '' hands it to OnMenuCommand, so this asserts the wiring
+                                '' rather than a second copy of the switch.
+                                ShellPanelMenu_OnClick( g_panelMenu, iBmk, 0 )
+                                Check "    clicking an icon switches the pane", _
+                                      (g_panelMode = SHPANEL_BOOKMARKS) andalso _
+                                      g_panelMenu->GetSelected( iBmk )
+                            end scope
+
                             '' Leave the document as this block found it -- no bookmarks --
                             '' so the assertions after it see what they expect.
                             ShellPanel_SetMode( SHPANEL_BOOKMARKS )
@@ -5053,7 +5219,46 @@ end function
                   (g_menubar->bounds.y = 0) andalso (g_menubar->bounds.w = 1400)
             Check "statusbar owns the bottom", _
                   (g_status->bounds.y + g_status->bounds.h = 900)
-            Check "the panel starts under the menubar", (g_panel->bounds.y = 52)
+            '' THE STRIP STARTS UNDER THE MENUBAR AND THE TREE STARTS UNDER THE STRIP.
+            '' This read `g_panel->bounds.y = 52` until step 20 put the pane switcher above
+            '' it. Asserted as a PAIR rather than by moving the number: the property that
+            '' matters is that the two are stacked with no gap and no overlap, and a lone
+            '' `g_panel->bounds.y = 82` would hold just as well with the strip somewhere
+            '' else entirely.
+            Check "the panel strip starts under the menubar", (g_panelMenu->bounds.y = 52)
+            Check "  and the tree starts under the strip", _
+                  (g_panel->bounds.y = g_panelMenu->bounds.y + g_panelMenu->bounds.h), _
+                  str(g_panel->bounds.y) & " vs " & _
+                  str(g_panelMenu->bounds.y + g_panelMenu->bounds.h)
+            Check "    both spanning the panel's width", _
+                  (g_panelMenu->bounds.x = g_panel->bounds.x) andalso _
+                  (g_panelMenu->bounds.w = g_panel->bounds.w)
+
+            '' ---- AND TOGETHER THEY ARE tiko's PANEL BAND -- 7c step 20 ----------------
+            ''
+            '' THE ORACLE HAS ONE ROW WHERE THIS BINARY NOW HAS TWO, and that is not a
+            '' mismatch: tiko's HWND_FRMPANEL is a CONTAINER whose children are the strip
+            '' and the tree, and modLayoutDump dumps the container. This shell has no
+            '' container -- both sit on the root -- so the thing that has to equal tiko's
+            '' `PANEL 0,52,413,854` is their UNION.
+            ''
+            '' Asserted as the union rather than by editing the oracle's PANEL row, because
+            '' the union is the property tiko actually pins. Either rect alone can be wrong
+            '' in a way the other cancels, and a number copied into the oracle by hand would
+            '' hide exactly that -- which is what the oracle README means by "regenerate it,
+            '' don't hand-edit it".
+            '' A NUMBER, NOT A RELATION, and it is here because the three relations above
+            '' it all hold with a ZERO-HEIGHT strip -- proved by reverting the height to 0
+            '' and watching the suite stay green. Step 1 recorded the same trap: twenty-one
+            '' relation assertions passed while the UI was visibly unscaled.
+            Check "    the strip is SH_PANELMENU_H, scaled", _
+                  (g_panelMenu->bounds.h = PsScaleBy(SH_PANELMENU_H, 1.75)), _
+                  str(g_panelMenu->bounds.h) & " wanted " & str(PsScaleBy(SH_PANELMENU_H, 1.75))
+            Check "      and together they are tiko's whole panel band", _
+                  (g_panelMenu->bounds.y = 52) andalso _
+                  (g_panel->bounds.y + g_panel->bounds.h = 854) andalso _
+                  (g_panelMenu->bounds.h + g_panel->bounds.h = 802), _
+                  str(g_panelMenu->bounds.h) & " + " & str(g_panel->bounds.h)
             Check "  and stops above the statusbar", _
                   (g_panel->bounds.y + g_panel->bounds.h = 854)
             Check "the splitter is on the panel's inner edge", _
@@ -5078,10 +5283,14 @@ end function
         '' layout with a hole in it or two children on top of each other; this is not.
         '' It also scales -- thirteen children now, and the same helper covers twenty.
         scope
-            dim as PsWidget ptr kids(0 to 13) = { _
-                g_menubar, g_status, g_panel, g_splitPanel, g_tabs, g_topTabsMenu, _
-                g_barInfo, g_barFind, g_barReplace, g_splitOutput, g_output, g_fip, _
-                g_view, g_vscroll }
+            '' g_panelMenu JOINED THIS LIST IN STEP 20, and it had to: the strip takes its
+            '' band out of the panel's rectangle, so leaving it out made the coverage sum
+            '' short by exactly the strip's area and turned a correct layout into a failure
+            '' naming three gaps when there are still only three.
+            dim as PsWidget ptr kids(0 to 14) = { _
+                g_menubar, g_status, g_panelMenu, g_panel, g_splitPanel, g_tabs, _
+                g_topTabsMenu, g_barInfo, g_barFind, g_barReplace, g_splitOutput, _
+                g_output, g_fip, g_view, g_vscroll }
 
             dim as long nOverlap = 0
             dim as string sFirst = ""
