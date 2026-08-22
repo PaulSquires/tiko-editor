@@ -67,6 +67,38 @@ rem 33 SINCE 7c STEP 15 added the dialog suites. It was 25, and both numbers
 rem were measured rather than counted -- see above.
 set /a MINSUITES=33
 
+rem ---- AND A MINIMUM ASSERTION TOTAL, ADDED IN 7c STEP 26 -------------------
+rem
+rem The note above says a DROP in assertions is "visible" because the totals are
+rem printed. Visible to a READER, and not asserted -- so a suite that quietly
+rem stops part-way through is caught only if somebody is comparing totals by eye.
+rem In step 26 nobody was: the total matched the previous step's number exactly
+rem and was read as "unchanged".
+rem
+rem SEVERAL SUITES COUNT DATA RATHER THAN STATEMENTS. The find-in-project suite
+rem asserts per match, so its total moves with what the engine finds -- which is
+rem why this is a FLOOR and not an equality. A suite that legitimately grows must
+rem not fail the gate; one that quietly shrinks should.
+rem
+rem ---- WHAT THIS NUMBER IS, AND WHAT IT IS NOT -----------------------------
+rem
+rem 20,328 is the LOWEST total this tree has been observed to produce, not the
+rem highest. Within one hour, on a tree with the same tracked contents, this gate
+rem reported both 33 suites / 20,328 and 34 suites / 20,443 -- and the difference
+rem was NOT attributed. Step 23 pinned one cause (two untracked .bas files in
+rem this directory add a suite); the rest is unexplained, and settings.ini is a
+rem candidate because this gate rewrites and restores it and a killed run leaves
+rem it mid-flight.
+rem
+rem SO THE FLOOR IS SET LOW ON PURPOSE. A floor at the high-water mark would fail
+rem honest runs, and a gate that cries wolf gets its number lowered until it says
+rem nothing -- which is the failure this is trying to prevent, one level up.
+rem
+rem AND IT IS NOT PROVEN TO CATCH THE DEFECT THAT PROMPTED IT. Re-introducing
+rem that defect deliberately left the total UNCHANGED at 20,443. This catches a
+rem suite that stops early; it did not catch that one.
+set /a MINASSERTS=20328
+
 pushd "%~dp0"
 
 rem Every startup suite, AND -- since 7c step 15 -- the five that need a real
@@ -213,6 +245,11 @@ powershell -NoProfile -Command ^
   "Write-Host ('  ' + $m.Count + ' suites, ' + $tp + ' passed, ' + $tf + ' failed');" ^
   "if ($tf -gt 0) { exit 1 };" ^
   "if ($m.Count -lt %MINSUITES%) { exit 2 };" ^
+  "if ($tp -lt %MINASSERTS%) {" ^
+  "  Write-Host ('  FAIL    ' + $tp + ' assertions, fewer than the ' + %MINASSERTS% + ' this tree runs.');" ^
+  "  Write-Host '          A suite that quietly SHRINKS is the same defect as one that fails.';" ^
+  "  exit 3" ^
+  "};" ^
   "exit 0"
 set RC=%errorlevel%
 
@@ -220,6 +257,17 @@ if %RC% equ 1 (
     echo.
     echo   A startup self-test FAILED. The failing lines are marked above; the
     echo   whole log is in _selftests.log.
+    popd
+    exit /b 1
+)
+rem RC 3 IS THE ASSERTION FLOOR, and it needs its own arm here or the exit code
+rem is thrown away. Written without one first: the FAIL line printed, the gate
+rem returned 0, and the "ok" line printed underneath it -- a gate that reports a
+rem failure and passes is worse than one that never checked.
+if %RC% equ 3 (
+    echo.
+    echo   Either a suite stopped part-way through, or one that counts DATA found
+    echo   less of it. Compare the per-suite totals above against a known-good run.
     popd
     exit /b 1
 )

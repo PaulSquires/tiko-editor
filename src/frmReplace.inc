@@ -219,12 +219,32 @@ end function
 ' PsTextBox callback for the Replace textbox. The control owns the cue banner, colors,
 ' vertical centering, single-line enforcement and the Cut/Copy/Paste context menu that
 ' the old RichEdit subclass hand-rolled here. ENTER/TAB handling stays in
-' handleKeysFindReplace (modMsgPump). No change callback: the replace text is read on
-' demand by FindReplace_DoReplace.
+' handleKeysFindReplace (modMsgPump).
+'
+' THIS SAID "No change callback: the replace text is read on demand by
+' FindReplace_DoReplace" UNTIL 7c STEP 26, and it was true and it was the defect. DoReplace
+' read the control through GetDlgItem + AfxGetWindowText; when it moved into app/ it could
+' no longer do that and read gFind.txtReplace instead -- WHICH NOTHING HAS EVER WRITTEN.
+' Replace and Replace All duly replaced every match with an empty string.
+'
+' AND THE FIELD WAS ALREADY BEING READ. frmReplace_Show seeds the box with
+' gFind.txtReplace and calls it "carried-over replace term"; it has been seeding an empty
+' string since the day it was written, which nobody noticed because a Replace bar that
+' opens empty looks exactly like a Replace bar that opens empty.
 ' ========================================================================================
 sub frmReplace_TextBoxFocus( byval hTextBox as HWND, byval bGotFocus as boolean )
     ' Was the EN_SETFOCUS path: repaint the panel chrome around the textbox.
     if bGotFocus then AfxRedrawWindow( HWND_FRMMAIN_REPLACE )
+end sub
+
+
+' ========================================================================================
+' Keep gFind.txtReplace in step with the field, exactly as frmFind does for txtFind.
+' ========================================================================================
+' ONE SOURCE OF TRUTH, and that is the point rather than a convenience: the app layer has
+' no window to ask, so the state has to BE the answer instead of a cache of it.
+sub frmReplace_TextBoxChange( byval hTextBox as HWND )
+    gFind.txtReplace = PsTextBox_GetText( hTextBox )
 end sub
 
 
@@ -383,6 +403,7 @@ function frmReplace_Show( byval hwndParent as HWND ) as LRESULT
     PsTextBox_SetCueBannerText( hCtlReplace, L(138,"Replace") & "..." )
     PsTextBox_SetCueBannerColor( hCtlReplace, theme.toptabs.text.forecolor )
     PsTextBox_SetFocusCallback( hCtlReplace, @frmReplace_TextBoxFocus )
+    PsTextBox_SetChangeCallback( hCtlReplace, @frmReplace_TextBoxChange )
     PsTextBox_SetText( hCtlReplace, gFind.txtReplace )            ' carried-over replace term
     ThemeTextBoxContextMenu( hCtlReplace )
 
