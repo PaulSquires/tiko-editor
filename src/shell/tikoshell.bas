@@ -123,6 +123,11 @@
 '' PsPlatform, so the prompt is painted by the dialog root itself.
 #include once "ui/controls/PsButton.inc"
 #include once "ui/controls/PsTextBox.inc"
+'' The two splitters, real controls since 7c step 36. INCLUDED HERE AND NOT LOWER, because
+'' the globals are declared long before the layout runs and `dim shared as <unknown> ptr` is
+'' NOT an error in fbc -- it is a variable of no type whose every USE then fails somewhere
+'' else entirely. The note beside g_barFind says so; this is the second time it was true.
+#include once "ui/controls/PsSplitter.inc"
 '' modScintilla.bi BEFORE PsPlatform's scintilla headers, and THE ORDER IS LOAD-BEARING --
 '' tiko.bas carries the same note for the same reason. tiko #Defines all 117 SCI_* constants;
 '' PsPlatform declares them as `const` behind #ifndef guards, and guards only work in this
@@ -474,13 +479,24 @@ dim shared as PsListTree ptr g_panel
 '' active pane with no host painting at all.
 dim shared as PsIconPanel ptr g_panelMenu
 
-dim shared as ShellStub ptr g_splitPanel
+'' ---- THE TWO SPLITTERS ARE REAL CONTROLS -- 7c step 36 --------------------------------
+'' They were ShellStubs: painted bars with no mouse handling at all, so dragging either one
+'' did nothing and always had. Reported as "splitters do not work", which was exactly right
+'' and was never a regression -- the band was reserved and the control was never built.
+''
+'' PsSplitter reports DURING the drag, not on release, so the panes follow the pointer.
+'' The host converts the bar's position back into the width or height the layout stores,
+'' which is the same arithmetic Shell_LayoutAll does forwards.
+dim shared as PsSplitter ptr g_splitPanel
+declare sub Shell_OnSplitPanel( byval pSpl as any ptr, byval nPos as long, byval ud as any ptr )
+declare sub Shell_OnSplitOutput( byval pSpl as any ptr, byval nPos as long, byval ud as any ptr )
 dim shared as ShellStub ptr g_barInfo
 '' g_barFind IS DECLARED WITH ITS TYPE, further down, and not here with its siblings -- the
 '' ShellFindBar type needs gFind and the app headers, so it cannot be defined this early and
 '' `dim shared as <unknown> ptr` is not an error in fbc, it is a variable of no type whose
 '' every USE then fails somewhere else entirely.
-dim shared as ShellStub ptr g_splitOutput, g_output, g_fip
+dim shared as PsSplitter ptr g_splitOutput
+dim shared as ShellStub ptr g_output, g_fip
 
 '' THE EDITOR, and the two scrollbars flanking it. tiko replaces Scintilla's own scrollbars
 '' with its PsVScrollBar/PsHScrollBar, so the editor rect is the document rect LESS both --
@@ -1598,9 +1614,17 @@ sub BuildTree( byref surf as PsSurface )
     '' The first draft of this call sat six lines up, before AddItem -- syncing a strip with
     '' no items, which is a no-op that looks exactly like a fix.
     ShellPanelMenu_SyncToMode( g_panelMode )
+
+    '' AND THE PANE IS FILLED, which the mode alone does not do. ShellPanel_Reload hangs off
+    '' SetMode exactly as the strip's sync does, and nothing calls SetMode at startup -- so
+    '' the shell came up with the Explorer SELECTED and the tree EMPTY. Setting the default
+    '' to Explorer fixed which pane; this is what puts something in it.
+    ShellPanel_Reload()
     root->AddChild( g_panelMenu )
 
-    g_splitPanel  = new ShellStub( @"",            PSTHEME_BORDER )
+    g_splitPanel  = new PsSplitter
+    g_splitPanel->SetOrient( PSSPLIT_VERT )
+    g_splitPanel->OnMove( @Shell_OnSplitPanel, 0 )
     root->AddChild( g_splitPanel )
     g_barInfo     = new ShellStub( @"TOPTABSINFO", PSTHEME_BACKGROUNDRAISED )
     root->AddChild( g_barInfo )
@@ -1608,7 +1632,9 @@ sub BuildTree( byref surf as PsSurface )
     root->AddChild( g_barFind )
     g_barReplace  = new ShellReplaceBar
     root->AddChild( g_barReplace )
-    g_splitOutput = new ShellStub( @"",            PSTHEME_BORDER )
+    g_splitOutput = new PsSplitter
+    g_splitOutput->SetOrient( PSSPLIT_HORZ )
+    g_splitOutput->OnMove( @Shell_OnSplitOutput, 0 )
     root->AddChild( g_splitOutput )
     g_output      = new ShellStub( @"OUTPUT",      PSTHEME_BACKGROUNDALT )
     root->AddChild( g_output )
@@ -1947,6 +1973,17 @@ sub Shell_LayoutAll( byref surf as PsSurface, byref st as ShellLayoutState )
         g_panelMenu->SetBounds( PsRc(nPanelX, nTop, nPanelW, nMenuH) )
         g_panel->SetBounds( PsRc(nPanelX, nTop + nMenuH, nPanelW, nPanelH - nMenuH) )
         g_splitPanel->SetBounds( PsRc(nBarPos, nTop, nGrabPanel, nPanelH) )
+        '' THE CONTROL IS TOLD ITS POSITION AND ITS LIMITS, every layout. The range is the
+        '' SAME pair ClampTo just used above -- written once here rather than a second copy
+        '' the two could disagree about.
+        g_splitPanel->SetPos( nBarPos )
+        if st.bExplorerRight then
+            g_splitPanel->SetRange( PsScaleBy(SH_PANEL_MIN_CONTENT, f), _
+                                    W - nGrabPanel - PsScaleBy(SH_PANEL_MIN_WIDTH, f) )
+        else
+            g_splitPanel->SetRange( PsScaleBy(SH_PANEL_MIN_WIDTH, f), _
+                                    W - nGrabPanel - PsScaleBy(SH_PANEL_MIN_CONTENT, f) )
+        end if
         g_panelMenu->bVisible = true
         g_panel->bVisible = true
         g_splitPanel->bVisible = true
@@ -2042,6 +2079,10 @@ sub Shell_LayoutAll( byref surf as PsSurface, byref st as ShellLayoutState )
         if nOutputH < 0 then nOutputH = 0
 
         g_splitOutput->SetBounds( PsRc(nLeft, nBarPos, W - nLeft, nGrabOut) )
+        '' Same pair ClampTo used, handed to the control rather than restated.
+        g_splitOutput->SetPos( nBarPos )
+        g_splitOutput->SetRange( nTop + PsScaleBy(SH_OUTPUT_MIN_EDITOR, f), _
+                                 H - nStatusH - PsScaleBy(SH_OUTPUT_TABS_HEIGHT, f) - nGrabOut )
         g_output->SetBounds( PsRc(nLeft, nBarPos + nGrabOut, W - nLeft, nOutputH) )
         g_splitOutput->bVisible = true
         g_output->bVisible = true
@@ -2195,6 +2236,45 @@ end sub
 '' The pump and the self-test both call this, so the live state is threaded from one place.
 sub LayoutAll( byref surf as PsSurface )
     Shell_LayoutAll( surf, g_state )
+end sub
+
+
+'' ---------------------------------------------------------------------------------------
+'' THE SPLITTERS' MOVE CALLBACKS -- 7c step 36.
+''
+'' nPos is the BAR's position in the parent's coordinates, and the layout stores a WIDTH and
+'' a HEIGHT -- so each of these is Shell_LayoutAll's own arithmetic run backwards. Written
+'' against that block rather than guessed: the panel's bar sits at nPanelW when docked left
+'' and at W - nPanelW - grab when docked right, and the output's at H - status - nOutputH -
+'' grab.
+''
+'' NO CLAMPING HERE. Shell_LayoutAll clamps the bar to the same limits SetRange gives the
+'' control, and it re-derives the width from the clamped position -- so a value out of range
+'' is corrected on the way through the layout rather than in two places that can disagree.
+'' That is the rule the layout's own header states for nPanelW.
+'' ---------------------------------------------------------------------------------------
+sub Shell_OnSplitPanel( byval pSpl as any ptr, byval nPos as long, byval ud as any ptr )
+    if g_pSurf = 0 then exit sub
+    dim as single f = g_pSurf->fScale
+    dim as long nGrab = PsScaleBy( SH_SPLITTER_GRAB, f )
+    if g_state.bExplorerRight then
+        g_state.nPanelW = g_pSurf->w - nPos - nGrab
+    else
+        g_state.nPanelW = nPos
+    end if
+    LayoutAll( *g_pSurf )
+    g_pSurf->InvalidateAll()
+end sub
+
+sub Shell_OnSplitOutput( byval pSpl as any ptr, byval nPos as long, byval ud as any ptr )
+    if g_pSurf = 0 then exit sub
+    dim as single f = g_pSurf->fScale
+    dim as long nGrab   = PsScaleBy( SH_SPLITTER_GRAB, f )
+    dim as long nStatus = PsScaleBy( SH_STATUS_H, f )
+    g_state.nOutputH = g_pSurf->h - nStatus - nPos - nGrab
+    if g_state.nOutputH < 0 then g_state.nOutputH = 0
+    LayoutAll( *g_pSurf )
+    g_pSurf->InvalidateAll()
 end sub
 
 '' =======================================================================================
@@ -3545,6 +3625,68 @@ end function
                       (g_panelMenu->nCellSize < SH_PANELMENU_H), _
                       str(g_panelMenu->nCellSize) & " vs " & str(SH_PANELMENU_H)
             end if
+        end scope
+
+        '' ---- AND THE PANE HAS SOMETHING IN IT -----------------------------------------
+        '' The mode says WHICH pane; ShellPanel_Reload is what FILLS it, and it hangs off
+        '' SetMode exactly as the strip's sync does. Nothing calls SetMode at startup, so
+        '' the shell came up with the Explorer selected and the tree EMPTY -- which from the
+        '' outside is indistinguishable from the pane not being on the Explorer at all, and
+        '' is why it was reported twice.
+        '' ASSERTED ON THE CALL, NOT ON THE ROWS. The first draft demanded rows and read 0
+        '' -- correctly: at this point in the suite no project and no documents are open, so
+        '' an empty Explorer is the right answer. AN EMPTY PANE AND A PANE THAT WAS NEVER
+        '' LOADED LOOK IDENTICAL FROM OUTSIDE, which is precisely how the missing call
+        '' survived to be reported twice.
+        Check "  and the pane was actually FILLED, not merely selected", _
+              (g_nPanelReloads > 0), str(g_nPanelReloads)
+
+        '' ---- THE SPLITTERS ARE CONTROLS, NOT PAINTED BARS -- 7c step 36 ----------------
+        '' They were ShellStubs with no mouse handling: dragging either did nothing, and
+        '' always had. Nothing here could see it, because a stub has the right RECT.
+        Check "the panel splitter can be dragged", _
+              (g_splitPanel <> 0) andalso (g_splitPanel->pfnMove <> 0)
+        Check "  and knows its limits", g_splitPanel->bHasRange
+        Check "the output splitter can be dragged", _
+              (g_splitOutput <> 0) andalso (g_splitOutput->pfnMove <> 0)
+        Check "  and knows its limits", g_splitOutput->bHasRange
+        scope
+            '' DRIVEN THROUGH THE CALLBACK, and asserted on the PANEL's rect rather than on
+            '' g_state: the callback writing a number nothing lays out with is the shape of
+            '' defect this port keeps finding.
+            dim as long wWas = g_state.nPanelW
+            dim as long xWas = g_panel->bounds.w
+            Shell_OnSplitPanel( g_splitPanel, wWas + 40, 0 )
+            Check "  dragging the panel splitter resizes the PANEL", _
+                  (g_panel->bounds.w <> xWas), _
+                  str(xWas) & " -> " & str(g_panel->bounds.w)
+            Check "    by the amount it moved", _
+                  (g_panel->bounds.w = xWas + 40), _
+                  str(g_panel->bounds.w) & " wanted " & str(xWas + 40)
+            Shell_OnSplitPanel( g_splitPanel, wWas, 0 )
+            Check "      and back", (g_panel->bounds.w = xWas), str(g_panel->bounds.w)
+
+            dim as long hWas = g_output->bounds.h
+            '' RELATIONAL, NOT AN EXACT DELTA. The panel's is exact because its clamp has
+            '' room; the output's bar is bounded by SH_OUTPUT_MIN_EDITOR above and the tab
+            '' band below, and the layout RE-DERIVES the height from the clamped position.
+            '' Restating that arithmetic here would be the second copy the callback
+            '' deliberately does not keep -- so this asserts the direction and that it moved.
+            Shell_OnSplitOutput( g_splitOutput, g_splitOutput->nPos - 30, 0 )
+            Check "  dragging the output splitter UP grows the OUTPUT", _
+                  (g_output->bounds.h > hWas), _
+                  str(hWas) & " -> " & str(g_output->bounds.h)
+            dim as long hUp = g_output->bounds.h
+            Shell_OnSplitOutput( g_splitOutput, g_splitOutput->nPos + 60, 0 )
+            '' AGAINST THE INTERMEDIATE, not against the start: the first drag was clamped,
+            '' so it did not move by the 30 it was asked for and dragging 60 the other way
+            '' does not necessarily land below where it began. Comparing with hWas made this
+            '' assert a round trip nobody asked for.
+            Check "    and dragging it back down shrinks it", _
+                  (g_output->bounds.h < hUp), _
+                  str(hUp) & " -> " & str(g_output->bounds.h)
+            g_state.nOutputH = hWas
+            LayoutAll( *g_pSurf )
         end scope
 
         Check "eight menubar titles", (g_menubar->GetCount() = 8), str(g_menubar->GetCount())

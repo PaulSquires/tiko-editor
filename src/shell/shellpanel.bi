@@ -440,7 +440,15 @@ declare sub ShellExplorer_Load()
 '' Rebuild whatever the panel is currently showing. THE ONE ENTRY POINT anything outside
 '' this file should use -- a caller that picked a loader directly would show the wrong list
 '' the moment the mode changed under it.
+'' HOW MANY TIMES THE PANE HAS BEEN FILLED. Exists for one assertion and earns its keep:
+'' the startup reload cannot be proved by looking at the ROWS, because at startup there is
+'' legitimately nothing to show -- no project, no documents. An empty Explorer and an
+'' Explorer that was never loaded look identical from outside, which is exactly how the
+'' missing call survived.
+dim shared as long g_nPanelReloads
+
 sub ShellPanel_Reload()
+    g_nPanelReloads += 1
     select case g_panelMode
         case SHPANEL_FUNCTIONS : ShellFunctions_Load()
         case SHPANEL_EXPLORER  : ShellExplorer_Load()
