@@ -102,7 +102,7 @@ tiko builds with its own bundled toolchain and its own bundled copy of AfxNova.
 _compile_fast.bat
 ```
 
-Run the resulting `tiko.exe` from the project root, not from `src\` — it
+Run the resulting `tiko-editor.exe` from the project root, not from `src\` — it
 resolves settings, themes, keywords, and help relative to its own directory.
 
 ---

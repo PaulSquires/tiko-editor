@@ -63,3 +63,10 @@ __pycache__/
 /_copy*.*
 /THEMES.md
 /CODE_REVIEW.md
+
+# The built editor. tiko.exe was tracked for years and is REMOVED with the rename to
+# tiko-editor: a committed binary makes every build a diff, and this one was 3MB.
+# BOTH names are listed because _compile.bat and _compile_fast.bat each emitted the
+# old one -- a removal the next build undoes is not a removal.
+/tiko.exe
+/tiko-editor.exe
