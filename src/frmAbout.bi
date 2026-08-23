@@ -31,7 +31,8 @@
 #define IDC_FRMABOUT_CMDWEBSITE     1003
 #define IDC_FRMABOUT_CMDGITHUB      1004
 #define IDC_FRMABOUT_CMDCLOSE       1005
-#define IDC_FRMABOUT_LICSEL         1006
+' 1006 was IDC_FRMABOUT_LICSEL, the GPL-3 / Proprietary strip, removed in 7c step 15.
+' NOT REUSED and the ids after it are not renumbered -- they are matched by value.
 #define IDC_FRMABOUT_LICVSCROLL     1007
 
 ' The three pages, in tab order. Also the PsSelectBar panel indices, which is why they start
@@ -43,27 +44,19 @@ enum ABOUTPAGE_ENUM
 end enum
 
 ' ========================================================================================
-' TIKO IS DUAL-LICENSED, and the Licenses page is where that is said out loud.
+' ONE LICENCE FILE, SINCE 7c STEP 15.
 '
-' The editor is GPLv3; fbcParser and debugParser are proprietary and closed source, and
-' LICENSE-EXCEPTION.txt is the GPLv3 section 7 additional permission that makes the
-' combination redistributable by someone other than the copyright holder. A single
-' "License" page showing only the GPL notice would have been actively misleading about
-' what a user of a tiko build is allowed to do with the DLLs beside it.
+' This page used to offer two: a GPL-3 panel and a Proprietary one, chosen with a
+' PsSelectBar, reading LICENSE and LICENSE-PROPRIETARY.txt. THE SECOND FILE DOES NOT EXIST
+' and the dialog had been quietly showing its fallback notice instead -- caught the first
+' time _check_selftests.bat opened this dialog, because the layout suite had asserted the
+' file ships and nothing had ever run it.
 '
-' Two panels, in sub-strip order, indexed directly like ABOUTPAGE_ENUM above.
+' The proprietary licence is deprecated. LICENSE is the only option, so the file, the
+' LICPAGE_ENUM that indexed between them and the two-panel selector all went: a selector
+' over one item is dead UI, the same judgement step 13 applied to the Character Set combo.
 ' ========================================================================================
-enum LICPAGE_ENUM
-    LICPAGE_GPL = 0
-    LICPAGE_PROPRIETARY
-end enum
-
-' The licence files, read at display time from the exe's own directory. NOT paraphrased
-' into a string literal: a summary in the source is a second statement of the licence that
-' drifts from the file the moment either is edited, and it is the FILE that ships beside
-' the exe and governs. Read AND rendered verbatim.
 #define FRMABOUT_FILE_GPL          wstr("LICENSE")
-#define FRMABOUT_FILE_PROPRIETARY  wstr("LICENSE-PROPRIETARY.txt")
 
 ' ---- geometry, ALL UNSCALED ------------------------------------------------------------
 ' Every one of these is passed through AfxScaleX/Y at the point of use. None is ever stored

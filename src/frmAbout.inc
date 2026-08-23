@@ -20,9 +20,8 @@
 ' ========================================================================================
 dim shared as long gAboutPage
 
-' Which licence the Licenses page is showing. Held rather than read back from the sub-strip
+' Which licence the Licence page is showing. Held rather than read back from the sub-strip
 ' because the strip is created after the first SetText and a re-theme must not disturb it.
-dim shared as long gAboutLicPage
 
 ' The wordmark on the icon plate. Two lowercase letters, NOT the application icon: the .ico
 ' is a detailed raster that reads as clutter at 72px on a plate this size, and it is already
@@ -47,7 +46,7 @@ dim shared as long gAboutLicPage
 ' reproduced verbatim, and a community translation of a licence is not that licence.
 '
 ' The second is mechanical and is worth knowing before putting ANY prose in a .lang file:
-' LoadLocalizationFile runs every value through AfxStrParse(wData, 1, ";"), which treats a
+' LoadLocalizationFile runs every value through PsStrParse(wData, 1, ";"), which treats a
 ' semicolon as the start of a trailing comment and DISCARDS the rest of the line. The GPL's
 ' warranty paragraph contains one ("WITHOUT ANY WARRANTY; without even..."), so stored as a
 ' localized string it would silently lose two thirds of itself, with nothing in the build,
@@ -57,12 +56,25 @@ dim shared as long gAboutLicPage
 ' licence files would otherwise show a blank page with nothing to say why -- and the
 ' fallback names the file, so the report that comes back is actionable.
 ' ========================================================================================
-private function frmAbout_LicenseText( byval nWhich as long ) as DWSTRING
+'' ONE LICENCE, SINCE 7c STEP 15. This took a page selector and read whichever of two files
+'' it pointed at; the proprietary licence is deprecated and LICENSE is the only one now.
+'' The GPL-3 / Proprietary strip went with it -- a selector over one item is dead UI, which
+'' is the same judgement step 13 applied to the Character Set combo.
+''
+'' FOUND BY A GATE, not by reading. frmAbout's layout suite had asserted for some time that
+'' LICENSE-PROPRIETARY.txt ships beside the exe, and it does not; the dialog quietly showed
+'' the fallback notice instead. Nothing ran that suite until _check_selftests.bat opened the
+'' dialog in this step, and its first run reported it.
+private function frmAbout_LicenseText() as DWSTRING
 
     dim as DWSTRING nl = chr(13) & chr(10)
 
-    dim as DWSTRING wszFile = iif( nWhich = LICPAGE_PROPRIETARY, _
-                                   FRMABOUT_FILE_PROPRIETARY, FRMABOUT_FILE_GPL )
+    dim as DWSTRING wszFile = FRMABOUT_FILE_GPL
+    ' ADAPTED FROM THE CROSS-PLATFORM BRANCH, which reads the file through PsCore:
+    '     PsExePath / PsFileExists / TextFile_ReadAll / PsLen
+    ' None of those exist here -- three are PsPlatform's and the fourth is
+    ' src/app/modTextFile.inc, both of which belong to the port. This is
+    ' development's own idiom, taken verbatim from the frmAbout this file replaces.
     dim as DWSTRING wszPath = AfxGetExePathName & wszFile
 
     if AfxFileExists( wszPath ) then
@@ -79,10 +91,8 @@ private function frmAbout_LicenseText( byval nWhich as long ) as DWSTRING
     return APPNAME & " -- " & APPCOPYRIGHT & nl & nl & _
         "The licence file " & wszFile & " was not found beside the program, or could not " & _
         "be read." & nl & nl & _
-        "tiko is licensed under the GNU General Public License version 3 or later, with " & _
-        "the exception in LICENSE-EXCEPTION.txt. The fbcParser and debugParser components " & _
-        "are proprietary and are covered by LICENSE-PROPRIETARY.txt. All three files are " & _
-        "distributed with tiko and are available at " & FRMABOUT_URL_GITHUB & "."
+        "tiko is licensed under the GNU General Public License version 3 or later. The " & _
+        "licence is distributed with tiko and is available at " & FRMABOUT_URL_GITHUB & "."
 
 end function
 
@@ -382,20 +392,19 @@ private sub frmAbout_PaintHero( byval pb as PsBufferPaint ptr, byval rcHero as R
     pb->PaintText( L(359,"Programmer's code editor for the FreeBASIC compiler"), _
                    @r, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
 
-    ' ---- the three pills ---------------------------------------------------------------
+    ' ---- the two pills -------------------------------------------------------------------
     '
-    ' BOTH LICENCES ARE NAMED HERE, not just the GPL. The hero is the one thing every user
-    ' of this dialog reads, and a lone "GPL v3" pill on a program that ships two proprietary
-    ' DLLs states something that is not true of the whole product.
+    ' A "Proprietary" pill stood beside "GPL v3" until 7c step 15, saying that the product as
+    ' a whole was not purely GPL. It went with the proprietary LICENCE PAGE it belonged to --
+    ' author's call, and a pill naming a licence the dialog no longer shows would be pointing
+    ' at nothing.
     y += lineH + gap2
 
     dim as DWSTRING wszVersion = APPVERSION & "  " & wchr(183) & "  " & trim(APPBITS, any " ()")
     dim as DWSTRING wszLicense = "GPL v3"
-    dim as DWSTRING wszPropr   = L(397,"Proprietary")
 
     dim as long w1 = frmAbout_MeasurePill( pb, wszVersion )
     dim as long w2 = frmAbout_MeasurePill( pb, wszLicense )
-    dim as long w3 = frmAbout_MeasurePill( pb, wszPropr )
 
     dim as RECT rcPill
     rcPill.left   = tx
@@ -408,17 +417,17 @@ private sub frmAbout_PaintHero( byval pb as PsBufferPaint ptr, byval rcHero as R
     rcPill.right  = rcPill.left + w2
     frmAbout_PaintPill( pb, @rcPill, wszLicense, false )
 
-    rcPill.left   = rcPill.right + AfxScaleX(FRMABOUT_PILL_GAP)
-    rcPill.right  = rcPill.left + w3
-    frmAbout_PaintPill( pb, @rcPill, wszPropr, false )
-
 end sub
 
 
 ' ========================================================================================
-' Where the pill row ends. Split out of the painter so the self-test can ask whether three
-' pills still fit the hero at this DPI in this language -- the painter measures them and
-' then draws, and a pill that ran off the edge would simply be clipped in silence.
+' Where the pill row ends. Split out of the painter so the self-test can ask whether the
+' pills still fit the hero at this DPI -- the painter measures them and then draws, and a
+' pill that ran off the edge would simply be clipped in silence.
+'
+' IT NO LONGER DEPENDS ON A TRANSLATION. The row was three pills and the widest was the
+' translated "Proprietary"; both remaining captions are literals, so this can only overflow
+' now if the version string or the DPI grows.
 ' ========================================================================================
 private function frmAbout_PillRowRight( byval pb as PsBufferPaint ptr, byval rcHero as RECT ptr ) as long
 
@@ -430,7 +439,6 @@ private function frmAbout_PillRowRight( byval pb as PsBufferPaint ptr, byval rcH
 
     dim as long w = frmAbout_MeasurePill( pb, wszVersion )
     w += AfxScaleX(FRMABOUT_PILL_GAP) + frmAbout_MeasurePill( pb, "GPL v3" )
-    w += AfxScaleX(FRMABOUT_PILL_GAP) + frmAbout_MeasurePill( pb, L(397,"Proprietary") )
 
     function = tx + w
 
@@ -554,11 +562,9 @@ private sub frmAbout_ShowPage( byval hwnd as HWND, byval nPage as long )
 
     ShowWindow( HWND_FRMABOUT_CREDITS, iif( nPage = ABOUTPAGE_CREDITS, SW_SHOW, SW_HIDE ) )
     ShowWindow( HWND_FRMABOUT_LICENSE, iif( nPage = ABOUTPAGE_LICENSE, SW_SHOW, SW_HIDE ) )
-    ' The GPL-3 / Proprietary strip and the field's scrollbar both belong to the Licenses
-    ' page and travel with it. The strip in particular MUST be hidden off the page: it sits
-    ' on top of the tab strip, so leaving it up would paint two licence captions over the
-    ' right-hand end of a tab row that has nothing to do with them.
-    ShowWindow( HWND_FRMABOUT_LICSEL,     iif( nPage = ABOUTPAGE_LICENSE, SW_SHOW, SW_HIDE ) )
+    ' The field's scrollbar belongs to the Licence page and travels with it. The GPL-3 /
+    ' Proprietary strip did too, and had to be hidden off the page because it sat on top of
+    ' the tab strip; it was removed in 7c step 15 with the licence it named.
     ShowWindow( HWND_FRMABOUT_LICVSCROLL, iif( nPage = ABOUTPAGE_LICENSE, SW_SHOW, SW_HIDE ) )
 
     ' The About page is PAINTED, so leaving a page has to invalidate the body band -- hiding a
@@ -580,29 +586,18 @@ end sub
 
 
 ' ========================================================================================
-' Swap which licence the Licenses page shows.
+' Swap which licence the Licence page shows.
 '
 ' The text is re-read from disk on every switch rather than cached in two DWSTRINGs. The
 ' files are small, this runs on a mouse click, and holding no copy means the dialog cannot
 ' show a licence that disagrees with the file shipped beside it. The scroll position going
 ' back to the top is correct here: it is a different document, not the same one re-shown.
 ' ========================================================================================
-private sub frmAbout_ShowLicense( byval nWhich as long )
+private sub frmAbout_ShowLicense()
 
     if HWND_FRMABOUT_LICENSE = 0 then exit sub
-    if (nWhich < LICPAGE_GPL) orelse (nWhich > LICPAGE_PROPRIETARY) then exit sub
+    PsTextBox_SetText( HWND_FRMABOUT_LICENSE, frmAbout_LicenseText() )
 
-    gAboutLicPage = nWhich
-    PsTextBox_SetText( HWND_FRMABOUT_LICENSE, frmAbout_LicenseText( nWhich ) )
-
-end sub
-
-
-' ========================================================================================
-' The GPL-3 / Proprietary strip. USER-DRIVEN ONLY, like the tab strip above it.
-' ========================================================================================
-private sub frmAbout_LicenseTabChanged( byval hSelectBar as HWND, byval idxOld as long, byval idxNew as long )
-    frmAbout_ShowLicense( idxNew )
 end sub
 
 
@@ -691,13 +686,6 @@ private sub frmAbout_ApplyTheme( byval hwnd as HWND )
     sc.IndicatorColor    = theme.ui.accent
     PsSelectBar_SetColors( HWND_FRMABOUT_TABS, @sc )
 
-    ' ---- the GPL-3 / Proprietary strip -------------------------------------------------
-    ' The SAME struct, deliberately: it is the same widget one level down, and giving the
-    ' inner strip its own palette would make the page look like it had two unrelated tab
-    ' bars rather than one subordinate to the other. Size is what separates them (a smaller
-    ' font and a shorter band), not colour.
-    PsSelectBar_SetColors( HWND_FRMABOUT_LICSEL, @sc )
-
     ' ---- the Credits list -------------------------------------------------------------
     PsListTree_SetBackColor( HWND_FRMABOUT_CREDITS, theme.panel.text.backcolor )
     PsListTree_SetScrollBarColors( HWND_FRMABOUT_CREDITS, theme.panel.scrollbar.backcolor, _
@@ -771,7 +759,7 @@ private sub frmAbout_PositionWindows( byval hwnd as HWND )
                   rcTabs.right, rcTabs.bottom - rcTabs.top, SWP_NOZORDER or SWP_NOACTIVATE )
 
     ' ---- the body band's inner rect ----------------------------------------------------
-    ' The Credits list takes it whole; the Licenses page divides it below. (This used to say
+    ' The Credits list takes it whole; the Licence page divides it below. (This used to say
     ' "the two body controls, sharing one rect", which stopped being true when the licence
     ' strip arrived.)
     dim as long bx = mx
@@ -782,7 +770,7 @@ private sub frmAbout_PositionWindows( byval hwnd as HWND )
 
     SetWindowPos( HWND_FRMABOUT_CREDITS, 0, bx, by, bw, bh, SWP_NOZORDER or SWP_NOACTIVATE )
 
-    ' ---- the Licenses page: the field and its scrollbar --------------------------------
+    ' ---- the Licence page: the field and its scrollbar --------------------------------
     ' Together they fill the body rect the Credits list occupies whole -- the licence
     ' selector does not live in the body at all. The bar takes the right edge and the field
     ' gives up exactly that width, so the two never overlap and no pixel of the band is
@@ -803,29 +791,6 @@ private sub frmAbout_PositionWindows( byval hwnd as HWND )
     ' lines. Nothing else would correct it: the dialog is fixed-size, so this is the only
     ' layout pass there is.
     frmAbout_LicenseScrollChanged( HWND_FRMABOUT_LICENSE )
-
-    ' ---- the GPL-3 / Proprietary strip, ON THE TAB STRIP'S OWN LINE --------------------
-    '
-    ' Same band as the page tabs, pushed to the right margin, so the row reads "About |
-    ' Credits | Licenses ............ GPL-3 | Proprietary" -- one line, two ends. It sat
-    ' under the tabs before and read as a second row of them competing for the same job.
-    '
-    ' It OVERLAPS the tab strip, which spans the full width and paints its own background.
-    ' That works because both carry the same palette (see frmAbout_ApplyTheme) and because
-    ' this window is explicitly raised to the TOP of the sibling Z-order below -- creation
-    ' order already puts it there, but relying on that would make a later re-ordering of
-    ' frmAbout_Show silently paint the tab strip's background over these two captions.
-    '
-    ' Width is the two captions and nothing more, so the empty middle of the line belongs to
-    ' the tab strip underneath and stays inert. Clamped to the body: a translation wide
-    ' enough to exceed it would otherwise be positioned at a negative x and lose its FIRST
-    ' caption -- the one that starts selected -- off the left edge.
-    dim as long selW = PsSelectBar_GetIdealWidth( HWND_FRMABOUT_LICSEL )
-    if selW > bw then selW = bw
-
-    ' Right edge = the body's right margin, which is the field's right border to the pixel.
-    SetWindowPos( HWND_FRMABOUT_LICSEL, HWND_TOP, (bx + bw) - selW, rcTabs.top, _
-                  selW, rcTabs.bottom - rcTabs.top, SWP_NOACTIVATE )
 
     ' ---- the footer buttons, laid out right to left -----------------------------------
     dim as long btnW = AfxScaleX(FRMABOUT_BTN_W)
@@ -913,7 +878,7 @@ private sub frmAbout_RunLayoutSelfTest( byval hwnd as HWND )
     end scope
 
     ' ---- both body pages occupy the SAME rect -----------------------------------------
-    ' The Licenses page is two windows -- field plus scrollbar -- so the claim is that the
+    ' The Licence page is two windows -- field plus scrollbar -- so the claim is that the
     ' PAIR tiles the rect the Credits list takes whole: same top, same bottom, same outer
     ' edges, and the seam between them shared exactly. They are shown one at a time, so a
     ' divergence is invisible until someone switches tabs and the panel jumps.
@@ -925,7 +890,7 @@ private sub frmAbout_RunLayoutSelfTest( byval hwnd as HWND )
 
         ABOUTASSERT( (r1.top = r2.top) andalso (r1.bottom = r2.bottom) andalso _
                      (r1.top = rV.top) andalso (r1.bottom = rV.bottom), _
-                     "the Credits and Licenses pages do not share the body's top and bottom" )
+                     "the Credits and Licence pages do not share the body's top and bottom" )
         ABOUTASSERT( r1.left = r2.left, "the licence field is not on the body's left margin" )
         ABOUTASSERT( rV.right = r1.right, "the scrollbar does not reach the body's right margin" )
         ' The seam. An off-by-one here is a hairline of dialog background showing between the
@@ -946,79 +911,24 @@ private sub frmAbout_RunLayoutSelfTest( byval hwnd as HWND )
                      "the licence scrollbar has no thumb for a ~670 line document" )
     end scope
 
-    ' ---- the licence strip shares the TAB STRIP'S line --------------------------------
-    '
-    ' Two select bars on one band, overlapping, so the assertions that matter are about the
-    ' space BETWEEN them. Neither control knows the other exists.
-    scope
-        ABOUTASSERT( PsSelectBar_GetCount( HWND_FRMABOUT_LICSEL ) = 2, _
-                     "the licence strip does not have exactly two panels" )
-
-        dim as RECT rS, rL
-        GetWindowRect( HWND_FRMABOUT_LICSEL, @rS )
-        ' The BODY's rect, taken from the Credits list -- the licence field is narrower than
-        ' the body by its scrollbar, so measuring the right margin against the field would
-        ' be measuring it against the wrong edge.
-        GetWindowRect( HWND_FRMABOUT_CREDITS, @rL )
-        MapWindowPoints( HWND_DESKTOP, hwnd, cast(LPPOINT, @rS), 2 )
-        MapWindowPoints( HWND_DESKTOP, hwnd, cast(LPPOINT, @rL), 2 )
-
-        ' It fills the tab band exactly, which is what puts its captions on the same baseline
-        ' as the page tabs rather than merely near them.
-        ABOUTASSERT( (rS.top = rcTabs.top) andalso (rS.bottom = rcTabs.bottom), _
-                     "the licence strip does not fill the tab band" & _
-                     " [strip=" & str(rS.top) & ".." & str(rS.bottom) & _
-                     " band=" & str(rcTabs.top) & ".." & str(rcTabs.bottom) & "]" )
-
-        ' Right edge on the body's right margin -- which is the scrollbar's outer edge now,
-        ' not the field's. That is what makes the right-aligned end of the line look
-        ' deliberate rather than a few pixels adrift.
-        ABOUTASSERT( rS.right = rL.right, _
-                     "the licence strip does not end on the body's right margin" )
-
-        ' THE COLLISION TEST, and the reason this pair needs assertions at all. The page tabs
-        ' grow leftward from 0 and this strip grows rightward from the margin; a long
-        ' translation of either can close the gap, and the overlap would silently paint one
-        ' set of captions over the other. Compared against the TAB STRIP'S IDEAL WIDTH, not
-        ' its window, because that window is full-width by design and would make the test
-        ' fail always.
-        dim as long tabsW = PsSelectBar_GetIdealWidth( HWND_FRMABOUT_TABS )
-        ABOUTASSERT( rS.left >= tabsW, _
-                     "the licence strip overlaps the page tabs" & _
-                     " [strip.left=" & str(rS.left) & " tabs need=" & str(tabsW) & "]" )
-
-        ' Against the BODY, not against the strip's own window: the strip is SIZED from
-        ' GetIdealWidth, so comparing the two would be restating the assignment.
-        ABOUTASSERT( PsSelectBar_GetIdealWidth( HWND_FRMABOUT_LICSEL ) <= (rL.right - rL.left), _
-                     "the two licence captions are wider than the body" )
-    end scope
-
-    ' ---- BOTH LICENCE FILES ACTUALLY SHIP ----------------------------------------------
-    ' The page reads them from the exe's directory at display time, and a missing file
-    ' returns a readable fallback rather than a blank field -- which is right for the user
-    ' and useless as evidence, because the dialog then looks fine while showing no licence
-    ' at all. This is the assertion that can tell the difference.
+    ' ---- THE LICENCE FILE ACTUALLY SHIPS -----------------------------------------------
+    ' The page reads it from the exe's directory at display time, and a missing file returns
+    ' a readable fallback rather than a blank field -- which is right for the user and
+    ' useless as evidence, because the dialog then looks fine while showing no licence at
+    ' all. This is the assertion that can tell the difference, and in 7c step 15 it did:
+    ' it reported the deprecated LICENSE-PROPRIETARY.txt as missing, which is what removed
+    ' the second page rather than adding the file.
     scope
         dim as DWSTRING wszG = AfxGetExePathName & FRMABOUT_FILE_GPL
-        dim as DWSTRING wszP = AfxGetExePathName & FRMABOUT_FILE_PROPRIETARY
         ABOUTASSERT( AfxFileExists( wszG ) <> 0, "LICENSE is not beside the executable" )
-        ABOUTASSERT( AfxFileExists( wszP ) <> 0, "LICENSE-PROPRIETARY.txt is not beside the executable" )
 
-        dim as DWSTRING wszTextG = frmAbout_LicenseText( LICPAGE_GPL )
-        dim as DWSTRING wszTextP = frmAbout_LicenseText( LICPAGE_PROPRIETARY )
+        dim as DWSTRING wszTextG = frmAbout_LicenseText()
         ABOUTASSERT( len(wszTextG) > 1000, _
-                     "the GPL text is only " & str(len(wszTextG)) & " chars -- the fallback?" )
-        ABOUTASSERT( len(wszTextP) > 1000, _
-                     "the proprietary text is only " & str(len(wszTextP)) & " chars -- the fallback?" )
-        ' The two panels must not be showing the same document. Both files existing does not
-        ' establish that the reader is keyed on the panel: an ignored parameter would pass
-        ' every assertion above.
-        ABOUTASSERT( wszTextG <> wszTextP, "both licence panels show the same text" )
+                     "the licence text is only " & str(len(wszTextG)) & " chars -- the fallback?" )
     end scope
 
-    ' ---- the three hero pills fit the hero ---------------------------------------------
-    ' The pill row is PAINTED, so an overflow is clipped in silence. It grew a third pill and
-    ' the widest of the three is a translated word.
+    ' ---- the hero pills fit the hero ---------------------------------------------------
+    ' The pill row is PAINTED, so an overflow is clipped in silence.
     scope
         dim as RECT rcTmp
         dim as HDC hdcTmp = GetDC( hwnd )
@@ -1079,11 +989,9 @@ private sub frmAbout_RunLayoutSelfTest( byval hwnd as HWND )
             end if
         next
         ABOUTASSERT( nBlank = 0, "one or more of ids 370-385 is missing from english.lang" )
-        ' 408 is this dialog's one id outside that run -- claimed from the blank slots rather
-        ' than appended, so it does not sit beside its neighbours and would be missed by the
-        ' loop above. It is used TWICE (the hero pill and the sub-strip), so a blank value
-        ' costs two captions.
-        ABOUTASSERT( len(LL(397)) > 0, "localization id 397 (Proprietary) is blank" )
+        ' Id 397 ("Proprietary") was asserted here. It had TWO uses, the hero pill and the
+        ' licence sub-strip, and 7c step 15 removed both -- so the id is retired and blanked
+        ' rather than renumbered, and there is nothing left to assert about it.
     end scope
 
     scope
@@ -1144,7 +1052,6 @@ private function frmAbout_WndProc( _
             HWND_FRMABOUT_TABS    = 0
             HWND_FRMABOUT_CREDITS = 0
             HWND_FRMABOUT_LICENSE = 0
-            HWND_FRMABOUT_LICSEL  = 0
             HWND_FRMABOUT_LICVSCROLL = 0
             PostQuitMessage(0)
             return 0
@@ -1166,9 +1073,9 @@ function frmAbout_Show( byval hWndParent as HWND ) as LRESULT
     dim pWindow as CWindow ptr = new CWindow
 
     HWND_FRMABOUT = pWindow->Create( hWndParent, L(71,"About") & " " & APPNAME, _
-        @frmAbout_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
+                        @frmAbout_WndProc, 0, 0, 0, 0, _
+                        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
+                        WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
     pWindow->SetClientSize( FRMABOUT_CLIENT_W, FRMABOUT_CLIENT_H )
     pWindow->Center( pWindow->hWindow, hWndParent )
 
@@ -1189,7 +1096,10 @@ function frmAbout_Show( byval hWndParent as HWND ) as LRESULT
     PsSelectBar_AddPanel( HWND_FRMABOUT_TABS, L(361,"Credits") )
     ' PLURAL. tiko ships under two licences and this page shows both; a singular caption
     ' over a two-panel strip reads as a mistake before it reads as a licence statement.
-    PsSelectBar_AddPanel( HWND_FRMABOUT_TABS, L(362,"Licenses") )
+    '' SINGULAR since 7c step 15: there is one licence page now, not two. The default here
+    '' is DISCARDED by L() -- the real text is id 362 in all six .lang files, changed with
+    '' it.
+    PsSelectBar_AddPanel( HWND_FRMABOUT_TABS, L(362,"License") )
     PsSelectBar_SetPanelPadding( HWND_FRMABOUT_TABS, 0, _
                                  AfxScaleX(FRMABOUT_MARGIN), AfxScaleX(14) )
     PsSelectBar_SetIndicator( HWND_FRMABOUT_TABS, AfxScaleY(2), AfxScaleY(6) )
@@ -1211,31 +1121,6 @@ function frmAbout_Show( byval hWndParent as HWND ) as LRESULT
     ' RAW PIXELS and deliberately not DPI-scaled -- a chrome hairline should stay a hairline.
     ' PsListTree is the odd one out in its own API here: RowHeight above IS scaled internally.
     PsListTree_SetBorderWidth( HWND_FRMABOUT_CREDITS, 1 )
-
-    ' ---- the GPL-3 / Proprietary strip, ABOVE the field --------------------------------
-    ' Created before the field for the same reason the tab strip is created first: creation
-    ' order is Z-order is tab order.
-    '
-    ' A PsSelectBar rather than two painted labels, because "a flat row of text labels,
-    ' exactly one current, hot-tracked, reporting user clicks" is exactly what that control
-    ' is -- and the alternative is hit-testing and hover-tracking two rects by hand in the
-    ' dialog's own WM_MOUSEMOVE.
-    HWND_FRMABOUT_LICSEL = PsSelectBar_Create( HWND_FRMABOUT, IDC_FRMABOUT_LICSEL )
-    PsSelectBar_SetFont( HWND_FRMABOUT_LICSEL, ghFont(GUIFONT_11) )
-    ' THE SAME PADDING AND INDICATOR AS THE TAB STRIP, because they are now one line: the two
-    ' halves must space their words alike and underline them at the same height, or the row
-    ' reads as two controls that happened to collide.
-    PsSelectBar_SetPadding( HWND_FRMABOUT_LICSEL, AfxScaleX(14), AfxScaleX(14) )
-    ' "GPL-3" is an identifier, not prose -- untranslated on purpose, like the "GPL v3" pill.
-    PsSelectBar_AddPanel( HWND_FRMABOUT_LICSEL, "GPL-3" )
-    PsSelectBar_AddPanel( HWND_FRMABOUT_LICSEL, L(397,"Proprietary") )
-    PsSelectBar_SetPanelPadding( HWND_FRMABOUT_LICSEL, 0, 0, AfxScaleX(14) )
-    ' NO RIGHT PADDING ON THE LAST PANEL. The strip is sized to its ideal width and pushed
-    ' against the body's right margin, so trailing padding would show up as the last caption
-    ' floating short of the edge it is meant to line up with.
-    PsSelectBar_SetPanelPadding( HWND_FRMABOUT_LICSEL, 1, AfxScaleX(14), 0 )
-    PsSelectBar_SetIndicator( HWND_FRMABOUT_LICSEL, AfxScaleY(2), AfxScaleY(6) )
-    PsSelectBar_SetSelChangeCallback( HWND_FRMABOUT_LICSEL, @frmAbout_LicenseTabChanged )
 
     ' ---- the License field -------------------------------------------------------------
     ' Multiline (creation-time, not a setter) and read-only. This is the one control that
@@ -1260,7 +1145,7 @@ function frmAbout_Show( byval hWndParent as HWND ) as LRESULT
     ' AFTER SetReadOnly, and that order is not cosmetic: the field is seeded through the same
     ' frmAbout_ShowLicense the strip's callback uses, so there is ONE path that puts a licence
     ' on screen and the seeded state cannot disagree with a clicked one.
-    frmAbout_ShowLicense( LICPAGE_GPL )
+    frmAbout_ShowLicense()
 
     ' ---- the three footer buttons ------------------------------------------------------
     dim as HWND hWebsite = PsButton_Create( HWND_FRMABOUT, IDC_FRMABOUT_CMDWEBSITE )
@@ -1302,10 +1187,22 @@ function frmAbout_Show( byval hWndParent as HWND ) as LRESULT
 
     frmAbout_RunLayoutSelfTest( HWND_FRMABOUT )
 
-    ' Close the dialog immediately, so a headless run reaches the end of the process and the
-    ' console output actually flushes. Without this the modal loop below blocks forever
-    ' waiting for a human, and a run that is killed rather than exited loses every buffered
-    ' line -- including the self-test's own report.
+    ' Close the dialog immediately, so an unattended run can END.
+    '
+    ' TWO CLAIMS ABOUT THIS HOOK HAVE NOW BEEN MEASURED AND BOTH WERE WRONG.
+    '
+    ' It used to say a killed run "loses every buffered line, including the self-test's own
+    ' report". FALSE: _check_selftests.bat tree-killed tiko on every run and got all 25
+    ' report lines, and a 78-byte log survived a kill under two redirect styles.
+    '
+    ' The replacement said that while a modal dialog is up, every suite after it never runs.
+    ' ALSO FALSE, and caught by removing an AUTOCLOSE and watching: all 33 suites still
+    ' reported. A modal dialog owns the message loop but GetMessage takes messages for every
+    ' window in the thread, so the later suites are dispatched from inside it.
+    '
+    ' WHAT IS ACTUALLY TRUE: without this, the process never exits on its own. The run then
+    ' depends on the gate's kill backstop and takes the full poll ceiling -- 40s against 20s,
+    ' measured. Nothing is lost; it is slow, and it makes the gate's exit code meaningless.
     if environ("TIKO_ABOUT_AUTOCLOSE") = "1" then
         PostMessage( HWND_FRMABOUT, WM_CLOSE, 0, 0 )
     end if
@@ -1315,7 +1212,6 @@ function frmAbout_Show( byval hWndParent as HWND ) as LRESULT
     ' field's right-click menu is a PsPopupMenu that needs one.
     dim uMsg as MSG
     while GetMessage( @uMsg, null, 0, 0 )
-
         ' MANDATORY. Without it that menu has no keyboard navigation and never closes on an
         ' outside click.
         if PsTextBox_FilterMessage( @uMsg ) then continue while
