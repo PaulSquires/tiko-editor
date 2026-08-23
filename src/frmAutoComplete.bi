@@ -78,7 +78,7 @@ type AUTOC_ITEM
 end type
 
 declare sub      frmAutoComplete_Init()
-declare function frmAutoComplete_Show( byval pDoc as clsDocument ptr, items() as AUTOC_ITEM, byval nCount as long ) as boolean
+declare function frmAutoComplete_Show( byval pDoc as clsDocument ptr, byref items as FB.Array( of AUTOC_ITEM ) ) as boolean
 declare sub      frmAutoComplete_Cancel()
 declare function frmAutoComplete_IsOpen() as boolean
 declare function frmAutoComplete_ReFilter( byval pDoc as clsDocument ptr ) as boolean

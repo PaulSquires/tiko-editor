@@ -23,9 +23,10 @@
 ' The full candidate set as handed to frmAutoComplete_Show, and the subset currently
 ' passing the typed prefix. gAutoCVisible(i) is the row i of the listbox -- the painter
 ' indexes straight through it, so no per-row itemData is needed.
-redim shared gAutoCItems(any) as AUTOC_ITEM
+dim shared gAutoCItems as FB.Array( of AUTOC_ITEM )
 redim shared gAutoCVisible(any) as long
-dim shared gAutoCCount    as long          ' logical length of gAutoCItems (array may be larger)
+' gAutoCItems.Count is gone: the container's Count IS the logical length, so the array can no
+' longer be "larger than" the count it is read against.
 dim shared gAutoCVisCount as long          ' logical length of gAutoCVisible
 dim shared gAutoCOpen     as boolean
 ' Row height in UNSCALED units. PsListTree_SetRowHeight DPI-scales what it is handed
@@ -94,7 +95,7 @@ private sub frmAutoComplete_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     ' The paint callback gets a model row, and rows map 1:1 onto the filtered set.
     if (p->itemID < 0) orelse (p->itemID >= gAutoCVisCount) then exit sub
     dim as long nItem = gAutoCVisible(p->itemID)
-    if (nItem < 0) orelse (nItem >= gAutoCCount) then exit sub
+    if (nItem < 0) orelse (nItem >= gAutoCItems.Count) then exit sub
 
     ' State priority for the row: selected > hot > normal.
     dim as COLORREF backclr, foreclr, detailclr, glyphclr
@@ -107,12 +108,12 @@ private sub frmAutoComplete_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
         backclr   = theme.editor.currentline
         foreclr   = theme.editor.text.forecolor
         detailclr = theme.editor.comments.forecolor
-        glyphclr  = AutoC_KindColor( gAutoCItems(nItem).nKind )
+        glyphclr  = AutoC_KindColor( gAutoCItems[nItem].nKind )
     else
         backclr   = theme.editor.text.backcolor
         foreclr   = theme.editor.text.forecolor
         detailclr = theme.editor.comments.forecolor
-        glyphclr  = AutoC_KindColor( gAutoCItems(nItem).nKind )
+        glyphclr  = AutoC_KindColor( gAutoCItems[nItem].nKind )
     end if
 
     p->b->SetBackColor( backclr )
@@ -128,12 +129,12 @@ private sub frmAutoComplete_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     rcGlyph.right = rcGlyph.left + nGlyphWidth
     p->b->SetForeColor( glyphclr )
     p->b->SetFont( ghFont(GUIFONT_10) )
-    p->b->PaintText( AutoC_KindGlyph( gAutoCItems(nItem).nKind ), @rcGlyph, DT_CENTER )
+    p->b->PaintText( AutoC_KindGlyph( gAutoCItems[nItem].nKind ), @rcGlyph, DT_CENTER )
 
     ' Detail (right-aligned, dimmed). Painted BEFORE the name so the name's rect can be
     ' clipped short of it and the two can never overlap on a narrow popup.
     dim as long nDetailWidth = 0
-    dim as DWSTRING wszDetail = gAutoCItems(nItem).wszDetail
+    dim as DWSTRING wszDetail = gAutoCItems[nItem].wszDetail
     if len(wszDetail) then
         dim as RECT rcDetail = p->rc
         rcDetail.right -= nPadRight
@@ -151,7 +152,7 @@ private sub frmAutoComplete_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     if rcText.right < rcText.left then rcText.right = rcText.left
     p->b->SetForeColor( foreclr )
     p->b->SetFont( ghFont(GUIFONT_10) )
-    p->b->PaintText( gAutoCItems(nItem).wszName, @rcText, DT_LEFT or DT_END_ELLIPSIS )
+    p->b->PaintText( gAutoCItems[nItem].wszName, @rcText, DT_LEFT or DT_END_ELLIPSIS )
 
 end sub
 
@@ -279,15 +280,15 @@ private function AutoC_Layout( byval pDoc as clsDocument ptr ) as boolean
     for i as long = 0 to nMeasure - 1
         dim as long nItem = gAutoCVisible(i)
         dim as SIZE sz
-        dim as long nChars = len( gAutoCItems(nItem).wszName )
+        dim as long nChars = len( gAutoCItems[nItem].wszName )
         if nChars > 0 then
-            if GetTextExtentPoint32W( hDC, gAutoCItems(nItem).wszName.vptr, nChars, @sz ) then
+            if GetTextExtentPoint32W( hDC, gAutoCItems[nItem].wszName.vptr, nChars, @sz ) then
                 if sz.cx > maxNameW then maxNameW = sz.cx
             end if
         end if
-        nChars = len( gAutoCItems(nItem).wszDetail )
+        nChars = len( gAutoCItems[nItem].wszDetail )
         if nChars > 0 then
-            if GetTextExtentPoint32W( hDC, gAutoCItems(nItem).wszDetail.vptr, nChars, @sz ) then
+            if GetTextExtentPoint32W( hDC, gAutoCItems[nItem].wszDetail.vptr, nChars, @sz ) then
                 if sz.cx > maxDetailW then maxDetailW = sz.cx
             end if
         end if
@@ -382,7 +383,7 @@ private sub AutoC_PopulateListBox()
     PsListTree_BeginUpdate( ghAutoCList )
     PsListTree_Clear( ghAutoCList )
     for i as long = 0 to gAutoCVisCount - 1
-        PsListTree_AddString( ghAutoCList, gAutoCItems( gAutoCVisible(i) ).wszName )
+        PsListTree_AddString( ghAutoCList, gAutoCItems[ gAutoCVisible(i) ].wszName )
     next
     PsListTree_EndUpdate( ghAutoCList )
     if gAutoCVisCount > 0 then PsListTree_SetCurSel( ghAutoCList, 0 )
@@ -397,7 +398,7 @@ end sub
 ' ========================================================================================
 function frmAutoComplete_ReFilter( byval pDoc as clsDocument ptr ) as boolean
     if pDoc = 0 then return false
-    if gAutoCCount = 0 then return false
+    if gAutoCItems.Count = 0 then return false
 
     ' wszMatchWord is already uppercase everywhere it is produced (see
     ' ShowAutocompleteList), and wszSort is the uppercased name, so this is a plain
@@ -405,11 +406,11 @@ function frmAutoComplete_ReFilter( byval pDoc as clsDocument ptr ) as boolean
     dim as DWSTRING wszMatch = ucase( pDoc->wszMatchWord )
     dim as long nLen = len( wszMatch )
 
-    redim gAutoCVisible( 0 to gAutoCCount - 1 ) as long
+    redim gAutoCVisible( 0 to gAutoCItems.Count - 1 ) as long
     gAutoCVisCount = 0
-    for i as long = 0 to gAutoCCount - 1
+    for i as long = 0 to gAutoCItems.Count - 1
         dim as boolean bMatch = true
-        if nLen then bMatch = ( left( gAutoCItems(i).wszSort, nLen ) = wszMatch )
+        if nLen then bMatch = ( left( gAutoCItems[i].wszSort, nLen ) = wszMatch )
         if bMatch then
             gAutoCVisible( gAutoCVisCount ) = i
             gAutoCVisCount += 1
@@ -431,24 +432,21 @@ end function
 ' ========================================================================================
 function frmAutoComplete_Show( _
             byval pDoc as clsDocument ptr, _
-            items() as AUTOC_ITEM, _
-            byval nCount as long _
+            byref items as FB.Array( of AUTOC_ITEM ) _
             ) as boolean
 
     if pDoc = 0 then return false
-    if nCount <= 0 then
+    if items.Count = 0 then
         frmAutoComplete_Cancel()
         return false
     end if
     if HWND_FRMAUTOCOMPLETE = 0 then return false
 
-    ' Take our own copy: the caller's array is a local that dies with its function, and
-    ' the popup outlives the call by design.
-    redim gAutoCItems( 0 to nCount - 1 ) as AUTOC_ITEM
-    for i as long = 0 to nCount - 1
-        gAutoCItems(i) = items(i)
-    next
-    gAutoCCount = nCount
+    ' Take our own copy: the caller's buffer is shared scratch that the next keystroke
+    ' clears, and the popup outlives the call by design. Assigning the container copies
+    ' it -- element by element, DWSTRINGs included -- which is exactly what the hand
+    ' written loop did.
+    gAutoCItems = items
 
     ghAutoCEdit = pDoc->hWndActiveScintilla
 
@@ -502,7 +500,7 @@ function frmAutoComplete_Commit( byval pDoc as clsDocument ptr ) as boolean
         frmAutoComplete_Cancel()
         return false
     end if
-    dim as DWSTRING wszText = gAutoCItems( gAutoCVisible(nRow) ).wszName
+    dim as DWSTRING wszText = gAutoCItems[ gAutoCVisible(nRow) ].wszName
 
     dim as HWND hEdit = pDoc->hWndActiveScintilla
 
@@ -576,7 +574,7 @@ function frmAutoComplete_FilterMessage( byval pMsg as MSG ptr ) as boolean
             dim as long nRow = PsListTree_GetCurSel( ghAutoCList )
             dim as boolean bValidRow = (nRow >= 0) andalso (nRow < gAutoCVisCount)
             dim as boolean bAccept = false
-            if bValidRow then bAccept = gAutoCItems( gAutoCVisible(nRow) ).bHasParams
+            if bValidRow then bAccept = gAutoCItems[ gAutoCVisible(nRow) ].bHasParams
 
             if bAccept then
                 dim as clsDocument ptr pDoc = gTTabCtl.GetActiveDocumentPtr()
