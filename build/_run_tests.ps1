@@ -50,7 +50,14 @@ $Gates = @(
 #            leaving it high would hide the next real failure behind it.
 #   Flaky    the suite is nondeterministic: it returns a different split on
 #            consecutive runs of an unchanged binary. Reported, never counted.
-#            See docs/tiko-editor/RFC-0008 s6.
+#            NOTHING CARRIES THIS TODAY. FORMAT (apply) and FORMATOPTIONS did,
+#            until the cause was found -- LL() is sized by the .lang file's
+#            "MAXIMUM:" line, 521, and both suites asserted ids 589-669, so
+#            every lookup was an out-of-bounds heap read that fbc does not
+#            bounds-check without -exx. Fixed in fc186ed3; both are now
+#            deterministic (16/0 and 42/0, three runs running) and are counted
+#            like everything else. The mechanism stays here because the next
+#            suite to wobble should be understood, not excused.
 $Suites = @(
   @{ Name='THEME';              Pattern='theme self-test: (\d+) passed, (\d+) failed' }
   @{ Name='OPTIONS (bind)';     Pattern='options bind test: (\d+) passed, (\d+) failed'; Baseline=6 }
@@ -62,9 +69,9 @@ $Suites = @(
   @{ Name='DEBUG';              Pattern='TIKO_DEBUG_SELFTEST: (\d+) passed, (\d+) failed' }
   @{ Name='UNUSED (model)';     Pattern='TIKO_UNUSED_SELFTEST: (\d+) passed, (\d+) failed' }
   @{ Name='FORMAT (engine)';    Pattern='Format engine self-test: (\d+) passed, (\d+) failed' }
-  @{ Name='FORMAT (apply)';     Pattern='Format apply self-test: (\d+) passed, (\d+) failed'; Flaky=$true }
+  @{ Name='FORMAT (apply)';     Pattern='Format apply self-test: (\d+) passed, (\d+) failed' }
   @{ Name='AUTOINSERT';         Pattern='AutoInsert self-test: (\d+) passed, (\d+) failed' }
-  @{ Name='FORMATOPTIONS';      Pattern='frmFormatOptions self-test \(headless\): (\d+) passed, (\d+) failed'; Flaky=$true }
+  @{ Name='FORMATOPTIONS';      Pattern='frmFormatOptions self-test \(headless\): (\d+) passed, (\d+) failed' }
   @{ Name='PSBUFFERPAINT';      Pattern='=== (\d+) of (\d+) assertions passed ==='; OfForm=$true }
   @{ Name='PSCOLORPICKER';      Pattern='PsColorPicker self-test: (\d+) passed, (\d+) failed' }
   @{ Name='KEYBOARD (vocab)';   Pattern='TIKO_KEYBOARD_SELFTEST: (\d+) passed, (\d+) failed' }
