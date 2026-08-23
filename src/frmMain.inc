@@ -1580,6 +1580,18 @@ function frmMain_WndProc( _
             ' the workspace has to exist first.
             frmExplorer_RunSelfTest()
 
+            ' TIKO_STARTUP_AUTOEXIT=1. The third and last of these hooks, and the widest:
+            ' it quits HERE, past the two suites above, which TIKO_FINDPROJ_AUTOEXIT quits
+            ' just short of. Those two were unreachable unattended -- the test runner had
+            ' no way to reach Workspace or Explorer at all and had to report both SKIPPED.
+            ' Same reasoning as the other two, which the comments beside them spell out:
+            ' tiko's console output is BLOCK-BUFFERED when redirected, so a run that is
+            ' killed rather than exited loses every line the suites printed.
+            ' Deliberately BEFORE the UNUSED_AUTOOPEN block below: that one shows a window
+            ' and is a separate opt-in, so folding it in would make this hook's stopping
+            ' point depend on another variable.
+            if environ("TIKO_STARTUP_AUTOEXIT") = "1" then end 0
+
             ' TIKO_UNUSED_AUTOOPEN=1: the only way to reach the Unused Symbols layout
             ' self-test without a human driving the menu. HERE, not on scan completion:
             ' with no project open nothing ever requests a project scan, so a
