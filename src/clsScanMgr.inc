@@ -66,7 +66,7 @@ end function
 
 
 ' Scan a byte buffer for 'TODO: comment lines and APPEND them to the result
-' set's todoItems()/todoCount, stamped with wszFile. This is modParser's match
+' set's todoItems list, stamped with wszFile. This is modParser's match
 ' rule, lifted before its deletion: an apostrophe comment whose text - after
 ' optional spaces - begins with "todo:" case-insensitively (no spaces inside
 ' the word). Only the FIRST apostrophe outside a string literal counts,
@@ -135,10 +135,8 @@ private sub ScanMgr_ScanTodoBytes( _
                 next
                 sText = trim( sText, any chr(32, 9) )
 
-                if pRSet->todoCount > ubound( pRSet->todoItems ) then
-                    redim preserve pRSet->todoItems( 0 to pRSet->todoCount * 2 + 7 )
-                end if
-                with pRSet->todoItems( pRSet->todoCount )
+                dim as TODOITEM todo
+                with todo
                     .wszFile = wszFile
                     .nLineNum = nLineNum
                     ' byte->wide: UTF-8 documents/files must convert through
@@ -149,7 +147,7 @@ private sub ScanMgr_ScanTodoBytes( _
                         .wszText = sText
                     end if
                 end with
-                pRSet->todoCount += 1
+                pRSet->todoItems.Push( todo )
             end if
         end if
         i += 1

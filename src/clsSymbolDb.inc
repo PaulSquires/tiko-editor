@@ -201,7 +201,7 @@ function clsSymbolDb.InstallSet( byval nTier as long, byval pNew as PARSERESULTS
         m_pBuffer = pNew
         ' the buffer scan's TODO line-scan replaces this file's stored entries
         ' (UI thread, per the store's threading rule)
-        if pNew then TodoStore_ReplaceFile( pNew->wszRootFile, pNew->todoItems(), pNew->todoCount )
+        if pNew then TodoStore_ReplaceFile( pNew->wszRootFile, pNew->todoItems )
     else
         pOld = m_pProject
         m_pProject = pNew
@@ -223,7 +223,7 @@ sub clsSymbolDb.InstallProjectTodos( byval pNew as PARSERESULTSET ptr )
     dim as DWSTRING wszBufRoot
     if m_pBuffer then wszBufRoot = m_pBuffer->wszRootFile
 
-    dim tmp(any) as TODOITEM
+    dim tmp as TODOLIST
     dim as long fc = pNew->pResult->fileCount
     for i as long = 0 to fc - 1
         dim as wstring ptr pFile = @pNew->pResult->stringPool[ pNew->pResult->fileOffsets[i] ]
@@ -231,21 +231,20 @@ sub clsSymbolDb.InstallProjectTodos( byval pNew as PARSERESULTSET ptr )
             if SymDb_FileNameEq( *pFile, wszBufRoot ) then continue for
         end if
 
-        dim as long nSub = 0
-        redim tmp( 0 to 7 )
-        for t as long = 0 to pNew->todoCount - 1
-            if SymDb_FileNameEq( pNew->todoItems(t).wszFile, *pFile ) then
-                if nSub > ubound( tmp ) then redim preserve tmp( 0 to nSub * 2 + 7 )
-                tmp(nSub) = pNew->todoItems(t)
-                nSub += 1
+        ' nTodo, not t: t is on RFC-0004 s5's forbidden list and this procedure now names
+        ' a container two lines below it.
+        tmp.Clear( )
+        for nTodo as long = 0 to pNew->todoItems.Count - 1
+            if SymDb_FileNameEq( pNew->todoItems[nTodo].wszFile, *pFile ) then
+                tmp.Push( pNew->todoItems[nTodo] )
             end if
         next
-        if nSub > 0 then
+        if tmp.Count > 0 then
             ' store/display under the on-disk casing (scan names are UPPERCASED;
             ' the store's keying is case-insensitive either way)
-            TodoStore_ReplaceFile( FilenameOriginalCase( *pFile ), tmp(), nSub )
+            TodoStore_ReplaceFile( FilenameOriginalCase( *pFile ), tmp )
         else
-            TodoStore_ReplaceFile( *pFile, tmp(), nSub )
+            TodoStore_ReplaceFile( *pFile, tmp )
         end if
     next
 end sub
@@ -923,32 +922,29 @@ end function
 
 sub TodoStore_RemoveFile( byref wszFile as const wstring )
     dim as long nOut = 0
-    for i as long = 0 to gTodoCount - 1
-        if SymDb_FileNameEq( gTodoItems(i).wszFile, wszFile ) = false then
-            if nOut <> i then gTodoItems(nOut) = gTodoItems(i)
+    for i as long = 0 to gTodoItems.Count - 1
+        if SymDb_FileNameEq( gTodoItems[i].wszFile, wszFile ) = false then
+            if nOut <> i then gTodoItems[nOut] = gTodoItems[i]
             nOut += 1
         end if
     next
-    ' clear the dropped tail entries so their strings free now
-    for i as long = nOut to gTodoCount - 1
-        gTodoItems(i).wszFile = ""
-        gTodoItems(i).wszText = ""
-        gTodoItems(i).nLineNum = 0
-    next
-    gTodoCount = nOut
+    ' The compaction above moved the survivors down; now drop the tail. The old code could
+    ' not shorten a redim'd array without losing the survivors, so it blanked the dropped
+    ' entries' strings by hand to release them. Pop destroys each dropped element -- its
+    ' DWSTRINGs with it -- so the hand wipe is gone rather than translated.
+    while gTodoItems.Count > nOut
+        gTodoItems.Pop( )
+    wend
 end sub
 
-sub TodoStore_ReplaceFile( byref wszFile as const wstring, items() as TODOITEM, byval itemCount as long )
+sub TodoStore_ReplaceFile( byref wszFile as const wstring, byref items as TODOLIST )
     TodoStore_RemoveFile( wszFile )
-    if itemCount <= 0 then exit sub
-    if gTodoCount + itemCount - 1 > ubound( gTodoItems ) then
-        redim preserve gTodoItems( 0 to (gTodoCount + itemCount) * 2 + 7 )
-    end if
-    for i as long = 0 to itemCount - 1
-        gTodoItems( gTodoCount ).wszFile = wszFile
-        gTodoItems( gTodoCount ).nLineNum = items(i).nLineNum
-        gTodoItems( gTodoCount ).wszText = items(i).wszText
-        gTodoCount += 1
+    ' The entries are re-keyed onto wszFile as they are copied: the caller's list carries
+    ' whatever casing the scan reported, and the store keys on the name it was given.
+    for i as long = 0 to items.Count - 1
+        dim as TODOITEM item = items[i]
+        item.wszFile = wszFile
+        gTodoItems.Push( item )
     next
 end sub
 

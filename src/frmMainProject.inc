@@ -543,8 +543,7 @@ function OnCommand_ProjectClose( byval hwnd As HWND ) As LRESULT
 
     ' The TODO store outlives the sets that populated it (project sweeps add
     ' entries for files never opened as documents), so empty it explicitly.
-    erase gTodoItems
-    gTodoCount = 0
+    gTodoItems.Clear( )
     frmOutput_UpdateToDoListview()
 
     ' Clear content from functions and bookmarks listboxes

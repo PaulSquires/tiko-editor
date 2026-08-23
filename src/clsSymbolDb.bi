@@ -46,10 +46,14 @@ type TODOITEM
     wszText  as DWSTRING          ' text after the TODO: marker
 end type
 
-dim shared gTodoItems(any) as TODOITEM
-dim shared gTodoCount as long = 0
+' Aliased because a generic spelled directly in a TYPE field does not instantiate -- see
+' PARSERESULTSET.todoItems below and RFC-0004 s1. The alias is declared here so both the
+' global store and the per-set field can use it.
+type TODOLIST as FB.Array( of TODOITEM )
 
-declare sub TodoStore_ReplaceFile( byref wszFile as const wstring, items() as TODOITEM, byval itemCount as long )
+dim shared gTodoItems as TODOLIST
+
+declare sub TodoStore_ReplaceFile( byref wszFile as const wstring, byref items as TODOLIST )
 declare sub TodoStore_RemoveFile( byref wszFile as const wstring )
 
 ' One scan's result plus its indexes. Built on the worker, immutable afterward.
@@ -76,8 +80,10 @@ type PARSERESULTSET
 
     ' 'TODO: lines found by the worker's line scan of the buffer-scan text copy
     ' (buffer tier only; empty for project scans - their text is never in memory)
-    todoItems(any) as TODOITEM
-    todoCount      as long
+    ' TODOLIST, not FB.Array( of TODOITEM ) written out: a generic spelled directly in a
+    ' TYPE field is silently never defined, and the only symptom is "error 18: Element not
+    ' defined" at every use site, naming the member and never this line.
+    todoItems      as TODOLIST
 
     declare sub BuildIndexes()
 end type
