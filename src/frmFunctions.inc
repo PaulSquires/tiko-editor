@@ -303,24 +303,20 @@ end function
 ' ========================================================================================
 ' Simple QuickSort of Function Name array
 ' ========================================================================================
-function QuickSortFuncs( a() as FUNCTION_NODE_TYPE, lo as long, hi as long ) as long
-    dim as long i, j
-    dim as DWSTRING pivot
-    
-    if lo < hi then
-        i = lo : j = hi
-        pivot = ucase( a( (lo+hi)/2 ).wszFunctionName )
-        do
-            while ucase(a(i).wszFunctionName) < pivot and i < hi: i += 1: wend
-            while ucase(a(j).wszFunctionName) > Pivot and j > lo: j -= 1: wend
-            if i <= j then swap a(i), a(j): i += 1: j -= 1
-        loop while i <= j
-        if lo < j then QuickSortFuncs( a(), lo, j )
-        if hi > i then QuickSortFuncs( a(), i, hi )
-    end if
-    
-    function = 0
-end function
+' Sort a flattened function list by qualified name, case-insensitively.
+'
+' The old hand-written quicksort recomputed ucase( ) inside BOTH inner comparison loops --
+' an allocation per comparison, O(n log n) of them. Hoisting is not possible through
+' FB.SortBy either (it takes a 'less' predicate, not a key selector), so the two ucase( )
+' calls per comparison remain; what goes is the O(n^2) worst case on already-sorted input,
+' which is what a rebuild of an unchanged panel produced every time.
+'
+' Sort and not StableSort: two implementations in one file cannot share a qualified name.
+sub SortFuncsByName( byref a as FB.Array( of FUNCTION_NODE_TYPE ) )
+    FB.SortBy( a, function( byref x as FUNCTION_NODE_TYPE, byref y as FUNCTION_NODE_TYPE ) as boolean
+                      return ucase( x.wszFunctionName ) < ucase( y.wszFunctionName )
+                  end function )
+end sub
 
 
 ' ========================================================================================
@@ -393,7 +389,7 @@ function LoadFilesAndFunctions() as long
     dim as long nFiles = frmFunctions_BuildFileList()
 
     ' Get the functions (and sort them) for each file
-    redim arrFuncs(any) as FUNCTION_NODE_TYPE
+    dim arrFuncs as FB.Array( of FUNCTION_NODE_TYPE )
     dim rs() as SYMBOLREF
 
     for i as long = 0 to nFiles - 1
@@ -406,22 +402,24 @@ function LoadFilesAndFunctions() as long
             ' the old (parsed-bodies) panel either
             dim as long nBodyLine = gSymDb.SymBodyLine( rs(p) )
             if nBodyLine <= 0 then continue for
-            dim as long ub = ubound(arrFuncs) + 1
-            redim preserve arrFuncs(ub)
-            arrFuncs(ub).wszFunctionName = gSymDb.QualifiedName( rs(p) )
-            arrFuncs(ub).wszPrototype = gSymDb.BuildCalltip( rs(p) )
-            arrFuncs(ub).nLineNumber = nBodyLine - 1     ' Scintilla lines are 0-based
-            arrFuncs(ub).nFileIdx = i
+            ' Push, not a one-element redim preserve: the old form reallocated and
+            ' copied the whole array per function, O(n^2) over a project.
+            dim as FUNCTION_NODE_TYPE fn
+            fn.wszFunctionName = gSymDb.QualifiedName( rs(p) )
+            fn.wszPrototype    = gSymDb.BuildCalltip( rs(p) )
+            fn.nLineNumber     = nBodyLine - 1           ' Scintilla lines are 0-based
+            fn.nFileIdx        = i
+            arrFuncs.Push( fn )
         next
 
-        quickSortFuncs( arrFuncs(), lbound(arrFuncs), ubound(arrFuncs) )
+        SortFuncsByName( arrFuncs )
 
-        for ii as long = lbound(arrFuncs) to ubound(arrFuncs)
-            wszText = ltrim(arrFuncs(ii).wszFunctionName) & _
-                      "%" & trim(arrFuncs(ii).wszPrototype)
-            PsListTree_AddString( hCtrl, wszText, i, arrFuncs(ii).nLineNumber )
+        for ii as long = 0 to arrFuncs.Count - 1
+            wszText = ltrim(arrFuncs[ii].wszFunctionName) & _
+                      "%" & trim(arrFuncs[ii].wszPrototype)
+            PsListTree_AddString( hCtrl, wszText, i, arrFuncs[ii].nLineNumber )
         next
-        erase arrFuncs
+        arrFuncs.Clear( )
 
     next
 
@@ -465,7 +463,7 @@ function LoadFunctionsOnly() as long
     ' flattened into one name-sorted list.
     dim as long nFiles = frmFunctions_BuildFileList()
 
-    redim arrFuncs(any) as FUNCTION_NODE_TYPE
+    dim arrFuncs as FB.Array( of FUNCTION_NODE_TYPE )
     dim rs() as SYMBOLREF
 
     for i as long = 0 to nFiles - 1
@@ -473,23 +471,25 @@ function LoadFunctionsOnly() as long
         for p as long = 0 to nProcs - 1
             dim as long nBodyLine = gSymDb.SymBodyLine( rs(p) )
             if nBodyLine <= 0 then continue for
-            dim as long ub = ubound(arrFuncs) + 1
-            redim preserve arrFuncs(ub)
-            arrFuncs(ub).wszFunctionName = gSymDb.QualifiedName( rs(p) )
-            arrFuncs(ub).wszPrototype = gSymDb.BuildCalltip( rs(p) )
-            arrFuncs(ub).nLineNumber = nBodyLine - 1     ' Scintilla lines are 0-based
-            arrFuncs(ub).nFileIdx = i
+            ' Push, not a one-element redim preserve: the old form reallocated and
+            ' copied the whole array per function, O(n^2) over a project.
+            dim as FUNCTION_NODE_TYPE fn
+            fn.wszFunctionName = gSymDb.QualifiedName( rs(p) )
+            fn.wszPrototype    = gSymDb.BuildCalltip( rs(p) )
+            fn.nLineNumber     = nBodyLine - 1           ' Scintilla lines are 0-based
+            fn.nFileIdx        = i
+            arrFuncs.Push( fn )
         next
     next
 
-    quickSortFuncs( arrFuncs(), lbound(arrFuncs), ubound(arrFuncs) )
+    SortFuncsByName( arrFuncs )
 
-    for ii as long = lbound(arrFuncs) to ubound(arrFuncs)
-        wszText = ltrim(arrFuncs(ii).wszFunctionName) & _
-                  "%" & trim(arrFuncs(ii).wszPrototype)
-        PsListTree_AddString( hCtrl, wszText, arrFuncs(ii).nFileIdx, arrFuncs(ii).nLineNumber )
+    for ii as long = 0 to arrFuncs.Count - 1
+        wszText = ltrim(arrFuncs[ii].wszFunctionName) & _
+                  "%" & trim(arrFuncs[ii].wszPrototype)
+        PsListTree_AddString( hCtrl, wszText, arrFuncs[ii].nFileIdx, arrFuncs[ii].nLineNumber )
     next
-    erase arrFuncs
+    arrFuncs.Clear( )
 
 
     PsListTree_EndUpdate( hCtrl )
