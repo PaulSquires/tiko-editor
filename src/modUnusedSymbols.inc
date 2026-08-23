@@ -107,43 +107,26 @@ function UnusedSymbols_Compare( byref a as UNUSEDROW, byref b as UNUSEDROW, _
     function = UnusedSymbols_CmpText( a.wszName, b.wszName )
 end function
 
-private sub UnusedSymbols_QuickSort( rows() as UNUSEDROW, byval nLo as long, byval nHi as long, _
-                                     byval nCol as long, byval bDesc as boolean )
-    if nLo >= nHi then exit sub
-
-    dim as long i = nLo, j = nHi
-    dim as long nMid = nLo + (nHi - nLo) \ 2
-    dim as UNUSEDROW pivot = rows(nMid)
-
-    do while i <= j
-        do while i <= nHi
-            dim as long c = UnusedSymbols_Compare( rows(i), pivot, nCol )
-            if bDesc then c = -c
-            if c >= 0 then exit do
-            i += 1
-        loop
-        do while j >= nLo
-            dim as long c = UnusedSymbols_Compare( rows(j), pivot, nCol )
-            if bDesc then c = -c
-            if c <= 0 then exit do
-            j -= 1
-        loop
-        if i <= j then
-            swap rows(i), rows(j)
-            i += 1
-            j -= 1
-        end if
-    loop
-
-    UnusedSymbols_QuickSort( rows(), nLo, j, nCol, bDesc )
-    UnusedSymbols_QuickSort( rows(), i, nHi, nCol, bDesc )
-end sub
-
-sub UnusedSymbols_Sort( rows() as UNUSEDROW, byval nCount as long, _
+sub UnusedSymbols_Sort( byref rows as FB.Array( of UNUSEDROW ), _
                         byval nCol as long, byval bDesc as boolean )
-    if nCount < 2 then exit sub
+    if rows.Count < 2 then exit sub
+    ' An out-of-range column leaves the array ALONE rather than scrambling it. The
+    ' comparator would return 0 for every pair, and a non-stable sort is free to permute
+    ' rows that all compare equal -- so this guard is what makes "ignored" true.
     if nCol < 0 orelse nCol >= UNUSED_COLUMN_COUNT then exit sub
-    UnusedSymbols_QuickSort( rows(), 0, nCount - 1, nCol, bDesc )
+
+    ' The comparator is a CLOSURE over the column and the direction. FB.StableSortBy takes
+    ' 'of T, TCmp' -- a generic -- which is what lets a capturing lambda through; a
+    ' capturing lambda cannot become a procedure pointer (error 355), and both captures
+    ' need an explicit byval (error 353).
+    FB.StableSortBy( rows, _
+        function[ byval nCol, byval bDesc ]( byref a as UNUSEDROW, byref b as UNUSEDROW ) as boolean
+            dim as long c = UnusedSymbols_Compare( a, b, nCol )
+            if bDesc then c = -c
+            ' STRICT less-than. Returning c <= 0 would make the comparator non-strict and
+            ' the sort's ordering assumptions invalid.
+            return c < 0
+        end function )
 end sub
 
 ' ----------------------------------------------------------------------------------------
@@ -205,10 +188,12 @@ end function
 ' ----------------------------------------------------------------------------------------
 ' Build the report from ONE tier.
 ' ----------------------------------------------------------------------------------------
-function UnusedSymbols_Build( byval nTier as long, rows() as UNUSEDROW, _
-                              byref wszDirtyFiles as DWSTRING ) as long
-    dim as long cnt = 0
-    redim rows( 0 to 255 )
+sub UnusedSymbols_Build( byval nTier as long, byref rows as FB.Array( of UNUSEDROW ), _
+                         byref wszDirtyFiles as DWSTRING )
+    rows.Clear( )
+    ' 256 was the old initial redim. Reserving it up front keeps that behaviour and costs
+    ' one allocation; Push grows amortised from there.
+    rows.Reserve( 256 )
     wszDirtyFiles = ""
 
     ' ONE tier, never the merged view (see the .bi header): reference counts are
@@ -219,8 +204,8 @@ function UnusedSymbols_Build( byval nTier as long, rows() as UNUSEDROW, _
     else
         pRSet = gSymDb.ProjectSet()
     end if
-    if pRSet = 0 then return 0
-    if pRSet->pResult = 0 then return 0
+    if pRSet = 0 then exit sub
+    if pRSet->pResult = 0 then exit sub
 
     ' precompute "is this one of the project's own files" per file index, the same test
     ' EnumAllProcsTypes applies. Without it the report is ~99% Win32 and AfxNova headers.
@@ -254,8 +239,8 @@ function UnusedSymbols_Build( byval nTier as long, rows() as UNUSEDROW, _
 
         if UnusedSymbols_ShouldReport( refSym, pSym->flags, nGroup ) = false then continue for
 
-        if cnt > ubound( rows ) then redim preserve rows( 0 to cnt * 2 + 1 )
-        with rows(cnt)
+        dim as UNUSEDROW row
+        with row
             ' fbc interns filenames UPPERCASED (they are its include-once keys), so a scan
             ' reports C:\DEV\TIKO\SRC\FRMMAIN.INC. Restore the real casing for display --
             ' and do it HERE rather than at paint time, so the File column sorts and filters
@@ -276,7 +261,7 @@ function UnusedSymbols_Build( byval nTier as long, rows() as UNUSEDROW, _
                 .nStatus = UnusedStatusDead
             end if
         end with
-        cnt += 1
+        rows.Push( row )
     next
 
     ' Which open documents have unsaved edits AND contributed to this scan? The scan read
@@ -293,8 +278,7 @@ function UnusedSymbols_Build( byval nTier as long, rows() as UNUSEDROW, _
         pDoc = pDoc->pDocNext
     loop
 
-    function = cnt
-end function
+end sub
 
 ' ========================================================================================
 ' Self-test.  TIKO_UNUSED_SELFTEST=1
@@ -373,42 +357,53 @@ sub UnusedSymbols_RunSelfTest()
               "the comparator is antisymmetric", nPass, nFail )
 
     ' ---- the sort itself, ascending AND descending ----------------------------------
-    redim as UNUSEDROW rows( 0 to 4 )
-    rows(0) = hMakeRow( "c.bas", 30, UnusedKindVariable, "c", UnusedStatusDead, 0 )
-    rows(1) = hMakeRow( "a.bas", 9,  UnusedKindVariable, "a", UnusedStatusDead, 0 )
-    rows(2) = hMakeRow( "b.bas", 10, UnusedKindVariable, "b", UnusedStatusDead, 0 )
-    rows(3) = hMakeRow( "a.bas", 100, UnusedKindVariable, "d", UnusedStatusDead, 0 )
-    rows(4) = hMakeRow( "a.bas", 2,  UnusedKindVariable, "e", UnusedStatusDead, 0 )
+    dim rows as FB.Array( of UNUSEDROW )
+    rows.Push( hMakeRow( "c.bas", 30,  UnusedKindVariable, "c", UnusedStatusDead, 0 ) )
+    rows.Push( hMakeRow( "a.bas", 9,   UnusedKindVariable, "a", UnusedStatusDead, 0 ) )
+    rows.Push( hMakeRow( "b.bas", 10,  UnusedKindVariable, "b", UnusedStatusDead, 0 ) )
+    rows.Push( hMakeRow( "a.bas", 100, UnusedKindVariable, "d", UnusedStatusDead, 0 ) )
+    rows.Push( hMakeRow( "a.bas", 2,   UnusedKindVariable, "e", UnusedStatusDead, 0 ) )
+    hUAssert( rows.Count = 5, "the container reports the count the caller pushed", nPass, nFail )
 
-    UnusedSymbols_Sort( rows(), 5, UnusedColLine, false )
-    hUAssert( rows(0).nLine = 2 andalso rows(1).nLine = 9 andalso rows(2).nLine = 10 _
-              andalso rows(3).nLine = 30 andalso rows(4).nLine = 100, _
+    UnusedSymbols_Sort( rows, UnusedColLine, false )
+    hUAssert( rows[0].nLine = 2 andalso rows[1].nLine = 9 andalso rows[2].nLine = 10 _
+              andalso rows[3].nLine = 30 andalso rows[4].nLine = 100, _
               "ascending sort by line: 2,9,10,30,100", nPass, nFail )
 
-    UnusedSymbols_Sort( rows(), 5, UnusedColLine, true )
-    hUAssert( rows(0).nLine = 100 andalso rows(1).nLine = 30 andalso rows(2).nLine = 10 _
-              andalso rows(3).nLine = 9 andalso rows(4).nLine = 2, _
+    UnusedSymbols_Sort( rows, UnusedColLine, true )
+    hUAssert( rows[0].nLine = 100 andalso rows[1].nLine = 30 andalso rows[2].nLine = 10 _
+              andalso rows[3].nLine = 9 andalso rows[4].nLine = 2, _
               "descending sort by line: 100,30,10,9,2", nPass, nFail )
 
-    UnusedSymbols_Sort( rows(), 5, UnusedColFile, false )
-    hUAssert( rows(0).wszFile = "a.bas" andalso rows(4).wszFile = "c.bas", _
+    UnusedSymbols_Sort( rows, UnusedColFile, false )
+    hUAssert( rows[0].wszFile = "a.bas" andalso rows[4].wszFile = "c.bas", _
               "ascending sort by file", nPass, nFail )
-    hUAssert( rows(0).nLine = 2 andalso rows(1).nLine = 9 andalso rows(2).nLine = 100, _
+    hUAssert( rows[0].nLine = 2 andalso rows[1].nLine = 9 andalso rows[2].nLine = 100, _
               "rows equal on file stay ordered by the line tiebreak", nPass, nFail )
 
-    UnusedSymbols_Sort( rows(), 5, UnusedColFile, true )
-    hUAssert( rows(0).wszFile = "c.bas" andalso rows(4).wszFile = "a.bas", _
+    UnusedSymbols_Sort( rows, UnusedColFile, true )
+    hUAssert( rows[0].wszFile = "c.bas" andalso rows[4].wszFile = "a.bas", _
               "descending sort by file", nPass, nFail )
 
-    ' a single row and an empty list must not fault
-    UnusedSymbols_Sort( rows(), 1, UnusedColName, false )
-    UnusedSymbols_Sort( rows(), 0, UnusedColName, false )
-    hUAssert( true, "sorting 0 and 1 rows is a no-op, not a fault", nPass, nFail )
+    ' A single row and an empty list must not fault. These used to be expressed as a count
+    ' SMALLER than the allocated array -- Sort( rows(), 1, ... ) over five rows. The
+    ' container carries its own count, so there is no such thing as a short count any
+    ' more, and the cases are built at the sizes they are testing. Same coverage of the
+    ' "< 2 elements" guard, and no way for the two numbers to disagree.
+    dim rowsOne as FB.Array( of UNUSEDROW )
+    rowsOne.Push( hMakeRow( "a.bas", 1, UnusedKindVariable, "only", UnusedStatusDead, 0 ) )
+    UnusedSymbols_Sort( rowsOne, UnusedColName, false )
+    hUAssert( rowsOne.Count = 1 andalso rowsOne[0].wszName = "only", _
+              "sorting one row is a no-op, not a fault", nPass, nFail )
+
+    dim rowsNone as FB.Array( of UNUSEDROW )
+    UnusedSymbols_Sort( rowsNone, UnusedColName, false )
+    hUAssert( rowsNone.Count = 0, "sorting an empty container is a no-op, not a fault", nPass, nFail )
 
     ' an out-of-range column must leave the array alone rather than scramble it
-    dim as DWSTRING wszFirst = rows(0).wszFile
-    UnusedSymbols_Sort( rows(), 5, 99, false )
-    hUAssert( rows(0).wszFile = wszFirst, "an out-of-range sort column is ignored", nPass, nFail )
+    dim as DWSTRING wszFirst = rows[0].wszFile
+    UnusedSymbols_Sort( rows, 99, false )
+    hUAssert( rows[0].wszFile = wszFirst, "an out-of-range sort column is ignored", nPass, nFail )
 
     ' ---- filter: the kind mask -------------------------------------------------------
     dim as UNUSEDROW rv = hMakeRow( "a.bas", 1, UnusedKindVariable,  "thing", UnusedStatusDead, 0 )

@@ -16,8 +16,10 @@
 ' things that are this file's job rather than a control's: sorting and the sort glyph.
 ' ==========================================================================================
 
-dim shared gUnusedRows(any) as UNUSEDROW     ' the whole report, sorted
-dim shared gUnusedRowCount  as long
+' The whole report, sorted. The container carries its own count -- there is deliberately
+' no gUnusedRowCount global beside it any more, because the two could disagree and one
+' would have been wrong.
+dim shared gUnusedRows as FB.Array( of UNUSEDROW )
 dim shared gUnusedVisible(any) as long       ' model indices currently in the list
 dim shared gUnusedVisCount  as long
 dim shared gUnusedToggle(IDC_FRMUNUSED_TOGGLEFIRST to IDC_FRMUNUSED_TOGGLELAST) as HWND
@@ -140,17 +142,17 @@ private sub frmUnusedSymbols_Populate()
 
     PsListTree_Clear( hLV )
 
-    if gUnusedRowCount > 0 then redim gUnusedVisible( 0 to gUnusedRowCount - 1 )
+    if gUnusedRows.Count > 0 then redim gUnusedVisible( 0 to gUnusedRows.Count - 1 )
     gUnusedVisCount = 0
 
-    for i as long = 0 to gUnusedRowCount - 1
-        if UnusedSymbols_Passes( gUnusedRows(i), nMask ) = false then continue for
+    for i as long = 0 to gUnusedRows.Count - 1
+        if UnusedSymbols_Passes( gUnusedRows[i], nMask ) = false then continue for
 
-        dim as DWSTRING wszRow = gUnusedRows(i).wszFile & chr(9) & _
-                                 wstr(gUnusedRows(i).nLine) & chr(9) & _
-                                 UnusedSymbols_KindText( gUnusedRows(i).nKind ) & chr(9) & _
-                                 gUnusedRows(i).wszName & chr(9) & _
-                                 UnusedSymbols_StatusText( gUnusedRows(i) )
+        dim as DWSTRING wszRow = gUnusedRows[i].wszFile & chr(9) & _
+                                 wstr(gUnusedRows[i].nLine) & chr(9) & _
+                                 UnusedSymbols_KindText( gUnusedRows[i].nKind ) & chr(9) & _
+                                 gUnusedRows[i].wszName & chr(9) & _
+                                 UnusedSymbols_StatusText( gUnusedRows[i] )
         ListBox_AddTabbedRow( hLV, wszRow )
         ' the payload is the MODEL index, so it survives every re-sort and re-filter
         PsListTree_SetItemData( hLV, gUnusedVisCount, i )
@@ -208,12 +210,12 @@ sub frmUnusedSymbols_Rebuild()
     ' reached only from a completed scan, so whatever we were waiting for has arrived
     gUnusedPending = false
 
-    gUnusedRowCount = UnusedSymbols_Build( ScanTierProject, gUnusedRows(), gUnusedDirtyText )
+    UnusedSymbols_Build( ScanTierProject, gUnusedRows, gUnusedDirtyText )
 
     dim as PARSERESULTSET ptr pRSet = gSymDb.ProjectSet()
     if pRSet then gUnusedScannedText = FilenameOriginalCase( pRSet->wszRootFile )
 
-    UnusedSymbols_Sort( gUnusedRows(), gUnusedRowCount, gConfig.UnusedSortCol, gConfig.UnusedSortDesc )
+    UnusedSymbols_Sort( gUnusedRows, gConfig.UnusedSortCol, gConfig.UnusedSortDesc )
 
     ' the warning band appears and disappears with the dirty-file list, so the bands move
     frmUnusedSymbols_PositionWindows()
@@ -223,10 +225,10 @@ sub frmUnusedSymbols_Rebuild()
     ' while the scan is still pending. Report it so an unattended run can show the rows
     ' actually arrived rather than only that the window opened.
     if environ("TIKO_UNUSED_SELFTEST") = "1" then
-        ' BOTH counts: gUnusedRowCount is the model, gUnusedVisCount is what actually
+        ' BOTH counts: gUnusedRows.Count is the model, gUnusedVisCount is what actually
         ' reached the control. They differ by the kind filter, and a visible count of 0
         ' against a non-zero model is exactly the "no results" failure.
-        dim as string sR = "  rebuild: " & gUnusedVisCount & " of " & gUnusedRowCount & _
+        dim as string sR = "  rebuild: " & gUnusedVisCount & " of " & gUnusedRows.Count & _
                            " rows visible, from " & gUnusedScannedText
         print sR
     end if
@@ -246,7 +248,7 @@ private sub frmUnusedSymbols_HeaderClick( byval hHeader as HWND, byval idx as in
         gConfig.UnusedSortDesc = false
     end if
 
-    UnusedSymbols_Sort( gUnusedRows(), gUnusedRowCount, gConfig.UnusedSortCol, gConfig.UnusedSortDesc )
+    UnusedSymbols_Sort( gUnusedRows, gConfig.UnusedSortCol, gConfig.UnusedSortDesc )
     frmUnusedSymbols_Populate()
     ' Without this the arrow stays on the previously sorted column - the header repaints on
     ' its own only for hover and press.
@@ -299,10 +301,10 @@ end sub
 private sub frmUnusedSymbols_Activate( byval hCtl as HWND, byval nRow as integer )
     if nRow < 0 orelse nRow >= gUnusedVisCount then exit sub
     dim as long nModel = gUnusedVisible(nRow)
-    if nModel < 0 orelse nModel >= gUnusedRowCount then exit sub
+    if nModel < 0 orelse nModel >= gUnusedRows.Count then exit sub
 
-    dim as DWSTRING wszFile = gUnusedRows(nModel).wszFile
-    dim as long nLine = gUnusedRows(nModel).nLine - 1
+    dim as DWSTRING wszFile = gUnusedRows[nModel].wszFile
+    dim as long nLine = gUnusedRows[nModel].nLine - 1
     if nLine < 0 then nLine = 0
     OpenSelectedDocument( wszFile, "", nLine )
 
@@ -462,10 +464,10 @@ private sub frmUnusedSymbols_OnPaint( byval hwnd as HWND )
     if gUnusedPending then
         ' an empty list while a scan is running must NOT read as "nothing found"
         wszStatus = L(422, "Scanning...")
-    elseif gUnusedRowCount = 0 then
+    elseif gUnusedRows.Count = 0 then
         wszStatus = L(417, "No unused symbols found")
     else
-        wszStatus = wstr(gUnusedVisCount) & " / " & wstr(gUnusedRowCount) & " " & L(419, "shown")
+        wszStatus = wstr(gUnusedVisCount) & " / " & wstr(gUnusedRows.Count) & " " & L(419, "shown")
     end if
     b.PaintText( wszStatus, @rcS, DT_LEFT )
 
@@ -633,8 +635,7 @@ private function frmUnusedSymbols_WndProc( byval hwnd as HWND, byval uMsg as UIN
             for id as long = IDC_FRMUNUSED_TOGGLEFIRST to IDC_FRMUNUSED_TOGGLELAST
                 gUnusedToggle(id) = 0
             next
-            erase gUnusedRows
-            gUnusedRowCount = 0
+            gUnusedRows.Clear( )
             gUnusedVisCount = 0
             return 0
 
@@ -829,7 +830,7 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
     ' "No unused symbols found" over a scan that has not run.
     if gUnusedPending then
         gUnusedScannedText = FilenameOriginalCase( wszRoot )
-        gUnusedRowCount = 0
+        gUnusedRows.Clear( )
         gUnusedVisCount = 0
         frmUnusedSymbols_PositionWindows()
     else
@@ -1076,8 +1077,8 @@ sub frmUnusedSymbols_RunLayoutSelfTest()
     end if
 
     ' The engine uppercases filenames; the report shows them in their original casing.
-    if gUnusedRowCount > 0 then
-        if gUnusedRows(0).wszFile <> ucase( gUnusedRows(0).wszFile ) then
+    if gUnusedRows.Count > 0 then
+        if gUnusedRows[0].wszFile <> ucase( gUnusedRows[0].wszFile ) then
             nPass += 1
         else
             nFail += 1 : print "  FAIL filenames are still uppercased (FilenameOriginalCase not applied)"
