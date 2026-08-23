@@ -2,7 +2,7 @@
 
 **A programmer's code editor for the FreeBASIC compiler.**
 
-![tiko editor dark mode](/screenshots/tiko_dark.png)
+![tiko editor dark mode](/docs/screenshots/tiko_dark.png)
 
 tiko is a native Win32 desktop application written in FreeBASIC. No .NET, no
 Electron, no cross-platform abstraction layer — it talks to the Windows API
@@ -85,7 +85,7 @@ means every surface is themeable, not just the text.
 - Localized in English, French, Spanish, German, Norwegian, and Chinese
   (Simplified); adding a language is copying one text file
 
-![tiko editor light mode](/screenshots/tiko_light.png)
+![tiko editor light mode](/docs/screenshots/tiko_light.png)
 
 ---
 
@@ -99,7 +99,7 @@ anything earlier.
 tiko builds with its own bundled toolchain and its own bundled copy of AfxNova.
 
 ```
-_compile_fast.bat
+build\_compile_fast.bat
 ```
 
 Run the resulting `tiko-editor.exe` from the project root, not from `src\` — it

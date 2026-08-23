@@ -1,5 +1,5 @@
 @echo off
-cd src
+cd /d "%~dp0..\src"
 rem ---------------------------------------------------------------------------
 rem FAST DEV-LOOP BUILD. Identical to _compile.bat except for -gen gas64.
 rem
