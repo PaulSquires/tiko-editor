@@ -2977,34 +2977,34 @@ sub frmDebug_RunSelfTest()
     ' Every id this window uses must resolve. An id with no entry renders as an EMPTY string,
     ' so a caption or a whole message box comes up blank with nothing in the build or the
     ' assertions to say so.
-    ' 624 is the retired "<click to add a watch>" prompt. It is deliberately still in the
+    ' 456 is the retired "<click to add a watch>" prompt. It is deliberately still in the
     ' .lang files and deliberately NOT asserted: the slot stays claimed so a future feature
     ' does not reuse the id and inherit a stale translation in five languages.
     dim as long nBlank = 0
     for id as long = 432 to 461
-        if id = 624 then continue for
-        if len( LL(id) ) = 0 then
+        if id = 456 then continue for
+        if LangIdIsSet(id) = false then
             nBlank += 1
             print "  FAIL: localized id " & id & " is empty"
         end if
     next
-    frmDebug_Check( "every debugger string 600-629 resolves (624 retired)", nBlank = 0, str(nBlank) & " blank" )
+    frmDebug_Check( "every debugger string 432-461 resolves (456 retired)", nBlank = 0, str(nBlank) & " blank" )
 
     for id as long = 243 to 244
-        frmDebug_Check( "reused menu string " & id & " still resolves", len(LL(id)) > 0 )
+        frmDebug_Check( "reused menu string " & id & " still resolves", LangIdIsSet(id) )
     next
-    frmDebug_Check( "the restore-icon tooltip resolves", len(LL(521)) > 0 )
-    frmDebug_Check( "reused menu string 255 still resolves", len(LL(251)) > 0 )
-    frmDebug_Check( "reused menu string 256 still resolves", len(LL(252)) > 0 )
+    frmDebug_Check( "the restore-icon tooltip resolves", LangIdIsSet(521) )
+    frmDebug_Check( "reused menu string 251 still resolves", LangIdIsSet(251) )
+    frmDebug_Check( "reused menu string 252 still resolves", LangIdIsSet(252) )
 
     ' len() > 0 CANNOT distinguish a real translation from the English fallback -- the
     ' loader fills a blank key with English, so this suite reads the same under any language
-    ' file. Printing some of them is what actually distinguishes them. 247 is here because it
+    ' file. Printing some of them is what actually distinguishes them. 243 is here because it
     ' was RE-WORDED rather than added ("Step Into" -> "Step"): a stale translation left behind
     ' in one of the six files still resolves, and only reading it back catches that.
-    sLine = "  NOTE resolved: 247=" & str(LL(243)) & " | 618=" & str(LL(450)) & _
-            " | 619=" & str(LL(451)) & " | 620=" & str(LL(452)) & _
-            " | 627=" & str(LL(459)) & " | 629=" & str(LL(461))
+    sLine = "  NOTE resolved: 243=" & str(LL(243)) & " | 450=" & str(LL(450)) & _
+            " | 451=" & str(LL(451)) & " | 452=" & str(LL(452)) & _
+            " | 459=" & str(LL(459)) & " | 461=" & str(LL(461))
     print sLine
 
     sLine = "--- TIKO_DEBUG_SELFTEST: " & str(gDbgTestPass) & " passed, " & _

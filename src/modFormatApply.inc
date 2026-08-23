@@ -663,11 +663,17 @@ sub Format_RunApplySelfTest()
 
     print "Format apply self-test (localization)"
 
-    dim as long ids(0 to 15) = { 589, 591, 592, 593, 594, 595, 596, 598, _
-                                 633, 634, 635, 636, 637, 638, 639, 640 }
+    ' THE IDS ARE THE ONES THIS FILE ACTUALLY CALLS -- 421..430 (the completion and
+    ' progress strings) and 465..472 (the whole Format menu group plus its two message
+    ' boxes). They were 589..640 until the id block was renumbered DOWN BY 168; the list
+    ' here was not renumbered with it, so every assertion below was reading LL() PAST ITS
+    ' UPPER BOUND of 521 and grading itself on heap garbage. Hence LangIdIsSet, which
+    ' bounds-checks: a stale id now fails every time instead of once in a while.
+    dim as long ids(0 to 15) = { 421, 423, 424, 425, 426, 427, 428, 430, _
+                                 465, 466, 467, 468, 469, 470, 471, 472 }
     for i as long = 0 to 15
         dim as string sName = "lang id " & str(ids(i)) & " is not blank"
-        CHECK( len(LL(ids(i))) > 0, sName )
+        CHECK( LangIdIsSet(ids(i)), sName )
     next
 
     ' AND WHAT THEY RESOLVED TO, printed rather than asserted. This is NOT decoration:
@@ -676,7 +682,7 @@ sub Format_RunApplySelfTest()
     ' the assertions above cannot tell a real translation from the English fallback, and
     ' running under french.lang and seeing them green proves only that the ids exist.
     ' Reading this line is what distinguishes the two.
-    dim as string sShow = "  resolved: 633=" & LL(465) & " | 634=" & LL(466) & " | 598=" & LL(430)
+    dim as string sShow = "  resolved: 465=" & LL(465) & " | 466=" & LL(466) & " | 430=" & LL(430)
     print sShow
 
     dim as string sReport = "Format apply self-test: " & str(nPass) & " passed, " & str(nFail) & " failed"
