@@ -14,10 +14,10 @@
 #include once "modMenus.bi"
 #include once "modContextMenus.bi" ' the standalone popup menus (implementation is
                                    ' included late in tiko.bas -- see that file)
-#include once "PsVScrollBar.bi"    ' required by PsListTree.bi
-#include once "PsColumnHeader.bi"  ' likewise: PsListTree.bi names HDR_* callback typedefs
-#include once "PsListTree.bi"       ' PsListTree_GetSelCount (PsListTree.inc is included later)
-#include once "PsMenuBar.bi"       ' the topmenu lives on PsMenuBar/PsPopupMenu controls
+#include once "PsControls\PsVScrollBar.bi"    ' required by PsListTree.bi
+#include once "PsControls\PsColumnHeader.bi"  ' likewise: PsListTree.bi names HDR_* callback typedefs
+#include once "PsControls\PsListTree.bi"       ' PsListTree_GetSelCount (PsListTree.inc is included later)
+#include once "PsControls\PsMenuBar.bi"       ' the topmenu lives on PsMenuBar/PsPopupMenu controls
                                   ' (implementations are included later in tiko.bas)
 
 ' ========================================================================================

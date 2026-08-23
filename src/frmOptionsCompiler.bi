@@ -26,7 +26,7 @@
 
 ' SCP_PAINTINFO is named in the declares below, and this header is pulled in early (by
 ' modRoutines.inc) before PsScrollPanel.bi would otherwise be seen.
-#include once "PsScrollPanel.bi"
+#include once "PsControls\PsScrollPanel.bi"
 
 ' 9213 and 9214 are RETIRED, not reused: they were the FreeBASIC help file textbox and its
 ' browse button. The setting they edited was never read by anything -- the Help Center

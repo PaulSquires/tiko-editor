@@ -27,7 +27,7 @@
 #pragma once
 
 ' SCP_PAINTINFO is named in the declares below; this header is pulled in early.
-#include once "PsScrollPanel.bi"
+#include once "PsControls\PsScrollPanel.bi"
 
 ' CMDNEW / CMDLOCALIZATION keep their values: AfxIFileSaveDialog / AfxIFileOpenDialogW
 ' switch on them (by name -- see modRoutines.inc) to pick the *.lang filter and title.

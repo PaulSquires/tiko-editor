@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include once "PsScrollPanel.bi"        ' SCP_PAINTINFO, pulled in early
+#include once "PsControls\PsScrollPanel.bi"        ' SCP_PAINTINFO, pulled in early
 
 #Define IDC_FRMOPTIONSCOLORS_LSTTHEMES    9400
 #Define IDC_FRMOPTIONSCOLORS_LSTFONTS     9401

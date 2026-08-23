@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include once "PsTabBar.bi"
+#include once "PsControls\PsTabBar.bi"
 
 ' A tab's per-tab payload is the single itemData integer PsTabBar carries, and it normally
 ' holds a clsDocument ptr. TAB_FINDINPROJECT is a SENTINEL stored in that same slot to mark

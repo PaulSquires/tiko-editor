@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include once "PsScrollPanel.bi"        ' SCP_PAINTINFO, pulled in early
+#include once "PsControls\PsScrollPanel.bi"        ' SCP_PAINTINFO, pulled in early
 
 #Define IDC_FRMOPTIONSKEYWORDS_TXTBASE   9500     ' + page index (0..2)
 #Define IDC_FRMOPTIONSKEYWORDS_VSCROLL   9510

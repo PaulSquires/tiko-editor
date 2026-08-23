@@ -19,11 +19,11 @@
 #include once "modCompile.bi"
 #include once "modCompileErrors.bi"
 #include once "frmStatusBar.bi"
-#include once "PsStatusBar.bi"
+#include once "PsControls\PsStatusBar.bi"
 ' This file is compiled BEFORE tiko.bas reaches the custom-control block, so the header for
 ' any control it calls has to be hand-included here -- the same reason modMenus.inc and
 ' modRoutines.inc hand-include theirs. Needed for the Output tab bar (PsSelectBar_SetCurSel).
-#include once "PsSelectBar.bi"
+#include once "PsControls\PsSelectBar.bi"
 
 
 ''

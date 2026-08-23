@@ -20,9 +20,9 @@
 #include once "frmMain.bi"
 ' This module is included before the control implementations, so the PsListTree family's
 ' headers are pulled in by hand -- the same prerequisite dance modMenus.inc does.
-#include once "PsVScrollBar.bi"
-#include once "PsColumnHeader.bi"
-#include once "PsListTree.bi"
+#include once "PsControls\PsVScrollBar.bi"
+#include once "PsControls\PsColumnHeader.bi"
+#include once "PsControls\PsListTree.bi"
 
 
 ' ========================================================================================

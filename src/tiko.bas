@@ -84,7 +84,7 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 ' implementation can be compiled -- that needs PsMessageBox and lands near the end.
 #include once "modFormatApply.bi"
 #include once "frmFormatOptions.bi"
-#include once "PsBufferPaint.bi"
+#include once "PsControls\PsBufferPaint.bi"
 #include once "clsTopTabCtl.bi"
 ' Ahead of clsConfig.bi because clsConfig embeds a FORMAT_RULES. Declarations only, and it
 ' names no Ps* type, no clsDocument and nothing from Scintilla -- the formatter engine is
@@ -138,7 +138,7 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modIniParse.bi"
 #include once "modIniParse.inc"
 #include once "clsConfig.inc"
-#include once "PsBufferPaint.inc"
+#include once "PsControls\PsBufferPaint.inc"
 ' modRoutines was a 2,250-line junk drawer. These three are PURE MOVES out of it -- see
 ' each file's header. Order is load-bearing for the first two: modEncoding holds the four
 ' PRIVATE conversion helpers (undeclared in any .bi), and modRoutines' own GetFileToString
@@ -195,42 +195,42 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modKeyBindings.inc"
 
 ' Custom controls
-#include once "PsVScrollBar.inc"
-#include once "PsHScrollBar.inc"
-#include once "PsColumnHeader.inc"
+#include once "PsControls\PsVScrollBar.inc"
+#include once "PsControls\PsHScrollBar.inc"
+#include once "PsControls\PsColumnHeader.inc"
 ' PsPopupMenu + PsTextBox must precede PsListTree: its in-place label editor is a PsTextBox
 ' child (and PsTextBox uses PsPopupMenu for its context menu), so PsListTree.inc's calls need
 ' those declarations already in scope. (Moved up from below for the treeview sync.)
-#include once "PsPopupMenu.inc"
-#include once "PsTextBox.inc"
-#include once "PsListTree.inc"
-#include once "PsStatusBar.inc"
-#include once "PsTabBar.inc"
-#include once "PsMenuBar.inc"
-#include once "PsSplitter.inc"
-#include once "PsIconPanel.inc"
-#include once "PsSelectBar.inc"
+#include once "PsControls\PsPopupMenu.inc"
+#include once "PsControls\PsTextBox.inc"
+#include once "PsControls\PsListTree.inc"
+#include once "PsControls\PsStatusBar.inc"
+#include once "PsControls\PsTabBar.inc"
+#include once "PsControls\PsMenuBar.inc"
+#include once "PsControls\PsSplitter.inc"
+#include once "PsControls\PsIconPanel.inc"
+#include once "PsControls\PsSelectBar.inc"
 ' Dependencies first: PsScrollPanel needs PsVScrollBar, PsComboBox needs PsPopupMenu,
 ' PsNumericUpDown needs PsTextBox (+ PsPopupMenu), PsMessageBox needs PsButton. All four
 ' of those are already included above, so only the ordering below matters.
-#include once "PsToggle.inc"
-#include once "PsButton.inc"
+#include once "PsControls\PsToggle.inc"
+#include once "PsControls\PsButton.inc"
 ' Vendored for the Unused Symbols report's kind filters. Its dependencies
 ' (PsBufferPaint, PsTipHost/PsTooltip) are already here and byte-identical.
-#include once "PsCheckBox.inc"
-#include once "PsComboBox.inc"
-#include once "PsScrollPanel.inc"
-#include once "PsNumericUpDown.inc"
-#include once "PsMessageBox.inc"
+#include once "PsControls\PsCheckBox.inc"
+#include once "PsControls\PsComboBox.inc"
+#include once "PsControls\PsScrollPanel.inc"
+#include once "PsControls\PsNumericUpDown.inc"
+#include once "PsControls\PsMessageBox.inc"
 ' PsColorPicker depends on nothing but PsBufferPaint (it owns no child window and no popup --
 ' that is the whole design), so its position here is only for tidiness beside its siblings.
-#include once "PsColorPicker.inc"
+#include once "PsControls\PsColorPicker.inc"
 ' PsTooltip depends on nothing but PsBufferPaint. It does NOT subclass the control it serves
 ' and adds NO pump obligation, which is why it can be dropped in beside the comctl32 tooltips
 ' the other controls still use rather than replacing them all at once. First tiko user: the
 ' User Tools dialog's Parameters field, which needs a WRAPPED, multi-line tip -- something the
 ' comctl32 path only reaches by hand-sending TTM_SETMAXTIPWIDTH.
-#include once "PsTooltip.inc"
+#include once "PsControls\PsTooltip.inc"
 ' The two tooltip colour recipes, shared by all four tip owners. Here rather than in
 ' modThemeApply.inc because PSTOOLTIP_COLORS is PsTooltip's and every caller precedes
 ' the apply layer.
