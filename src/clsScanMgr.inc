@@ -117,15 +117,20 @@ private sub ScanMgr_ScanTodoBytes( _
             end if
             if bMatch then
                 ' capture the remainder of the line
-                dim as long k = j + 5
-                dim as long e = k
-                while e < cchText
-                    dim as long ce = pB[e]
+                ' nTodoStart/nTodoEnd, not k/e. Both are on RFC-0004 s5's forbidden list: FB
+                ' identifiers are case-insensitive and a generic type parameter resolves
+                ' against the instantiation site's scope, so a local named k or e near a
+                ' container breaks the instantiation with an error naming fb/map.bi or
+                ' fb/result.bi and never this file. PARSERESULTSET is about to carry one.
+                dim as long nTodoStart = j + 5
+                dim as long nTodoEnd = nTodoStart
+                while nTodoEnd < cchText
+                    dim as long ce = pB[nTodoEnd]
                     if (ce = 13) orelse (ce = 10) then exit while
-                    e += 1
+                    nTodoEnd += 1
                 wend
                 dim as string sText
-                for x as long = k to e - 1
+                for x as long = nTodoStart to nTodoEnd - 1
                     sText &= chr( pB[x] )
                 next
                 sText = trim( sText, any chr(32, 9) )
@@ -174,16 +179,17 @@ private sub ScanMgr_ScanProjectTodos( _
         end if
 
         dim as DWSTRING wszF = *pFile
-        dim as long f = freefile
-        if open( wszF for binary access read as #f ) <> 0 then continue for
-        dim as long cb = lof( f )
+        ' nFileNum, not f -- same rule as nTodoStart/nTodoEnd above.
+        dim as long nFileNum = freefile
+        if open( wszF for binary access read as #nFileNum ) <> 0 then continue for
+        dim as long cb = lof( nFileNum )
         if cb <= 0 then
-            close #f
+            close #nFileNum
             continue for
         end if
         dim as string sBytes = space( cb )
-        get #f, 1, sBytes
-        close #f
+        get #nFileNum, 1, sBytes
+        close #nFileNum
 
         dim as ubyte ptr pB = cast( ubyte ptr, strptr( sBytes ) )
         dim as long nStart = 0
@@ -228,8 +234,7 @@ sub clsScanMgr.StartWorker()
     InitializeCriticalSection( @m_cs )
     m_hWakeEvent = CreateEvent( 0, FALSE, FALSE, 0 )    ' auto-reset
     m_hExitEvent = CreateEvent( 0, TRUE, FALSE, 0 )     ' manual-reset
-    redim m_retire( 0 to 15 )
-    m_retireCount = 0
+    m_retire.Reserve( 16 )
     m_bShutdown = false
 
     m_pThread = ThreadCreate( @ScanMgr_ThreadProc, @this )
@@ -242,7 +247,7 @@ sub clsScanMgr.StartWorker()
         if m_hWakeEvent then CloseHandle( m_hWakeEvent ) : m_hWakeEvent = 0
         if m_hExitEvent then CloseHandle( m_hExitEvent ) : m_hExitEvent = 0
         DeleteCriticalSection( @m_cs )
-        erase m_retire
+        m_retire.Clear( )
     end if
 end sub
 
@@ -372,11 +377,7 @@ end function
 
 ' Append to the retire queue. Caller must hold the critical section.
 private sub clsScanMgr.RetireLocked( byval pRSet as PARSERESULTSET ptr )
-    if m_retireCount > ubound( m_retire ) then
-        redim preserve m_retire( 0 to m_retireCount * 2 + 7 )
-    end if
-    m_retire( m_retireCount ) = pRSet
-    m_retireCount += 1
+    m_retire.Push( pRSet )
 end sub
 
 
@@ -403,11 +404,14 @@ sub clsScanMgr.WorkerLoop()
             dim as boolean bStop
 
             EnterCriticalSection( @m_cs )
-            for i as long = 0 to m_retireCount - 1
-                fbcparser_free( m_retire(i)->pResult )
-                delete m_retire(i)
+            ' Still under the lock, and still one explicit release per entry: the
+            ' container owns the pointer array, nothing else. Clear( ) keeps the capacity,
+            ' so a steady stream of scans never reallocates this queue.
+            for i as long = 0 to m_retire.Count - 1
+                fbcparser_free( m_retire[i]->pResult )
+                delete m_retire[i]
             next
-            m_retireCount = 0
+            m_retire.Clear( )
             bStop = m_bShutdown
             if bStop = false then
                 if m_pBufReq then
