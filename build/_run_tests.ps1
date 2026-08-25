@@ -227,8 +227,14 @@ function Run-Harness([string]$dir, [string]$exe, [string]$logName, [string[]]$ha
 Write-Host " running the DLL harnesses ..."
 $fbcRun = Run-Harness $FbcDir "tiko_fbctest.exe" "fbctest.log" @()
 $dbgRun = Run-Harness $DbgDir "tiko_dbgtest.exe" "dbgtest.log" @("_testfile_arrays.exe","vars")
+# The SECOND fixture, and it is not redundant. DBG_GROW allocates 128 entries up front, so
+# _testfile_arrays.bas -- 40 lines, one type, one sub -- never grows a single table in the
+# engine. _testfile_big.bas (60 types, 300 fields, ~1300 lines) pushes gDbgLine, gDbgVar and
+# gDbgField past that, so the doubling paths actually execute.
+$dbgBigRun = Run-Harness $DbgDir "tiko_dbgtest.exe" "dbgtest_big.log" @("_testfile_big.exe","vars","400")
 
-foreach ($h in @(@('fbcParser harness',$fbcRun), @('debugParser harness',$dbgRun))) {
+foreach ($h in @(@('fbcParser harness',$fbcRun), @('debugParser harness',$dbgRun),
+                 @('debugParser (big)',$dbgBigRun))) {
     $name = $h[0]; $run = $h[1]
     if ($null -eq $run) {
         $results += [pscustomobject]@{ Name=$name; Passed=$null; Failed=$null; Flaky=$false; Baseline=0; Kind='harness' }
