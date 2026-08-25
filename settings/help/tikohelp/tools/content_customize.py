@@ -13,7 +13,7 @@ section("customize", "Customization", "sliders")
 
 TH = ""
 TH += p(
-    "A theme sets every colour in Tiko — the editor's syntax colours, and the panels, "
+    "A theme sets every colour in Tiko Editor — the editor's syntax colours, and the panels, "
     "menus, dialogs, tabs and status bar as well. Changing theme changes the whole "
     "application, not just the code area."
 )
@@ -27,12 +27,12 @@ TH += ol([
 ], steps=True)
 
 TH += h2("The bundled themes")
-TH += p("Tiko ships fourteen themes, in matched light and dark families:")
+TH += p("Tiko Editor ships fourteen themes, in matched light and dark families:")
 TH += table(
     ["Theme", "Character"],
     [
         ("<code>default_dark</code> / <code>default_light</code>",
-         "Tiko's own palette. The starting point."),
+         "Tiko Editor's own palette. The starting point."),
         ("<code>studio_dark</code> / <code>studio_light</code>",
          "Familiar to anyone coming from a mainstream code editor."),
         ("<code>slate_dark</code> / <code>slate_light</code>",
@@ -56,7 +56,7 @@ TH += note(
 
 TH += h2("How a theme is built")
 TH += p(
-    "Tiko's themes work in two layers, which is what keeps them short and internally "
+    "Tiko Editor's themes work in two layers, which is what keeps them short and internally "
     "consistent."
 )
 TH += table(
@@ -101,7 +101,7 @@ TH += ul([
 ])
 
 page("themes", "Themes", "customize",
-     "Choosing among the fourteen bundled colour themes, and how Tiko's two-layer role and "
+     "Choosing among the fourteen bundled colour themes, and how Tiko Editor's two-layer role and "
      "key model makes themes short and consistent.",
      TH,
      keywords="theme themes dark light colour color scheme default_dark studio slate "
@@ -113,7 +113,7 @@ page("themes", "Themes", "customize",
 
 TE = ""
 TE += p(
-    "The theme editor lets you change any colour in Tiko and see the result immediately. "
+    "The theme editor lets you change any colour in Tiko Editor and see the result immediately. "
     "Open it with %s or %s."
     % (menu("File", "Settings", "Themes…"), kbd("Ctrl", "Shift", "T"))
 )
@@ -141,7 +141,7 @@ TE += figure_img(
     "assets/img/theme-editor.png",
     "The theme editor with the colour picker open. Each row shows the role a colour "
     "inherits from, so you can always see what clearing a value will fall back to.",
-    alt="The Tiko theme editor with the colour picker open")
+    alt="The Tiko Editor theme editor with the colour picker open")
 
 TE += h2("Choosing a colour")
 TE += p("Clicking a colour button opens the colour picker, which has three tabs:")
@@ -187,7 +187,7 @@ TE += h2("Making your own theme")
 TE += p("The intended route is to clone an existing theme and edit the copy.")
 TE += ol([
     "Select the theme you want to start from and click <strong>Clone</strong>.",
-    "Give the copy a file name. Tiko adds the <code>.theme</code> extension if you leave "
+    "Give the copy a file name. Tiko Editor adds the <code>.theme</code> extension if you leave "
     "it off, and will not let you overwrite the theme you are cloning.",
     "The copy's description is tagged <strong>(cloned)</strong> so you can tell it apart "
     "in the list.",
@@ -208,7 +208,7 @@ TE += important(
 )
 TE += p(
     "Every other theme is fully editable and deletable, including the twelve other themes "
-    "that ship with Tiko — <code>studio_*</code>, <code>slate_*</code>, "
+    "that ship with Tiko Editor — <code>studio_*</code>, <code>slate_*</code>, "
     "<code>midnight</code>, <code>neon</code> and the rest. Protection matches the "
     "<code>default_</code> prefix only, so a theme of your own called "
     "<code>my_default_x.theme</code> is not protected."
@@ -222,7 +222,7 @@ TE += tip(
 TE += h3("Deleting themes")
 TE += p(
     "<strong>Delete</strong> removes the selected theme's file. If you ever delete your "
-    "way down to no themes at all, Tiko restores <code>default_dark.theme</code> from a "
+    "way down to no themes at all, Tiko Editor restores <code>default_dark.theme</code> from a "
     "backup copy it keeps — you cannot end up with an editor that has no theme to load."
 )
 
@@ -302,7 +302,7 @@ FA += ul([
 
 FA += h2("High-DPI displays")
 FA += p(
-    "Tiko scales its interface to the display's DPI setting, so it stays legible on "
+    "Tiko Editor scales its interface to the display's DPI setting, so it stays legible on "
     "high-resolution screens. Colours and fonts behave the same at any scale."
 )
 
@@ -326,7 +326,7 @@ page("editor-appearance", "Fonts and editor appearance", "customize",
 
 KC = ""
 KC += p(
-    "Every command in Tiko can be rebound. Open the Keyboard Shortcuts dialog with "
+    "Every command in Tiko Editor can be rebound. Open the Keyboard Shortcuts dialog with "
     "%s or %s."
     % (menu("File", "Settings", "Keyboard Shortcuts…"), kbd("Ctrl", "K"))
 )
@@ -370,7 +370,7 @@ KC += figure_img(
 
 KC += h2("Conflicts")
 KC += p(
-    "A keystroke can only do one thing. Tiko checks for conflicts across editor commands, "
+    "A keystroke can only do one thing. Tiko Editor checks for conflicts across editor commands, "
     "user tools and build configuration shortcuts, and marks any conflict it finds in the "
     "list."
 )
@@ -383,7 +383,7 @@ KC += p(
 KC += h2("Disabling a default")
 KC += p(
     "A default shortcut can be suppressed without being replaced — useful when a "
-    "keystroke conflicts with something outside Tiko, such as a global hotkey from another "
+    "keystroke conflicts with something outside Tiko Editor, such as a global hotkey from another "
     "application. A suppressed default shows in the list marked as disabled."
 )
 
@@ -428,7 +428,7 @@ page("keyboard-customization", "Customizing keyboard shortcuts", "customize",
 
 UT = ""
 UT += p(
-    "A user tool is an external program you can run from inside Tiko — a formatter, a "
+    "A user tool is an external program you can run from inside Tiko Editor — a formatter, a "
     "version-control command, a packaging script, a documentation generator. Tools appear "
     "on %s and can have their own keyboard shortcuts."
     % menu("File", "User Tools")
@@ -538,7 +538,7 @@ page("user-tools", "User tools", "customize",
 
 LZ = ""
 LZ += p(
-    "Tiko's interface text is loaded from a language file, so it can be displayed in "
+    "Tiko Editor's interface text is loaded from a language file, so it can be displayed in "
     "another language — or reworded to your taste."
 )
 
@@ -551,7 +551,7 @@ LZ += ol([
     "Choose <strong>OK</strong>.",
 ], steps=True)
 LZ += note(
-    "A language change takes effect the next time Tiko starts, since the interface is "
+    "A language change takes effect the next time Tiko Editor starts, since the interface is "
     "built from the language file as the program loads."
 )
 
@@ -592,7 +592,7 @@ LZ += p(
 )
 LZ += important(
     "<strong>Selecting a language and editing one are different actions.</strong> Opening "
-    "French to correct a typo does not switch Tiko into French — only <strong>Select</strong> "
+    "French to correct a typo does not switch Tiko Editor into French — only <strong>Select</strong> "
     "does that."
 )
 LZ += warn(
@@ -606,7 +606,7 @@ LZ += ol([
     "Choose <strong>New</strong> and give the language a name and a file name.",
     "Choose <strong>Edit</strong> and work through the phrase list, filling in translations.",
     "Leave anything you have not translated blank — the English text is used for it.",
-    "Choose <strong>Select</strong> to make it active, then restart Tiko.",
+    "Choose <strong>Select</strong> to make it active, then restart Tiko Editor.",
 ], steps=True)
 
 LZ += h2("Related topics")
@@ -628,8 +628,8 @@ page("localization", "Localization", "customize",
 
 SF = ""
 SF += p(
-    "Everything Tiko remembers is a plain file next to <code>tiko.exe</code>. There is "
-    "nothing in the registry and nothing in your user profile, which is what makes Tiko "
+    "Everything Tiko Editor remembers is a plain file next to <code>tiko-editor.exe</code>. There is "
+    "nothing in the registry and nothing in your user profile, which is what makes Tiko Editor "
     "portable."
 )
 
@@ -656,7 +656,7 @@ SF += table(
 SF += h2("The settings file")
 SF += p(
     "<code>settings.ini</code> is a conventional INI file, grouped into sections. It is "
-    "written when you choose OK in a settings dialog and when Tiko exits."
+    "written when you choose OK in a settings dialog and when Tiko Editor exits."
 )
 SF += code("""
 [Editor]
@@ -687,7 +687,7 @@ SF += p(
 
 SF += h2("Editing settings by hand")
 SF += warn(
-    "<strong>Close Tiko before editing <code>settings.ini</code>.</strong> The editor "
+    "<strong>Close Tiko Editor before editing <code>settings.ini</code>.</strong> The editor "
     "writes the whole file when it exits, so changes made while it is running are "
     "overwritten."
 )
@@ -722,10 +722,10 @@ SF += note(
 
 SF += h2("Resetting to defaults")
 SF += ol([
-    "Close Tiko.",
+    "Close Tiko Editor.",
     "Rename <code>settings.ini</code> to <code>settings.ini.bak</code> — rename rather "
     "than delete, so you can go back.",
-    "Start Tiko. It creates a fresh file with default values.",
+    "Start Tiko Editor. It creates a fresh file with default values.",
 ], steps=True)
 SF += p(
     "To reset only the keyboard, delete <code>keybindings.ini</code> instead. To reset only "
@@ -734,23 +734,23 @@ SF += p(
 
 SF += h2("Running from removable media")
 SF += p(
-    "Because nothing is stored outside its own folder, Tiko runs from a USB stick or a "
+    "Because nothing is stored outside its own folder, Tiko Editor runs from a USB stick or a "
     "network share with your full configuration intact. Copy the folder, run "
-    "<code>tiko.exe</code> from it, and the editor you get is the editor you set up."
+    "<code>tiko-editor.exe</code> from it, and the editor you get is the editor you set up."
 )
 SF += warn(
-    "Do not install Tiko into <code>C:\\Program Files</code>. That location is "
-    "write-protected for ordinary users, and Tiko needs to write its settings beside the "
+    "Do not install Tiko Editor into <code>C:\\Program Files</code>. That location is "
+    "write-protected for ordinary users, and Tiko Editor needs to write its settings beside the "
     "executable."
 )
 
 SF += h2("Multiple installations")
 SF += p(
-    "Two copies of Tiko in different folders have completely separate settings, themes and "
+    "Two copies of Tiko Editor in different folders have completely separate settings, themes and "
     "workspaces. This is deliberate and useful — you might keep a customised installation "
     "for one project and a stock one for another — but it also means that "
     "<strong>which copy you launch decides which configuration you get</strong>. If a "
-    "setting seems not to have taken effect, check which <code>tiko.exe</code> you ran."
+    "setting seems not to have taken effect, check which <code>tiko-editor.exe</code> you ran."
 )
 
 SF += h2("Related topics")
@@ -761,7 +761,7 @@ SF += ul([
 ])
 
 page("settings-files", "Settings and configuration files", "customize",
-     "Where Tiko stores everything it remembers, how to edit those files, back them up, "
+     "Where Tiko Editor stores everything it remembers, how to edit those files, back them up, "
      "move them between machines and reset them.",
      SF,
      keywords="settings.ini configuration files keybindings.ini portable backup export "

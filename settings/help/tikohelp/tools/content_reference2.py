@@ -11,7 +11,7 @@ from build import (page, h2, h3, h4, p, ul, ol, dl, code, table, cards,
 
 CFG = ""
 CFG += p(
-    "Every setting Tiko stores in <code>settings\\settings.ini</code>. Most are set "
+    "Every setting Tiko Editor stores in <code>settings\\settings.ini</code>. Most are set "
     "through %s; they are documented here so you can read the file, "
     "compare two installations, or edit it in bulk."
     % menu("File", "Settings", "Options…")
@@ -21,7 +21,7 @@ CFG += important(
     "<strong><code>0</code> means false</strong>."
 )
 CFG += warn(
-    "Close Tiko before editing the file by hand. It rewrites the whole file on exit, which "
+    "Close Tiko Editor before editing the file by hand. It rewrites the whole file on exit, which "
     "discards anything you changed while it was running."
 )
 
@@ -39,18 +39,18 @@ def cfgrow(key, purpose, default, values, related=""):
 BOOL = "<code>-1</code> (true) or <code>0</code> (false)"
 
 CFG += h2("[Editor] — general behaviour")
-CFG += cfgrow("AskExit", "Prompt for confirmation when closing Tiko.", "0", BOOL)
+CFG += cfgrow("AskExit", "Prompt for confirmation when closing Tiko Editor.", "0", BOOL)
 CFG += cfgrow("AutoSaveFiles", "Save modified documents automatically at an interval.",
               "0", BOOL, "<code>AutoSaveInterval</code>")
 CFG += cfgrow("AutoSaveInterval", "Minutes between automatic saves.", "10",
               "A whole number of minutes", "<code>AutoSaveFiles</code>")
 CFG += cfgrow("RestoreSession",
-              "Reopen the workspace that was active when Tiko last closed.", "-1", BOOL,
+              "Reopen the workspace that was active when Tiko Editor last closed.", "-1", BOOL,
               "<code>LastActiveProjectFile</code>")
 CFG += cfgrow("LastActiveProjectFile",
-              "The project reopened at start-up. Maintained by Tiko; you do not normally "
+              "The project reopened at start-up. Maintained by Tiko Editor; you do not normally "
               "edit it.", "(empty)", "A path to a <code>.tiko</code> file")
-CFG += cfgrow("MultipleInstances", "Allow more than one copy of Tiko to run at once.",
+CFG += cfgrow("MultipleInstances", "Allow more than one copy of Tiko Editor to run at once.",
               "-1", BOOL)
 CFG += cfgrow("CompactMenus", "Draw menu rows at a tighter height.", "0", BOOL)
 CFG += cfgrow("CheckUpdates", "Check whether a newer version is available.", "-1", BOOL)
@@ -147,7 +147,7 @@ CFG += cfgrow("NewFileEncoding",
               "UTF-8 without a byte-order mark.", "1",
               ENC_VALUES, '<a href="encoding.html">Encoding and line endings</a>')
 CFG += cfgrow("UnicodeEncoding",
-              "How Tiko treats files whose encoding it cannot determine.", "0",
+              "How Tiko Editor treats files whose encoding it cannot determine.", "0",
               ENC_VALUES, '<a href="encoding.html">Encoding and line endings</a>')
 
 CFG += h2("[Editor] — formatter rules")
@@ -204,7 +204,7 @@ CFG += p(
     '<a href="compiler-setup.html">Compiler setup</a>.'
 )
 CFG += cfgrow("FBWINCompiler32",
-              "Full path to the 32-bit compiler. Tiko rebuilds this from the toolchain you "
+              "Full path to the 32-bit compiler. Tiko Editor rebuilds this from the toolchain you "
               "select; it is not edited directly.",
               "toolchains\\&lt;toolchain&gt;\\fbc32.exe",
               "A path to an <code>fbc32.exe</code>", "<code>FBWINCompiler64</code>")
@@ -235,7 +235,7 @@ CFG += note(
 
 CFG += h2("[Startup] — window and layout")
 CFG += p(
-    "These are maintained by Tiko as you move and resize things. They are listed for "
+    "These are maintained by Tiko Editor as you move and resize things. They are listed for "
     "completeness; edit them only to move a window that has ended up off screen — "
     "%s does the same thing more safely."
     % menu("View", "Restore Main Window Size")
@@ -281,7 +281,7 @@ CFG += table(
         ("<code>settings\\keywords\\*.txt</code>", "Syntax highlighting keyword lists."),
         ("<code>toolchains\\</code>",
          "One subfolder per compiler toolchain, each holding <code>fbc32.exe</code> and "
-         "<code>fbc64.exe</code>. Not a settings file, but Tiko scans it — see "
+         "<code>fbc64.exe</code>. Not a settings file, but Tiko Editor scans it — see "
          '<a href="compiler-setup.html">Compiler setup</a>.'),
     ],
     key_first=True,
@@ -307,7 +307,7 @@ page("configuration-reference", "Configuration reference", "reference",
 
 DR = ""
 DR += p(
-    "Every dialog in Tiko and what its controls do. Dialogs edit a working copy of your "
+    "Every dialog in Tiko Editor and what its controls do. Dialogs edit a working copy of your "
     "settings, so <strong>Cancel</strong> always discards every change made since the "
     "dialog opened."
 )
@@ -339,7 +339,7 @@ DR += table(
 )
 DR += p("<strong>OK</strong> applies and saves; <strong>Cancel</strong> discards everything.")
 DR += note(
-    "There is no colours page here — every colour in Tiko belongs to the theme. Use "
+    "There is no colours page here — every colour in Tiko Editor belongs to the theme. Use "
     "%s instead." % menu("File", "Settings", "Themes…")
 )
 
@@ -473,7 +473,7 @@ DR += table(
     ["Section", "Purpose"],
     [
         ("Project", "Project identification and the command-line arguments passed to your "
-         "program when Tiko runs it."),
+         "program when Tiko Editor runs it."),
         ("Compiler options", "Extra compiler switches for this project."),
         ("Build output", "Where the built executable is written."),
     ],
@@ -525,7 +525,7 @@ DR += ul([
 ])
 
 page("dialog-reference", "Dialog reference", "reference",
-     "Every dialog box in Tiko, control by control, with links to the topic that explains "
+     "Every dialog box in Tiko Editor, control by control, with links to the topic that explains "
      "each in context.",
      DR,
      keywords="dialog reference options themes build configurations keyboard shortcuts "

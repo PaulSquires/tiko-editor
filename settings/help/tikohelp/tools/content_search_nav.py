@@ -34,7 +34,7 @@ FR += h2("The Find bar")
 FR += figure_img(
     "assets/img/find-bar.png",
     "The Find bar. Six icons flank the search box; three of them latch on and stay lit.",
-    alt="The Tiko Find bar")
+    alt="The Tiko Editor Find bar")
 FR += table(
     ["Icon", "What it does", "Latches?"],
     [
@@ -54,7 +54,7 @@ FR += table(
 )
 FR += p(
     "A latching icon stays lit while its option is on; click it again to turn it off. "
-    "The three latching options are the whole of Tiko's matching behaviour — there is "
+    "The three latching options are the whole of Tiko Editor's matching behaviour — there is "
     "nothing else to configure."
 )
 
@@ -65,7 +65,7 @@ FR += p(
     "whole file."
 )
 FR += important(
-    "Tiko sets this up for you. Open the Find bar with a <strong>multi-line</strong> "
+    "Tiko Editor sets this up for you. Open the Find bar with a <strong>multi-line</strong> "
     "selection and Selection switches on automatically with the search box left empty — "
     "because \"search inside this selection\" begins with no search term by definition. "
     "Open it with a <strong>single-line</strong> selection and that text becomes the "
@@ -77,7 +77,7 @@ FR += note(
 )
 
 FR += important(
-    "<strong>Tiko does not support regular expressions.</strong> Searches are literal "
+    "<strong>Tiko Editor does not support regular expressions.</strong> Searches are literal "
     "text, refined by the three options above. If you need pattern matching — extracting "
     "captured groups, matching optional or repeated text — do it in a tool built for it "
     "and bring the results back."
@@ -206,7 +206,7 @@ FP += ul([
     "<code>HACK</code> or a deprecated API name across the whole codebase.",
 ])
 FP += tip(
-    "Tiko already collects <code>TODO</code> comments automatically into the Output "
+    "Tiko Editor already collects <code>TODO</code> comments automatically into the Output "
     "panel's TODO tab — you do not need to search for those."
 )
 
@@ -233,7 +233,7 @@ section("navigation", "Navigation", "compass")
 
 NV = ""
 NV += p(
-    "Tiko gives you several ways to move around, from the whole-project symbol search down "
+    "Tiko Editor gives you several ways to move around, from the whole-project symbol search down "
     "to stepping between procedures in one file. Learning two or three of these makes far "
     "more difference to day-to-day speed than any other feature."
 )
@@ -241,11 +241,11 @@ NV += p(
 NV += h2("Goto Definition")
 NV += p(
     "Put the caret on any symbol — a procedure name, a type, a variable — and press %s. "
-    "Tiko jumps to where that symbol is defined, opening the file if necessary."
+    "Tiko Editor jumps to where that symbol is defined, opening the file if necessary."
     % kbd("F12")
 )
 NV += p(
-    "This works across the whole project because Tiko's parser has already indexed every "
+    "This works across the whole project because Tiko Editor's parser has already indexed every "
     "file. It is the single most useful navigation command in the editor."
 )
 NV += note(
@@ -273,7 +273,7 @@ NV += tip(
 
 NV += h2("Search Symbol — the fuzzy finder")
 NV += p(
-    "%s opens Search Symbol, a popup that appears just under the tab strip. It is Tiko's "
+    "%s opens Search Symbol, a popup that appears just under the tab strip. It is Tiko Editor's "
     "universal \"go to anything\" command, and it is a <strong>fast fuzzy finder</strong> "
     "rather than a plain substring filter." % kbd("Ctrl", "P")
 )
@@ -341,7 +341,7 @@ NV += p(
 
 NV += h2("Going to a line number")
 NV += important(
-    "<strong>There is no Goto Line dialog.</strong> Tiko has no command that asks you to "
+    "<strong>There is no Goto Line dialog.</strong> Tiko Editor has no command that asks you to "
     "type a line number, because in practice you never need one — everything that knows "
     "about a line number takes you there directly."
 )
@@ -370,7 +370,7 @@ NV += p(
 
 NV += h2("Switching between related files")
 NV += p(
-    "Tiko knows about the conventional relationships between the files of a FreeBASIC "
+    "Tiko Editor knows about the conventional relationships between the files of a FreeBASIC "
     "project, and can hop between them:"
 )
 NV += table(
@@ -421,7 +421,7 @@ page("navigation", "Navigation", "navigation",
 
 SY = ""
 SY += p(
-    "Tiko continuously parses your source in the background and keeps a database of the "
+    "Tiko Editor continuously parses your source in the background and keeps a database of the "
     "symbols it finds — procedures and their parameters, types, enumerations, variables — "
     "each with the file, line and column where it was declared. Several features read "
     "from that one database."
@@ -550,7 +550,7 @@ SY += ul([
     "file.",
 ])
 SY += note(
-    "If any open document has unsaved edits when you run the report, Tiko names those "
+    "If any open document has unsaved edits when you run the report, Tiko Editor names those "
     "files and warns you that their line numbers may be stale — it reports rather than "
     "refusing to run. Save first if you intend to work from the line numbers."
 )
@@ -561,7 +561,7 @@ SY += tip(
 
 SY += h2("Code tips")
 SY += p(
-    "When you type an opening parenthesis after a procedure name, Tiko shows a "
+    "When you type an opening parenthesis after a procedure name, Tiko Editor shows a "
     "<strong>code tip</strong> — a small popup giving that procedure's parameter list. It "
     "closes when you type the closing parenthesis, press %s, or move the caret off the "
     "line." % kbd("Esc")
@@ -579,7 +579,7 @@ SY += ul([
 ])
 
 page("symbol-navigation", "Symbols and the function list", "navigation",
-     "How Tiko's background parser indexes your code, and the features that read from it: "
+     "How Tiko Editor's background parser indexes your code, and the features that read from it: "
      "the function list, code tips and the unused-symbols report.",
      SY,
      keywords="symbol symbols parser function list outline procedures types enums "
@@ -591,7 +591,7 @@ section("productivity", "Editing Productivity", "bolt")
 
 AC = ""
 AC += p(
-    "Autocomplete offers completions drawn from the symbols Tiko has parsed out of your "
+    "Autocomplete offers completions drawn from the symbols Tiko Editor has parsed out of your "
     "project plus the keyword lists for the current language. Some lists appear on their "
     "own as you type; the general word list you ask for with %s." % kbd("Ctrl", "Space")
 )
@@ -607,7 +607,7 @@ AC += p(
     "with everything that matches, and filters itself as you carry on typing."
     % kbd("Ctrl", "Space")
 )
-AC += p("Tiko only claims the keystroke when it is genuinely useful:")
+AC += p("Tiko Editor only claims the keystroke when it is genuinely useful:")
 AC += table(
     ["Situation", "What happens"],
     [
@@ -625,7 +625,7 @@ AC += table(
     ],
 )
 AC += note(
-    "Because Tiko consumes the keystroke rather than passing it on, %s never inserts a "
+    "Because Tiko Editor consumes the keystroke rather than passing it on, %s never inserts a "
     "stray character — which is what an unclaimed one would otherwise do."
     % kbd("Ctrl", "Space")
 )
@@ -774,10 +774,10 @@ LO += p(
     '<a href="indentation.html">Indentation</a>.' % (kbd("Tab"), kbd("Shift", "Tab"))
 )
 
-LO += h2("Commands Tiko does not have")
+LO += h2("Commands Tiko Editor does not have")
 LO += p(
     "For completeness, because they exist in some other editors and are worth not hunting "
-    "for: Tiko has <strong>no Sort Lines, Join Lines or Transpose Lines command</strong>, "
+    "for: Tiko Editor has <strong>no Sort Lines, Join Lines or Transpose Lines command</strong>, "
     "and no standalone Trim Trailing Whitespace command."
 )
 LO += p("Trailing whitespace is handled two other ways:")
@@ -820,7 +820,7 @@ page("line-operations", "Line and block operations", "productivity",
 SH = ""
 SH += p(
     "Syntax highlighting colours your code according to what each piece of it means — "
-    "keywords, strings, comments, numbers, types. Tiko highlights through Lexilla, the "
+    "keywords, strings, comments, numbers, types. Tiko Editor highlights through Lexilla, the "
     "lexer library that accompanies Scintilla."
 )
 
@@ -833,7 +833,7 @@ SH += p(
 
 SH += h2("Choosing the language for a file")
 SH += p(
-    "Tiko picks a syntax scheme from the file's extension. There is no language selector on "
+    "Tiko Editor picks a syntax scheme from the file's extension. There is no language selector on "
     "the status bar, so a file with an unusual extension is highlighted according to that "
     "extension."
 )
@@ -880,7 +880,7 @@ SH += important(
 )
 SH += tip(
     "Adding your library's procedure names to <strong>Extra Keywords</strong> is one of "
-    "the highest-value five minutes you can spend in Tiko: those names then colour "
+    "the highest-value five minutes you can spend in Tiko Editor: those names then colour "
     "correctly <em>and</em> appear in autocomplete throughout the project."
 )
 SH += note(
@@ -931,7 +931,7 @@ SH += ul([
 ])
 
 page("syntax-highlighting", "Syntax highlighting", "productivity",
-     "How Tiko colours code, choosing the language for a file, editing the keyword lists, "
+     "How Tiko Editor colours code, choosing the language for a file, editing the keyword lists, "
      "and the difference between displaying and rewriting keyword case.",
      SH,
      keywords="syntax highlighting colours lexer lexilla keywords keyword lists language "

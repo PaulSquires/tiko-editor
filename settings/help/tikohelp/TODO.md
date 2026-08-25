@@ -1,10 +1,10 @@
-# Open questions in the Tiko help
+# Open questions in the Tiko Editor help
 
 **All questions are answered — 0 TODO callouts remain in the built help.**
 
 This file is now a record rather than a worklist: each item below keeps the answer it was
 closed with, so you can see what was verified and how. Items marked *ANSWERED FROM SOURCE*
-were confirmed by reading the Tiko source; the rest were answered by the author.
+were confirmed by reading the Tiko Editor source; the rest were answered by the author.
 
 After answering, the fix goes in `tools/content_*.py` (never the HTML), then:
 
@@ -25,7 +25,7 @@ included a **Colors** page that does not exist — colours live in the Themes di
 explicitly. **Documented.**
 
 ### ~~A2. Compiler page fields~~ — ANSWERED
-Tiko ships a FreeBASIC toolchain. Toolchains are subfolders of `toolchains\` each
+Tiko Editor ships a FreeBASIC toolchain. Toolchains are subfolders of `toolchains\` each
 holding both `fbc32.exe` and `fbc64.exe`; the page lists them, and selecting one sets both
 compiler paths at once. Page controls: toolchain list, compiler switches, include paths,
 run-via-command-window, disable-compile-beep. Architecture comes from the build
@@ -55,7 +55,7 @@ highlighting page has been corrected to match. **Documented.**
 
 ### ~~A5. Supported encodings~~ — ANSWERED
 Exactly four, and the docs now use the names the status bar shows: `UTF-8`,
-`UTF-8 (BOM)`, `UTF-16 (BOM)` and `ANSI`. There is no BOM-less UTF-16 — Tiko always
+`UTF-8 (BOM)`, `UTF-16 (BOM)` and `ANSI`. There is no BOM-less UTF-16 — Tiko Editor always
 writes the mark for UTF-16. **Documented.**
 
 ### ~~A6. Keyword list files~~ — ANSWERED
@@ -80,7 +80,7 @@ include/exclude patterns" was invention and is gone. Confirmed in source: `FindP
 accepts exactly `bMatchCase` and `bWholeWord`. **Documented.**
 
 ### ~~B3. Regular expression dialect~~ — MOOT
-**Tiko does not support regular expressions at all.** Confirmed in source: only
+**Tiko Editor does not support regular expressions at all.** Confirmed in source: only
 `SCFIND_MATCHCASE` and `SCFIND_WHOLEWORD` are ever passed to the search engine. The
 `regular-expressions` page has been deleted and every reference across the site corrected.
 
@@ -150,7 +150,7 @@ TODO removed at the author's request. The summary table of which menu appears wh
 
 ### ~~E3. Per-monitor DPI behaviour~~ — CLOSED, NOT NEEDED
 TODO removed at the author's request. The short High-DPI displays section stays — it says
-only that Tiko scales its interface to the display's DPI, which is safe and accurate.
+only that Tiko Editor scales its interface to the display's DPI, which is safe and accurate.
 
 ---
 

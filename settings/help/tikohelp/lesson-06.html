@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Configure the compiler, build and run your project, and navigate compiler errors.">
-<meta name="generator" content="Tiko Help build.py">
+<meta name="generator" content="Tiko Editor Help build.py">
 <title>Lesson 6 — Building a program — Tiko Editor Help</title>
 <link rel="stylesheet" href="assets/styles.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231f6feb'/><text x='16' y='22' font-family='monospace' font-size='16' font-weight='bold' fill='white' text-anchor='middle'>tk</text></svg>">
@@ -39,7 +39,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <button class="nav-section-btn" type="button" data-section="welcome" aria-expanded="false" aria-controls="navsec-welcome"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5L10 3l7 5.5V16a1 1 0 01-1 1h-3.5v-5h-5v5H4a1 1 0 01-1-1z"/></svg><span>Welcome</span></button>
 <div class="nav-section-body" id="navsec-welcome"><ul>
 <li><a href="index.html">Tiko Editor Documentation</a></li>
-<li><a href="what-is-tiko.html">What is Tiko?</a></li>
+<li><a href="what-is-tiko.html">What is Tiko Editor?</a></li>
 <li><a href="quick-start.html">Quick Start</a></li>
 </ul></div></li>
 <li class="nav-section">
@@ -134,7 +134,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <button class="nav-section-btn" type="button" data-section="tutorial" aria-expanded="true" aria-controls="navsec-tutorial"><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><svg class="sec-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3l8 4-8 4-8-4z"/><path d="M5 9v4.2c0 1.3 2.2 2.3 5 2.3s5-1 5-2.3V9"/></svg><span>Tutorial</span></button>
 <div class="nav-section-body" id="navsec-tutorial"><ul>
 <li><a href="tutorial.html">Tutorial</a></li>
-<li><a href="lesson-01.html">Lesson 1 — Opening Tiko</a></li>
+<li><a href="lesson-01.html">Lesson 1 — Opening Tiko Editor</a></li>
 <li><a href="lesson-02.html">Lesson 2 — Creating your first file</a></li>
 <li><a href="lesson-03.html">Lesson 3 — Editing text</a></li>
 <li><a href="lesson-04.html">Lesson 4 — Searching</a></li>
@@ -167,12 +167,12 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <li>Building and running with one keystroke.</li>
   <li>Reading build output and jumping to an error.</li>
   <li>When to use Compile, Run Executable and Quick Run.</li>
-</ul><div class="callout note"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 9v5M10 6.2v.1"/></svg><div class="callout-body"><span class="callout-title">Note</span><p>This lesson needs a FreeBASIC compiler installed. If you do not have one, skip ahead to <a href="lesson-08.html">Lesson 8</a> and come back later.</p></div></div><h2 id="point-tiko-at-the-compiler">Point Tiko at the compiler</h2><ol class="steps">
+</ul><div class="callout note"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 9v5M10 6.2v.1"/></svg><div class="callout-body"><span class="callout-title">Note</span><p>This lesson needs a FreeBASIC compiler installed. If you do not have one, skip ahead to <a href="lesson-08.html">Lesson 8</a> and come back later.</p></div></div><h2 id="point-tiko-editor-at-the-compiler">Point Tiko Editor at the compiler</h2><ol class="steps">
   <li>Open <span class="ui path">File<span class="sep">›</span>Settings<span class="sep">›</span>Options…</span>.</li>
   <li>Select the <strong>Compiler</strong> page.</li>
-  <li>Confirm a toolchain is selected in the list. One ships with Tiko and is already chosen, so this is normally just a look.</li>
+  <li>Confirm a toolchain is selected in the list. One ships with Tiko Editor and is already chosen, so this is normally just a look.</li>
   <li>Choose <strong>OK</strong>.</li>
-</ol><p>This is a one-off. Tiko remembers it for every project.</p><h2 id="build-and-run">Build and run</h2><ol class="steps">
+</ol><p>This is a one-off. Tiko Editor remembers it for every project.</p><h2 id="build-and-run">Build and run</h2><ol class="steps">
   <li>Make <code>inventory.bas</code> the active document.</li>
   <li>Press <kbd>F5</kbd>.</li>
   <li>The Output panel opens on its Compiler tab and shows the build.</li>
@@ -182,13 +182,13 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <li>In <code>inventory.bas</code>, change <code>Describe( qty1 )</code> to <code>Descrbe( qty1 )</code>.</li>
   <li>Press <kbd>F5</kbd>.</li>
   <li>The build fails, and the Output panel lists the error.</li>
-  <li><strong>Click the error row.</strong> Tiko jumps to the exact line.</li>
+  <li><strong>Click the error row.</strong> Tiko Editor jumps to the exact line.</li>
   <li>Fix the typo and press <kbd>F5</kbd> again. It builds.</li>
 </ol><div class="callout important"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M10 2.2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L2.2 7.9l5.4-.8z"/></svg><div class="callout-body"><span class="callout-title">Important</span><p>Always fix the <strong>first</strong> error and rebuild. One early mistake commonly produces a cascade of later errors that disappear on their own once it is fixed.</p></div></div><h2 id="the-other-build-commands">The other build commands</h2><ol class="steps">
   <li>Press <kbd>Ctrl</kbd> + <kbd>F5</kbd> — Compile. It builds but does not run.</li>
   <li>Press <kbd>Shift</kbd> + <kbd>F5</kbd> — Run Executable. It runs the build you just made, without recompiling.</li>
   <li>Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F5</kbd> — Quick Run. It compiles and runs the current file on its own, ignoring the project.</li>
-</ol><div class="callout tip"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 15h5M8 17.5h4M10 2.5a5 5 0 00-3 9v1.5h6V11.5a5 5 0 00-3-9z"/></svg><div class="callout-body"><span class="callout-title">Tip</span><p>Quick Run makes Tiko a good scratchpad. Open a new file, type ten lines to test a language feature, and press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F5</kbd> — no project needed.</p></div></div><h2 id="see-the-command-line">See the command line</h2><p>Choose <span class="ui path">Compile<span class="sep">›</span>Command Line…</span> to see exactly what Tiko passes to the compiler. When a build does something unexpected, this usually explains it in one glance.</p><h2 id="expected-result">Expected result</h2><p>The program compiles and runs, printing three lines with a description beside each quantity, and you have navigated to a compiler error by clicking it.</p><h2 id="common-mistakes">Common mistakes</h2><div class="table-wrap"><table><thead><tr><th>Symptom</th><th>Cause and fix</th></tr></thead><tbody><tr><td>The build fails saying the compiler was not found.</td><td>No toolchain is selected, or its folder no longer holds both <code>fbc32.exe</code> and <code>fbc64.exe</code>. Check <span class="ui path">File<span class="sep">›</span>Settings<span class="sep">›</span>Options…</span> — this is a configuration error, not a code error.</td></tr><tr><td>The program window flashes and vanishes.</td><td>Your program ended without waiting. Add <code>Sleep</code> at the end.</td></tr><tr><td>Errors point at lines that look fine.</td><td>Fix the first error and rebuild; the rest often go with it. An unterminated block is reported far below where it was opened.</td></tr><tr><td>The build succeeds but runs old behaviour.</td><td>A file was not saved. Check that <strong>Compile autosave</strong> is on.</td></tr></tbody></table></div><h2 id="review">Review</h2><ul>
+</ol><div class="callout tip"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 15h5M8 17.5h4M10 2.5a5 5 0 00-3 9v1.5h6V11.5a5 5 0 00-3-9z"/></svg><div class="callout-body"><span class="callout-title">Tip</span><p>Quick Run makes Tiko Editor a good scratchpad. Open a new file, type ten lines to test a language feature, and press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F5</kbd> — no project needed.</p></div></div><h2 id="see-the-command-line">See the command line</h2><p>Choose <span class="ui path">Compile<span class="sep">›</span>Command Line…</span> to see exactly what Tiko Editor passes to the compiler. When a build does something unexpected, this usually explains it in one glance.</p><h2 id="expected-result">Expected result</h2><p>The program compiles and runs, printing three lines with a description beside each quantity, and you have navigated to a compiler error by clicking it.</p><h2 id="common-mistakes">Common mistakes</h2><div class="table-wrap"><table><thead><tr><th>Symptom</th><th>Cause and fix</th></tr></thead><tbody><tr><td>The build fails saying the compiler was not found.</td><td>No toolchain is selected, or its folder no longer holds both <code>fbc32.exe</code> and <code>fbc64.exe</code>. Check <span class="ui path">File<span class="sep">›</span>Settings<span class="sep">›</span>Options…</span> — this is a configuration error, not a code error.</td></tr><tr><td>The program window flashes and vanishes.</td><td>Your program ended without waiting. Add <code>Sleep</code> at the end.</td></tr><tr><td>Errors point at lines that look fine.</td><td>Fix the first error and rebuild; the rest often go with it. An unterminated block is reported far below where it was opened.</td></tr><tr><td>The build succeeds but runs old behaviour.</td><td>A file was not saved. Check that <strong>Compile autosave</strong> is on.</td></tr></tbody></table></div><h2 id="review">Review</h2><ul>
   <li><kbd>F5</kbd> builds and runs; <kbd>Ctrl</kbd> + <kbd>F5</kbd> builds only.</li>
   <li>Clicking an error jumps to its line.</li>
   <li>Quick Run builds the current file alone, ignoring the project.</li>

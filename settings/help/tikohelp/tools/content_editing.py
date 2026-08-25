@@ -13,7 +13,7 @@ section("editing", "Editing Text", "edit")
 
 EB = ""
 EB += p(
-    "Tiko's editing surface is built on Scintilla, so if you have used Notepad++, SciTE or "
+    "Tiko Editor's editing surface is built on Scintilla, so if you have used Notepad++, SciTE or "
     "any other Scintilla-based editor, the fundamentals will already feel familiar."
 )
 
@@ -138,7 +138,7 @@ page("editing-basics", "Editing basics", "editing",
 
 MS = ""
 MS += p(
-    "Tiko supports editing in more than one place at once. There are two related "
+    "Tiko Editor supports editing in more than one place at once. There are two related "
     "mechanisms, and knowing which one you want saves a lot of fiddling."
 )
 
@@ -202,7 +202,7 @@ MS += p(
     "editor</a>."
 )
 MS += note(
-    "Tiko has no \"select next occurrence\" command that grows a multi-selection one match "
+    "Tiko Editor has no \"select next occurrence\" command that grows a multi-selection one match "
     "at a time — you place the carets yourself with %s. To change every occurrence of "
     'something, use <a href="find-replace.html">Replace</a>: beyond a handful of places it '
     "is both quicker and reviewable." % kbd("Ctrl")
@@ -295,7 +295,7 @@ IN += p(
     "nested code." % kbd("Enter")
 )
 IN += p(
-    "Tiko goes further for FreeBASIC. When you press %s after a line that opens a block, "
+    "Tiko Editor goes further for FreeBASIC. When you press %s after a line that opens a block, "
     "it can insert the matching closing statement for you and place the caret between "
     "them:" % kbd("Enter")
 )
@@ -303,7 +303,7 @@ IN += code("""
 ' Type this and press Enter at the end of the line:
 If count > 0 Then
 
-' Tiko produces:
+' Tiko Editor produces:
 If count > 0 Then
     |          <- caret lands here
 End If
@@ -312,7 +312,7 @@ IN += p(
     "This applies to <code>If</code>, <code>For</code>, <code>Do</code>, "
     "<code>While</code>, <code>Select Case</code>, <code>Sub</code>, "
     "<code>Function</code>, <code>Type</code>, <code>Scope</code> and the other block "
-    "constructs. Tiko scans forward from the line you are on to check whether the block "
+    "constructs. Tiko Editor scans forward from the line you are on to check whether the block "
     "is <em>already</em> closed, and inserts nothing if it is."
 )
 IN += p(
@@ -369,7 +369,7 @@ EN += p(
     "symbols and non-Latin scripts come out as garbage."
 )
 
-EN += h2("Encodings Tiko works with")
+EN += h2("Encodings Tiko Editor works with")
 EN += p(
     "Four, and the names below are exactly what the status bar shows:"
 )
@@ -383,7 +383,7 @@ EN += table(
          "The same encoding, preceded by a marker identifying it. Some tools require the "
          "marker; others choke on it."),
         ("<code>UTF-16 (BOM)</code>", "UTF-16 with a byte-order mark",
-         "Two bytes per character. Common in Windows APIs, less so in source files. Tiko "
+         "Two bytes per character. Common in Windows APIs, less so in source files. Tiko Editor "
          "always writes the byte-order mark for UTF-16 — there is no BOM-less variant."),
         ("<code>ANSI</code>", "The system code page",
          "The legacy Windows encoding for your locale. Fine for plain ASCII, unreliable "
@@ -405,7 +405,7 @@ EN += warn(
 EN += p("Two settings govern the defaults:")
 EN += dl([
     ("New file encoding", "The encoding given to files you create."),
-    ("Unicode encoding", "How Tiko treats files whose encoding it cannot determine."),
+    ("Unicode encoding", "How Tiko Editor treats files whose encoding it cannot determine."),
 ])
 
 EN += h2("Line endings")
@@ -421,7 +421,7 @@ EN += table(
     key_first=True,
 )
 EN += p(
-    "The status bar shows the current style; click it to convert the whole document. Tiko "
+    "The status bar shows the current style; click it to convert the whole document. Tiko Editor "
     "detects the style when it opens a file and preserves it on save, so opening a "
     "Unix-style file and saving it does not silently rewrite every line."
 )
@@ -528,7 +528,7 @@ VW += ul([
 
 VW += h2("Minimap")
 VW += p(
-    "<strong>Tiko has no minimap</strong> — the miniature overview of a whole file that "
+    "<strong>Tiko Editor has no minimap</strong> — the miniature overview of a whole file that "
     "some editors show beside the scrollbar. For an overview of a file's structure, use "
     "<strong>Fold All</strong> (" + kbd("Shift", "F8") + ") or the function list (" +
     kbd("F4") + ") instead; both are quicker to read than a thumbnail of the text."

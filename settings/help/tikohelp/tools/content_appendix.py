@@ -13,22 +13,22 @@ section("appendix", "Help and Reference", "help")
 
 FAQ_ITEMS = [
     # --- Getting started ---
-    ("How do I install Tiko?",
+    ("How do I install Tiko Editor?",
      "<p>Unpack the distribution into a folder you can write to and run "
-     "<code>tiko.exe</code>. There is no installer. Do not use "
-     "<code>C:\\Program Files</code> — Tiko writes its settings beside the executable, and "
+     "<code>tiko-editor.exe</code>. There is no installer. Do not use "
+     "<code>C:\\Program Files</code> — Tiko Editor writes its settings beside the executable, and "
      "that folder is write-protected.</p>"),
-    ("Does Tiko need .NET or any other runtime?",
+    ("Does Tiko Editor need .NET or any other runtime?",
      "<p>No. It is a native Win32 application. The DLLs it needs ship alongside it.</p>"),
-    ("Can I run Tiko from a USB stick?",
+    ("Can I run Tiko Editor from a USB stick?",
      "<p>Yes. Nothing is stored in the registry or your user profile, so the folder is "
      "self-contained. See <a href=\"settings-files.html\">Settings and configuration "
      "files</a>.</p>"),
-    ("Where does Tiko store my settings?",
-     "<p>In the <code>settings</code> folder beside <code>tiko.exe</code> — chiefly "
+    ("Where does Tiko Editor store my settings?",
+     "<p>In the <code>settings</code> folder beside <code>tiko-editor.exe</code> — chiefly "
      "<code>settings.ini</code> and <code>keybindings.ini</code>.</p>"),
-    ("Is Tiko free? What licence is it under?",
-     "<p>Tiko is released under the GNU General Public License v3. See "
+    ("Is Tiko Editor free? What licence is it under?",
+     "<p>Tiko Editor is released under the GNU General Public License v3. See "
      + menu("Help", "About") + " for the full text and credits.</p>"),
 
     # --- Appearance ---
@@ -79,7 +79,7 @@ FAQ_ITEMS = [
      "selection if there is one.</p>"),
     ("How do I delete a line without selecting it?",
      "<p>" + kbd("Ctrl", "Y") + ". " + kbd("Ctrl", "D") + " duplicates one.</p>"),
-    ("Does Tiko use tabs or spaces?",
+    ("Does Tiko Editor use tabs or spaces?",
      "<p>Whichever you choose. <strong>Tab indents with spaces</strong> in the options "
      "decides what " + kbd("Tab") + " inserts, and <strong>Tab size</strong> sets the "
      "width. See <a href=\"indentation.html\">Indentation</a>.</p>"),
@@ -114,7 +114,7 @@ FAQ_ITEMS = [
      "ranked best-first with the matched characters highlighted. See "
      "<a href=\"navigation.html\">Navigation</a>.</p>"),
     ("Is there a Goto Line command?",
-     "<p>No — Tiko has no Goto Line dialog, because nothing needs one. Click a compiler "
+     "<p>No — Tiko Editor has no Goto Line dialog, because nothing needs one. Click a compiler "
      "error, a search result, a TODO entry or a bookmark and it takes you straight to the "
      "line. The status bar always shows where you are.</p>"),
     ("How do I get a completion list on demand?",
@@ -126,7 +126,7 @@ FAQ_ITEMS = [
     ("How do I switch between a module and its header?",
      "<p>" + kbd("Ctrl", "Shift", "H") + " goes to the header and " +
      kbd("Ctrl", "Shift", "C") + " back to the code file.</p>"),
-    ("Does Tiko support regular expressions?",
+    ("Does Tiko Editor support regular expressions?",
      "<p><strong>No.</strong> Searches are literal text. The only matching options are "
      "Match Case, Match Whole Words and Selection, in both Find and Find in Project.</p>"),
     ("What are the icons on the Find bar?",
@@ -136,11 +136,11 @@ FAQ_ITEMS = [
      "lit; the other three act immediately.</p>"),
     ("How do I search only part of a file?",
      "<p>Select the text and turn on <strong>Selection</strong> on the Find bar. If you "
-     "open Find with a multi-line selection already made, Tiko turns Selection on for you "
+     "open Find with a multi-line selection already made, Tiko Editor turns Selection on for you "
      "and leaves the search box empty.</p>"),
 
     # --- Projects ---
-    ("Do I have to create a project to use Tiko?",
+    ("Do I have to create a project to use Tiko Editor?",
      "<p>No. Loose files already form an untitled project, saved automatically, so your "
      "work reopens next time. Naming it is optional.</p>"),
     ("How do I turn my open files into a real project?",
@@ -165,7 +165,7 @@ FAQ_ITEMS = [
      "each</strong> — the entry point and the resource script. The other three take any "
      "number, and can contain folders you create yourself.</p>"),
     ("Can I organise project files into folders?",
-     "<p>Yes, within Header, Module and Normal. These are Tiko's own folders, not folders "
+     "<p>Yes, within Header, Module and Normal. These are Tiko Editor's own folders, not folders "
      "on disk. Deleting one dissolves it — its contents move up to the parent — so nothing "
      "is ever lost.</p>"),
     ("How do I change which file is the main module?",
@@ -188,15 +188,15 @@ FAQ_ITEMS = [
 
     # --- Building ---
     ("Do I need to install FreeBASIC separately?",
-     "<p>No. Tiko ships with the most recent FreeBASIC toolchain already installed and "
+     "<p>No. Tiko Editor ships with the most recent FreeBASIC toolchain already installed and "
      "selected, so you can build and run straight away.</p>"),
     ("How do I install an additional compiler toolchain?",
      "<p>Unpack it into its own subfolder of <code>toolchains\\</code> beside "
-     "<code>tiko.exe</code>, making sure both <code>fbc32.exe</code> and "
+     "<code>tiko-editor.exe</code>, making sure both <code>fbc32.exe</code> and "
      "<code>fbc64.exe</code> sit in that folder's root. It then appears in the list on the "
      "Compiler page of " + menu("File", "Settings", "Options…") + ". You can install as "
      "many as you like and switch between them.</p>"),
-    ("Tiko says the compiler was not found.",
+    ("Tiko Editor says the compiler was not found.",
      "<p>Check the Compiler page of " + menu("File", "Settings", "Options…") + ": either "
      "no toolchain is selected, or the folder it names no longer contains both "
      "<code>fbc32.exe</code> and <code>fbc64.exe</code>. This is a configuration problem, "
@@ -215,7 +215,7 @@ FAQ_ITEMS = [
      "— later errors are often consequences of it.</p>"),
     ("How do I pass command-line arguments to my program?",
      "<p>Set them in " + menu("Project", "Project Options…") + ". They are used whenever "
-     "Tiko runs your program.</p>"),
+     "Tiko Editor runs your program.</p>"),
     ("How do I see the exact compiler command line?",
      "<p>" + menu("Compile", "Command Line…") + ".</p>"),
     ("My build succeeds but the program behaves as it did before I edited it.",
@@ -228,7 +228,7 @@ FAQ_ITEMS = [
      "if <strong>Click toggles breakpoint</strong> is enabled.</p>"),
     ("My breakpoint moved to a different line.",
      "<p>The line you chose generates no executable code — a comment, a blank line or a "
-     "bare declaration — so Tiko moved the breakpoint to the next line that does. It "
+     "bare declaration — so Tiko Editor moved the breakpoint to the next line that does. It "
      "prevents a breakpoint that would silently never fire.</p>"),
     ("Debugging will not start.",
      "<p>The executable needs debug information. Select a Debug build configuration and "
@@ -253,22 +253,22 @@ FAQ_ITEMS = [
     ("Can I disable a default shortcut without replacing it?",
      "<p>Yes. A suppressed default is recorded in <code>keybindings.ini</code> with a "
      "<code>(DISABLED)</code> marker and shown as disabled in the dialog.</p>"),
-    ("How do I run an external program from Tiko?",
+    ("How do I run an external program from Tiko Editor?",
      "<p>Define a user tool in " + menu("File", "User Tools…") + ". Tools appear on the "
      "User Tools menu and can have their own shortcuts.</p>"),
-    ("Can I use Tiko in another language?",
+    ("Can I use Tiko Editor in another language?",
      "<p>Yes. Choose a language file on the Localization page of the options dialog. The "
      "change takes effect at the next start-up.</p>"),
     ("How do I move my settings to another computer?",
      "<p>Copy the <code>settings</code> folder. That is everything — preferences, "
      "shortcuts, themes, languages and keyword lists.</p>"),
     ("How do I reset everything to defaults?",
-     "<p>Close Tiko, rename <code>settings\\settings.ini</code>, and start again. A fresh "
+     "<p>Close Tiko Editor, rename <code>settings\\settings.ini</code>, and start again. A fresh "
      "file is created with default values.</p>"),
 
     # --- Files ---
     ("How do I recover unsaved work?",
-     "<p>Tiko has no crash-recovery store, so unsaved changes are lost if it exits "
+     "<p>Tiko Editor has no crash-recovery store, so unsaved changes are lost if it exits "
      "abnormally. Turn on <strong>Auto save files</strong> in the options to have modified "
      "documents saved at an interval. Save often, and use version control for anything "
      "that matters.</p>"),
@@ -277,14 +277,14 @@ FAQ_ITEMS = [
      "is usually right. See <a href=\"encoding.html\">Encoding and line endings</a>.</p>"),
     ("How do I change a file's line endings?",
      "<p>Click the line-ending field in the status bar and choose CRLF, LF or CR.</p>"),
-    ("Can Tiko tell me when a file changes outside the editor?",
+    ("Can Tiko Editor tell me when a file changes outside the editor?",
      "<p>Yes — turn on <strong>Detect external file changes</strong> in the options.</p>"),
     ("Can I open a file as a starting template without editing the original?",
      "<p>Yes — " + menu("File", "Open File As Template…") + " opens its contents as a new "
      "untitled document.</p>"),
 
     # --- Misc ---
-    ("Can I run two copies of Tiko at once?",
+    ("Can I run two copies of Tiko Editor at once?",
      "<p>Yes, if <strong>Multiple instances</strong> is enabled. Note that instances "
      "sharing a folder share one <code>settings.ini</code>, and the last one to close "
      "wins.</p>"),
@@ -298,14 +298,14 @@ FAQ_ITEMS = [
      "<p>Treat it as candidates, not certainties. Counts come from one scan, so anything "
      "reached through a function pointer, excluded by conditional compilation, or called "
      "from outside the project can look unused while being essential.</p>"),
-    ("Does Tiko work with languages other than FreeBASIC?",
+    ("Does Tiko Editor work with languages other than FreeBASIC?",
      "<p>Yes. It edits any text file, and highlights the languages its lexers support. The "
      "project system, symbol engine and debugger are FreeBASIC-specific.</p>"),
     ("Is there a minimap?",
      "<p>No. Use <strong>Fold All</strong> (" + kbd("Shift", "F8") + ") or the function "
      "list (" + kbd("F4") + ") for an overview of a file.</p>"),
     ("What is the Help Center?",
-     "<p>The documentation browser built into Tiko, opened with " + kbd("F1") + ". It "
+     "<p>The documentation browser built into Tiko Editor, opened with " + kbd("F1") + ". It "
      "searches for the selected text, or the word under the caret.</p>"),
     ("How do I report a bug?",
      "<p>Note your version from " + menu("Help", "About") + " and describe the steps that "
@@ -416,7 +416,7 @@ TT += ul([
 
 TT += h2("Build and debug tricks")
 TT += ul([
-    "<strong>Quick Run (%s) turns Tiko into a scratchpad.</strong> New file, ten lines, "
+    "<strong>Quick Run (%s) turns Tiko Editor into a scratchpad.</strong> New file, ten lines, "
     "one keystroke — no project needed." % kbd("Ctrl", "Shift", "F5"),
     "<strong>Run to Cursor (%s) instead of a temporary breakpoint.</strong> Nothing to set "
     "and nothing to remember to clear." % kbd("Ctrl", "F10"),
@@ -486,26 +486,26 @@ TS += p(
     "cause."
 )
 
-TS += h2("Tiko will not start, or starts wrong")
+TS += h2("Tiko Editor will not start, or starts wrong")
 TS += table(
     ["Symptom", "Cause and fix"],
     [
         ("It starts with no colours and the menus look wrong.",
-         "You launched a copy of <code>tiko.exe</code> away from its <code>settings</code> "
+         "You launched a copy of <code>tiko-editor.exe</code> away from its <code>settings</code> "
          "folder. Run it from the folder you unpacked."),
         ("It reports a missing DLL.",
          "The editing, parser or debugger DLLs are not beside the executable. Restore the "
          "full distribution."),
         ("Settings are forgotten every time.",
-         "Tiko cannot write to its own folder. Move it out of <code>C:\\Program "
+         "Tiko Editor cannot write to its own folder. Move it out of <code>C:\\Program "
          "Files</code>, or grant write permission."),
         ("The window opens off screen or at a strange size.",
          "Stored geometry from another monitor arrangement. Choose " +
-         menu("View", "Restore Main Window Size") + ", or close Tiko and delete the "
+         menu("View", "Restore Main Window Size") + ", or close Tiko Editor and delete the "
          "<code>[Startup]</code> geometry keys from <code>settings.ini</code>."),
         ("A change I made in the options had no effect.",
          "You may have two installations and be launching the other one. Each folder has "
-         "its own settings — check which <code>tiko.exe</code> you ran."),
+         "its own settings — check which <code>tiko-editor.exe</code> you ran."),
     ],
 )
 
@@ -576,7 +576,7 @@ TS += table(
          "work."),
         ("Line endings look wrong in another tool.",
          "Mixed or unexpected line endings. Convert the file from the status bar."),
-        ("A file changed on disk and Tiko did not notice.",
+        ("A file changed on disk and Tiko Editor did not notice.",
          "Enable <strong>Detect external file changes</strong> in the options."),
         ("Unsaved work was lost after a crash.",
          "There is no crash-recovery store. Enable <strong>Auto save files</strong>, and "
@@ -616,7 +616,7 @@ TS += table(
          "Same cause — the defining file must be part of the project."),
         ("The function list is empty.",
          "The active file has no procedures the parser recognised, or its extension is not "
-         "one Tiko parses as FreeBASIC source."),
+         "one Tiko Editor parses as FreeBASIC source."),
         ("Typing feels slow on a very large file.",
          "Turn off occurrence highlighting and, if necessary, syntax highlighting. Splitting "
          "a very large file is usually the better answer."),
@@ -650,10 +650,10 @@ TS += table(
 TS += h2("Starting over")
 TS += p("When something is badly wrong and you want a clean slate:")
 TS += ol([
-    "Close Tiko.",
+    "Close Tiko Editor.",
     "Rename <code>settings\\settings.ini</code> to <code>settings.ini.bak</code>. Rename "
     "rather than delete, so you can put it back.",
-    "Start Tiko. A fresh settings file is created.",
+    "Start Tiko Editor. A fresh settings file is created.",
     "If the problem is specifically keyboard-related, delete "
     "<code>settings\\keybindings.ini</code> instead. If it is workspace-related, delete "
     "<code>settings\\default.tiko</code>.",
@@ -663,7 +663,7 @@ TS += h2("Reporting a problem")
 TS += p("Include:")
 TS += ul([
     "the version from %s;" % menu("Help", "About"),
-    "your Windows version, and whether you run a 32- or 64-bit Tiko;",
+    "your Windows version, and whether you run a 32- or 64-bit Tiko Editor;",
     "the exact steps that reproduce the problem;",
     "what you expected and what happened instead;",
     "any message text, copied rather than described.",
@@ -711,7 +711,7 @@ GLOSSARY = [
     ("Column selection", "A rectangular selection covering the same columns on several "
      "lines. See <a href=\"multiple-selections.html\">Multiple selections and column "
      "mode</a>."),
-    ("Compiler", "The program that turns source code into an executable. Tiko drives the "
+    ("Compiler", "The program that turns source code into an executable. Tiko Editor drives the "
      "FreeBASIC compiler; it does not include one."),
     ("CRLF / LF / CR", "The three line-ending conventions: Windows, Unix and classic Mac "
      "OS. See <a href=\"encoding.html\">Encoding and line endings</a>."),
@@ -721,15 +721,15 @@ GLOSSARY = [
     ("Fold", "A collapsed block of code, shown as a single line. Folding is a display "
      "state and does not change the file. See <a href=\"code-folding.html\">Code "
      "folding</a>."),
-    ("FreeBASIC", "The BASIC-dialect compiler Tiko is built around. Free, open source and "
+    ("FreeBASIC", "The BASIC-dialect compiler Tiko Editor is built around. Free, open source and "
      "self-hosting."),
     ("Gutter / margin", "The narrow strips left of the text holding line numbers, "
      "bookmark and breakpoint markers, and fold markers."),
-    ("Help Center", "Tiko's built-in documentation browser, opened with " + kbd("F1") +
+    ("Help Center", "Tiko Editor's built-in documentation browser, opened with " + kbd("F1") +
      "."),
     ("Keyword", "A word with special meaning in a language, such as <code>Dim</code> or "
      "<code>Function</code>. Keyword lists live in <code>settings\\keywords</code>."),
-    ("Lexer", "The component that breaks source into tokens so it can be coloured. Tiko "
+    ("Lexer", "The component that breaks source into tokens so it can be coloured. Tiko Editor "
      "uses Lexilla. See <a href=\"syntax-highlighting.html\">Syntax highlighting</a>."),
     ("Localization", "Presenting the interface in another language, from a "
      "<code>.lang</code> file. See <a href=\"localization.html\">Localization</a>."),
@@ -737,18 +737,18 @@ GLOSSARY = [
     ("Monospaced font", "A font in which every character is the same width. Required for "
      "code alignment to work."),
     ("Multiple selections", "Several independent selections or carets edited at once."),
-    ("Parser", "The component that reads your source and extracts its symbols. Tiko's runs "
+    ("Parser", "The component that reads your source and extracts its symbols. Tiko Editor's runs "
      "in the background and powers Goto Definition, autocomplete and the function list."),
     ("Project", "A named workspace: a set of files plus its options, stored in a "
      "<code>.tiko</code> file. See <a href=\"projects-overview.html\">Projects and "
      "workspaces</a>."),
     ("Regular expression", "A pattern language for describing sets of strings, offered by "
-     "some editors for advanced searching. <strong>Tiko does not support them</strong> — "
+     "some editors for advanced searching. <strong>Tiko Editor does not support them</strong> — "
      "its searches are literal text, refined by Match Case, Match Whole Words and "
      "Selection."),
     ("Resource script", "A <code>.rc</code> file describing icons, menus, dialogs and "
      "version information compiled into a Windows program."),
-    ("Scintilla", "The open-source editing component Tiko's editing surface is built on, "
+    ("Scintilla", "The open-source editing component Tiko Editor's editing surface is built on, "
      "also used by Notepad++ and SciTE."),
     ("Side panel", "The dock beside the editor hosting the Explorer, function list and "
      "bookmarks. Toggle with " + kbd("Ctrl", "B") + "."),
@@ -758,20 +758,20 @@ GLOSSARY = [
     ("Symbol", "A named thing in your code — a procedure, type, enumeration or variable — "
      "that the parser has indexed."),
     ("Syntax highlighting", "Colouring code according to what each part of it means."),
-    ("TODO comment", "A comment marking work still to be done. Tiko collects them into "
+    ("TODO comment", "A comment marking work still to be done. Tiko Editor collects them into "
      "the Output panel's TODO tab."),
     ("Token", "The smallest meaningful unit of source — an identifier, keyword, operator "
      "or literal. The formatter compares tokens to prove it preserved your code."),
     ("Unicode", "The standard assigning a number to every character in every writing "
      "system. UTF-8 and UTF-16 are ways of storing those numbers as bytes."),
-    ("User tool", "An external program you can run from Tiko's menu. See "
+    ("User tool", "An external program you can run from Tiko Editor's menu. See "
      "<a href=\"user-tools.html\">User tools</a>."),
     ("UTF-8", "The dominant Unicode encoding. Byte-compatible with ASCII for plain English "
      "text, and able to represent every Unicode character."),
     ("Watch", "An expression the debugger re-evaluates every time your program stops."),
     ("Whole word", "A search option requiring a match to be a complete word rather than "
      "part of a longer one."),
-    ("Workspace", "The set of files currently open, which in Tiko is always a project — "
+    ("Workspace", "The set of files currently open, which in Tiko Editor is always a project — "
      "named or untitled."),
     ("Zoom", "A temporary change to displayed text size. It does not alter the configured "
      "font size."),

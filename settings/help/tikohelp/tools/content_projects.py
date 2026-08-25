@@ -13,7 +13,7 @@ section("projects", "Projects", "folder")
 
 PO = ""
 PO += important(
-    "<strong>In Tiko, every workspace is a project.</strong> There is no \"no project "
+    "<strong>In Tiko Editor, every workspace is a project.</strong> There is no \"no project "
     "open\" state. If you simply open a few loose files, those files <em>are</em> a "
     "project — an <strong>untitled</strong> one. Naming it later is a save, not a "
     "conversion."
@@ -64,7 +64,7 @@ PO += ul([
     "%s and choose a <code>.tiko</code> file." % menu("Project", "Open Project…"),
     "%s lists the ten most recent, and ends with "
     "<strong>Clear this list</strong>." % menu("Project", "Recent Projects"),
-    "Tiko reopens your last workspace automatically when it starts.",
+    "Tiko Editor reopens your last workspace automatically when it starts.",
 ])
 PO += note(
     "Opening a project closes the current workspace first, prompting you to save anything "
@@ -85,7 +85,7 @@ PO += table(
 )
 PO += p(
     "Saving the <em>project</em> and saving your <em>files</em> are separate. %s saves "
-    "documents; Save Project saves the list of them. Tiko prompts for unsaved documents "
+    "documents; Save Project saves the list of them. Tiko Editor prompts for unsaved documents "
     "when it needs to." % kbd("Ctrl", "S")
 )
 
@@ -131,7 +131,7 @@ PO += important(
     "rather than being lost."
 )
 PO += p(
-    "Tiko assigns a category from the file's extension when you add it. The first "
+    "Tiko Editor assigns a category from the file's extension when you add it. The first "
     "<code>.bas</code> file to enter a workspace with no main module becomes the main "
     "module; later ones become ordinary modules. To change a file's category afterwards, "
     "right-click it in the Explorer or on its tab and pick the type, or drag it to another "
@@ -167,7 +167,7 @@ PO += important(
     "That is why no confirmation is asked for: nothing can be lost."
 )
 PO += note(
-    "These folders are Tiko's own organisation, not folders on disk. A file's folder is "
+    "These folders are Tiko Editor's own organisation, not folders on disk. A file's folder is "
     "remembered per category, so moving a file to a different category clears its folder — "
     "a folder under Module is not the same place as a folder under Normal."
 )
@@ -181,7 +181,7 @@ PO += ul([
 ])
 
 page("projects-overview", "Projects and workspaces", "projects",
-     "Tiko's single workspace model: why every set of open files is already a project, how "
+     "Tiko Editor's single workspace model: why every set of open files is already a project, how "
      "to name one, and what a project contains.",
      PO,
      keywords="project workspace untitled named default.tiko save as project new project "
@@ -217,7 +217,7 @@ PE += figure_img(
     "assets/img/explorer-tree.png",
     "The Explorer. Files sit under the five permanent category headers, and the pinned "
     "<strong>Save as Project…</strong> row appears while the workspace is still untitled.",
-    alt="The Tiko Project Explorer tree")
+    alt="The Tiko Editor Project Explorer tree")
 
 PE += h2("Working in the Explorer")
 PE += table(
@@ -277,7 +277,7 @@ PF += table(
     ],
 )
 PF += p(
-    "Tiko categorises each added file by its extension. A <code>.bas</code> file entering "
+    "Tiko Editor categorises each added file by its extension. A <code>.bas</code> file entering "
     "a workspace that has no main module yet becomes the main module."
 )
 
@@ -297,7 +297,7 @@ PF += table(
     key_first=True,
 )
 PF += p(
-    "Both routes do the same thing. If the file is open, Tiko closes its tab first — so "
+    "Both routes do the same thing. If the file is open, Tiko Editor closes its tab first — so "
     "you get the usual prompt if it has unsaved changes. <strong>Cancelling that prompt "
     "abandons the removal</strong> and the file stays in the project."
 )
@@ -442,7 +442,7 @@ PP += h2("The pages")
 PP += h3("Project")
 PP += p(
     "Identifies the project and holds its command-line arguments — the parameters passed "
-    "to your program when Tiko runs it. Set them here rather than remembering to type them "
+    "to your program when Tiko Editor runs it. Set them here rather than remembering to type them "
     "each time."
 )
 PP += h3("Compiler options")

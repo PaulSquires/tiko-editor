@@ -13,13 +13,13 @@ section("welcome", "Welcome", "home")
 
 HOME = """
 <div class="hero">
-  <p class="hero-lede">Tiko is a fast, native Windows code editor built for FreeBASIC
+  <p class="hero-lede">Tiko Editor is a fast, native Windows code editor built for FreeBASIC
   development — with a project system, an integrated compiler workflow, a real debugger
   and a symbol engine that understands your code. It edits any text-based language
   equally well.</p>
   <div class="hero-actions">
     <a class="btn" href="quick-start.html">Start the 25-minute Quick Start %s</a>
-    <a class="btn secondary" href="what-is-tiko.html">What is Tiko?</a>
+    <a class="btn secondary" href="what-is-tiko.html">What is Tiko Editor?</a>
     <a class="btn secondary" href="tutorial.html">Full tutorial</a>
   </div>
 </div>
@@ -27,16 +27,16 @@ HOME = """
 
 HOME += figure_img(
     "assets/img/tiko_dark.png",
-    "Tiko editing a FreeBASIC project. The Explorer sits on the left, the editor fills the "
+    "Tiko Editor editing a FreeBASIC project. The Explorer sits on the left, the editor fills the "
     "centre, and the Output panel is docked below.",
-    alt="The Tiko editor main window using a dark theme",
+    alt="The Tiko Editor editor main window using a dark theme",
 )
 
 HOME += h2("Start here")
 HOME += cards([
     ("quick-start.html", "rocket", "Quick Start",
      "Install, open a file, edit, search, build and run — in about 25 minutes."),
-    ("what-is-tiko.html", "home", "What is Tiko?",
+    ("what-is-tiko.html", "home", "What is Tiko Editor?",
      "The product in a page: what it does, who it is for, and its design philosophy."),
     ("tutorial.html", "graduation", "Ten-lesson tutorial",
      "A progressive course from your first file through to advanced editing."),
@@ -111,19 +111,19 @@ HOME += note(
 )
 
 page("index", "Tiko Editor Documentation", "welcome",
-     "Everything you need to install, learn and master Tiko — the native Windows code "
+     "Everything you need to install, learn and master Tiko Editor — the native Windows code "
      "editor for FreeBASIC development.",
      HOME,
      keywords="home start documentation help tiko editor freebasic")
 
 # ==========================================================================
-# What is Tiko?
+# What is Tiko Editor?
 # ==========================================================================
 
 WHAT = ""
-WHAT += h2("What is Tiko?")
+WHAT += h2("What is Tiko Editor?")
 WHAT += p(
-    "Tiko is a programmer's code editor for Microsoft Windows, written by Paul Squires "
+    "Tiko Editor is a programmer's code editor for Microsoft Windows, written by Paul Squires "
     "(PlanetSquires Software) and released under the GNU General Public License v3. It is "
     "designed first and foremost for <strong>FreeBASIC</strong> development, and it ships "
     "with the pieces that make that work end to end: a project system, compiler "
@@ -131,27 +131,27 @@ WHAT += p(
     "engine that reads your code as you type."
 )
 WHAT += p(
-    "It is not limited to FreeBASIC. Tiko is a competent general-purpose text and code "
+    "It is not limited to FreeBASIC. Tiko Editor is a competent general-purpose text and code "
     "editor, so C, C++, resource scripts, INI files, plain text and anything else you "
     "point it at open and edit normally."
 )
 WHAT += p(
-    "Tiko is a <strong>native Win32 application</strong>. There is no runtime to install, "
+    "Tiko Editor is a <strong>native Win32 application</strong>. There is no runtime to install, "
     "no browser engine behind the editor surface, and no background service. The editing "
     "surface is built on <strong>Scintilla</strong>, the same proven editing component "
     "used by Notepad++ and SciTE."
 )
 
-WHAT += h2("Why use Tiko?")
+WHAT += h2("Why use Tiko Editor?")
 WHAT += h3("It is fast, and stays fast")
 WHAT += p(
-    "Tiko starts quickly and keeps responding on large files. Source parsing happens on a "
+    "Tiko Editor starts quickly and keeps responding on large files. Source parsing happens on a "
     "background worker thread and its results are handed back to the user interface, so "
     "scanning a big project never blocks your typing."
 )
 WHAT += h3("It understands FreeBASIC specifically")
 WHAT += p(
-    "Generic editors treat BASIC as coloured text. Tiko parses it. The symbol engine "
+    "Generic editors treat BASIC as coloured text. Tiko Editor parses it. The symbol engine "
     "extracts procedures and their parameters, types, enumerations and variables — with "
     "the file, line and column of each — which is what powers Goto Definition, the "
     "function list, code tips and autocomplete."
@@ -202,31 +202,31 @@ WHAT += table(
 )
 
 WHAT += h2("Philosophy")
-WHAT += p("A few principles show up repeatedly in how Tiko behaves:")
+WHAT += p("A few principles show up repeatedly in how Tiko Editor behaves:")
 WHAT += ul([
-    "<strong>Native, not emulated.</strong> Tiko is a Win32 program that draws its own "
+    "<strong>Native, not emulated.</strong> Tiko Editor is a Win32 program that draws its own "
     "controls. It looks and behaves like a Windows application because it is one.",
     "<strong>Everything is a file you own.</strong> Settings, themes, keyboard bindings, "
     "language files and keyword lists are plain text files in the <code>settings</code> "
     "folder beside the executable. You can read them, back them up, copy them to another "
     "machine or put them in version control.",
-    "<strong>Portable by default.</strong> Tiko resolves its files relative to its own "
+    "<strong>Portable by default.</strong> Tiko Editor resolves its files relative to its own "
     "location, not to your user profile or the registry. Copy the folder to a USB stick "
     "and it takes your entire configuration with it.",
     "<strong>No surprises with your source.</strong> The formatter never moves a line "
     "break on its own, and it verifies that a reformat preserved every token before it "
     "touches your buffer.",
-    "<strong>Nothing phones home.</strong> Tiko can check for updates if you ask it to; "
+    "<strong>Nothing phones home.</strong> Tiko Editor can check for updates if you ask it to; "
     "otherwise it makes no network requests.",
 ])
 
 WHAT += h2("System requirements")
 WHAT += dl([
-    ("Operating system", "Microsoft Windows. Tiko is a native Win32 application; "
+    ("Operating system", "Microsoft Windows. Tiko Editor is a native Win32 application; "
      "both 32-bit and 64-bit builds are supported."),
     ("Disk space", "A few tens of megabytes for the editor, its DLLs and its settings."),
     ("Runtime", "None. There is no .NET, Java or scripting runtime dependency."),
-    ("For building programs", "Nothing extra. Tiko ships with the most recent FreeBASIC "
+    ("For building programs", "Nothing extra. Tiko Editor ships with the most recent FreeBASIC "
      "toolchain already installed and selected. You can add other toolchains and switch "
      'between them — see <a href="compiler-setup.html">Compiler setup</a>.'),
     ("For debugging", "A program compiled with debug information. See "
@@ -234,18 +234,18 @@ WHAT += dl([
 ])
 
 WHAT += note(
-    "Tiko ships the Scintilla and Lexilla editing libraries and its parser and debugger "
-    "engines as DLLs alongside <code>tiko.exe</code>. Keep them together — the editor "
+    "Tiko Editor ships the Scintilla and Lexilla editing libraries and its parser and debugger "
+    "engines as DLLs alongside <code>tiko-editor.exe</code>. Keep them together — the editor "
     "loads them from its own directory."
 )
 
 WHAT += h2("Where things live")
 WHAT += p(
-    "Everything Tiko reads and writes sits under the folder holding "
-    "<code>tiko.exe</code>:"
+    "Everything Tiko Editor reads and writes sits under the folder holding "
+    "<code>tiko-editor.exe</code>:"
 )
 WHAT += code("""
-tiko.exe                        The editor
+tiko-editor.exe                        The editor
 Scintilla64.dll                 Editing component
 Lexilla64.dll                   Syntax lexers
 fbcParser.dll                   Symbol / code-intelligence engine
@@ -274,7 +274,7 @@ WHAT += ul([
     '<a href="glossary.html">Glossary</a> — terminology used across this documentation.',
 ])
 
-page("what-is-tiko", "What is Tiko?", "welcome",
+page("what-is-tiko", "What is Tiko Editor?", "welcome",
      "An overview of the editor: what it does, why you might choose it, its design "
      "philosophy, and what it needs to run.",
      WHAT,
@@ -295,19 +295,19 @@ QS += note(
 
 QS += h2("1. Install and launch")
 QS += p(
-    "Tiko does not use an installer. Unpack the distribution into any folder you can "
-    "write to and run <code>tiko.exe</code> from there."
+    "Tiko Editor does not use an installer. Unpack the distribution into any folder you can "
+    "write to and run <code>tiko-editor.exe</code> from there."
 )
 QS += ol([
-    "Unpack the archive into a folder — for example <code>C:\\tiko</code>. Avoid "
-    "<code>C:\\Program Files</code>: Tiko writes its settings beside the executable, and "
+    "Unpack the archive into a folder — for example <code>C:\\tiko-editor</code>. Avoid "
+    "<code>C:\\Program Files</code>: Tiko Editor writes its settings beside the executable, and "
     "that location is protected.",
-    "Double-click <code>tiko.exe</code>.",
+    "Double-click <code>tiko-editor.exe</code>.",
     "The main window opens with an empty untitled workspace.",
 ], steps=True)
 QS += warn(
-    "Run <code>tiko.exe</code> from the folder you unpacked, not from a copy you moved "
-    "elsewhere on its own. Tiko finds its themes, settings and keyword files relative to "
+    "Run <code>tiko-editor.exe</code> from the folder you unpacked, not from a copy you moved "
+    "elsewhere on its own. Tiko Editor finds its themes, settings and keyword files relative to "
     "its own location, so a stray copy starts with no theme and no configuration."
 )
 
@@ -359,7 +359,7 @@ QS += diagram("""
 <text x="34" y="349" class="dg-s">Ln 2, Col 24</text>
 <text x="470" y="349" class="dg-s">Win64 Console (Debug)   Spaces: 4   UTF-8   CRLF</text>
 <circle cx="742" cy="344" r="11" class="dg-c"/><text x="738" y="349" class="dg-n">7</text>
-""", "The Tiko main window. <strong>1</strong> Menu bar · <strong>2</strong> Panel icon "
+""", "The Tiko Editor main window. <strong>1</strong> Menu bar · <strong>2</strong> Panel icon "
      "strip, running across the top of the side panel · "
      "<strong>3</strong> Side panel (Explorer, Functions, Bookmarks) · "
      "<strong>4</strong> Document tabs · <strong>5</strong> Editor surface · "
@@ -409,7 +409,7 @@ QS += note(
 
 QS += h2("5. Reopen recent work")
 QS += p(
-    "Tiko keeps two separate recent lists, and the distinction matters:"
+    "Tiko Editor keeps two separate recent lists, and the distinction matters:"
 )
 QS += ul([
     "%s — individual files you have opened." % menu("File", "Open Recent"),
@@ -417,7 +417,7 @@ QS += ul([
     % menu("Project", "Recent Projects"),
 ])
 QS += p(
-    "Each list ends with <strong>Clear this list</strong> if you want to reset it. Tiko "
+    "Each list ends with <strong>Clear this list</strong> if you want to reset it. Tiko Editor "
     "also reopens your last workspace automatically when it starts, so in normal use you "
     "rarely need either list."
 )
@@ -471,7 +471,7 @@ QS += ol([
 ], steps=True)
 QS += note(
     "Find offers three latching options — <strong>Match Case</strong>, <strong>Match Whole "
-    "Words</strong> and <strong>Selection</strong>. Tiko does not support regular "
+    "Words</strong> and <strong>Selection</strong>. Tiko Editor does not support regular "
     'expressions. See <a href="find-replace.html">Find and Replace</a>.'
 )
 
@@ -497,13 +497,13 @@ QS += table(
 
 QS += h2("9. Check your compiler")
 QS += important(
-    "<strong>There is nothing to install.</strong> Tiko ships with the most recent "
+    "<strong>There is nothing to install.</strong> Tiko Editor ships with the most recent "
     "FreeBASIC toolchain already set up, so you can skip this step entirely and go "
     "straight to building. It is here so you know where the setting lives."
 )
 QS += p(
     "Compiler toolchains are subfolders of the <code>toolchains\\</code> folder beside "
-    "<code>tiko.exe</code>, and each one holds both <code>fbc32.exe</code> and "
+    "<code>tiko-editor.exe</code>, and each one holds both <code>fbc32.exe</code> and "
     "<code>fbc64.exe</code>. To see which is selected, or to switch to another you have "
     "installed:"
 )
@@ -523,7 +523,7 @@ QS += figure_img(
     "assets/img/options-compiler.png",
     "The Compiler page of the options dialog. This is a one-off: set it once and every "
     "project uses it.",
-    alt="The Compiler page of the Tiko options dialog")
+    alt="The Compiler page of the Tiko Editor options dialog")
 
 QS += h2("10. Build and run")
 QS += p("With a compiler configured, the whole cycle is three keys:")
@@ -557,7 +557,7 @@ QS += tip(
 
 QS += h2("11. Debug")
 QS += p(
-    "Tiko has a real source-level debugger built in, not just a console window."
+    "Tiko Editor has a real source-level debugger built in, not just a console window."
 )
 QS += ol([
     "Click in the margin beside a line, or press %s, to set a breakpoint. A marker "
@@ -571,7 +571,7 @@ QS += ol([
     "Press %s to stop debugging." % kbd("Shift", "F6"),
 ], steps=True)
 QS += note(
-    "Debugging needs a build that carries debug information. Tiko selects an appropriate "
+    "Debugging needs a build that carries debug information. Tiko Editor selects an appropriate "
     'debug build automatically. See <a href="debugging.html">Debugging</a> for the '
     "full story."
 )
@@ -601,7 +601,7 @@ QS += h2("13. Close down")
 QS += ul([
     "%s closes the current document; %s closes them all."
     % (kbd("Ctrl", "W"), kbd("Ctrl", "Shift", "W")),
-    "%s exits Tiko. You are prompted to save anything modified." % kbd("Alt", "F4"),
+    "%s exits Tiko Editor. You are prompted to save anything modified." % kbd("Alt", "F4"),
     "Your workspace — which files were open, and the window layout — is restored the "
     "next time you start.",
 ])
@@ -619,7 +619,7 @@ QS += cards([
 ])
 
 page("quick-start", "Quick Start", "welcome",
-     "Install Tiko, learn the interface, and work through editing, searching, building, "
+     "Install Tiko Editor, learn the interface, and work through editing, searching, building, "
      "running and debugging a program — in about 25 minutes.",
      QS,
      keywords="quick start getting started install launch new file save open build run "

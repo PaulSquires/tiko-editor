@@ -2,7 +2,7 @@
 """Reference section: shortcuts, menus, commands, configuration, dialogs.
 
 The shortcut and command tables are generated from KEYS below, which mirrors
-Tiko's own default key-binding table so that both reference pages stay
+Tiko Editor's own default key-binding table so that both reference pages stay
 consistent with each other.
 """
 
@@ -52,7 +52,7 @@ KEYS = [
     ("File", "IDM_USERTOOLSDIALOG", "User Tools…", "", "File ▸ User Tools…",
      "Define external programs to run from the menu."),
     ("File", "IDM_EXIT", "Exit", "Alt+F4", "File ▸ Exit",
-     "Close Tiko, prompting to save modified documents."),
+     "Close Tiko Editor, prompting to save modified documents."),
 
     # ---- Edit ----
     ("Edit", "IDM_UNDO", "Undo", "Ctrl+Z", "Edit ▸ Undo", "Undo the last change."),
@@ -232,7 +232,7 @@ KEYS = [
     ("Compile", "IDM_RUNEXE", "Run Executable", "Shift+F5", "Compile ▸ Run Executable",
      "Run the last successful build without recompiling."),
     ("Compile", "IDM_COMMANDLINE", "Command Line…", "", "Compile ▸ Command Line…",
-     "Show the compiler command line Tiko will use."),
+     "Show the compiler command line Tiko Editor will use."),
 
     # ---- Debug ----
     ("Debug", "IDM_DEBUG_STARTDEBUGGING", "Start / Continue Debugging", "F6",
@@ -381,7 +381,7 @@ KS += ul([
 ])
 
 page("keyboard-shortcuts", "Keyboard shortcuts", "reference",
-     "Every default keyboard shortcut in Tiko, grouped by category and ready to print.",
+     "Every default keyboard shortcut in Tiko Editor, grouped by category and ready to print.",
      KS,
      keywords="keyboard shortcuts accelerators hotkeys keys reference print cheat sheet "
               "default bindings")
@@ -477,7 +477,7 @@ page("menu-reference", "Menu reference", "reference",
 
 CR = ""
 CR += p(
-    "Every command in Tiko, with its internal identifier, its default shortcut and where "
+    "Every command in Tiko Editor, with its internal identifier, its default shortcut and where "
     "it lives. The identifier is the name used in "
     "<code>settings\\keybindings.ini</code> — useful when editing that file by hand or "
     "comparing configurations."
@@ -511,7 +511,7 @@ CR += p(
     "assigning a new one."
 )
 CR += warn(
-    "An identifier Tiko does not recognise is ignored, and the command keeps its default. "
+    "An identifier Tiko Editor does not recognise is ignored, and the command keeps its default. "
     "Nothing reports the mistake, so check your spelling against the tables above."
 )
 

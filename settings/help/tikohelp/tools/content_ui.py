@@ -14,14 +14,14 @@ section("ui", "User Interface", "window")
 MW = ""
 MW += figure_img(
     "assets/img/tiko_light.png",
-    "The Tiko main window in a light theme, with the Explorer open on the left and the "
+    "The Tiko Editor main window in a light theme, with the Explorer open on the left and the "
     "Output panel docked below the editor.",
-    alt="Tiko main window using a light theme",
+    alt="Tiko Editor main window using a light theme",
 )
 
 MW += h2("Anatomy of the window")
 MW += p(
-    "Tiko's window is built from seven regions. Everything else — dialogs, popups, "
+    "Tiko Editor's window is built from seven regions. Everything else — dialogs, popups, "
     "tooltips — appears on top of these."
 )
 MW += table(
@@ -94,7 +94,7 @@ MW += ul([
 ])
 
 page("main-window", "The main window", "ui",
-     "A guided tour of Tiko's interface: the seven regions of the main window, how to "
+     "A guided tour of Tiko Editor's interface: the seven regions of the main window, how to "
      "resize them, and how the layout is remembered.",
      MW,
      keywords="main window interface layout regions panels splitter resize ui tour")
@@ -105,7 +105,7 @@ page("main-window", "The main window", "ui",
 
 MB = ""
 MB += p(
-    "The menu bar carries every command in Tiko. It is drawn by the editor rather than by "
+    "The menu bar carries every command in Tiko Editor. It is drawn by the editor rather than by "
     "Windows, so it follows your chosen theme, but it behaves like a standard Windows "
     "menu: click to open, arrow keys to move, %s to activate, %s to close."
     % (kbd("Enter"), kbd("Esc"))
@@ -186,7 +186,7 @@ MB += ul([
 ])
 
 page("menu-bar", "Menu bar", "ui",
-     "How Tiko's menus are organised, how to read a menu item, and which menus rebuild "
+     "How Tiko Editor's menus are organised, how to read a menu item, and which menus rebuild "
      "themselves as you work.",
      MB,
      keywords="menu bar menus file edit search view project compile debug help "
@@ -198,7 +198,7 @@ page("menu-bar", "Menu bar", "ui",
 
 TB = ""
 TB += p(
-    "Tiko does not have a traditional wide toolbar spanning the window. Instead a compact "
+    "Tiko Editor does not have a traditional wide toolbar spanning the window. Instead a compact "
     "<strong>icon strip runs horizontally across the top of the side panel</strong>, in a "
     "band the same height as the document tab strip beside it. The panel's contents begin "
     "directly below it."
@@ -264,7 +264,7 @@ TB += ul([
 ])
 
 page("toolbar", "Toolbar and icon strip", "ui",
-     "Tiko's compact icon strip: which buttons switch panels, which run commands, and how "
+     "Tiko Editor's compact icon strip: which buttons switch panels, which run commands, and how "
      "to hide it.",
      TB,
      keywords="toolbar icon strip buttons panel selector commands find save compile "
@@ -317,11 +317,11 @@ SP += note(
 SP += figure_img(
     "assets/img/explorer-panel.png",
     "The Explorer in the side panel, showing the five category headers.",
-    alt="The Explorer view in the Tiko side panel")
+    alt="The Explorer view in the Tiko Editor side panel")
 
 SP += h2("Functions")
 SP += p(
-    "The function list shows the procedures Tiko's parser found in your code — subs, "
+    "The function list shows the procedures Tiko Editor's parser found in your code — subs, "
     "functions, and their containing types. Click an entry to jump to its definition."
 )
 SP += ul([
@@ -353,7 +353,7 @@ SP += ul([
 ])
 
 page("side-panels", "Side panels", "ui",
-     "The Explorer, function list and bookmarks views that share Tiko's side dock, and how "
+     "The Explorer, function list and bookmarks views that share Tiko Editor's side dock, and how "
      "to switch, resize and hide them.",
      SP,
      keywords="side panel explorer functions bookmarks dock tree navigation")
@@ -364,7 +364,7 @@ page("side-panels", "Side panels", "ui",
 
 OP = ""
 OP += p(
-    "The Output panel is docked below the editor and carries everything Tiko has to tell "
+    "The Output panel is docked below the editor and carries everything Tiko Editor has to tell "
     "you, on separate tabs. Toggle it with %s." % kbd("Ctrl", "F9")
 )
 OP += table(
@@ -503,7 +503,7 @@ SB += figure_img(
     "assets/img/status-bar.png",
     "The status bar. The caret readout sits at the left, the build and document settings "
     "at the right.",
-    alt="The Tiko status bar")
+    alt="The Tiko Editor status bar")
 
 SB += h2("The panels, left to right")
 SB += table(
@@ -543,7 +543,7 @@ SB += p(
 )
 SB += important(
     "There is <strong>no insert/overwrite indicator and no language indicator</strong> on "
-    "Tiko's status bar. " + kbd("Insert") + " still toggles overwrite mode in the editor; "
+    "Tiko Editor's status bar. " + kbd("Insert") + " still toggles overwrite mode in the editor; "
     "the status bar simply does not report which mode you are in."
 )
 
@@ -586,7 +586,7 @@ page("status-bar", "Status bar", "ui",
 
 CM = ""
 CM += p(
-    "Right-clicking almost anything in Tiko opens a context menu relevant to what is under "
+    "Right-clicking almost anything in Tiko Editor opens a context menu relevant to what is under "
     "the pointer. Context menus are drawn by the editor and follow your theme, and they "
     "always use the compact row height."
 )
@@ -625,7 +625,7 @@ page("context-menus", "Context menus", "ui",
 
 DG = ""
 DG += p(
-    "Tiko's dialogs are owner-drawn, so they follow your theme rather than the system grey "
+    "Tiko Editor's dialogs are owner-drawn, so they follow your theme rather than the system grey "
     "of standard Windows dialogs. They behave conventionally in every other respect."
 )
 DG += h2("Common behaviour")
@@ -688,7 +688,7 @@ DG += ul([
 ])
 
 page("dialogs", "Dialog boxes", "ui",
-     "How Tiko's dialogs behave, and an index of the main ones with what each is for.",
+     "How Tiko Editor's dialogs behave, and an index of the main ones with what each is for.",
      DG,
      keywords="dialog dialogs options themes build configurations keyboard user tools "
               "format options project options find replace about cancel ok")

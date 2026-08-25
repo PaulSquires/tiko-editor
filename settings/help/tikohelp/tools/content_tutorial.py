@@ -33,7 +33,7 @@ def lesson(num, slug, title, goal, time_est, prereq, goals, body,
 
 TV = ""
 TV += p(
-    "This tutorial teaches Tiko from the beginning. Each lesson builds on the last, takes "
+    "This tutorial teaches Tiko Editor from the beginning. Each lesson builds on the last, takes "
     "10–20 minutes, and ends with exercises that make the material stick. Work through it "
     "in order the first time."
 )
@@ -46,7 +46,7 @@ TV += p(
 
 TV += h2("Before you start")
 TV += ul([
-    "Tiko unpacked into a folder you can write to.",
+    "Tiko Editor unpacked into a folder you can write to.",
     "A FreeBASIC compiler installed, if you want to do lessons 6 and 7. Lessons 1–5 and "
     "8–10 need no compiler at all.",
     "About two hours in total, or one lesson at a time.",
@@ -58,7 +58,7 @@ TV += note(
 
 TV += h2("The lessons")
 TV += cards([
-    ("lesson-01.html", "rocket", "1 — Opening Tiko",
+    ("lesson-01.html", "rocket", "1 — Opening Tiko Editor",
      "Install, launch, and learn the parts of the window. 10 minutes."),
     ("lesson-02.html", "edit", "2 — Your first file",
      "Create, type, save and reopen a file. 10 minutes."),
@@ -93,7 +93,7 @@ TV += table(
 )
 
 page("tutorial", "Tutorial", "tutorial",
-     "A ten-lesson course that takes you from installing Tiko to using its advanced "
+     "A ten-lesson course that takes you from installing Tiko Editor to using its advanced "
      "editing features, with exercises throughout.",
      TV,
      keywords="tutorial lessons course learn beginner training walkthrough")
@@ -103,16 +103,16 @@ page("tutorial", "Tutorial", "tutorial",
 # ==========================================================================
 
 L1 = ""
-L1 += h2("Launch Tiko")
+L1 += h2("Launch Tiko Editor")
 L1 += ol([
-    "Unpack the distribution into a folder you can write to — <code>C:\\tiko</code>, for "
-    "example. Not <code>C:\\Program Files</code>: Tiko keeps its settings beside the "
+    "Unpack the distribution into a folder you can write to — <code>C:\\tiko-editor</code>, for "
+    "example. Not <code>C:\\Program Files</code>: Tiko Editor keeps its settings beside the "
     "executable and that folder is protected.",
-    "Double-click <code>tiko.exe</code>.",
+    "Double-click <code>tiko-editor.exe</code>.",
     "The main window opens on an empty untitled workspace.",
 ], steps=True)
 L1 += note(
-    "There is no installer and nothing is written to the registry. Removing Tiko later is "
+    "There is no installer and nothing is written to the registry. Removing Tiko Editor later is "
     "deleting the folder."
 )
 
@@ -154,28 +154,28 @@ L1 += ol([
 
 L1 += h2("Expected result")
 L1 += p(
-    "Tiko is running, you can name every region of the window, and you can show, hide and "
+    "Tiko Editor is running, you can name every region of the window, and you can show, hide and "
     "resize the panels."
 )
 
 lesson(
-    1, "lesson-01", "Opening Tiko",
-    "Install and launch Tiko, and learn the parts of its window.",
+    1, "lesson-01", "Opening Tiko Editor",
+    "Install and launch Tiko Editor, and learn the parts of its window.",
     "10 minutes", "Nothing — this is the starting point.",
-    ["Where to unpack Tiko, and why the location matters.",
+    ["Where to unpack Tiko Editor, and why the location matters.",
      "The seven regions of the main window.",
      "How to show, hide and resize the panels.",
      "How to switch between the three side panel views."],
     L1,
-    [("Tiko starts but has no colours and menus look wrong.",
-      "You ran a copy of <code>tiko.exe</code> on its own. Run it from the folder you "
+    [("Tiko Editor starts but has no colours and menus look wrong.",
+      "You ran a copy of <code>tiko-editor.exe</code> on its own. Run it from the folder you "
       "unpacked, where its <code>settings</code> folder is."),
      ("Settings do not stick between runs.",
-      "Tiko is installed somewhere it cannot write. Move the folder out of "
+      "Tiko Editor is installed somewhere it cannot write. Move the folder out of "
       "<code>C:\\Program Files</code>."),
      ("The side panel will not reappear.",
       "Press " + kbd("Ctrl", "B") + ", or choose " + menu("View", "View Side Panel") + ".")],
-    ["Tiko is portable: unpack, run, delete.",
+    ["Tiko Editor is portable: unpack, run, delete.",
      kbd("Ctrl", "B") + " toggles the side panel, " + kbd("Ctrl", "F9") +
      " the Output panel.",
      "The side panel hosts three views: Explorer, Functions and Bookmarks.",
@@ -245,7 +245,7 @@ L2 += ol([
     "Choose <code>greet.bas</code>. It opens where you left it.",
 ], steps=True)
 L2 += note(
-    "Tiko also reopens whatever you had open when you last closed it — even though you "
+    "Tiko Editor also reopens whatever you had open when you last closed it — even though you "
     "have not created a project. Those loose files already <em>are</em> a project, an "
     'untitled one. Lesson 5 covers this properly.'
 )
@@ -263,7 +263,7 @@ lesson(
     ["Creating a document and saving it for the first time.",
      "The difference between Save and Save As.",
      "Closing a document and reopening it from Open Recent.",
-     "Why your files come back when you restart Tiko."],
+     "Why your files come back when you restart Tiko Editor."],
     L2,
     [("Pressing " + kbd("Ctrl", "S") + " opens a dialog every time.",
       "You are pressing " + kbd("Ctrl", "Shift", "S") + " (Save All), or the document "
@@ -280,10 +280,10 @@ lesson(
      " closes them all.",
      "Open Recent lists files; Recent Projects lists whole workspaces."],
     ["Create a third file, <code>notes.txt</code>, and type a few lines. Notice that it "
-     "gets no syntax colouring — Tiko chose the language from the extension.",
+     "gets no syntax colouring — Tiko Editor chose the language from the extension.",
      "Close every document with " + kbd("Ctrl", "Shift", "W") + ", then reopen "
      "<code>greet.bas</code> from Open Recent.",
-     "Restart Tiko and confirm your open files come back."],
+     "Restart Tiko Editor and confirm your open files come back."],
     'In <a href="lesson-03.html">Lesson 3</a> you learn to edit efficiently — selections, '
     "line operations and column editing.",
     "tutorial lesson 2 new file save save as open recent close")
@@ -391,7 +391,7 @@ lesson(
      (kbd("Ctrl", "D") + " does nothing.",
       "The editor does not have focus. Click in it, or press " + kbd("Ctrl", "`") + "."),
      ("Comment block used the wrong comment character.",
-      "Tiko chooses the comment character from the file's extension. Save the file with a "
+      "Tiko Editor chooses the comment character from the file's extension. Save the file with a "
       "<code>.bas</code> or <code>.bi</code> extension and it will use an apostrophe.")],
     [kbd("Ctrl", "D") + " duplicates, " + kbd("Ctrl", "Y") + " deletes, " +
      kbd("Alt", "↑") + "/" + kbd("Alt", "↓") + " moves a line.",
@@ -470,7 +470,7 @@ L4 += h2("Searching inside a selection")
 L4 += ol([
     "Select the three <code>Print</code> lines — a multi-line selection.",
     "Press %s. Notice two things: the search box is empty, and the "
-    "<strong>Selection</strong> icon is lit. Tiko turned it on for you." % kbd("Ctrl", "F"),
+    "<strong>Selection</strong> icon is lit. Tiko Editor turned it on for you." % kbd("Ctrl", "F"),
     "Search for <code>item</code>. Only matches inside your selection are found.",
     "Turn <strong>Selection</strong> off by clicking its icon, and search again. Now the "
     "whole file is searched.",
@@ -480,7 +480,7 @@ L4 += important(
     "select the region first, then replace."
 )
 L4 += note(
-    "<strong>Tiko does not support regular expressions.</strong> Searches are literal text, "
+    "<strong>Tiko Editor does not support regular expressions.</strong> Searches are literal text, "
     "refined by the three latching options — Match Case, Match Whole Words and Selection."
 )
 
@@ -531,7 +531,7 @@ lesson(
 
 L5 = ""
 L5 += important(
-    "Before you start, understand the central idea: <strong>in Tiko you already have a "
+    "Before you start, understand the central idea: <strong>in Tiko Editor you already have a "
     "project</strong>. The files you have been editing form an untitled one. This lesson "
     "gives it a name."
 )
@@ -577,7 +577,7 @@ End Function
 """, lang="fb", title="helpers.bi")
 L5 += p(
     "Look at the Explorer. <code>helpers.bi</code> has been filed under Header, because "
-    "Tiko categorises by extension."
+    "Tiko Editor categorises by extension."
 )
 
 L5 += h2("Use it")
@@ -685,15 +685,15 @@ L6 += note(
     'to <a href="lesson-08.html">Lesson 8</a> and come back later.'
 )
 
-L6 += h2("Point Tiko at the compiler")
+L6 += h2("Point Tiko Editor at the compiler")
 L6 += ol([
     "Open %s." % menu("File", "Settings", "Options…"),
     "Select the <strong>Compiler</strong> page.",
-    "Confirm a toolchain is selected in the list. One ships with Tiko and is already "
+    "Confirm a toolchain is selected in the list. One ships with Tiko Editor and is already "
     "chosen, so this is normally just a look.",
     "Choose <strong>OK</strong>.",
 ], steps=True)
-L6 += p("This is a one-off. Tiko remembers it for every project.")
+L6 += p("This is a one-off. Tiko Editor remembers it for every project.")
 
 L6 += h2("Build and run")
 L6 += ol([
@@ -714,7 +714,7 @@ L6 += ol([
     "<code>Descrbe( qty1 )</code>.",
     "Press %s." % kbd("F5"),
     "The build fails, and the Output panel lists the error.",
-    "<strong>Click the error row.</strong> Tiko jumps to the exact line.",
+    "<strong>Click the error row.</strong> Tiko Editor jumps to the exact line.",
     "Fix the typo and press %s again. It builds." % kbd("F5"),
 ], steps=True)
 L6 += important(
@@ -731,13 +731,13 @@ L6 += ol([
     "project." % kbd("Ctrl", "Shift", "F5"),
 ], steps=True)
 L6 += tip(
-    "Quick Run makes Tiko a good scratchpad. Open a new file, type ten lines to test a "
+    "Quick Run makes Tiko Editor a good scratchpad. Open a new file, type ten lines to test a "
     "language feature, and press %s — no project needed." % kbd("Ctrl", "Shift", "F5")
 )
 
 L6 += h2("See the command line")
 L6 += p(
-    "Choose %s to see exactly what Tiko passes to the compiler. When a build does "
+    "Choose %s to see exactly what Tiko Editor passes to the compiler. When a build does "
     "something unexpected, this usually explains it in one glance."
     % menu("Compile", "Command Line…")
 )
@@ -816,7 +816,7 @@ L7 += ol([
 ], steps=True)
 L7 += note(
     "If the breakpoint jumps to the next line when you set it, that is deliberate: the "
-    "line you chose generates no executable code, so Tiko moved it somewhere it can "
+    "line you chose generates no executable code, so Tiko Editor moved it somewhere it can "
     "actually stop."
 )
 
@@ -987,13 +987,13 @@ L8 += note(
 
 L8 += h2("See where it is all stored")
 L8 += ol([
-    "Close Tiko.",
+    "Close Tiko Editor.",
     "Open <code>settings\\settings.ini</code> in Notepad and find "
     "<code>EditorFontsize</code> and <code>Theme</code>. Those are the changes you just "
     "made.",
     "Open <code>settings\\keybindings.ini</code>. If you left a remapping in place, it is "
-    "the only thing in there — Tiko stores overrides, not defaults.",
-    "Close both without saving, and start Tiko again.",
+    "the only thing in there — Tiko Editor stores overrides, not defaults.",
+    "Close both without saving, and start Tiko Editor again.",
 ], steps=True)
 L8 += tip(
     "Copy the <code>settings</code> folder to another machine and your entire setup goes "
@@ -1002,7 +1002,7 @@ L8 += tip(
 
 L8 += h2("Expected result")
 L8 += p(
-    "Tiko looks the way you want, you have remapped and reset a shortcut, and you know "
+    "Tiko Editor looks the way you want, you have remapped and reset a shortcut, and you know "
     "which files hold your configuration."
 )
 
@@ -1025,13 +1025,13 @@ lesson(
       "Another command already owns it. Choose a different one, or rebind the other "
       "command first."),
      ("Hand-edited settings.ini and the changes vanished.",
-      "Tiko rewrites the file when it exits. Close Tiko before editing it.")],
+      "Tiko Editor rewrites the file when it exits. Close Tiko Editor before editing it.")],
     ["Themes cover the whole application, not just the editor.",
      "Zoom is temporary; the font setting is permanent.",
      "Every command can be remapped, and conflicts are refused rather than silently "
      "resolved.",
      "Everything is stored in the <code>settings</code> folder beside "
-     "<code>tiko.exe</code>."],
+     "<code>tiko-editor.exe</code>."],
     ["Try every bundled theme and keep the one you like best.",
      "Give Format Document (currently " + kbd("Shift", "Alt", "F") + ") a shortcut you "
      "find easier, then reset it.",
@@ -1053,7 +1053,7 @@ L9 += p(
 L9 += h2("Goto Definition and back")
 L9 += ol([
     "Open <code>inventory.bas</code> and put the caret on <code>Describe</code>.",
-    "Press %s. Tiko opens <code>helpers.bi</code> at the function's definition." % kbd("F12"),
+    "Press %s. Tiko Editor opens <code>helpers.bi</code> at the function's definition." % kbd("F12"),
     "Press %s. You are back where you started." % kbd("Alt", "←"),
     "Press %s. Forward again." % kbd("Alt", "→"),
 ], steps=True)

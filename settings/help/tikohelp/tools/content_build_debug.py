@@ -11,7 +11,7 @@ section("building", "Building Programs", "build")
 
 CS = ""
 CS += important(
-    "<strong>Tiko already comes with a compiler.</strong> The most recent FreeBASIC "
+    "<strong>Tiko Editor already comes with a compiler.</strong> The most recent FreeBASIC "
     "toolchain ships with the editor and is installed and selected out of the box, so "
     "there is normally nothing to set up — you can build and run from the moment you "
     "unpack it."
@@ -25,13 +25,13 @@ CS += p(
 CS += h2("How toolchains are organised")
 CS += p(
     "Compiler toolchains live as <strong>subfolders of the <code>toolchains\\</code> "
-    "folder</strong>, beside <code>tiko.exe</code>. Each subfolder is one complete "
+    "folder</strong>, beside <code>tiko-editor.exe</code>. Each subfolder is one complete "
     "toolchain, and you may install as many as you like."
 )
 CS += code("""
-tiko.exe
+tiko-editor.exe
 toolchains\\
-    FreeBASIC-1.10.1-winlibs-gcc-9.3.0\\     <- ships with Tiko
+    FreeBASIC-1.10.1-winlibs-gcc-9.3.0\\     <- ships with Tiko Editor
         fbc32.exe                            <- both executables are required
         fbc64.exe
         bin\\  inc\\  lib\\  examples\\  doc\\
@@ -42,7 +42,7 @@ toolchains\\
 """, lang="text", title="The toolchains folder", numbered=False)
 CS += important(
     "<strong>Each toolchain must have both <code>fbc32.exe</code> and "
-    "<code>fbc64.exe</code> in its root folder.</strong> Tiko always resolves both from "
+    "<code>fbc64.exe</code> in its root folder.</strong> Tiko Editor always resolves both from "
     "the one folder you select, because the 32-bit or 64-bit choice is made per build, not "
     "per toolchain — see below."
 )
@@ -55,7 +55,7 @@ CS += ol([
     "Check that <code>fbc32.exe</code> and <code>fbc64.exe</code> are both directly in "
     "that folder, not one level down.",
     "Open %s and select the <strong>Compiler</strong> page." % menu("File", "Settings", "Options…"),
-    "The new toolchain appears in the list — Tiko scans the folder each time the page "
+    "The new toolchain appears in the list — Tiko Editor scans the folder each time the page "
     "opens, so nothing needs registering.",
 ], steps=True)
 
@@ -70,7 +70,7 @@ CS += figure_img(
     "assets/img/options-compiler.png",
     "The Compiler page. The list shows every subfolder of <code>toolchains\\</code>; "
     "selecting one points the editor at both of its compilers at once.",
-    alt="The Compiler page of the Tiko options dialog")
+    alt="The Compiler page of the Tiko Editor options dialog")
 CS += note(
     "Selecting a toolchain sets the paths to <em>both</em> its compilers together. You "
     "never pick an individual <code>.exe</code>, which is why the two files must both be "
@@ -92,7 +92,7 @@ CS += table(
         ("Run via command window", "Launch your compiled program through a command window "
          "rather than directly. Useful for a console program that exits immediately, so "
          "you can still read its output."),
-        ("Disable compile beep", "Suppress the sound Tiko makes when a build finishes."),
+        ("Disable compile beep", "Suppress the sound Tiko Editor makes when a build finishes."),
     ],
     key_first=True,
 )
@@ -103,7 +103,7 @@ CS += important(
     "Because every toolchain provides both <code>fbc32.exe</code> and "
     "<code>fbc64.exe</code>, switching between a Win32 and a Win64 build is a matter of "
     'selecting a different <a href="build-configurations.html">build configuration</a> — '
-    "Tiko then invokes the matching compiler from the toolchain you selected."
+    "Tiko Editor then invokes the matching compiler from the toolchain you selected."
 )
 CS += p(
     "If your project links against a DLL or static library of a particular architecture, "
@@ -119,7 +119,7 @@ CS += ol([
 ], steps=True)
 CS += warn(
     "If the build fails immediately with a message about the compiler not being found, the "
-    "problem is Tiko's configuration rather than your code. Check that a toolchain is "
+    "problem is Tiko Editor's configuration rather than your code. Check that a toolchain is "
     "selected on the Compiler page, and that the folder it names still contains both "
     "<code>fbc32.exe</code> and <code>fbc64.exe</code>. See "
     '<a href="troubleshooting.html">Troubleshooting</a>.'
@@ -134,10 +134,10 @@ CS += ol([
     "specific to this project.",
     "The <strong>Compiler switches</strong> field on the Compiler options page — applied "
     "to every build in every project. Use sparingly.",
-    "Anything Tiko must add itself, such as the output file name.",
+    "Anything Tiko Editor must add itself, such as the output file name.",
 ], steps=True)
 CS += tip(
-    "%s shows the exact command line Tiko will use. When a build does something you did "
+    "%s shows the exact command line Tiko Editor will use. When a build does something you did "
     "not expect, look there first — it usually settles the question immediately."
     % menu("Compile", "Command Line…")
 )
@@ -150,7 +150,7 @@ CS += ul([
 ])
 
 page("compiler-setup", "Compiler setup", "building",
-     "Tiko ships with a FreeBASIC toolchain ready to use. How toolchains are organised, "
+     "Tiko Editor ships with a FreeBASIC toolchain ready to use. How toolchains are organised, "
      "how to add more, and how the 32- and 64-bit choice is really made.",
      CS,
      keywords="compiler setup toolchain toolchains folder fbc32 fbc64 freebasic bundled "
@@ -161,7 +161,7 @@ page("compiler-setup", "Compiler setup", "building",
 
 BD = ""
 BD += p(
-    "Tiko's build commands all live on the %s menu and all report into the Output panel's "
+    "Tiko Editor's build commands all live on the %s menu and all report into the Output panel's "
     "<strong>Compiler</strong> tab." % menu("Compile")
 )
 
@@ -186,14 +186,14 @@ BD += table(
          "Runs the last successful build without recompiling.",
          "Running again after a build you already did."),
         ("Command Line…", "—",
-         "Shows the compiler command line Tiko will use.",
+         "Shows the compiler command line Tiko Editor will use.",
          "Diagnosing why a build behaves unexpectedly."),
     ],
     key_first=True,
 )
 BD += tip(
     "<strong>Quick Run</strong> is worth remembering. It builds and runs the current file "
-    "on its own with no project set-up, which makes Tiko a perfectly good scratchpad for "
+    "on its own with no project set-up, which makes Tiko Editor a perfectly good scratchpad for "
     "trying out a language feature."
 )
 
@@ -207,7 +207,7 @@ BD += p(
 BD += h2("What happens during a build")
 BD += ol([
     "Modified files are saved, if Compile autosave is on.",
-    "Tiko assembles the command line from the build configuration, the project options and "
+    "Tiko Editor assembles the command line from the build configuration, the project options and "
     "the file set.",
     "The Output panel switches to the Compiler tab and shows the command being run.",
     "Compiler output is captured line by line as it arrives.",
@@ -222,7 +222,7 @@ BD += p(
     'project options — see <a href="project-options.html">Project options</a>.'
 )
 BD += note(
-    "Because the program is a separate process, closing Tiko does not close it, and a "
+    "Because the program is a separate process, closing Tiko Editor does not close it, and a "
     "crash in your program cannot take the editor down with it."
 )
 
@@ -292,7 +292,7 @@ BC += h2("Shortcuts and clashes")
 BC += p(
     "A configuration can have its own keyboard shortcut so you can switch without opening "
     "any menu. If a shortcut cannot work — because the key name is not recognised, or "
-    "because an editor command or user tool already claims it — Tiko simply leaves that "
+    "because an editor command or user tool already claims it — Tiko Editor simply leaves that "
     "configuration unassigned rather than giving you a shortcut that silently never fires."
 )
 BC += note(
@@ -320,7 +320,7 @@ BC += p(
     '<a href="debugging.html">Debugging</a>.' % kbd("F6")
 )
 BC += p(
-    "Tiko ships with twelve configurations covering the usual combinations — 32- and "
+    "Tiko Editor ships with twelve configurations covering the usual combinations — 32- and "
     "64-bit, GUI and console, release and debug, plus DLL and static library targets:"
 )
 BC += table(
@@ -391,7 +391,7 @@ page("build-configurations", "Build configurations", "building",
 CE = ""
 CE += p(
     "When a build fails, the compiler's messages appear in the Output panel's "
-    "<strong>Compiler</strong> tab. Tiko parses them so each becomes a link into your code."
+    "<strong>Compiler</strong> tab. Tiko Editor parses them so each becomes a link into your code."
 )
 
 CE += h2("Navigating to an error")
@@ -473,7 +473,7 @@ section("debugging", "Debugging", "bug")
 
 DB = ""
 DB += p(
-    "Tiko has a real source-level debugger. It runs your program under its own control, so "
+    "Tiko Editor has a real source-level debugger. It runs your program under its own control, so "
     "you can stop it at a chosen line, step through it a statement at a time, and look at "
     "the value of any variable while it is stopped."
 )
@@ -623,7 +623,7 @@ DB += ul([
 ])
 
 page("debugging", "Debugging", "debugging",
-     "Running your program under Tiko's debugger: starting and stopping, stepping, the "
+     "Running your program under Tiko Editor's debugger: starting and stopping, stepping, the "
      "four debugger panes, and inspecting values.",
      DB,
      keywords="debug debugger start debugging continue break stop step into step over "
@@ -659,7 +659,7 @@ BP += h2("Breakpoints on lines that generate no code")
 BP += important(
     "Not every line becomes machine code. Comments, blank lines and bare declarations "
     "produce nothing to stop at. Rather than accepting a breakpoint that would silently "
-    "never fire, Tiko moves it forward to the next line that does generate code."
+    "never fire, Tiko Editor moves it forward to the next line that does generate code."
 )
 BP += p(
     "If a breakpoint appears to jump one or two lines when you set it, that is what "

@@ -372,7 +372,7 @@ SHELL = """<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="{description}">
-<meta name="generator" content="Tiko Help build.py">
+<meta name="generator" content="Tiko Editor Help build.py">
 <title>{title} — {site}</title>
 <link rel="stylesheet" href="assets/styles.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231f6feb'/><text x='16' y='22' font-family='monospace' font-size='16' font-weight='bold' fill='white' text-anchor='middle'>tk</text></svg>">
@@ -540,7 +540,7 @@ def main():
 
     write("assets/search-index.js", build_search_index())
 
-    print("Tiko help built: %d pages, %d sections" % (count, len(SECTIONS)))
+    print("Tiko Editor help built: %d pages, %d sections" % (count, len(SECTIONS)))
     for sec in SECTIONS:
         print("  %-22s %d pages" % (sec["title"], len(sec["pages"])))
     print("Output: %s" % OUT)

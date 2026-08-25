@@ -81,6 +81,6 @@ grep -l 'callout todo' *.html
 ## What is verified
 
 Menus, commands, default keyboard shortcuts and `settings.ini` keys were taken from the
-Tiko source (`modMenuDefinitions.inc`, `modKeyBindings.inc`, `settings/settings.ini`) and
+Tiko Editor source (`modMenuDefinitions.inc`, `modKeyBindings.inc`, `settings/settings.ini`) and
 are accurate. Behavioural details that could not be confirmed from source are marked with
 TODO callouts rather than guessed at.
