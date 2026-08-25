@@ -1,4 +1,4 @@
-'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
+﻿'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
 '    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
@@ -338,7 +338,7 @@ private sub frmThemes_ThemeListSelChange( byval hList as HWND, byval row as inte
     Theme_ApplyAll()
     frmThemes_ApplyShellTheme()   ' previewed theme has different colours -- re-theme our own controls too
     frmThemes_UpdateSelButtons()  ' Edit/Delete off for a built-in default_* theme
-    AfxRedrawWindow( HWND_FRMTHEMES )
+    Theme_RedrawDeep( HWND_FRMTHEMES )
 end sub
 
 
@@ -584,6 +584,12 @@ private sub frmThemes_ApplyShellTheme()
     if ghThemesList then
         PsListTree_SetBackColor( ghThemesList, theme.panel.text.backcolor )
         PsListTree_SetFont( ghThemesList, OptionsFont_Base() )
+        ' Border and scrollbar are COPIED colours, exactly like the back colour, so they have
+        ' to be re-pushed on every theme change -- setting them once at create left a dark
+        ' scrollbar strip and a dark frame sitting on a light theme.
+        PsListTree_SetBorderColor( ghThemesList, theme.ui.divider )
+        PsListTree_SetScrollBarColors( ghThemesList, theme.panel.scrollbar.backcolor, _
+                                       theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
     end if
 
     if ghThemesBar then
@@ -659,7 +665,7 @@ private sub frmThemes_EditClick( byval hButton as HWND, byval id as long )
 
     frmThemes_ApplyViewVisibility()
     frmThemes_PositionWindows( HWND_FRMTHEMES )
-    AfxRedrawWindow( HWND_FRMTHEMES )
+    Theme_RedrawDeep( HWND_FRMTHEMES )
     SetFocus( ghThemesBar )
 end sub
 
@@ -710,7 +716,7 @@ private sub frmThemes_CloneClick( byval hButton as HWND, byval id as long )
     Theme_PreviewFile( wszClone )
     Theme_ApplyAll()
     frmThemes_ApplyShellTheme()
-    AfxRedrawWindow( HWND_FRMTHEMES )
+    Theme_RedrawDeep( HWND_FRMTHEMES )
 end sub
 
 
@@ -756,7 +762,7 @@ private sub frmThemes_DeleteClick( byval hButton as HWND, byval id as long )
     PsListTree_SetCurSel( ghThemesList, newSel )
     PsListTree_SetTopIndex( ghThemesList, newSel )
     AfxRedrawWindow( ghThemesList )
-    AfxRedrawWindow( HWND_FRMTHEMES )
+    Theme_RedrawDeep( HWND_FRMTHEMES )
 end sub
 
 
@@ -776,7 +782,7 @@ private sub frmThemes_SetActiveClick( byval hButton as HWND, byval id as long )
 
     frmThemes_ApplyShellTheme()
     frmThemes_MarkActiveRow()
-    AfxRedrawWindow( HWND_FRMTHEMES )
+    Theme_RedrawDeep( HWND_FRMTHEMES )
 end sub
 
 
@@ -791,7 +797,7 @@ private sub frmThemes_SaveClick( byval hButton as HWND, byval id as long )
     if frmThemes_SaveThemeFile() then
         ' A fork may have repointed gThemesWorkFile; re-theme and repaint the header/footer.
         frmThemes_ApplyShellTheme()
-        AfxRedrawWindow( HWND_FRMTHEMES )
+        Theme_RedrawDeep( HWND_FRMTHEMES )
     end if
 end sub
 
@@ -806,7 +812,7 @@ private sub frmThemes_RevertClick( byval hButton as HWND, byval id as long )
 
     frmThemes_ApplyShellTheme()
     frmThemes_ApplyTheme()                          ' refresh the page's swatches / picker
-    AfxRedrawWindow( HWND_FRMTHEMES )
+    Theme_RedrawDeep( HWND_FRMTHEMES )
     if HWND_FRMTHEMES_PAGE then AfxRedrawWindow( HWND_FRMTHEMES_PAGE )
 end sub
 
@@ -820,7 +826,7 @@ private sub frmThemes_DescEditClick( byval hButton as HWND, byval id as long )
         gThemesDescEdited = true
         frmThemes_MarkEdited()
         frmThemes_PositionWindows( HWND_FRMTHEMES )   ' re-place the icon after the new text
-        AfxRedrawWindow( HWND_FRMTHEMES )
+        Theme_RedrawDeep( HWND_FRMTHEMES )
     end if
 end sub
 
@@ -846,7 +852,7 @@ private sub frmThemes_GoBackClick( byval hButton as HWND, byval id as long )
     gThemesShowEdit = false
     frmThemes_ApplyViewVisibility()
     frmThemes_PositionWindows( HWND_FRMTHEMES )
-    AfxRedrawWindow( HWND_FRMTHEMES )
+    Theme_RedrawDeep( HWND_FRMTHEMES )
     SetFocus( ghThemesList )
 end sub
 

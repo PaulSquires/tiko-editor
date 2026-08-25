@@ -756,14 +756,19 @@ dim shared as HBRUSH ghOutputPanelBrush = 0
 ' ----------------------------------------------------------------------------------------
 ' Paint one tab. Reads the ghOutput theme colors LIVE, so a theme switch needs only a
 ' repaint and no color-pushing plumbing anywhere -- the same pattern
-' frmEditorHScroll_PaintCallback uses. The selected tab draws hot (fore AND back), which is
-' what the hand-drawn strip did.
+' frmEditorHScroll_PaintCallback uses.
+'
+' THE SELECTED TAB KEEPS THE PANEL BACK COLOUR. Only a HOVERED or pressed tab fills with the
+' hot colour -- the current tab is identified by its brighter caption and the indicator bar
+' under it, not by a filled block, which on a strip painted in the panel back colour read as a
+' permanently-hovered tab.
 ' ----------------------------------------------------------------------------------------
 sub frmOutput_SelectBarPaint( byval p as PSSELECTBAR_PAINTINFO ptr )
     dim as boolean isHotTab = p->isSelected orelse p->isHot orelse p->isPressed
+    dim as boolean isFilled = p->isHot orelse p->isPressed
 
     p->b->SetForeColor( iif( isHotTab, theme.output.texthot.forecolor, theme.output.text.forecolor ) )
-    p->b->SetBackColor( iif( isHotTab, theme.output.texthot.backcolor, theme.output.text.backcolor ) )
+    p->b->SetBackColor( iif( isFilled, theme.output.texthot.backcolor, theme.output.text.backcolor ) )
     p->b->PaintRect( @p->rc )
 
     p->b->SetFont( ghFont(GUIFONT_9) )
@@ -954,7 +959,7 @@ function frmOutput_WndProc( _
     case WM_PAINT            
         dim as PsBufferPaint b
         b.BeginDoubleBuffer(hwnd)
-        b.SetBackColor( theme.output.texthot.backcolor )
+        b.SetBackColor( theme.output.text.backcolor )
         b.PaintClientRect()
         b.EndDoubleBuffer()
         return 0
@@ -978,7 +983,7 @@ function frmOutput_SetControlColors() as long
     dim pPanel as CWindow ptr = AfxCWindowPtr( HWND_FRMOUTPUT )
     if pPanel then
         dim as HBRUSH hOld = ghOutputPanelBrush
-        ghOutputPanelBrush = CreateSolidBrush( theme.output.texthot.backcolor )
+        ghOutputPanelBrush = CreateSolidBrush( theme.output.text.backcolor )
         pPanel->Brush = ghOutputPanelBrush
         ' Freed only AFTER the class has stopped pointing at it.
         if hOld then DeleteObject( hOld )
@@ -1024,10 +1029,14 @@ function frmOutput_SetControlColors() as long
     ' last tab still dark. The two icon panels hid the same staleness better, because
     ' frmOutput_ClosePaint paints each ITEM's background live; only the strip around the
     ' items showed it.
+    '
+    ' The strip fill is the PANEL back colour, not texthot: texthot is the SELECTED tab's
+    ' colour, and using it here made the empty run to the right of the last tab read as one
+    ' enormous selected tab.
     if IsWindow( HWND_FRMOUTPUT_SELECTBAR ) then
         dim as PSSELECTBAR_COLORS SelectBarColors
         PsSelectBar_GetColors( HWND_FRMOUTPUT_SELECTBAR, @SelectBarColors )
-        SelectBarColors.BackColor = theme.output.texthot.backcolor
+        SelectBarColors.BackColor = theme.output.text.backcolor
         PsSelectBar_SetColors( HWND_FRMOUTPUT_SELECTBAR, @SelectBarColors )
         AfxRedrawWindow( HWND_FRMOUTPUT_SELECTBAR )
     end if
@@ -1040,7 +1049,7 @@ function frmOutput_SetControlColors() as long
         if IsWindow( hCtl ) then
             dim as PSICONPANEL_COLORS IconPanelColors
             PsIconPanel_GetColors( hCtl, @IconPanelColors )
-            IconPanelColors.BackColor = theme.output.texthot.backcolor
+            IconPanelColors.BackColor = theme.output.text.backcolor
             PsIconPanel_SetColors( hCtl, @IconPanelColors )
             AfxRedrawWindow( hCtl )
         end if
@@ -1089,7 +1098,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
     ' reached. Undocking flashed white because of this and the frame's own brush together;
     ' the panel is the one covering the whole client, so it is the one that showed.
     ' The class is per-instance, so this affects nothing else. Freed in WM_NCDESTROY.
-    ghOutputPanelBrush = CreateSolidBrush( theme.output.texthot.backcolor )
+    ghOutputPanelBrush = CreateSolidBrush( theme.output.text.backcolor )
     pWindow->Brush = ghOutputPanelBrush
 
     ' NOTE: gConfig.ShowOutputPanelHeight is deliberately NOT scaled here. It stays in
@@ -1113,7 +1122,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         
         dim as PSSELECTBAR_COLORS SelectBarColors 
         PsSelectBar_GetColors( HWND_FRMOUTPUT_SELECTBAR, @SelectBarColors )
-        SelectBarColors.BackColor = theme.output.texthot.backcolor 
+        SelectBarColors.BackColor = theme.output.text.backcolor 
         PsSelectBar_SetColors( HWND_FRMOUTPUT_SELECTBAR, @SelectBarColors )
 
         ' Panels are added ONCE. The third argument is the panel's host ID -- an
@@ -1153,7 +1162,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
 
         dim as PSICONPANEL_COLORS UndockColors
         PsIconPanel_GetColors( HWND_FRMOUTPUT_UNDOCK, @UndockColors )
-        UndockColors.BackColor = theme.output.texthot.backcolor
+        UndockColors.BackColor = theme.output.text.backcolor
         PsIconPanel_SetColors( HWND_FRMOUTPUT_UNDOCK, @UndockColors )
 
     HWND_FRMOUTPUT_CLOSE = PsIconPanel_Create( HWND_FRMOUTPUT, IDC_FRMOUTPUT_BTNCLOSE )
@@ -1169,7 +1178,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
 
         dim as PSICONPANEL_COLORS IconPanelColors 
         PsIconPanel_GetColors( HWND_FRMOUTPUT_CLOSE, @IconPanelColors )
-        IconPanelColors.BackColor = theme.output.texthot.backcolor 
+        IconPanelColors.BackColor = theme.output.text.backcolor 
         PsIconPanel_SetColors( HWND_FRMOUTPUT_CLOSE, @IconPanelColors )
 
     ' Compiler Log File: multiline read-only PsTextBox (borderless; the 20px indent the
