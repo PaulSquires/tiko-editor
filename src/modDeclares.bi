@@ -419,7 +419,11 @@ dim shared gFindInFiles as FINDREPLACE_TYPE
 '  rects, hover and active state -- see frmMenuBar.inc.)
 
 ' array that holds the names of all fonts on the target system
-dim shared gFontNames( any ) as DWSTRING
+' A plain list of names. Five separate globals used to be a bare DWSTRING array with the
+' one-element "redim preserve arr(ubound + 1)" append open-coded beside each one.
+type DWSTRINGLIST as FB.Array( of DWSTRING )
+
+dim shared gFontNames as DWSTRINGLIST
 
 
 const MENUITEM_HEIGHT = 24

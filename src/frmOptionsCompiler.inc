@@ -47,7 +47,7 @@ dim shared ghCompBeep       as HWND      ' PsToggle
 ' Clean toolchain folder names, parallel to the PsListTree rows. The row's display TEXT may
 ' carry a "path contains spaces" warning suffix, so the folder name is kept separately
 ' rather than parsed back out of the list.
-dim shared gCompToolchainNames(any) as DWSTRING
+dim shared gCompToolchainNames as DWSTRINGLIST
 
 dim shared gCompLabels as PAGELABELLIST
 dim shared gCompBuilt as boolean = false
@@ -74,7 +74,7 @@ sub frmOptionsCompiler_Reset()
     ghCompIncludes   = 0
     ghCompRunCmd     = 0
     ghCompBeep       = 0
-    erase gCompToolchainNames
+    gCompToolchainNames.Clear( )
     gCompLabels.Clear( )
 end sub
 
@@ -83,8 +83,8 @@ end sub
 ' Toolchain selection changed (mouse or keyboard). Write the clean folder name to staging.
 ' ========================================================================================
 private sub frmOptionsCompiler_ToolchainSelChange( byval hList as HWND, byval row as integer )
-    if (row < lbound(gCompToolchainNames)) orelse (row > ubound(gCompToolchainNames)) then exit sub
-    gOptWork.CompilerToolchain = gCompToolchainNames(row)
+    if (row < 0) orelse (row >= gCompToolchainNames.Count) then exit sub
+    gOptWork.CompilerToolchain = gCompToolchainNames[row]
 end sub
 
 
@@ -144,7 +144,7 @@ private function frmOptionsCompiler_LoadToolchains() as long
 
     PsListTree_BeginUpdate( ghCompToolchains )
     PsListTree_Clear( ghCompToolchains )
-    erase gCompToolchainNames
+    gCompToolchainNames.Clear( )
 
     dim as long idxMatch = -1
     dim as long idx = 0
@@ -169,8 +169,7 @@ private function frmOptionsCompiler_LoadToolchains() as long
                     end if
 
                     idx = PsListTree_AddString( ghCompToolchains, wszDisplay )
-                    redim preserve gCompToolchainNames(idx) as DWSTRING
-                    gCompToolchainNames(idx) = wszFolder
+                    SetNameAtRow( gCompToolchainNames, idx, wszFolder )
                     if ucase(wszFolder) = wszWanted then idxMatch = idx
                 end if
             end if

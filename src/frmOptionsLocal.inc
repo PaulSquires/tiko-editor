@@ -102,7 +102,7 @@ dim shared ghLocalList      as HWND
 
 ' Filename per languages-list row -- the list shows a prettified name, so the row index cannot be
 ' turned back into a file without this. Same shape as frmThemes' gThemeFilenames().
-dim shared gLocalLangFiles(any) as DWSTRING
+dim shared gLocalLangFiles as DWSTRINGLIST
 
 dim shared gLocalLabels as PAGELABELLIST
 
@@ -152,7 +152,7 @@ sub frmOptionsLocal_Reset()
     ghLocalLanguages  = 0
     ghLocalList       = 0
     gLocalLabels.Clear( )
-    erase gLocalLangFiles
+    gLocalLangFiles.Clear( )
 end sub
 
 
@@ -331,7 +331,7 @@ private function frmOptionsLocal_LoadLanguages() as long
 
     PsListTree_BeginUpdate( ghLocalLanguages )
     PsListTree_Clear( ghLocalLanguages )
-    erase gLocalLangFiles
+    gLocalLangFiles.Clear( )
 
     dim as long idxMatch = -1
     dim hSearch as HANDLE
@@ -352,8 +352,7 @@ private function frmOptionsLocal_LoadLanguages() as long
                 dim as long idx = PsListTree_AddString( ghLocalLanguages, frmOptionsLocal_PrettyName( wszFile ) )
                 if idx >= 0 then
                     PsListTree_SetCellText( ghLocalLanguages, idx, 1, wszFile )
-                    redim preserve gLocalLangFiles(idx) as DWSTRING
-                    gLocalLangFiles(idx) = wszFile
+                    SetNameAtRow( gLocalLangFiles, idx, wszFile )
                     if ucase(gLocalCurrentFile) = ucase(wszFile) then idxMatch = idx
                 end if
             end if
@@ -384,8 +383,8 @@ end function
 ' highlight back on a file the row indices have moved under.
 private function frmOptionsLocal_RowForFile( byval wszFile as DWSTRING ) as long
     if len(wszFile) = 0 then return -1
-    for i as long = lbound(gLocalLangFiles) to ubound(gLocalLangFiles)
-        if ucase(gLocalLangFiles(i)) = ucase(wszFile) then return i
+    for i as long = 0 to gLocalLangFiles.Count - 1
+        if ucase(gLocalLangFiles[i]) = ucase(wszFile) then return i
     next
     return -1
 end function
@@ -405,8 +404,8 @@ private sub frmOptionsLocal_MarkActiveRow()
     ' some later repaint happened to come along. EndUpdate calls Refresh, which is what actually
     ' rebuilds and repaints the surface.
     PsListTree_BeginUpdate( ghLocalLanguages )
-    for i as long = lbound(gLocalLangFiles) to ubound(gLocalLangFiles)
-        dim as boolean bActive = (ucase(gLocalLangFiles(i)) = ucase(gLocalCurrentFile))
+    for i as long = 0 to gLocalLangFiles.Count - 1
+        dim as boolean bActive = (ucase(gLocalLangFiles[i]) = ucase(gLocalCurrentFile))
         ' if/else, not iif: iif cannot return a UDT, and DWSTRING is one.
         dim as DWSTRING wszMark = ""
         if bActive then wszMark = L(324,"Active")
@@ -421,9 +420,9 @@ private function frmOptionsLocal_SelectedFile() as DWSTRING
     ' returning a type with constructors, and DWSTRING is one.
     if ghLocalLanguages = 0 then return ""
     dim as long idx = PsListTree_GetCurSel( ghLocalLanguages )
-    if idx < lbound(gLocalLangFiles) then return ""
-    if idx > ubound(gLocalLangFiles) then return ""
-    return gLocalLangFiles(idx)
+    if idx < 0 then return ""
+    if idx >= gLocalLangFiles.Count then return ""
+    return gLocalLangFiles[idx]
 end function
 
 

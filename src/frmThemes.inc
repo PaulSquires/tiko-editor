@@ -163,7 +163,7 @@ private function frmThemes_LoadThemes() as long
 
     PsListTree_BeginUpdate( ghThemesList )
     PsListTree_Clear( ghThemesList )
-    erase gThemeFilenames
+    gThemeFilenames.Clear( )
 
     dim as long idxActive = -1
     dim as long idx = 0
@@ -183,8 +183,7 @@ private function frmThemes_LoadThemes() as long
                 dim as DWSTRING wszRow = sBase & chr(9) & wszDesc
 
                 idx = ListBox_AddTabbedRow( ghThemesList, wszRow )
-                redim preserve gThemeFilenames(idx) as DWSTRING
-                gThemeFilenames(idx) = WFD.cFileName
+                SetNameAtRow( gThemeFilenames, idx, WFD.cFileName )
                 if ucase(gConfig.ThemeShortFilename) = ucase(WFD.cFileName) then idxActive = idx
             end if
         loop while FindNextFile( hSearch, @WFD )
@@ -206,8 +205,8 @@ end function
 private sub frmThemes_MarkActiveRow()
     if ghThemesList = 0 then exit sub
     PsListTree_BeginUpdate( ghThemesList )
-    for i as long = lbound(gThemeFilenames) to ubound(gThemeFilenames)
-        dim as boolean bActive = (ucase(gThemeFilenames(i)) = ucase(gConfig.ThemeShortFilename))
+    for i as long = 0 to gThemeFilenames.Count - 1
+        dim as boolean bActive = (ucase(gThemeFilenames[i]) = ucase(gConfig.ThemeShortFilename))
         dim as DWSTRING wszMark = ""
         if bActive then wszMark = L(324,"Active")
         PsListTree_SetCellText( ghThemesList, i, THEMECOL_ACTIVE, wszMark )
@@ -228,8 +227,8 @@ private sub frmThemes_UpdateSelButtons()
     if ghThemesList = 0 then exit sub
     dim as long sel = PsListTree_GetCurSel( ghThemesList )
     dim as boolean bProtected = false
-    if (sel >= lbound(gThemeFilenames)) andalso (sel <= ubound(gThemeFilenames)) then
-        bProtected = frmThemes_IsProtectedTheme( gThemeFilenames(sel) )
+    if (sel >= 0) andalso (sel < gThemeFilenames.Count) then
+        bProtected = frmThemes_IsProtectedTheme( gThemeFilenames[sel] )
     end if
     if ghThemesEdit   then EnableWindow( ghThemesEdit,   iif( bProtected, false, true ) )
     if ghThemesDelete then EnableWindow( ghThemesDelete, iif( bProtected, false, true ) )
@@ -243,16 +242,16 @@ sub frmThemes_RefreshThemeList()
     frmThemes_MarkActiveRow()
 
     dim as long sel = -1
-    for i as long = lbound(gThemeFilenames) to ubound(gThemeFilenames)
-        if ucase(gThemeFilenames(i)) = ucase(gThemesWorkFile) then sel = i : exit for
+    for i as long = 0 to gThemeFilenames.Count - 1
+        if ucase(gThemeFilenames[i]) = ucase(gThemesWorkFile) then sel = i : exit for
     next
     if sel < 0 then sel = idxActive
-    if (sel < 0) andalso (ubound(gThemeFilenames) >= 0) then sel = 0
+    if (sel < 0) andalso (gThemeFilenames.Count > 0) then sel = 0
 
     if sel >= 0 then
         PsListTree_SetCurSel( ghThemesList, sel )
         PsListTree_SetTopIndex( ghThemesList, sel )
-        gThemesWorkFile = gThemeFilenames(sel)
+        gThemesWorkFile = gThemeFilenames[sel]
     end if
     frmThemes_UpdateSelButtons()
     AfxRedrawWindow( ghThemesList )
@@ -333,9 +332,9 @@ end sub
 ' gConfig is NOT touched -- the pick stays in gThemesWorkFile; Close restores the snapshot,
 ' and only "Set as active" commits.
 private sub frmThemes_ThemeListSelChange( byval hList as HWND, byval row as integer )
-    if (row < lbound(gThemeFilenames)) orelse (row > ubound(gThemeFilenames)) then exit sub
-    gThemesWorkFile = gThemeFilenames(row)
-    Theme_PreviewFile( gThemeFilenames(row) )
+    if (row < 0) orelse (row >= gThemeFilenames.Count) then exit sub
+    gThemesWorkFile = gThemeFilenames[row]
+    Theme_PreviewFile( gThemeFilenames[row] )
     Theme_ApplyAll()
     frmThemes_ApplyShellTheme()   ' previewed theme has different colours -- re-theme our own controls too
     frmThemes_UpdateSelButtons()  ' Edit/Delete off for a built-in default_* theme
@@ -634,11 +633,11 @@ end sub
 ' Edit: enter the colour editor for the selected theme. Does NOT activate it.
 private sub frmThemes_EditClick( byval hButton as HWND, byval id as long )
     dim as long sel = PsListTree_GetCurSel( ghThemesList )
-    if (sel < lbound(gThemeFilenames)) orelse (sel > ubound(gThemeFilenames)) then exit sub
+    if (sel < 0) orelse (sel >= gThemeFilenames.Count) then exit sub
     ' A built-in default_* theme cannot be edited -- Clone it first. The button is disabled for
     ' those, but ENTER / double-click routes through here via PsButton_Click, so guard again.
-    if frmThemes_IsProtectedTheme( gThemeFilenames(sel) ) then exit sub
-    gThemesWorkFile = gThemeFilenames(sel)
+    if frmThemes_IsProtectedTheme( gThemeFilenames[sel] ) then exit sub
+    gThemesWorkFile = gThemeFilenames[sel]
 
     ' Sync the description for the header display (Theme_PreviewFile does not refresh
     ' theme.general.description), and start a clean editing session.
@@ -663,9 +662,9 @@ end sub
 ' Clone: Save-As for the new theme's disk filename, then duplicate the selected theme into it.
 private sub frmThemes_CloneClick( byval hButton as HWND, byval id as long )
     dim as long sel = PsListTree_GetCurSel( ghThemesList )
-    if (sel < lbound(gThemeFilenames)) orelse (sel > ubound(gThemeFilenames)) then exit sub
+    if (sel < 0) orelse (sel >= gThemeFilenames.Count) then exit sub
 
-    dim as DWSTRING wszSrc    = gThemeFilenames(sel)
+    dim as DWSTRING wszSrc    = gThemeFilenames[sel]
     dim as DWSTRING wszFolder = frmThemes_ThemesFolder()
 
     ' Prompt for the filename, pre-filled with a unique suggestion. The dialog defaults to the
@@ -714,9 +713,9 @@ end sub
 ' and fall the active theme back to a survivor if the deleted one was active.
 private sub frmThemes_DeleteClick( byval hButton as HWND, byval id as long )
     dim as long sel = PsListTree_GetCurSel( ghThemesList )
-    if (sel < lbound(gThemeFilenames)) orelse (sel > ubound(gThemeFilenames)) then exit sub
+    if (sel < 0) orelse (sel >= gThemeFilenames.Count) then exit sub
 
-    dim as DWSTRING wszFile = gThemeFilenames(sel)
+    dim as DWSTRING wszFile = gThemeFilenames[sel]
 
     if frmThemes_ThemedMsgBox( L(379,"Delete this theme? This cannot be undone."), _
                                L(318,"Themes"), TMB_ICON_WARNING, TMB_OKCANCEL ) <> IDOK then
@@ -730,9 +729,9 @@ private sub frmThemes_DeleteClick( byval hButton as HWND, byval id as long )
     ' Reload and pick a survivor near where the deleted row was.
     frmThemes_LoadThemes()
     dim as long newSel = sel
-    if newSel > ubound(gThemeFilenames) then newSel = ubound(gThemeFilenames)
+    if newSel >= gThemeFilenames.Count then newSel = gThemeFilenames.Count - 1
     if newSel < 0 then newSel = 0
-    gThemesWorkFile = gThemeFilenames(newSel)
+    gThemesWorkFile = gThemeFilenames[newSel]
 
     if bWasActive then
         ' The active theme is gone -- promote the survivor, apply and commit it.
@@ -760,9 +759,9 @@ end sub
 ' this becomes the baseline Close restores to.
 private sub frmThemes_SetActiveClick( byval hButton as HWND, byval id as long )
     dim as long sel = PsListTree_GetCurSel( ghThemesList )
-    if (sel < lbound(gThemeFilenames)) orelse (sel > ubound(gThemeFilenames)) then exit sub
+    if (sel < 0) orelse (sel >= gThemeFilenames.Count) then exit sub
 
-    gThemesWorkFile = gThemeFilenames(sel)
+    gThemesWorkFile = gThemeFilenames[sel]
     gConfig.ThemeShortFilename = gThemesWorkFile
     gConfig.SaveConfigFile()
     LoadThemeFile()

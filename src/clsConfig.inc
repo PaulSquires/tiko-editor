@@ -168,9 +168,7 @@ function fonts_EnumFontName( _
             ByVal FontType as long, _
             HWnd as HWnd _
             ) as long
-    dim as long ub = ubound(gFontNames)
-    redim preserve gFontNames(ub + 1) as DWSTRING
-    gFontNames(ub + 1) = lf.lfFaceName
+    gFontNames.Push( lf.lfFaceName )
     function = true
 end function
 
@@ -179,8 +177,8 @@ end function
 ' ========================================================================================
 function isFontNameExist( byval wszFontName as DWSTRING ) as boolean
     wszFontName = ucase(wszFontName)
-    for i as long = lbound(gFontnames) to ubound(gFontNames)
-        if wszFontName = ucase(gFontNames(i)) then return true
+    for each wszName in gFontNames
+        if wszFontName = ucase(wszName) then return true
     next
     return false
 end function
@@ -193,7 +191,7 @@ end function
 ' were made to the config file fontname value.
 ' ========================================================================================
 function doFontSanityCheck() as long
-    erase gFontNames
+    gFontNames.Clear( )
     dim hDC as HDC = GetDC(0)
     EnumFontFamilies( hDC, ByVal 0, Cast(FONTENUMPROCW, @fonts_EnumFontName), 0 )
     ReleaseDC( 0, hDC )
