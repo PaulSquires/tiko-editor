@@ -1,4 +1,4 @@
-'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
+﻿'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
 '    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
@@ -1749,6 +1749,15 @@ sub frmDebug_ApplyTheme()
             bc.ForeColorHot     = theme.output.texthot.forecolor
             bc.BorderColor      = theme.output.divider
             bc.BorderColorHot   = theme.output.divider
+            ' DISABLED IS A THEMED MOOD TOO. Left unset it keeps PSBUTTON_COLORS' built-in
+            ' dark-theme greys, and Break -- the one toolbar button that is disabled most of
+            ' the time (it means nothing while the debuggee is stopped) -- sat on a light
+            ' theme as a black block. Same mapping OptionsTheme_FillButton uses: the idle
+            ' background so it blends, the divider colour for everything that draws on it.
+            bc.BackColorDisabled   = theme.output.texthot.backcolor
+            bc.ForeColorDisabled   = theme.output.divider
+            bc.BorderColorDisabled = theme.output.divider
+            bc.IconColorDisabled   = theme.output.divider
             PsButton_SetColors( h, @bc )
         end if
     #endmacro
@@ -1771,6 +1780,13 @@ sub frmDebug_ApplyTheme()
             ac.ForeColorHot     = theme.output.texthot.forecolor
             ac.BorderColor      = theme.output.texthot.backcolor
             ac.BorderColorHot   = theme.output.divider
+            ' The trashcan is disabled whenever no watch row is selected, which is most of
+            ' the time -- so its disabled mood needs the same treatment. Borderless like the
+            ' idle mood: these melt into the caption band until hovered.
+            ac.BackColorDisabled   = theme.output.texthot.backcolor
+            ac.ForeColorDisabled   = theme.output.divider
+            ac.BorderColorDisabled = theme.output.texthot.backcolor
+            ac.IconColorDisabled   = theme.output.divider
             PsButton_SetColors( h, @ac )
         end if
     #endmacro

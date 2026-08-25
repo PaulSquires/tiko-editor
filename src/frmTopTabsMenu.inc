@@ -1,4 +1,4 @@
-'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
+﻿'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
 '    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
@@ -43,27 +43,31 @@ sub frmTopTabsMenu_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
     if p->isHot then backclr = theme.toptabs.texthot.backcolor
     p->b->SetColors(foreclr, backclr)
 
-    ' If this is the Spring panel then we don't want any highlighting because it is
-    ' just a placeholder that forces the icons right justified.
-    if PsStatusBar_GetItemData(p->hStatusBar, p->itemID) = 0 then
-        p->b->SetColors(theme.panel.text.backcolor, theme.panel.text.backcolor)
-    end if
+    ' The Spring panel is a placeholder that forces the icons right justified: it has no
+    ' icon, no highlight, and NO ICON BUTTON EITHER.
+    '
+    ' PaintIconButton paints a rounded rect in the current back colour and THEN the text,
+    ' so an empty caption still leaves a filled button-sized blob -- which is what showed up
+    ' to the left of the chevrons. It was visible rather than invisible because the colour
+    ' set here was the PANEL subsystem's background, not this bar's: the two agree in the
+    ' dark theme and part company in the light one.
+    dim as boolean bSpring = ( PsStatusBar_GetItemData( p->hStatusBar, p->itemID ) = 0 )
 
     ' Don't paint the background because we will reduce the size of the drawing
     ' rect and we don't want the outside of that rect to be highlighted.
 '    p->b->PaintRect( @p->rc )
 
-    p->b->SetFont( ghFont(SYMBOLFONT_10) )
+    if bSpring = false then
+        p->b->SetFont( ghFont(SYMBOLFONT_10) )
 
-    dim as integer itemData = PsStatusBar_GetItemData( p->hStatusBar, p->itemID )
-    
-    ' Draw the icon
-    dim as RECT rc = p->rc
-    
-    ' Shrink the drawing rect top and height for better icon drawing squareness.
-    dim as integer py = pWindow->ScaleX(6)
-    rc.top += py:  rc.bottom -= py
-    p->b->PaintIconButton( p->wszCaption, @rc )
+        ' Draw the icon
+        dim as RECT rc = p->rc
+
+        ' Shrink the drawing rect top and height for better icon drawing squareness.
+        dim as integer py = pWindow->ScaleX(6)
+        rc.top += py:  rc.bottom -= py
+        p->b->PaintIconButton( p->wszCaption, @rc )
+    end if
 
     ' Paint a full line under the control so that continues the line
     ' of the TopTabs control.

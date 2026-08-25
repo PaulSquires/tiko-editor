@@ -1,4 +1,4 @@
-'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
+﻿'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
 '    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
@@ -55,6 +55,13 @@ dim shared gBCPage as long = IDP_FRMBUILDCONFIG_GENERAL
 dim shared gBCPreviewRect      as RECT
 dim shared gBCPreviewLabelRect as RECT
 dim shared gBCPreviewHot       as boolean = false
+' TRUE between a press INSIDE the block and its release. The jump to the switches page used
+' to happen on the WM_LBUTTONDOWN, and that is a page switch performed with a click still in
+' flight: the switch list is shown over the very rect the block occupies, so the trailing
+' WM_LBUTTONUP landed on the list and toggled whatever row had appeared under the cursor
+' (-ex, at that height). Acting on the UP consumes the whole gesture here and leaves nothing
+' for the newly-shown list to receive.
+dim shared gBCPreviewPressed   as boolean = false
 
 ' One label rect per General-page row, indexed by BCROW_*. Derived in PositionWindows from
 ' where each control actually landed, and read back by the painter -- so a label can never
@@ -762,11 +769,23 @@ end sub
 '
 ' FALSE, not TRUE: the control has already applied its own click selection by the time this
 ' runs, and returning TRUE would suppress the rest of its default handling.
+' A ROW TOGGLES ON A MATCHED PRESS+RELEASE, never on a bare WM_LBUTTONUP. An UP with no DOWN
+' of its own is exactly what a page switch performed mid-click delivers -- the list is shown
+' under a cursor whose button is already down -- and acting on it toggled a row the user had
+' never pressed. Pressing a row, sliding off it and releasing does nothing, which is the
+' press/cancel gesture the rest of the family implements.
+dim shared gBCSwitchPressed as long = -1
+
 private function frmBuildConfig_SwitchListMessage( byval m as PSLISTTREE_MESSAGEINFO ptr ) as boolean
     if m = 0 then return false
-    if m->uMsg = WM_LBUTTONUP then
-        if m->idx >= 0 then frmBuildConfig_ToggleSwitch( m->idx )
-    end if
+    select case m->uMsg
+        case WM_LBUTTONDOWN
+            gBCSwitchPressed = m->idx
+        case WM_LBUTTONUP
+            dim as long idxPressed = gBCSwitchPressed
+            gBCSwitchPressed = -1
+            if (m->idx >= 0) andalso (m->idx = idxPressed) then frmBuildConfig_ToggleSwitch( m->idx )
+    end select
     return false
 end function
 
@@ -1925,14 +1944,31 @@ private function frmBuildConfig_WndProc( _
             ' THE PREVIEW BLOCK IS PAINTED, NOT A CHILD WINDOW, so its click lands here. That
             ' is one fewer CWindow, WndProc and WM_CTLCOLOR path than a real control would
             ' cost, for a target that does exactly one thing.
+            '
+            ' ARM ONLY. The page switch is on the UP -- see gBCPreviewPressed.
+            gBCPreviewPressed = false
             if (gBCPage = IDP_FRMBUILDCONFIG_GENERAL) andalso (gBCCurrent >= 0) then
                 dim as POINT pt = type( cast(short, loword(lParam)), cast(short, hiword(lParam)) )
                 if PtInRect( @gBCPreviewRect, pt ) then
-                    PsSelectBar_SetCurSel( ghBCSelectBar, 1 )
-                    frmBuildConfig_ShowPage( IDP_FRMBUILDCONFIG_SWITCHES )
-                    SetFocus( ghBCSwitches )
+                    gBCPreviewPressed = true
                     return 0
                 end if
+            end if
+
+        case WM_LBUTTONUP
+            ' The matching release. Press, slide off the block, release = nothing happened,
+            ' which is the same press/cancel discipline every Ps* control follows.
+            if gBCPreviewPressed then
+                gBCPreviewPressed = false
+                if (gBCPage = IDP_FRMBUILDCONFIG_GENERAL) andalso (gBCCurrent >= 0) then
+                    dim as POINT pt = type( cast(short, loword(lParam)), cast(short, hiword(lParam)) )
+                    if PtInRect( @gBCPreviewRect, pt ) then
+                        PsSelectBar_SetCurSel( ghBCSelectBar, 1 )
+                        frmBuildConfig_ShowPage( IDP_FRMBUILDCONFIG_SWITCHES )
+                        SetFocus( ghBCSwitches )
+                    end if
+                end if
+                return 0
             end if
 
         case WM_TIMER
