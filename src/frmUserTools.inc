@@ -240,14 +240,12 @@ end function
 ' UNCHANGED.
 ' ========================================================================================
 function frmUserTools_CreateAcceleratorTable() as long
-    dim NumKeys  as long
     dim nKey     as long
     dim fVirt    as long
 
     if ghAccelUserTools then DestroyAcceleratorTable(ghAccelUserTools)
-    dim a(any) as ACCEL
+    dim keys as ACCELLIST
 
-    NumKeys = 0
     for y as long = lbound(gConfig.Tools) to ubound(gConfig.Tools)
 
         fVirt = FNOINVERT or FVIRTKEY
@@ -267,19 +265,11 @@ function frmUserTools_CreateAcceleratorTable() as long
         ' "None" affordance to plain N, and any stale name to its own first letter.
         nKey = KeyBindings_PickListKeyToValue( gConfig.Tools(y).wszKey )
 
-        if nKey > 0 then
-            NumKeys = NumKeys + 1
-            redim preserve a(1 To NumKeys) as ACCEL
-            a(NumKeys).fVirt = fVirt
-            a(NumKeys).key   = nKey
-            a(NumKeys).cmd   = IDM_USERTOOLSBASE + y
-        end if
+        AddAccelKey( keys, fVirt, nKey, IDM_USERTOOLSBASE + y )
 
     next
 
-    if NumKeys then
-        ghAccelUserTools = CreateAcceleratorTable(cast(LPACCEL, @a(1)), NumKeys)
-    end if
+    ghAccelUserTools = BuildAccelTable( keys )
 
     function = 0
 end Function

@@ -396,14 +396,12 @@ end function
 ' Create an accelerator table based on selections for the Build Configurations.
 ' ========================================================================================
 function frmBuildConfig_CreateAcceleratorTable() as long
-    dim NumKeys  as long
     dim nKey     as long
     dim fVirt    as long
         
     if ghAccelBuildConfigurations then DestroyAcceleratorTable(ghAccelBuildConfigurations)
-    dim a(any) as ACCEL
+    dim keys as ACCELLIST
         
-    NumKeys = 0
     for y as long = lbound(gConfig.Builds) to ubound(gConfig.Builds)
             
         fVirt = FNOINVERT or FVIRTKEY
@@ -425,19 +423,11 @@ function frmBuildConfig_CreateAcceleratorTable() as long
         ' "None" affordance to plain N, and any stale name to its own first letter.
         nKey = KeyBindings_PickListKeyToValue( gConfig.Builds(y).wszKey )
 
-        if nKey > 0 then
-            NumKeys = NumKeys + 1
-            redim preserve a(1 To NumKeys) as ACCEL
-            a(NumKeys).fVirt = fVirt
-            a(NumKeys).key   = nKey
-            a(NumKeys).cmd   = IDM_BUILDCONFIGBASE + y
-        end if
+        AddAccelKey( keys, fVirt, nKey, IDM_BUILDCONFIGBASE + y )
 
     next                                    
         
-    if NumKeys then
-        ghAccelBuildConfigurations = CreateAcceleratorTable(cast(LPACCEL, @a(1)), NumKeys)
-    end if
+    ghAccelBuildConfigurations = BuildAccelTable( keys )
 
     function = 0
 end Function

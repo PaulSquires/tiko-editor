@@ -973,3 +973,36 @@ function AddShortcutsToComboBox( byval hCombo as HWND ) as long
 
     function = 0
 end function
+
+
+' ========================================================================================
+' Accelerator tables for the two list-editor dialogs.
+'
+' User Tools and Build Configurations each walked their own config list, filtered to the
+' entries with a resolvable key, and grew an ACCEL array one entry at a time with
+'     redim preserve a(1 To NumKeys)
+' before handing @a(1) and a separate NumKeys to CreateAcceleratorTable. Same code twice,
+' over the same type, differing only in which config list is read and which command-id base
+' is used -- so it needs no generic, only saying once.
+'
+' NOTE THE 1-BASED ARRAY the originals used, and that this is 0-based: CreateAcceleratorTable
+' is given the address of the FIRST element either way, so the base is invisible to it. The
+' count comes from the container rather than from a variable maintained beside it.
+' ========================================================================================
+sub AddAccelKey( byref keys as ACCELLIST, byval fVirt as long, _
+                 byval nKey as long, byval nCmd as long )
+    ' A key that did not resolve contributes nothing -- both callers tested this before
+    ' appending, and getting it wrong is invisible: the shortcut saves, displays and
+    ' reloads perfectly and never fires.
+    if nKey <= 0 then exit sub
+    dim as ACCEL acc
+    acc.fVirt = fVirt
+    acc.key   = nKey
+    acc.cmd   = nCmd
+    keys.Push( acc )
+end sub
+
+function BuildAccelTable( byref keys as ACCELLIST ) as HACCEL
+    if keys.Count = 0 then return 0
+    return CreateAcceleratorTable( cast(LPACCEL, @keys[0]), keys.Count )
+end function

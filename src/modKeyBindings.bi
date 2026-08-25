@@ -130,3 +130,11 @@ declare function KeyBindings_PickListKeyToValue( byval wszString as DWSTRING ) a
 ' TIKO_KEYBOARD_SELFTEST=1. Asserts the vocabulary; needs no window and no message pump,
 ' so it runs at startup rather than when the dialog opens.
 declare sub      KeyBindings_RunSelfTest()
+
+' The accelerator table both list-editor dialogs build from their own config list. Aliased
+' for the reason RFC-0004 s1 gives; the helper is in modKeyBindings.inc.
+type ACCELLIST as FB.Array( of ACCEL )
+
+declare function BuildAccelTable( byref keys as ACCELLIST ) as HACCEL
+declare sub AddAccelKey( byref keys as ACCELLIST, byval fVirt as long, _
+                         byval nKey as long, byval nCmd as long )
