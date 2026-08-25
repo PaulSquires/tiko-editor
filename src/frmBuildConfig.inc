@@ -1355,7 +1355,7 @@ private sub frmBuildConfig_PositionWindows( byval hwnd as HWND )
     dim as long prevH  = AfxScaleY(FRMBUILDCONFIG_PREVIEW_H)
     dim as long prevLH = AfxScaleY(FRMBUILDCONFIG_PREVIEWLABEL_H)
     dim as long editW  = AfxScaleX(FRMBUILDCONFIG_EDIT_W)
-    dim as long prevY  = y + AfxScaleY(12) + prevLH
+    dim as long prevY  = y + AfxScaleY(FRMBUILDCONFIG_PREVIEW_GAP) + prevLH
 
     gBCPreviewLabelRect.left   = detailX
     gBCPreviewLabelRect.right  = xRight - editW - gap
@@ -1763,6 +1763,17 @@ private sub frmBuildConfig_RunLayoutSelfTest()
     LAYASSERT( gBCPreviewRect.bottom <= paneBot, "the preview block fits above the footer" )
     LAYASSERT( gBCPreviewLabelRect.bottom = gBCPreviewRect.top, _
                "the preview's label sits directly on top of it" )
+
+    ' The Edit button rides the label band. It is centred in it, so a band shorter than the
+    ' button pushes it out of both ends -- which is exactly how it came to touch the preview
+    ' box, and is invisible to every other assertion here because nothing OVERLAPS.
+    scope
+        dim as RECT rcEdit = frmBuildConfig_ChildRect( ghBCEditSwitches )
+        LAYASSERT( rcEdit.top >= gBCPreviewLabelRect.top, _
+                   "the Edit button starts inside the preview label band" )
+        LAYASSERT( rcEdit.bottom <= gBCPreviewRect.top, _
+                   "the Edit button clears the top of the preview block" )
+    end scope
 
     ' ---- 5. the General page reads top-down, with no row overlapping the next ----------
     dim as RECT rcDesc = frmBuildConfig_ChildRect( ghBCDescription )

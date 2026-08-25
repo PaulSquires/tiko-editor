@@ -1,4 +1,4 @@
-'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
+﻿'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
 '    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
@@ -118,8 +118,20 @@
 #Define FRMBUILDCONFIG_SHORTCUT_W            150
 ' The switches preview, pinned to the BOTTOM of the General page. Its label row carries a
 ' small Edit button on the right, and the whole block is clickable.
-#Define FRMBUILDCONFIG_PREVIEWLABEL_H         22
-#Define FRMBUILDCONFIG_PREVIEW_H              44
+'
+' THE LABEL BAND MUST BE TALLER THAN THE EDIT BUTTON IT CARRIES (24 units, in
+' PositionWindows). At 22 the button was centred in a band 2 units shorter than itself, so it
+' hung a unit past the bottom and touched the preview box. 30 leaves 3 units clear either
+' side; the layout self-test asserts the clearance.
+'
+' THE BLOCK'S TOTAL HEIGHT IS UNCHANGED at 78 -- gap 8 + label 30 + box 40, where it was
+' 12 + 22 + 44. There was no slack to grow into: the General page ended EXACTLY at the
+' footer, so the first attempt (band 32, nothing else touched) pushed the preview past it and
+' the fits-above-the-footer assertion caught it. The eight units the band gained come from
+' the gap above it and from the box, which holds one line of text in either size.
+#Define FRMBUILDCONFIG_PREVIEW_GAP             8      ' above the label band
+#Define FRMBUILDCONFIG_PREVIEWLABEL_H         30
+#Define FRMBUILDCONFIG_PREVIEW_H              40
 #Define FRMBUILDCONFIG_EDIT_W                 72
 
 ' ---- the compiler switches page ----------------------------------------------------------
