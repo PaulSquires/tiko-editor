@@ -64,12 +64,15 @@ __pycache__/
 /THEMES.md
 /CODE_REVIEW.md
 
-# The built editor. tiko.exe was tracked for years and is REMOVED with the rename to
-# tiko-editor: a committed binary makes every build a diff, and this one was 3MB.
-# BOTH names are listed because _compile.bat and _compile_fast.bat each emitted the
-# old one -- a removal the next build undoes is not a removal.
+# The built editor. tiko-editor.exe is TRACKED AGAIN, by request: the shipped binary
+# travels with the repo so a clone can run without a toolchain. The cost is the one the
+# earlier removal was written for and it has not changed -- roughly 3MB per commit that
+# touches it, and every build shows as a diff whether or not any source moved. Stage it
+# deliberately; do not let "git add -A" sweep it in beside an unrelated change.
+#
+# tiko.exe stays ignored: that is the PRE-RENAME name, which _compile.bat and
+# _compile_fast.bat no longer emit, and reviving it would track the same program twice.
 /tiko.exe
-/tiko-editor.exe
 
 # test runner scratch output (build\_run_tests.bat)
 /build/testlogs/
