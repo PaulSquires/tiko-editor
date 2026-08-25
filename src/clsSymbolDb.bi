@@ -67,6 +67,13 @@ type PARSERESULTSET
     wszRootFile    as wstring * MAX_PATH   ' root file as passed to the scan
     rootFileIndex  as long                 ' index into fileOffsets[] of the root; -1 if absent
 
+    ' Diagnostics from this set are not reportable. Set for the WORKSPACE scan -- the
+    ' synthetic root that includes every Explorer file when the workspace has no Main
+    ' (clsScanMgr.RequestProjectScan). Unrelated .bas files pulled into one root collide
+    ' by construction (two entry points, same-named procedures), so its diagnostics say
+    ' nothing about the code. Its SYMBOLS are the point and are unaffected.
+    bNoDiags       as boolean
+
     ' case-insensitive name hash: bucket -> first symbol, symbol -> next in bucket
     hashSize       as long                 ' power of two (mask = hashSize-1); 0 if no symbols
     hashHead(any)  as long

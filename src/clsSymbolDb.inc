@@ -740,6 +740,8 @@ sub clsSymbolDb.EnumDiags( byref results as DIAGREFLIST )
         if pass = 0 then pRSet = m_pBuffer else pRSet = m_pProject
         if pRSet = 0 then continue for
         if pRSet->pResult = 0 then continue for
+        ' The workspace scan's diagnostics are noise by construction - see bNoDiags.
+        if pRSet->bNoDiags then continue for
         dim as long dc = pRSet->pResult->diagCount
         for i as long = 0 to dc - 1
             dim as DIAGREF hit

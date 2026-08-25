@@ -904,7 +904,12 @@ function frmMain_PositionWindows() as LRESULT
         nTop += nHeightTabControl
     end if
         
-    if gFind.bShowInfoPanel then
+    ' THE TAB COUNT IS PART OF THE CONDITION, not just bShowInfoPanel. The strip describes
+    ' the active tab -- its filename, its file-type pill -- so with no tabs there is nothing
+    ' for it to say, and it used to sit there as an empty band. The zero-tab block above
+    ' zeroed nHeightTabInfoPanel but this branch showed the window anyway and overwrote it.
+    dim as boolean bHaveTabs = ( gTTabCtl.GetItemCount() > 0 )
+    if gFind.bShowInfoPanel andalso bHaveTabs then
         nHeightTabInfoPanel = pWindow->ScaleY(TOPTABS_INFO_HEIGHT)
         SetWindowPos( HWND_FRMMAIN_TOPTABSINFO, 0, _
                     nLeft, nTop, _     
@@ -1623,9 +1628,10 @@ function frmMain_WndProc( _
 
             ' TIKO_UNUSED_AUTOOPEN=1: the only way to reach the Unused Symbols layout
             ' self-test without a human driving the menu. HERE, not on scan completion:
-            ' with no project open nothing ever requests a project scan, so a
-            ' completion-driven hook could never reach the loose-file path -- which is
-            ' exactly the one worth testing. _Show requests the scan itself now.
+            ' the window must open whether or not a scan ever lands, and _Show requests
+            ' the scan itself. (It used to read "with no project open nothing ever
+            ' requests a project scan" - no longer true: a workspace with no Main now gets
+            ' a project-tier scan over every file in the Explorer.)
             if environ("TIKO_UNUSED_AUTOOPEN") = "1" then
                 frmUnusedSymbols_Show( hwnd )
             end if
@@ -1710,12 +1716,20 @@ function frmMain_WndProc( _
                     ' project is open) was ALWAYS discarded here, so its window sat on
                     ' "Scanning..." forever. Comparing roots still discards a closed
                     ' project's late-arriving scan, which is what this test is for.
-                    dim as clsDocument ptr pRootDoc = gApp.GetMainDocumentPtr()
-                    if pRootDoc = 0 then pRootDoc = gTTabCtl.GetActiveDocumentPtr()
-                    if pRootDoc = 0 then
-                        bStale = true
+                    ' The WORKSPACE scan is rooted at a synthetic name that matches no
+                    ' document, so the comparison below can never accept it. It is current
+                    ' exactly while the condition that produced it still holds: no named
+                    ' project (a Save As landing mid-scan makes it stale).
+                    if SymDb_FileNameEq( pRSet->wszRootFile, ScanMgr_WorkspaceRootName() ) then
+                        bStale = gApp.IsProjectNamed()
                     else
-                        bStale = ( SymDb_FileNameEq( pRSet->wszRootFile, pRootDoc->DiskFilename ) = false )
+                        dim as clsDocument ptr pRootDoc = gApp.GetMainDocumentPtr()
+                        if pRootDoc = 0 then pRootDoc = gTTabCtl.GetActiveDocumentPtr()
+                        if pRootDoc = 0 then
+                            bStale = true
+                        else
+                            bStale = ( SymDb_FileNameEq( pRSet->wszRootFile, pRootDoc->DiskFilename ) = false )
+                        end if
                     end if
                 else
                     dim as clsDocument ptr pActiveDoc = gTTabCtl.GetActiveDocumentPtr()

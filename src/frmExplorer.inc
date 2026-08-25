@@ -1276,6 +1276,15 @@ function LoadExplorerFiles() as long
     ' is showing Functions or Bookmarks instead, and reloading it must not yank it forward.
     if bWasVisible then ShowWindow( hCtrl, SW_SHOW )
 
+    ' The workspace scan's root IS this list, so it has to be rebuilt whenever the list is.
+    ' Here rather than at the ~20 call sites: every path that can add, remove, rename or
+    ' recategorize a file funnels through this function already. Only while the workspace
+    ' is untitled - a named project's scan is rooted at its main file and follows its own
+    ' triggers. Costs nothing before the worker starts (RequestProjectScan bails on
+    ' m_bStarted) and the mailbox is latest-wins, so startup's several calls collapse into
+    ' one scan.
+    if gApp.IsProjectNamed() = false then gScanMgr.RequestProjectScan()
+
     function = 0
 end function
 

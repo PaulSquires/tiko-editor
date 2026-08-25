@@ -37,26 +37,13 @@ dim shared ghTopTabsInfoIcons as HWND
 ' These are BOTH the PsTooltip tool index AND the PsIconPanel item index -- the items are
 ' added in this order so the message callback can hand one straight to the other. Keeping
 ' them equal is what makes that a pass-through rather than a mapping table.
+' TTITIP_GOTOMAIN and TTITIP_GOTOHEADER are GONE -- the "M" and "H"/"C" buttons were
+' removed from the strip. The COMMANDS remain: IDM_GOTOMAINFILE and IDM_GOTOHEADERFILE are
+' still on the menu and still bindable, so nothing about the feature went with the buttons.
 enum
     TTITIP_NONE = -1
     TTITIP_FIND = 0
-    TTITIP_GOTOMAIN
-    TTITIP_GOTOHEADER
 end enum
-
-
-' ========================================================================================
-' The glyph for the Goto Header/Source button, for the CURRENTLY ACTIVE document.
-' ========================================================================================
-' Resolved at paint time rather than pushed into the item with PsIconPanel_SetGlyph, because
-' the answer changes with the active tab and a tab switch only redraws this bar -- it does
-' not call frmTopTabsInfo_PositionWindows. A pushed glyph would go stale on exactly that path.
-private function frmTopTabsInfo_GotoGlyph() as DWSTRING
-    dim as clsDocument ptr pDoc = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc = 0 then return ""
-    if pDoc->ProjectFileType = FILETYPE_HEADER then return wszIconGotoSource
-    return wszIconGotoHeader   ' main, normal, module, resource
-end function
 
 
 ' ========================================================================================
@@ -75,18 +62,6 @@ private function frmTopTabsInfo_TipText( byval hTip as HWND, _
     select case idx
         case TTITIP_FIND
             return frmPanelMenu_FormatTooltip( IDM_FIND )
-        case TTITIP_GOTOMAIN
-            return frmPanelMenu_FormatTooltip( IDM_GOTOMAINFILE )
-        case TTITIP_GOTOHEADER
-            ' Resolved at show time, not at hover time: the label depends on which document is
-            ' active, and that can change under a resting cursor.
-            dim as clsDocument ptr pDoc = gTTabCtl.GetActiveDocumentPtr()
-            if pDoc = 0 then return ""
-            if pDoc->ProjectFileType = FILETYPE_HEADER then
-                return frmPanelMenu_FormatTooltip( IDM_GOTOSOURCEFILE )
-            else   ' main, normal, module
-                return frmPanelMenu_FormatTooltip( IDM_GOTOHEADERFILE )
-            end if
     end select
     return ""
 end function
@@ -95,13 +70,15 @@ end function
 ' ========================================================================================
 ' Draw one icon button, instead of PsIconPanel's built-in painter.
 ' ========================================================================================
-' Two reasons this callback exists rather than the built-in rendering:
-'   * PER-ITEM FONT. Find is a Segoe Fluent codepoint; the two Goto buttons are the plain
-'     letters "M"/"H"/"C", which the symbol font cannot draw. PsIconPanel has ONE font for
-'     the whole control (the font is a paint-time input there), so the choice belongs here.
-'   * The bar's inversion. The strip's field colour is BackColorHot, so a HOVERED button
-'     inverts to the tab area's normal BackColor -- the opposite direction to every other
-'     control in the family, and to PsIconPanel's own defaults.
+' This callback exists rather than the built-in rendering for the bar's INVERSION: the
+' strip's field colour is BackColorHot, so a HOVERED button inverts to the tab area's normal
+' BackColor -- the opposite direction to every other control in the family, and to
+' PsIconPanel's own defaults.
+'
+' It used to carry a second reason, a PER-ITEM FONT: Find is a Segoe Fluent codepoint while
+' the Goto buttons were the plain letters "M"/"H"/"C", which the symbol font cannot draw.
+' With those buttons gone every item is a symbol again and the font is no longer a per-item
+' decision -- but the inversion still is, so the callback stays.
 ' Colours are read from ghTopTabs live, so a theme change needs only a repaint.
 private sub frmTopTabsInfo_IconPaint( byval p as PSICONPANEL_PAINTINFO ptr )
     ' Fill the whole cell first: p->rc carries the item's padding and the control has
@@ -114,10 +91,9 @@ private sub frmTopTabsInfo_IconPaint( byval p as PSICONPANEL_PAINTINFO ptr )
     if gTTabCtl.GetItemCount = 0 then exit sub
 
     dim as DWSTRING wszGlyph = p->wszGlyph
-    if p->itemID = TTITIP_GOTOHEADER then wszGlyph = frmTopTabsInfo_GotoGlyph()
     if len(wszGlyph) = 0 then exit sub
 
-    p->b->SetFont( ghFont( iif( p->itemID = TTITIP_FIND, SYMBOLFONT_10, GUIFONT_10 ) ) )
+    p->b->SetFont( ghFont( SYMBOLFONT_10 ) )
     p->b->SetForeColor( theme.toptabs.texthot.forecolor )
     p->b->SetBackColor( iif( p->isHot orelse p->isPressed, _
                              theme.toptabs.text.backcolor, theme.toptabs.texthot.backcolor ) )
@@ -156,16 +132,6 @@ private sub frmTopTabsInfo_IconClick( byval hIconPanel as HWND, byval idx as lon
     select case idx
         case TTITIP_FIND
             PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_FIND, 0), 0 )
-        case TTITIP_GOTOMAIN
-            PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_GOTOMAINFILE, 0), 0 )
-        case TTITIP_GOTOHEADER
-            dim as clsDocument ptr pDoc = gTTabCtl.GetActiveDocumentPtr()
-            if pDoc = 0 then exit sub
-            if pDoc->ProjectFileType = FILETYPE_HEADER then
-                PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_GOTOSOURCEFILE, 0), 0 )
-            else   ' main, normal, module
-                PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_GOTOHEADERFILE, 0), 0 )
-            end if
     end select
 end sub
 
@@ -330,20 +296,42 @@ function frmTopTabsInfo_WndProc( _
         if gTTabCtl.GetItemCount then
             dim as long i = gTTabCtl.GetCurSel()
             
-            dim pDoc as clsDocument ptr 
-
-            ' Determine if it is in a subfolder and if it is, then display the relative file name.
+            ' What the strip shows for the active tab:
+            '   no project active  ->  just the filename and extension
+            '   project active     ->  the name relative to the PROJECT FILE's folder
+            '
+            ' The relative form is anchored on the .tiko, not on the Main document as it
+            ' used to be. Two reasons the Main is the wrong anchor: an untitled workspace
+            ' has one too (the first .bas opened is given FILETYPE_MAIN), so "no project"
+            ' never reached its own branch; and a project is free to keep its Main in a
+            ' subfolder, which made every other file's displayed path climb out of it.
+            '
+            ' A file outside the project's tree keeps its full path - there is no relative
+            ' name to give it, and a bare filename would hide where it actually lives.
             dim as DWSTRING wszFilename = gTTabCtl.GetTabText(i)
-            ' Only a designated Main gives a folder worth making paths relative to. With
-            ' none, show the full name rather than relativizing against the active tab,
-            ' which would be relative to itself.
-            pDoc = gApp.GetMainDocumentPtr()
-            if pDoc then
-                ' GetpDoc returns null when no tab is selected (i = -1)
-                dim as clsDocument ptr pDocTab = gTTabCtl.GetpDoc(i)
-                if pDocTab then
-                    dim as DWSTRING wszMainFolder = AfxStrPathname("PATH", pDoc->DiskFilename)
-                    wszFilename = AfxStrRemove( pDocTab->DiskFilename, wszMainFolder )
+            ' GetpDoc returns null when no tab is selected (i = -1)
+            dim as clsDocument ptr pDocTab = gTTabCtl.GetpDoc(i)
+            if pDocTab then
+                if gApp.IsProjectNamed() then
+                    ' Strip the project folder as a PREFIX, case-insensitively, rather than
+                    ' with AfxStrRemove: that one deletes every occurrence anywhere in the
+                    ' string and is case-sensitive, so a repeated folder name inside the
+                    ' path gets eaten and a drive letter in the other case matches nothing.
+                    dim as DWSTRING wszFull = pDocTab->DiskFilename
+                    dim as DWSTRING wszProjFolder = AfxStrPathname( "PATH", gApp.ProjectFilename )
+                    dim as long nPrefix = len( wszProjFolder )
+                    dim as boolean bHavePrefix = ( nPrefix > 0 )
+                    dim as boolean bUnderProj = false
+                    if bHavePrefix then
+                        bUnderProj = ( ucase( left( wszFull, nPrefix ) ) = ucase( wszProjFolder ) )
+                    end if
+                    if bUnderProj then
+                        wszFilename = mid( wszFull, nPrefix + 1 )
+                    else
+                        wszFilename = wszFull
+                    end if
+                else
+                    wszFilename = AfxStrPathname( "NAMEX", pDocTab->DiskFilename )
                 end if
             end if
             ' The strip's field color is BackColorHot, so a hovered button
@@ -398,10 +386,14 @@ function frmTopTabsInfo_Show( byval hwndParent as HWND ) as LRESULT
     ' Disable background erasing by only assigning the one style
     pWindow->ClassStyle = CS_DBLCLKS
 
-    ' The three icon buttons. COMMAND items, so nothing latches. Cells are DECLARED here --
-    ' padding 0 either side and a 30px icon -- which is what makes the strip exactly 3 * 30
+    ' The icon button. COMMAND item, so nothing latches. The cell is DECLARED here --
+    ' padding 0 either side and a 30px icon -- which is what makes the strip exactly 1 * 30
     ' wide and lets frmTopTabsInfo_PositionWindows ask the control for that number instead of
     ' recomputing it. Items are added in TTITIP_* order; see the enum.
+    '
+    ' It was THREE: Find, Goto Main and Goto Header/Source. The two Goto buttons were removed
+    ' and the strip narrows to match, because the width is asked of the control rather than
+    ' written down anywhere.
     ghTopTabsInfoIcons = PsIconPanel_Create( HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_ICONS )
         PsIconPanel_SetFont( ghTopTabsInfoIcons, ghFont(SYMBOLFONT_10) )
         PsIconPanel_SetIconSize( ghTopTabsInfoIcons, pWindow->ScaleX(30), pWindow->ScaleY(30) )
@@ -410,8 +402,6 @@ function frmTopTabsInfo_Show( byval hwndParent as HWND ) as LRESULT
         PsIconPanel_SetMessageCallback( ghTopTabsInfoIcons, @frmTopTabsInfo_IconMessage )
         PsIconPanel_SetClickCallback( ghTopTabsInfoIcons, @frmTopTabsInfo_IconClick )
         PsIconPanel_AddItem( ghTopTabsInfoIcons, IP_KIND_COMMAND, wszIconFind, IDM_FIND )
-        PsIconPanel_AddItem( ghTopTabsInfoIcons, IP_KIND_COMMAND, wszIconGotoMain, IDM_GOTOMAINFILE )
-        PsIconPanel_AddItem( ghTopTabsInfoIcons, IP_KIND_COMMAND, wszIconGotoHeader, IDM_GOTOHEADERFILE )
         ' No tooltip TEXT and no tooltip CALLBACK: the tips are the bar's PsTooltip, so the
         ' control's own comctl32 tip is left with nothing to say and never shows.
         Theme_ApplyTopTabsIcons()

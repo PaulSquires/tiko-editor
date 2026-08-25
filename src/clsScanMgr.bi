@@ -25,14 +25,26 @@
 ' store and DereferenceLine use to identify the active document in the database.
 declare function ScanMgr_GetRootName( byval pDoc as clsDocument ptr ) as DWSTRING
 
+' The synthetic root name a WORKSPACE scan is attributed to: the project tier's root when
+' the workspace has no Main document. Public because two callers outside the scan manager
+' have to recognize it - frmMain's staleness test and frmUnusedSymbols_RootFile.
+declare function ScanMgr_WorkspaceRootName() as DWSTRING
+
+' Would a workspace scan have anything to scan? False means RequestProjectScan will file no
+' request, so a caller must not sit waiting for a completion.
+declare function ScanMgr_WorkspaceHasFiles() as boolean
+
 ' A pending scan request (mailbox slot). Allocated with NEW on the UI thread;
 ' DELETEd by the worker after the scan, or by the UI thread when a newer
 ' request supersedes it in its slot. The destructor frees the text copy.
+' A request carries TEXT whenever the root is not a real file on disk: the buffer tier
+' always, and the project tier for a workspace scan (the synthetic include-only root).
+' The worker chooses fbcparser_scan_text over fbcparser_scan on pszText, not on the tier.
 type SCANREQUEST
     tier          as long               ' SCAN_TIER
-    pszText       as zstring ptr        ' buffer tier: heap copy of the document text
+    pszText       as zstring ptr        ' heap copy of the text to scan; 0 = read the root from disk
     cchText       as long
-    bTextUtf8     as boolean            ' buffer tier: pszText is UTF-8 (else ANSI)
+    bTextUtf8     as boolean            ' pszText is UTF-8 (else ANSI)
     sIncludePaths as DWSTRING           ' semicolon list snapshotted on the UI thread
     sIncPrefix    as DWSTRING           ' ucased toolchain inc folder (TODO sweep filter)
     wszRootFile   as wstring * MAX_PATH ' absolute path; buffer tier: the virtual name
@@ -75,6 +87,7 @@ type clsScanMgr
 
         declare function BuildRequest( byval nTier as long, byref wszRootFile as wstring ) as SCANREQUEST ptr
         declare sub EnqueueRequest( byval pReq as SCANREQUEST ptr )
+        declare sub RequestWorkspaceScan()
         declare sub RetireLocked( byval pRSet as PARSERESULTSET ptr )
 
     public:

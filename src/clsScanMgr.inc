@@ -7,6 +7,11 @@
 ' (worker -> UI) and RetireResult (UI -> worker).
 ' ========================================================================================
 
+' For frmExplorer_CatIndexForDoc - the workspace scan mirrors the Explorer's display rule
+' rather than restating it. Already pulled in ahead of us by clsApp.inc; stated here so the
+' dependency is visible at the use site.
+#include once "frmExplorer.bi"
+
 destructor SCANREQUEST()
     if this.pszText then deallocate( this.pszText )
     this.pszText = 0
@@ -224,6 +229,87 @@ private function ScanMgr_IsScannable( byval pDoc as clsDocument ptr ) as boolean
 end function
 
 
+' The root name a WORKSPACE scan is attributed to. Not a real file: it names the synthetic
+' include-only root built below. Under the exe folder for the same reason ScanMgr_GetRootName
+' puts its UNTITLED- names there - the parser resolves a plain #include against the root's
+' own directory, and that has to be a directory that exists.
+function ScanMgr_WorkspaceRootName() as DWSTRING
+    function = AfxGetExePathName & "WORKSPACE.BAS"
+end function
+
+
+' Does this document contribute to the WORKSPACE scan?
+'
+' Membership is frmExplorer_CatIndexForDoc, not merely "is in pDocList": a document whose
+' category is outside the displayed range (CATINDEX_FILES) is rendered nowhere, and "what
+' the Explorer shows" is exactly what this scan is meant to cover. Unsaved documents are
+' skipped - there is nothing on disk to include, and their text reaches the database
+' through the buffer tier anyway.
+private function ScanMgr_IsWorkspaceFile( byval pDoc as clsDocument ptr ) as boolean
+    if pDoc = 0 then return false
+    if frmExplorer_CatIndexForDoc( pDoc ) < 0 then return false
+    if instr( pDoc->DiskFilename, "\" ) = 0 then return false
+    return ScanMgr_IsScannable( pDoc )
+end function
+
+
+' Would a workspace scan have anything to scan? Asked by frmUnusedSymbols before it commits
+' to waiting on one: with nothing to include, RequestProjectScan files no request, and a
+' caller that expected a scan would wait for a completion that never posts.
+function ScanMgr_WorkspaceHasFiles() as boolean
+    dim as clsDocument ptr pDoc = gApp.pDocList
+    do until pDoc = 0
+        if ScanMgr_IsWorkspaceFile( pDoc ) then return true
+        pDoc = pDoc->pDocNext
+    loop
+    return false
+end function
+
+
+' Build the WORKSPACE scan's root text: '#include once' for every file the Explorer
+' displays, so that a workspace with no Main still gets all of its files parsed instead of
+' nothing at all. Returns "" when nothing qualifies (the caller then files no request).
+'
+' ONCE, not plain #include: a file already reached through another file's includes must not
+' be parsed twice, and with several .bas files in one root that is the normal case.
+'
+' sOutDirs collects each contributing file's own directory as a ';' list for the request's
+' include paths. Without it a loose file's own #include "sibling.bi" cannot resolve: the
+' synthetic root lives in the exe folder, so the root-directory search that normally
+' covers this finds nothing.
+private function ScanMgr_BuildWorkspaceRootText( byref sOutDirs as DWSTRING ) as string
+    dim as DWSTRING wszText, wszDirs
+
+    dim as clsDocument ptr pDoc = gApp.pDocList
+    do until pDoc = 0
+        if ScanMgr_IsWorkspaceFile( pDoc ) then
+            dim as DWSTRING wszFile = pDoc->DiskFilename
+            wszText = wszText & "#include once """ & wszFile & """" & chr(13, 10)
+            dim as DWSTRING wszDir = AfxStrPathname( "PATH", wszFile )
+            if len( wszDir ) then
+                if instr( ucase( wszDirs ), ucase( wszDir ) ) = 0 then
+                    wszDirs = wszDirs & wszDir & ";"
+                end if
+            end if
+        end if
+        pDoc = pDoc->pDocNext
+    loop
+
+    if len( wszText ) = 0 then return ""
+
+    sOutDirs = wszDirs
+
+    ' To UTF-8: a path can hold any character, and the DLL takes bytes. bTextUtf8 on the
+    ' request says which conversion the TODO scanner would apply - the workspace tier does
+    ' not use it (its TODOs are swept from disk), but the flag must still be honest.
+    dim as long cbUtf8 = WideCharToMultiByte( CP_UTF8, 0, cast( LPCWSTR, wszText.sptr ), len( wszText ), NULL, 0, NULL, NULL )
+    if cbUtf8 <= 0 then return ""
+    dim as string sUtf8 = space( cbUtf8 )
+    WideCharToMultiByte( CP_UTF8, 0, cast( LPCWSTR, wszText.sptr ), len( wszText ), strptr( sUtf8 ), cbUtf8, NULL, NULL )
+    function = sUtf8
+end function
+
+
 ''
 ''
 sub clsScanMgr.StartWorker()
@@ -312,13 +398,55 @@ sub clsScanMgr.RequestProjectScan( byref wszRootOverride as const wstring = "" )
 
     dim as DWSTRING wszFile = wszRootOverride
     if len( wszFile ) = 0 then
+        ' NO NAMED PROJECT: scan the WHOLE EXPLORER. A project has a main file whose
+        ' includes define the compilation unit, and rooting there is right. A loose
+        ' workspace has no such structure - its files are simply the ones the user has
+        ' open, related or not - so the only honest root is all of them.
+        '
+        ' The test is IsProjectNamed, NOT "is there a Main". Every untitled workspace has a
+        ' Main: ProjectSetFileType hands FILETYPE_MAIN to the first .bas opened
+        ' (Workspace_DeriveFileType, clsApp.inc). Gating on the Main made this whole path
+        ' unreachable in practice, and left the other Explorer files unparsed behind a
+        ' scan rooted at whichever .bas happened to be opened first.
+        if gApp.IsProjectNamed() = false then
+            this.RequestWorkspaceScan()
+            exit sub
+        end if
         dim as clsDocument ptr pDoc = gApp.GetMainDocumentPtr()
-        if pDoc = 0 then exit sub
+        if pDoc = 0 then exit sub          ' named project, no Main - nothing to root at
         wszFile = pDoc->DiskFilename
     end if
     if instr( wszFile, "\" ) = 0 then exit sub    ' never saved - nothing on disk to scan
 
     this.EnqueueRequest( this.BuildRequest( ScanTierProject, wszFile ) )
+end sub
+
+
+' Project tier over a synthetic root that includes every file the Explorer displays - see
+' ScanMgr_BuildWorkspaceRootText. Text-bearing, so the worker takes fbcparser_scan_text:
+' the root is not a file and never will be. Everything downstream is unchanged - it is one
+' ordinary project-tier PARSERESULTSET, installed in the one project slot.
+private sub clsScanMgr.RequestWorkspaceScan()
+    dim as DWSTRING wszDirs
+    dim as string sText = ScanMgr_BuildWorkspaceRootText( wszDirs )
+    if len( sText ) = 0 then exit sub
+
+    dim as SCANREQUEST ptr pReq = this.BuildRequest( ScanTierProject, ScanMgr_WorkspaceRootName() )
+    ' The contributing files' own directories, ahead of the configured includes: the
+    ' synthetic root sits in the exe folder, so the root-directory search BuildRequest
+    ' seeds resolves nothing for a loose file's own #include.
+    if len( wszDirs ) then pReq->sIncludePaths = wszDirs & pReq->sIncludePaths
+
+    pReq->bTextUtf8 = true
+    pReq->cchText = len( sText )
+    pReq->pszText = allocate( pReq->cchText + 1 )
+    if pReq->pszText = 0 then
+        delete pReq
+        exit sub
+    end if
+    *pReq->pszText = sText
+
+    this.EnqueueRequest( pReq )
 end sub
 
 
@@ -451,7 +579,10 @@ sub clsScanMgr.WorkerLoop()
             dim as double t0 = timer
             dim as FBCP_RESULT ptr pRes = 0
             dim as long rcScan
-            if pReq->tier = ScanTierBuffer then
+            ' On pszText, not on the tier: the buffer tier always carries text, and the
+            ' project tier does too for a workspace scan, whose root is synthetic and has
+            ' no file behind it.
+            if pReq->pszText then
                 rcScan = fbcparser_scan_text( pReq->pszText, @pReq->wszRootFile, @opts, @pRes )
             else
                 rcScan = fbcparser_scan( @pReq->wszRootFile, @opts, @pRes )
@@ -463,6 +594,11 @@ sub clsScanMgr.WorkerLoop()
             pRSet->scanRc = rcScan
             pRSet->scanMs = clng( (timer - t0) * 1000 )
             pRSet->wszRootFile = pReq->wszRootFile
+            ' A text-bearing PROJECT scan is the workspace scan, and its diagnostics are
+            ' collisions between files that were never meant to share a root.
+            dim as boolean bProjTier = ( pReq->tier = ScanTierProject )
+            dim as boolean bHasText  = ( pReq->pszText <> 0 )
+            pRSet->bNoDiags = bProjTier andalso bHasText
 
             ' TODO line-scan (fbcParser itself never sees comments): the buffer
             ' tier scans the same text copy the symbol scan consumed; the

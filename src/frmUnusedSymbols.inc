@@ -172,20 +172,32 @@ end sub
 ' ------------------------------------------------------------------------------------------
 ' Which file roots the report's scan?
 '
-' With a project open that is its main file. WITHOUT one it is the ACTIVE DOCUMENT, which is
-' what makes the report usable on loose files at all -- fbcParser follows #includes from
-' whatever root it is given, so a lone .bas still yields a real compilation unit. Same
-' "project main file, else active document" rule modRoutines.inc:1612 already uses.
+' With a NAMED PROJECT open that is its main file. Otherwise it is the whole Explorer, under
+' the scan manager's synthetic workspace root -- which is what makes the report usable
+' without a project at all. It used to be the ACTIVE DOCUMENT for that case, because the
+' project tier could not scan anything else; it can now, and a report over every open file
+' answers a more useful question than one over whichever tab happened to be in front.
 '
-' Returns "" when there is nothing scannable: no document, or one never saved to disk (the
-' project tier reads from disk, so an unsaved buffer has no root).
+' IsProjectNamed, matching clsScanMgr.RequestProjectScan: an untitled workspace has a Main
+' too -- the first .bas opened is given FILETYPE_MAIN -- so testing for one here would send
+' this window to a root the scan manager is not going to use.
+'
+' Returns "" when there is nothing scannable: nothing in the Explorer, or a named project
+' whose Main was never saved (the project tier reads from disk, so it has no root).
 ' ------------------------------------------------------------------------------------------
 private function frmUnusedSymbols_RootFile() as DWSTRING
-    dim pDoc as clsDocument ptr
-    ' Main if there is one, otherwise the active document -- taking only the project arm
-    ' would return "" for any workspace with no designated Main.
-    pDoc = gApp.GetMainDocumentPtr()
-    if pDoc = 0 then pDoc = gTTabCtl.GetActiveDocumentPtr()
+    ' No named project: the project tier scans the WHOLE EXPLORER under a synthetic root,
+    ' and this report follows it -- unused-symbol analysis over every file the user has
+    ' open is strictly better than over one of them. The root is not a file, so none of the
+    ' on-disk tests below can be applied to it; the only question is whether the scan
+    ' manager will have anything to scan, since it answers "nothing" by filing no request
+    ' and this window would then wait for a completion that never posts.
+    if gApp.IsProjectNamed() = false then
+        if ScanMgr_WorkspaceHasFiles() = false then return ""
+        return ScanMgr_WorkspaceRootName()
+    end if
+
+    dim pDoc as clsDocument ptr = gApp.GetMainDocumentPtr()
     if pDoc = 0 then return ""
 
     ' The project tier scans from DISK, so the root has to be a real file. Test for the
@@ -723,11 +735,11 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
         return 0
     end if
 
-    ' What should this report cover? With no project open that is the active document, so
-    ' the window works on loose files instead of refusing.
+    ' What should this report cover? With no named project that is every file in the
+    ' Explorer, so the window works without a project instead of refusing.
     dim as DWSTRING wszRoot = frmUnusedSymbols_RootFile()
     if len( wszRoot ) = 0 then
-        ' nothing scannable at all: no document open, or the only one has never been saved
+        ' nothing scannable at all: nothing in the Explorer, or a project Main never saved
         TikoMsgBox( hWndParent, L(420, "Open or save a source file first"), L(214, "Confirm"), _
                     TMB_ICON_INFO, TMB_OK )
         return 0
@@ -745,17 +757,11 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
         ' Request it and open ANYWAY, showing "Scanning...". The rebuild lands in frmMain's
         ' MSG_USER_PARSE_COMPLETE handler. Refusing here and making the user find the menu
         ' again is the behaviour this replaces.
-        ' The override is passed only when there is no project: with one open it would
-        ' replace the project's own scan with a single file's.
-        ' Root the scan at the workspace's Main when there is one. With no Main there is
-        ' nothing to walk includes from, so scan just this file -- which also keeps an
-        ' untitled workspace holding a pile of unrelated loose files from triggering a
-        ' whole-workspace scan the user did not ask for.
-        if gApp.GetMainDocumentPtr() then
-            gScanMgr.RequestProjectScan()
-        else
-            gScanMgr.RequestProjectScan( wszRoot )
-        end if
+        ' No override any more, in either case: RequestProjectScan roots at the Main when
+        ' there is one and at the whole Explorer when there is not. It used to be handed
+        ' this window's single file for the second case, because the project tier then did
+        ' nothing at all without a Main.
+        gScanMgr.RequestProjectScan()
     end if
 
     dim pWindow as CWindow ptr = new CWindow
