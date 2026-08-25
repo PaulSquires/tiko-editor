@@ -83,11 +83,7 @@ dim shared gThemePickerBind    as long = -1
 dim shared gThemePickerChannel as long = -1
 
 ' Drawn labels, same trick frmOptionsColors uses: captions are painted, not controls.
-type THEMELABEL_TYPE
-    rc      as RECT
-    caption as DWSTRING
-end type
-dim shared gThemeLabels(any) as THEMELABEL_TYPE
+dim shared gThemeLabels as PAGELABELLIST
 
 ' Unscaled geometry.
 ' THREE COLUMNS: key list | colour picker | the controls column.
@@ -1304,10 +1300,7 @@ end sub
 private sub frmThemes_AddLabel( byval wszCaption as DWSTRING, _
                                       byval x1 as long, byval y1 as long, _
                                       byval x2 as long, byval y2 as long )
-    dim as long n = ubound(gThemeLabels) + 1
-    redim preserve gThemeLabels(n) as THEMELABEL_TYPE
-    gThemeLabels(n).rc = type<RECT>( x1, y1, x2, y2 )
-    gThemeLabels(n).caption = wszCaption
+    AddPageLabel( gThemeLabels, wszCaption, x1, y1, x2, y2 )
 end sub
 
 
@@ -1597,7 +1590,7 @@ function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPan
 
     if gThemeBuilt = false then return 0
 
-    erase gThemeLabels
+    gThemeLabels.Clear( )
 
     dim as long padLeft  = AfxScaleX(OPTROW_PADLEFT)
     dim as long padRight = AfxScaleX(OPTROW_PADRIGHT)
@@ -1807,10 +1800,7 @@ sub frmThemes_Paint( byval nPage as long, byval p as SCP_PAINTINFO ptr )
     p->b->SetFont( OptionsFont_Base() )
     p->b->SetBackColor( theme.panel.text.backcolor )
     p->b->SetForeColor( theme.panel.text.forecolor )
-    for i as long = lbound(gThemeLabels) to ubound(gThemeLabels)
-        dim as RECT rc = gThemeLabels(i).rc
-        p->b->PaintText( gThemeLabels(i).caption, @rc, DT_LEFT or DT_END_ELLIPSIS )
-    next
+    PaintPageLabels( p, gThemeLabels )
 
     ' The current-colour swatch(es) beside the buttons.
     dim as long nb = frmThemes_SelectedBind()
@@ -1873,5 +1863,5 @@ sub frmThemes_Reset()
     gThemeEdited  = false
     gThemeCurPage = THEMEPAGE_NONE
     erase gThemeRowBind
-    erase gThemeLabels
+    gThemeLabels.Clear( )
 end sub

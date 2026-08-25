@@ -16,6 +16,35 @@
 #include once "clsConfig.bi"
 
 
+
+' ========================================================================================
+' Drawn page captions, shared by every options-style page.
+'
+' Replaces four identical AddLabel builders and four identical paint loops. Each page keeps
+' its OWN list -- they are separate pages with separate captions -- but the type, the
+' append and the painting are stated once.
+' ========================================================================================
+sub AddPageLabel( byref labels as PAGELABELLIST, byval wszCaption as DWSTRING, _
+                  byval nLeft as long, byval nTop as long, _
+                  byval nRight as long, byval nBottom as long )
+    ' Push, not the one-element "redim preserve labels(ubound + 1)" all four pages used,
+    ' which reallocated and copied the whole list per caption.
+    dim as PAGE_LABEL lbl
+    lbl.rc      = type<RECT>( nLeft, nTop, nRight, nBottom )
+    lbl.caption = wszCaption
+    labels.Push( lbl )
+end sub
+
+sub PaintPageLabels( byval p as SCP_PAINTINFO ptr, byref labels as PAGELABELLIST )
+    if p = 0 then exit sub
+    for each lbl in labels
+        ' PaintText takes the rect BYREF, so it needs an addressable copy rather than the
+        ' field itself -- exactly what all four originals did.
+        dim as RECT rc = lbl.rc
+        p->b->PaintText( lbl.caption, @rc, DT_LEFT or DT_END_ELLIPSIS )
+    next
+end sub
+
 ' Row metrics, in UNSCALED units -- everything below runs them through AfxScaleX/Y.
 ' There is no divider: rows are separated by whitespace alone (see modOptionsRows.bi). The
 ' padding constants (OPTROW_PADLEFT etc.) are shared and live in modOptionsRows.bi.

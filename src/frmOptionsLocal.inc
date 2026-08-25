@@ -75,10 +75,6 @@
 #define LOCALCOL_TRANSLATE    2
 
 
-type LOCAL_LABEL
-    rc      as RECT
-    caption as DWSTRING
-end type
 
 
 ' THE SELECTED LANGUAGE -- the one the editor will run in, written to gConfig.LocalizationFile
@@ -108,7 +104,7 @@ dim shared ghLocalList      as HWND
 ' turned back into a file without this. Same shape as frmThemes' gThemeFilenames().
 dim shared gLocalLangFiles(any) as DWSTRING
 
-dim shared gLocalLabels(any) as LOCAL_LABEL
+dim shared gLocalLabels as PAGELABELLIST
 
 
 ' Forward declarations for the internal helpers used before their definition.
@@ -155,7 +151,7 @@ sub frmOptionsLocal_Reset()
     gLocalEditFile    = ""
     ghLocalLanguages  = 0
     ghLocalList       = 0
-    erase gLocalLabels
+    gLocalLabels.Clear( )
     erase gLocalLangFiles
 end sub
 
@@ -954,10 +950,7 @@ end sub
 private sub frmOptionsLocal_AddLabel( byval wszCaption as DWSTRING, _
                                       byval nLeft as long, byval nTop as long, _
                                       byval nRight as long, byval nBottom as long )
-    dim as long idx = ubound(gLocalLabels) + 1
-    redim preserve gLocalLabels(idx) as LOCAL_LABEL
-    gLocalLabels(idx).rc = type<RECT>( nLeft, nTop, nRight, nBottom )
-    gLocalLabels(idx).caption = wszCaption
+    AddPageLabel( gLocalLabels, wszCaption, nLeft, nTop, nRight, nBottom )
 end sub
 
 
@@ -996,7 +989,7 @@ function frmOptionsLocal_Layout( byval hPage as HWND, byval cxPanel as long ) as
     dim as long padBottom  = AfxScaleY(OPTROW_PADBOTTOM)
     dim as long y = AfxScaleY(OPTROW_PADTOP)
 
-    erase gLocalLabels
+    gLocalLabels.Clear( )
 
     ' ---- heading: the language the editor is actually set to -------------------------
     frmOptionsLocal_AddLabel( L(124,"Localization") & ": " & frmOptionsLocal_PrettyName( gLocalCurrentFile ), _
@@ -1083,8 +1076,5 @@ sub frmOptionsLocal_Paint( byval p as SCP_PAINTINFO ptr )
     p->b->SetFont( OptionsFont_Base() )
     p->b->SetBackColor( theme.panel.text.backcolor )
     p->b->SetForeColor( theme.panel.text.forecolor )
-    for i as long = lbound(gLocalLabels) to ubound(gLocalLabels)
-        dim as RECT rc = gLocalLabels(i).rc
-        p->b->PaintText( gLocalLabels(i).caption, @rc, DT_LEFT or DT_END_ELLIPSIS )
-    next
+    PaintPageLabels( p, gLocalLabels )
 end sub

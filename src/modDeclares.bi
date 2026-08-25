@@ -352,6 +352,25 @@ dim shared ghFont(MAXFONTS) as HFONT
 ''
 ''  Save information related to Find/Replace and Find in Files operations
 ''
+' A drawn (non-control) caption on an options-style page: a rectangle and the text that
+' goes in it. FOUR pages each declared their own copy of this -- COLORS_LABEL, COMP_LABEL,
+' LOCAL_LABEL and THEMELABEL_TYPE -- and all four were identical, field for field, along
+' with the AddLabel builder and the paint loop that went with them. One type, one builder
+' and one painter now serve all four; see AddPageLabel / PaintPageLabels in
+' modOptionsRows.inc.
+'
+' No generic is involved, and none is wanted: the four were not merely similar, they were
+' the same type written out four times.
+type PAGE_LABEL
+    rc      as RECT
+    caption as DWSTRING
+end type
+
+' Aliased because these live as module-level lists today and as a TYPE field the moment
+' anyone puts a page's labels inside a struct -- and a generic spelled directly in a TYPE
+' field never instantiates (RFC-0004 s1).
+type PAGELABELLIST as FB.Array( of PAGE_LABEL )
+
 type FINDREPLACE_TYPE
     bFirstTimeInvoked   as boolean = true
     hCueBannerFont      as HFONT

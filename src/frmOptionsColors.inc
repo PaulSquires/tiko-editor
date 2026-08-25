@@ -32,10 +32,6 @@
 #define COLORS_ROWHEIGHT           40
 
 
-type COLORS_LABEL
-    rc      as RECT
-    caption as DWSTRING
-end type
 
 
 dim shared ghColorFonts    as HWND      ' PsListTree (per-font preview)
@@ -46,7 +42,7 @@ dim shared ghColorTabSize  as HWND      ' PsNumericUpDown -- moved here from the
 dim shared ghColorCase     as HWND      ' PsComboBox      -- moved here from the Code Editor page
 
 dim shared gColorFontNames(any) as DWSTRING     ' collected by the EnumFontFamilies callback
-dim shared gColorLabels(any)    as COLORS_LABEL
+dim shared gColorLabels as PAGELABELLIST
 dim shared gColorBuilt as boolean
 
 
@@ -144,7 +140,7 @@ sub frmOptionsColors_Reset()
     ghColorTabSize = 0
     ghColorCase    = 0
     erase gColorFontNames
-    erase gColorLabels
+    gColorLabels.Clear( )
 end sub
 
 
@@ -415,10 +411,7 @@ end sub
 private sub frmOptionsColors_AddLabel( byval wszCaption as DWSTRING, _
                                        byval nLeft as long, byval nTop as long, _
                                        byval nRight as long, byval nBottom as long )
-    dim as long idx = ubound(gColorLabels) + 1
-    redim preserve gColorLabels(idx) as COLORS_LABEL
-    gColorLabels(idx).rc = type<RECT>( nLeft, nTop, nRight, nBottom )
-    gColorLabels(idx).caption = wszCaption
+    AddPageLabel( gColorLabels, wszCaption, nLeft, nTop, nRight, nBottom )
 end sub
 
 
@@ -450,7 +443,7 @@ function frmOptionsColors_Layout( byval hPage as HWND, byval cxPanel as long ) a
     dim as long sectionGap = AfxScaleY(COLORS_SECTIONGAP)
     dim as long y = AfxScaleY(OPTROW_PADTOP)
 
-    erase gColorLabels
+    gColorLabels.Clear( )
 
     ' THE THEMES LIST IS GONE (it moved to frmThemes). The label and the space it reserved went
     ' with it, so the Font section is now the first thing on the page -- which is why the page
@@ -512,8 +505,5 @@ sub frmOptionsColors_Paint( byval p as SCP_PAINTINFO ptr )
     p->b->SetFont( OptionsFont_Base() )
     p->b->SetBackColor( theme.panel.text.backcolor )
     p->b->SetForeColor( theme.panel.text.forecolor )
-    for i as long = lbound(gColorLabels) to ubound(gColorLabels)
-        dim as RECT rc = gColorLabels(i).rc
-        p->b->PaintText( gColorLabels(i).caption, @rc, DT_LEFT or DT_END_ELLIPSIS )
-    next
+    PaintPageLabels( p, gColorLabels )
 end sub
