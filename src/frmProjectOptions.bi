@@ -44,23 +44,44 @@
 ' the walk ends inside the footer, which is what turns a forgotten re-sum into a failure
 ' rather than into a control hanging off the bottom edge at 175% DPI.
 ' ========================================================================================
+' THE VERTICAL SUM, unscaled. ComputeLayout walks it and the painter reads the stored
+' results, so this is the one place the total is written down:
+'
+'     16 TOP + 20 hdr + 0            = 36    Project
+'     + 2 rows x 38                  = 112
+'     + 16 gap + 20 hdr + 6          = 154   Compiler options
+'     + 22 hint + 2 rows x 38        = 246
+'     + 16 gap + 20 hdr + 0          = 282   Build output
+'     + 1 row x 38                   = 320   body ends
+'     + 16 slack + 48 FOOTER_H       = 384
+'
+' IT CAME DOWN FROM 480 with the section rules. Those hairlines were what justified 46px rows
+' and 20px gaps -- once the headings alone divide the sections, the same structure reads at 38
+' and 16, and the page stops looking like a form with three empty bands in it. Every header
+' also stopped advancing by the 1px the rule used to occupy.
+'
+' HDR_AFTER IS 0 ON PURPOSE, not an oversight. The heading band (HDR_TEXT_H) and the row
+' stride below it (ROWH, with its content vertically centred) already put ~9 unscaled px
+' between the heading text and the first label under it. Any explicit gap on top of that read
+' as a blank ROW rather than as spacing -- most visibly under Build output, where a single
+' toggle row follows the heading and there is nothing else to absorb the eye.
 #Define FRMPROJECTOPTIONS_CLIENT_W                   720
-#Define FRMPROJECTOPTIONS_CLIENT_H                   480
+#Define FRMPROJECTOPTIONS_CLIENT_H                   384
 #Define FRMPROJECTOPTIONS_MARGIN                      22
-#Define FRMPROJECTOPTIONS_TOP                         20     ' first section header's top
-#Define FRMPROJECTOPTIONS_FOOTER_H                    58
+#Define FRMPROJECTOPTIONS_TOP                         16     ' first section header's top
+#Define FRMPROJECTOPTIONS_FOOTER_H                    48
 
 ' A section header: the caption, then a hairline, then air. HDR_AFTER is the air, and the
 ' Compiler options header uses HDR_AFTER_HINT instead because a hint line follows it.
 #Define FRMPROJECTOPTIONS_HDR_TEXT_H                  20
-#Define FRMPROJECTOPTIONS_HDR_AFTER                   14
-#Define FRMPROJECTOPTIONS_HDR_AFTER_HINT               8
-#Define FRMPROJECTOPTIONS_HINT_H                      24
-#Define FRMPROJECTOPTIONS_SECTION_GAP                 20
+#Define FRMPROJECTOPTIONS_HDR_AFTER                   0
+#Define FRMPROJECTOPTIONS_HDR_AFTER_HINT               6
+#Define FRMPROJECTOPTIONS_HINT_H                      22
+#Define FRMPROJECTOPTIONS_SECTION_GAP                 16
 
 ' A row. ROWH is the STRIDE and FIELD_H is the control inside it -- the 16px difference is
 ' the vertical breathing room, and it is the only thing that separates two fields.
-#Define FRMPROJECTOPTIONS_ROWH                        46
+#Define FRMPROJECTOPTIONS_ROWH                        38
 #Define FRMPROJECTOPTIONS_FIELD_H                     30
 #Define FRMPROJECTOPTIONS_LABEL_W                    150
 

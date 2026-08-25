@@ -410,7 +410,12 @@ function frmMain_OnCommand( _
                     if HelpCenter_IsSearchableWord( wszWord ) then wszHelpSel = wszWord
                 end if
             end if
-            frmHelpCenter_Show( wszHelpSel )
+            ' POSTED, not called: see MSG_USER_SHOW_HELPCENTER in modDeclares.bi. Opening
+            ' the window here works, and then the menu click that got us here re-activates
+            ' frmMain and buries it.
+            gHelpPendingQuery = wszHelpSel
+            gHelpPendingSite  = HELPCENTER_SITE_DOCS
+            PostMessage( HWND_FRMMAIN, MSG_USER_SHOW_HELPCENTER, 0, 0 )
 
         case IDM_HELP_TIKO
             ' tiko's OWN documentation, in the same window. No search term is passed and
@@ -418,7 +423,9 @@ function frmMain_OnCommand( _
             ' than the input#q the generated site puts in every page header, so the term
             ' would have nowhere to land. It is also the wrong question -- "help on the
             ' identifier under the caret" is what F1 is for.
-            frmHelpCenter_Show( "", HELPCENTER_SITE_TIKO )
+            gHelpPendingQuery = ""
+            gHelpPendingSite  = HELPCENTER_SITE_TIKO
+            PostMessage( HWND_FRMMAIN, MSG_USER_SHOW_HELPCENTER, 0, 0 )
 
         case IDM_ABOUT
             frmAbout_Show( hwnd )

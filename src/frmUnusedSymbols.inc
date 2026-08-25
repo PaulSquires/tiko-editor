@@ -295,6 +295,24 @@ end sub
 
 
 ' ------------------------------------------------------------------------------------------
+' SUPPRESS the report list's tooltips.
+'
+' PsListTree's DEFAULT tooltip text is the row's own Text, so with no callback set every row
+' popped a tip repeating what was already on screen under the cursor. The columns here are
+' auto-sized to their content (ListBox_LVAutoSizeColumn), so the tip was not even standing in
+' for something ellipsized.
+'
+' "" is the control's documented "no tooltip" answer - see PsListTree_SetTooltipCallback.
+' There is no off switch on PsTipHost; its mode constants only choose WHICH backend draws it.
+' ------------------------------------------------------------------------------------------
+private function frmUnusedSymbols_ListTooltip( byval hCtl as HWND, _
+                                               byval nRow as integer, _
+                                               byval nCol as integer ) as DWSTRING
+    return ""
+end function
+
+
+' ------------------------------------------------------------------------------------------
 ' Row activation: double-click OR Enter. 1-BASED to 0-BASED is mandatory here - the engine
 ' reports 1-based lines and OpenSelectedDocument takes Scintilla's 0-based.
 ' ------------------------------------------------------------------------------------------
@@ -813,6 +831,7 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
     PsListTree_SetColumnClickCallback( hLV, @frmUnusedSymbols_HeaderClick )
     PsListTree_SetColumnAutoSizeCallback( hLV, @ListBox_LVAutoSizeColumn )
     PsListTree_SetActivateCallback( hLV, @frmUnusedSymbols_Activate )
+    PsListTree_SetTooltipCallback( hLV, @frmUnusedSymbols_ListTooltip )
     PsListTree_SetFont( hLV, ghFont(GUIFONT_9) )
 
     frmUnusedSymbols_ApplyTheme()

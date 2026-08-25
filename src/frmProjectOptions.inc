@@ -348,16 +348,19 @@ private sub frmProjectOptions_PositionWindows( byval hwnd as HWND )
     gPOLayout.yFooter     = rc.bottom - AfxScaleY(FRMPROJECTOPTIONS_FOOTER_H)
 
     ' ---- the walk down the page --------------------------------------------------------
+    ' THE +1 AFTER EACH HEADER IS GONE. It was the section rule's own hairline, reserved so
+    ' the first row cleared it; with the rules removed it was a stray pixel three times over.
+    ' The sum this walk produces is written down in frmProjectOptions.bi.
     dim as long y = AfxScaleY(FRMPROJECTOPTIONS_TOP)
 
     gPOLayout.yHdr(PO_HDR_PROJECT) = y
-    y += hdrH + AfxScaleY(1) + AfxScaleY(FRMPROJECTOPTIONS_HDR_AFTER)
+    y += hdrH + AfxScaleY(FRMPROJECTOPTIONS_HDR_AFTER)
     gPOLayout.yRow(PO_ROW_PATH)        = y : y += rowH
     gPOLayout.yRow(PO_ROW_COMMANDLINE) = y : y += rowH
 
     y += AfxScaleY(FRMPROJECTOPTIONS_SECTION_GAP)
     gPOLayout.yHdr(PO_HDR_COMPILER) = y
-    y += hdrH + AfxScaleY(1) + AfxScaleY(FRMPROJECTOPTIONS_HDR_AFTER_HINT)
+    y += hdrH + AfxScaleY(FRMPROJECTOPTIONS_HDR_AFTER_HINT)
     gPOLayout.yHint = y
     y += AfxScaleY(FRMPROJECTOPTIONS_HINT_H)
     gPOLayout.yRow(PO_ROW_OTHER32) = y : y += rowH
@@ -365,7 +368,7 @@ private sub frmProjectOptions_PositionWindows( byval hwnd as HWND )
 
     y += AfxScaleY(FRMPROJECTOPTIONS_SECTION_GAP)
     gPOLayout.yHdr(PO_HDR_OUTPUT) = y
-    y += hdrH + AfxScaleY(1) + AfxScaleY(FRMPROJECTOPTIONS_HDR_AFTER)
+    y += hdrH + AfxScaleY(FRMPROJECTOPTIONS_HDR_AFTER)
     gPOLayout.yRow(PO_ROW_MANIFEST) = y
 
     gPOLayout.bValid = true
@@ -447,6 +450,13 @@ private function frmProjectOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as long hdrH = AfxScaleY(FRMPROJECTOPTIONS_HDR_TEXT_H)
 
     ' ---- the three section headers -----------------------------------------------------
+    ' NO RULE UNDER THE HEADING. The bold face and the space above it already say where a
+    ' section starts; a hairline as well was saying it twice, and four of them across a short
+    ' dialog read as ruled paper rather than as structure.
+    '
+    ' THE SPACE THE RULE OCCUPIED IS LEFT ALONE. It was painted inside the band the layout had
+    ' already reserved (yHdr -> yRow), so dropping the paint changes no geometry and the
+    ' headings keep the breathing room that now does the dividing.
     #macro SECTIONHDR( _idx_, _text_ )
         rcT.left   = gPOLayout.xLabel
         rcT.right  = gPOLayout.xRight
@@ -455,11 +465,6 @@ private function frmProjectOptions_OnPaint( byval hwnd as HWND ) as LRESULT
         buffer.SetFont( ghFont(GUIFONTBOLD_11) )
         buffer.SetForeColor( theme.panel.text.forecolor )
         buffer.PaintText( _text_, @rcT, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
-        rcT.top    = rcT.bottom + AfxScaleY(2)
-        rcT.bottom = rcT.top + AfxScaleY(1)
-        buffer.SetBackColor( theme.ui.divider )
-        buffer.PaintRect( @rcT )
-        buffer.SetBackColor( theme.panel.text.backcolor )
     #endmacro
 
     SECTIONHDR( PO_HDR_PROJECT,  L(27,"Project") )
@@ -504,13 +509,11 @@ private function frmProjectOptions_OnPaint( byval hwnd as HWND ) as LRESULT
                   L(240,"Create resource file and manifest") )
     end scope
 
-    ' ---- the footer rule ---------------------------------------------------------------
-    rcT.left   = gPOLayout.xLabel
-    rcT.right  = gPOLayout.xRight
-    rcT.top    = gPOLayout.yFooter
-    rcT.bottom = rcT.top + AfxScaleY(1)
-    buffer.SetBackColor( theme.ui.divider )
-    buffer.PaintRect( @rcT )
+    ' ---- no footer rule ------------------------------------------------------------------
+    ' Removed with the three section rules above, so the dialog carries no hairlines at all
+    ' rather than one lone survivor over the buttons. gPOLayout.yFooter is UNCHANGED and still
+    ' marks the top of the footer band -- it is the layout's boundary, which the self-test
+    ' asserts the body walk stays above; only the line that used to be drawn on it is gone.
 
     buffer.EndDoubleBuffer()
     EndPaint( hwnd, @ps )

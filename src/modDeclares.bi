@@ -40,6 +40,23 @@ enum
     ' editor. Both exist so the sub-dialog can be opened from a posted message rather than
     ' only from a button click -- see TIKO_USERTOOLS_AUTOASSIGN.
     MSG_USER_SHOW_TOOLKEY
+    ' Opens the Help Center. It is POSTED rather than the window being created inline in
+    ' the WM_COMMAND handler, and the reason is measured, not defensive.
+    '
+    ' The menu delivers this command from inside the popup's WM_LBUTTONUP. The popup is
+    ' WS_EX_NOACTIVATE so it never takes activation, which means the CLICK is still settling
+    ' against frmMain when the handler runs: SetForegroundWindow on the new Help Center window
+    ' SUCCEEDS (traced: returns 1, foreground really is the help window), and a moment later
+    ' frmMain receives WM_ACTIVATE with WA_CLICKACTIVE and takes it straight back. The window
+    ' was up and correct; the click that opened it then buried it.
+    '
+    ' F1 never showed this because there is no click to settle -- which is exactly why the
+    ' menu path failed while the keyboard path worked.
+    '
+    ' Posting lets the whole click drain first, so the window is raised against a settled
+    ' foreground. The arguments travel in gHelpPendingQuery / gHelpPendingSite because a
+    ' DWSTRING does not fit in a wParam.
+    MSG_USER_SHOW_HELPCENTER
     MSG_USER_RICHEDIT_SELECTALL
     MSG_USER_PARSE_COMPLETE        ' wParam = SCAN_TIER; posted by the fbcParser scan worker
     ' Posted by the update-check worker as its last act. The check used to be joined

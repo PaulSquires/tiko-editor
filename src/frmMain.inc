@@ -1511,6 +1511,7 @@ function frmMain_WndProc( _
 
         ''  CUSTOM MESSAGES
 
+
         case WM_SETFOCUS
             frmMain_SetFocusToCurrentCodeWindow()
 
@@ -1526,6 +1527,28 @@ function frmMain_WndProc( _
             ' Set focus to current Scintilla window and update the document
             ' display such as Line#, Col#, Filename, etc.
             frmMain_SetStatusbar()
+
+            ' ONLY IF THIS WINDOW STILL OWNS THE FOREGROUND.
+            '
+            ' SetFocus on a child ACTIVATES that child's top-level window. This message is
+            ' POSTED, so it lands an unknown number of messages after whatever asked for it --
+            ' and if something opened another top-level window of ours in between, the focus
+            ' restore arrives late and drags the whole main window back over it.
+            '
+            ' THAT IS THE HELP CENTER BUG, and the menu is what made it reproducible:
+            '   1. a menu item is chosen; the popup hides and WM_COMMAND is POSTED
+            '   2. the popup goes away, activation returns here, WM_SETFOCUS posts THIS
+            '   3. WM_COMMAND runs -> frmHelpCenter_Show -> SetForegroundWindow(help)
+            '   4. this message runs LAST -> SetFocus(Scintilla) -> frmMain comes forward
+            ' The Help Center opened behind the editor every time, and re-picking the menu
+            ' item just ran the same four steps again, so it could never be brought forward.
+            ' frmHelpCenter_Show's own IsReady() wait pumps messages, so this can even be
+            ' dispatched from inside the call it is about to undo.
+            '
+            ' NOT SELF-CORRECTING and deliberately so: when frmMain is legitimately
+            ' re-activated it receives WM_SETFOCUS, which posts this message again. Skipping
+            ' costs nothing but a statusbar refresh that has already happened above.
+            if GetForegroundWindow() <> HWND_FRMMAIN then exit function
 
             ' The Find in Project tab has no document, but it does have somewhere to put the
             ' caret: back in the excerpt that had it. Done from HERE, on a posted message,
@@ -1545,6 +1568,12 @@ function frmMain_WndProc( _
                 frmExplorer_SelectItemData( pDoc )
                 SetFocus( pDoc->hWndActiveScintilla )
             end if
+
+        case MSG_USER_SHOW_HELPCENTER
+            ' The click that asked for this has fully drained by now, so the window is raised
+            ' against a settled foreground and nothing takes it back. See modDeclares.bi.
+            frmHelpCenter_Show( gHelpPendingQuery, gHelpPendingSite )
+            gHelpPendingQuery = ""
 
         case MSG_USER_PROCESS_COMMANDLINE
             ' process any command line arguments that may have been passed to the program.

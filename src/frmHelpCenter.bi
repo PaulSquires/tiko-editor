@@ -44,6 +44,11 @@
 
 #pragma once
 
+' Arguments parked for MSG_USER_SHOW_HELPCENTER -- see the note on that message in
+' modDeclares.bi. Only ever written immediately before the post and read once by the handler.
+dim shared gHelpPendingQuery as DWSTRING
+dim shared gHelpPendingSite  as long
+
 ' The child window the WebView2 control is hosted in. The pane is NOT hosted in the frame
 ' itself: CWebView2's constructor writes the host window's GWLP_USERDATA, and a dedicated
 ' child keeps that clear of the frame's own CWindow bookkeeping. It is also the pattern the

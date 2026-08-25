@@ -48,7 +48,15 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     dim as score_t min_score = 0
     dim as boolean bLoadAll 
     
-    ' By default, if empty search string then simply load all filenames
+    ' AN EMPTY BOX LISTS EVERYTHING -- filenames AND types/functions alike, not filenames
+    ' only. bLoadAll is what says so, and BOTH loops below honour it; it used to gate the
+    ' filename loop alone, so opening the picker showed a file list and no symbols at all
+    ' until the first keystroke.
+    '
+    ' WITH NO NEEDLE EVERY SCORE IS 0, so nothing here is ranked -- the order is the order
+    ' the walks push in (files, by leaf name, then symbols, then any remaining files) and the
+    ' stable sort preserves it. MAX_SYMBOL_SEARCH still caps the result set, but it is now
+    ' SPLIT between the two kinds rather than served first-come -- see nFileBudget below.
     if wszNeedle = "" then bLoadAll = true
 
     ' PROCESS ALL FILENAMES (every user file the symbol database knows,
@@ -62,26 +70,52 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     next
 
     SortFilenamesByLeaf( arrFiles )
-    for nFile as long = 0 to arrFiles.Count - 1
-        dim positions(any) as uinteger
-        wszFilename = AfxStrPathName( "NAMEX", arrFiles[nFile] )
-        nScore = fuzzy_match_positions( wszNeedle, wszFilename, positions() )
-        if (nScore > min_score) orelse (bLoadAll = true) then
-            if gSymbols.Count >= MAX_SYMBOL_SEARCH then exit for
-            dim as SEARCHSYMBOL_TYPE hit
-            hit.nScore      = nScore
-            hit.id          = SearchSymbol.file_symbol
-            hit.wszCaption  = wszFilename
-            hit.wszFilename = arrFiles[nFile]
-            hit.nLineNumber = -1
-            hit.isEnum      = false
-            hit.clrMask     = WSTRING( len(wszFilename), 48 )    ' "0"
-            for i as long = lbound(positions) to ubound(positions)
-                hit.clrMask[ positions(i) ] = 49   '  "1"
-            next
 
-            gSymbols.Push( hit )
-        end if
+    ' ONE FILE, SCORED AND PUSHED. A macro because the filename walk happens TWICE -- once
+    ' for its share of the cap, once for whatever the symbols leave behind -- and the two
+    ' passes must score and colour a row identically or the same file would look different
+    ' depending on which pass caught it.
+    #macro PUSHFILEHIT( _idx_ )
+        scope
+            dim positions(any) as uinteger
+            wszFilename = AfxStrPathName( "NAMEX", arrFiles[_idx_] )
+            nScore = fuzzy_match_positions( wszNeedle, wszFilename, positions() )
+            if (nScore > min_score) orelse (bLoadAll = true) then
+                dim as SEARCHSYMBOL_TYPE hit
+                hit.nScore      = nScore
+                hit.id          = SearchSymbol.file_symbol
+                hit.wszCaption  = wszFilename
+                hit.wszFilename = arrFiles[_idx_]
+                hit.nLineNumber = -1
+                hit.isEnum      = false
+                hit.clrMask     = WSTRING( len(wszFilename), 48 )    ' "0"
+                for i as long = lbound(positions) to ubound(positions)
+                    hit.clrMask[ positions(i) ] = 49   '  "1"
+                next
+
+                gSymbols.Push( hit )
+            end if
+        end scope
+    #endmacro
+
+    ' THE CAP IS SHARED, SO IT IS SPLIT RATHER THAN SERVED FIRST-COME. The filename walk used
+    ' to run all the way to MAX_SYMBOL_SEARCH before the symbol walk was reached, so a project
+    ' with 100+ user files showed no types or functions AT ALL -- and it was not only the
+    ' empty-box case: with a needle typed, a hundred weak filename matches could crowd out a
+    ' symbol that scored higher, because the truncation happens on INSERTION order while the
+    ' ranking sort runs afterwards.
+    '
+    ' Files take half the cap first, symbols take what is left, then files resume into any
+    ' slack the symbols did not use -- so neither kind can starve the other, and a short
+    ' result set on one side still fills the list. nFileNext carries the resume point, which
+    ' is why the first pass advances it whether or not the row actually scored.
+    dim as long nFileBudget = MAX_SYMBOL_SEARCH \ 2
+    dim as long nFileNext   = 0
+
+    for nFile as long = 0 to arrFiles.Count - 1
+        if gSymbols.Count >= nFileBudget then exit for
+        PUSHFILEHIT( nFile )
+        nFileNext = nFile + 1
     next
 
 
@@ -97,7 +131,8 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
             dim as DWSTRING wszName = gSymDb.QualifiedName( refSym )
             nScore = fuzzy_match_positions( wszNeedle, wszName, positions() )
 
-            if (nScore > min_score) then
+            ' orelse bLoadAll: same rule as the filename loop above.
+            if (nScore > min_score) orelse (bLoadAll = true) then
                 if gSymbols.Count >= MAX_SYMBOL_SEARCH then exit for
 
                 dim as long nKind = gSymDb.SymKind( refSym )
@@ -121,6 +156,16 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
 
                 gSymbols.Push( hit )
             end if
+        next
+    end if
+
+
+    ' Files again, into whatever the symbol walk left unused. Resumes at nFileNext rather
+    ' than rescanning, so no file can be pushed twice.
+    if gSymbols.Count < MAX_SYMBOL_SEARCH then
+        for nFile as long = nFileNext to arrFiles.Count - 1
+            if gSymbols.Count >= MAX_SYMBOL_SEARCH then exit for
+            PUSHFILEHIT( nFile )
         next
     end if
 

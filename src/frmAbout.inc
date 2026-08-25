@@ -123,8 +123,12 @@ private sub frmAbout_BuildCredits()
     nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "ImortisInglorian", 2 )
     PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(371,"Ideas and testing") )
 
+    ' SARG wrote FBDebugger, which is what tiko's own debugger interface was modelled on --
+    ' a specific debt, not the general one the other two names carry, so it gets its own id
+    ' rather than sharing 371. Id 100 was a BLANK slot reclaimed from english.lang, not an
+    ' append: the id space is dense and MAXIMUM is the last key, not a count.
     nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "Laurent GRAS (SARG)", 3 )
-    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(371,"Ideas and testing") )
+    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(100,"FBDebugger inspiration") )
 
     nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "Neil Hodgson", 4 )
     PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(372,"Scintilla editing component") )
