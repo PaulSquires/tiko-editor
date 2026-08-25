@@ -37,6 +37,7 @@
 ' ========================================================================================
 #include once "fb/array.bi"
 #include once "fb/sort.bi"
+#include once "fb/string.bi"
 
 #include once "windows.bi"
 #include once "vbcompat.bi"
