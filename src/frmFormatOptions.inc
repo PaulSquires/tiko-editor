@@ -939,21 +939,30 @@ sub frmFormatOptions_RunSelfTest( byval bLayoutHalf as boolean )
         ' L(id,"default") DISCARDS the default -- it is #Define L(e,s) LL(e). An id with no
         ' entry in english.lang renders as an EMPTY STRING, so a rule label, a combo choice
         ' or a whole page comes up BLANK with nothing in the build to say so.
-        dim as long ids(0 to 29) = { 638, 641, 642, 643, 644, 645, 646, 647, 648, 649, _
-                                     650, 651, 652, 653, 654, 655, 656, 657, 658, 659, _
-                                     660, 661, 662, 663, 664, 665, 666, 667, 668, 669 }
-        for i as long = 0 to 29
+        ' THE IDS ARE THE ONES THIS DIALOG ACTUALLY CALLS -- 470 (its own caption),
+        ' 473..478 (the combo choices), 479..493 (one per rule row), 494..495 (the two
+        ' explanatory paragraphs), 496..501 (Preview plus the five nav pages) and 502
+        ' (Reset to Defaults). They were 638..669 until the id block was renumbered DOWN
+        ' BY 168; this list was not renumbered with it, so every assertion below was
+        ' reading LL() PAST ITS UPPER BOUND of 521 and grading itself on whatever heap
+        ' happened to follow the array -- which is why the pass/fail split moved between
+        ' runs of an UNCHANGED binary and moved again depending on which other suites had
+        ' run first. LangIdIsSet bounds-checks, so a stale id now fails deterministically.
+        dim as long ids(0 to 30) = { 470, 473, 474, 475, 476, 477, 478, 479, 480, 481, _
+                                     482, 483, 484, 485, 486, 487, 488, 489, 490, 491, _
+                                     492, 493, 494, 495, 496, 497, 498, 499, 500, 501, _
+                                     502 }
+        for i as long = 0 to 30
             dim as string sName = "lang id " & str(ids(i)) & " is not blank"
-            CHECK( len(LL(ids(i))) > 0, sName )
+            CHECK( LangIdIsSet(ids(i)), sName )
         next
-        CHECK( len(LL(502)) > 0, "lang id 502 is not blank" )
 
         ' AND WHAT THEY RESOLVED TO, printed rather than asserted. NOT decoration: the
         ' is-not-blank check passes under EVERY language file even when that language has the slot
         ' empty, because LoadLocalizationFile fills a blank key with the English text. So
         ' the assertions above cannot tell a translation from the English fallback, and
         ' running under french.lang and seeing them green proves only that the ids exist.
-        dim as string sShow = "  resolved: 665=" & LL(497) & " | 647=" & LL(479) & " | 644=" & LL(476)
+        dim as string sShow = "  resolved: 497=" & LL(497) & " | 479=" & LL(479) & " | 476=" & LL(476)
         print sShow
 
         ' ---- the row table ----------------------------------------------------------------

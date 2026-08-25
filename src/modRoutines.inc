@@ -1151,6 +1151,26 @@ end function
 
 
 ' ========================================================================================
+' Is a localized id BOTH within the loaded LL() array and non-blank?
+'
+' LL() is a dynamic array sized by the "MAXIMUM:" line of the .lang file, so LL(id) for an
+' id past that maximum is an OUT-OF-BOUNDS READ, not a blank string. fbc does not bounds-
+' check without -exx, so such a read silently returns whatever heap follows the array --
+' which is why a self-test asserting stale ids produced a DIFFERENT pass/fail split on
+' consecutive runs of the same binary, and a different one again depending on which other
+' suites had run first and left different bytes there.
+'
+' Every self-test that asserts a lang id must go through this, never through len(LL(id)):
+' an id the .lang files do not define then fails DETERMINISTICALLY instead of coin-flipping.
+' ========================================================================================
+function LangIdIsSet( byval nId as long ) as boolean
+    if nId < lbound(LL) then return false
+    if nId > ubound(LL) then return false
+    return len(LL(nId)) > 0
+end function
+
+
+' ========================================================================================
 ' Get the full process image name
 ' ========================================================================================
 function GetProcessImageName( _

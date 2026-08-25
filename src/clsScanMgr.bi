@@ -39,6 +39,10 @@ type SCANREQUEST
     declare destructor()
 end type
 
+' The retire queue's element type, aliased because a generic written out directly in a TYPE
+' field does not instantiate -- see the field's own comment below.
+type RETIREQUEUE as FB.Array( of PARSERESULTSET ptr )
+
 type clsScanMgr
     private:
         m_cs          as CRITICAL_SECTION
@@ -56,8 +60,18 @@ type clsScanMgr
         m_pProjDone   as PARSERESULTSET ptr
         m_pBufDone    as PARSERESULTSET ptr
         ' sets the UI has retired, queued for same-thread freeing
-        m_retire(any) as PARSERESULTSET ptr
-        m_retireCount as long
+        ' An Array of POINTERS: it frees the array, never the pointees. Each retired set
+        ' is released explicitly in WorkerLoop -- fbcparser_free on the marshalled block,
+        ' then DELETE on the set itself -- and that must stay true. Do not 'improve' this
+        ' into an Array of values or of SharedPtr; the DLL owns the block, not FreeBASIC.
+        ' Count is the queue depth; the parallel m_retireCount is gone.
+        '
+        ' RETIREQUEUE, not FB.Array( of PARSERESULTSET ptr ) written out here. A generic
+        ' spelled directly in a TYPE FIELD does not instantiate -- and it does not say so:
+        ' the field is silently never defined, and what you get is "error 18: Element not
+        ' defined" at every USE SITE, naming the member and never the declaration. Alias
+        ' the instantiation first and use the alias. Verified by probe both ways.
+        m_retire as RETIREQUEUE
 
         declare function BuildRequest( byval nTier as long, byref wszRootFile as wstring ) as SCANREQUEST ptr
         declare sub EnqueueRequest( byval pReq as SCANREQUEST ptr )

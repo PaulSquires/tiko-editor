@@ -70,3 +70,6 @@ __pycache__/
 # old one -- a removal the next build undoes is not a removal.
 /tiko.exe
 /tiko-editor.exe
+
+# test runner scratch output (build\_run_tests.bat)
+/build/testlogs/

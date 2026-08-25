@@ -36,10 +36,6 @@
 
 ' One drawn label on the page. The caption is composed at layout time (some carry a
 ' trailing colon, some do not -- matching the old dialog exactly) and drawn in Paint.
-type COMP_LABEL
-    rc      as RECT
-    caption as DWSTRING
-end type
 
 
 dim shared ghCompToolchains as HWND      ' PsListTree
@@ -51,9 +47,9 @@ dim shared ghCompBeep       as HWND      ' PsToggle
 ' Clean toolchain folder names, parallel to the PsListTree rows. The row's display TEXT may
 ' carry a "path contains spaces" warning suffix, so the folder name is kept separately
 ' rather than parsed back out of the list.
-dim shared gCompToolchainNames(any) as DWSTRING
+dim shared gCompToolchainNames as DWSTRINGLIST
 
-dim shared gCompLabels(any) as COMP_LABEL
+dim shared gCompLabels as PAGELABELLIST
 dim shared gCompBuilt as boolean = false
 
 
@@ -78,8 +74,8 @@ sub frmOptionsCompiler_Reset()
     ghCompIncludes   = 0
     ghCompRunCmd     = 0
     ghCompBeep       = 0
-    erase gCompToolchainNames
-    erase gCompLabels
+    gCompToolchainNames.Clear( )
+    gCompLabels.Clear( )
 end sub
 
 
@@ -87,8 +83,8 @@ end sub
 ' Toolchain selection changed (mouse or keyboard). Write the clean folder name to staging.
 ' ========================================================================================
 private sub frmOptionsCompiler_ToolchainSelChange( byval hList as HWND, byval row as integer )
-    if (row < lbound(gCompToolchainNames)) orelse (row > ubound(gCompToolchainNames)) then exit sub
-    gOptWork.CompilerToolchain = gCompToolchainNames(row)
+    if (row < 0) orelse (row >= gCompToolchainNames.Count) then exit sub
+    gOptWork.CompilerToolchain = gCompToolchainNames[row]
 end sub
 
 
@@ -148,7 +144,7 @@ private function frmOptionsCompiler_LoadToolchains() as long
 
     PsListTree_BeginUpdate( ghCompToolchains )
     PsListTree_Clear( ghCompToolchains )
-    erase gCompToolchainNames
+    gCompToolchainNames.Clear( )
 
     dim as long idxMatch = -1
     dim as long idx = 0
@@ -173,8 +169,7 @@ private function frmOptionsCompiler_LoadToolchains() as long
                     end if
 
                     idx = PsListTree_AddString( ghCompToolchains, wszDisplay )
-                    redim preserve gCompToolchainNames(idx) as DWSTRING
-                    gCompToolchainNames(idx) = wszFolder
+                    SetNameAtRow( gCompToolchainNames, idx, wszFolder )
                     if ucase(wszFolder) = wszWanted then idxMatch = idx
                 end if
             end if
@@ -273,10 +268,7 @@ end sub
 private sub frmOptionsCompiler_AddLabel( byval wszCaption as DWSTRING, _
                                          byval nLeft as long, byval nTop as long, _
                                          byval nRight as long, byval nBottom as long )
-    dim as long idx = ubound(gCompLabels) + 1
-    redim preserve gCompLabels(idx) as COMP_LABEL
-    gCompLabels(idx).rc = type<RECT>( nLeft, nTop, nRight, nBottom )
-    gCompLabels(idx).caption = wszCaption
+    AddPageLabel( gCompLabels, wszCaption, nLeft, nTop, nRight, nBottom )
 end sub
 
 
@@ -311,7 +303,7 @@ function frmOptionsCompiler_Layout( byval hPage as HWND, byval cxPanel as long )
     dim as long sectionGap = AfxScaleY(COMP_SECTIONGAP)
     dim as long y = AfxScaleY(OPTROW_PADTOP)
 
-    erase gCompLabels
+    gCompLabels.Clear( )
 
     ' ---- a field label above its control ---------------------------------------------
     #macro FIELDLABEL( cap )
@@ -369,8 +361,5 @@ sub frmOptionsCompiler_Paint( byval p as SCP_PAINTINFO ptr )
     p->b->SetFont( OptionsFont_Base() )
     p->b->SetBackColor( theme.panel.text.backcolor )
     p->b->SetForeColor( theme.panel.text.forecolor )
-    for i as long = lbound(gCompLabels) to ubound(gCompLabels)
-        dim as RECT rc = gCompLabels(i).rc
-        p->b->PaintText( gCompLabels(i).caption, @rc, DT_LEFT or DT_END_ELLIPSIS )
-    next
+    PaintPageLabels( p, gCompLabels )
 end sub

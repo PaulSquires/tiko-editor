@@ -15,19 +15,23 @@
 
 
 ' ========================================================================================
-' Fastest descending sort for this small, string-bearing udt array
-' uses swap (bitwise exchange, no string realloc) instead of "="
-' adaptive insertion sort: near-sorted input -> near O(n)
+' Best fuzzy score first.
+'
+' STABLE, and it matters: files are scored and pushed before symbols, so two entries on the
+' same score keep that order and a file still outranks the symbol it ties with.
+'
+' The hand-written insertion sort this replaces used SWAP rather than assignment, and said
+' so on purpose -- bitwise exchange, no string realloc, over a UDT carrying three DWSTRINGs.
+' FB's merge sort assigns. At MAX_SYMBOL_SEARCH = 100 that is a hundred-odd DWSTRING copies
+' per keystroke, against a list rebuilt from scratch on every keystroke, behind fuzzy
+' scoring that dominates both. Recorded rather than measured, because it was never measured
+' before either -- if the picker ever feels slow, start here.
 ' ========================================================================================
-sub frmSearchSymbol_sortSymbolsDescending( byval nCount as integer )
-    dim as integer j
-    for i as integer = 1 to nCount - 1
-        j = i
-        do while (j > 0) andalso (gSymbols(j).result > gSymbols(j - 1).result)
-            swap gSymbols(j), gSymbols(j - 1)
-            j -= 1
-        loop
-    next i
+sub frmSearchSymbol_sortSymbolsDescending( )
+    FB.StableSortBy( gSymbols, _
+        function( byref a as SEARCHSYMBOL_TYPE, byref b as SEARCHSYMBOL_TYPE ) as boolean
+            return a.nScore > b.nScore
+        end function )
 end sub
 
 ' ========================================================================================
@@ -37,10 +41,10 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     dim as DWSTRING wszFilename
     dim as DWSTRING wszNeedle = AfxGetWindowText( hwndCtl )
 
-    gSymbolsCount = 0
-    dim as long nextEl = 0
+    gSymbols.Clear( )
+    gSymbols.Reserve( MAX_SYMBOL_SEARCH )
         
-    dim as score_t result
+    dim as score_t nScore
     dim as score_t min_score = 0
     dim as boolean bLoadAll 
     
@@ -50,78 +54,79 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     ' PROCESS ALL FILENAMES (every user file the symbol database knows,
     ' including include files never opened in the editor). Scan filenames are
     ' UPPERCASED - normalize to on-disk casing for display and open-on-select.
-    dim arrFiles(any) as DWSTRING
-    dim as long nFiles = gSymDb.EnumUserFiles( arrFiles() )
-    for i as long = 0 to nFiles - 1
-        arrFiles(i) = FilenameOriginalCase( arrFiles(i) )
+    dim arrFiles as FILENAMELIST
+    gSymDb.EnumUserFiles( arrFiles )
+    ' BYREF: this REWRITES each entry in place rather than reading it.
+    for each byref wszScanned as DWSTRING in arrFiles
+        wszScanned = FilenameOriginalCase( wszScanned )
     next
 
-    if nFiles > 0 then QuickSortFilenames( arrFiles(), 0, nFiles - 1 )
-    for f as long = 0 to nFiles - 1
+    SortFilenamesByLeaf( arrFiles )
+    for nFile as long = 0 to arrFiles.Count - 1
         dim positions(any) as uinteger
-        wszFilename = AfxStrPathName( "NAMEX", arrFiles(f) )
-        result = fuzzy_match_positions( wszNeedle, wszFilename, positions() )
-        if (result > min_score) orelse (bLoadAll = true) then
-            if gSymbolsCount + 1 > MAX_SYMBOL_SEARCH then exit for
-            gSymbolsCount += 1
-            gSymbols(nextEl).result      = result
-            gSymbols(nextEl).id          = SearchSymbol.file_symbol
-            gSymbols(nextEl).wszCaption  = wszFilename
-            gSymbols(nextEl).wszFilename = arrFiles(f)
-            gSymbols(nextEl).nLineNumber = -1
-            gSymbols(nextEl).isEnum      = false
-            gSymbols(nextEl).clrMask     = WSTRING( len(wszFilename), 48 )    ' "0"
+        wszFilename = AfxStrPathName( "NAMEX", arrFiles[nFile] )
+        nScore = fuzzy_match_positions( wszNeedle, wszFilename, positions() )
+        if (nScore > min_score) orelse (bLoadAll = true) then
+            if gSymbols.Count >= MAX_SYMBOL_SEARCH then exit for
+            dim as SEARCHSYMBOL_TYPE hit
+            hit.nScore      = nScore
+            hit.id          = SearchSymbol.file_symbol
+            hit.wszCaption  = wszFilename
+            hit.wszFilename = arrFiles[nFile]
+            hit.nLineNumber = -1
+            hit.isEnum      = false
+            hit.clrMask     = WSTRING( len(wszFilename), 48 )    ' "0"
             for i as long = lbound(positions) to ubound(positions)
-                gSymbols(nextEl).clrMask[ positions(i) ] = 49   '  "1"
+                hit.clrMask[ positions(i) ] = 49   '  "1"
             next
 
-            nextEl += 1
+            gSymbols.Push( hit )
         end if
     next
 
 
     ' PROCESS ALL TYPES and FUNCTION NAMES
-    if gSymbolsCount < MAX_SYMBOL_SEARCH then
-        dim rs() as SYMBOLREF
-        dim as long nSyms = gSymDb.EnumAllProcsTypes( rs(), true )
-        for s as long = 0 to nSyms - 1
-            dim as wstring ptr pFile = gSymDb.SymFile( rs(s) )
+    if gSymbols.Count < MAX_SYMBOL_SEARCH then
+        dim rs as SYMBOLREFLIST
+        gSymDb.EnumAllProcsTypes( rs, true )
+        for each refSym in rs
+            dim as wstring ptr pFile = gSymDb.SymFile( refSym )
             if pFile = 0 then continue for
 
             dim positions(any) as uinteger
-            dim as DWSTRING wszName = gSymDb.QualifiedName( rs(s) )
-            result = fuzzy_match_positions( wszNeedle, wszName, positions() )
+            dim as DWSTRING wszName = gSymDb.QualifiedName( refSym )
+            nScore = fuzzy_match_positions( wszNeedle, wszName, positions() )
 
-            if (result > min_score) then
-                if gSymbolsCount + 1 > MAX_SYMBOL_SEARCH then exit for
-                gSymbolsCount += 1
+            if (nScore > min_score) then
+                if gSymbols.Count >= MAX_SYMBOL_SEARCH then exit for
 
-                dim as long nKind = gSymDb.SymKind( rs(s) )
-                gSymbols(nextEl).result = result
+                dim as long nKind = gSymDb.SymKind( refSym )
+                dim as SEARCHSYMBOL_TYPE hit
+                hit.nScore = nScore
                 if (nKind = FBCP_KIND_SUB) orelse (nKind = FBCP_KIND_FUNCTION) then
-                    gSymbols(nextEl).id = SearchSymbol.function_symbol
+                    hit.id = SearchSymbol.function_symbol
                 else
-                    gSymbols(nextEl).id = SearchSymbol.type_symbol
+                    hit.id = SearchSymbol.type_symbol
                 end if
-                gSymbols(nextEl).wszCaption  = wszName
-                gSymbols(nextEl).wszFilename = FilenameOriginalCase( *pFile )
-                dim as long nLineNum = gSymDb.SymBodyLine( rs(s) )
-                if nLineNum = 0 then nLineNum = gSymDb.SymLine( rs(s) )
-                gSymbols(nextEl).nLineNumber = iif( nLineNum > 0, nLineNum - 1, 0 )
-                gSymbols(nextEl).isEnum      = ( nKind = FBCP_KIND_ENUM )
-                gSymbols(nextEl).clrMask     = WSTRING( len(wszName), 48 )  ' "0"
+                hit.wszCaption  = wszName
+                hit.wszFilename = FilenameOriginalCase( *pFile )
+                dim as long nLineNum = gSymDb.SymBodyLine( refSym )
+                if nLineNum = 0 then nLineNum = gSymDb.SymLine( refSym )
+                hit.nLineNumber = iif( nLineNum > 0, nLineNum - 1, 0 )
+                hit.isEnum      = ( nKind = FBCP_KIND_ENUM )
+                hit.clrMask     = WSTRING( len(wszName), 48 )  ' "0"
                 for i as long = lbound(positions) to ubound(positions)
-                    gSymbols(nextEl).clrMask[ positions(i) ] = 49  ' "1"
+                    hit.clrMask[ positions(i) ] = 49  ' "1"
                 next
 
-                nextEl += 1
+                gSymbols.Push( hit )
             end if
         next
     end if
 
 
     ' Sort the gSymbols array based on score_t descending
-    frmSearchSymbol_sortSymbolsDescending( gSymbolsCount )
+    frmSearchSymbol_sortSymbolsDescending( )
 
     
     dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
@@ -130,15 +135,15 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     ' Every keystroke re-runs the search, so the previous result set has to go: the row
     ' itemID indexes gSymbols(), which has just been rebuilt from scratch.
     PsListTree_Clear( hList )
-    for i as integer = 0 to gSymbolsCount - 1
-        PsListTree_AddString( hList, gSymbols(i).wszCaption, i )
+    for i as integer = 0 to gSymbols.Count - 1
+        PsListTree_AddString( hList, gSymbols[i].wszCaption, i )
     next
     ShowWindow( hList, SW_SHOW )
     
     ' If we have symbols in the list then select the first entry if the text is 
     ' a perfect match.
-    if gSymbolsCount > 0 then
-        if gSymbols(0).result = SCORE_MAX then
+    if gSymbols.Count > 0 then
+        if gSymbols[0].nScore = SCORE_MAX then
             PsListTree_SetCurSel( hList, 0 )
         end if
     end if    
@@ -152,13 +157,16 @@ end function
 ' ========================================================================================
 function frmSearchSymbol_GotoSymbol( byval idx as long ) as long
     
-    if (idx < 0) orelse (idx > gSymbolsCount) then return 0
+    ' >=, not >. This read gSymbols[gSymbols.Count] -- one PAST the fill -- and got away
+    ' with it only because the array was a fixed 101 entries, so the stale row it handed
+    ' back was still allocated memory. Against a container it is plainly out of bounds.
+    if (idx < 0) orelse (idx >= gSymbols.Count) then return 0
 
-    if len( gSymbols(idx).wszFilename ) then
-        if gSymbols(idx).nLineNumber >= 0 then
-            OpenSelectedDocument( gSymbols(idx).wszFilename, "", gSymbols(idx).nLineNumber )
+    if len( gSymbols[idx].wszFilename ) then
+        if gSymbols[idx].nLineNumber >= 0 then
+            OpenSelectedDocument( gSymbols[idx].wszFilename, "", gSymbols[idx].nLineNumber )
         else
-            OpenSelectedDocument( gSymbols(idx).wszFilename )
+            OpenSelectedDocument( gSymbols[idx].wszFilename )
         end if
     end if
     
@@ -206,7 +214,7 @@ function frmSearchSymbol_TextBoxMessage( byval m as PSTEXTBOX_MESSAGEINFO ptr ) 
 
             case VK_DOWN
                 dim as integer cur = PsListTree_GetCurSel(hList)
-                if (cur < gSymbolsCount - 1) then PsListTree_SetCurSel( hList, cur + 1 )
+                if (cur < gSymbols.Count - 1) then PsListTree_SetCurSel( hList, cur + 1 )
                 return true
         end select
     end if
@@ -330,9 +338,9 @@ sub frmSearchSymbol_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
 
     if p->ItemID > -1 then
         dim as DWSTRING wszIcon
-        dim as DWSTRING wszCaption = gSymbols(p->ItemID).wszCaption
+        dim as DWSTRING wszCaption = gSymbols[p->ItemID].wszCaption
 
-        select case gSymbols(p->ItemID).id
+        select case gSymbols[p->ItemID].id
             case SearchSymbol.file_symbol
                 icon_foreclr = theme.panel.filenameicon.forecolor
                 icon_backclr = iif( p->IsSelected, theme.panel.texthot.backcolor, theme.panel.filenameicon.backcolor)
@@ -346,7 +354,7 @@ sub frmSearchSymbol_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
             case SearchSymbol.type_symbol
                 icon_foreclr = theme.panel.typeicon.forecolor
                 icon_backclr = iif( p->IsSelected, theme.panel.texthot.backcolor, theme.panel.typeicon.backcolor)
-                wszIcon = iif( gSymbols(p->ItemID).isEnum, wszSearchEnum, wszSearchType )
+                wszIcon = iif( gSymbols[p->ItemID].isEnum, wszSearchEnum, wszSearchType )
         end select
 
 
@@ -366,7 +374,7 @@ sub frmSearchSymbol_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
             idFont  = GUIFONT_10
             
             ' Test mask to see if "1" indicating highlight the letter.
-            if gSymbols(p->ItemID).clrMask[i] = 49 then   ' "1"
+            if gSymbols[p->ItemID].clrMask[i] = 49 then   ' "1"
                 clrChar = theme.panel.textsearchhot
                 idFont  = GUIFONTBOLD_10
             end if
@@ -546,7 +554,7 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
             if (GetAsyncKeyState(VK_SHIFT) and &H8000) then
                 if cur > 0 then PsListTree_SetCurSel( hList, cur - 1 )
             else
-                if cur < gSymbolsCount - 1 then PsListTree_SetCurSel( hList, cur + 1 )
+                if cur < gSymbols.Count - 1 then PsListTree_SetCurSel( hList, cur + 1 )
             end if
             continue while   ' fully handled; don't let IsDialogMessage move focus
 

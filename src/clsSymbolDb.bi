@@ -46,10 +46,14 @@ type TODOITEM
     wszText  as DWSTRING          ' text after the TODO: marker
 end type
 
-dim shared gTodoItems(any) as TODOITEM
-dim shared gTodoCount as long = 0
+' Aliased because a generic spelled directly in a TYPE field does not instantiate -- see
+' PARSERESULTSET.todoItems below and RFC-0004 s1. The alias is declared here so both the
+' global store and the per-set field can use it.
+type TODOLIST as FB.Array( of TODOITEM )
 
-declare sub TodoStore_ReplaceFile( byref wszFile as const wstring, items() as TODOITEM, byval itemCount as long )
+dim shared gTodoItems as TODOLIST
+
+declare sub TodoStore_ReplaceFile( byref wszFile as const wstring, byref items as TODOLIST )
 declare sub TodoStore_RemoveFile( byref wszFile as const wstring )
 
 ' One scan's result plus its indexes. Built on the worker, immutable afterward.
@@ -76,8 +80,10 @@ type PARSERESULTSET
 
     ' 'TODO: lines found by the worker's line scan of the buffer-scan text copy
     ' (buffer tier only; empty for project scans - their text is never in memory)
-    todoItems(any) as TODOITEM
-    todoCount      as long
+    ' TODOLIST, not FB.Array( of TODOITEM ) written out: a generic spelled directly in a
+    ' TYPE field is silently never defined, and the only symptom is "error 18: Element not
+    ' defined" at every use site, naming the member and never this line.
+    todoItems      as TODOLIST
 
     declare sub BuildIndexes()
 end type
@@ -95,6 +101,13 @@ type DIAGREF
     pRSet as PARSERESULTSET ptr
     idx   as long
 end type
+
+' The enumeration result lists. Aliased for the same reason TODOLIST and RETIREQUEUE are:
+' a generic spelled out in a TYPE field never instantiates. None of these is a field today,
+' but they are one edit away from becoming one, and the alias costs nothing.
+type SYMBOLREFLIST as FB.Array( of SYMBOLREF )
+type DIAGREFLIST   as FB.Array( of DIAGREF )
+type FILENAMELIST  as FB.Array( of DWSTRING )
 
 ' FB intrinsic calltip (LEN, MID, ...). Kept as a separate sorted lookup - these
 ' never appear in any include file, so they are not part of the scanned symbols.
@@ -131,13 +144,13 @@ type clsSymbolDb
         declare function FindVariable( byref wszName as const wstring, byref wszFile as const wstring, byval nCaretLine as long ) as SYMBOLREF
 
         ' -- enumerations (results() redim'd by callee; returns count) --
-        declare function EnumMembers( byval refType as SYMBOLREF, results() as SYMBOLREF, byval bWalkExtends as boolean = true ) as long
-        declare function EnumPrefix( byref wszPrefix as const wstring, byval kindMask as long, results() as SYMBOLREF ) as long
-        declare function EnumLocalsInScope( byref wszFile as const wstring, byval nCaretLine as long, results() as SYMBOLREF ) as long
-        declare function EnumProcsInFile( byref wszFile as const wstring, results() as SYMBOLREF ) as long
-        declare function EnumUserFiles( results() as DWSTRING ) as long
-        declare function EnumAllProcsTypes( results() as SYMBOLREF, byval bUserFilesOnly as boolean ) as long
-        declare function EnumDiags( results() as DIAGREF ) as long
+        declare sub EnumMembers( byval refType as SYMBOLREF, byref results as SYMBOLREFLIST, byval bWalkExtends as boolean = true )
+        declare sub EnumPrefix( byref wszPrefix as const wstring, byval kindMask as long, byref results as SYMBOLREFLIST )
+        declare sub EnumLocalsInScope( byref wszFile as const wstring, byval nCaretLine as long, byref results as SYMBOLREFLIST )
+        declare sub EnumProcsInFile( byref wszFile as const wstring, byref results as SYMBOLREFLIST )
+        declare sub EnumUserFiles( byref results as FILENAMELIST )
+        declare sub EnumAllProcsTypes( byref results as SYMBOLREFLIST, byval bUserFilesOnly as boolean )
+        declare sub EnumDiags( byref results as DIAGREFLIST )
 
         ' -- accessors on a SYMBOLREF (thin reads over pResult) --
         declare function SymName( byval r as SYMBOLREF ) as wstring ptr

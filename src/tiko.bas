@@ -19,7 +19,25 @@
 
 
 #define UNICODE
-#define _WIN32_WINNT &h0602  
+#define _WIN32_WINNT &h0602
+
+' ========================================================================================
+' FBC-Modern standard library.
+'
+' THIS BLOCK MUST PRECEDE windows.bi AND "using AfxNova", and the order is not cosmetic:
+' fb\math.bi (pulled in transitively) defines Infinity and the FP_* constants, which
+' collide with what windows.bi brings in. Include it the other way round and you get six
+' errors that all point INSIDE math.bi and none of which mention the collision.
+'
+' AND NEVER "using FB". AfxNova's GDI+ defines Ok = 0 inside namespace AfxNova, and this
+' file does "using AfxNova" below. Every standard-library name is written out: FB.Array,
+' FB.Sort, FB.Map. As a corollary no identifier in this tree may be named "ok".
+'
+' See docs/tiko-editor/RFC-0001 s5.
+' ========================================================================================
+#include once "fb/array.bi"
+#include once "fb/sort.bi"
+#include once "fb/string.bi"
 
 #include once "windows.bi"
 #include once "vbcompat.bi"

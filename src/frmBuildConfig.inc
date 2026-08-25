@@ -396,14 +396,12 @@ end function
 ' Create an accelerator table based on selections for the Build Configurations.
 ' ========================================================================================
 function frmBuildConfig_CreateAcceleratorTable() as long
-    dim NumKeys  as long
     dim nKey     as long
     dim fVirt    as long
         
     if ghAccelBuildConfigurations then DestroyAcceleratorTable(ghAccelBuildConfigurations)
-    dim a(any) as ACCEL
+    dim keys as ACCELLIST
         
-    NumKeys = 0
     for y as long = lbound(gConfig.Builds) to ubound(gConfig.Builds)
             
         fVirt = FNOINVERT or FVIRTKEY
@@ -425,19 +423,11 @@ function frmBuildConfig_CreateAcceleratorTable() as long
         ' "None" affordance to plain N, and any stale name to its own first letter.
         nKey = KeyBindings_PickListKeyToValue( gConfig.Builds(y).wszKey )
 
-        if nKey > 0 then
-            NumKeys = NumKeys + 1
-            redim preserve a(1 To NumKeys) as ACCEL
-            a(NumKeys).fVirt = fVirt
-            a(NumKeys).key   = nKey
-            a(NumKeys).cmd   = IDM_BUILDCONFIGBASE + y
-        end if
+        AddAccelKey( keys, fVirt, nKey, IDM_BUILDCONFIGBASE + y )
 
     next                                    
         
-    if NumKeys then
-        ghAccelBuildConfigurations = CreateAcceleratorTable(cast(LPACCEL, @a(1)), NumKeys)
-    end if
+    ghAccelBuildConfigurations = BuildAccelTable( keys )
 
     function = 0
 end Function
@@ -478,9 +468,9 @@ end function
 
 ' The STAGING row's shortcut -- what the dialog shows while it is open.
 private function frmBuildConfig_ShortcutText( byval idx as long ) as DWSTRING
-    if (idx < lbound(gBuildsWork)) orelse (idx > ubound(gBuildsWork)) then return ""
-    return frmBuildConfig_ComposeShortcut( gBuildsWork(idx).wszKey, gBuildsWork(idx).IsCtrl, _
-                                           gBuildsWork(idx).IsShift, gBuildsWork(idx).IsAlt )
+    if (idx < 0) orelse (idx >= gBuildsWork.Count) then return ""
+    return frmBuildConfig_ComposeShortcut( gBuildsWork[idx].wszKey, gBuildsWork[idx].IsCtrl, _
+                                           gBuildsWork[idx].IsShift, gBuildsWork[idx].IsAlt )
 end function
 
 
@@ -503,8 +493,8 @@ end function
 ' "" and "None" are NOT dead: they mean the build has no shortcut, which is a legal state.
 ' ========================================================================================
 private function frmBuildConfig_ShortcutIsDead( byval idx as long ) as boolean
-    if (idx < lbound(gBuildsWork)) orelse (idx > ubound(gBuildsWork)) then return false
-    dim as DWSTRING wszKey = trim(gBuildsWork(idx).wszKey)
+    if (idx < 0) orelse (idx >= gBuildsWork.Count) then return false
+    dim as DWSTRING wszKey = trim(gBuildsWork[idx].wszKey)
     if len(wszKey) = 0 then return false
     if ucase(wszKey) = "NONE" then return false
     return iif( KeyBindings_PickListKeyToValue( wszKey ) = 0, true, false )
@@ -521,14 +511,14 @@ end function
 ' the build simply never runs and nothing says why.
 ' ========================================================================================
 private function frmBuildConfig_ShortcutClash( byval idx as long ) as DWSTRING
-    if (idx < lbound(gBuildsWork)) orelse (idx > ubound(gBuildsWork)) then return ""
-    dim as DWSTRING wszKey = trim(gBuildsWork(idx).wszKey)
+    if (idx < 0) orelse (idx >= gBuildsWork.Count) then return ""
+    dim as DWSTRING wszKey = trim(gBuildsWork[idx].wszKey)
     if len(wszKey) = 0 then return ""
     if ucase(wszKey) = "NONE" then return ""
     return frmAssignKey_ClashText( wszKey, _
-                                   iif( gBuildsWork(idx).IsCtrl  <> 0, true, false ), _
-                                   iif( gBuildsWork(idx).IsAlt   <> 0, true, false ), _
-                                   iif( gBuildsWork(idx).IsShift <> 0, true, false ), _
+                                   iif( gBuildsWork[idx].IsCtrl  <> 0, true, false ), _
+                                   iif( gBuildsWork[idx].IsAlt   <> 0, true, false ), _
+                                   iif( gBuildsWork[idx].IsShift <> 0, true, false ), _
                                    ASSIGNKEY_DOMAIN_BUILDS, idx )
 end function
 
@@ -537,11 +527,11 @@ end function
 ' Staging: seed on entry, commit only on OK.
 ' ========================================================================================
 private sub frmBuildConfig_LoadWork()
-    erase gBuildsWork
+    gBuildsWork.Clear( )
     if ubound(gConfig.Builds) < 0 then exit sub
-    redim gBuildsWork(ubound(gConfig.Builds))
+    ' gConfig.Builds stays a plain array -- it is config storage, not a working list.
     for i as long = lbound(gConfig.Builds) to ubound(gConfig.Builds)
-        gBuildsWork(i) = gConfig.Builds(i)
+        gBuildsWork.Push( gConfig.Builds(i) )
     next
 end sub
 
@@ -570,8 +560,8 @@ end sub
 ' user happens to be looking at.
 ' ========================================================================================
 private sub frmBuildConfig_SanitizeWork()
-    for i as long = lbound(gBuildsWork) to ubound(gBuildsWork)
-        dim as DWSTRING wszKey = trim(gBuildsWork(i).wszKey)
+    for i as long = 0 to gBuildsWork.Count - 1
+        dim as DWSTRING wszKey = trim(gBuildsWork[i].wszKey)
         if len(wszKey) = 0 then continue for
         ' "None" is the legacy affordance the old dialog wrote on every selection change. It
         ' is not a key and never was, so it is normalised away here too.
@@ -579,10 +569,10 @@ private sub frmBuildConfig_SanitizeWork()
         if bDrop = false then bDrop = frmBuildConfig_ShortcutIsDead( i )
         if bDrop = false then bDrop = iif( len( frmBuildConfig_ShortcutClash( i ) ) > 0, true, false )
         if bDrop then
-            gBuildsWork(i).wszKey  = ""
-            gBuildsWork(i).IsCtrl  = 0
-            gBuildsWork(i).IsAlt   = 0
-            gBuildsWork(i).IsShift = 0
+            gBuildsWork[i].wszKey  = ""
+            gBuildsWork[i].IsCtrl  = 0
+            gBuildsWork[i].IsAlt   = 0
+            gBuildsWork[i].IsShift = 0
         end if
     next
 end sub
@@ -593,10 +583,10 @@ end sub
 ' table before the copy and it reinstates the pre-edit shortcuts, with nothing reporting it.
 private sub frmBuildConfig_CommitWork()
     erase gConfig.Builds
-    if ubound(gBuildsWork) >= 0 then
-        redim gConfig.Builds(ubound(gBuildsWork))
-        for i as long = lbound(gBuildsWork) to ubound(gBuildsWork)
-            gConfig.Builds(i) = gBuildsWork(i)
+    if gBuildsWork.Count - 1 >= 0 then
+        redim gConfig.Builds(gBuildsWork.Count - 1)
+        for i as long = 0 to gBuildsWork.Count - 1
+            gConfig.Builds(i) = gBuildsWork[i]
         next
     end if
 
@@ -619,7 +609,7 @@ private function frmBuildConfig_SelectedWorkIndex() as long
     dim as long row = PsListTree_GetCurSel( HWND_FRMBUILDCONFIG_LIST )
     if row < 0 then return -1
     dim as long idx = PsListTree_GetItemData( HWND_FRMBUILDCONFIG_LIST, row )
-    if (idx < lbound(gBuildsWork)) orelse (idx > ubound(gBuildsWork)) then return -1
+    if (idx < 0) orelse (idx >= gBuildsWork.Count) then return -1
     return idx
 end function
 
@@ -721,7 +711,7 @@ private sub frmBuildConfig_SwitchPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
     end if
 
     dim as boolean bChecked = false
-    if gBCCurrent >= 0 then bChecked = BuildOpts_IsChecked( gBuildsWork(gBCCurrent).wszOptions, idx )
+    if gBCCurrent >= 0 then bChecked = BuildOpts_IsChecked( gBuildsWork[gBCCurrent].wszOptions, idx )
 
     dim as RECT rcGlyph = p->rc
     rcGlyph.right = rcGlyph.left + AfxScaleX(FRMBUILDCONFIG_SWGLYPH_W)
@@ -748,12 +738,12 @@ private sub frmBuildConfig_ToggleSwitch( byval row as long )
     if gBCCurrent < 0 then exit sub
     if (row < lbound(gBuildOptions)) orelse (row > ubound(gBuildOptions)) then exit sub
 
-    gBuildsWork(gBCCurrent).wszOptions = BuildOpts_Toggle( gBuildsWork(gBCCurrent).wszOptions, row )
+    gBuildsWork[gBCCurrent].wszOptions = BuildOpts_Toggle( gBuildsWork[gBCCurrent].wszOptions, row )
 
     ' The raw field is the same value shown a different way, so it follows. SetText is silent,
     ' which is what stops this bouncing back through the change callback.
     gBCLoading = true
-    PsTextBox_SetText( ghBCOptions, gBuildsWork(gBCCurrent).wszOptions )
+    PsTextBox_SetText( ghBCOptions, gBuildsWork[gBCCurrent].wszOptions )
     gBCLoading = false
 
     ' PsListTree_Refresh, NOT AfxRedrawWindow on the control. The checkbox glyphs are painted
@@ -819,14 +809,14 @@ private sub frmBuildConfig_LoadDetail( byval nIdx as long )
     gBCCurrent = nIdx
     gBCLoading = true
 
-    if (nIdx >= lbound(gBuildsWork)) andalso (nIdx <= ubound(gBuildsWork)) then
-        PsTextBox_SetText( ghBCDescription, gBuildsWork(nIdx).wszDescription )
-        PsTextBox_SetText( ghBCOptions, gBuildsWork(nIdx).wszOptions )
-        PsToggle_SetChecked( ghBCTogDefault, iif( gBuildsWork(nIdx).IsDefault <> 0, true, false ) )
-        PsToggle_SetChecked( ghBCTogExclude, iif( gBuildsWork(nIdx).ExcludeInPopup <> 0, true, false ) )
+    if (nIdx >= 0) andalso (nIdx < gBuildsWork.Count) then
+        PsTextBox_SetText( ghBCDescription, gBuildsWork[nIdx].wszDescription )
+        PsTextBox_SetText( ghBCOptions, gBuildsWork[nIdx].wszOptions )
+        PsToggle_SetChecked( ghBCTogDefault, iif( gBuildsWork[nIdx].IsDefault <> 0, true, false ) )
+        PsToggle_SetChecked( ghBCTogExclude, iif( gBuildsWork[nIdx].ExcludeInPopup <> 0, true, false ) )
         ' Is64bit wins when both are set -- a settings.ini can hold any pair, and picking one
         ' deterministically is better than showing whichever the last writer happened to set.
-        PsComboBox_SetCurSel( ghBCTarget, iif( gBuildsWork(nIdx).Is64bit <> 0, BUILDTARGET_64, BUILDTARGET_32 ) )
+        PsComboBox_SetCurSel( ghBCTarget, iif( gBuildsWork[nIdx].Is64bit <> 0, BUILDTARGET_64, BUILDTARGET_32 ) )
 
         dim as DWSTRING wszSC = frmBuildConfig_ShortcutText( nIdx )
         if len(wszSC) = 0 then wszSC = L(343,"(none)")
@@ -839,7 +829,7 @@ private sub frmBuildConfig_LoadDetail( byval nIdx as long )
 
     PsButton_SetEnabled( ghBCDelete, iif( gBCCurrent >= 0, true, false ) )
     PsButton_SetEnabled( ghBCUp, iif( gBCCurrent > 0, true, false ) )
-    PsButton_SetEnabled( ghBCDown, iif( (gBCCurrent >= 0) andalso (gBCCurrent < ubound(gBuildsWork)), true, false ) )
+    PsButton_SetEnabled( ghBCDown, iif( (gBCCurrent >= 0) andalso (gBCCurrent < gBuildsWork.Count - 1), true, false ) )
 
     frmBuildConfig_ShowPage( gBCPage )
     PsListTree_Refresh( ghBCSwitches )
@@ -859,22 +849,22 @@ private sub frmBuildConfig_BuildList( byval nSelectIdx as long = -2 )
     PsListTree_BeginUpdate( HWND_FRMBUILDCONFIG_LIST )
     PsListTree_Clear( HWND_FRMBUILDCONFIG_LIST )
 
-    for i as long = lbound(gBuildsWork) to ubound(gBuildsWork)
-        dim as DWSTRING wszDesc = gBuildsWork(i).wszDescription
+    for i as long = 0 to gBuildsWork.Count - 1
+        dim as DWSTRING wszDesc = gBuildsWork[i].wszDescription
         if len(wszDesc) = 0 then wszDesc = L(342,"(untitled)")
         dim as long row = PsListTree_AddString( HWND_FRMBUILDCONFIG_LIST, wszDesc, i )
         dim as DWSTRING wszDef
-        if gBuildsWork(i).IsDefault <> 0 then wszDef = L(357,"Default")
+        if gBuildsWork[i].IsDefault <> 0 then wszDef = L(357,"Default")
         PsListTree_SetCellText( HWND_FRMBUILDCONFIG_LIST, row, 1, wszDef )
     next
 
     PsListTree_EndUpdate( HWND_FRMBUILDCONFIG_LIST )
 
-    if ubound(gBuildsWork) < 0 then
+    if gBuildsWork.Count - 1 < 0 then
         nWant = -1
     else
         if nWant < 0 then nWant = 0
-        if nWant > ubound(gBuildsWork) then nWant = ubound(gBuildsWork)
+        if nWant >= gBuildsWork.Count then nWant = gBuildsWork.Count - 1
         PsListTree_SetCurSel( HWND_FRMBUILDCONFIG_LIST, nWant )
     end if
 
@@ -886,11 +876,11 @@ end sub
 ' One row's cells, without rebuilding the list -- which would lose the scroll position.
 private sub frmBuildConfig_RefreshRow( byval idx as long )
     if HWND_FRMBUILDCONFIG_LIST = 0 then exit sub
-    if (idx < lbound(gBuildsWork)) orelse (idx > ubound(gBuildsWork)) then exit sub
-    dim as DWSTRING wszDesc = gBuildsWork(idx).wszDescription
+    if (idx < 0) orelse (idx >= gBuildsWork.Count) then exit sub
+    dim as DWSTRING wszDesc = gBuildsWork[idx].wszDescription
     if len(wszDesc) = 0 then wszDesc = L(342,"(untitled)")
     dim as DWSTRING wszDef
-    if gBuildsWork(idx).IsDefault <> 0 then wszDef = L(357,"Default")
+    if gBuildsWork[idx].IsDefault <> 0 then wszDef = L(357,"Default")
     PsListTree_SetText( HWND_FRMBUILDCONFIG_LIST, idx, wszDesc )
     PsListTree_SetCellText( HWND_FRMBUILDCONFIG_LIST, idx, 1, wszDef )
 end sub
@@ -922,27 +912,27 @@ private sub frmBuildConfig_DoAdd()
     dim as long nAt = gBCCurrent + 1
     if nAt < 0 then nAt = 0
 
-    dim as long nOld = ubound(gBuildsWork)
-    redim preserve gBuildsWork(nOld + 1)
-    for i as long = ubound(gBuildsWork) to nAt + 1 step -1
-        gBuildsWork(i) = gBuildsWork(i-1)
-    next
+    ' Array.Insert does the shift, with the bounds guard and the copy-before-reserve that
+    ' the hand-written version had to get right itself.
+    if nAt > gBuildsWork.Count then nAt = gBuildsWork.Count
+    dim as TYPE_BUILDS blank
+    gBuildsWork.Insert( nAt, blank )
 
     ' FIELD BY FIELD, not a blank TYPE_BUILDS: a member added to that type later then shows up
     ' as a compile-time reminder here rather than silently defaulting to zero.
-    gBuildsWork(nAt).Id             = AfxGuidText(AfxGuid())
-    gBuildsWork(nAt).wszDescription = ""
-    gBuildsWork(nAt).wszOptions     = ""
-    gBuildsWork(nAt).IsDefault      = 0
-    gBuildsWork(nAt).Is32bit        = 0
-    gBuildsWork(nAt).Is64bit        = 1
-    gBuildsWork(nAt).ExcludeInPopup = 0
-    gBuildsWork(nAt).idMenu         = 0
-    gBuildsWork(nAt).IsCtrl         = 0
-    gBuildsWork(nAt).IsAlt          = 0
-    gBuildsWork(nAt).IsShift        = 0
+    gBuildsWork[nAt].Id             = AfxGuidText(AfxGuid())
+    gBuildsWork[nAt].wszDescription = ""
+    gBuildsWork[nAt].wszOptions     = ""
+    gBuildsWork[nAt].IsDefault      = 0
+    gBuildsWork[nAt].Is32bit        = 0
+    gBuildsWork[nAt].Is64bit        = 1
+    gBuildsWork[nAt].ExcludeInPopup = 0
+    gBuildsWork[nAt].idMenu         = 0
+    gBuildsWork[nAt].IsCtrl         = 0
+    gBuildsWork[nAt].IsAlt          = 0
+    gBuildsWork[nAt].IsShift        = 0
     ' "" and NOT "None" -- see frmBuildConfig_ComposeShortcut.
-    gBuildsWork(nAt).wszKey         = ""
+    gBuildsWork[nAt].wszKey         = ""
 
     frmBuildConfig_BuildList( nAt )
     frmBuildConfig_ShowPage( IDP_FRMBUILDCONFIG_GENERAL )
@@ -959,13 +949,10 @@ private sub frmBuildConfig_DoDelete()
                                     L(214,"Confirm") ) <> IDOK then exit sub
 
     dim as long nAt = gBCCurrent
-    if ubound(gBuildsWork) = 0 then
-        erase gBuildsWork
+    if gBuildsWork.Count - 1 = 0 then
+        gBuildsWork.Clear( )
     else
-        for i as long = nAt to ubound(gBuildsWork) - 1
-            gBuildsWork(i) = gBuildsWork(i+1)
-        next
-        redim preserve gBuildsWork(ubound(gBuildsWork) - 1)
+        gBuildsWork.Remove( nAt )
     end if
 
     frmBuildConfig_BuildList( nAt )
@@ -977,8 +964,8 @@ end sub
 private sub frmBuildConfig_DoMove( byval nDelta as long )
     if gBCCurrent < 0 then exit sub
     dim as long nTo = gBCCurrent + nDelta
-    if (nTo < lbound(gBuildsWork)) orelse (nTo > ubound(gBuildsWork)) then exit sub
-    swap gBuildsWork(gBCCurrent), gBuildsWork(nTo)
+    if (nTo < 0) orelse (nTo >= gBuildsWork.Count) then exit sub
+    swap gBuildsWork[gBCCurrent], gBuildsWork[nTo]
     frmBuildConfig_BuildList( nTo )
     SetFocus( HWND_FRMBUILDCONFIG_LIST )
 end sub
@@ -992,7 +979,7 @@ private sub frmBuildConfig_DoAssign()
     if gBCCurrent < 0 then exit sub
     dim as long idx = gBCCurrent
 
-    gAssignKeyCaption = gBuildsWork(idx).wszDescription
+    gAssignKeyCaption = gBuildsWork[idx].wszDescription
     if len(gAssignKeyCaption) = 0 then gAssignKeyCaption = L(342,"(untitled)")
     ' Domain AND row, so the clash test skips this build's own current binding -- without it,
     ' opening on a build that already has Ctrl+2 reports that it clashes with itself and
@@ -1001,20 +988,20 @@ private sub frmBuildConfig_DoAssign()
     gAssignKeyIndex  = idx
     ' "None" is a legacy affordance, not a key. Hand the dialog an empty string or it starts
     ' up showing a shortcut that does not exist.
-    gAssignKeyName   = gBuildsWork(idx).wszKey
+    gAssignKeyName   = gBuildsWork[idx].wszKey
     if ucase(trim(gAssignKeyName)) = "NONE" then gAssignKeyName = ""
-    gAssignKeyCtrl   = iif( gBuildsWork(idx).IsCtrl  <> 0, true, false )
-    gAssignKeyAlt    = iif( gBuildsWork(idx).IsAlt   <> 0, true, false )
-    gAssignKeyShift  = iif( gBuildsWork(idx).IsShift <> 0, true, false )
+    gAssignKeyCtrl   = iif( gBuildsWork[idx].IsCtrl  <> 0, true, false )
+    gAssignKeyAlt    = iif( gBuildsWork[idx].IsAlt   <> 0, true, false )
+    gAssignKeyShift  = iif( gBuildsWork[idx].IsShift <> 0, true, false )
 
     frmAssignKey_Show( HWND_FRMBUILDCONFIG )
 
     ' Cancel leaves gAssignKey* exactly as set above, so this is a no-op on that path rather
     ' than a case that has to be detected.
-    gBuildsWork(idx).wszKey  = gAssignKeyName
-    gBuildsWork(idx).IsCtrl  = iif( gAssignKeyCtrl,  1, 0 )
-    gBuildsWork(idx).IsAlt   = iif( gAssignKeyAlt,   1, 0 )
-    gBuildsWork(idx).IsShift = iif( gAssignKeyShift, 1, 0 )
+    gBuildsWork[idx].wszKey  = gAssignKeyName
+    gBuildsWork[idx].IsCtrl  = iif( gAssignKeyCtrl,  1, 0 )
+    gBuildsWork[idx].IsAlt   = iif( gAssignKeyAlt,   1, 0 )
+    gBuildsWork[idx].IsShift = iif( gAssignKeyShift, 1, 0 )
 
     ' BOTH sentinels: leaving the domain set would make a later ASSIGNKEY_DOMAIN_NONE caller
     ' silently read staging instead of committed records.
@@ -1059,13 +1046,13 @@ private sub frmBuildConfig_TextChanged( byval hTextBox as HWND )
     if gBCCurrent < 0 then exit sub
 
     if hTextBox = ghBCDescription then
-        gBuildsWork(gBCCurrent).wszDescription = PsTextBox_GetText( hTextBox )
+        gBuildsWork[gBCCurrent].wszDescription = PsTextBox_GetText( hTextBox )
         frmBuildConfig_RefreshRow( gBCCurrent )
 
     elseif hTextBox = ghBCOptions then
         ' TYPING HERE RE-DERIVES THE CHECK STATE AND NOTHING ELSE. The text is never rewritten
         ' under the caret -- only a toggle rebuilds the string from its tokens.
-        gBuildsWork(gBCCurrent).wszOptions = PsTextBox_GetText( hTextBox )
+        gBuildsWork[gBCCurrent].wszOptions = PsTextBox_GetText( hTextBox )
         PsListTree_Refresh( ghBCSwitches )
         AfxRedrawWindow( HWND_FRMBUILDCONFIG )
     end if
@@ -1079,18 +1066,18 @@ private sub frmBuildConfig_ToggleChanged( byval hToggle as HWND, byval isChecked
     if hToggle = ghBCTogDefault then
         ' EXACTLY ONE BUILD MAY BE DEFAULT. Clearing the others changes column 2 on every row,
         ' so every row is refreshed -- not just this one.
-        gBuildsWork(gBCCurrent).IsDefault = iif( isChecked, 1, 0 )
+        gBuildsWork[gBCCurrent].IsDefault = iif( isChecked, 1, 0 )
         if isChecked then
-            for i as long = lbound(gBuildsWork) to ubound(gBuildsWork)
-                if i <> gBCCurrent then gBuildsWork(i).IsDefault = 0
+            for i as long = 0 to gBuildsWork.Count - 1
+                if i <> gBCCurrent then gBuildsWork[i].IsDefault = 0
             next
         end if
-        for i as long = lbound(gBuildsWork) to ubound(gBuildsWork)
+        for i as long = 0 to gBuildsWork.Count - 1
             frmBuildConfig_RefreshRow( i )
         next
 
     elseif hToggle = ghBCTogExclude then
-        gBuildsWork(gBCCurrent).ExcludeInPopup = iif( isChecked, 1, 0 )
+        gBuildsWork[gBCCurrent].ExcludeInPopup = iif( isChecked, 1, 0 )
     end if
 end sub
 
@@ -1100,8 +1087,8 @@ end sub
 private sub frmBuildConfig_TargetChanged( byval hCombo as HWND, byval idxOld as long, byval idxNew as long )
     if gBCLoading then exit sub
     if gBCCurrent < 0 then exit sub
-    gBuildsWork(gBCCurrent).Is32bit = iif( idxNew = BUILDTARGET_32, 1, 0 )
-    gBuildsWork(gBCCurrent).Is64bit = iif( idxNew = BUILDTARGET_64, 1, 0 )
+    gBuildsWork[gBCCurrent].Is32bit = iif( idxNew = BUILDTARGET_32, 1, 0 )
+    gBuildsWork[gBCCurrent].Is64bit = iif( idxNew = BUILDTARGET_64, 1, 0 )
 end sub
 
 
@@ -1221,7 +1208,7 @@ private function frmBuildConfig_OnPaint( byval hwnd as HWND ) as LRESULT
         ' never disagree with reality, and it includes any switch typed by hand that has no
         ' checkbox. Wrapped, not single-lined: PaintTextEx, because PaintText forces
         ' DT_SINGLELINE and structurally cannot wrap.
-        dim as DWSTRING wszOpts = gBuildsWork(gBCCurrent).wszOptions
+        dim as DWSTRING wszOpts = gBuildsWork[gBCCurrent].wszOptions
         if len(trim(wszOpts)) = 0 then
             buffer.SetFont( ghFont(GUIFONT_11) )
             buffer.SetForeColor( theme.topmenu.textdisabled.forecolor )
@@ -1893,12 +1880,12 @@ private sub frmBuildConfig_RunLayoutSelfTest()
     ' ---- 11. the staging copy is genuinely separate storage ----------------------------
     ' The whole point of gBuildsWork: Cancel must be a no-op. Asserted rather than trusting
     ' the redim in LoadWork to have made a copy.
-    if (ubound(gBuildsWork) >= 0) andalso (ubound(gConfig.Builds) >= 0) then
+    if (gBuildsWork.Count - 1 >= 0) andalso (ubound(gConfig.Builds) >= 0) then
         dim as DWSTRING wszWas = gConfig.Builds(0).wszDescription
-        gBuildsWork(0).wszDescription = wszWas & "##selftest##"
+        gBuildsWork[0].wszDescription = wszWas & "##selftest##"
         LAYASSERT( gConfig.Builds(0).wszDescription = wszWas, _
                    "editing staging does not touch gConfig.Builds" )
-        gBuildsWork(0).wszDescription = wszWas
+        gBuildsWork[0].wszDescription = wszWas
         frmBuildConfig_RefreshRow( 0 )
     end if
 
@@ -2019,7 +2006,7 @@ private function frmBuildConfig_WndProc( _
             gBCPreviewHot = false
             ' The staging array outlives the dialog otherwise, holding live DWSTRINGs -- the
             ' exact leak gConfig.BuildsTemp had.
-            erase gBuildsWork
+            gBuildsWork.Clear( )
             PostQuitMessage(0)
             return 0
 

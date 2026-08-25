@@ -16,6 +16,55 @@
 #include once "clsConfig.bi"
 
 
+
+' ========================================================================================
+' Drawn page captions, shared by every options-style page.
+'
+' Replaces four identical AddLabel builders and four identical paint loops. Each page keeps
+' its OWN list -- they are separate pages with separate captions -- but the type, the
+' append and the painting are stated once.
+' ========================================================================================
+' ========================================================================================
+' Store a value PARALLEL TO A LIST-CONTROL ROW.
+'
+' Three pages keep a DWSTRING beside each row of a Ps* list -- the toolchain folder behind
+' a display name that may carry a warning suffix, the .lang filename behind a pretty name,
+' the theme filename behind its description. The row index comes back from the control, so
+' the list is addressed BY THAT INDEX rather than appended to, and it must grow to reach it.
+'
+' A control can return -1 on failure, and one of the three already guarded for it. This
+' guards for all three: a negative index stores nothing rather than growing the list
+' backwards.
+' ========================================================================================
+sub SetNameAtRow( byref names as DWSTRINGLIST, byval idx as long, byval wszValue as DWSTRING )
+    if idx < 0 then exit sub
+    while names.Count <= idx
+        names.Push( "" )
+    wend
+    names[idx] = wszValue
+end sub
+
+sub AddPageLabel( byref labels as PAGELABELLIST, byval wszCaption as DWSTRING, _
+                  byval nLeft as long, byval nTop as long, _
+                  byval nRight as long, byval nBottom as long )
+    ' Push, not the one-element "redim preserve labels(ubound + 1)" all four pages used,
+    ' which reallocated and copied the whole list per caption.
+    dim as PAGE_LABEL lbl
+    lbl.rc      = type<RECT>( nLeft, nTop, nRight, nBottom )
+    lbl.caption = wszCaption
+    labels.Push( lbl )
+end sub
+
+sub PaintPageLabels( byval p as SCP_PAINTINFO ptr, byref labels as PAGELABELLIST )
+    if p = 0 then exit sub
+    for each lbl in labels
+        ' PaintText takes the rect BYREF, so it needs an addressable copy rather than the
+        ' field itself -- exactly what all four originals did.
+        dim as RECT rc = lbl.rc
+        p->b->PaintText( lbl.caption, @rc, DT_LEFT or DT_END_ELLIPSIS )
+    next
+end sub
+
 ' Row metrics, in UNSCALED units -- everything below runs them through AfxScaleX/Y.
 ' There is no divider: rows are separated by whitespace alone (see modOptionsRows.bi). The
 ' padding constants (OPTROW_PADLEFT etc.) are shared and live in modOptionsRows.bi.

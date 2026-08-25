@@ -199,12 +199,12 @@ function frmOutput_UpdateToDoListview() as long
     ' The store is fed by the scan worker's line scan of each buffer-scanned
     ' document (see clsSymbolDb.bi). Line numbers are 1-based, which is what
     ' the click-through (SetDocumentErrorPosition) expects in this column.
-    for i as long = 0 to gTodoCount - 1
+    for each todo in gTodoItems
         wszText = _
             "" & chr(9) & _
-            ltrim(wstr(gTodoItems(i).nLineNum)) & chr(9) & _
-            ltrim(gTodoItems(i).wszFile) & chr(9) & _
-            ltrim(gTodoItems(i).wszText)
+            ltrim(wstr(todo.nLineNum)) & chr(9) & _
+            ltrim(todo.wszFile) & chr(9) & _
+            ltrim(todo.wszText)
         ListBox_AddTabbedRow( hLV, wszText )
     next
 

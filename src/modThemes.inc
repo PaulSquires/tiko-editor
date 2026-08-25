@@ -73,7 +73,7 @@ type THEMEMACRO_TYPE
 end type
 dim shared gThemeMacros(any) as THEMEMACRO_TYPE
 dim shared gTheme(any) as THEME_TYPE
-dim shared gThemeFilenames(any) as DWSTRING
+dim shared gThemeFilenames as DWSTRINGLIST
 
 ' Which theme is CURRENTLY IN MEMORY. Deliberately not gConfig.ThemeShortFilename: during a
 ' live preview the Options dialog has staged the user's pick in gOptWork and gConfig still

@@ -42,29 +42,6 @@ dim shared as boolean gExpTipTrace = false
 
 
 
-' ========================================================================================
-' Simple QuickSort of a clsDocument ptr array by filename (moved here from
-' frmFunctions.inc when the Functions panel switched to symbol-database files;
-' the Explorer is now the only consumer)
-' ========================================================================================
-function QuickSortpDocs( pDocs() as clsDocument ptr, lo as long, hi as long ) as long
-    dim as long i, j
-    dim as DWSTRING pivot
-
-    if lo < hi then
-        i = lo : j = hi
-        pivot = ucase( pDocs( (lo+hi)/2 )->DiskFilename )
-        do
-            while ucase(pDocs(i)->DiskFilename) < pivot and i < hi: i += 1: wend
-            while ucase(pDocs(j)->DiskFilename) > Pivot and j > lo: j -= 1: wend
-            if i <= j then swap pDocs(i), pDocs(j): i += 1: j -= 1
-        loop while i <= j
-        if lo < j then QuickSortpDocs( pDocs(), lo, j )
-        if hi > i then QuickSortpDocs( pDocs(), i, hi )
-    end if
-
-    function = 0
-end function
 
 
 ' ========================================================================================
@@ -1167,29 +1144,37 @@ sub frmExplorer_AddFolderLevel( byval hCtrl as HWND, byval catIndex as long, _
     next
 
     ' --- the files at this level ----------------------------------------------------------
-    redim pDocs(any) as clsDocument ptr
+    ' An Array of POINTERS. It frees the array, never the pointees -- the documents are
+    ' owned by gApp.pDocList and outlive this panel by a long way.
+    '
+    ' The append used to be "redim preserve pDocs(ubound+1)" ONE ELEMENT AT A TIME, which
+    ' reallocates and copies the whole array per file. Push doubles, so the whole fill is
+    ' amortised O(n) instead of O(n^2).
+    dim pDocs as FB.Array( of clsDocument ptr )
     dim pDoc as clsDocument ptr = gApp.pDocList
     do until pDoc = 0
         if pDoc->ProjectFiletype = gConfig.Cat(catIndex).idFileType then
             if ucase( pDoc->docData.wszFolder ) = ucase( wszParentPath ) then
-                dim as long ub = ubound(pDocs) + 1
-                redim preserve pDocs(ub)
-                pDocs(ub) = pDoc
+                pDocs.Push( pDoc )
             end if
         end if
         pDoc = pDoc->pDocNext
     loop
 
-    QuickSortpDocs( pDocs(), lbound(pDocs), ubound(pDocs) )
+    ' By filename, case-insensitively. Sort and not StableSort: two documents cannot share
+    ' a DiskFilename, so nothing can tie.
+    FB.SortBy( pDocs, function( byval a as clsDocument ptr, byval b as clsDocument ptr ) as boolean
+                          return ucase( a->DiskFilename ) < ucase( b->DiskFilename )
+                      end function )
 
-    for i as long = lbound(pDocs) to ubound(pDocs)
+    for each pFileDoc in pDocs
         ' AddNode, not AddString: AddString derives its level from the PRECEDING row and
         ' only ever produces level 1 when that row is a header or is itself level 1. With
         ' the group now a plain parent, AddString would put every file at level 0 -- a flat
         ' list with no subtree to collapse -- and could not express a nested folder at all.
         PsListTree_AddNode( hCtrl, nParentRow, _
-                            AfxStrPathName( "NAMEX", pDocs(i)->DiskFilename ), _
-                            cast(integer, pDocs(i)), EXPKIND_FILE )
+                            AfxStrPathName( "NAMEX", pFileDoc->DiskFilename ), _
+                            cast(integer, pFileDoc), EXPKIND_FILE )
     next
 end sub
 

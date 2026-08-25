@@ -64,13 +64,21 @@ end type
 ' count. Also reports, in wszDirtyFiles, the open documents with unsaved edits that
 ' contributed to this scan - their line numbers may be stale, which the window warns about
 ' rather than blocking on.
-declare function UnusedSymbols_Build( byval nTier as long, rows() as UNUSEDROW, _
-                                      byref wszDirtyFiles as DWSTRING ) as long
+' rows is emptied and refilled; its Count IS the row count afterwards, which is why this
+' no longer returns one and no caller keeps a parallel counter.
+declare sub UnusedSymbols_Build( byval nTier as long, byref rows as FB.Array( of UNUSEDROW ), _
+                                 byref wszDirtyFiles as DWSTRING )
 
 ' Pure. Stable, with a deterministic tiebreak, so re-clicking a header cannot shuffle
 ' equal rows. Line and reference counts compare NUMERICALLY.
-declare sub UnusedSymbols_Sort( rows() as UNUSEDROW, byval nCount as long, _
-                               byval nCol as long, byval bDesc as boolean )
+'
+' FB.StableSortBy, not FB.SortBy: UNUSEDROW carries five fields the sort column does not
+' look at, and re-clicking a header must not shuffle rows that tie. The deterministic
+' tiebreak in UnusedSymbols_Compare makes the ORDER total either way, so this is belt and
+' braces -- but the two costs differ only by a scratch buffer, and the assertion that
+' equal rows keep their order is one the suite actually makes.
+declare sub UnusedSymbols_Sort( byref rows as FB.Array( of UNUSEDROW ), _
+                                byval nCol as long, byval bDesc as boolean )
 
 ' Pure. nKindMask is a bitmask of (1 shl UNUSED_KIND); wszFilter matches
 ' case-insensitively against any displayed column.

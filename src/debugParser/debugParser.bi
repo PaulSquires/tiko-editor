@@ -71,6 +71,7 @@ const DBGP_ERR_BUSY         = -6   '' a session is already running
 const DBGP_ERR_NOSESSION    = -7
 const DBGP_ERR_LAUNCH       = -8   '' CreateProcess failed
 const DBGP_ERR_NOTFOUND     = -9   '' name/line/frame does not resolve
+const DBGP_ERR_UNAUTHORIZED = -10  '' the host process is not tiko.exe; the engine refuses to run
 
 '' Posted to the host's notify window. wParam carries the detail noted.
 '' Chosen well clear of tiko's own MSG_USER_* block.

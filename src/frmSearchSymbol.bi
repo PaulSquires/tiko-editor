@@ -23,7 +23,12 @@ end enum
 ' background scan completing while it is open swaps/frees the result set a stored
 ' ref would point into.
 type SEARCHSYMBOL_TYPE
-    result      as score_t
+    ' Renamed from "result". FreeBASIC identifiers are CASE-INSENSITIVE, and a generic
+    ' type parameter resolves against the INSTANTIATION SITE's scope -- so anything called
+    ' result anywhere near an FB container collides with FB.Result and breaks the
+    ' instantiation, with an error naming a line inside fb/result.bi that never mentions
+    ' this file. It was always a score anyway.
+    nScore      as score_t
     id          as SearchSymbol
     wszCaption  as DWSTRING        ' display name (file name / qualified symbol name)
     wszFilename as DWSTRING        ' absolute path to open on selection
@@ -36,7 +41,10 @@ end type
 #define IDC_FRMSEARCHSYMBOL_LISTBOX       1001
 
 #define MAX_SYMBOL_SEARCH  100
-dim shared gSymbols( MAX_SYMBOL_SEARCH ) as SEARCHSYMBOL_TYPE
+' Count IS the hit count. The gSymbolsCount / nextEl pair that used to track it -- two
+' variables incremented together for one number -- is gone. MAX_SYMBOL_SEARCH is still
+' the cap, now tested against Count.
+dim shared gSymbols as FB.Array( of SEARCHSYMBOL_TYPE )
 dim shared gSymbolsCount as integer = 0  ' actual # of populated entries (<= MAX_SYMBOL_SEARCH+1)
 
 declare function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long

@@ -32,10 +32,6 @@
 #define COLORS_ROWHEIGHT           40
 
 
-type COLORS_LABEL
-    rc      as RECT
-    caption as DWSTRING
-end type
 
 
 dim shared ghColorFonts    as HWND      ' PsListTree (per-font preview)
@@ -45,8 +41,8 @@ dim shared ghColorSpacing  as HWND      ' PsNumericUpDown
 dim shared ghColorTabSize  as HWND      ' PsNumericUpDown -- moved here from the Code Editor page
 dim shared ghColorCase     as HWND      ' PsComboBox      -- moved here from the Code Editor page
 
-dim shared gColorFontNames(any) as DWSTRING     ' collected by the EnumFontFamilies callback
-dim shared gColorLabels(any)    as COLORS_LABEL
+dim shared gColorFontNames as DWSTRINGLIST     ' collected by the EnumFontFamilies callback
+dim shared gColorLabels as PAGELABELLIST
 dim shared gColorBuilt as boolean
 
 
@@ -92,9 +88,7 @@ private function frmOptionsColors_EnumFontProc( _
     ' Skip the "@Name" vertical-writing faces; the old owner-drawn combo showed them, but
     ' they are never wanted as an editor font and only clutter the list.
     if (len(nm) = 0) orelse (left(nm, 1) = "@") then return 1
-    dim as long idx = ubound(gColorFontNames) + 1
-    redim preserve gColorFontNames(idx) as DWSTRING
-    gColorFontNames(idx) = nm
+    gColorFontNames.Push( nm )
     function = 1
 end function
 
@@ -143,8 +137,8 @@ sub frmOptionsColors_Reset()
     ghColorSpacing = 0
     ghColorTabSize = 0
     ghColorCase    = 0
-    erase gColorFontNames
-    erase gColorLabels
+    gColorFontNames.Clear( )
+    gColorLabels.Clear( )
 end sub
 
 
@@ -248,22 +242,21 @@ end sub
 ' ========================================================================================
 private function frmOptionsColors_LoadFonts() as long
 
-    erase gColorFontNames
+    gColorFontNames.Clear( )
     dim hDC as HDC = GetDC(0)
     EnumFontFamilies( hDC, byval 0, cast(FONTENUMPROCW, @frmOptionsColors_EnumFontProc), 0 )
     ReleaseDC( 0, hDC )
 
-    ' Insertion sort (case-insensitive). A few hundred names, once per dialog session.
-    for i as long = lbound(gColorFontNames) + 1 to ubound(gColorFontNames)
-        dim as DWSTRING key = gColorFontNames(i)
-        dim as DWSTRING keyU = ucase(key)
-        dim as long j = i - 1
-        do while (j >= lbound(gColorFontNames)) andalso (ucase(gColorFontNames(j)) > keyU)
-            gColorFontNames(j+1) = gColorFontNames(j)
-            j -= 1
-        loop
-        gColorFontNames(j+1) = key
-    next
+    ' Case-insensitive, and STABLE so that two faces differing only in case keep the order
+    ' the enumeration reported them in -- the duplicate drop below relies on equal names
+    ' being adjacent, not on which of them survives.
+    '
+    ' This was an eighth hand-written sort, an insertion sort missed by the Phase 3 sweep
+    ' because it sits inline in a loader rather than in a named Sort/Compare procedure.
+    FB.StableSortBy( gColorFontNames, _
+        function( byref a as DWSTRING, byref b as DWSTRING ) as boolean
+            return ucase( a ) < ucase( b )
+        end function )
 
     dim as long idxMatch = -1
     dim as DWSTRING wszWanted = ucase( gOptWork.EditorFontname )
@@ -271,11 +264,11 @@ private function frmOptionsColors_LoadFonts() as long
 
     PsListTree_BeginUpdate( ghColorFonts )
     PsListTree_Clear( ghColorFonts )
-    for i as long = lbound(gColorFontNames) to ubound(gColorFontNames)
-        if ucase(gColorFontNames(i)) = ucase(wszPrev) then continue for   ' drop duplicate
-        dim as long r = PsListTree_AddString( ghColorFonts, gColorFontNames(i) )
-        if ucase(gColorFontNames(i)) = wszWanted then idxMatch = r
-        wszPrev = gColorFontNames(i)
+    for each wszFace in gColorFontNames
+        if ucase(wszFace) = ucase(wszPrev) then continue for   ' drop duplicate
+        dim as long r = PsListTree_AddString( ghColorFonts, wszFace )
+        if ucase(wszFace) = wszWanted then idxMatch = r
+        wszPrev = wszFace
     next
     PsListTree_EndUpdate( ghColorFonts )
 
@@ -415,10 +408,7 @@ end sub
 private sub frmOptionsColors_AddLabel( byval wszCaption as DWSTRING, _
                                        byval nLeft as long, byval nTop as long, _
                                        byval nRight as long, byval nBottom as long )
-    dim as long idx = ubound(gColorLabels) + 1
-    redim preserve gColorLabels(idx) as COLORS_LABEL
-    gColorLabels(idx).rc = type<RECT>( nLeft, nTop, nRight, nBottom )
-    gColorLabels(idx).caption = wszCaption
+    AddPageLabel( gColorLabels, wszCaption, nLeft, nTop, nRight, nBottom )
 end sub
 
 
@@ -450,7 +440,7 @@ function frmOptionsColors_Layout( byval hPage as HWND, byval cxPanel as long ) a
     dim as long sectionGap = AfxScaleY(COLORS_SECTIONGAP)
     dim as long y = AfxScaleY(OPTROW_PADTOP)
 
-    erase gColorLabels
+    gColorLabels.Clear( )
 
     ' THE THEMES LIST IS GONE (it moved to frmThemes). The label and the space it reserved went
     ' with it, so the Font section is now the first thing on the page -- which is why the page
@@ -512,8 +502,5 @@ sub frmOptionsColors_Paint( byval p as SCP_PAINTINFO ptr )
     p->b->SetFont( OptionsFont_Base() )
     p->b->SetBackColor( theme.panel.text.backcolor )
     p->b->SetForeColor( theme.panel.text.forecolor )
-    for i as long = lbound(gColorLabels) to ubound(gColorLabels)
-        dim as RECT rc = gColorLabels(i).rc
-        p->b->PaintText( gColorLabels(i).caption, @rc, DT_LEFT or DT_END_ELLIPSIS )
-    next
+    PaintPageLabels( p, gColorLabels )
 end sub

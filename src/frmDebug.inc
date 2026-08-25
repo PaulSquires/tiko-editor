@@ -54,8 +54,9 @@ dim shared as boolean  gDbgHaveBreakpoints
 ' Row descriptors. Appended to and never compacted, so an index already handed to a row's
 ' itemData stays valid. Cleared per fill of a given tree only by starting a new session --
 ' abandoned entries cost a struct each and are reclaimed when the window closes.
-dim shared as FRMDEBUG_ROW gDbgRow()
-dim shared as long         gDbgRowCount
+' The row descriptors behind the variables tree. Count is the descriptor count -- there is
+' no gDbgRow.Count beside it any more, and so no way for the two to disagree.
+dim shared gDbgRow as FB.Array( of FRMDEBUG_ROW )
 
 ' Sort state, one per variables tree.
 dim shared as FRMDEBUG_SORT gDbgSortGlobals
@@ -239,22 +240,21 @@ end sub
 ' Row descriptors
 ' ==========================================================================================
 private sub frmDebug_RowsReset()
-    gDbgRowCount = 0
-    redim gDbgRow(0 to 255)
+    ' Clear( ) keeps the capacity, so a re-fill after a step costs no allocation. The 256
+    ' the old redim started from is reserved once, here.
+    gDbgRow.Clear( )
+    gDbgRow.Reserve( 256 )
 end sub
 
 private function frmDebug_RowNew() as long
-    if gDbgRowCount > ubound(gDbgRow) then
-        redim preserve gDbgRow( 0 to (gDbgRowCount * 2) + 15 )
-    end if
-    dim as long k = gDbgRowCount
-    gDbgRowCount += 1
-    gDbgRow(k).kind    = DBGROW_NODE
-    gDbgRow(k).idxLo   = 0
-    gDbgRow(k).idxHi   = -1
-    gDbgRow(k).bFilled = false
-    gDbgRow(k).wszPath = ""
-    return k
+    dim as FRMDEBUG_ROW row
+    row.kind    = DBGROW_NODE
+    row.idxLo   = 0
+    row.idxHi   = -1
+    row.bFilled = false
+    row.wszPath = ""
+    gDbgRow.Push( row )
+    return gDbgRow.Count - 1
 end function
 
 ' ==========================================================================================
@@ -300,7 +300,7 @@ end function
 ' ==========================================================================================
 private sub frmDebug_AddPlaceholder( byval hLV as HWND, byval parentRow as long )
     dim as long k = frmDebug_RowNew()
-    gDbgRow(k).kind = DBGROW_PLACEHOLDER
+    gDbgRow[k].kind = DBGROW_PLACEHOLDER
     dim as long r = PsListTree_AddNode( hLV, parentRow, "", k )
     if r >= 0 then PsListTree_SetRowSelectable( hLV, r, false )
 end sub
@@ -311,9 +311,9 @@ private function frmDebug_AddNodeRow( byval hLV as HWND, byval parentRow as long
                                       byval pNode as DBGP_NODE ptr, byval wszPath as DWSTRING, _
                                       byval bTrackChange as boolean ) as long
     dim as long k = frmDebug_RowNew()
-    gDbgRow(k).kind    = DBGROW_NODE
-    gDbgRow(k).nd      = *pNode
-    gDbgRow(k).wszPath = wszPath
+    gDbgRow[k].kind    = DBGROW_NODE
+    gDbgRow[k].nd      = *pNode
+    gDbgRow[k].wszPath = wszPath
 
     dim as long r = PsListTree_AddNode( hLV, parentRow, pNode->wszName, k )
     if r < 0 then return -1
@@ -322,7 +322,7 @@ private function frmDebug_AddNodeRow( byval hLV as HWND, byval parentRow as long
     PsListTree_SetCellText( hLV, r, 2, pNode->wszType )
 
     if bTrackChange then
-        gDbgRow(k).bChanged = frmDebug_ValueChanged( wszPath, pNode->wszValue )
+        gDbgRow[k].bChanged = frmDebug_ValueChanged( wszPath, pNode->wszValue )
     end if
 
     if pNode->hasChildren <> 0 then
@@ -338,15 +338,15 @@ private function frmDebug_AddGroupRow( byval hLV as HWND, byval parentRow as lon
                                        byval pArray as DBGP_NODE ptr, byval wszPath as DWSTRING, _
                                        byval idxLo as longint, byval idxHi as longint ) as long
     dim as long k = frmDebug_RowNew()
-    gDbgRow(k).kind    = DBGROW_GROUP
-    gDbgRow(k).nd      = *pArray
-    gDbgRow(k).idxLo   = idxLo
-    gDbgRow(k).idxHi   = idxHi
+    gDbgRow[k].kind    = DBGROW_GROUP
+    gDbgRow[k].nd      = *pArray
+    gDbgRow[k].idxLo   = idxLo
+    gDbgRow[k].idxHi   = idxHi
     ' A group's path has to differ from its ARRAY's -- they used to be the same string, so
     ' every group of one array was indistinguishable from the array and from its siblings.
     ' Nothing depended on it until expansion state had to survive a step, which is keyed on
     ' exactly this.
-    gDbgRow(k).wszPath = wszPath & "#" & str(idxLo) & "-" & str(idxHi)
+    gDbgRow[k].wszPath = wszPath & "#" & str(idxLo) & "-" & str(idxHi)
 
     dim as DWSTRING wszCaption = "[" & str(idxLo) & " .. " & str(idxHi) & "]"
     dim as long r = PsListTree_AddNode( hLV, parentRow, wszCaption, k )
@@ -362,34 +362,34 @@ end function
 ' twisty exists because of it, and by this point the real children are about to replace it.
 private sub frmDebug_ExpandRowChildren( byval hLV as HWND, byval row as long )
     dim as long k = cast(long, PsListTree_GetItemData( hLV, row ))
-    if (k < 0) orelse (k >= gDbgRowCount) then exit sub
-    if gDbgRow(k).bFilled then exit sub
-    gDbgRow(k).bFilled = true
+    if (k < 0) orelse (k >= gDbgRow.Count) then exit sub
+    if gDbgRow[k].bFilled then exit sub
+    gDbgRow[k].bFilled = true
 
     ' Drop the placeholder. It is the row's only child at this point, so it sits directly
     ' after it in the flat model.
     if PsListTree_GetChildCount( hLV, row ) > 0 then
         dim as long kc = cast(long, PsListTree_GetItemData( hLV, row + 1 ))
-        if (kc >= 0) andalso (kc < gDbgRowCount) then
-            if gDbgRow(kc).kind = DBGROW_PLACEHOLDER then PsListTree_DeleteString( hLV, row + 1 )
+        if (kc >= 0) andalso (kc < gDbgRow.Count) then
+            if gDbgRow[kc].kind = DBGROW_PLACEHOLDER then PsListTree_DeleteString( hLV, row + 1 )
         end if
     end if
 
-    dim as DBGP_NODE parent = gDbgRow(k).nd
-    dim as DWSTRING  wszBase = gDbgRow(k).wszPath
+    dim as DBGP_NODE parent = gDbgRow[k].nd
+    dim as DWSTRING  wszBase = gDbgRow[k].wszPath
 
     ' ---- an index group: either the elements themselves, or a finer set of groups ----
-    if gDbgRow(k).kind = DBGROW_GROUP then
-        dim as longint nSpan = gDbgRow(k).idxHi - gDbgRow(k).idxLo + 1
+    if gDbgRow[k].kind = DBGROW_GROUP then
+        dim as longint nSpan = gDbgRow[k].idxHi - gDbgRow[k].idxLo + 1
         if nSpan > FRMDEBUG_CHUNK then
             dim as longint sub_ = frmDebug_GroupSpan( nSpan )
             dim as longint g = 0, gLo, gHi
-            do while frmDebug_GroupBounds( gDbgRow(k).idxLo, nSpan, sub_, g, gLo, gHi )
+            do while frmDebug_GroupBounds( gDbgRow[k].idxLo, nSpan, sub_, g, gLo, gHi )
                 frmDebug_AddGroupRow( hLV, row, @parent, wszBase, gLo, gHi )
                 g += 1
             loop
         else
-            for i as longint = gDbgRow(k).idxLo to gDbgRow(k).idxHi
+            for i as longint = gDbgRow[k].idxLo to gDbgRow[k].idxHi
                 dim as DBGP_NODE ch
                 if debugparser_child_node( @parent, cast(long, i), @ch ) <> DBGP_OK then continue for
                 frmDebug_AddNodeRow( hLV, row, @ch, wszBase & "." & ch.wszName, true )
@@ -434,7 +434,7 @@ private sub frmDebug_ExpandRowChildren( byval hLV as HWND, byval row as long )
     ' worse than a short one that admits what it left out.
     if n > shown then
         dim as long kk = frmDebug_RowNew()
-        gDbgRow(kk).kind = DBGROW_PLACEHOLDER
+        gDbgRow[kk].kind = DBGROW_PLACEHOLDER
         dim as long r = PsListTree_AddNode( hLV, row, "", kk )
         if r >= 0 then
             PsListTree_SetCellText( hLV, r, 1, L(439, "more elements not shown") & _
@@ -483,7 +483,7 @@ dim shared as long     gDbgExpTop(FRMDEBUG_TREESLOTS - 1)
 private sub frmDebug_CaptureExpanded( byval nSlot as long, byval hLV as HWND )
     if (nSlot < 0) orelse (nSlot >= FRMDEBUG_TREESLOTS) then exit sub
     if IsWindow(hLV) = 0 then exit sub
-    if gDbgRowCount = 0 then exit sub
+    if gDbgRow.Count = 0 then exit sub
 
     gDbgExpCount(nSlot) = 0
     gDbgExpTop(nSlot)   = PsListTree_GetTopIndex( hLV )
@@ -493,9 +493,9 @@ private sub frmDebug_CaptureExpanded( byval nSlot as long, byval hLV as HWND )
         if PsListTree_IsCollapsed( hLV, r ) then continue for
         if PsListTree_HasChildren( hLV, r ) = false then continue for
         dim as long k = cast(long, PsListTree_GetItemData( hLV, r ))
-        if (k < 0) orelse (k >= gDbgRowCount) then continue for
-        if len(gDbgRow(k).wszPath) = 0 then continue for
-        gDbgExp(nSlot, gDbgExpCount(nSlot)) = gDbgRow(k).wszPath
+        if (k < 0) orelse (k >= gDbgRow.Count) then continue for
+        if len(gDbgRow[k].wszPath) = 0 then continue for
+        gDbgExp(nSlot, gDbgExpCount(nSlot)) = gDbgRow[k].wszPath
         gDbgExpCount(nSlot) += 1
     next
 end sub
@@ -521,9 +521,9 @@ private sub frmDebug_RestoreExpanded( byval nSlot as long, byval hLV as HWND )
     dim as long r = 0
     do while r < PsListTree_GetCount(hLV)
         dim as long k = cast(long, PsListTree_GetItemData( hLV, r ))
-        if (k >= 0) andalso (k < gDbgRowCount) then
-            if (gDbgRow(k).bFilled = false) andalso (len(gDbgRow(k).wszPath) > 0) then
-                if frmDebug_WasExpanded( nSlot, gDbgRow(k).wszPath ) then
+        if (k >= 0) andalso (k < gDbgRow.Count) then
+            if (gDbgRow[k].bFilled = false) andalso (len(gDbgRow[k].wszPath) > 0) then
+                if frmDebug_WasExpanded( nSlot, gDbgRow[k].wszPath ) then
                     frmDebug_ExpandRowChildren( hLV, r )
                     ' The SILENT setter, deliberately: the user did not just toggle this, so
                     ' the expand/collapse callback must not fire and re-enter the fill.
@@ -561,22 +561,29 @@ private function frmDebug_SortKey( byval pNode as DBGP_NODE ptr, byval nCol as l
     end select
 end function
 
-private sub frmDebug_SortNodes( byval pn as DBGP_NODE ptr, byval n as long, byref srt as FRMDEBUG_SORT )
+private sub frmDebug_SortNodes( byref nodes as FB.Array( of DBGP_NODE ), byref srt as FRMDEBUG_SORT )
     if srt.nCol < 0 then exit sub
-    if n < 2 then exit sub
-    ' Insertion sort: n is the number of variables in one scope -- tens, occasionally
-    ' hundreds -- and it is stable, so equal keys keep the engine's order.
-    for i as long = 1 to n - 1
-        dim as DBGP_NODE tmp = pn[i]
-        dim as DWSTRING wszKey = frmDebug_SortKey( @tmp, srt.nCol )
-        dim as long j = i - 1
-        do while j >= 0
-            if frmDebug_SortLess( wszKey, frmDebug_SortKey( @pn[j], srt.nCol ), srt.bDesc ) = false then exit do
-            pn[j + 1] = pn[j]
-            j -= 1
-        loop
-        pn[j + 1] = tmp
-    next
+    if nodes.Count < 2 then exit sub
+    ' STABLE, and that is not incidental: equal keys must keep the order the debug engine
+    ' reported them in, which is declaration order. The hand-written insertion sort was
+    ' chosen for the same reason -- n here is the variables in one scope, tens or at worst
+    ' hundreds -- so this is the same guarantee with the O(n^2) removed.
+    '
+    ' The column and the direction are CAPTURED; that is what lets frmDebug_SortKey and
+    ' frmDebug_SortLess stay exactly as they are.
+    '
+    ' Hoisted into locals first, and they have to be: a capture list names VARIABLES, not
+    ' expressions, so srt.nCol is not capturable (error 354: Captured variable not
+    ' declared). Capturing srt itself byref would work too, but byval copies of two
+    ' scalars are cheaper and cannot outlive anything.
+    dim as long    nSortCol  = srt.nCol
+    dim as boolean bSortDesc = srt.bDesc
+
+    FB.StableSortBy( nodes, _
+        function[ byval nSortCol, byval bSortDesc ]( byref a as DBGP_NODE, byref b as DBGP_NODE ) as boolean
+            return frmDebug_SortLess( frmDebug_SortKey( @a, nSortCol ), _
+                                      frmDebug_SortKey( @b, nSortCol ), bSortDesc )
+        end function )
 end sub
 
 ' ------------------------------------------------------------------------------------------
@@ -599,27 +606,32 @@ private sub frmDebug_FillVarList( byval hLV as HWND, byval bGlobals as boolean, 
         exit sub
     end if
 
-    ' Fetch the whole scope first so the sort can run on the model.
-    dim as DBGP_NODE nodes(0 to n - 1)
-    dim as long have = 0
+    ' Fetch the whole scope first so the sort can run on the model. Not every index yields
+    ' a node -- a failed fetch is skipped -- so the count of what we HAVE was tracked
+    ' separately from the count we asked for. The container carries it now.
+    dim nodes as FB.Array( of DBGP_NODE )
+    nodes.Reserve( n )
     for i as long = 0 to n - 1
+        dim as DBGP_NODE nd
         dim as long rc
         if bGlobals then
-            rc = debugparser_global_node( i, @nodes(have) )
+            rc = debugparser_global_node( i, @nd )
         else
-            rc = debugparser_local_node( gDbgCurFrame, i, @nodes(have) )
+            rc = debugparser_local_node( gDbgCurFrame, i, @nd )
         end if
-        if rc = DBGP_OK then have += 1
+        if rc = DBGP_OK then nodes.Push( nd )
     next
-    if have > 1 then frmDebug_SortNodes( @nodes(0), have, srt )
+    frmDebug_SortNodes( nodes, srt )
 
     ' The scope is part of the identity: a local named "i" in one frame is not the local
     ' named "i" in another, and marking one changed because the other differs is a lie.
     dim as DWSTRING wszScope = "G:"
     if bGlobals = false then wszScope = "L" & str(gDbgCurFrame) & ":"
 
-    for i as long = 0 to have - 1
-        if frmDebug_AddNodeRow( hLV, -1, @nodes(i), wszScope & nodes(i).wszName, true ) < 0 then exit for
+    ' BYREF, because the row builder takes the node's ADDRESS. A byval binding would hand
+    ' it a pointer to the loop's own copy.
+    for each byref nd as DBGP_NODE in nodes
+        if frmDebug_AddNodeRow( hLV, -1, @nd, wszScope & nd.wszName, true ) < 0 then exit for
     next
     PsListTree_Refresh( hLV )
     frmDebug_RestoreExpanded( nSlot, hLV )
@@ -1435,7 +1447,7 @@ sub frmDebug_Trace()
             "  locals=" & str(PsListTree_GetCount(HWND_FRMDEBUG_LVLOCALS)) & _
             "  stack=" & str(PsListTree_GetCount(HWND_FRMDEBUG_LVSTACK)) & _
             "  watch=" & str(PsListTree_GetCount(HWND_FRMDEBUG_LVWATCH)) & _
-            "  descriptors=" & str(gDbgRowCount)
+            "  descriptors=" & str(gDbgRow.Count)
     print sLine
     ' Expand every top-level variables row and dump the resulting tree. Separate from the
     ' rect dump above because it drives real work rather than reading state, and because the
@@ -1453,9 +1465,9 @@ sub frmDebug_Trace()
                 if bExpandedOnce = false then
                     for r as long = PsListTree_GetCount(hG) - 1 to 0 step -1
                         dim as long kk = cast(long, PsListTree_GetItemData( hG, r ))
-                        if (kk < 0) orelse (kk >= gDbgRowCount) then continue for
-                        if gDbgRow(kk).kind <> DBGROW_NODE then continue for
-                        if gDbgRow(kk).nd.hasChildren = 0 then continue for
+                        if (kk < 0) orelse (kk >= gDbgRow.Count) then continue for
+                        if gDbgRow[kk].kind <> DBGROW_NODE then continue for
+                        if gDbgRow[kk].nd.hasChildren = 0 then continue for
                         frmDebug_ExpandRowChildren( hG, r )
                         PsListTree_SetNodeCollapsed( hG, r, false )
                     next
@@ -1464,8 +1476,8 @@ sub frmDebug_Trace()
                     ' that only exists because its parent is open.
                     for r as long = 0 to PsListTree_GetCount(hG) - 1
                         dim as long kg = cast(long, PsListTree_GetItemData( hG, r ))
-                        if (kg < 0) orelse (kg >= gDbgRowCount) then continue for
-                        if gDbgRow(kg).kind <> DBGROW_GROUP then continue for
+                        if (kg < 0) orelse (kg >= gDbgRow.Count) then continue for
+                        if gDbgRow[kg].kind <> DBGROW_GROUP then continue for
                         frmDebug_ExpandRowChildren( hG, r )
                         PsListTree_SetNodeCollapsed( hG, r, false )
                         exit for
@@ -1479,8 +1491,8 @@ sub frmDebug_Trace()
                     ' one thing a trace can say something useful about.
                     dim as long kk2 = cast(long, PsListTree_GetItemData( hG, r ))
                     dim as string sMark = "  "
-                    if (kk2 >= 0) andalso (kk2 < gDbgRowCount) then
-                        if gDbgRow(kk2).bChanged then sMark = " *"
+                    if (kk2 >= 0) andalso (kk2 < gDbgRow.Count) then
+                        if gDbgRow[kk2].bChanged then sMark = " *"
                     end if
                     sLine = sMark & " " & space(PsListTree_GetLevel(hG, r) * 2) & _
                             str(PsListTree_GetText(hG, r)) & " | " & _
@@ -1489,7 +1501,7 @@ sub frmDebug_Trace()
                     print sLine
                 next
                 sLine = "   rows=" & str(PsListTree_GetCount(hG)) & _
-                        "  descriptors=" & str(gDbgRowCount)
+                        "  descriptors=" & str(gDbgRow.Count)
                 print sLine
             end scope
         #endmacro
@@ -1607,7 +1619,7 @@ private sub frmDebug_PaintVarRowFor( byval hLV as HWND, byval p as PSLISTTREE_PA
     ' now passes FRMDEBUG_NOROW explicitly.
     dim as boolean bChanged = false
     dim as long k = cast(long, PsListTree_GetItemData( hLV, p->itemID ))
-    if (k >= 0) andalso (k < gDbgRowCount) then bChanged = gDbgRow(k).bChanged
+    if (k >= 0) andalso (k < gDbgRow.Count) then bChanged = gDbgRow[k].bChanged
 
     if p->columnCount <= 0 then
         dim as RECT rcText = p->rc
@@ -2977,34 +2989,34 @@ sub frmDebug_RunSelfTest()
     ' Every id this window uses must resolve. An id with no entry renders as an EMPTY string,
     ' so a caption or a whole message box comes up blank with nothing in the build or the
     ' assertions to say so.
-    ' 624 is the retired "<click to add a watch>" prompt. It is deliberately still in the
+    ' 456 is the retired "<click to add a watch>" prompt. It is deliberately still in the
     ' .lang files and deliberately NOT asserted: the slot stays claimed so a future feature
     ' does not reuse the id and inherit a stale translation in five languages.
     dim as long nBlank = 0
     for id as long = 432 to 461
-        if id = 624 then continue for
-        if len( LL(id) ) = 0 then
+        if id = 456 then continue for
+        if LangIdIsSet(id) = false then
             nBlank += 1
             print "  FAIL: localized id " & id & " is empty"
         end if
     next
-    frmDebug_Check( "every debugger string 600-629 resolves (624 retired)", nBlank = 0, str(nBlank) & " blank" )
+    frmDebug_Check( "every debugger string 432-461 resolves (456 retired)", nBlank = 0, str(nBlank) & " blank" )
 
     for id as long = 243 to 244
-        frmDebug_Check( "reused menu string " & id & " still resolves", len(LL(id)) > 0 )
+        frmDebug_Check( "reused menu string " & id & " still resolves", LangIdIsSet(id) )
     next
-    frmDebug_Check( "the restore-icon tooltip resolves", len(LL(521)) > 0 )
-    frmDebug_Check( "reused menu string 255 still resolves", len(LL(251)) > 0 )
-    frmDebug_Check( "reused menu string 256 still resolves", len(LL(252)) > 0 )
+    frmDebug_Check( "the restore-icon tooltip resolves", LangIdIsSet(521) )
+    frmDebug_Check( "reused menu string 251 still resolves", LangIdIsSet(251) )
+    frmDebug_Check( "reused menu string 252 still resolves", LangIdIsSet(252) )
 
     ' len() > 0 CANNOT distinguish a real translation from the English fallback -- the
     ' loader fills a blank key with English, so this suite reads the same under any language
-    ' file. Printing some of them is what actually distinguishes them. 247 is here because it
+    ' file. Printing some of them is what actually distinguishes them. 243 is here because it
     ' was RE-WORDED rather than added ("Step Into" -> "Step"): a stale translation left behind
     ' in one of the six files still resolves, and only reading it back catches that.
-    sLine = "  NOTE resolved: 247=" & str(LL(243)) & " | 618=" & str(LL(450)) & _
-            " | 619=" & str(LL(451)) & " | 620=" & str(LL(452)) & _
-            " | 627=" & str(LL(459)) & " | 629=" & str(LL(461))
+    sLine = "  NOTE resolved: 243=" & str(LL(243)) & " | 450=" & str(LL(450)) & _
+            " | 451=" & str(LL(451)) & " | 452=" & str(LL(452)) & _
+            " | 459=" & str(LL(459)) & " | 461=" & str(LL(461))
     print sLine
 
     sLine = "--- TIKO_DEBUG_SELFTEST: " & str(gDbgTestPass) & " passed, " & _

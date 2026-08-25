@@ -335,7 +335,11 @@ end function
 ' because it holds AUTOCOMPLETE_MAX_ITEMS records of three DWSTRINGs each: as a local it
 ' would construct and destruct 3000 dynamic strings on every keystroke that opens a
 ' popup. frmAutoComplete_Show takes its own copy, so reusing this between builds is safe.
-dim shared gAutoCBuild(0 to AUTOCOMPLETE_MAX_ITEMS - 1) as AUTOC_ITEM
+' Reserved to the cap up front, so the growth path never runs and this costs the same one
+' allocation the fixed array did. Count IS the item count -- the byref nItems that used to
+' be threaded through every builder is gone, and with it the chance of it disagreeing with
+' the array it indexed.
+dim shared gAutoCBuild as FB.Array( of AUTOC_ITEM )
 
 
 ' ========================================================================================
@@ -345,27 +349,32 @@ dim shared gAutoCBuild(0 to AUTOCOMPLETE_MAX_ITEMS - 1) as AUTOC_ITEM
 ' string with instr - quadratic in BOTH the item count and the accumulated string length.
 ' ========================================================================================
 sub AddAutocompleteItem( _
-            items() as AUTOC_ITEM, _
-            byref nItems as long, _
+            byref items as FB.Array( of AUTOC_ITEM ), _
             byref wszName as DWSTRING, _
             byref wszDetail as DWSTRING, _
             byval nKind as long, _
             byval bHasParams as boolean = false _
             )
-    if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit sub
+    if items.Count >= AUTOCOMPLETE_MAX_ITEMS then exit sub
     if len(rtrim(wszName)) = 0 then exit sub
 
+    ' STILL a linear dedupe scan, and still O(n^2) over the whole build -- up to a
+    ' thousand items on every keystroke that opens a popup. An FB.Set( of DWSTRING )
+    ' beside the array would make it O(1) amortised. Deliberately NOT done here: this
+    ' commit converts storage, and that is a behavioural optimisation that deserves its
+    ' own measurement.
     dim as DWSTRING wszSort = ucase(wszName)
-    for i as long = 0 to nItems - 1
-        if items(i).wszSort = wszSort then exit sub
+    for each existing in items
+        if existing.wszSort = wszSort then exit sub
     next
 
-    items(nItems).wszName     = wszName
-    items(nItems).wszSort     = wszSort
-    items(nItems).wszDetail   = wszDetail
-    items(nItems).nKind       = nKind
-    items(nItems).bHasParams  = bHasParams
-    nItems += 1
+    dim as AUTOC_ITEM item
+    item.wszName     = wszName
+    item.wszSort     = wszSort
+    item.wszDetail   = wszDetail
+    item.nKind       = nKind
+    item.bHasParams  = bHasParams
+    items.Push( item )
 end sub
 
 
@@ -395,8 +404,7 @@ end function
 ' still open. Hence the copies here.
 ' ========================================================================================
 sub AddAutocompleteSymbol( _
-            items() as AUTOC_ITEM, _
-            byref nItems as long, _
+            byref items as FB.Array( of AUTOC_ITEM ), _
             byval r as SYMBOLREF _
             )
     dim as wstring ptr pName = gSymDb.SymName( r )
@@ -417,7 +425,7 @@ sub AddAutocompleteSymbol( _
             bHasParams = gSymDb.ProcHasParams( r )
     end select
 
-    AddAutocompleteItem( items(), nItems, *pName, wszDetail, nKind, bHasParams )
+    AddAutocompleteItem( items, *pName, wszDetail, nKind, bHasParams )
 end sub
 
 
@@ -429,20 +437,18 @@ end sub
 ' decides who survives the AUTOCOMPLETE_MAX_ITEMS cap, which is why locals and the
 ' guaranteed keyword list are added before the capped global enumeration.
 ' ========================================================================================
-sub SortAutocompleteItems( items() as AUTOC_ITEM, byval lo as long, byval hi as long )
-    if lo >= hi then exit sub
-    dim as long i = lo, j = hi
-    dim as DWSTRING pivot = items( (lo + hi) \ 2 ).wszSort
-    do
-        while items(i).wszSort < pivot : i += 1 : wend
-        while items(j).wszSort > pivot : j -= 1 : wend
-        if i <= j then
-            swap items(i), items(j)
-            i += 1 : j -= 1
-        end if
-    loop while i <= j
-    if lo < j then SortAutocompleteItems( items(), lo, j )
-    if hi > i then SortAutocompleteItems( items(), i, hi )
+sub SortAutocompleteItems( byref items as FB.Array( of AUTOC_ITEM ) )
+    ' wszSort is already the uppercased name, so this is a plain '<' on it and the
+    ' comparator allocates nothing. The old quicksort recomputed nothing either, but it
+    ' had the textbook O(n^2) worst case on already-sorted input -- which is exactly what
+    ' a second keystroke against an unchanged candidate set produces. FB.SortBy is an
+    ' introsort and does not.
+    '
+    ' Sort, not StableSort: the names are deduped on wszSort before they get here, so no
+    ' two items can tie.
+    FB.SortBy( items, function( byref a as AUTOC_ITEM, byref b as AUTOC_ITEM ) as boolean
+                          return a.wszSort < b.wszSort
+                      end function )
 end sub
 
 
@@ -469,8 +475,12 @@ type AUTOC_KEYWORD
     bHasParams as boolean
 end type
 
-redim shared gKwCache(any) as AUTOC_KEYWORD
-dim shared gKwCacheCount as long = -1      ' -1 = never built
+dim shared gKwCache as FB.Array( of AUTOC_KEYWORD )
+' The count used to carry a -1 "never built" sentinel, which a container cannot express:
+' Count is 0 both before the first build and after a build that found no keywords. The
+' distinction is real -- it decides whether the rebuild test below runs at all -- so it
+' gets its own flag rather than being smuggled into a count.
+dim shared gKwCacheBuilt as boolean = false
 dim shared gKwCacheSrcFB as string         ' the sources it was built from, for the
 dim shared gKwCacheSrcEx as string         ' rebuild test below
 
@@ -497,17 +507,15 @@ private sub AutoC_AppendKeywordSource( byref sSrc as string )
             p += 1
         wend
         if p > s then
-            if gKwCacheCount > ubound(gKwCache) then
-                redim preserve gKwCache( 0 to (gKwCacheCount * 2) + 15 )
-            end if
             dim as string st = mid( sSrc, s + 1, p - s )
-            gKwCache(gKwCacheCount).wszName = st
-            gKwCache(gKwCacheCount).wszUp   = ucase(st)
+            dim as AUTOC_KEYWORD kw
+            kw.wszName = st
+            kw.wszUp   = ucase(st)
             ' An FB intrinsic (LEN, MID, INSTR, ...) is a keyword that takes arguments, so
             ' "(" should accept it just as it accepts a parsed proc. Ordinary keywords
             ' (IF, DIM, ...) have no intrinsic calltip and answer false.
-            gKwCache(gKwCacheCount).bHasParams = CalltipHasParams( FindIntrinsicCalltip( st ) )
-            gKwCacheCount += 1
+            kw.bHasParams = CalltipHasParams( FindIntrinsicCalltip( st ) )
+            gKwCache.Push( kw )
         end if
     wend
 end sub
@@ -518,14 +526,14 @@ end sub
 ' hand. The comparison is a memcmp of two 220 KB buffers -- microseconds against the
 ' seconds the split itself costs.
 private sub AutoC_EnsureKeywordCache()
-    dim as boolean bSame = (gKwCacheCount >= 0)
+    dim as boolean bSame = gKwCacheBuilt
     if bSame then bSame = (gKwCacheSrcFB = gConfig.FBKeywords)
     if bSame then bSame = (gKwCacheSrcEx = gConfig.ExtraKeywords)
     if bSame then exit sub
 
-    erase gKwCache
-    redim gKwCache( 0 to 255 )
-    gKwCacheCount = 0
+    gKwCache.Clear( )
+    gKwCache.Reserve( 256 )
+    gKwCacheBuilt = true
     AutoC_AppendKeywordSource( gConfig.FBKeywords )
     AutoC_AppendKeywordSource( gConfig.ExtraKeywords )
     gKwCacheSrcFB = gConfig.FBKeywords
@@ -567,19 +575,17 @@ end function
 ' parser in the sources or includes.
 ' ========================================================================================
 sub AppendKeywordsToList( _
-            items() as AUTOC_ITEM, _
-            byref nItems as long, _
+            byref items as FB.Array( of AUTOC_ITEM ), _
             byref wszMatchWord as DWSTRING _
             )
     AutoC_EnsureKeywordCache()
     dim as long nLenMatchWord = len(wszMatchWord)
-    for i as long = 0 to gKwCacheCount - 1
-        if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit sub
+    for each kw in gKwCache
+        if items.Count >= AUTOCOMPLETE_MAX_ITEMS then exit sub
         dim as boolean bMatch = true
-        if nLenMatchWord then bMatch = AutoC_HasPrefixUp( gKwCache(i).wszUp, wszMatchWord, nLenMatchWord )
+        if nLenMatchWord then bMatch = AutoC_HasPrefixUp( kw.wszUp, wszMatchWord, nLenMatchWord )
         if bMatch then
-            AddAutocompleteItem( items(), nItems, gKwCache(i).wszName, "", _
-                                 AUTOC_KIND_KEYWORD, gKwCache(i).bHasParams )
+            AddAutocompleteItem( items, kw.wszName, "", AUTOC_KIND_KEYWORD, kw.bHasParams )
         end if
     next
 end sub
@@ -737,10 +743,12 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
         end if
     end if
 
-    ' The candidate set. gAutoCBuild is a shared scratch buffer; nItems is its logical
-    ' length. The ADD order below is deliberate - it decides who survives the
-    ' AUTOCOMPLETE_MAX_ITEMS cap - even though the popup ends up sorted alphabetically.
-    dim as long nItems
+    ' The candidate set. gAutoCBuild is a shared scratch buffer, reused between builds so
+    ' a popup does not construct and destruct three thousand dynamic strings per
+    ' keystroke; frmAutoComplete_Show takes its own copy. Clear( ) keeps the reserved
+    ' capacity, so the reuse still costs no allocation.
+    gAutoCBuild.Clear( )
+    gAutoCBuild.Reserve( AUTOCOMPLETE_MAX_ITEMS )
 
     select case pDoc->AutoCompleteType
 
@@ -765,7 +773,7 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
                     dim as boolean bMatch = true
                     if nLenMatchWord then bMatch = ( left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord )
                     if bMatch then
-                        AddAutocompleteItem( gAutoCBuild(), nItems, st, "", AUTOC_KIND_STDTYPE )
+                        AddAutocompleteItem( gAutoCBuild, st, "", AUTOC_KIND_STDTYPE )
                     end if
                 next
             end if
@@ -777,18 +785,18 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
             ' EnumPrefix returns user-file symbols ahead of the toolchain's, so the
             ' AUTOCOMPLETE_MAX_ITEMS cap below truncates toolchain types rather than the
             ' project's own. Do not re-order here - that policy lives in one place.
-            dim rs() as SYMBOLREF
-            dim as long n = gSymDb.EnumPrefix( pDoc->wszMatchWord, SYMMASK_TYPE, rs() )
+            dim rs as SYMBOLREFLIST
+            gSymDb.EnumPrefix( pDoc->wszMatchWord, SYMMASK_TYPE, rs )
             dim as DWSTRING wszIncPath
             if bTypesNotPreloaded then wszIncPath = gSymDb.ToolchainIncludeRoot()
-            for i as long = 0 to n - 1
-                if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit for
+            for each refSym in rs
+                if gAutoCBuild.Count >= AUTOCOMPLETE_MAX_ITEMS then exit for
                 if len(wszIncPath) then
-                    dim as wstring ptr pFile = gSymDb.SymFile( rs(i) )
+                    dim as wstring ptr pFile = gSymDb.SymFile( refSym )
                     if pFile = 0 then continue for
                     if ucase(left(*pFile, len(wszIncPath))) = wszIncPath then continue for
                 end if
-                AddAutocompleteSymbol( gAutoCBuild(), nItems, rs(i) )
+                AddAutocompleteSymbol( gAutoCBuild, refSym )
             next
 
 
@@ -832,16 +840,16 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
 
             if refType.IsValid = false then return false
 
-            dim rs() as SYMBOLREF
-            dim as long n = gSymDb.EnumMembers( refType, rs() )
-            if environ("TIKO_MEMBER_TRACE") = "1" then print "  members=" & str(n)
-            for i as long = 0 to n - 1
-                if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit for
-                st = *gSymDb.SymName( rs(i) )
+            dim rs as SYMBOLREFLIST
+            gSymDb.EnumMembers( refType, rs )
+            if environ("TIKO_MEMBER_TRACE") = "1" then print "  members=" & str(rs.Count)
+            for each refSym in rs
+                if gAutoCBuild.Count >= AUTOCOMPLETE_MAX_ITEMS then exit for
+                st = *gSymDb.SymName( refSym )
                 dim as boolean bMatch = true
                 if nLenMatchWord then bMatch = ( left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord )
                 if bMatch then
-                    AddAutocompleteSymbol( gAutoCBuild(), nItems, rs(i) )
+                    AddAutocompleteSymbol( gAutoCBuild, refSym )
                 end if
             next
 
@@ -860,42 +868,42 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
 
             dim as DWSTRING wszDocFile = ScanMgr_GetRootName( pDoc )
             dim as long nCaretLine = pDoc->GetCurrentLineNumber + 1
-            dim rs() as SYMBOLREF
+            dim rs as SYMBOLREFLIST
 
             ' Locals and params of the enclosing proc first
-            dim as long n = gSymDb.EnumLocalsInScope( wszDocFile, nCaretLine, rs() )
-            for i as long = 0 to n - 1
-                st = *gSymDb.SymName( rs(i) )
+            gSymDb.EnumLocalsInScope( wszDocFile, nCaretLine, rs )
+            for each refSym in rs
+                st = *gSymDb.SymName( refSym )
                 dim as boolean bMatch = ( left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord )
                 if bMatch then
-                    AddAutocompleteSymbol( gAutoCBuild(), nItems, rs(i) )
+                    AddAutocompleteSymbol( gAutoCBuild, refSym )
                 end if
             next
 
             ' Always-available FB keywords/data types from the keyword files,
             ' independent of anything the parser found. After locals (most
             ' relevant first for the dedupe) but before the capped global enum.
-            AppendKeywordsToList( gAutoCBuild(), nItems, pDoc->wszMatchWord )
+            AppendKeywordsToList( gAutoCBuild, pDoc->wszMatchWord )
 
             ' Then global procs, types, variables, constants and enum values.
             ' Locals of OTHER procs also carry kind VAR/CONST - skip them via the
             ' LOCAL flag (this scope's locals were already added above).
             dim as long wordMask = SYMMASK_PROC or SYMMASK_TYPE or SYMMASK_VAR or (1 shl FBCP_KIND_ENUMVAL)
-            n = gSymDb.EnumPrefix( pDoc->wszMatchWord, wordMask, rs() )
-            for i as long = 0 to n - 1
-                if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit for
-                if (gSymDb.SymFlags( rs(i) ) and FBCP_SYMBFLAG_LOCAL) <> 0 then continue for
-                AddAutocompleteSymbol( gAutoCBuild(), nItems, rs(i) )
+            gSymDb.EnumPrefix( pDoc->wszMatchWord, wordMask, rs )
+            for each refSym in rs
+                if gAutoCBuild.Count >= AUTOCOMPLETE_MAX_ITEMS then exit for
+                if (gSymDb.SymFlags( refSym ) and FBCP_SYMBFLAG_LOCAL) <> 0 then continue for
+                AddAutocompleteSymbol( gAutoCBuild, refSym )
             next
 
     end select
 
-    if nItems > 0 then
+    if gAutoCBuild.Count > 0 then
         ' Alphabetical, case-insensitive - what SCI_AUTOCSETORDER used to do for us.
-        SortAutocompleteItems( gAutoCBuild(), 0, nItems - 1 )
+        SortAutocompleteItems( gAutoCBuild )
         ' Save the code editor starting position
         pDoc->AutoCStartPos = SciExec(hEdit, SCI_GETCURRENTPOS, 0, 0)
-        frmAutoComplete_Show( pDoc, gAutoCBuild(), nItems )
+        frmAutoComplete_Show( pDoc, gAutoCBuild )
         return true
     else
         if (notification <> AUTOCOMPLETE_NOTIFY_CHARDELETED) then

@@ -141,7 +141,9 @@ common shared as HACCEL ghAccelBuildConfigurations
 ' It lives in the .bi rather than the .inc because frmAssignKey_ClashText reads it, and
 ' frmAssignKey is included BEFORE frmBuildConfig.inc.
 ' ----------------------------------------------------------------------------------------
-dim shared gBuildsWork(any) as TYPE_BUILDS
+' Aliased, same reason as TOOLSLIST -- see RFC-0004 s1.
+type BUILDSLIST as FB.Array( of TYPE_BUILDS )
+dim shared gBuildsWork as BUILDSLIST
 
 dim shared HWND_FRMBUILDCONFIG_LIST as HWND
 

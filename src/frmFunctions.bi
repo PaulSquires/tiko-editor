@@ -27,7 +27,9 @@ end type
 ' function rows store an index into this array as their ItemData - the panel
 ' now also lists never-opened include files, which have no clsDocument, so a
 ' pDoc pointer can no longer identify a row's file.
-dim shared gFuncPanelFiles(any) as DWSTRING
+' FILENAMELIST, the same alias clsSymbolDb's enumerations hand back, so the panel's list
+' and a fresh enumeration are the same type and neither needs copying into the other.
+dim shared gFuncPanelFiles as FILENAMELIST
 
 enum FunctionsDisplayState
     ViewAsTree = 0
@@ -43,5 +45,5 @@ declare function LoadFunctionsFiles() as long
 declare function frmFunctions_ViewAsTree() as long
 declare function frmFunctions_ViewAsList() as long
 declare function QuickSortFilenames( arrFiles() as DWSTRING, lo as long, hi as long ) as long
-declare function frmFunctions_BuildFileList() as long
+declare sub frmFunctions_BuildFileList()
 

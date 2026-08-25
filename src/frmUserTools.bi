@@ -68,7 +68,10 @@ common shared as HACCEL ghAccelUserTools
 ' clsConfig -- an editing copy of one of those arrays living in the same class was the odd one
 ' out. gConfig.Tools() is not touched until OK commits.
 ' ========================================================================================
-dim shared gToolsWork(any) as TYPE_TOOLS
+' Aliased: a generic spelled directly in a TYPE field never instantiates (RFC-0004 s1), and
+' a working list is exactly the thing that ends up inside a dialog struct one day.
+type TOOLSLIST as FB.Array( of TYPE_TOOLS )
+dim shared gToolsWork as TOOLSLIST
 
 
 ' Shell metrics, UNSCALED -- run through AfxScaleX/AfxScaleY at use, exactly as FRMOPTIONS_*

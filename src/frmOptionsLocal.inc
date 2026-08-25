@@ -75,10 +75,6 @@
 #define LOCALCOL_TRANSLATE    2
 
 
-type LOCAL_LABEL
-    rc      as RECT
-    caption as DWSTRING
-end type
 
 
 ' THE SELECTED LANGUAGE -- the one the editor will run in, written to gConfig.LocalizationFile
@@ -106,9 +102,9 @@ dim shared ghLocalList      as HWND
 
 ' Filename per languages-list row -- the list shows a prettified name, so the row index cannot be
 ' turned back into a file without this. Same shape as frmThemes' gThemeFilenames().
-dim shared gLocalLangFiles(any) as DWSTRING
+dim shared gLocalLangFiles as DWSTRINGLIST
 
-dim shared gLocalLabels(any) as LOCAL_LABEL
+dim shared gLocalLabels as PAGELABELLIST
 
 
 ' Forward declarations for the internal helpers used before their definition.
@@ -155,8 +151,8 @@ sub frmOptionsLocal_Reset()
     gLocalEditFile    = ""
     ghLocalLanguages  = 0
     ghLocalList       = 0
-    erase gLocalLabels
-    erase gLocalLangFiles
+    gLocalLabels.Clear( )
+    gLocalLangFiles.Clear( )
 end sub
 
 
@@ -335,7 +331,7 @@ private function frmOptionsLocal_LoadLanguages() as long
 
     PsListTree_BeginUpdate( ghLocalLanguages )
     PsListTree_Clear( ghLocalLanguages )
-    erase gLocalLangFiles
+    gLocalLangFiles.Clear( )
 
     dim as long idxMatch = -1
     dim hSearch as HANDLE
@@ -356,8 +352,7 @@ private function frmOptionsLocal_LoadLanguages() as long
                 dim as long idx = PsListTree_AddString( ghLocalLanguages, frmOptionsLocal_PrettyName( wszFile ) )
                 if idx >= 0 then
                     PsListTree_SetCellText( ghLocalLanguages, idx, 1, wszFile )
-                    redim preserve gLocalLangFiles(idx) as DWSTRING
-                    gLocalLangFiles(idx) = wszFile
+                    SetNameAtRow( gLocalLangFiles, idx, wszFile )
                     if ucase(gLocalCurrentFile) = ucase(wszFile) then idxMatch = idx
                 end if
             end if
@@ -388,8 +383,8 @@ end function
 ' highlight back on a file the row indices have moved under.
 private function frmOptionsLocal_RowForFile( byval wszFile as DWSTRING ) as long
     if len(wszFile) = 0 then return -1
-    for i as long = lbound(gLocalLangFiles) to ubound(gLocalLangFiles)
-        if ucase(gLocalLangFiles(i)) = ucase(wszFile) then return i
+    for i as long = 0 to gLocalLangFiles.Count - 1
+        if ucase(gLocalLangFiles[i]) = ucase(wszFile) then return i
     next
     return -1
 end function
@@ -409,8 +404,8 @@ private sub frmOptionsLocal_MarkActiveRow()
     ' some later repaint happened to come along. EndUpdate calls Refresh, which is what actually
     ' rebuilds and repaints the surface.
     PsListTree_BeginUpdate( ghLocalLanguages )
-    for i as long = lbound(gLocalLangFiles) to ubound(gLocalLangFiles)
-        dim as boolean bActive = (ucase(gLocalLangFiles(i)) = ucase(gLocalCurrentFile))
+    for i as long = 0 to gLocalLangFiles.Count - 1
+        dim as boolean bActive = (ucase(gLocalLangFiles[i]) = ucase(gLocalCurrentFile))
         ' if/else, not iif: iif cannot return a UDT, and DWSTRING is one.
         dim as DWSTRING wszMark = ""
         if bActive then wszMark = L(324,"Active")
@@ -425,9 +420,9 @@ private function frmOptionsLocal_SelectedFile() as DWSTRING
     ' returning a type with constructors, and DWSTRING is one.
     if ghLocalLanguages = 0 then return ""
     dim as long idx = PsListTree_GetCurSel( ghLocalLanguages )
-    if idx < lbound(gLocalLangFiles) then return ""
-    if idx > ubound(gLocalLangFiles) then return ""
-    return gLocalLangFiles(idx)
+    if idx < 0 then return ""
+    if idx >= gLocalLangFiles.Count then return ""
+    return gLocalLangFiles[idx]
 end function
 
 
@@ -954,10 +949,7 @@ end sub
 private sub frmOptionsLocal_AddLabel( byval wszCaption as DWSTRING, _
                                       byval nLeft as long, byval nTop as long, _
                                       byval nRight as long, byval nBottom as long )
-    dim as long idx = ubound(gLocalLabels) + 1
-    redim preserve gLocalLabels(idx) as LOCAL_LABEL
-    gLocalLabels(idx).rc = type<RECT>( nLeft, nTop, nRight, nBottom )
-    gLocalLabels(idx).caption = wszCaption
+    AddPageLabel( gLocalLabels, wszCaption, nLeft, nTop, nRight, nBottom )
 end sub
 
 
@@ -996,7 +988,7 @@ function frmOptionsLocal_Layout( byval hPage as HWND, byval cxPanel as long ) as
     dim as long padBottom  = AfxScaleY(OPTROW_PADBOTTOM)
     dim as long y = AfxScaleY(OPTROW_PADTOP)
 
-    erase gLocalLabels
+    gLocalLabels.Clear( )
 
     ' ---- heading: the language the editor is actually set to -------------------------
     frmOptionsLocal_AddLabel( L(124,"Localization") & ": " & frmOptionsLocal_PrettyName( gLocalCurrentFile ), _
@@ -1083,8 +1075,5 @@ sub frmOptionsLocal_Paint( byval p as SCP_PAINTINFO ptr )
     p->b->SetFont( OptionsFont_Base() )
     p->b->SetBackColor( theme.panel.text.backcolor )
     p->b->SetForeColor( theme.panel.text.forecolor )
-    for i as long = lbound(gLocalLabels) to ubound(gLocalLabels)
-        dim as RECT rc = gLocalLabels(i).rc
-        p->b->PaintText( gLocalLabels(i).caption, @rc, DT_LEFT or DT_END_ELLIPSIS )
-    next
+    PaintPageLabels( p, gLocalLabels )
 end sub

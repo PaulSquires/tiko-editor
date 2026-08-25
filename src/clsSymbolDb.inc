@@ -201,7 +201,7 @@ function clsSymbolDb.InstallSet( byval nTier as long, byval pNew as PARSERESULTS
         m_pBuffer = pNew
         ' the buffer scan's TODO line-scan replaces this file's stored entries
         ' (UI thread, per the store's threading rule)
-        if pNew then TodoStore_ReplaceFile( pNew->wszRootFile, pNew->todoItems(), pNew->todoCount )
+        if pNew then TodoStore_ReplaceFile( pNew->wszRootFile, pNew->todoItems )
     else
         pOld = m_pProject
         m_pProject = pNew
@@ -223,7 +223,7 @@ sub clsSymbolDb.InstallProjectTodos( byval pNew as PARSERESULTSET ptr )
     dim as DWSTRING wszBufRoot
     if m_pBuffer then wszBufRoot = m_pBuffer->wszRootFile
 
-    dim tmp(any) as TODOITEM
+    dim tmp as TODOLIST
     dim as long fc = pNew->pResult->fileCount
     for i as long = 0 to fc - 1
         dim as wstring ptr pFile = @pNew->pResult->stringPool[ pNew->pResult->fileOffsets[i] ]
@@ -231,21 +231,20 @@ sub clsSymbolDb.InstallProjectTodos( byval pNew as PARSERESULTSET ptr )
             if SymDb_FileNameEq( *pFile, wszBufRoot ) then continue for
         end if
 
-        dim as long nSub = 0
-        redim tmp( 0 to 7 )
-        for t as long = 0 to pNew->todoCount - 1
-            if SymDb_FileNameEq( pNew->todoItems(t).wszFile, *pFile ) then
-                if nSub > ubound( tmp ) then redim preserve tmp( 0 to nSub * 2 + 7 )
-                tmp(nSub) = pNew->todoItems(t)
-                nSub += 1
+        ' nTodo, not t: t is on RFC-0004 s5's forbidden list and this procedure now names
+        ' a container two lines below it.
+        tmp.Clear( )
+        for nTodo as long = 0 to pNew->todoItems.Count - 1
+            if SymDb_FileNameEq( pNew->todoItems[nTodo].wszFile, *pFile ) then
+                tmp.Push( pNew->todoItems[nTodo] )
             end if
         next
-        if nSub > 0 then
+        if tmp.Count > 0 then
             ' store/display under the on-disk casing (scan names are UPPERCASED;
             ' the store's keying is case-insensitive either way)
-            TodoStore_ReplaceFile( FilenameOriginalCase( *pFile ), tmp(), nSub )
+            TodoStore_ReplaceFile( FilenameOriginalCase( *pFile ), tmp )
         else
-            TodoStore_ReplaceFile( *pFile, tmp(), nSub )
+            TodoStore_ReplaceFile( *pFile, tmp )
         end if
     next
 end sub
@@ -494,10 +493,10 @@ end function
 
 ' ---- clsSymbolDb: enumerations ---------------------------------------------------------
 
-function clsSymbolDb.EnumMembers( byval refType as SYMBOLREF, results() as SYMBOLREF, byval bWalkExtends as boolean = true ) as long
-    dim as long cnt = 0
-    redim results( 0 to 63 )
-    if refType.IsValid = false then return 0
+sub clsSymbolDb.EnumMembers( byval refType as SYMBOLREF, byref results as SYMBOLREFLIST, byval bWalkExtends as boolean = true )
+    results.Clear( )
+    results.Reserve( 64 )
+    if refType.IsValid = false then exit sub
 
     dim as SYMBOLREF cur = refType
     dim as long hops = 0
@@ -505,7 +504,7 @@ function clsSymbolDb.EnumMembers( byval refType as SYMBOLREF, results() as SYMBO
         dim as PARSERESULTSET ptr pRSet = cur.pRSet
         dim as wstring ptr pPrevName = 0
         dim as long c = pRSet->childHead( cur.idx )
-        do while (c >= 0) andalso (cnt < SYMDB_MAX_ENUM)
+        do while (c >= 0) andalso (results.Count < SYMDB_MAX_ENUM)
             dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[c]
             if (SYMMASK_MEMBER and (1 shl pSym->kind)) <> 0 then
                 ' dynamic member arrays emit twin FIELD records (data + its
@@ -514,10 +513,10 @@ function clsSymbolDb.EnumMembers( byval refType as SYMBOLREF, results() as SYMBO
                 dim as boolean bDup = false
                 if pPrevName then bDup = SymDb_NameEqW( pName, pPrevName )
                 if bDup = false then
-                    if cnt > ubound(results) then redim preserve results( 0 to cnt * 2 + 1 )
-                    results(cnt).pRSet = pRSet
-                    results(cnt).idx = c
-                    cnt += 1
+                    dim as SYMBOLREF hit
+                    hit.pRSet = pRSet
+                    hit.idx = c
+                    results.Push( hit )
                     pPrevName = pName
                 end if
             end if
@@ -527,8 +526,7 @@ function clsSymbolDb.EnumMembers( byval refType as SYMBOLREF, results() as SYMBO
         cur = this.GetTypeBase( cur )
         hops += 1
     loop
-    function = cnt
-end function
+end sub
 
 ' USER FILES FIRST, then the toolchain's. SYMDB_MAX_ENUM is a hard stop, and symbols
 ' are walked in DECLARATION order -- which for any real project means windows.bi, then
@@ -541,9 +539,9 @@ end function
 ' Splitting the walk by origin makes the stop truncate toolchain symbols instead of the
 ' user's. It also fixes the popup's own AUTOCOMPLETE_MAX_ITEMS cap for free, since
 ' results arrive in the order the caller appends them.
-function clsSymbolDb.EnumPrefix( byref wszPrefix as const wstring, byval kindMask as long, results() as SYMBOLREF ) as long
-    dim as long cnt = 0
-    redim results( 0 to 127 )
+sub clsSymbolDb.EnumPrefix( byref wszPrefix as const wstring, byval kindMask as long, byref results as SYMBOLREFLIST )
+    results.Clear( )
+    results.Reserve( 128 )
     dim as long plen = len( wszPrefix )
     dim as DWSTRING wszInc = this.ToolchainIncludeRoot()
     dim as long nIncLen = len( wszInc )
@@ -573,7 +571,7 @@ function clsSymbolDb.EnumPrefix( byref wszPrefix as const wstring, byval kindMas
 
             dim as long n = pRSet->pResult->symbolCount
             for i as long = 0 to n - 1
-                if cnt >= SYMDB_MAX_ENUM then exit for
+                if results.Count >= SYMDB_MAX_ENUM then exit for
                 dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[i]
                 if (kindMask and (1 shl pSym->kind)) = 0 then continue for
                 if this.FileContributes( pRSet, pSym->fileIndex ) = false then continue for
@@ -586,20 +584,19 @@ function clsSymbolDb.EnumPrefix( byref wszPrefix as const wstring, byval kindMas
                 end if
                 dim as wstring ptr pName = @pRSet->pResult->stringPool[ pSym->nameOffset ]
                 if SymDb_NamePrefixW( pName, @wszPrefix, plen ) then
-                    if cnt > ubound(results) then redim preserve results( 0 to cnt * 2 + 1 )
-                    results(cnt).pRSet = pRSet
-                    results(cnt).idx = i
-                    cnt += 1
+                    dim as SYMBOLREF hit
+                    hit.pRSet = pRSet
+                    hit.idx = i
+                    results.Push( hit )
                 end if
             next
         next
     next
-    function = cnt
-end function
+end sub
 
-function clsSymbolDb.EnumLocalsInScope( byref wszFile as const wstring, byval nCaretLine as long, results() as SYMBOLREF ) as long
-    dim as long cnt = 0
-    redim results( 0 to 63 )
+sub clsSymbolDb.EnumLocalsInScope( byref wszFile as const wstring, byval nCaretLine as long, byref results as SYMBOLREFLIST )
+    results.Clear( )
+    results.Reserve( 64 )
     for pass as long = 0 to 1
         dim as PARSERESULTSET ptr pRSet
         if pass = 0 then pRSet = m_pBuffer else pRSet = m_pProject
@@ -610,26 +607,26 @@ function clsSymbolDb.EnumLocalsInScope( byref wszFile as const wstring, byval nC
         dim as long proc = SymDb_EnclosingProc( pRSet, fileIdx, nCaretLine )
         if proc < 0 then continue for
         dim as long c = pRSet->childHead( proc )
-        do while (c >= 0) andalso (cnt < SYMDB_MAX_ENUM)
+        do while (c >= 0) andalso (results.Count < SYMDB_MAX_ENUM)
             dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[c]
             dim as long k = pSym->kind
             dim as boolean bWant = ((k = FBCP_KIND_VAR) orelse (k = FBCP_KIND_PARAM) orelse (k = FBCP_KIND_CONST))
             if bWant then
-                if cnt > ubound(results) then redim preserve results( 0 to cnt * 2 + 1 )
-                results(cnt).pRSet = pRSet
-                results(cnt).idx = c
-                cnt += 1
+                dim as SYMBOLREF hit
+                hit.pRSet = pRSet
+                hit.idx = c
+                results.Push( hit )
             end if
             c = pRSet->childNext(c)
         loop
-        if cnt > 0 then return cnt          ' the active file lives in one set
+        ' the active file lives in one set: first set with any hit wins
+        if results.Count > 0 then exit sub
     next
-    function = cnt
-end function
+end sub
 
-function clsSymbolDb.EnumProcsInFile( byref wszFile as const wstring, results() as SYMBOLREF ) as long
-    dim as long cnt = 0
-    redim results( 0 to 63 )
+sub clsSymbolDb.EnumProcsInFile( byref wszFile as const wstring, byref results as SYMBOLREFLIST )
+    results.Clear( )
+    results.Reserve( 64 )
     for pass as long = 0 to 1
         dim as PARSERESULTSET ptr pRSet
         if pass = 0 then pRSet = m_pBuffer else pRSet = m_pProject
@@ -639,29 +636,29 @@ function clsSymbolDb.EnumProcsInFile( byref wszFile as const wstring, results() 
         if fileIdx < 0 then continue for
         if this.FileContributes( pRSet, fileIdx ) = false then continue for
         dim as long s = pRSet->fileHead( fileIdx )
-        do while (s >= 0) andalso (cnt < SYMDB_MAX_ENUM)
+        do while (s >= 0) andalso (results.Count < SYMDB_MAX_ENUM)
             dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[s]
             dim as boolean bProc = ((pSym->kind = FBCP_KIND_SUB) orelse (pSym->kind = FBCP_KIND_FUNCTION))
             if bProc then
-                if cnt > ubound(results) then redim preserve results( 0 to cnt * 2 + 1 )
-                results(cnt).pRSet = pRSet
-                results(cnt).idx = s
-                cnt += 1
+                dim as SYMBOLREF hit
+                hit.pRSet = pRSet
+                hit.idx = s
+                results.Push( hit )
             end if
             s = pRSet->fileNext(s)
         loop
-        return cnt                          ' the file lives in one set; first hit wins
+        ' the file lives in one set; first hit wins
+        exit sub
     next
-    function = cnt
-end function
+end sub
 
-function clsSymbolDb.EnumUserFiles( results() as DWSTRING ) as long
+sub clsSymbolDb.EnumUserFiles( byref results as FILENAMELIST )
     dim as DWSTRING wszInc
     if len( gConfig.FBWINCompiler64 ) then
         wszInc = ucase( AfxStrPathname( "PATH", ProcessFromCurdriveApp( gConfig.FBWINCompiler64 ) ) & "inc" )
     end if
-    dim as long cnt = 0
-    redim results( 0 to 63 )
+    results.Clear( )
+    results.Reserve( 64 )
     for pass as long = 0 to 1
         dim as PARSERESULTSET ptr pRSet
         if pass = 0 then pRSet = m_pBuffer else pRSet = m_pProject
@@ -675,25 +672,25 @@ function clsSymbolDb.EnumUserFiles( results() as DWSTRING ) as long
                 if ucase( left( wszF, len( wszInc ) ) ) = wszInc then continue for
             end if
             dim as boolean bDup = false
-            for j as long = 0 to cnt - 1
-                if SymDb_FileNameEq( results(j), wszF ) then
+            ' O(n^2) dedupe over the file list, unchanged. It is ~230 files per project
+            ' scan and runs once per panel rebuild; an FB.Set beside it would make it
+            ' linear, and that is a behavioural change wanting its own measurement.
+            for each wszSeen in results
+                if SymDb_FileNameEq( wszSeen, wszF ) then
                     bDup = true
                     exit for
                 end if
             next
             if bDup = false then
-                if cnt > ubound(results) then redim preserve results( 0 to cnt * 2 + 1 )
-                results(cnt) = wszF
-                cnt += 1
+                results.Push( wszF )
             end if
         next
     next
-    function = cnt
-end function
+end sub
 
-function clsSymbolDb.EnumAllProcsTypes( results() as SYMBOLREF, byval bUserFilesOnly as boolean ) as long
-    dim as long cnt = 0
-    redim results( 0 to 255 )
+sub clsSymbolDb.EnumAllProcsTypes( byref results as SYMBOLREFLIST, byval bUserFilesOnly as boolean )
+    results.Clear( )
+    results.Reserve( 256 )
     dim as long wantMask = SYMMASK_PROC or SYMMASK_TYPE
     dim as DWSTRING wszInc
     if bUserFilesOnly andalso (len( gConfig.FBWINCompiler64 ) > 0) then
@@ -719,7 +716,7 @@ function clsSymbolDb.EnumAllProcsTypes( results() as SYMBOLREF, byval bUserFiles
 
         dim as long n = pRSet->pResult->symbolCount
         for i as long = 0 to n - 1
-            if cnt >= SYMDB_MAX_ENUM then exit for
+            if results.Count >= SYMDB_MAX_ENUM then exit for
             dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[i]
             if (wantMask and (1 shl pSym->kind)) = 0 then continue for
             if this.FileContributes( pRSet, pSym->fileIndex ) = false then continue for
@@ -727,18 +724,17 @@ function clsSymbolDb.EnumAllProcsTypes( results() as SYMBOLREF, byval bUserFiles
                 if pSym->fileIndex < 0 then continue for
                 if bUserFile( pSym->fileIndex ) = false then continue for
             end if
-            if cnt > ubound(results) then redim preserve results( 0 to cnt * 2 + 1 )
-            results(cnt).pRSet = pRSet
-            results(cnt).idx = i
-            cnt += 1
+            dim as SYMBOLREF hit
+            hit.pRSet = pRSet
+            hit.idx = i
+            results.Push( hit )
         next
     next
-    function = cnt
-end function
+end sub
 
-function clsSymbolDb.EnumDiags( results() as DIAGREF ) as long
-    dim as long cnt = 0
-    redim results( 0 to 63 )
+sub clsSymbolDb.EnumDiags( byref results as DIAGREFLIST )
+    results.Clear( )
+    results.Reserve( 64 )
     for pass as long = 0 to 1
         dim as PARSERESULTSET ptr pRSet
         if pass = 0 then pRSet = m_pBuffer else pRSet = m_pProject
@@ -746,14 +742,13 @@ function clsSymbolDb.EnumDiags( results() as DIAGREF ) as long
         if pRSet->pResult = 0 then continue for
         dim as long dc = pRSet->pResult->diagCount
         for i as long = 0 to dc - 1
-            if cnt > ubound(results) then redim preserve results( 0 to cnt * 2 + 1 )
-            results(cnt).pRSet = pRSet
-            results(cnt).idx = i
-            cnt += 1
+            dim as DIAGREF hit
+            hit.pRSet = pRSet
+            hit.idx = i
+            results.Push( hit )
         next
     next
-    function = cnt
-end function
+end sub
 
 
 ' ---- clsSymbolDb: accessors ------------------------------------------------------------
@@ -923,32 +918,29 @@ end function
 
 sub TodoStore_RemoveFile( byref wszFile as const wstring )
     dim as long nOut = 0
-    for i as long = 0 to gTodoCount - 1
-        if SymDb_FileNameEq( gTodoItems(i).wszFile, wszFile ) = false then
-            if nOut <> i then gTodoItems(nOut) = gTodoItems(i)
+    for i as long = 0 to gTodoItems.Count - 1
+        if SymDb_FileNameEq( gTodoItems[i].wszFile, wszFile ) = false then
+            if nOut <> i then gTodoItems[nOut] = gTodoItems[i]
             nOut += 1
         end if
     next
-    ' clear the dropped tail entries so their strings free now
-    for i as long = nOut to gTodoCount - 1
-        gTodoItems(i).wszFile = ""
-        gTodoItems(i).wszText = ""
-        gTodoItems(i).nLineNum = 0
-    next
-    gTodoCount = nOut
+    ' The compaction above moved the survivors down; now drop the tail. The old code could
+    ' not shorten a redim'd array without losing the survivors, so it blanked the dropped
+    ' entries' strings by hand to release them. Pop destroys each dropped element -- its
+    ' DWSTRINGs with it -- so the hand wipe is gone rather than translated.
+    while gTodoItems.Count > nOut
+        gTodoItems.Pop( )
+    wend
 end sub
 
-sub TodoStore_ReplaceFile( byref wszFile as const wstring, items() as TODOITEM, byval itemCount as long )
+sub TodoStore_ReplaceFile( byref wszFile as const wstring, byref items as TODOLIST )
     TodoStore_RemoveFile( wszFile )
-    if itemCount <= 0 then exit sub
-    if gTodoCount + itemCount - 1 > ubound( gTodoItems ) then
-        redim preserve gTodoItems( 0 to (gTodoCount + itemCount) * 2 + 7 )
-    end if
-    for i as long = 0 to itemCount - 1
-        gTodoItems( gTodoCount ).wszFile = wszFile
-        gTodoItems( gTodoCount ).nLineNum = items(i).nLineNum
-        gTodoItems( gTodoCount ).wszText = items(i).wszText
-        gTodoCount += 1
+    ' The entries are re-keyed onto wszFile as they are copied: the caller's list carries
+    ' whatever casing the scan reported, and the store keys on the name it was given.
+    for each src in items
+        dim as TODOITEM item = src
+        item.wszFile = wszFile
+        gTodoItems.Push( item )
     next
 end sub
 
