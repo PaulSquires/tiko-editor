@@ -56,8 +56,9 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     ' UPPERCASED - normalize to on-disk casing for display and open-on-select.
     dim arrFiles as FILENAMELIST
     gSymDb.EnumUserFiles( arrFiles )
-    for i as long = 0 to arrFiles.Count - 1
-        arrFiles[i] = FilenameOriginalCase( arrFiles[i] )
+    ' BYREF: this REWRITES each entry in place rather than reading it.
+    for each byref wszScanned as DWSTRING in arrFiles
+        wszScanned = FilenameOriginalCase( wszScanned )
     next
 
     SortFilenamesByLeaf( arrFiles )
@@ -88,18 +89,18 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     if gSymbols.Count < MAX_SYMBOL_SEARCH then
         dim rs as SYMBOLREFLIST
         gSymDb.EnumAllProcsTypes( rs, true )
-        for s as long = 0 to rs.Count - 1
-            dim as wstring ptr pFile = gSymDb.SymFile( rs[s] )
+        for each refSym in rs
+            dim as wstring ptr pFile = gSymDb.SymFile( refSym )
             if pFile = 0 then continue for
 
             dim positions(any) as uinteger
-            dim as DWSTRING wszName = gSymDb.QualifiedName( rs[s] )
+            dim as DWSTRING wszName = gSymDb.QualifiedName( refSym )
             nScore = fuzzy_match_positions( wszNeedle, wszName, positions() )
 
             if (nScore > min_score) then
                 if gSymbols.Count >= MAX_SYMBOL_SEARCH then exit for
 
-                dim as long nKind = gSymDb.SymKind( rs[s] )
+                dim as long nKind = gSymDb.SymKind( refSym )
                 dim as SEARCHSYMBOL_TYPE hit
                 hit.nScore = nScore
                 if (nKind = FBCP_KIND_SUB) orelse (nKind = FBCP_KIND_FUNCTION) then
@@ -109,8 +110,8 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
                 end if
                 hit.wszCaption  = wszName
                 hit.wszFilename = FilenameOriginalCase( *pFile )
-                dim as long nLineNum = gSymDb.SymBodyLine( rs[s] )
-                if nLineNum = 0 then nLineNum = gSymDb.SymLine( rs[s] )
+                dim as long nLineNum = gSymDb.SymBodyLine( refSym )
+                if nLineNum = 0 then nLineNum = gSymDb.SymLine( refSym )
                 hit.nLineNumber = iif( nLineNum > 0, nLineNum - 1, 0 )
                 hit.isEnum      = ( nKind = FBCP_KIND_ENUM )
                 hit.clrMask     = WSTRING( len(wszName), 48 )  ' "0"

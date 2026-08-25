@@ -675,8 +675,8 @@ sub clsSymbolDb.EnumUserFiles( byref results as FILENAMELIST )
             ' O(n^2) dedupe over the file list, unchanged. It is ~230 files per project
             ' scan and runs once per panel rebuild; an FB.Set beside it would make it
             ' linear, and that is a behavioural change wanting its own measurement.
-            for j as long = 0 to results.Count - 1
-                if SymDb_FileNameEq( results[j], wszF ) then
+            for each wszSeen in results
+                if SymDb_FileNameEq( wszSeen, wszF ) then
                     bDup = true
                     exit for
                 end if
@@ -937,8 +937,8 @@ sub TodoStore_ReplaceFile( byref wszFile as const wstring, byref items as TODOLI
     TodoStore_RemoveFile( wszFile )
     ' The entries are re-keyed onto wszFile as they are copied: the caller's list carries
     ' whatever casing the scan reported, and the store keys on the name it was given.
-    for i as long = 0 to items.Count - 1
-        dim as TODOITEM item = items[i]
+    for each src in items
+        dim as TODOITEM item = src
         item.wszFile = wszFile
         gTodoItems.Push( item )
     next

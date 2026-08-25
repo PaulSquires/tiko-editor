@@ -405,9 +405,9 @@ sub clsScanMgr.WorkerLoop()
             ' Still under the lock, and still one explicit release per entry: the
             ' container owns the pointer array, nothing else. Clear( ) keeps the capacity,
             ' so a steady stream of scans never reallocates this queue.
-            for i as long = 0 to m_retire.Count - 1
-                fbcparser_free( m_retire[i]->pResult )
-                delete m_retire[i]
+            for each pRetired in m_retire
+                fbcparser_free( pRetired->pResult )
+                delete pRetired
             next
             m_retire.Clear( )
             bStop = m_bShutdown

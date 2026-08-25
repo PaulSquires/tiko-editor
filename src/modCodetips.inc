@@ -364,8 +364,8 @@ sub AddAutocompleteItem( _
     ' commit converts storage, and that is a behavioural optimisation that deserves its
     ' own measurement.
     dim as DWSTRING wszSort = ucase(wszName)
-    for i as long = 0 to items.Count - 1
-        if items[i].wszSort = wszSort then exit sub
+    for each existing in items
+        if existing.wszSort = wszSort then exit sub
     next
 
     dim as AUTOC_ITEM item
@@ -580,13 +580,12 @@ sub AppendKeywordsToList( _
             )
     AutoC_EnsureKeywordCache()
     dim as long nLenMatchWord = len(wszMatchWord)
-    for i as long = 0 to gKwCache.Count - 1
+    for each kw in gKwCache
         if items.Count >= AUTOCOMPLETE_MAX_ITEMS then exit sub
         dim as boolean bMatch = true
-        if nLenMatchWord then bMatch = AutoC_HasPrefixUp( gKwCache[i].wszUp, wszMatchWord, nLenMatchWord )
+        if nLenMatchWord then bMatch = AutoC_HasPrefixUp( kw.wszUp, wszMatchWord, nLenMatchWord )
         if bMatch then
-            AddAutocompleteItem( items, gKwCache[i].wszName, "", _
-                                 AUTOC_KIND_KEYWORD, gKwCache[i].bHasParams )
+            AddAutocompleteItem( items, kw.wszName, "", AUTOC_KIND_KEYWORD, kw.bHasParams )
         end if
     next
 end sub
@@ -790,14 +789,14 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
             gSymDb.EnumPrefix( pDoc->wszMatchWord, SYMMASK_TYPE, rs )
             dim as DWSTRING wszIncPath
             if bTypesNotPreloaded then wszIncPath = gSymDb.ToolchainIncludeRoot()
-            for i as long = 0 to rs.Count - 1
+            for each refSym in rs
                 if gAutoCBuild.Count >= AUTOCOMPLETE_MAX_ITEMS then exit for
                 if len(wszIncPath) then
-                    dim as wstring ptr pFile = gSymDb.SymFile( rs[i] )
+                    dim as wstring ptr pFile = gSymDb.SymFile( refSym )
                     if pFile = 0 then continue for
                     if ucase(left(*pFile, len(wszIncPath))) = wszIncPath then continue for
                 end if
-                AddAutocompleteSymbol( gAutoCBuild, rs[i] )
+                AddAutocompleteSymbol( gAutoCBuild, refSym )
             next
 
 
@@ -844,13 +843,13 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
             dim rs as SYMBOLREFLIST
             gSymDb.EnumMembers( refType, rs )
             if environ("TIKO_MEMBER_TRACE") = "1" then print "  members=" & str(rs.Count)
-            for i as long = 0 to rs.Count - 1
+            for each refSym in rs
                 if gAutoCBuild.Count >= AUTOCOMPLETE_MAX_ITEMS then exit for
-                st = *gSymDb.SymName( rs[i] )
+                st = *gSymDb.SymName( refSym )
                 dim as boolean bMatch = true
                 if nLenMatchWord then bMatch = ( left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord )
                 if bMatch then
-                    AddAutocompleteSymbol( gAutoCBuild, rs[i] )
+                    AddAutocompleteSymbol( gAutoCBuild, refSym )
                 end if
             next
 
@@ -873,11 +872,11 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
 
             ' Locals and params of the enclosing proc first
             gSymDb.EnumLocalsInScope( wszDocFile, nCaretLine, rs )
-            for i as long = 0 to rs.Count - 1
-                st = *gSymDb.SymName( rs[i] )
+            for each refSym in rs
+                st = *gSymDb.SymName( refSym )
                 dim as boolean bMatch = ( left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord )
                 if bMatch then
-                    AddAutocompleteSymbol( gAutoCBuild, rs[i] )
+                    AddAutocompleteSymbol( gAutoCBuild, refSym )
                 end if
             next
 
@@ -891,10 +890,10 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
             ' LOCAL flag (this scope's locals were already added above).
             dim as long wordMask = SYMMASK_PROC or SYMMASK_TYPE or SYMMASK_VAR or (1 shl FBCP_KIND_ENUMVAL)
             gSymDb.EnumPrefix( pDoc->wszMatchWord, wordMask, rs )
-            for i as long = 0 to rs.Count - 1
+            for each refSym in rs
                 if gAutoCBuild.Count >= AUTOCOMPLETE_MAX_ITEMS then exit for
-                if (gSymDb.SymFlags( rs[i] ) and FBCP_SYMBFLAG_LOCAL) <> 0 then continue for
-                AddAutocompleteSymbol( gAutoCBuild, rs[i] )
+                if (gSymDb.SymFlags( refSym ) and FBCP_SYMBFLAG_LOCAL) <> 0 then continue for
+                AddAutocompleteSymbol( gAutoCBuild, refSym )
             next
 
     end select

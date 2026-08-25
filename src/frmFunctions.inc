@@ -346,8 +346,8 @@ sub frmFunctions_BuildFileList()
     ' preserve, purely because it had nowhere else to put the survivors.
     gFuncPanelFiles.Clear( )
     gFuncPanelFiles.Reserve( scratch.Count )
-    for i as long = 0 to scratch.Count - 1
-        dim as DWSTRING wszFile = FilenameOriginalCase( scratch[i] )
+    for each wszScanned in scratch
+        dim as DWSTRING wszFile = FilenameOriginalCase( wszScanned )
         if frmExplorer_IsFileDisplayed( wszFile ) = false then continue for
         gFuncPanelFiles.Push( wszFile )
     next
@@ -396,16 +396,16 @@ function LoadFilesAndFunctions() as long
         PsListTree_AddHeader( hCtrl, wszText, i, 0 )
 
         gSymDb.EnumProcsInFile( gFuncPanelFiles[i], rs )
-        for p as long = 0 to rs.Count - 1
+        for each refProc in rs
             ' implementations only - declare-only prototypes never appeared in
             ' the old (parsed-bodies) panel either
-            dim as long nBodyLine = gSymDb.SymBodyLine( rs[p] )
+            dim as long nBodyLine = gSymDb.SymBodyLine( refProc )
             if nBodyLine <= 0 then continue for
             ' Push, not a one-element redim preserve: the old form reallocated and
             ' copied the whole array per function, O(n^2) over a project.
             dim as FUNCTION_NODE_TYPE fn
-            fn.wszFunctionName = gSymDb.QualifiedName( rs[p] )
-            fn.wszPrototype    = gSymDb.BuildCalltip( rs[p] )
+            fn.wszFunctionName = gSymDb.QualifiedName( refProc )
+            fn.wszPrototype    = gSymDb.BuildCalltip( refProc )
             fn.nLineNumber     = nBodyLine - 1           ' Scintilla lines are 0-based
             fn.nFileIdx        = i
             arrFuncs.Push( fn )
@@ -413,10 +413,11 @@ function LoadFilesAndFunctions() as long
 
         SortFuncsByName( arrFuncs )
 
-        for ii as long = 0 to arrFuncs.Count - 1
-            wszText = ltrim(arrFuncs[ii].wszFunctionName) & _
-                      "%" & trim(arrFuncs[ii].wszPrototype)
-            PsListTree_AddString( hCtrl, wszText, i, arrFuncs[ii].nLineNumber )
+        ' The OUTER index i stays -- it is the file index the row carries as its payload,
+        ' which is data rather than a position.
+        for each fn in arrFuncs
+            wszText = ltrim(fn.wszFunctionName) & "%" & trim(fn.wszPrototype)
+            PsListTree_AddString( hCtrl, wszText, i, fn.nLineNumber )
         next
         arrFuncs.Clear( )
 
@@ -467,14 +468,14 @@ function LoadFunctionsOnly() as long
 
     for i as long = 0 to gFuncPanelFiles.Count - 1
         gSymDb.EnumProcsInFile( gFuncPanelFiles[i], rs )
-        for p as long = 0 to rs.Count - 1
-            dim as long nBodyLine = gSymDb.SymBodyLine( rs[p] )
+        for each refProc in rs
+            dim as long nBodyLine = gSymDb.SymBodyLine( refProc )
             if nBodyLine <= 0 then continue for
             ' Push, not a one-element redim preserve: the old form reallocated and
             ' copied the whole array per function, O(n^2) over a project.
             dim as FUNCTION_NODE_TYPE fn
-            fn.wszFunctionName = gSymDb.QualifiedName( rs[p] )
-            fn.wszPrototype    = gSymDb.BuildCalltip( rs[p] )
+            fn.wszFunctionName = gSymDb.QualifiedName( refProc )
+            fn.wszPrototype    = gSymDb.BuildCalltip( refProc )
             fn.nLineNumber     = nBodyLine - 1           ' Scintilla lines are 0-based
             fn.nFileIdx        = i
             arrFuncs.Push( fn )
@@ -483,10 +484,9 @@ function LoadFunctionsOnly() as long
 
     SortFuncsByName( arrFuncs )
 
-    for ii as long = 0 to arrFuncs.Count - 1
-        wszText = ltrim(arrFuncs[ii].wszFunctionName) & _
-                  "%" & trim(arrFuncs[ii].wszPrototype)
-        PsListTree_AddString( hCtrl, wszText, arrFuncs[ii].nFileIdx, arrFuncs[ii].nLineNumber )
+    for each fn in arrFuncs
+        wszText = ltrim(fn.wszFunctionName) & "%" & trim(fn.wszPrototype)
+        PsListTree_AddString( hCtrl, wszText, fn.nFileIdx, fn.nLineNumber )
     next
     arrFuncs.Clear( )
 

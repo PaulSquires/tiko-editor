@@ -1167,14 +1167,14 @@ sub frmExplorer_AddFolderLevel( byval hCtrl as HWND, byval catIndex as long, _
                           return ucase( a->DiskFilename ) < ucase( b->DiskFilename )
                       end function )
 
-    for i as long = 0 to pDocs.Count - 1
+    for each pFileDoc in pDocs
         ' AddNode, not AddString: AddString derives its level from the PRECEDING row and
         ' only ever produces level 1 when that row is a header or is itself level 1. With
         ' the group now a plain parent, AddString would put every file at level 0 -- a flat
         ' list with no subtree to collapse -- and could not express a nested folder at all.
         PsListTree_AddNode( hCtrl, nParentRow, _
-                            AfxStrPathName( "NAMEX", pDocs[i]->DiskFilename ), _
-                            cast(integer, pDocs[i]), EXPKIND_FILE )
+                            AfxStrPathName( "NAMEX", pFileDoc->DiskFilename ), _
+                            cast(integer, pFileDoc), EXPKIND_FILE )
     next
 end sub
 

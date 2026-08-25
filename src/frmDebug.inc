@@ -628,8 +628,10 @@ private sub frmDebug_FillVarList( byval hLV as HWND, byval bGlobals as boolean, 
     dim as DWSTRING wszScope = "G:"
     if bGlobals = false then wszScope = "L" & str(gDbgCurFrame) & ":"
 
-    for i as long = 0 to nodes.Count - 1
-        if frmDebug_AddNodeRow( hLV, -1, @nodes[i], wszScope & nodes[i].wszName, true ) < 0 then exit for
+    ' BYREF, because the row builder takes the node's ADDRESS. A byval binding would hand
+    ' it a pointer to the loop's own copy.
+    for each byref nd as DBGP_NODE in nodes
+        if frmDebug_AddNodeRow( hLV, -1, @nd, wszScope & nd.wszName, true ) < 0 then exit for
     next
     PsListTree_Refresh( hLV )
     frmDebug_RestoreExpanded( nSlot, hLV )
