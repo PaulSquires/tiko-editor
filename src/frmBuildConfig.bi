@@ -69,10 +69,10 @@
 ' NEITHER PAGE SCROLLS. A row pushed past 470 is silently CLIPPED -- no scrollbar appears --
 ' and only above 100% DPI where nobody is looking. That is the same trade frmOptions,
 ' frmKeyboard and frmUserTools make, and the reason each of them carries a fit check.
-#Define FRMBUILDCONFIG_CLIENT_W              900
-#Define FRMBUILDCONFIG_CLIENT_H              620
-#Define FRMBUILDCONFIG_TITLE_H                52
-#Define FRMBUILDCONFIG_FOOTER_H               58
+#Define FRMBUILDCONFIG_CLIENT_W              720
+#Define FRMBUILDCONFIG_CLIENT_H              432
+#Define FRMBUILDCONFIG_TITLE_H                44
+#Define FRMBUILDCONFIG_FOOTER_H               48
 #Define FRMBUILDCONFIG_MARGIN                 16
 #Define FRMBUILDCONFIG_BTN_W                  92
 #Define FRMBUILDCONFIG_BTN_H                  32
@@ -90,7 +90,7 @@
 
 ' ---- the right pane ---------------------------------------------------------------------
 #Define FRMBUILDCONFIG_DETAIL_GAP             20
-#Define FRMBUILDCONFIG_SELECTBAR_H            40
+#Define FRMBUILDCONFIG_SELECTBAR_H            32
 ' The gap BETWEEN select-bar panels. The bar's left padding is zeroed so its first panel's
 ' text lines up with the labels beneath it, which means this is the only spacing left.
 #Define FRMBUILDCONFIG_SELECTBAR_PANELGAP     28
@@ -111,15 +111,15 @@
 #Define FRMBUILDCONFIG_FIELD_H                32
 ' A STACKED row -- label above a full-width field -- used by Description and by the raw
 ' options field on the switches page.
-#Define FRMBUILDCONFIG_STACKLABEL_H           24
-#Define FRMBUILDCONFIG_STACKROW_H             62
+#Define FRMBUILDCONFIG_STACKLABEL_H           20
+#Define FRMBUILDCONFIG_STACKROW_H             54
 ' The Shortcut button. 150, not BTN_W: its caption is a live accelerator that can read
 ' "Ctrl+Shift+Alt+F12", and PsButton ellipsizes without complaining.
 #Define FRMBUILDCONFIG_SHORTCUT_W            150
 ' The switches preview, pinned to the BOTTOM of the General page. Its label row carries a
 ' small Edit button on the right, and the whole block is clickable.
-#Define FRMBUILDCONFIG_PREVIEWLABEL_H         28
-#Define FRMBUILDCONFIG_PREVIEW_H              64
+#Define FRMBUILDCONFIG_PREVIEWLABEL_H         22
+#Define FRMBUILDCONFIG_PREVIEW_H              44
 #Define FRMBUILDCONFIG_EDIT_W                 72
 
 ' ---- the compiler switches page ----------------------------------------------------------

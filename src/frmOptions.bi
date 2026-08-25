@@ -32,18 +32,30 @@
 ' the sum down because every page layout is measured against it:
 '
 '     page viewport = (CLIENT_W - NAV_W) x (CLIENT_H - TITLE_H - FOOTER_H)
-'                   =  (900 - 220)       x  (620 - 52 - 58)
-'                   =   680              x   510          , unscaled
+'                   =  (720 - 196)       x  (434 - 44 - 48)
+'                   =   524              x   342          , unscaled
+'
+' THE HEIGHT WAS CUT 30% (620 -> 434). That did not come out of the page metrics alone: the
+' tallest page, Code Editor, is twelve rows, and a row cannot be shorter than the taller of its
+' control and its title. So the toggle itself was shrunk for this dialog -- see
+' OPTROW_TOGGLE_TRACKH in modOptionsRows.bi -- alongside the row height, the row padding and the
+' two bands. Twelve rows now need 8 + 12*26 + 8 = 328 of the 342 available.
+'
+' THE WIDTH WAS THEN CUT 20% (900 -> 720). The nav column did NOT take a proportional share:
+' at 176 the longest nav title ("Windows API Keywords") cleared its row by 4px, which is not a
+' margin. 196 leaves it 22 unscaled px of slack. The page keeps 524, and the widest row title
+' ("Margin click toggles Breakpoint rather than Bookmark") needs 617 of the 744px it is given
+' at 175% DPI -- measured, because the labels ellipsize SILENTLY and nothing asserts it.
 '
 ' A page that needs more than that no longer scrolls -- only OPTPAGE_EDITOR does -- so it would
 ' CLIP. frmOptions_SelfTest asserts the fit for every page rather than leaving it to be noticed.
-#Define FRMOPTIONS_CLIENT_W                          900
-#Define FRMOPTIONS_CLIENT_H                          620
-#Define FRMOPTIONS_NAV_W                             220
-#Define FRMOPTIONS_SEARCH_H                          40    ' the search box in the nav column
+#Define FRMOPTIONS_CLIENT_W                          720
+#Define FRMOPTIONS_CLIENT_H                          432
+#Define FRMOPTIONS_NAV_W                             196
+#Define FRMOPTIONS_SEARCH_H                          34    ' the search box in the nav column
 #Define FRMOPTIONS_SEARCH_GLYPHW                     34    ' the magnifying-glass gutter left of it
-#Define FRMOPTIONS_TITLE_H                            52
-#Define FRMOPTIONS_FOOTER_H                           58
+#Define FRMOPTIONS_TITLE_H                            44
+#Define FRMOPTIONS_FOOTER_H                           48
 #Define FRMOPTIONS_BTN_W                              92
 #Define FRMOPTIONS_BTN_H                              32
 #Define FRMOPTIONS_MARGIN                             16

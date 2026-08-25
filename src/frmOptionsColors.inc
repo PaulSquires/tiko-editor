@@ -24,12 +24,12 @@
 ' the whole of the judgement here: a handful of .theme files ship and the folder is rarely long,
 ' while the font list is every family on the machine and is the one people actually scroll.
 #define COLORS_LISTHEIGHT_THEMES  104
-#define COLORS_LISTHEIGHT_FONTS   160
+#define COLORS_LISTHEIGHT_FONTS   96
 #define COLORS_NUMWIDTH            96
 #define COLORS_COMBOWIDTH         180
-#define COLORS_SECTIONGAP          11      ' x2 on this page
+#define COLORS_SECTIONGAP          8      ' x2 on this page
 #define COLORS_LABELGAP             4
-#define COLORS_ROWHEIGHT           40
+#define COLORS_ROWHEIGHT           26
 
 
 
@@ -193,12 +193,7 @@ end sub
 private sub frmOptionsColors_FontPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
     dim as COLORREF backclr, foreclr
-    if p->isSelected orelse p->isHot then
-        backclr = theme.panel.texthot.backcolor : foreclr = theme.panel.texthot.forecolor
-    else
-        ' Idle rows match the nav panel's lighter shade (see frmOptions nav list).
-        backclr = theme.toptabs.texthot.backcolor : foreclr = theme.panel.text.forecolor
-    end if
+    OptionsList_RowColors( p->isSelected, p->isHot, backclr, foreclr )
     p->b->SetBackColor( backclr )
     p->b->SetForeColor( foreclr )
     p->b->PaintRect( @p->rc )
@@ -455,8 +450,8 @@ function frmOptionsColors_Layout( byval hPage as HWND, byval cxPanel as long ) a
     #macro CTLROW( hCtl, cap, ctlW, ctlH )
         scope
             dim as long rowH = AfxScaleY(COLORS_ROWHEIGHT)
-            if (ctlH) + AfxScaleY(8) > rowH then rowH = (ctlH) + AfxScaleY(8)
-            if textH + AfxScaleY(8) > rowH then rowH = textH + AfxScaleY(8)
+            if (ctlH) + AfxScaleY(OPTROW_CTRLPAD) > rowH then rowH = (ctlH) + AfxScaleY(OPTROW_CTRLPAD)
+            if textH + AfxScaleY(OPTROW_CTRLPAD) > rowH then rowH = textH + AfxScaleY(OPTROW_CTRLPAD)
             dim as long cx = contentR - (ctlW)
             dim as long cy = y + (rowH - (ctlH)) \ 2
             SetWindowPos( (hCtl), 0, cx, cy, (ctlW), (ctlH), SWP_NOZORDER or SWP_NOACTIVATE )

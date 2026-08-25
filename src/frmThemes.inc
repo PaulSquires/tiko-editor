@@ -507,9 +507,14 @@ private sub frmThemes_PositionWindows( byval hwnd as HWND )
     y += selBtnH + selGap + selGap
     SetWindowPos( ghThemesSetActive, 0, colX, y, selBtnW, selBtnH, SWP_NOZORDER or SWP_NOACTIVATE )
 
-    ' Close, footer right -- height matches the SELECT-view action buttons, centred in the footer.
-    dim as long closeY = rc.bottom - footerH + (footerH - selBtnH) \ 2
-    SetWindowPos( ghThemesClose, 0, rc.right - margin - btnW, closeY, btnW, selBtnH, _
+    ' Close, footer right. It uses btnY/btnH -- the SAME footer geometry as Save and Revert
+    ' below, which is what it should always have been.
+    '
+    ' IT USED selBtnH (51), matching the SELECT-view action column instead of the footer it
+    ' actually sits in. That survived only while the footer was 58 tall; at 48 the centring
+    ' arithmetic goes NEGATIVE -- (48-51) integer-divided by 2 is -1 -- so the button started a pixel above the
+    ' footer and hung two pixels past the client bottom, sitting on the window border.
+    SetWindowPos( ghThemesClose, 0, rc.right - margin - btnW, btnY, btnW, btnH, _
                   SWP_NOZORDER or SWP_NOACTIVATE )
 
     ' ---- EDIT view ----------------------------------------------------------------------
@@ -920,13 +925,6 @@ function frmThemes_WndProc( _
             b.SetForeColor( theme.panel.text.forecolor )
             b.PaintText( theme.general.description, @rD, DT_LEFT or DT_END_ELLIPSIS )
         end if
-
-        ' The rule above the footer, so the buttons read as a band.
-        dim as RECT rcDiv
-        SetRect( @rcDiv, 0, rc.bottom - AfxScaleY(FRMTHEMES_FOOTER_H), _
-                 rc.right, rc.bottom - AfxScaleY(FRMTHEMES_FOOTER_H) + AfxScaleY(1) )
-        b.SetBackColor( theme.ui.divider )
-        b.PaintRect( @rcDiv )
 
         ' Unsaved-changes indicator, footer left, EDIT view only.
         if gThemesShowEdit andalso frmThemes_WasEdited() then

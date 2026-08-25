@@ -72,11 +72,11 @@
 ' Shell metrics, UNSCALED -- run through AfxScaleX/AfxScaleY at use. FIXED SIZE, like
 ' frmOptions: the colour page's three columns have to fit one known width, and a resizable
 ' dialog would make "does it fit" a question with no stable answer.
-#Define FRMTHEMES_CLIENT_W         900
-#Define FRMTHEMES_CLIENT_H         620
+#Define FRMTHEMES_CLIENT_W         720
+#Define FRMTHEMES_CLIENT_H         432
 #Define FRMTHEMES_LIST_W           240
 #Define FRMTHEMES_BAR_H             34
-#Define FRMTHEMES_FOOTER_H          58
+#Define FRMTHEMES_FOOTER_H          48
 #Define FRMTHEMES_BTN_W             92
 #Define FRMTHEMES_BTN_H             32
 #Define FRMTHEMES_MARGIN            16
@@ -91,7 +91,7 @@
 #Define FRMTHEMES_SELBTN_W         128
 #Define FRMTHEMES_SELBTN_H          51
 #Define FRMTHEMES_SELBTN_GAP        10
-#Define FRMTHEMES_HEADER_H          84
+#Define FRMTHEMES_HEADER_H          72
 
 ' The two views share one window. THEMEVIEW_SELECT is the theme picker (list + Edit/Clone/
 ' Delete/Set-active + Close); THEMEVIEW_EDIT is the colour editor (Syntax/Interface bar + page

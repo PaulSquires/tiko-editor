@@ -61,10 +61,10 @@ dim shared gKeysFilter as DWSTRING
 '     list viewport = (CLIENT_W - 2*MARGIN) x (CLIENT_H - TITLE_H - FOOTER_H)
 '                   = (900 - 32)            x (620 - 52 - 58)
 '                   =  868                  x  510          , unscaled
-#Define FRMKEYBOARD_CLIENT_W                         900
-#Define FRMKEYBOARD_CLIENT_H                         620
-#Define FRMKEYBOARD_TITLE_H                           52
-#Define FRMKEYBOARD_FOOTER_H                          58
+#Define FRMKEYBOARD_CLIENT_W                         720
+#Define FRMKEYBOARD_CLIENT_H                         432
+#Define FRMKEYBOARD_TITLE_H                           44
+#Define FRMKEYBOARD_FOOTER_H                          48
 #Define FRMKEYBOARD_MARGIN                            16
 #Define FRMKEYBOARD_BTN_W                             92
 #Define FRMKEYBOARD_BTN_H                             32
@@ -74,10 +74,10 @@ dim shared gKeysFilter as DWSTRING
 #Define FRMKEYBOARD_ROW_H                             24
 
 ' Column widths, unscaled. Description (index 1) is the fill column and absorbs the slack.
-#Define FRMKEYBOARD_COL_CATEGORY                     110
-#Define FRMKEYBOARD_COL_DESCRIPTION                  330
-#Define FRMKEYBOARD_COL_DEFAULTKEYS                  170
-#Define FRMKEYBOARD_COL_USERKEYS                     170
+#Define FRMKEYBOARD_COL_CATEGORY                     90
+#Define FRMKEYBOARD_COL_DESCRIPTION                  270
+#Define FRMKEYBOARD_COL_DEFAULTKEYS                  140
+#Define FRMKEYBOARD_COL_USERKEYS                     140
                                                 
 
 declare function frmKeyboard_Show( byval hWndParent as HWND ) as LRESULT

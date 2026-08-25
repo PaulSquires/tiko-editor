@@ -78,16 +78,25 @@ dim shared gToolsWork as TOOLSLIST
 ' and FRMKEYBOARD_*. THE CLIENT SIZE IS FIXED (no WS_THICKFRAME), which is what makes both
 ' viewports one number rather than "whatever the user dragged the window to":
 '
-'     list      = LIST_W x (CLIENT_H - TITLE_H - FOOTER_H) = 340 x 510
-'     detail    = (CLIENT_W - MARGIN - LIST_X2) x same     = 508 x 510
+'     list      = LIST_W x (CLIENT_H - TITLE_H - FOOTER_H) = 340 x 436
+'     detail    = (CLIENT_W - MARGIN - LIST_X2) x same     = 392 x 436
 '
 ' The detail column is a stack of fixed rows and it must FIT: nothing here scrolls, so a row
-' pushed past 510 is silently clipped, and only above 100% DPI where nobody is looking.
+' pushed past 436 is silently clipped, and only above 100% DPI where nobody is looking.
 ' frmUserTools_RunSelfTest asserts the fit rather than leaving it to be noticed.
-#Define FRMUSERTOOLS_CLIENT_W                        900
-#Define FRMUSERTOOLS_CLIENT_H                        620
-#Define FRMUSERTOOLS_TITLE_H                          52
-#Define FRMUSERTOOLS_FOOTER_H                         58
+'
+' THE WIDTH IS ASYMMETRIC ON PURPOSE. The list column is a fixed LIST_W and the detail column
+' takes the whole remainder, so CLIENT_W is the only lever on the right-hand side: at 720 the
+' detail column was 328 and its four text fields were too cramped to read a path in. 784 puts
+' it at 392 -- 20% wider -- while the list keeps its 340 unchanged.
+'
+' CLIENT_W MUST STAY A MULTIPLE OF 4. AfxScaleX returns a fractional SINGLE, so a width whose
+' x1.75 lands on a half-pixel fails the shell's own "client width is the declared width"
+' assertion -- the trap that CLIENT_H = 434 walked into.
+#Define FRMUSERTOOLS_CLIENT_W                        784
+#Define FRMUSERTOOLS_CLIENT_H                        528
+#Define FRMUSERTOOLS_TITLE_H                          44
+#Define FRMUSERTOOLS_FOOTER_H                         48
 #Define FRMUSERTOOLS_MARGIN                           16
 #Define FRMUSERTOOLS_BTN_W                            92
 #Define FRMUSERTOOLS_BTN_H                            32

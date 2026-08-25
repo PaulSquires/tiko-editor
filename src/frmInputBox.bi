@@ -82,15 +82,15 @@
 ' CLIENT_H - MARGIN - BTN_H = 108. 26 px clear. The field is the whole width of the dialog,
 ' because a text entry is the one thing here that is routinely long.
 ' ----------------------------------------------------------------------------------------
-#Define FRMINPUTBOX_CLIENT_W                         520
-#Define FRMINPUTBOX_CLIENT_H                         160
-#Define FRMINPUTBOX_MARGIN                            20
-#Define FRMINPUTBOX_LABEL_H                           24
-#Define FRMINPUTBOX_GAP                                6
-#Define FRMINPUTBOX_TEXT_H                            32
+#Define FRMINPUTBOX_CLIENT_W                         416
+#Define FRMINPUTBOX_CLIENT_H                         112
+#Define FRMINPUTBOX_MARGIN                            12
+#Define FRMINPUTBOX_LABEL_H                           22
+#Define FRMINPUTBOX_GAP                                4
+#Define FRMINPUTBOX_TEXT_H                            28
 #Define FRMINPUTBOX_TEXT_PAD                           8     ' inside the field, per side
 #Define FRMINPUTBOX_BTN_W                             92
-#Define FRMINPUTBOX_BTN_H                             32
+#Define FRMINPUTBOX_BTN_H                             28
 #Define FRMINPUTBOX_BTN_GAP                            8
 
 dim shared HWND_FRMINPUTBOX as HWND

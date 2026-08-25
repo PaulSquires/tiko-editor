@@ -61,8 +61,23 @@
 #define OPTROW_PADLEFT       24
 #define OPTROW_PADRIGHT      24
 #define OPTROW_LABELGAP      16
-#define OPTROW_PADTOP        12
-#define OPTROW_PADBOTTOM     20
+#define OPTROW_PADTOP         8
+#define OPTROW_PADBOTTOM      8
+
+' The slack a row keeps ABOVE the taller of its control and its title -- the floor every row
+' height is clamped to. It was 8, which is 96px of pure air across the twelve-row Code Editor
+' page and was the single biggest obstacle to the shorter dialog. Shared, so the hand-written
+' pages clamp their rows exactly as the table does.
+#define OPTROW_CTRLPAD        1
+
+' THE OPTIONS DIALOG'S OWN TOGGLE SIZE, unscaled -- PsToggle's shipped default is 40x20, whose
+' ideal height is 28 (the track plus the focus-ring band on both sides). At twelve rows that
+' control alone sets the page floor, so this dialog asks for a smaller pill: 34x16 -> an ideal
+' height of 24, which fits inside the 26px row. Applied through OptionsToggle_ApplyTrackSize so
+' the table rows and the hand-written pages cannot drift apart. NOT a change to PsToggle's
+' default -- every other host keeps 40x20.
+#define OPTROW_TOGGLE_TRACKW 34
+#define OPTROW_TOGGLE_TRACKH 16
 
 
 ' ----------------------------------------------------------------------------------------
@@ -228,6 +243,32 @@ declare sub      OptionsTheme_ApplyTextBox( byval hTextBox as HWND )
 ' list and a text field stacked on the same page read as the same kind of control. One
 ' helper rather than two call sites, so the two borders cannot drift apart.
 declare sub      OptionsTheme_ApplyListBorder( byval hList as HWND )
+' Give a toggle this dialog's smaller pill (OPTROW_TOGGLE_TRACK*). Call it once, right after
+' PsToggle_Create -- the setter takes raw pixels, so the scaling happens here.
+declare sub      OptionsToggle_ApplyTrackSize( byval hToggle as HWND )
+
+' The row colours EVERY PsListTree in this dialog paints with -- the nav list, the font list,
+' the toolchain list and both Localization lists. One helper because the four callbacks had
+' four copies of the same three-way choice and had already drifted (two used panel.text for
+' the idle row, two used toptabs.texthot).
+'
+' WHY IT CHANGED: selected and hot both painted theme.panel.texthot.backcolor, which is a HOT
+' shade by role -- in default_dark that is (44,49,58) against an idle row of (40,44,52). Four
+' steps of grey. The selected row was, correctly, reported as impossible to see, and hovering
+' told you nothing because it was the same colour again. Selection now takes theme.ui.accent,
+' which is the one colour the theme system defines as meaning "this is on / selected / active",
+' and hot keeps panel.texthot -- so the two states are finally distinct.
+'
+' The foreground is DERIVED from the accent rather than themed, through
+' PsColorPicker_ContrastColor: ui.accent is a dark blue in the dark themes and a PALE tint in
+' the light ones, so no single themed foreground is legible on both. Black-or-white by luma is.
+' The hover shade: the idle row a fixed step darker (or lighter, on a theme whose background
+' is already black). See the note on the definition for why it is derived and not themed.
+declare function OptionsList_HotShade( byval clr as COLORREF ) as COLORREF
+declare sub      OptionsList_RowColors( byval bSelected as boolean, _
+                                        byval bHot as boolean, _
+                                        byref backclr as COLORREF, _
+                                        byref foreclr as COLORREF )
 
 declare sub      OptionsRows_Init()
 declare sub      OptionsWork_Load()

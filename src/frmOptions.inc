@@ -196,23 +196,31 @@ End function
 
 
 ' ========================================================================================
+' SUPPRESS the nav list's tooltips.
+'
+' PsListTree's DEFAULT tooltip text is the row's own Text, so with no callback set every page
+' name popped a tip repeating the label already on screen an inch to the left. The nav titles
+' are sized to fit -- FRMOPTIONS_NAV_W is chosen so the longest one clears its row -- so the
+' tip never had anything to add even when it was not simply in the way.
+'
+' "" is the control's documented "no tooltip" answer (see PsListTree_SetTooltipCallback); there
+' is no off switch on PsTipHost, and the mode constants only choose WHICH backend draws it.
+' ========================================================================================
+private function frmOptions_NavTooltipCallback( byval hList as HWND, _
+                                                byval row as integer, _
+                                                byval col as integer ) as DWSTRING
+    return ""
+end function
+
+
+' ========================================================================================
 ' Paint one row of the navigation list.
 ' ========================================================================================
 private sub frmOptions_NavPaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
 
     dim as COLORREF backclr, foreclr
-    if p->isSelected then
-        backclr = theme.panel.texthot.backcolor
-        foreclr = theme.panel.texthot.forecolor
-    elseif p->isHot then
-        backclr = theme.panel.texthot.backcolor
-        foreclr = theme.panel.texthot.forecolor
-    else
-        ' Idle rows read in the nav panel's own shade -- the separator between nav and page now.
-        backclr = theme.toptabs.texthot.backcolor
-        foreclr = theme.panel.text.forecolor
-    end if
+    OptionsList_RowColors( p->isSelected, p->isHot, backclr, foreclr )
 
     p->b->SetForeColor( foreclr )
     p->b->SetBackColor( backclr )
@@ -1212,6 +1220,7 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     HWND_FRMOPTIONS_NAV = PsListTree_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_NAVLIST )
     PsListTree_SetPaintCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavPaintCallback )
     PsListTree_SetSelChangeCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavSelChangeCallback )
+    PsListTree_SetTooltipCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavTooltipCallback )
     PsListTree_SetFont( HWND_FRMOPTIONS_NAV, OptionsFont_Base() )
     ' Row height is in UNSCALED units (PsListTree scales what it is handed) and has to grow
     ' with the base font, or a 12pt list clips its own rows.

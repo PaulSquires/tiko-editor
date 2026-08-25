@@ -68,7 +68,7 @@ end sub
 ' Row metrics, in UNSCALED units -- everything below runs them through AfxScaleX/Y.
 ' There is no divider: rows are separated by whitespace alone (see modOptionsRows.bi). The
 ' padding constants (OPTROW_PADLEFT etc.) are shared and live in modOptionsRows.bi.
-#define OPTROW_HEIGHT        40
+#define OPTROW_HEIGHT        26
 #define OPTROW_NUMWIDTH      96      ' PsNumericUpDown has no natural width; give it one
 
 
@@ -474,6 +474,81 @@ end sub
 
 ' ========================================================================================
 ' Shared theme builders. See modOptionsRows.bi.
+
+' ========================================================================================
+' This dialog's toggle is SMALLER than PsToggle's shipped 40x20 default: the twelve-row Code
+' Editor page has to fit a fixed 342px viewport, and a row can never be shorter than its
+' control. 34x16 takes the ideal height from 28 to 24. One helper rather than a SetTrackSize
+' call at each creation site, so the table rows and frmOptionsCompiler's two toggles cannot
+' drift apart. The setter takes RAW pixels -- the family rule -- so the scaling is done here.
+' ========================================================================================
+sub OptionsToggle_ApplyTrackSize( byval hToggle as HWND )
+    if hToggle = 0 then exit sub
+    PsToggle_SetTrackSize( hToggle, AfxScaleX(OPTROW_TOGGLE_TRACKW), AfxScaleY(OPTROW_TOGGLE_TRACKH) )
+end sub
+
+
+' ========================================================================================
+' The hover shade: the idle row, a fixed step DARKER.
+'
+' A FIXED DELTA RATHER THAN A PERCENTAGE, because a percentage does not survive both ends of
+' the theme range -- 28% off default_dark's (40,44,52) is a 12-step move nobody sees, while 28%
+' off default_light's white is a 71-step slab. 18 flat reads the same on both: (22,26,34) in
+' the dark themes, (237,237,237) in the light ones.
+'
+' THE LIGHTEN ARM IS NOT SYMMETRY FOR ITS OWN SAKE. contrast_dark's role.background is literally
+' (0,0,0): darkening it clamps to itself and the hover disappears entirely. Below the delta
+' there is no room left to darken into, so the step goes the other way.
+' ========================================================================================
+#define OPTROW_HOTSHADE_DELTA 18
+
+function OptionsList_HotShade( byval clr as COLORREF ) as COLORREF
+    dim as long nR = clng(clr) and &hFF
+    dim as long nG = (clng(clr) shr 8) and &hFF
+    dim as long nB = (clng(clr) shr 16) and &hFF
+    dim as long d  = OPTROW_HOTSHADE_DELTA
+
+    ' BT.601 luma, the same weighting PsColorPicker_ContrastColor uses -- one notion of
+    ' "how dark is this" in the dialog rather than two that can disagree.
+    dim as long nLuma = ((299 * nR) + (587 * nG) + (114 * nB)) \ 1000
+    if nLuma < d then
+        return BGR( nR + d, nG + d, nB + d )
+    end if
+
+    if nR < d then nR = 0 else nR -= d
+    if nG < d then nG = 0 else nG -= d
+    if nB < d then nB = 0 else nB -= d
+    return BGR( nR, nG, nB )
+end function
+
+
+' ========================================================================================
+' The row colours every PsListTree in this dialog paints with. See modOptionsRows.bi for why
+' selection moved off panel.texthot and onto the accent.
+'
+' SELECTED WINS OVER HOT. A hovered selected row keeps the accent: the selection is the fact
+' worth showing, and repainting it in the hot shade made the highlight vanish under the cursor.
+' ========================================================================================
+sub OptionsList_RowColors( byval bSelected as boolean, _
+                           byval bHot as boolean, _
+                           byref backclr as COLORREF, _
+                           byref foreclr as COLORREF )
+    if bSelected then
+        backclr = theme.ui.accent
+        foreclr = PsColorPicker_ContrastColor( backclr )
+    elseif bHot then
+        ' DERIVED FROM THE IDLE ROW, not themed. panel.texthot.backcolor is a HOT role, which
+        ' means LIGHTER than the surface it sits on -- in default_dark (44,49,58) over an idle
+        ' (40,44,52), five steps the wrong way. A hover here should read as a recess.
+        backclr = OptionsList_HotShade( theme.toptabs.texthot.backcolor )
+        foreclr = theme.panel.texthot.forecolor
+    else
+        ' Idle rows read in the nav panel's own shade -- the separator between nav and page.
+        backclr = theme.toptabs.texthot.backcolor
+        foreclr = theme.panel.text.forecolor
+    end if
+end sub
+
 ' ========================================================================================
 sub OptionsTheme_FillToggle( byval tc as PSTOGGLE_COLORS ptr )
     if tc = 0 then exit sub
@@ -665,6 +740,7 @@ function OptionsRows_BuildPage( byval nPage as long, byval hPanel as HWND ) as l
 
             case OPT_TOGGLE
                 dim as HWND hCtrl = PsToggle_Create( hPanel, IDC_FRMOPTIONS_FIRSTROW + i )
+                OptionsToggle_ApplyTrackSize( hCtrl )
                 PsToggle_SetCheckChangedCallback( hCtrl, @OptionsRows_ToggleChanged )
                 ' Seed from the staging copy. SetChecked is silent, so this cannot
                 ' re-enter the change handler.
@@ -775,8 +851,8 @@ function OptionsRows_LayoutPage( byval nPage as long, byval hPanel as HWND, byva
 
         ' The row is at least as tall as the taller of the control and the title text.
         dim as long thisRowH = rowHeight
-        if ctrlH + AfxScaleY(8) > thisRowH then thisRowH = ctrlH + AfxScaleY(8)
-        if textH + AfxScaleY(8) > thisRowH then thisRowH = textH + AfxScaleY(8)
+        if ctrlH + AfxScaleY(OPTROW_CTRLPAD) > thisRowH then thisRowH = ctrlH + AfxScaleY(OPTROW_CTRLPAD)
+        if textH + AfxScaleY(OPTROW_CTRLPAD) > thisRowH then thisRowH = textH + AfxScaleY(OPTROW_CTRLPAD)
 
         with gOptRows(i)
             .rc.left   = 0
@@ -1221,8 +1297,8 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
 
     for c as long = 0 to 2
         dim as long lineH   = OptionsRows_TextHeight( hPanel, ghFont(nCandIdx(c)) )
-        dim as long textRow = lineH + AfxScaleY(8)
-        dim as long ctrlRow = nCtrlMax + AfxScaleY(8)
+        dim as long textRow = lineH + AfxScaleY(OPTROW_CTRLPAD)
+        dim as long ctrlRow = nCtrlMax + AfxScaleY(OPTROW_CTRLPAD)
         dim as long rowUsed = AfxScaleY(OPTROW_HEIGHT)
         if ctrlRow > rowUsed then rowUsed = ctrlRow
         if textRow > rowUsed then rowUsed = textRow

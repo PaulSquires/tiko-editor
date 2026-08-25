@@ -76,14 +76,26 @@
 ' blank except after a refused keystroke, so that space was doing nothing at all. It went to
 ' the picker, which is a 90-item list and the one thing here that gains from height. Found by
 ' looking; no assertion had anything to say about it, because everything already fit.
-#Define FRMASSIGNKEY_CLIENT_W                   480
-#Define FRMASSIGNKEY_CLIENT_H                   470
+' THE VERTICAL SUM, unscaled -- both walks (PositionWindows and OnPaint) follow it, so it is
+' written down here rather than rediscovered twice:
+'
+'     20 margin + 30 name + 46 capture + 18 + 30 toggles + 6 + 132 list + 12 + 30 message
+'         = 324, then 16 gap + 32 buttons + 20 margin = 392
+'
+' TOP AND BOTTOM MARGIN ARE BOTH FRMASSIGNKEY_MARGIN, by construction.
+'
+' KEYLIST_H WAS 210 AND CLIENT_H 470. At 328 the list ran to 360 -- 32px past the client
+' bottom and straight through the bottom-anchored buttons, because the height came down and
+' the list did not. The list is the only elastic element here (everything else is one row of
+' something), so it is what absorbs a height change. 132 is five and a half rows at KEYROW_H.
+#Define FRMASSIGNKEY_CLIENT_W                   440
+#Define FRMASSIGNKEY_CLIENT_H                   392
 #Define FRMASSIGNKEY_MARGIN                      20
 #Define FRMASSIGNKEY_BTN_W                       92
 #Define FRMASSIGNKEY_BTN_H                       32
 #Define FRMASSIGNKEY_ROW_H                       30
 #Define FRMASSIGNKEY_CAPTURE_H                   46
-#Define FRMASSIGNKEY_KEYLIST_H                  210
+#Define FRMASSIGNKEY_KEYLIST_H                  132
 #Define FRMASSIGNKEY_KEYROW_H                    24
 #Define FRMASSIGNKEY_TOGW                        46     ' the toggle's own cell
 #Define FRMASSIGNKEY_CAPW                        42     ' its drawn caption

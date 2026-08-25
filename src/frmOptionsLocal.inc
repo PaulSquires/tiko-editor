@@ -54,15 +54,20 @@
 ' Fixed metrics, UNSCALED.
 #define LOCAL_ROWHEIGHT      22        ' PsListTree's own default; named so the budget can use it
 #define LOCAL_HEADERHEIGHT   24        ' PsListTree's own default, likewise
-#define LOCAL_SECTIONGAP     14
+#define LOCAL_SECTIONGAP     10
 #define LOCAL_HINTGAP         6        ' phrase list -> the "click a cell" hint under it
 #define LOCAL_BTNWIDTH       84
 #define LOCAL_BTNHEIGHT      30
 #define LOCAL_BTNGAP          8        ' between stacked buttons AND between list and stack
-#define LOCAL_LANGNAMEW     180        ' languages list, column 0 ("Language")
-#define LOCAL_ACTIVEW       90        ' languages list, column 2 (the "Active" marker)
-#define LOCAL_PHRASEIDXW     60        ' phrase list, column 0 ("Index")
-#define LOCAL_PHRASEENGW    230        ' phrase list, column 1 ("English Phrase")
+' THE COLUMN WIDTHS HAVE TO ADD UP -- PsListTree does not shrink them to fit, so a total wider
+' than the list is simply not reachable. The dialog is 720 wide now (was 900), which leaves the
+' page 524 and, after OPTROW_PADLEFT/RIGHT, a content band of 476 unscaled:
+'     languages list = 476 - LOCAL_BTNWIDTH - LOCAL_BTNGAP = 384   vs 150 + 120 + 80 = 350
+'     phrase list    = 476                                        vs  50 + 200 + 200 = 450
+#define LOCAL_LANGNAMEW     150        ' languages list, column 0 ("Language")
+#define LOCAL_ACTIVEW       80        ' languages list, column 2 (the "Active" marker)
+#define LOCAL_PHRASEIDXW     50        ' phrase list, column 0 ("Index")
+#define LOCAL_PHRASEENGW    200        ' phrase list, column 1 ("English Phrase")
 ' Left inset of a cell's TEXT inside its column, UNSCALED. Used by both painters AND handed to
 ' PsListTree_SetEditTextInset, so the in-place editor's text lands on the same x as the text it
 ' replaces. Two literals that had to agree was how they came to disagree.
@@ -730,13 +735,7 @@ end function
 private sub frmOptionsLocal_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
     dim as COLORREF backclr, foreclr
-    if p->isSelected orelse p->isHot then
-        backclr = theme.panel.texthot.backcolor
-        foreclr = theme.panel.texthot.forecolor
-    else
-        backclr = theme.panel.text.backcolor
-        foreclr = theme.panel.text.forecolor
-    end if
+    OptionsList_RowColors( p->isSelected, p->isHot, backclr, foreclr )
     p->b->SetBackColor( backclr )
     p->b->SetForeColor( foreclr )
     p->b->PaintRect( @p->rc )
@@ -789,7 +788,7 @@ sub frmOptionsLocal_Build( byval hPage as HWND )
     ' ---- languages list ---------------------------------------------------------------
     ghLocalLanguages = PsListTree_Create( hPage, IDC_FRMOPTIONSLOCAL_LSTLANGUAGES )
     PsListTree_AddColumn( ghLocalLanguages, "Language", AfxScaleX(LOCAL_LANGNAMEW) )
-    PsListTree_AddColumn( ghLocalLanguages, "File", AfxScaleX(160) )
+    PsListTree_AddColumn( ghLocalLanguages, "File", AfxScaleX(120) )
     ' Status column, DELIBERATELY UNCAPTIONED: it holds a marker, not a field, and a heading
     ' over one word of text on one row reads as a column that is mostly empty rather than as
     ' a note about the row it is on. File stays the fill column, so this sits at the right

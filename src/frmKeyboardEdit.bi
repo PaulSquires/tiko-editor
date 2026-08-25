@@ -52,14 +52,30 @@
 ' and the footer sits at CLIENT_H - MARGIN - BTN_H. At 470 that put the buttons at 418,
 ' eight pixels INSIDE the message -- the refusal text ran straight through the Reset
 ' button. Found by looking at a refused keystroke, not by any assertion. 500 leaves 22px.
-#Define FRMKBEDIT_CLIENT_W                   480
-#Define FRMKBEDIT_CLIENT_H                   500
+' THE VERTICAL SUM, unscaled. Both walks -- PositionWindows and OnPaint -- follow it, and it
+' is written down here because there is no fit self-test on this dialog to catch a drift:
+'
+'     20 margin + 30 desc + 30 category + 10 + 30 default-row + 14
+'         + 46 capture + 18 + 30 toggles + 6          = 234, the list's top
+'     + 120 list + 12 + 30 message                     = 396
+'     + 16 gap + 32 buttons + 20 margin                = 464
+'
+' TOP AND BOTTOM MARGIN ARE BOTH FRMKBEDIT_MARGIN, by construction.
+'
+' THE CLOSING TERM IS 340 + KEYLIST_H. The list is the only elastic element -- everything else
+' is one row of something -- so it is what a height change has to come out of. When CLIENT_H
+' went to 352 and KEYLIST_H stayed at 150, the list ran to 384: 32px past the client bottom,
+' straight over the bottom-anchored buttons, which vanished. The message line UNDER the list
+' costs a further 42 (its row plus the gap above it) whether or not it currently has anything
+' to say, which is what keeps this dialog tall.
+#Define FRMKBEDIT_CLIENT_W                   440
+#Define FRMKBEDIT_CLIENT_H                   464
 #Define FRMKBEDIT_MARGIN                      20
 #Define FRMKBEDIT_BTN_W                       92
 #Define FRMKBEDIT_BTN_H                       32
 #Define FRMKBEDIT_ROW_H                       30
 #Define FRMKBEDIT_CAPTURE_H                   46
-#Define FRMKBEDIT_KEYLIST_H                  150
+#Define FRMKBEDIT_KEYLIST_H                  120
 #Define FRMKBEDIT_KEYROW_H                    24
 
 dim shared HWND_FRMKEYBOARDEDIT_CAPTURE as HWND

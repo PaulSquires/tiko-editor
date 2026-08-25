@@ -52,12 +52,27 @@
 #define FMTPAGE_COUNT         5
 
 ' ---- layout, in UNSCALED units (AfxScaleX/Y applied at point of use only) ----------------
-#define FRMFORMATOPTIONS_CLIENT_W    900
-#define FRMFORMATOPTIONS_CLIENT_H    620
-#define FRMFORMATOPTIONS_NAV_W       176
+#define FRMFORMATOPTIONS_CLIENT_W    912
+#define FRMFORMATOPTIONS_CLIENT_H    476
+' THE MIDDLE COLUMN IS THE REMAINDER. PositionWindows pins the nav strip left at NAV_W and
+' the preview right at PREVIEW_W + MARGIN; the rule rows take whatever is left. So NAV_W and
+' PREVIEW_W are the fixed pair and CLIENT_W is the only lever on the middle pane -- widening
+' the dialog without touching the other two hands every new pixel to the rules.
+'
+'     middle = CLIENT_W - NAV_W - PREVIEW_W - MARGIN = 912 - 144 - 288 - 16 = 464
+'
+' CLIENT_W MUST STAY A MULTIPLE OF 4: AfxScaleX returns a fractional SINGLE, and 125% and
+' 175% are both quarters, so an odd width lands on a half-pixel and fails the shell's own
+' width assertion.
+#define FRMFORMATOPTIONS_NAV_W       144
 #define FRMFORMATOPTIONS_PREVIEW_W   288
-#define FRMFORMATOPTIONS_TITLE_H      52
-#define FRMFORMATOPTIONS_FOOTER_H     58
+' The preview's own INTERNAL padding -- text inset from the box border, not space around the
+' box. PsTextBox carries a left/right pair (EM_SETMARGINS) and nothing for the top, so these
+' two are applied by different mechanisms; see the note in frmFormatOptions_PositionWindows.
+#define FRMFORMATOPTIONS_PREVIEW_PADLEFT   8
+#define FRMFORMATOPTIONS_PREVIEW_PADTOP    6
+#define FRMFORMATOPTIONS_TITLE_H      44
+#define FRMFORMATOPTIONS_FOOTER_H     48
 #define FRMFORMATOPTIONS_MARGIN       16
 ' Tall enough for the tallest control a row can hold, which is decided by the CONTROL's
 ' ideal height (font-dependent), not by this number. Kept comfortably above it rather than
@@ -71,8 +86,8 @@
 ' its own row held a 44px toggle -- so "Reindent code from block structure" ellipsized against
 ' whitespace a combo two rows down was not using. The label span is now measured from the
 ' control that is actually on THAT row.
-#define FRMFORMATOPTIONS_COMBO_W     120
-#define FRMFORMATOPTIONS_NUMERIC_W    90
+#define FRMFORMATOPTIONS_COMBO_W     124
+#define FRMFORMATOPTIONS_NUMERIC_W    76
 #define FRMFORMATOPTIONS_TOGGLE_W     44
 #define FRMFORMATOPTIONS_BUTTON_W     92
 #define FRMFORMATOPTIONS_BUTTON_H     30

@@ -28,10 +28,10 @@
 ' gap below. The toolchain list loses about one visible row, which is the cheapest thing on this
 ' page to give up -- the two long single-line fields under it cannot shrink and the toggles are
 ' already at row height.
-#define COMP_LISTHEIGHT     120
-#define COMP_FIELDPAD        11      ' vertical padding inside a single-line PsTextBox
+#define COMP_LISTHEIGHT     90
+#define COMP_FIELDPAD        7      ' vertical padding inside a single-line PsTextBox
 #define COMP_LABELGAP         4      ' between a field label and the field under it
-#define COMP_SECTIONGAP      11      ' between one field block and the next
+#define COMP_SECTIONGAP      8      ' between one field block and the next
 
 
 ' One drawn label on the page. The caption is composed at layout time (some carry a
@@ -94,14 +94,7 @@ end sub
 private sub frmOptionsCompiler_ToolchainPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
     dim as COLORREF backclr, foreclr
-    if p->isSelected orelse p->isHot then
-        backclr = theme.panel.texthot.backcolor
-        foreclr = theme.panel.texthot.forecolor
-    else
-        ' Idle rows match the nav panel's lighter shade (see frmOptions nav list).
-        backclr = theme.toptabs.texthot.backcolor
-        foreclr = theme.panel.text.forecolor
-    end if
+    OptionsList_RowColors( p->isSelected, p->isHot, backclr, foreclr )
     p->b->SetBackColor( backclr )
     p->b->SetForeColor( foreclr )
     p->b->PaintRect( @p->rc )
@@ -215,10 +208,12 @@ sub frmOptionsCompiler_Build( byval hPage as HWND )
 
     ' ---- toggles ---------------------------------------------------------------------
     ghCompRunCmd = PsToggle_Create( hPage, IDC_FRMOPTIONSCOMPILER_CHKRUNVIACOMMANDWINDOW )
+    OptionsToggle_ApplyTrackSize( ghCompRunCmd )
     PsToggle_SetChecked( ghCompRunCmd, iif( gOptWork.RunViaCommandWindow <> 0, true, false ) )   ' silent
     PsToggle_SetCheckChangedCallback( ghCompRunCmd, @frmOptionsCompiler_ToggleChanged )
 
     ghCompBeep = PsToggle_Create( hPage, IDC_FRMOPTIONSCOMPILER_CHKDISABLECOMPILEBEEP )
+    OptionsToggle_ApplyTrackSize( ghCompBeep )
     PsToggle_SetChecked( ghCompBeep, iif( gOptWork.DisableCompileBeep <> 0, true, false ) )
     PsToggle_SetCheckChangedCallback( ghCompBeep, @frmOptionsCompiler_ToggleChanged )
 
@@ -333,8 +328,8 @@ function frmOptionsCompiler_Layout( byval hPage as HWND, byval cxPanel as long )
             dim as long tw, th
             PsToggle_GetIdealSize( (hToggle), tw, th )
             dim as long rowH = AfxScaleY(OPTROW_HEIGHT)
-            if th + AfxScaleY(8) > rowH then rowH = th + AfxScaleY(8)
-            if textH + AfxScaleY(8) > rowH then rowH = textH + AfxScaleY(8)
+            if th + AfxScaleY(OPTROW_CTRLPAD) > rowH then rowH = th + AfxScaleY(OPTROW_CTRLPAD)
+            if textH + AfxScaleY(OPTROW_CTRLPAD) > rowH then rowH = textH + AfxScaleY(OPTROW_CTRLPAD)
             dim as long tx = contentR - tw
             dim as long ty = y + (rowH - th) \ 2
             SetWindowPos( (hToggle), 0, tx, ty, tw, th, SWP_NOZORDER or SWP_NOACTIVATE )

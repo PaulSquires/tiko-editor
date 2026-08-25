@@ -45,6 +45,21 @@ dim shared gEditSyncing  as boolean      ' TRUE while a view is being refreshed 
 dim shared gEditWhy      as DWSTRING     ' why the last capture was refused ("" = it was not)
 dim shared gEditCaptureFocus as boolean  ' does the capture field hold the focus?
 
+' THE MODIFIERS, HELD SEPARATELY FROM THE KEY.
+'
+' They used to live only inside gEditKeys, which meant they could not exist without one: a
+' shortcut string is Ctrl+Alt+F5, and with no key there is nothing to hang them on. So
+' ModelFromViews cleared gEditKeys whenever the picker sat on None, RefreshViews re-derived
+' the toggles from that empty string, and every manual press of Ctrl / Alt / Shift snapped
+' straight back off. The toggles were only usable once a key had already been chosen.
+'
+' Keeping them here lets the modifiers be set FIRST and the key picked afterwards, in either
+' order. gEditKeys is still composed only when a key is actually selected -- a lone Ctrl+ is
+' not a binding and is never stored.
+dim shared gEditCtrl  as boolean
+dim shared gEditAlt   as boolean
+dim shared gEditShift as boolean
+
 dim shared as HWND ghEditTogCtrl, ghEditTogAlt, ghEditTogShift, ghEditTogDisable
 dim shared as HWND ghEditKeyList, ghEditOK, ghEditCancel, ghEditReset
 
@@ -220,28 +235,33 @@ private sub frmKeyboardEdit_RefreshViews()
     gEditSyncing = true
 
     ' Split the model back into its parts.
-    dim as boolean bCtrl, bAlt, bShift
     dim as DWSTRING wszKey
 
+    ' A NON-EMPTY MODEL OWNS THE MODIFIERS; AN EMPTY ONE LEAVES THEM ALONE. Capturing a
+    ' keystroke, or seeding from the row, rewrites all four facts at once, so those parse out
+    ' of gEditKeys. But an empty string means only no key, never no modifiers -- re-deriving
+    ' from it would undo the press the user just made, which is what made the toggles unusable
+    ' without a key. Reset clears gEditCtrl/Alt/Shift itself, explicitly.
     dim as long nCount = AfxStrParseCount( gEditKeys, "+" )
     if len(gEditKeys) then
+        gEditCtrl = false : gEditAlt = false : gEditShift = false
         for i as long = 1 to nCount
             dim as DWSTRING wszPart = AfxStrParse( gEditKeys, i, "+" )
             if i = nCount then
                 wszKey = wszPart
             else
                 select case ucase(wszPart)
-                    case "CTRL":  bCtrl  = true
-                    case "ALT":   bAlt   = true
-                    case "SHIFT": bShift = true
+                    case "CTRL":  gEditCtrl  = true
+                    case "ALT":   gEditAlt   = true
+                    case "SHIFT": gEditShift = true
                 end select
             end if
         next
     end if
 
-    PsToggle_SetChecked( ghEditTogCtrl,  bCtrl )
-    PsToggle_SetChecked( ghEditTogAlt,   bAlt )
-    PsToggle_SetChecked( ghEditTogShift, bShift )
+    PsToggle_SetChecked( ghEditTogCtrl,  gEditCtrl )
+    PsToggle_SetChecked( ghEditTogAlt,   gEditAlt )
+    PsToggle_SetChecked( ghEditTogShift, gEditShift )
     PsToggle_SetChecked( ghEditTogDisable, gEditDisabled )
 
     ' Row 0 of the picker is "None"; the vocabulary follows in gKeyNames() order.
@@ -276,19 +296,25 @@ private sub frmKeyboardEdit_ModelFromViews()
 
     if gEditSyncing then exit sub
 
+    ' HARVEST THE TOGGLES FIRST, unconditionally. They are the user's statement about the
+    ' modifiers and it stands whether or not a key has been picked yet.
+    gEditCtrl  = PsToggle_GetChecked( ghEditTogCtrl )
+    gEditAlt   = PsToggle_GetChecked( ghEditTogAlt )
+    gEditShift = PsToggle_GetChecked( ghEditTogShift )
+
     dim as long nSel = PsListTree_GetCurSel( ghEditKeyList )
     if nSel <= 0 then
-        ' "None" -- clears the whole binding, modifiers included. A shortcut with modifiers
-        ' and no key is not a shortcut.
+        ' None -- there is no binding without a key, so the STRING is empty. The modifiers
+        ' above survive it; they are simply not part of a shortcut yet.
         gEditKeys = ""
     else
         KeyBindings_EnsureKeyNames()
         dim as long idx = nSel - 1
         if (idx >= lbound(gKeyNames)) andalso (idx <= ubound(gKeyNames)) then
             dim as DWSTRING wszKeys
-            if PsToggle_GetChecked( ghEditTogCtrl )  then wszKeys = wszKeys & "Ctrl+"
-            if PsToggle_GetChecked( ghEditTogAlt )   then wszKeys = wszKeys & "Alt+"
-            if PsToggle_GetChecked( ghEditTogShift ) then wszKeys = wszKeys & "Shift+"
+            if gEditCtrl  then wszKeys = wszKeys & "Ctrl+"
+            if gEditAlt   then wszKeys = wszKeys & "Alt+"
+            if gEditShift then wszKeys = wszKeys & "Shift+"
             gEditKeys = wszKeys & gKeyNames(idx).wszName
         end if
     end if
@@ -544,12 +570,14 @@ end function
 ' The key picker's row painter. Plain single-column rows in the dialog's own palette.
 private sub frmKeyboardEdit_KeyListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
+    ' Idle rows take the DIALOG background, so the list reads as a region of the page rather
+    ' than a well cut into it -- matching PsListTree_SetBackColor in frmKeyboardEdit_ApplyTheme.
     dim as boolean bActive = (p->isSelected orelse p->isHot)
-    p->b->SetBackColor( iif( bActive, theme.panel.texthot.backcolor, theme.ui.field.backcolor ) )
+    p->b->SetBackColor( iif( bActive, theme.panel.texthot.backcolor, theme.panel.text.backcolor ) )
     p->b->PaintRect( @p->rc )
     dim as RECT rcText = p->rc
     rcText.left += AfxScaleX(8)
-    p->b->SetForeColor( iif( bActive, theme.panel.texthot.forecolor, theme.ui.field.forecolor ) )
+    p->b->SetForeColor( iif( bActive, theme.panel.texthot.forecolor, theme.panel.text.forecolor ) )
     p->b->SetFont( ghFont(GUIFONT_11) )
     p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_END_ELLIPSIS )
 end sub
@@ -567,6 +595,8 @@ private sub frmKeyboardEdit_ButtonClick( byval hButton as HWND, byval id as long
             gEditKeys     = ""
             gEditDisabled = false
             gEditWhy      = ""
+            ' Explicit: RefreshViews no longer derives these from an empty gEditKeys.
+            gEditCtrl = false : gEditAlt = false : gEditShift = false
             frmKeyboardEdit_RefreshViews()
             SetFocus( HWND_FRMKEYBOARDEDIT_CAPTURE )
 
@@ -788,7 +818,10 @@ private sub frmKeyboardEdit_ApplyTheme( byval hwnd as HWND )
     PsToggle_SetColors( ghEditTogShift,   @tc )
     PsToggle_SetColors( ghEditTogDisable, @tc )
 
-    PsListTree_SetBackColor( ghEditKeyList, theme.ui.field.backcolor )
+    ' THE LIST READS AS PART OF THE DIALOG, not as a sunken field: the same background as
+    ' the surface it sits on (frmKeyboardEdit_OnPaint fills with panel.text.backcolor). Its
+    ' 1px ui.divider border is what still marks where it starts and ends.
+    PsListTree_SetBackColor( ghEditKeyList, theme.panel.text.backcolor )
     PsListTree_SetScrollBarColors( ghEditKeyList, theme.panel.scrollbar.backcolor, _
                                    theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
     PsListTree_SetBorderColor( ghEditKeyList, theme.ui.divider )
@@ -982,6 +1015,9 @@ function frmKeyboardEdit_Show( byval hWndParent as HWND ) as LRESULT
     ' Seed the model from the row the caller staged.
     gEditKeys     = gKeysEdit.wszUserKeys
     gEditDisabled = gKeysEdit.bDefaultDisabled
+    ' Shared, so a previous visit would otherwise leak its modifiers into this one. A
+    ' non-empty wszUserKeys overwrites them in RefreshViews; an empty one must not inherit.
+    gEditCtrl = false : gEditAlt = false : gEditShift = false
     gEditWhy      = ""
     gEditSyncing  = false
     gEditCaptureFocus = false

@@ -88,6 +88,11 @@ dim shared ghFmtOK       as HWND
 dim shared ghFmtCancel   as HWND
 dim shared ghFmtReset    as HWND
 dim shared ghFmtFontFixed as HFONT
+' THE EDITOR'S OWN FACE, for the code samples -- gConfig.EditorFontname, the same field
+' clsDocument hands Scintilla, so the sample reads as code in the face the file will actually
+' be edited in. AT A PINNED 10pt, NOT the user's EditorFontsize: see the note at the
+' CreateFont call. Kept SEPARATE from ghFmtFontFixed, which the prose page still uses.
+dim shared ghFmtFontEditor as HFONT
 dim shared gFmtCombos(any) as HWND            ' every combo, for the pump's FilterMessage
 dim shared gFmtComboCount as long
 
@@ -236,12 +241,19 @@ end function
 private sub frmFormatOptions_RefreshPreview()
     if ghFmtPreview = 0 then exit sub
 
+    ' THE FONT IS PER PAGE. Every other page shows a CODE SAMPLE and gets the editor's own
+    ' face, so what the pane shows matches what the file will look like. This first page is
+    ' PROSE -- two paragraphs about when formatting runs -- and code font on running text
+    ' reads badly, so it keeps the UI-side fixed face it has always had.
     if gFmtPage = FMTPAGE_TRIGGERS then
+        PsTextBox_SetFont( ghFmtPreview, ghFmtFontFixed )
         PsTextBox_SetText( ghFmtPreview, L(494,"These settings decide WHEN formatting runs, not what it does. The rules on the other pages are what get applied.") & _
                            chr(13) & chr(10) & chr(13) & chr(10) & _
                            L(495,"Formatting while you type only ever touches the line you just finished, never a line below the caret, and never removes a line. Both actions are a separate undo step, so Ctrl+Z rejects the formatting and keeps what you typed or pasted.") )
         exit sub
     end if
+
+    PsTextBox_SetFont( ghFmtPreview, ghFmtFontEditor )
 
     dim as string sSample = frmFormatOptions_SampleFor( gFmtPage )
     dim as long bChanged = false
@@ -439,6 +451,27 @@ private sub frmFormatOptions_PositionWindows( byval hwnd as HWND )
         ' 20px ABOVE the box, which at this y put it partly over the title band's hairline.
         SetWindowPos( ghFmtPreview, 0, xPrev, yBody + nMargin + nCapH, _
                       nPrevW, hBody - (nMargin * 2) - nCapH, SWP_NOZORDER )
+
+        ' THE TOP INSET, and why it is done by hand. PsTextBox's only padding setter is
+        ' EM_SETMARGINS, which is left/right and has no vertical half -- the left pad is set
+        ' through it at creation. For the top there is only the RichEdit's FORMATTING RECT.
+        '
+        ' Reaching past the control is safe HERE specifically: PsTextBox drives that rect
+        ' itself only to vertically centre a SINGLE-LINE box, and this preview is multiline,
+        ' so nothing of the control's will overwrite what we set.
+        '
+        ' IT MUST BE RE-APPLIED ON EVERY LAYOUT PASS. An untouched formatting rect tracks the
+        ' client area automatically; the first EM_SETRECT ends that, so a later resize would
+        ' otherwise leave a stale rect that clips the text.
+        dim as HWND hPrevRE = PsTextBox_GetRichEditHandle( ghFmtPreview )
+        if hPrevRE then
+            dim as RECT rcFmt
+            GetClientRect( hPrevRE, @rcFmt )
+            if (rcFmt.right > rcFmt.left) andalso (rcFmt.bottom > rcFmt.top) then
+                rcFmt.top += AfxScaleY(FRMFORMATOPTIONS_PREVIEW_PADTOP)
+                SendMessage( hPrevRE, EM_SETRECT, 0, cast(LPARAM, @rcFmt) )
+            end if
+        end if
     end if
 
     ' -- rule rows, in the middle column ---------------------------------------------------
@@ -722,6 +755,18 @@ function frmFormatOptions_Show( byval hWndParent as HWND ) as LRESULT
     ' thing this pane exists to show. There is no cached ghFont entry at this size.
     ghFmtFontFixed = pWindow->CreateFont( GUIFIXEDFONT, 10, FW_NORMAL )
 
+    ' The editor's FACE, at a pinned 10pt -- gConfig.EditorFontsize is deliberately NOT read.
+    ' The preview is a thumbnail of the rule's effect, not a replica of the editor: at a 16pt
+    ' editor setting the sample would wrap inside a 288px pane and stop showing the very thing
+    ' it exists to show, which is indentation. The FACE is what makes it read as code; the
+    ' size only has to be legible, and 10 matches the fixed font this pane used before.
+    dim as DWSTRING wszEdFace = gConfig.EditorFontname
+    if len( wszEdFace ) = 0 then wszEdFace = GUIFIXEDFONT
+    ghFmtFontEditor = pWindow->CreateFont( wszEdFace, 10, FW_NORMAL )
+    ' A face the machine does not have still returns a usable HFONT (GDI substitutes), so
+    ' there is nothing to test for here -- only a null handle, which means the call failed.
+    if ghFmtFontEditor = 0 then ghFmtFontEditor = ghFmtFontFixed
+
     ' ---- CREATION ORDER IS THE TAB ORDER -------------------------------------------------
     ' These sit on an ordinary CWindow, not a dialog template, so there is no ordinal to
     ' set: GetNextDlgTabItem walks the child Z-ORDER and Z-order is creation order. Built
@@ -794,6 +839,10 @@ function frmFormatOptions_Show( byval hWndParent as HWND ) as LRESULT
     ghFmtPreview = PsTextBox_Create( HWND_FRMFORMATOPTIONS, IDC_FRMFORMATOPTIONS_PREVIEW, true )
     PsTextBox_SetFont( ghFmtPreview, ghFmtFontFixed )
     PsTextBox_SetReadOnly( ghFmtPreview, true )
+    ' The left inset. RIGHT IS LEFT AT ZERO deliberately: the samples are left-aligned code
+    ' and a right margin would only pull the wrap point in. The top half of the padding is
+    ' the formatting rect, in PositionWindows.
+    PsTextBox_SetMargins( ghFmtPreview, AfxScaleX(FRMFORMATOPTIONS_PREVIEW_PADLEFT), 0 )
 
     ' -- buttons --------------------------------------------------------------------------------
     ghFmtReset = PsButton_Create( HWND_FRMFORMATOPTIONS, IDC_FRMFORMATOPTIONS_CMDRESET )
@@ -888,6 +937,13 @@ function frmFormatOptions_Show( byval hWndParent as HWND ) as LRESULT
             DispatchMessage( @uMsg )
         end if
     wend
+
+    ' Guarded against the aliasing above: if CreateFont failed, ghFmtFontEditor IS
+    ' ghFmtFontFixed and deleting both would be a double free.
+    if (ghFmtFontEditor <> 0) andalso (ghFmtFontEditor <> ghFmtFontFixed) then
+        DeleteObject( ghFmtFontEditor )
+    end if
+    ghFmtFontEditor = 0
 
     if ghFmtFontFixed then
         DeleteObject( ghFmtFontFixed )
