@@ -54,16 +54,16 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     ' PROCESS ALL FILENAMES (every user file the symbol database knows,
     ' including include files never opened in the editor). Scan filenames are
     ' UPPERCASED - normalize to on-disk casing for display and open-on-select.
-    dim arrFiles(any) as DWSTRING
-    dim as long nFiles = gSymDb.EnumUserFiles( arrFiles() )
-    for i as long = 0 to nFiles - 1
-        arrFiles(i) = FilenameOriginalCase( arrFiles(i) )
+    dim arrFiles as FILENAMELIST
+    gSymDb.EnumUserFiles( arrFiles )
+    for i as long = 0 to arrFiles.Count - 1
+        arrFiles[i] = FilenameOriginalCase( arrFiles[i] )
     next
 
-    if nFiles > 0 then QuickSortFilenames( arrFiles(), 0, nFiles - 1 )
-    for nFile as long = 0 to nFiles - 1
+    SortFilenamesByLeaf( arrFiles )
+    for nFile as long = 0 to arrFiles.Count - 1
         dim positions(any) as uinteger
-        wszFilename = AfxStrPathName( "NAMEX", arrFiles(nFile) )
+        wszFilename = AfxStrPathName( "NAMEX", arrFiles[nFile] )
         nScore = fuzzy_match_positions( wszNeedle, wszFilename, positions() )
         if (nScore > min_score) orelse (bLoadAll = true) then
             if gSymbols.Count >= MAX_SYMBOL_SEARCH then exit for
@@ -71,7 +71,7 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
             hit.nScore      = nScore
             hit.id          = SearchSymbol.file_symbol
             hit.wszCaption  = wszFilename
-            hit.wszFilename = arrFiles(nFile)
+            hit.wszFilename = arrFiles[nFile]
             hit.nLineNumber = -1
             hit.isEnum      = false
             hit.clrMask     = WSTRING( len(wszFilename), 48 )    ' "0"
@@ -86,20 +86,20 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
 
     ' PROCESS ALL TYPES and FUNCTION NAMES
     if gSymbols.Count < MAX_SYMBOL_SEARCH then
-        dim rs() as SYMBOLREF
-        dim as long nSyms = gSymDb.EnumAllProcsTypes( rs(), true )
-        for s as long = 0 to nSyms - 1
-            dim as wstring ptr pFile = gSymDb.SymFile( rs(s) )
+        dim rs as SYMBOLREFLIST
+        gSymDb.EnumAllProcsTypes( rs, true )
+        for s as long = 0 to rs.Count - 1
+            dim as wstring ptr pFile = gSymDb.SymFile( rs[s] )
             if pFile = 0 then continue for
 
             dim positions(any) as uinteger
-            dim as DWSTRING wszName = gSymDb.QualifiedName( rs(s) )
+            dim as DWSTRING wszName = gSymDb.QualifiedName( rs[s] )
             nScore = fuzzy_match_positions( wszNeedle, wszName, positions() )
 
             if (nScore > min_score) then
                 if gSymbols.Count >= MAX_SYMBOL_SEARCH then exit for
 
-                dim as long nKind = gSymDb.SymKind( rs(s) )
+                dim as long nKind = gSymDb.SymKind( rs[s] )
                 dim as SEARCHSYMBOL_TYPE hit
                 hit.nScore = nScore
                 if (nKind = FBCP_KIND_SUB) orelse (nKind = FBCP_KIND_FUNCTION) then
@@ -109,8 +109,8 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
                 end if
                 hit.wszCaption  = wszName
                 hit.wszFilename = FilenameOriginalCase( *pFile )
-                dim as long nLineNum = gSymDb.SymBodyLine( rs(s) )
-                if nLineNum = 0 then nLineNum = gSymDb.SymLine( rs(s) )
+                dim as long nLineNum = gSymDb.SymBodyLine( rs[s] )
+                if nLineNum = 0 then nLineNum = gSymDb.SymLine( rs[s] )
                 hit.nLineNumber = iif( nLineNum > 0, nLineNum - 1, 0 )
                 hit.isEnum      = ( nKind = FBCP_KIND_ENUM )
                 hit.clrMask     = WSTRING( len(wszName), 48 )  ' "0"

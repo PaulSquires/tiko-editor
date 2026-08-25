@@ -786,18 +786,18 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
             ' EnumPrefix returns user-file symbols ahead of the toolchain's, so the
             ' AUTOCOMPLETE_MAX_ITEMS cap below truncates toolchain types rather than the
             ' project's own. Do not re-order here - that policy lives in one place.
-            dim rs() as SYMBOLREF
-            dim as long n = gSymDb.EnumPrefix( pDoc->wszMatchWord, SYMMASK_TYPE, rs() )
+            dim rs as SYMBOLREFLIST
+            gSymDb.EnumPrefix( pDoc->wszMatchWord, SYMMASK_TYPE, rs )
             dim as DWSTRING wszIncPath
             if bTypesNotPreloaded then wszIncPath = gSymDb.ToolchainIncludeRoot()
-            for i as long = 0 to n - 1
+            for i as long = 0 to rs.Count - 1
                 if gAutoCBuild.Count >= AUTOCOMPLETE_MAX_ITEMS then exit for
                 if len(wszIncPath) then
-                    dim as wstring ptr pFile = gSymDb.SymFile( rs(i) )
+                    dim as wstring ptr pFile = gSymDb.SymFile( rs[i] )
                     if pFile = 0 then continue for
                     if ucase(left(*pFile, len(wszIncPath))) = wszIncPath then continue for
                 end if
-                AddAutocompleteSymbol( gAutoCBuild, rs(i) )
+                AddAutocompleteSymbol( gAutoCBuild, rs[i] )
             next
 
 
@@ -841,16 +841,16 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
 
             if refType.IsValid = false then return false
 
-            dim rs() as SYMBOLREF
-            dim as long n = gSymDb.EnumMembers( refType, rs() )
-            if environ("TIKO_MEMBER_TRACE") = "1" then print "  members=" & str(n)
-            for i as long = 0 to n - 1
+            dim rs as SYMBOLREFLIST
+            gSymDb.EnumMembers( refType, rs )
+            if environ("TIKO_MEMBER_TRACE") = "1" then print "  members=" & str(rs.Count)
+            for i as long = 0 to rs.Count - 1
                 if gAutoCBuild.Count >= AUTOCOMPLETE_MAX_ITEMS then exit for
-                st = *gSymDb.SymName( rs(i) )
+                st = *gSymDb.SymName( rs[i] )
                 dim as boolean bMatch = true
                 if nLenMatchWord then bMatch = ( left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord )
                 if bMatch then
-                    AddAutocompleteSymbol( gAutoCBuild, rs(i) )
+                    AddAutocompleteSymbol( gAutoCBuild, rs[i] )
                 end if
             next
 
@@ -869,15 +869,15 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
 
             dim as DWSTRING wszDocFile = ScanMgr_GetRootName( pDoc )
             dim as long nCaretLine = pDoc->GetCurrentLineNumber + 1
-            dim rs() as SYMBOLREF
+            dim rs as SYMBOLREFLIST
 
             ' Locals and params of the enclosing proc first
-            dim as long n = gSymDb.EnumLocalsInScope( wszDocFile, nCaretLine, rs() )
-            for i as long = 0 to n - 1
-                st = *gSymDb.SymName( rs(i) )
+            gSymDb.EnumLocalsInScope( wszDocFile, nCaretLine, rs )
+            for i as long = 0 to rs.Count - 1
+                st = *gSymDb.SymName( rs[i] )
                 dim as boolean bMatch = ( left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord )
                 if bMatch then
-                    AddAutocompleteSymbol( gAutoCBuild, rs(i) )
+                    AddAutocompleteSymbol( gAutoCBuild, rs[i] )
                 end if
             next
 
@@ -890,11 +890,11 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
             ' Locals of OTHER procs also carry kind VAR/CONST - skip them via the
             ' LOCAL flag (this scope's locals were already added above).
             dim as long wordMask = SYMMASK_PROC or SYMMASK_TYPE or SYMMASK_VAR or (1 shl FBCP_KIND_ENUMVAL)
-            n = gSymDb.EnumPrefix( pDoc->wszMatchWord, wordMask, rs() )
-            for i as long = 0 to n - 1
+            gSymDb.EnumPrefix( pDoc->wszMatchWord, wordMask, rs )
+            for i as long = 0 to rs.Count - 1
                 if gAutoCBuild.Count >= AUTOCOMPLETE_MAX_ITEMS then exit for
-                if (gSymDb.SymFlags( rs(i) ) and FBCP_SYMBFLAG_LOCAL) <> 0 then continue for
-                AddAutocompleteSymbol( gAutoCBuild, rs(i) )
+                if (gSymDb.SymFlags( rs[i] ) and FBCP_SYMBFLAG_LOCAL) <> 0 then continue for
+                AddAutocompleteSymbol( gAutoCBuild, rs[i] )
             next
 
     end select

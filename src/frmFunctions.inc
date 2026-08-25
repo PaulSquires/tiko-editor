@@ -59,8 +59,8 @@ function frmFunctions_SelectItemData( byval pDoc as clsDocument ptr ) as boolean
     dim as integer nCurSel = PsListTree_GetCurSel(hCtrl)
     if nCurSel >= 0 then
         dim as integer nFileIdx = PsListTree_GetItemData( hCtrl, nCurSel )
-        if (nFileIdx >= 0) andalso (nFileIdx <= ubound(gFuncPanelFiles)) then
-            if SymDb_FileNameEq( gFuncPanelFiles(nFileIdx), wszFile ) then return true
+        if (nFileIdx >= 0) andalso (nFileIdx < gFuncPanelFiles.Count) then
+            if SymDb_FileNameEq( gFuncPanelFiles[nFileIdx], wszFile ) then return true
         end if
     end if
 
@@ -68,8 +68,8 @@ function frmFunctions_SelectItemData( byval pDoc as clsDocument ptr ) as boolean
     for i as long = 0 to nCount - 1
         dim as integer nFileIdx = PsListTree_GetItemData( hCtrl, i )
         dim as boolean bMatch = false
-        if (nFileIdx >= 0) andalso (nFileIdx <= ubound(gFuncPanelFiles)) then
-            bMatch = SymDb_FileNameEq( gFuncPanelFiles(nFileIdx), wszFile )
+        if (nFileIdx >= 0) andalso (nFileIdx < gFuncPanelFiles.Count) then
+            bMatch = SymDb_FileNameEq( gFuncPanelFiles[nFileIdx], wszFile )
         end if
         if bMatch then
             ' If the pDoc is currently within the visible range of the Listbox then
@@ -184,11 +184,11 @@ function frmFunctions_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) a
             if PsListTree_IsHeader( hCtl, m->idx ) = false then
                 dim as integer nFileIdx = PsListTree_GetItemData( hCtl, m->idx )
                 dim as integer nLineNum = PsListTree_GetItemDataExtra( hCtl, m->idx )
-                if (nFileIdx >= 0) andalso (nFileIdx <= ubound(gFuncPanelFiles)) then
+                if (nFileIdx >= 0) andalso (nFileIdx < gFuncPanelFiles.Count) then
                     ' if the file is already open in the Top tabs then switch to that
                     ' tab; otherwise open it from disk (never-opened include files
                     ' have no clsDocument yet).
-                    dim as clsDocument ptr pDoc = gApp.GetDocumentPtrByFilename( gFuncPanelFiles(nFileIdx) )
+                    dim as clsDocument ptr pDoc = gApp.GetDocumentPtrByFilename( gFuncPanelFiles[nFileIdx] )
                     dim as boolean bSwitched = false
                     if pDoc then
                         if gTTabCtl.SetTabIndexByDocumentPtr( pDoc ) <> -1 then
@@ -200,7 +200,7 @@ function frmFunctions_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) a
                         end if
                     end if
                     if bSwitched = false then
-                        OpenSelectedDocument( gFuncPanelFiles(nFileIdx), "", nLineNum )
+                        OpenSelectedDocument( gFuncPanelFiles[nFileIdx], "", nLineNum )
                     end if
                     frmMain_SetFocusToCurrentCodeWindow()
                 end if
@@ -281,24 +281,28 @@ end function
 ' ========================================================================================
 ' Simple QuickSort of Filename array (sorted by display name, i.e. name + extension)
 ' ========================================================================================
-function QuickSortFilenames( arrFiles() as DWSTRING, lo as long, hi as long ) as long
-    dim as long i, j
-    dim as DWSTRING pivot
-
-    if lo < hi then
-        i = lo : j = hi
-        pivot = ucase( AfxStrPathName( "NAMEX", arrFiles( (lo+hi)/2 ) ) )
-        do
-            while ucase(AfxStrPathName("NAMEX", arrFiles(i))) < pivot and i < hi: i += 1: wend
-            while ucase(AfxStrPathName("NAMEX", arrFiles(j))) > Pivot and j > lo: j -= 1: wend
-            if i <= j then swap arrFiles(i), arrFiles(j): i += 1: j -= 1
-        loop while i <= j
-        if lo < j then QuickSortFilenames( arrFiles(), lo, j )
-        if hi > i then QuickSortFilenames( arrFiles(), i, hi )
-    end if
-
-    function = 0
-end function
+' Sort a file list by its LEAF name, case-insensitively -- the name the panel displays,
+' not the full path, so "a\zeta.bas" sorts after "b\alpha.bas".
+'
+' Shared with the symbol picker, which sorted the same list the same way through its own
+' copy of the same quicksort. AfxStrPathName is called twice per comparison, exactly as the
+' old inner loops called it; FB.SortBy takes a 'less' predicate and has no key-selector
+' form, so there is nowhere to hoist it to without materialising a parallel key array.
+'
+' Sort and not StableSort: EnumUserFiles dedupes, so no two entries can tie.
+sub SortFilenamesByLeaf( byref arrFiles as FILENAMELIST )
+    ' wszNamex is a LOCAL that the comparator CAPTURES, and it has to be. A bare string
+    ' literal at a byref parameter inside a lambda body does not resolve when the body is
+    ' replayed into a generic instantiation -- AfxStrPathName( "NAMEX", a ) earns
+    ' "error 42: Variable not declared, NAMEX", reported against the SortBy instantiation
+    ' rather than against the literal. Naming it first sidesteps that entirely.
+    dim as DWSTRING wszNamex = "NAMEX"
+    FB.SortBy( arrFiles, _
+        function[ byref wszNamex ]( byref a as DWSTRING, byref b as DWSTRING ) as boolean
+            return ucase( AfxStrPathName( wszNamex, a ) ) < _
+                   ucase( AfxStrPathName( wszNamex, b ) )
+        end function )
+end sub
 
 ' ========================================================================================
 ' Simple QuickSort of Function Name array
@@ -333,29 +337,24 @@ end sub
 ' Scan filenames are UPPERCASED - normalize to on-disk casing for display and
 ' click-through before testing, since the Explorer's documents carry real casing.
 ' ========================================================================================
-function frmFunctions_BuildFileList() as long
-    erase gFuncPanelFiles
-    dim as long nFiles = gSymDb.EnumUserFiles( gFuncPanelFiles() )
+sub frmFunctions_BuildFileList()
+    dim scratch as FILENAMELIST
+    gSymDb.EnumUserFiles( scratch )
 
-    dim as long nKeep = 0
-    for i as long = 0 to nFiles - 1
-        dim as DWSTRING wszFile = FilenameOriginalCase( gFuncPanelFiles(i) )
+    ' Filter into the panel's list rather than compacting in place and truncating. The old
+    ' form overwrote entry nKeep with entry i and then dropped the tail with a redim
+    ' preserve, purely because it had nowhere else to put the survivors.
+    gFuncPanelFiles.Clear( )
+    gFuncPanelFiles.Reserve( scratch.Count )
+    for i as long = 0 to scratch.Count - 1
+        dim as DWSTRING wszFile = FilenameOriginalCase( scratch[i] )
         if frmExplorer_IsFileDisplayed( wszFile ) = false then continue for
-        gFuncPanelFiles(nKeep) = wszFile
-        nKeep += 1
+        gFuncPanelFiles.Push( wszFile )
     next
 
-    ' Drop the tail rather than leaving stale entries above the kept run: the array's
-    ' ubound is used as a range check when a clicked row is resolved back to a file.
-    if nKeep > 0 then
-        redim preserve gFuncPanelFiles(nKeep - 1)
-        QuickSortFilenames( gFuncPanelFiles(), 0, nKeep - 1 )
-    else
-        erase gFuncPanelFiles
-    end if
+    SortFilenamesByLeaf( gFuncPanelFiles )
 
-    function = nKeep
-end function
+end sub
 
 
 ' ========================================================================================
@@ -386,27 +385,27 @@ function LoadFilesAndFunctions() as long
     dim as DWSTRING wszText
 
     ' The files shown in the Explorer, in display order.
-    dim as long nFiles = frmFunctions_BuildFileList()
+    frmFunctions_BuildFileList()
 
     ' Get the functions (and sort them) for each file
     dim arrFuncs as FB.Array( of FUNCTION_NODE_TYPE )
-    dim rs() as SYMBOLREF
+    dim rs as SYMBOLREFLIST
 
-    for i as long = 0 to nFiles - 1
-        wszText = AfxStrPathName( "NAMEX", gFuncPanelFiles(i) )
+    for i as long = 0 to gFuncPanelFiles.Count - 1
+        wszText = AfxStrPathName( "NAMEX", gFuncPanelFiles[i] )
         PsListTree_AddHeader( hCtrl, wszText, i, 0 )
 
-        dim as long nProcs = gSymDb.EnumProcsInFile( gFuncPanelFiles(i), rs() )
-        for p as long = 0 to nProcs - 1
+        gSymDb.EnumProcsInFile( gFuncPanelFiles[i], rs )
+        for p as long = 0 to rs.Count - 1
             ' implementations only - declare-only prototypes never appeared in
             ' the old (parsed-bodies) panel either
-            dim as long nBodyLine = gSymDb.SymBodyLine( rs(p) )
+            dim as long nBodyLine = gSymDb.SymBodyLine( rs[p] )
             if nBodyLine <= 0 then continue for
             ' Push, not a one-element redim preserve: the old form reallocated and
             ' copied the whole array per function, O(n^2) over a project.
             dim as FUNCTION_NODE_TYPE fn
-            fn.wszFunctionName = gSymDb.QualifiedName( rs(p) )
-            fn.wszPrototype    = gSymDb.BuildCalltip( rs(p) )
+            fn.wszFunctionName = gSymDb.QualifiedName( rs[p] )
+            fn.wszPrototype    = gSymDb.BuildCalltip( rs[p] )
             fn.nLineNumber     = nBodyLine - 1           ' Scintilla lines are 0-based
             fn.nFileIdx        = i
             arrFuncs.Push( fn )
@@ -461,21 +460,21 @@ function LoadFunctionsOnly() as long
 
     ' The files shown in the Explorer, then every implementation in each of them,
     ' flattened into one name-sorted list.
-    dim as long nFiles = frmFunctions_BuildFileList()
+    frmFunctions_BuildFileList()
 
     dim arrFuncs as FB.Array( of FUNCTION_NODE_TYPE )
-    dim rs() as SYMBOLREF
+    dim rs as SYMBOLREFLIST
 
-    for i as long = 0 to nFiles - 1
-        dim as long nProcs = gSymDb.EnumProcsInFile( gFuncPanelFiles(i), rs() )
-        for p as long = 0 to nProcs - 1
-            dim as long nBodyLine = gSymDb.SymBodyLine( rs(p) )
+    for i as long = 0 to gFuncPanelFiles.Count - 1
+        gSymDb.EnumProcsInFile( gFuncPanelFiles[i], rs )
+        for p as long = 0 to rs.Count - 1
+            dim as long nBodyLine = gSymDb.SymBodyLine( rs[p] )
             if nBodyLine <= 0 then continue for
             ' Push, not a one-element redim preserve: the old form reallocated and
             ' copied the whole array per function, O(n^2) over a project.
             dim as FUNCTION_NODE_TYPE fn
-            fn.wszFunctionName = gSymDb.QualifiedName( rs(p) )
-            fn.wszPrototype    = gSymDb.BuildCalltip( rs(p) )
+            fn.wszFunctionName = gSymDb.QualifiedName( rs[p] )
+            fn.wszPrototype    = gSymDb.BuildCalltip( rs[p] )
             fn.nLineNumber     = nBodyLine - 1           ' Scintilla lines are 0-based
             fn.nFileIdx        = i
             arrFuncs.Push( fn )
