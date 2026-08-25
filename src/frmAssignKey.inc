@@ -175,12 +175,12 @@ function frmAssignKey_ClashText( byval wszKey as DWSTRING, _
 
     ' --- 2. the user tools ---
     if nDomain = ASSIGNKEY_DOMAIN_TOOLS then
-        for i as long = lbound(gToolsWork) to ubound(gToolsWork)
+        for i as long = 0 to gToolsWork.Count - 1
             if i = nSkipIndex then continue for
-            if AssignKey_PartsMatch( gToolsWork(i).wszKey, gToolsWork(i).IsCtrl, _
-                                     gToolsWork(i).IsAlt, gToolsWork(i).IsShift, _
+            if AssignKey_PartsMatch( gToolsWork[i].wszKey, gToolsWork[i].IsCtrl, _
+                                     gToolsWork[i].IsAlt, gToolsWork[i].IsShift, _
                                      wszUpper, bCtrl, bAlt, bShift ) then
-                return AssignKey_OwnerText( gToolsWork(i).wszDescription )
+                return AssignKey_OwnerText( gToolsWork[i].wszDescription )
             end if
         next
     else
@@ -195,12 +195,12 @@ function frmAssignKey_ClashText( byval wszKey as DWSTRING, _
 
     ' --- 3. the build configurations ---
     if nDomain = ASSIGNKEY_DOMAIN_BUILDS then
-        for i as long = lbound(gBuildsWork) to ubound(gBuildsWork)
+        for i as long = 0 to gBuildsWork.Count - 1
             if i = nSkipIndex then continue for
-            if AssignKey_PartsMatch( gBuildsWork(i).wszKey, gBuildsWork(i).IsCtrl, _
-                                     gBuildsWork(i).IsAlt, gBuildsWork(i).IsShift, _
+            if AssignKey_PartsMatch( gBuildsWork[i].wszKey, gBuildsWork[i].IsCtrl, _
+                                     gBuildsWork[i].IsAlt, gBuildsWork[i].IsShift, _
                                      wszUpper, bCtrl, bAlt, bShift ) then
-                return AssignKey_OwnerText( gBuildsWork(i).wszDescription )
+                return AssignKey_OwnerText( gBuildsWork[i].wszDescription )
             end if
         next
     else

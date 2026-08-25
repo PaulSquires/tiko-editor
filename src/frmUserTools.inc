@@ -289,18 +289,18 @@ end Function
 ' The shortcut a staging row DISPLAYS. Composed, never stored -- see the .bi.
 ' ========================================================================================
 function frmUserTools_ShortcutText( byval idx as long ) as DWSTRING
-    if (idx < lbound(gToolsWork)) orelse (idx > ubound(gToolsWork)) then return ""
+    if (idx < 0) orelse (idx >= gToolsWork.Count) then return ""
 
-    dim as DWSTRING wszKey = trim(gToolsWork(idx).wszKey)
+    dim as DWSTRING wszKey = trim(gToolsWork[idx].wszKey)
     ' "None" is the pick-list AFFORDANCE the previous dialog persisted, not a key. Treated as
     ' no shortcut here, and NOT as a dead one -- see frmUserTools_ShortcutIsDead.
     if len(wszKey) = 0 then return ""
     if ucase(wszKey) = "NONE" then return ""
 
     dim as DWSTRING wsz
-    if gToolsWork(idx).IsCtrl  then wsz = wsz & "Ctrl+"
-    if gToolsWork(idx).IsShift then wsz = wsz & "Shift+"
-    if gToolsWork(idx).IsAlt   then wsz = wsz & "Alt+"
+    if gToolsWork[idx].IsCtrl  then wsz = wsz & "Ctrl+"
+    if gToolsWork[idx].IsShift then wsz = wsz & "Shift+"
+    if gToolsWork[idx].IsAlt   then wsz = wsz & "Alt+"
     return wsz & wszKey
 end function
 
@@ -321,8 +321,8 @@ end function
 ' "" and "None" are NOT dead -- they mean no shortcut, which is a legal state.
 ' ========================================================================================
 function frmUserTools_ShortcutIsDead( byval idx as long ) as boolean
-    if (idx < lbound(gToolsWork)) orelse (idx > ubound(gToolsWork)) then return false
-    dim as DWSTRING wszKey = trim(gToolsWork(idx).wszKey)
+    if (idx < 0) orelse (idx >= gToolsWork.Count) then return false
+    dim as DWSTRING wszKey = trim(gToolsWork[idx].wszKey)
     if len(wszKey) = 0 then return false
     if ucase(wszKey) = "NONE" then return false
     return iif( KeyBindings_PickListKeyToValue( wszKey ) = 0, true, false )
@@ -342,14 +342,14 @@ end function
 ' PAINTER needs it and that comes first in this file.
 ' ========================================================================================
 private function frmUserTools_ShortcutClash( byval idx as long ) as DWSTRING
-    if (idx < lbound(gToolsWork)) orelse (idx > ubound(gToolsWork)) then return ""
-    dim as DWSTRING wszKey = trim(gToolsWork(idx).wszKey)
+    if (idx < 0) orelse (idx >= gToolsWork.Count) then return ""
+    dim as DWSTRING wszKey = trim(gToolsWork[idx].wszKey)
     if len(wszKey) = 0 then return ""
     if ucase(wszKey) = "NONE" then return ""
     return frmAssignKey_ClashText( wszKey, _
-                                     iif( gToolsWork(idx).IsCtrl  <> 0, true, false ), _
-                                     iif( gToolsWork(idx).IsAlt   <> 0, true, false ), _
-                                     iif( gToolsWork(idx).IsShift <> 0, true, false ), _
+                                     iif( gToolsWork[idx].IsCtrl  <> 0, true, false ), _
+                                     iif( gToolsWork[idx].IsAlt   <> 0, true, false ), _
+                                     iif( gToolsWork[idx].IsShift <> 0, true, false ), _
                                      ASSIGNKEY_DOMAIN_TOOLS, idx )
 end function
 
@@ -358,11 +358,11 @@ end function
 ' Seed the staging copy from the live tools. Called once, before any control exists.
 ' ========================================================================================
 private sub frmUserTools_LoadWork()
-    erase gToolsWork
+    gToolsWork.Clear( )
     if ubound(gConfig.Tools) < 0 then exit sub
-    redim gToolsWork( ubound(gConfig.Tools) )
+    ' gConfig.Tools stays a plain array -- it is config storage, not a working list.
     for i as long = lbound(gConfig.Tools) to ubound(gConfig.Tools)
-        gToolsWork(i) = gConfig.Tools(i)
+        gToolsWork.Push( gConfig.Tools(i) )
     next
 end sub
 
@@ -379,12 +379,12 @@ end sub
 ' it opens.
 ' ========================================================================================
 private sub frmUserTools_CommitWork()
-    if ubound(gToolsWork) < 0 then
+    if gToolsWork.Count - 1 < 0 then
         erase gConfig.Tools
     else
-        redim gConfig.Tools( ubound(gToolsWork) )
-        for i as long = lbound(gToolsWork) to ubound(gToolsWork)
-            gConfig.Tools(i) = gToolsWork(i)
+        redim gConfig.Tools( gToolsWork.Count - 1 )
+        for i as long = 0 to gToolsWork.Count - 1
+            gConfig.Tools(i) = gToolsWork[i]
         next
     end if
     frmUserTools_CreateAcceleratorTable()
@@ -403,7 +403,7 @@ private function frmUserTools_SelectedWorkIndex() as long
     dim as long nRow = PsListTree_GetCurSel( HWND_FRMUSERTOOLS_LIST )
     if nRow < 0 then return -1
     dim as long idx = PsListTree_GetItemData( HWND_FRMUSERTOOLS_LIST, nRow )
-    if (idx < lbound(gToolsWork)) orelse (idx > ubound(gToolsWork)) then return -1
+    if (idx < 0) orelse (idx >= gToolsWork.Count) then return -1
     return idx
 end function
 
@@ -427,7 +427,7 @@ private sub frmUserTools_ListPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
     p->b->SetFont( ghFont(GUIFONT_11) )
 
     dim as long idx = PsListTree_GetItemData( HWND_FRMUSERTOOLS_LIST, p->itemID )
-    if (idx < lbound(gToolsWork)) orelse (idx > ubound(gToolsWork)) then exit sub
+    if (idx < 0) orelse (idx >= gToolsWork.Count) then exit sub
     if p->columnCount <= 0 then exit sub
 
     ' A shortcut is BAD in either of two ways, and the cell is marked the same for both --
@@ -520,7 +520,7 @@ private sub frmUserTools_LoadDetail( byval nIdx as long )
     ' Through PsButton_SetEnabled rather than EnableWindow: the control repaints itself in its
     ' disabled palette from there, and a bare EnableWindow would leave it looking live.
     dim as boolean bHave = (nIdx >= 0)
-    dim as boolean bCanDown = bHave andalso (nIdx < ubound(gToolsWork))
+    dim as boolean bCanDown = bHave andalso (nIdx < gToolsWork.Count - 1)
     PsButton_SetEnabled( ghUTDelete, bHave )
     PsButton_SetEnabled( ghUTUp,     iif( nIdx > 0, true, false ) )
     PsButton_SetEnabled( ghUTDown,   bCanDown )
@@ -534,22 +534,22 @@ private sub frmUserTools_LoadDetail( byval nIdx as long )
     ' the guard is raised anyway -- what it prevents is a loop, not a cosmetic glitch.
     gUTLoading = true
 
-    PsTextBox_SetText( ghUTName,    gToolsWork(nIdx).wszDescription )
-    PsTextBox_SetText( ghUTCommand, gToolsWork(nIdx).wszCommand )
-    PsTextBox_SetText( ghUTParams,  gToolsWork(nIdx).wszParameters )
-    PsTextBox_SetText( ghUTFolder,  gToolsWork(nIdx).wszWorkingFolder )
+    PsTextBox_SetText( ghUTName,    gToolsWork[nIdx].wszDescription )
+    PsTextBox_SetText( ghUTCommand, gToolsWork[nIdx].wszCommand )
+    PsTextBox_SetText( ghUTParams,  gToolsWork[nIdx].wszParameters )
+    PsTextBox_SetText( ghUTFolder,  gToolsWork[nIdx].wszWorkingFolder )
 
-    dim as long nAction = gToolsWork(nIdx).Action
+    dim as long nAction = gToolsWork[nIdx].Action
     if (nAction < 0) orelse (nAction > USERTOOL_ACTION_EDITORSTARTUP) then nAction = USERTOOL_ACTION_SELECTED
     PsComboBox_SetCurSel( ghUTAction, nAction )
 
     ' THE TYPE TRAP, in the reading direction: these fields are `as long` in clsConfig on
     ' purpose (the config writer emits them verbatim, so a real boolean would put
     ' "true"/"false" into settings.ini), and PsToggle deals in booleans.
-    PsToggle_SetChecked( ghUTTogPrompt,    iif( gToolsWork(nIdx).IsPromptRun   <> 0, true, false ) )
-    PsToggle_SetChecked( ghUTTogMinimized, iif( gToolsWork(nIdx).IsMinimized   <> 0, true, false ) )
-    PsToggle_SetChecked( ghUTTogWait,      iif( gToolsWork(nIdx).IsWaitFinish  <> 0, true, false ) )
-    PsToggle_SetChecked( ghUTTogMenu,      iif( gToolsWork(nIdx).IsDisplayMenu <> 0, true, false ) )
+    PsToggle_SetChecked( ghUTTogPrompt,    iif( gToolsWork[nIdx].IsPromptRun   <> 0, true, false ) )
+    PsToggle_SetChecked( ghUTTogMinimized, iif( gToolsWork[nIdx].IsMinimized   <> 0, true, false ) )
+    PsToggle_SetChecked( ghUTTogWait,      iif( gToolsWork[nIdx].IsWaitFinish  <> 0, true, false ) )
+    PsToggle_SetChecked( ghUTTogMenu,      iif( gToolsWork[nIdx].IsDisplayMenu <> 0, true, false ) )
 
     gUTLoading = false
 
@@ -575,9 +575,9 @@ private sub frmUserTools_BuildList( byval nSelectIdx as long = -2 )
     PsListTree_Clear( HWND_FRMUSERTOOLS_LIST )
 
     dim as long nSelectRow = -1
-    for i as long = lbound(gToolsWork) to ubound(gToolsWork)
+    for i as long = 0 to gToolsWork.Count - 1
         ' Column 0 is the row's own text; the itemData carries the staging index.
-        dim as long nRow = PsListTree_AddString( HWND_FRMUSERTOOLS_LIST, gToolsWork(i).wszDescription, i )
+        dim as long nRow = PsListTree_AddString( HWND_FRMUSERTOOLS_LIST, gToolsWork[i].wszDescription, i )
         if nRow < 0 then continue for
         PsListTree_SetCellText( HWND_FRMUSERTOOLS_LIST, nRow, 1, frmUserTools_ShortcutText(i) )
         if i = nKeepIdx then nSelectRow = nRow
@@ -601,7 +601,7 @@ private sub frmUserTools_RefreshRow( byval idx as long )
     if (HWND_FRMUSERTOOLS_LIST = 0) orelse (idx < 0) then exit sub
     for nRow as long = 0 to PsListTree_GetCount( HWND_FRMUSERTOOLS_LIST ) - 1
         if PsListTree_GetItemData( HWND_FRMUSERTOOLS_LIST, nRow ) <> idx then continue for
-        PsListTree_SetText( HWND_FRMUSERTOOLS_LIST, nRow, gToolsWork(idx).wszDescription )
+        PsListTree_SetText( HWND_FRMUSERTOOLS_LIST, nRow, gToolsWork[idx].wszDescription )
         PsListTree_SetCellText( HWND_FRMUSERTOOLS_LIST, nRow, 1, frmUserTools_ShortcutText(idx) )
         exit for
     next
@@ -640,33 +640,28 @@ private sub frmUserTools_DoAdd()
 
     dim as long nAt = frmUserTools_SelectedWorkIndex()
 
-    if ubound(gToolsWork) < 0 then
-        redim gToolsWork(0)
-        nAt = 0
-    else
-        redim preserve gToolsWork( ubound(gToolsWork) + 1 )
-        if nAt < 0 then nAt = ubound(gToolsWork)
-        ' Insert ABOVE the highlighted row, which is what the previous dialog's "Insert" did.
-        for i as long = ubound(gToolsWork) to nAt + 1 step -1
-            gToolsWork(i) = gToolsWork(i-1)
-        next
-    end if
+    ' Insert ABOVE the highlighted row, which is what the previous dialog's "Insert" did.
+    ' Array.Insert does the shift, and it copies the value before it reserves -- so it is
+    ' safe even when the value being inserted lives inside the array already.
+    if nAt < 0 then nAt = gToolsWork.Count
+    dim as TYPE_TOOLS blank
+    gToolsWork.Insert( nAt, blank )
 
     ' A fresh record. Assigned field by field rather than through a blank TYPE_TOOLS so that
     ' a field added to that type later shows up here as a compile-time reminder.
-    gToolsWork(nAt).wszDescription   = ""
-    gToolsWork(nAt).wszCommand       = ""
-    gToolsWork(nAt).wszParameters    = ""
-    gToolsWork(nAt).wszKey           = ""
-    gToolsWork(nAt).wszWorkingFolder = ""
-    gToolsWork(nAt).IsCtrl           = 0
-    gToolsWork(nAt).IsAlt            = 0
-    gToolsWork(nAt).IsShift          = 0
-    gToolsWork(nAt).IsPromptRun      = 0
-    gToolsWork(nAt).IsMinimized      = 0
-    gToolsWork(nAt).IsWaitFinish     = 0
-    gToolsWork(nAt).IsDisplayMenu    = 0
-    gToolsWork(nAt).Action           = USERTOOL_ACTION_SELECTED
+    gToolsWork[nAt].wszDescription   = ""
+    gToolsWork[nAt].wszCommand       = ""
+    gToolsWork[nAt].wszParameters    = ""
+    gToolsWork[nAt].wszKey           = ""
+    gToolsWork[nAt].wszWorkingFolder = ""
+    gToolsWork[nAt].IsCtrl           = 0
+    gToolsWork[nAt].IsAlt            = 0
+    gToolsWork[nAt].IsShift          = 0
+    gToolsWork[nAt].IsPromptRun      = 0
+    gToolsWork[nAt].IsMinimized      = 0
+    gToolsWork[nAt].IsWaitFinish     = 0
+    gToolsWork[nAt].IsDisplayMenu    = 0
+    gToolsWork[nAt].Action           = USERTOOL_ACTION_SELECTED
 
     frmUserTools_BuildList( nAt )
     ' Straight into the name field: an unnamed tool is the one thing the user must fix, and
@@ -684,15 +679,12 @@ private sub frmUserTools_DoDelete()
     if frmUserTools_ThemedMsgBox( L(233,"Are you sure you want to delete this user tool?"), _
                                   L(214,"Confirm"), TMB_ICON_WARNING, TMB_OKCANCEL ) <> IDOK then exit sub
 
-    if ubound(gToolsWork) = 0 then
-        erase gToolsWork
+    if gToolsWork.Count - 1 = 0 then
+        gToolsWork.Clear( )
         idx = -1
     else
-        for i as long = idx to ubound(gToolsWork) - 1
-            gToolsWork(i) = gToolsWork(i+1)
-        next
-        redim preserve gToolsWork( ubound(gToolsWork) - 1 )
-        if idx > ubound(gToolsWork) then idx = ubound(gToolsWork)
+        gToolsWork.Remove( idx )
+        if idx >= gToolsWork.Count then idx = gToolsWork.Count - 1
     end if
 
     frmUserTools_BuildList( idx )
@@ -709,9 +701,9 @@ private sub frmUserTools_DoMove( byval nDelta as long )
     if idx < 0 then exit sub
 
     dim as long nTo = idx + nDelta
-    if (nTo < lbound(gToolsWork)) orelse (nTo > ubound(gToolsWork)) then exit sub
+    if (nTo < 0) orelse (nTo >= gToolsWork.Count) then exit sub
 
-    swap gToolsWork(idx), gToolsWork(nTo)
+    swap gToolsWork[idx], gToolsWork[nTo]
     frmUserTools_BuildList( nTo )
     SetFocus( HWND_FRMUSERTOOLS_LIST )
 
@@ -726,7 +718,7 @@ private sub frmUserTools_DoAssign()
     dim as long idx = frmUserTools_SelectedWorkIndex()
     if idx < 0 then exit sub
 
-    gAssignKeyCaption = gToolsWork(idx).wszDescription
+    gAssignKeyCaption = gToolsWork[idx].wszDescription
     ' Which domain and which row, so the clash test skips the tool's own current binding --
     ' without it, opening the dialog on a tool that already has Ctrl+1 reports that it clashes
     ' with itself and disables OK before the user has touched anything. The domain also tells
@@ -734,19 +726,19 @@ private sub frmUserTools_DoAssign()
     ' builds, which is right because the two dialogs cannot be open at once.
     gAssignKeyDomain  = ASSIGNKEY_DOMAIN_TOOLS
     gAssignKeyIndex   = idx
-    gAssignKeyName    = gToolsWork(idx).wszKey
-    gAssignKeyCtrl    = iif( gToolsWork(idx).IsCtrl  <> 0, true, false )
-    gAssignKeyAlt     = iif( gToolsWork(idx).IsAlt   <> 0, true, false )
-    gAssignKeyShift   = iif( gToolsWork(idx).IsShift <> 0, true, false )
+    gAssignKeyName    = gToolsWork[idx].wszKey
+    gAssignKeyCtrl    = iif( gToolsWork[idx].IsCtrl  <> 0, true, false )
+    gAssignKeyAlt     = iif( gToolsWork[idx].IsAlt   <> 0, true, false )
+    gAssignKeyShift   = iif( gToolsWork[idx].IsShift <> 0, true, false )
 
     frmAssignKey_Show( HWND_FRMUSERTOOLS )
 
     ' Cancel leaves gAssignKey* exactly as set above, so this is a no-op on that path rather
     ' than a case that has to be detected.
-    gToolsWork(idx).wszKey  = gAssignKeyName
-    gToolsWork(idx).IsCtrl  = iif( gAssignKeyCtrl,  1, 0 )
-    gToolsWork(idx).IsAlt   = iif( gAssignKeyAlt,   1, 0 )
-    gToolsWork(idx).IsShift = iif( gAssignKeyShift, 1, 0 )
+    gToolsWork[idx].wszKey  = gAssignKeyName
+    gToolsWork[idx].IsCtrl  = iif( gAssignKeyCtrl,  1, 0 )
+    gToolsWork[idx].IsAlt   = iif( gAssignKeyAlt,   1, 0 )
+    gToolsWork[idx].IsShift = iif( gAssignKeyShift, 1, 0 )
 
     ' BOTH sentinels, not just the index: leaving the domain set would make a later
     ' ASSIGNKEY_DOMAIN_NONE caller silently read staging instead of committed records.
@@ -782,7 +774,7 @@ private sub frmUserTools_ButtonClick( byval hButton as HWND, byval id as long )
                 ' SetText is silent, so staging is written here too rather than relying on the
                 ' change callback that a user keystroke would have raised.
                 PsTextBox_SetText( ghUTCommand, *pwszName )
-                gToolsWork(gUTCurrent).wszCommand = *pwszName
+                gToolsWork[gUTCurrent].wszCommand = *pwszName
                 CoTaskMemFree( pwszName )
             end if
 
@@ -791,7 +783,7 @@ private sub frmUserTools_ButtonClick( byval hButton as HWND, byval id as long )
             dim as DWSTRING wszFolder = AfxBrowseForFolder( HWND_FRMUSERTOOLS, L(228,"Working Folder"), curdir )
             if len(wszFolder) then
                 PsTextBox_SetText( ghUTFolder, wszFolder )
-                gToolsWork(gUTCurrent).wszWorkingFolder = wszFolder
+                gToolsWork[gUTCurrent].wszWorkingFolder = wszFolder
             end if
 
         case IDC_FRMUSERTOOLS_CMDOK
@@ -810,15 +802,15 @@ private sub frmUserTools_TextChanged( byval hTextBox as HWND )
     if gUTCurrent < 0 then exit sub
 
     if hTextBox = ghUTName then
-        gToolsWork(gUTCurrent).wszDescription = PsTextBox_GetText( hTextBox )
+        gToolsWork[gUTCurrent].wszDescription = PsTextBox_GetText( hTextBox )
         ' The list's first column IS this field, so it has to follow every keystroke.
         frmUserTools_RefreshRow( gUTCurrent )
     elseif hTextBox = ghUTCommand then
-        gToolsWork(gUTCurrent).wszCommand = PsTextBox_GetText( hTextBox )
+        gToolsWork[gUTCurrent].wszCommand = PsTextBox_GetText( hTextBox )
     elseif hTextBox = ghUTParams then
-        gToolsWork(gUTCurrent).wszParameters = PsTextBox_GetText( hTextBox )
+        gToolsWork[gUTCurrent].wszParameters = PsTextBox_GetText( hTextBox )
     elseif hTextBox = ghUTFolder then
-        gToolsWork(gUTCurrent).wszWorkingFolder = PsTextBox_GetText( hTextBox )
+        gToolsWork[gUTCurrent].wszWorkingFolder = PsTextBox_GetText( hTextBox )
     end if
 end sub
 
@@ -829,13 +821,13 @@ private sub frmUserTools_ToggleChanged( byval hToggle as HWND, byval isChecked a
     if gUTCurrent < 0 then exit sub
 
     if hToggle = ghUTTogPrompt then
-        gToolsWork(gUTCurrent).IsPromptRun = iif( isChecked, 1, 0 )
+        gToolsWork[gUTCurrent].IsPromptRun = iif( isChecked, 1, 0 )
     elseif hToggle = ghUTTogMinimized then
-        gToolsWork(gUTCurrent).IsMinimized = iif( isChecked, 1, 0 )
+        gToolsWork[gUTCurrent].IsMinimized = iif( isChecked, 1, 0 )
     elseif hToggle = ghUTTogWait then
-        gToolsWork(gUTCurrent).IsWaitFinish = iif( isChecked, 1, 0 )
+        gToolsWork[gUTCurrent].IsWaitFinish = iif( isChecked, 1, 0 )
     elseif hToggle = ghUTTogMenu then
-        gToolsWork(gUTCurrent).IsDisplayMenu = iif( isChecked, 1, 0 )
+        gToolsWork[gUTCurrent].IsDisplayMenu = iif( isChecked, 1, 0 )
     end if
 end sub
 
@@ -843,7 +835,7 @@ end sub
 private sub frmUserTools_ActionChanged( byval hCombo as HWND, byval idxOld as long, byval idxNew as long )
     if gUTLoading then exit sub
     if gUTCurrent < 0 then exit sub
-    gToolsWork(gUTCurrent).Action = idxNew
+    gToolsWork[gUTCurrent].Action = idxNew
     frmUserTools_RefreshRow( gUTCurrent )
 end sub
 
@@ -1309,19 +1301,18 @@ sub frmUserTools_RunSelfTest()
     ' Driven against the staging array directly, which is why the array is saved and restored
     ' around it: this runs on a live dialog and must leave the user's tools untouched.
     dim as TYPE_TOOLS savedTools(any)
-    dim as long nSavedUB = ubound(gToolsWork)
+    dim as long nSavedUB = gToolsWork.Count - 1
     if nSavedUB >= 0 then
         redim savedTools(nSavedUB)
         for i as long = 0 to nSavedUB
-            savedTools(i) = gToolsWork(i)
+            savedTools(i) = gToolsWork[i]
         next
     end if
 
-    redim gToolsWork(0)
-    gToolsWork(0).wszKey = "F5"
-    gToolsWork(0).IsCtrl = 1 : gToolsWork(0).IsShift = 0 : gToolsWork(0).IsAlt = 0
+        gToolsWork[0].wszKey = "F5"
+    gToolsWork[0].IsCtrl = 1 : gToolsWork[0].IsShift = 0 : gToolsWork[0].IsAlt = 0
     UTASSERT( frmUserTools_ShortcutText(0) = "Ctrl+F5", "Ctrl+F5 composes" )
-    gToolsWork(0).IsShift = 1 : gToolsWork(0).IsAlt = 1
+    gToolsWork[0].IsShift = 1 : gToolsWork[0].IsAlt = 1
     ' MODIFIER ORDER IS PINNED. It is what createToolsMenuShortcut emits into the Tools menu,
     ' and the two strings sit inches apart on screen.
     UTASSERT( frmUserTools_ShortcutText(0) = "Ctrl+Shift+Alt+F5", "the modifier order is Ctrl, Shift, Alt" )
@@ -1329,22 +1320,22 @@ sub frmUserTools_RunSelfTest()
     ' A keyless tool composes to NOTHING, modifiers or not. The version this replaces wrote
     ' the literal "None" into wszKey on every selection change and persisted it, which is what
     ' put "Ctrl+NONE" beside a tool in the menu.
-    gToolsWork(0).wszKey = ""
+    gToolsWork[0].wszKey = ""
     UTASSERT( frmUserTools_ShortcutText(0) = "", "a keyless tool composes to an empty string" )
-    gToolsWork(0).wszKey = "None"
+    gToolsWork[0].wszKey = "None"
     UTASSERT( frmUserTools_ShortcutText(0) = "", "the persisted 'None' affordance composes to an empty string" )
     ' ...and is NOT reported as broken. "No shortcut" is a legal state; only an unresolvable
     ' name is a dead one.
     UTASSERT( frmUserTools_ShortcutIsDead(0) = false, "'None' is not a dead shortcut" )
-    gToolsWork(0).wszKey = ""
+    gToolsWork[0].wszKey = ""
     UTASSERT( frmUserTools_ShortcutIsDead(0) = false, "an empty key is not a dead shortcut" )
 
     ' THE DEAD-KEY TEST ITSELF. "PageDn" is the exact name the shipped pick-list once offered
     ' against a resolver that knows only "PGDN" -- a shortcut that saved, displayed and never
     ' fired. It must be reported, and the canonical spelling must not be.
-    gToolsWork(0).wszKey = "PageDn"
+    gToolsWork[0].wszKey = "PageDn"
     UTASSERT( frmUserTools_ShortcutIsDead(0) = true, "an unresolvable key name is reported dead" )
-    gToolsWork(0).wszKey = "PGDN"
+    gToolsWork[0].wszKey = "PGDN"
     UTASSERT( frmUserTools_ShortcutIsDead(0) = false, "the canonical spelling is not reported dead" )
 
     ' EVERY NAME THE ASSIGN DIALOG CAN PRODUCE RESOLVES. The picker offers gKeyNames verbatim
@@ -1354,7 +1345,7 @@ sub frmUserTools_RunSelfTest()
     KeyBindings_EnsureKeyNames()
     dim as long nUnresolved = 0
     for i as long = lbound(gKeyNames) to ubound(gKeyNames)
-        gToolsWork(0).wszKey = gKeyNames(i).wszName
+        gToolsWork[0].wszKey = gKeyNames(i).wszName
         if frmUserTools_ShortcutIsDead(0) then nUnresolved += 1
     next
     UTASSERT( nUnresolved = 0, "every pickable key name resolves (" & str(nUnresolved) & " did not)" )
@@ -1399,15 +1390,14 @@ sub frmUserTools_RunSelfTest()
 
     ' TOOL VERSUS TOOL, and the skip-self rule. Two staging rows carrying the identical
     ' binding: each must see the other, and neither may see itself.
-    redim gToolsWork(1)
-    gToolsWork(0).wszDescription = "AAA" : gToolsWork(0).wszKey = "F12" : gToolsWork(0).IsCtrl = 1
-    gToolsWork(1).wszDescription = "BBB" : gToolsWork(1).wszKey = "F12" : gToolsWork(1).IsCtrl = 1
+        gToolsWork[0].wszDescription = "AAA" : gToolsWork[0].wszKey = "F12" : gToolsWork[0].IsCtrl = 1
+    gToolsWork[1].wszDescription = "BBB" : gToolsWork[1].wszKey = "F12" : gToolsWork[1].IsCtrl = 1
     UTASSERT( instr( frmAssignKey_ClashText("F12", true, false, false, ASSIGNKEY_DOMAIN_TOOLS, 0), "BBB" ) > 0, _
               "a tool sees the OTHER tool holding its shortcut" )
     UTASSERT( instr( frmAssignKey_ClashText("F12", true, false, false, ASSIGNKEY_DOMAIN_TOOLS, 0), "AAA" ) = 0, _
               "a tool does not report clashing with itself" )
     ' Differing by one modifier is not a clash.
-    gToolsWork(1).IsShift = 1
+    gToolsWork[1].IsShift = 1
     UTASSERT( len( frmAssignKey_ClashText("F12", true, false, false, ASSIGNKEY_DOMAIN_TOOLS, 0) ) = 0, _
               "Ctrl+F12 and Ctrl+Shift+F12 are not a clash" )
     ' A keyless tool cannot clash with anything, however its modifier flags are left.
@@ -1436,7 +1426,7 @@ sub frmUserTools_RunSelfTest()
             for i as long = 0 to nB : keepBuilds(i) = gConfig.Builds(i) : next
         end if
 
-        erase gToolsWork : erase gBuildsWork
+        gToolsWork.Clear( ) : gBuildsWork.Clear( )
         erase gConfig.Tools : erase gConfig.Builds
 
         ' FIND a keystroke nothing in the editor owns, rather than hardcoding one. The first
@@ -1504,22 +1494,21 @@ sub frmUserTools_RunSelfTest()
     end scope
 
     ' Restore.
-    erase gToolsWork
+    gToolsWork.Clear( )
     if nSavedUB >= 0 then
-        redim gToolsWork(nSavedUB)
-        for i as long = 0 to nSavedUB
-            gToolsWork(i) = savedTools(i)
+                for i as long = 0 to nSavedUB
+            gToolsWork[i] = savedTools(i)
         next
     end if
 
     ' ---- 5. staging is genuinely separate ---------------------------------------------
     ' The whole point of gToolsWork: Cancel must be a no-op. Assert the two arrays are
     ' distinct storage rather than trusting the redim above to have made a copy.
-    if (ubound(gToolsWork) >= 0) andalso (ubound(gConfig.Tools) >= 0) then
+    if (gToolsWork.Count - 1 >= 0) andalso (ubound(gConfig.Tools) >= 0) then
         dim as DWSTRING wszWas = gConfig.Tools(0).wszDescription
-        gToolsWork(0).wszDescription = wszWas & "##selftest##"
+        gToolsWork[0].wszDescription = wszWas & "##selftest##"
         UTASSERT( gConfig.Tools(0).wszDescription = wszWas, "editing staging does not touch gConfig.Tools" )
-        gToolsWork(0).wszDescription = wszWas
+        gToolsWork[0].wszDescription = wszWas
     end if
 
     ' ---- 6. tab order -----------------------------------------------------------------
