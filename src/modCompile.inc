@@ -1,4 +1,4 @@
-''    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
+﻿''    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
 ''    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 ''
 ''    This program is free software: you can redistribute it and/or modify
@@ -119,7 +119,11 @@ function code_SetCompilerPath( byval pCompile as COMPILE_TYPE ptr ) as boolean
         SetCompileStatusBarMessage( "", 0 )
         TikoMsgBox( HWND_FRMMAIN, wszMsg, L(162,"Error"), _
                 TMB_ICON_INFO, TMB_OK )
-        code_Cleanup( pCompile )
+        ' NO code_Cleanup HERE. code_Compile OWNS pCompile and cleans up on every false
+        ' return, including this one -- so cleaning up here too DELETED IT TWICE. The second
+        ' call dereferenced hCurSave and wszCurDirSave through a freed pointer and took the
+        ' editor down right after this message box was dismissed. code_Cleanup's own
+        ' "pCompile = null" cannot save it: the parameter is byval, so it nulls a copy.
         return false        
     end if
     
