@@ -1027,10 +1027,13 @@ function PsListTree_SetCurSel( byval hListControl as HWND, byval row as integer 
     ' caret at bottom). The view is then re-derived, never asked to scroll on its own.
     ' A row hidden under a collapsed header stays where it is.
     dim as integer visRow = pList->ModelToVisible( row )
-    if (hList <> 0) andalso (visRow >= 0) then
+    ' perPage is 0 while the control has no client height yet (the host sets the
+    ' selection during Build, before layout). Scrolling on that guess drags the caret
+    ' to the top row and hides every row above it, so leave topRow alone until the
+    ' size is real -- the first paint-time sync scrolls the caret into view anyway.
+    dim as integer perPage = PsListTree_VisPerPage( pList )
+    if (hList <> 0) andalso (visRow >= 0) andalso (perPage >= 1) then
         dim as integer visTop  = pList->nTopVis
-        dim as integer perPage = PsListTree_ItemsPerPage( pList )
-        if perPage < 1 then perPage = 1
         if visRow < visTop then
             pList->topRow = row
         elseif visRow >= visTop + perPage then
