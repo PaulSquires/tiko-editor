@@ -403,11 +403,13 @@ sub clsScanMgr.RequestProjectScan( byref wszRootOverride as const wstring = "" )
         ' workspace has no such structure - its files are simply the ones the user has
         ' open, related or not - so the only honest root is all of them.
         '
-        ' The test is IsProjectNamed, NOT "is there a Main". Every untitled workspace has a
-        ' Main: ProjectSetFileType hands FILETYPE_MAIN to the first .bas opened
-        ' (Workspace_DeriveFileType, clsApp.inc). Gating on the Main made this whole path
-        ' unreachable in practice, and left the other Explorer files unparsed behind a
-        ' scan rooted at whichever .bas happened to be opened first.
+        ' The test is IsProjectNamed, NOT "is there a Main". It used to be that every
+        ' untitled workspace HAD a Main -- ProjectSetFileType handed FILETYPE_MAIN to the
+        ' first .bas opened -- and gating on the Main made this whole path unreachable in
+        ' practice, leaving the other Explorer files unparsed behind a scan rooted at
+        ' whichever .bas happened to be opened first. Workspace_DeriveFileType no longer
+        ' promotes without a project, so an untitled workspace now has no Main at all;
+        ' IsProjectNamed remains the right test either way.
         if gApp.IsProjectNamed() = false then
             this.RequestWorkspaceScan()
             exit sub

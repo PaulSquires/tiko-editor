@@ -376,15 +376,25 @@ end function
 ''  itself takes no globals and touches no document, which is the only way it can be
 ''  asserted headlessly.
 ''
-''  The .bas-becomes-Main rule is what makes "open a loose .bas and press build" work with
-''  no ceremony. It fires ONLY when the workspace has no Main at all, so it can promote at
-''  most one file and never displaces a choice the user made. Restricted to .bas on
-''  purpose -- a .bi or .inc is never a program entry point, and an .rc has its own
+''  The .bas-becomes-Main rule fires ONLY when the workspace has no Main at all, so it can
+''  promote at most one file and never displaces a choice the user made. Restricted to .bas
+''  on purpose -- a .bi or .inc is never a program entry point, and an .rc has its own
 ''  category.
 ''
-function Workspace_DeriveFileType( byref wszExt as wstring, byval bHasMain as boolean ) as DWSTRING
+''  IT ALSO REQUIRES A NAMED PROJECT. Main is a PROJECT role: it names the root of the
+''  compilation unit and it is what gets written to the project file. With no project
+''  active there is no unit to be the root of, so a loose .bas is just a Normal file --
+''  and nothing is lost by that, because code_SetMainFile falls back to the ACTIVE
+''  document when there is no Main, which is how "open a loose .bas and press build"
+''  keeps working with no ceremony.
+''
+function Workspace_DeriveFileType( _
+            byref wszExt as wstring, _
+            byval bHasMain as boolean, _
+            byval bProjectNamed as boolean = true _
+            ) as DWSTRING
     select case ucase(wszExt)
-    case ".BAS":  return iif( bHasMain, FILETYPE_NORMAL, FILETYPE_MAIN )
+    case ".BAS":  return iif( bHasMain orelse (bProjectNamed = false), FILETYPE_NORMAL, FILETYPE_MAIN )
     case ".RC":   return FILETYPE_RESOURCE
     case ".BI":   return FILETYPE_HEADER
     case ".INC":  return FILETYPE_NORMAL
@@ -421,7 +431,8 @@ function clsApp.ProjectSetFileType( _
         if pDoc->ProjectFileType = FILETYPE_UNDEFINED then
             ' GetMainDocumentPtr is asked BEFORE the type is assigned below, so a workspace
             ' whose only .bas is this one still reports "no Main" and this file gets it.
-            wszFileType = Workspace_DeriveFileType( wzFileExt, gApp.GetMainDocumentPtr() <> 0 )
+            wszFileType = Workspace_DeriveFileType( wzFileExt, gApp.GetMainDocumentPtr() <> 0, _
+                                                    gApp.IsProjectNamed() )
         end if
     end if
     

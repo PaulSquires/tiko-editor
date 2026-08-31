@@ -271,6 +271,12 @@ sub Workspace_RunSelfTest()
         Workspace_DeriveFileType( ".bas", false ) = FILETYPE_MAIN )
     Workspace_Check( "a .bas is Normal once a Main exists", _
         Workspace_DeriveFileType( ".bas", true ) = FILETYPE_NORMAL )
+    ' Main is a project role. With no project active a .bas never takes it, Main or not.
+    Workspace_Check( "a .bas is Normal when no project is active", _
+        ( Workspace_DeriveFileType( ".bas", false, false ) = FILETYPE_NORMAL ) andalso _
+        ( Workspace_DeriveFileType( ".bas", true,  false ) = FILETYPE_NORMAL ) )
+    Workspace_Check( "an .inc is Normal when no project is active", _
+        Workspace_DeriveFileType( ".inc", false, false ) = FILETYPE_NORMAL )
     ' The promotion is restricted to .bas. Nothing else may ever become Main by accident --
     ' a header or an include is not a program entry point and an .rc has its own category.
     Workspace_Check( "a .bi is a Header, Main or not", _
