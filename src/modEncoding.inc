@@ -248,22 +248,61 @@ function Doc_WriteToDisk( _
     end if
 
     ' ---- the swap ----------------------------------------------------------------------
+    '
+    ' RETRIED, because the commonest failure here is TRANSIENT AND NOT THE USER'S DOING.
+    ' Both calls need to delete or rename the target, which Windows refuses while ANY
+    ' handle is open on it without FILE_SHARE_DELETE -- and tiko itself opens exactly
+    ' such handles: fbcParser reads every include with "open ... for binary access read"
+    ' (fbcParser\fb.bas), on the scan worker thread, for the ~3 s a project scan lasts.
+    ' Save-all before a compile (modCompile) lands inside that window at random. Antivirus
+    ' and the search indexer do the same thing to the freshly closed .tiko-tmp.
+    '
+    ' MEASURED with a probe against this exact sequence: with such a handle open,
+    ' ReplaceFileW fails 32 (SHARING_VIOLATION) and MoveFileExW fails 5 (ACCESS_DENIED);
+    ' with FILE_SHARE_DELETE granted, both succeed. That is why the box said "Access
+    ' denied" on a folder the user owned -- it is a HELD HANDLE, not a permission.
+    '
+    ' Ten tries, 25 ms apart: a quarter-second worst case, invisible against a save the
+    ' user asked for, and long enough to outlast a scan moving off this file. A failure
+    ' that is NOT a sharing failure exits at once -- a real access denial does not heal by
+    ' being asked again, and a user owed an error message should not wait for it.
+    const SWAP_TRIES  = 10
+    const SWAP_WAITMS = 25
+
     dim as boolean bSwapped = false
-    if AfxFileExists( wszPath ) then
-        bSwapped = ( ReplaceFileW( wszPath, wszTemp, 0, _
-                                   REPLACEFILE_IGNORE_MERGE_ERRORS, 0, 0 ) <> 0 )
-    end if
-    if bSwapped = false then
+    dim as DWORD dwErr = 0
+
+    for nTry as long = 1 to SWAP_TRIES
+        dim as boolean bTargetExists = AfxFileExists( wszPath )
+        if bTargetExists then
+            if ReplaceFileW( wszPath, wszTemp, 0, _
+                             REPLACEFILE_IGNORE_MERGE_ERRORS, 0, 0 ) <> 0 then
+                bSwapped = true
+                exit for
+            end if
+            ' KEEP THIS ERROR, not MoveFileExW's. ReplaceFileW reports the sharing
+            ' violation by name (32); MoveFileExW reports the same condition as a bare 5,
+            ' and reporting the 5 is what sent the reader off to check permissions.
+            dwErr = GetLastError()
+        end if
+
         ' Either the target did not exist (the common Save As / new-file case, which
         ' ReplaceFileW refuses outright) or ReplaceFileW declined it. MoveFileExW with
         ' REPLACE_EXISTING is still atomic on NTFS; it simply does not carry the
         ' target's metadata across.
-        bSwapped = ( MoveFileExW( wszTemp, wszPath, _
-                                  MOVEFILE_REPLACE_EXISTING or MOVEFILE_WRITE_THROUGH ) <> 0 )
-    end if
+        if MoveFileExW( wszTemp, wszPath, _
+                        MOVEFILE_REPLACE_EXISTING or MOVEFILE_WRITE_THROUGH ) <> 0 then
+            bSwapped = true
+            exit for
+        end if
+        if bTargetExists = false then dwErr = GetLastError()
+
+        if (dwErr <> ERROR_SHARING_VIOLATION) andalso (dwErr <> ERROR_ACCESS_DENIED) then exit for
+        if nTry < SWAP_TRIES then sleep SWAP_WAITMS, 1     ' ,1 = not interruptible by a keypress
+    next
 
     if bSwapped = false then
-        wszErr = Win32ErrorText( GetLastError() )
+        wszErr = Win32ErrorText( dwErr )
         if len( wszErr ) = 0 then wszErr = "Could not replace the existing file."
         AfxDeleteFile( wszTemp )     ' never leave a stray .tiko-tmp behind
         return DOCWRITE_FAILED
