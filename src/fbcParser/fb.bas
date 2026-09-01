@@ -25,6 +25,11 @@ declare sub parserSetCtx ( )
 '' globals
 dim shared env as FBENV
 
+'' fbcParser: the root source read through hLoadSourceShared, owned here rather than
+'' in fbInit because several error paths there exit before the end of the sub. Freed
+'' at the end of a compile and defensively before the next one starts.
+dim shared fbRootSharedBuf as zstring ptr = NULL
+
 	dim shared infileTb( ) as FBFILE
 
 	dim shared as FB_LANG_INFO langTb(0 to FB_LANGS-1) = _
@@ -1291,10 +1296,24 @@ sub fbCompile _
 			exit sub
 		end if
 
-		env.inf.num = freefile
-		if( open( *infname, for binary, access read, as #env.inf.num ) <> 0 ) then
-			errReportEx( FB_ERRMSG_FILEACCESSERROR, infname, -1 )
-			exit sub
+		'' Prefer a shared, already-closed copy (hLoadSourceShared) so a scan cannot
+		'' block the editor saving this file. NULL means "not a plain ASCII file" or
+		'' the read failed -- open() then, exactly as before.
+		dim as integer cbShared = 0
+		if( fbRootSharedBuf <> NULL ) then deallocate( fbRootSharedBuf )
+		fbRootSharedBuf = hLoadSourceShared( infname, cbShared )
+		if( fbRootSharedBuf <> NULL ) then
+			env.inf.num = 0
+			env.inf.memtext = fbRootSharedBuf
+			env.inf.memlen = cbShared
+			env.inf.mempos = 1
+			env.inf.format = FBFILE_FORMAT_ASCII
+		else
+			env.inf.num = freefile
+			if( open( *infname, for binary, access read, as #env.inf.num ) <> 0 ) then
+				errReportEx( FB_ERRMSG_FILEACCESSERROR, infname, -1 )
+				exit sub
+			end if
 		end if
 
 		if( env.clopt.showincludes ) then
@@ -1302,7 +1321,9 @@ sub fbCompile _
 			hShowInclude( 0, pathStripCurdir( *infname ) )
 		end if
 
-		env.inf.format = hCheckFileFormat( env.inf.num )
+		if( env.inf.num > 0 ) then
+			env.inf.format = hCheckFileFormat( env.inf.num )
+		end if
 	end if
 
 	'' Note: was commented out in an early experiment to suppress output files,
@@ -1348,6 +1369,10 @@ sub fbCompile _
 		close #env.inf.num
 	end if
 	env.inf.memtext = NULL
+	if( fbRootSharedBuf <> NULL ) then
+		deallocate( fbRootSharedBuf )
+		fbRootSharedBuf = NULL
+	end if
 
 	'' check if any label undefined was used
 	if (fbShouldContinue()) then
@@ -1681,15 +1706,27 @@ sub fbIncludeFile(byval filename as zstring ptr, byval isonce as integer)
 		hShowInclude( env.includerec, pathStripCurdir( incfile ) )
 	end if
 
-	''
-	env.inf.num = freefile
-	if( open( incfile, for binary, access read, as #env.inf.num ) <> 0 ) then
-		errReportEx( FB_ERRMSG_FILENOTFOUND, QUOTE + *filename + QUOTE )
-		errHideFurtherErrors()
-		exit sub
-	end if
+	'' Same as the root source: read it once through a handle that permits deletion
+	'' and close it, so holding this include open cannot make the editor's save of it
+	'' fail. NULL falls back to open() unchanged (BOM'd or unreadable files).
+	dim as integer cbShared = 0
+	dim as zstring ptr pShared = hLoadSourceShared( incfile, cbShared )
+	if( pShared <> NULL ) then
+		env.inf.num = 0
+		env.inf.memtext = pShared
+		env.inf.memlen = cbShared
+		env.inf.mempos = 1
+		env.inf.format = FBFILE_FORMAT_ASCII
+	else
+		env.inf.num = freefile
+		if( open( incfile, for binary, access read, as #env.inf.num ) <> 0 ) then
+			errReportEx( FB_ERRMSG_FILENOTFOUND, QUOTE + *filename + QUOTE )
+			errHideFurtherErrors()
+			exit sub
+		end if
 
-	env.inf.format = hCheckFileFormat( env.inf.num )
+		env.inf.format = hCheckFileFormat( env.inf.num )
+	end if
 
 	'' parse
 	lexPushCtx( )
@@ -1700,7 +1737,13 @@ sub fbIncludeFile(byval filename as zstring ptr, byval isonce as integer)
 
 	lexPopCtx( )
 
-	close #env.inf.num
+	if( pShared <> NULL ) then
+		env.inf.memtext = NULL
+		deallocate( pShared )
+		pShared = NULL
+	else
+		close #env.inf.num
+	end if
 
 	'' pop context
 	env.includerec -= 1

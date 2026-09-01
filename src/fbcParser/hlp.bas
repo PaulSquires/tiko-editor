@@ -390,6 +390,118 @@ function pathIsAbsolute( byval path as zstring ptr ) as integer
 #endif
 end function
 
+#ifdef __FB_WIN32__
+'' Win32 file APIs, declared here rather than pulling windows.bi into a file that
+'' defines its own types. Only what this one function needs.
+extern "windows"
+	declare function hWinCreateFileW alias "CreateFileW" _
+		( byval as const wstring ptr, byval as ulong, byval as ulong, byval as any ptr, _
+		  byval as ulong, byval as ulong, byval as any ptr ) as any ptr
+	declare function hWinReadFile alias "ReadFile" _
+		( byval as any ptr, byval as any ptr, byval as ulong, byval as ulong ptr, _
+		  byval as any ptr ) as long
+	declare function hWinGetFileSize alias "GetFileSize" _
+		( byval as any ptr, byval as ulong ptr ) as ulong
+	declare function hWinCloseHandle alias "CloseHandle" ( byval as any ptr ) as long
+end extern
+#endif
+
+'' Whole source file in one allocation, NUL-terminated, for env.inf.memtext -- or NULL,
+'' meaning "read it the old way with open()".
+''
+'' WHY THIS EXISTS AT ALL. FB's open() cannot grant FILE_SHARE_DELETE (measured: no
+'' ACCESS/LOCK combination does), and Windows refuses to rename or delete a file while
+'' ANY handle lacking that share right is open on it. The editor saves by writing a
+'' sibling temp and swapping it in with ReplaceFileW/MoveFileExW, so for as long as a
+'' scan held an include open -- ~3 s for a full project scan -- saving that include
+'' failed with a sharing violation the editor could only report as "access denied".
+'' Reading through a handle that permits deletion removes the conflict at its source:
+'' the file is read and CLOSED here, and the parser then walks a private copy.
+''
+'' FALLS BACK (returns NULL) rather than changing what the parser sees:
+''   - any BOM at all -- hCheckFileFormat would classify those UTF8/UTF16/UTF32 and the
+''     lexer would decode them through lex-utf; memtext is ASCII-only, so those files
+''     must keep the file path. A BOM-less file is exactly the FBFILE_FORMAT_ASCII case.
+''   - an embedded NUL -- memtext is a zstring and would silently truncate there.
+''   - empty, oversized, or unreadable -- rare, and the old path already handles them.
+'' Non-Windows targets always fall back; this is a Windows-editor problem.
+''
+'' The caller owns the buffer and must deallocate it once the file has been parsed.
+function hLoadSourceShared _
+	( _
+		byval filename as zstring ptr, _
+		byref cbOut as integer _
+	) as zstring ptr
+
+	cbOut = 0
+
+#ifdef __FB_WIN32__
+	const FB_SHAREDREAD_MAXSIZE = 32 * 1024 * 1024
+
+	dim as wstring ptr pwPath = allocate( (FB_MAXPATHLEN + 1) * sizeof( wstring ) )
+	if( pwPath = NULL ) then return NULL
+	*pwPath = *filename
+
+	'' GENERIC_READ, FILE_SHARE_READ|WRITE|DELETE, OPEN_EXISTING, SEQUENTIAL_SCAN
+	dim as any ptr h = hWinCreateFileW( pwPath, &h80000000, 7, NULL, 3, &h08000000, NULL )
+	deallocate( pwPath )
+	if( h = cast( any ptr, -1 ) ) then return NULL
+
+	dim as ulong dwHigh = 0
+	dim as ulong dwSize = hWinGetFileSize( h, @dwHigh )
+	if( (dwSize = &hFFFFFFFF) orelse (dwHigh <> 0) orelse _
+	    (dwSize = 0) orelse (dwSize > FB_SHAREDREAD_MAXSIZE) ) then
+		hWinCloseHandle( h )
+		return NULL
+	end if
+
+	dim as zstring ptr pBuf = allocate( dwSize + 1 )
+	if( pBuf = NULL ) then
+		hWinCloseHandle( h )
+		return NULL
+	end if
+
+	dim as ulong dwRead = 0
+	dim as long bOk = hWinReadFile( h, pBuf, dwSize, @dwRead, NULL )
+	hWinCloseHandle( h )
+	if( (bOk = 0) orelse (dwRead <> dwSize) ) then
+		deallocate( pBuf )
+		return NULL
+	end if
+	pBuf[dwSize] = 0
+
+	'' A BOM means some other format; an embedded NUL means a zstring cannot hold it.
+	dim as ubyte ptr b = cast( ubyte ptr, pBuf )
+	dim as integer bHasBom = FALSE
+	if( dwSize >= 2 ) then
+		if( (b[0] = &hFF) andalso (b[1] = &hFE) ) then bHasBom = TRUE
+		if( (b[0] = &hFE) andalso (b[1] = &hFF) ) then bHasBom = TRUE
+		if( (b[0] = 0) andalso (b[1] = 0) ) then bHasBom = TRUE
+	end if
+	if( dwSize >= 3 ) then
+		if( (b[0] = &hEF) andalso (b[1] = &hBB) andalso (b[2] = &hBF) ) then bHasBom = TRUE
+	end if
+	if( bHasBom = FALSE ) then
+		for i as integer = 0 to dwSize - 1
+			if( b[i] = 0 ) then
+				bHasBom = TRUE     '' same outcome: fall back to the file path
+				exit for
+			end if
+		next
+	end if
+	if( bHasBom ) then
+		deallocate( pBuf )
+		return NULL
+	end if
+
+	cbOut = dwSize
+	return pBuf
+#else
+	return NULL
+#endif
+
+end function
+
 function hCheckFileFormat( byval f as integer ) as integer
 	dim as ulong BOM
 	dim as FBFILE_FORMAT fmt

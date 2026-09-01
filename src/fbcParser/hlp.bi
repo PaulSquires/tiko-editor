@@ -23,6 +23,15 @@ declare function hFileExists _
 		byval filename as zstring ptr _
 	) as integer
 
+'' fbcParser: whole-file read through a handle that permits deletion, so a scan in
+'' progress cannot make the editor's atomic save fail. NULL = read it with open()
+'' instead. Caller owns the returned buffer. See the implementation for the rules.
+declare function hLoadSourceShared _
+	( _
+		byval filename as zstring ptr, _
+		byref cbOut as integer _
+	) as zstring ptr
+
 declare sub hClearName _
 	( _
 		byval src as zstring ptr _
