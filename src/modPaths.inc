@@ -18,6 +18,28 @@
 
 
 ' ========================================================================================
+' One separator, everywhere: turn every "/" in a path into "\".
+'
+' A DOCUMENT FILENAME IS A KEY, not just a path -- GetDocumentPtrByFilename and
+' SymDb_FileNameEq compare it with a plain case-insensitive string compare, and Windows
+' itself accepts both separators, so "C:\dev\tracks\src/tws/EClient.inc" and
+' "C:\dev\tracks\src\tws\EClient.inc" open the SAME FILE and compare UNEQUAL.
+'
+' That mismatch is not hypothetical: a project file may record its members with forward
+' slashes (tracks.tiko has "File=.\src/tws/EClient.inc"), and PathCombineW -- which is
+' what AfxPathCombine calls -- canonicalizes the ".\" while leaving every "/" alone. The
+' scanner, meanwhile, normalizes to "\" (fbcParser hReplaceSlash), so EVERY file in such
+' a project failed frmExplorer_IsFileDisplayed and the Functions panel came up EMPTY.
+'
+' Applied where a filename ENTERS a document, so the comparisons downstream stay plain.
+' ========================================================================================
+function PathNormalizeSlashes( byval wszPath as DWSTRING ) as DWSTRING
+    if instr( wszPath, "/" ) = 0 then return wszPath      ' the common case, untouched
+    return AfxStrReplace( wszPath, "/", "\" )
+end function
+
+
+' ========================================================================================
 ' Get the original case filename as stored by Windows (used when converting the GDB
 ' returned filename from uppercase to original case).
 ' ========================================================================================

@@ -274,7 +274,10 @@ function clsDocument.LoadDiskFile( _
     ' set the diskfilename. The original CreateEmptyDocument would have
     ' already set the filename to Untitled.
     if bIsTemplate = false then
-        this.DiskFilename = wszFile
+        ' Normalized HERE: this is the funnel every on-disk document passes through
+        ' (project load, the Open dialog, drag and drop), and the name it stores is
+        ' the key every later lookup compares against.
+        this.DiskFilename = PathNormalizeSlashes( wszFile )
     end if
     
     ' Kick a background symbol scan for the freshly loaded text (skipped
@@ -2210,7 +2213,9 @@ function clsDocument.AddIncludeFromParse( byval sLine as string ) as boolean
     ' determine if the .bas module file should be recompiled.
     dim as clsDocument ptr pDoc = this.AddNewIncludeDocument()
     if pDoc then
-        pDoc->DiskFilename = sFilename
+        ' Same rule: this name comes from the #include text, which is routinely written
+        ' with forward slashes.
+        pDoc->DiskFilename = PathNormalizeSlashes( sFilename )
         pDoc->DateFileTime = AfxGetFileLastWriteTime(pDoc->DiskFilename)
     end if
 

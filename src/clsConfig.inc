@@ -1307,6 +1307,10 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
             if AfxPathIsRelative(wszFilename) then
                 wszFilename = AfxPathCombine( AfxStrPathName("PATH", gApp.ProjectFilename), wszFilename)
             end if
+            ' PathCombineW canonicalizes ".\" but leaves "/" alone, and a project file may
+            ' record its members with forward slashes -- normalize before this name becomes
+            ' a document key. The project is rewritten with one separator on the next save.
+            wszFilename = PathNormalizeSlashes( wszFilename )
             if AfxFileExists(wszFilename) then
 
                 nFileIndex = nFileIndex + 1

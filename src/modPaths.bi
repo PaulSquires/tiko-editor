@@ -6,6 +6,9 @@
 #pragma once
 
 declare function FilenameOriginalCase( byval wszFilename as DWSTRING ) as DWSTRING
+' A document filename is a KEY compared by plain string equality, so one separator only.
+' See the implementation for the project-file case that made the Functions panel empty.
+declare function PathNormalizeSlashes( byval wszPath as DWSTRING ) as DWSTRING
 declare function ProcessToCurdriveProject( byval wzFilename as DWSTRING ) as DWSTRING
 declare function ProcessFromCurdriveProject( byval wzFilename as DWSTRING ) as DWSTRING
 declare function ProcessToCurdriveApp( byval wzFilename as DWSTRING ) as DWSTRING

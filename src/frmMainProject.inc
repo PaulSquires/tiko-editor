@@ -266,6 +266,63 @@ sub Workspace_RunSelfTest()
     Workspace_Check( "at most one Main document", nMain <= 1, str(nMain) )
     Workspace_Check( "at most one Resource document", nResource <= 1, str(nResource) )
 
+    ' --- one separator in every document key ----------------------------------------------
+    '     A DiskFilename is compared with a plain case-insensitive string equality
+    '     (GetDocumentPtrByFilename, SymDb_FileNameEq), while Windows opens "a/b" and
+    '     "a\b" as the same file -- so a stray "/" makes a document unfindable by name
+    '     without making anything fail to load. That is exactly what emptied the Functions
+    '     panel for a project whose .tiko recorded its members with forward slashes:
+    '     every file failed frmExplorer_IsFileDisplayed and no header was even drawn.
+    scope
+        Workspace_Check( "PathNormalizeSlashes rewrites every separator", _
+            PathNormalizeSlashes( "C:\dev\tracks\src/tws/EClient.inc" ) = _
+                                  "C:\dev\tracks\src\tws\EClient.inc" )
+        Workspace_Check( "PathNormalizeSlashes leaves a clean path alone", _
+            PathNormalizeSlashes( "C:\dev\tracks\src\tws\EClient.inc" ) = _
+                                  "C:\dev\tracks\src\tws\EClient.inc" )
+
+        dim as DWSTRING wszBadName
+        dim pDocScan as clsDocument ptr = gApp.pDocList
+        do until pDocScan = 0
+            if instr( pDocScan->DiskFilename, "/" ) > 0 then
+                wszBadName = pDocScan->DiskFilename
+                exit do
+            end if
+            pDocScan = pDocScan->pDocNext
+        loop
+        Workspace_Check( "no document filename carries a forward slash", _
+            len( wszBadName ) = 0, iif( len( wszBadName ) = 0, DWSTRING("all clean"), wszBadName ) )
+
+        '     END TO END, on a document this test makes itself. Sweeping the CURRENT
+        '     workspace cannot show this: it passes vacuously whenever no loaded project
+        '     happens to use forward slashes, which is most of them -- measured, an A/B
+        '     that removed the normalization still reported every check green. So load a
+        '     file through the real funnel under a path spelled the way a .tiko records
+        '     it, and ask the lookup that failed.
+        scope
+            dim as DWSTRING wszDir  = environ("TEMP")
+            dim as DWSTRING wszFwd  = wszDir & "/tiko_slash_selftest.bas"   '' as a project stores it
+            dim as DWSTRING wszBack = wszDir & "\tiko_slash_selftest.bas"   '' as the scanner reports it
+
+            dim as DWSTRING wszErr
+            if Doc_WriteToDisk( wszBack, "'' workspace self-test scratch file" & vbcrlf, wszErr ) = DOCWRITE_OK then
+                dim pDocSlash as clsDocument ptr = gApp.CreateEmptyDocument()
+                if pDocSlash = 0 then
+                    gWorkspaceTestFail += 1 : ? "  FAIL: CreateEmptyDocument returned null"
+                else
+                    pDocSlash->LoadDiskFile( wszFwd )
+                    Workspace_Check( "a loaded document stores one separator", _
+                        instr( pDocSlash->DiskFilename, "/" ) = 0, pDocSlash->DiskFilename )
+                    Workspace_Check( "a file opened as a/b is found as a" & "\" & "b", _
+                        gApp.GetDocumentPtrByFilename( wszBack ) = pDocSlash, _
+                        "looked up " & wszBack )
+                    gApp.RemoveDocument( pDocSlash )
+                end if
+                AfxDeleteFile( wszBack )
+            end if
+        end scope
+    end scope
+
     ' --- the extension -> category rule (pure, so assertable both ways) --------------------
     Workspace_Check( "a .bas becomes Main when the workspace has none", _
         Workspace_DeriveFileType( ".bas", false ) = FILETYPE_MAIN )
