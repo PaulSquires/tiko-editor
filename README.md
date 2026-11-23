@@ -2,6 +2,7 @@
 
 ## Programmer's Code Editor for the FreeBASIC Compiler
 
+#⚠️ <mark>#NOTE: This project has been superseded by https://github.com/PaulSquires/tiko-lang</mark> which includes a great code editor and built in visual designer.
 
 Tiko is a small, fast, and easy to use code editor.
 
